@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { PRODUCTS, WORKSHOP_INFO } from './data/products';
 import { Product, CartItem, VehicleCategory, UserProfile } from './types';
 import { Header } from './components/Header';
@@ -74,7 +74,38 @@ export default function App() {
   const [pendingCheckoutAfterLogin, setPendingCheckoutAfterLogin] = useState(false);
 
   // Navigation & View State
-  const [activeTab, setActiveTab] = useState<'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart'>('home');
+  type RouteTab = 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart';
+  const routeToTab = (pathname: string): RouteTab => {
+    const route = pathname.replace(/\/$/, '') || '/home';
+    if (route === '/profile' || route === '/account') return 'account';
+    if (route === '/shop' || route === '/search' || route === '/custom' || route === '/wishlist' || route === '/cart') return route.slice(1) as RouteTab;
+    return 'home';
+  };
+  const tabToRoute = (tab: RouteTab) => tab === 'account' ? '/profile' : `/${tab}`;
+  const [activeTab, setActiveTab] = useState<RouteTab>(() => routeToTab(window.location.pathname));
+  const isPopState = useRef(false);
+  useEffect(() => {
+    const handlePopState = () => {
+      isPopState.current = true;
+      setActiveTab(routeToTab(window.location.pathname));
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    const nextPath = tabToRoute(activeTab);
+    if (window.location.pathname !== nextPath) {
+      if (isPopState.current) {
+        isPopState.current = false;
+        return;
+      }
+      window.history.pushState({ tab: activeTab }, '', nextPath);
+    } else {
+      isPopState.current = false;
+    }
+  }, [activeTab]);
+
   const [shopLayoutMode, setShopLayoutMode] = useState<'grid' | 'list'>('grid');
   const [isMobileFrameMode, setIsMobileFrameMode] = useState<boolean>(true);
 
