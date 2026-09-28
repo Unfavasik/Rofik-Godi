@@ -410,7 +410,7 @@ export default function App() {
         }`}
       >
         {/* Main Header */}
-        <Header
+        {activeTab !== 'search' && <Header
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
           wishlistCount={wishlist.length}
           currentUser={currentUser}
@@ -425,14 +425,14 @@ export default function App() {
           searchQuery={searchQuery}
           setSearchQuery={(q) => {
             setSearchQuery(q);
-            if (q.trim() && activeTab !== 'search') {
+            if (q.trim()) {
               setActiveTab('search');
             }
           }}
-          hideSearchInput={activeTab === 'search'}
+          hideSearchInput={false}
           isMobileFrameMode={isMobileFrameMode}
           setIsMobileFrameMode={setIsMobileFrameMode}
-        />
+        />}
 
         {/* View Switcher: Search View / Account View / Home & Shop Experience */}
         {activeTab === 'search' ? (
@@ -897,8 +897,8 @@ export default function App() {
           </main>
         )}
 
-        {/* Bottom Tab Bar Navigation */}
-        <BottomNav
+  {/* Bottom Tab Bar Navigation */}
+  {activeTab !== 'search' && <BottomNav
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
@@ -919,7 +919,7 @@ export default function App() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           onScrollToTop={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        />
+        />}
 
         {/* Modals & Slide-overs */}
         <ProductDetailModal
