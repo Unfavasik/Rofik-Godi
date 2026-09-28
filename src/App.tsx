@@ -58,10 +58,7 @@ import { motion } from 'motion/react';
 
 export default function App() {
   // App Phase State: Splash -> Welcome -> Auth -> Main
-  const [appPhase, setAppPhase] = useState<'splash' | 'welcome' | 'auth' | 'main'>(() => {
-    const path = window.location.pathname.replace(/\/$/, '') || '/';
-    return path === '/' ? 'splash' : 'main';
-  });
+  const [appPhase, setAppPhase] = useState<'splash' | 'welcome' | 'auth' | 'main'>('splash');
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>('signup');
 
   // User Authentication State (Default: Guest User)
@@ -458,8 +455,12 @@ export default function App() {
           onOpenCart={() => setIsCartOpen(true)}
           onOpenWishlist={() => setIsWishlistOpen(true)}
           onOpenStoreInfo={() => setIsStoreInfoOpen(true)}
-          onOpenAccount={() => setActiveTab('account')}
-          onOpenSearch={() => {
+  onOpenAccount={() => setActiveTab('account')}
+  onOpenNotifications={() => {
+    setActiveTab('notifications');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }}
+  onOpenSearch={() => {
             setActiveTab('search');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
