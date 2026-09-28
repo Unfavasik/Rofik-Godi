@@ -458,8 +458,12 @@ export default function App() {
           onOpenCart={() => setIsCartOpen(true)}
           onOpenWishlist={() => setIsWishlistOpen(true)}
           onOpenStoreInfo={() => setIsStoreInfoOpen(true)}
-          onOpenAccount={() => setActiveTab('account')}
-          onOpenSearch={() => {
+  onOpenAccount={() => setActiveTab('account')}
+  onOpenNotifications={() => {
+    setActiveTab('notifications');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }}
+  onOpenSearch={() => {
             setActiveTab('search');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
