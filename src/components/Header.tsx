@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { ShoppingBag, Search, X, User, Sparkles } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { ShoppingBag, Search, X, User, Sparkles, Bell, Truck, Tag, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../types';
 
@@ -30,14 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   hideSearchInput = false,
 }) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
-
-  const handleSearchClick = () => {
-    if (onOpenSearch) {
-      onOpenSearch();
-    } else if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  };
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   return (
     <header className="w-full flex flex-col bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-[0_1px_6px_rgba(0,0,0,0.03)] sticky top-0 z-40 transition-all">
@@ -72,21 +65,33 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right: Actions (Search & Cart) - Location removed as requested */}
         <div className="flex items-center gap-2">
-          {/* Top Bar Search Button */}
-          {setSearchQuery && (
+          {/* Notification Button */}
+          <div className="relative">
             <button
-              onClick={handleSearchClick}
-              aria-label="Search Products"
-              className={`w-9 h-9 rounded-full border flex items-center justify-center active:scale-95 transition-all shadow-2xs ${
-                searchQuery
-                  ? 'bg-red-50 border-red-200 text-[#D9232D]'
-                  : 'bg-slate-50 hover:bg-slate-100 border-slate-200/80 text-slate-700'
-              }`}
-              title="Search bike and toto seat covers"
+              onClick={() => setNotificationsOpen((open) => !open)}
+              aria-label="Notifications"
+              aria-expanded={notificationsOpen}
+              className="relative w-9 h-9 rounded-full bg-white hover:bg-red-50 border border-slate-200 shadow-2xs flex items-center justify-center text-slate-800 active:scale-95 transition-all"
+              title="Notifications"
             >
-              <Search className="w-4 h-4" />
+              <Bell className="w-[18px] h-[18px] text-slate-900" />
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#D9232D] text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">3</span>
             </button>
-          )}
+            {notificationsOpen && (
+              <div className="absolute right-0 top-11 w-[290px] rounded-2xl border border-slate-200 bg-white p-3 shadow-xl z-50">
+                <div className="flex items-center justify-between px-1 pb-2">
+                  <h2 className="text-sm font-black text-slate-900">Notifications</h2>
+                  <span className="text-[10px] font-bold text-[#D9232D]">3 new</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex gap-2 rounded-xl bg-red-50 p-2.5"><Truck className="mt-0.5 h-4 w-4 text-[#D9232D]" /><div><p className="text-xs font-bold">Order shipped</p><p className="text-[10px] text-slate-500">Your order is on the way.</p></div></div>
+                  <div className="flex gap-2 rounded-xl p-2.5"><Tag className="mt-0.5 h-4 w-4 text-[#D9232D]" /><div><p className="text-xs font-bold">Special offer</p><p className="text-[10px] text-slate-500">Flat 30% OFF on seat covers.</p></div></div>
+                  <div className="flex gap-2 rounded-xl p-2.5"><CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" /><div><p className="text-xs font-bold">Order confirmed</p><p className="text-[10px] text-slate-500">We will notify you soon.</p></div></div>
+                </div>
+                <button onClick={() => setNotificationsOpen(false)} className="mt-2 w-full rounded-xl bg-[#D9232D] py-2 text-xs font-bold text-white">View all notifications</button>
+              </div>
+            )}
+          </div>
 
           {/* Cart Button with Count Badge */}
           <button

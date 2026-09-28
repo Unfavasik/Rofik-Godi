@@ -3,6 +3,10 @@ import { Product } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
+  ArrowLeft,
+  Search,
+  Bell,
+  Share2,
   Star,
   ShieldCheck,
   Droplets,
@@ -86,45 +90,25 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-          className="relative w-full max-w-[480px] max-h-[92vh] sm:max-h-[85vh] bg-white rounded-t-[28px] sm:rounded-[28px] shadow-2xl flex flex-col z-10 overflow-hidden"
+          className="relative w-full max-w-[480px] h-[100dvh] sm:h-[94vh] sm:max-h-[940px] bg-[#F8FAFC] sm:rounded-[24px] shadow-2xl flex flex-col z-10 overflow-hidden"
         >
           {/* Header Bar */}
-          <div className="sticky top-0 z-20 flex justify-between items-center px-5 py-3.5 bg-white/95 backdrop-blur-md border-b border-gray-100">
-            <div>
-              <span className="text-[10px] font-bold tracking-wider text-[#D9232D] uppercase">
-                {product.categoryLabel}
-              </span>
-              <h3 className="text-[15px] font-black text-gray-900 leading-tight">
-                {product.title}
-              </h3>
-            </div>
+          <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-white/95 backdrop-blur-md border-b border-slate-100" aria-label="Product details header">
+            <button type="button" onClick={onClose} aria-label="Go back" className="h-9 w-9 rounded-full flex items-center justify-center text-slate-900 hover:bg-slate-100">
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <span className="text-[13px] font-black tracking-wide text-[#D9232D]">ROFIK GODI CENTRE</span>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => onToggleWishlist(product)}
-                className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:text-red-500 transition-colors"
-              >
-                <Heart
-                  className={`w-4 h-4 ${
-                    isWishlisted ? 'text-[#D9232D] fill-[#D9232D]' : 'text-gray-600'
-                  }`}
-                />
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <button type="button" aria-label="Search" className="h-9 w-9 rounded-full flex items-center justify-center text-slate-900 hover:bg-slate-100"><Search className="h-5 w-5" /></button>
+              <button type="button" aria-label="Notifications" className="h-9 w-9 rounded-full flex items-center justify-center text-slate-900 hover:bg-slate-100"><Bell className="h-5 w-5" /></button>
             </div>
           </div>
 
           {/* Modal Scrollable Body */}
-          <div className="overflow-y-auto px-5 py-4 space-y-5 no-scrollbar pb-28">
+          <div className="overflow-y-auto px-4 py-3 space-y-4 no-scrollbar pb-28">
             {/* Image Showcase & Gallery */}
             <div className="space-y-2.5">
-              <div className="relative w-full h-[210px] bg-gradient-to-b from-gray-100 to-gray-50 rounded-2xl overflow-hidden border border-gray-100 flex items-center justify-center">
+              <div className="relative -mx-4 w-[calc(100%+2rem)] h-[360px] bg-slate-100 overflow-hidden flex items-center justify-center">
                 <img
                   src={activeImage}
                   alt={product.title}
@@ -165,11 +149,21 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               )}
             </div>
 
+            {/* Product identity */}
+            <div className="pt-1">
+              <p className="text-[11px] font-black tracking-wider text-[#D9232D] uppercase">{product.categoryLabel}</p>
+              <div className="mt-1 flex items-center justify-between gap-2">
+                <h1 className="text-[21px] font-black leading-tight text-slate-900">{product.title}</h1>
+                {product.isBestseller && <span className="shrink-0 rounded-lg bg-[#D9232D] px-2.5 py-1 text-[10px] font-black text-white">Bestseller</span>}
+              </div>
+              <div className="mt-1 flex items-center gap-1.5 text-[12px] text-slate-500"><Star className="h-4 w-4 fill-amber-400 text-amber-400" /> <b className="text-slate-800">{product.rating}</b> ({product.reviewCount} reviews)</div>
+            </div>
+
             {/* Price & Features highlights */}
             <div className="flex justify-between items-baseline border-b border-gray-100 pb-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-black text-[#D9232D]">
+                  <span className="text-[30px] font-black text-slate-900">
                     ₹{product.price + selectedThickness.extraPrice + (embroideryText.trim() ? 150 : 0)}
                   </span>
                   <span className="text-sm text-gray-400 line-through">
@@ -353,9 +347,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           </div>
 
           {/* Sticky Bottom Action Bar */}
-          <div className="sticky bottom-0 z-30 p-4 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] flex items-center justify-between gap-3">
+          <div className="sticky bottom-0 z-30 p-3 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] flex items-center justify-between gap-2">
             {/* Quantity Selector */}
-            <div className="flex items-center border border-gray-200 rounded-xl bg-gray-50 p-1">
+            <div className="hidden flex items-center border border-gray-200 rounded-xl bg-gray-50 p-1">
               <button
                 type="button"
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -376,6 +370,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </div>
 
             {/* Total Price & Add Button */}
+            <button type="button" onClick={handleAdd} className="flex-1 rounded-xl border border-[#D9232D] bg-white py-3 text-[13px] font-black text-[#D9232D]"><ShoppingBag className="mr-1 inline h-4 w-4" /> Add to Cart</button>
             <motion.button
               whileTap={{ scale: 0.97 }}
               type="button"

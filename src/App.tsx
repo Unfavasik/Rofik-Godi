@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { PRODUCTS, WORKSHOP_INFO } from './data/products';
 import { Product, CartItem, VehicleCategory, UserProfile } from './types';
 import { Header } from './components/Header';
@@ -27,6 +27,8 @@ import { WelcomeAuthScreen } from './components/WelcomeAuthScreen';
 import { AuthScreen } from './components/AuthScreen';
 import { LoginRequiredModal } from './components/LoginRequiredModal';
 import { SearchView } from './components/SearchView';
+import { NotificationsView } from './components/NotificationsView';
+import { ShopView } from './components/ShopView';
 import {
   FilterSortModal,
   FilterState,
@@ -56,7 +58,10 @@ import { motion } from 'motion/react';
 
 export default function App() {
   // App Phase State: Splash -> Welcome -> Auth -> Main
-  const [appPhase, setAppPhase] = useState<'splash' | 'welcome' | 'auth' | 'main'>('splash');
+  const [appPhase, setAppPhase] = useState<'splash' | 'welcome' | 'auth' | 'main'>(() => {
+    const path = window.location.pathname.replace(/\/$/, '') || '/';
+    return path === '/' ? 'splash' : 'main';
+  });
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>('signup');
 
   // User Authentication State (Default: Guest User)
@@ -74,7 +79,40 @@ export default function App() {
   const [pendingCheckoutAfterLogin, setPendingCheckoutAfterLogin] = useState(false);
 
   // Navigation & View State
-  const [activeTab, setActiveTab] = useState<'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart'>('home');
+  type RouteTab = 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart' | 'notifications';
+  const routeToTab = (pathname: string): RouteTab => {
+    const normalizedPath = pathname.replace(/\/$/, '') || '/home';
+    const route = normalizedPath === '/example/shop' ? '/home' : normalizedPath.replace(/^\/example(?=\/|$)/, '') || '/home';
+    if (route === '/notifications' || route === '/notification') return 'notifications';
+    if (route === '/profile' || route === '/account') return 'account';
+    if (route === '/shop' || route === '/search' || route === '/custom' || route === '/wishlist' || route === '/cart' || route === '/notifications') return route.slice(1) as RouteTab;
+    return 'home';
+  };
+  const tabToRoute = (tab: RouteTab) => tab === 'account' ? '/profile' : `/${tab}`;
+  const [activeTab, setActiveTab] = useState<RouteTab>(() => routeToTab(window.location.pathname));
+  const isPopState = useRef(false);
+  useEffect(() => {
+    const handlePopState = () => {
+      isPopState.current = true;
+      setActiveTab(routeToTab(window.location.pathname));
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    const nextPath = tabToRoute(activeTab);
+    if (window.location.pathname !== nextPath) {
+      if (isPopState.current) {
+        isPopState.current = false;
+        return;
+      }
+      window.history.pushState({ tab: activeTab }, '', nextPath);
+    } else {
+      isPopState.current = false;
+    }
+  }, [activeTab]);
+
   const [shopLayoutMode, setShopLayoutMode] = useState<'grid' | 'list'>('grid');
   const [isMobileFrameMode, setIsMobileFrameMode] = useState<boolean>(true);
 
@@ -401,16 +439,19 @@ export default function App() {
   }
 
   // Phase 4: Main Application (Home / Shop / Account / Cart / Guest Mode)
+  const isNotificationPage = activeTab === 'notifications';
+  const isShopPage = activeTab === 'shop';
+
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex justify-center selection:bg-[#D9232D] selection:text-white font-sans antialiased text-[#1E232A]">
       {/* App Container (Mobile Frame or Full Width based on toggle) */}
       <div
-        className={`w-full bg-[#FDFDFD] min-h-screen flex flex-col relative pb-28 shadow-2xl transition-all duration-300 ${
-          isMobileFrameMode ? 'max-w-[440px]' : 'max-w-4xl'
-        }`}
+        className={`w-full bg-[#FDFDFD] min-h-screen flex flex-col relative shadow-2xl transition-all duration-300 ${
+          isNotificationPage || isShopPage ? '' : 'pb-28'
+        } ${isMobileFrameMode ? 'max-w-[440px]' : 'max-w-4xl'}`}
       >
         {/* Main Header */}
-        <Header
+        {!isNotificationPage && !isShopPage && activeTab !== 'search' && <Header
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
           wishlistCount={wishlist.length}
           currentUser={currentUser}
@@ -425,17 +466,21 @@ export default function App() {
           searchQuery={searchQuery}
           setSearchQuery={(q) => {
             setSearchQuery(q);
-            if (q.trim() && activeTab !== 'search') {
+            if (q.trim()) {
               setActiveTab('search');
             }
           }}
-          hideSearchInput={activeTab === 'search'}
+          hideSearchInput={false}
           isMobileFrameMode={isMobileFrameMode}
           setIsMobileFrameMode={setIsMobileFrameMode}
-        />
+        />}
 
         {/* View Switcher: Search View / Account View / Home & Shop Experience */}
-        {activeTab === 'search' ? (
+        {activeTab === 'notifications' ? (
+          <NotificationsView onBack={() => setActiveTab('home')} />
+        ) : activeTab === 'shop' ? (
+          <ShopView products={filteredProducts} wishlist={wishlist} cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)} onBack={() => setActiveTab('home')} onSearch={(value) => { setSearchQuery(value); setActiveTab('search'); }} onSelectProduct={setSelectedProduct} onQuickAdd={handleQuickAddToCart} onToggleWishlist={handleToggleWishlist} />
+        ) : activeTab === 'search' ? (
           <main className="flex-1 flex flex-col">
             <SearchView
               searchQuery={searchQuery}
@@ -897,10 +942,10 @@ export default function App() {
           </main>
         )}
 
-        {/* Bottom Tab Bar Navigation */}
-        <BottomNav
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
+  {/* Bottom Tab Bar Navigation */}
+  {!isNotificationPage && !isShopPage && activeTab !== 'search' && <BottomNav
+          activeTab={activeTab as 'home' | 'shop' | 'custom' | 'wishlist' | 'account' | 'cart'}
+          setActiveTab={(tab) => setActiveTab(tab as RouteTab)}
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
           wishlistCount={wishlist.length}
           onOpenCart={() => setIsCartOpen(true)}
@@ -919,7 +964,7 @@ export default function App() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           onScrollToTop={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        />
+        />}
 
         {/* Modals & Slide-overs */}
         <ProductDetailModal

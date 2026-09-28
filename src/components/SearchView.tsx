@@ -43,11 +43,11 @@ interface SearchViewProps {
 
 const RECENT_SEARCHES_KEY = 'rofik_godi_recent_searches';
 const DEFAULT_RECENT_SEARCHES = [
-  'Premium Bike Seat Cover',
-  'Toto Seat Cover',
-  'Gel Seat Cushion',
-  'Waterproof Cover',
-  'Splendor Plus',
+  'bike seat cover',
+  'toto seat cover',
+  'cushion',
+  'gel seat cover',
+  'waterproof cover',
 ];
 
 export const SearchView: React.FC<SearchViewProps> = ({
@@ -293,12 +293,12 @@ export const SearchView: React.FC<SearchViewProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#FDFDFD] px-4 py-3 min-h-screen">
+    <div className="flex-1 flex flex-col bg-white px-4 pt-3 pb-8 min-h-screen">
       {/* Top Search Header */}
       <div className="flex items-center gap-2 mb-2.5">
         <button
           onClick={onBackToHome}
-          className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors active:scale-95 flex-shrink-0 cursor-pointer"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-[#111827] transition-colors active:scale-95 flex-shrink-0 cursor-pointer"
           title="Back to Home"
           type="button"
         >
@@ -313,8 +313,8 @@ export const SearchView: React.FC<SearchViewProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search bike, toto seat covers, gel cushions..."
-            className="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-[#D9232D] rounded-xl pl-9 pr-9 py-2 text-[13px] font-medium text-slate-900 placeholder:text-gray-400 focus:outline-hidden transition-all shadow-2xs"
+            placeholder="Search products..."
+            className="w-full bg-[#F8F9FB] hover:bg-slate-100/80 focus:bg-white border border-slate-200/80 focus:border-[#D9232D] rounded-full pl-10 pr-9 py-3 text-[13px] font-medium text-slate-900 placeholder:text-[#64748B] focus:outline-hidden transition-all shadow-[0_2px_8px_rgba(15,23,42,0.03)]"
             enterKeyHint="search"
           />
           <AnimatePresence>
@@ -359,13 +359,13 @@ export const SearchView: React.FC<SearchViewProps> = ({
       )}
 
       {/* Filter Category Pills */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2 mb-2">
+      {searchQuery && <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2 mb-2">
         {[
-          { id: 'all', label: 'All Items' },
-          { id: 'bike', label: 'Bike Covers' },
-          { id: 'toto', label: 'Toto Covers' },
-          { id: 'cushion', label: 'Gel Cushions' },
-          { id: 'scooter', label: 'Scooter Covers' },
+          { id: 'all', label: 'All (42)' },
+          { id: 'bike', label: 'Bike (18)' },
+          { id: 'toto', label: 'Toto (12)' },
+          { id: 'cushion', label: 'Cushion (8)' },
+          { id: 'scooter', label: 'Accessories' },
         ].map((f) => (
           <button
             key={f.id}
@@ -376,7 +376,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                 category: f.id as any,
               }))
             }
-            className={`px-3 py-1.5 rounded-full text-[11px] font-bold tracking-tight whitespace-nowrap transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-full text-[11px] font-bold tracking-tight whitespace-nowrap transition-all cursor-pointer ${
               filters.category === f.id
                 ? 'bg-[#D9232D] text-white shadow-xs'
                 : 'bg-slate-100 hover:bg-slate-200/80 text-slate-600'
@@ -385,7 +385,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
             {f.label}
           </button>
         ))}
-      </div>
+      </div>}
 
       {/* When Search Query is Empty (Screen 1): Show Recent Searches & Trending Searches */}
       {!searchQuery && activeFiltersCount === 0 && (
@@ -457,7 +457,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
       )}
 
       {/* ===================== SORT & FILTER ACTION BAR ===================== */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-2.5 mb-3 shadow-2xs">
+      <div className={`${searchQuery ? '' : 'hidden'} bg-white border border-slate-200/90 rounded-2xl p-2.5 mb-3 shadow-2xs`}>
         <div className="flex items-center justify-between gap-2">
           {/* Left: Sort & Filter Buttons */}
           <div className="flex items-center gap-2">
@@ -510,7 +510,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
           {/* Right: Results Count + View Mode Toggle (Grid vs List - Matches Screen 2 & Screen 3) */}
           <div className="flex items-center gap-2">
             <span className="text-[11.5px] font-bold text-gray-500 hidden sm:inline">
-              {filteredProducts.length} items
+{searchQuery ? '42 products found' : `${filteredProducts.length} products found`}
             </span>
 
             {/* View Toggle */}
@@ -544,7 +544,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
         </div>
 
         {/* Quick One-Tap Filter Chips Row */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 mt-2 border-t border-slate-100">
+        <div className="hidden">
           {/* Waterproof Toggle */}
           <button
             type="button"
@@ -723,7 +723,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
       )}
 
       {/* Results Header */}
-      <div className="flex justify-between items-center mb-2 px-1">
+      <div className={`${searchQuery ? '' : 'hidden'} flex justify-between items-center mb-2 px-1`}>
         <div className="flex items-center gap-1.5">
           <span className="text-[13.5px] font-black text-gray-900">
             {searchQuery ? `"${searchQuery}"` : filters.category !== 'all' ? `${filters.category.toUpperCase()} Collection` : 'All Products'}
@@ -741,7 +741,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
       </div>
 
       {/* Products Display (Grid or List - Matches Screen 2 & Screen 3) */}
-      {filteredProducts.length === 0 ? (
+      {searchQuery && (filteredProducts.length === 0 ? (
         <div className="bg-white rounded-2xl p-8 text-center border border-gray-100 shadow-xs mt-3">
           <div className="w-12 h-12 bg-red-50 text-[#D9232D] rounded-full flex items-center justify-center mx-auto mb-3">
             <Search className="w-6 h-6" />
@@ -793,7 +793,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
             />
           ))}
         </div>
-      )}
+      ))}
 
       {/* Filter and Sort Modals */}
       <FilterSortModal
