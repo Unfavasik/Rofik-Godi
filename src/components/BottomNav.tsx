@@ -1,0 +1,121 @@
+import React from 'react';
+import { Home, ShoppingBag, Search, Heart, User } from 'lucide-react';
+import { motion } from 'motion/react';
+
+interface BottomNavProps {
+  activeTab: 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart';
+  setActiveTab: (tab: 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart') => void;
+  cartCount: number;
+  wishlistCount: number;
+  onOpenCart: () => void;
+  onOpenWishlist: () => void;
+  onOpenCustomBuilder?: () => void;
+  onOpenShop: () => void;
+  onOpenSearch?: () => void;
+  onOpenAccount: () => void;
+  onScrollToTop: () => void;
+}
+
+export const BottomNav: React.FC<BottomNavProps> = ({
+  activeTab,
+  setActiveTab,
+  wishlistCount,
+  onOpenWishlist,
+  onOpenShop,
+  onOpenSearch,
+  onOpenAccount,
+  onScrollToTop,
+}) => {
+  return (
+    <nav
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] bg-white/95 backdrop-blur-md border-t border-gray-100/90 shadow-[0_-4px_25px_rgba(0,0,0,0.06)] px-3 pt-2 pb-5 z-40"
+      data-purpose="mobile-navbar"
+    >
+      <div className="flex justify-around items-center">
+        {/* Home */}
+        <button
+          onClick={() => {
+            setActiveTab('home');
+            onScrollToTop();
+          }}
+          className="flex flex-col items-center group py-1 active:scale-95 transition-transform"
+        >
+          <Home className={`w-5 h-5 transition-colors ${activeTab === 'home' ? 'text-[#D9232D]' : 'text-gray-400 group-hover:text-gray-600'}`} />
+          <span className={`text-[10.5px] mt-1 ${activeTab === 'home' ? 'font-bold text-[#D9232D]' : 'font-semibold text-gray-500'}`}>
+            Home
+          </span>
+        </button>
+
+        {/* Shop */}
+        <button
+          onClick={() => {
+            setActiveTab('shop');
+            onOpenShop();
+          }}
+          className="flex flex-col items-center group py-1 active:scale-95 transition-transform"
+        >
+          <ShoppingBag className={`w-5 h-5 transition-colors ${activeTab === 'shop' ? 'text-[#D9232D]' : 'text-gray-400 group-hover:text-gray-600'}`} />
+          <span className={`text-[10.5px] mt-1 ${activeTab === 'shop' ? 'font-bold text-[#D9232D]' : 'font-semibold text-gray-500'}`}>
+            Shop
+          </span>
+        </button>
+
+        {/* Search (Screen 1 from mockup) */}
+        <button
+          onClick={() => {
+            setActiveTab('search');
+            if (onOpenSearch) onOpenSearch();
+          }}
+          className="flex flex-col items-center group py-1 active:scale-95 transition-transform"
+        >
+          <Search className={`w-5 h-5 transition-colors ${activeTab === 'search' ? 'text-[#D9232D]' : 'text-gray-400 group-hover:text-gray-600'}`} />
+          <span className={`text-[10.5px] mt-1 ${activeTab === 'search' ? 'font-bold text-[#D9232D]' : 'font-semibold text-gray-500'}`}>
+            Search
+          </span>
+        </button>
+
+        {/* Saved / Wishlist */}
+        <button
+          onClick={() => {
+            setActiveTab('wishlist');
+            onOpenWishlist();
+          }}
+          className="flex flex-col items-center relative group py-1 active:scale-95 transition-transform"
+        >
+          <div className="relative">
+            <Heart className={`w-5 h-5 transition-colors ${activeTab === 'wishlist' ? 'text-[#D9232D]' : 'text-gray-400 group-hover:text-gray-600'}`} />
+            {wishlistCount > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1 -right-2 w-3.5 h-3.5 bg-gray-900 text-white text-[8.5px] font-bold rounded-full flex items-center justify-center border border-white"
+              >
+                {wishlistCount}
+              </motion.span>
+            )}
+          </div>
+          <span className={`text-[10.5px] mt-1 ${activeTab === 'wishlist' ? 'font-bold text-[#D9232D]' : 'font-semibold text-gray-500'}`}>
+            Saved
+          </span>
+        </button>
+
+        {/* Account Screen */}
+        <button
+          onClick={() => {
+            setActiveTab('account');
+            onOpenAccount();
+          }}
+          className="flex flex-col items-center group py-1 active:scale-95 transition-transform"
+        >
+          <User className={`w-5 h-5 transition-colors ${activeTab === 'account' ? 'text-[#D9232D]' : 'text-gray-400 group-hover:text-gray-600'}`} />
+          <span className={`text-[10.5px] mt-1 ${activeTab === 'account' ? 'font-bold text-[#D9232D]' : 'font-semibold text-gray-500'}`}>
+            Account
+          </span>
+        </button>
+      </div>
+
+      {/* iOS Home Indicator Pill */}
+      <div className="w-32 h-1 bg-gray-300 rounded-full mx-auto mt-2.5" />
+    </nav>
+  );
+};

@@ -1,0 +1,6 @@
+{
+  "name": "ROFIK GODI - Local Ride Essentials",
+  "description": "Comfort for every ride. Premium seat covers, toto cushions, and ride accessories with custom fitment and stitching.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
