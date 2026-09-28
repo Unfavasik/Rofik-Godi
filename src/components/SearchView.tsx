@@ -457,7 +457,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
       )}
 
       {/* ===================== SORT & FILTER ACTION BAR ===================== */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-2.5 mb-3 shadow-2xs">
+      <div className={`${searchQuery ? '' : 'hidden'} bg-white border border-slate-200/90 rounded-2xl p-2.5 mb-3 shadow-2xs`}>
         <div className="flex items-center justify-between gap-2">
           {/* Left: Sort & Filter Buttons */}
           <div className="flex items-center gap-2">
@@ -723,7 +723,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
       )}
 
       {/* Results Header */}
-      <div className="flex justify-between items-center mb-2 px-1">
+      <div className={`${searchQuery ? '' : 'hidden'} flex justify-between items-center mb-2 px-1`}>
         <div className="flex items-center gap-1.5">
           <span className="text-[13.5px] font-black text-gray-900">
             {searchQuery ? `"${searchQuery}"` : filters.category !== 'all' ? `${filters.category.toUpperCase()} Collection` : 'All Products'}
@@ -741,7 +741,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
       </div>
 
       {/* Products Display (Grid or List - Matches Screen 2 & Screen 3) */}
-      {filteredProducts.length === 0 ? (
+      {searchQuery && (filteredProducts.length === 0 ? (
         <div className="bg-white rounded-2xl p-8 text-center border border-gray-100 shadow-xs mt-3">
           <div className="w-12 h-12 bg-red-50 text-[#D9232D] rounded-full flex items-center justify-center mx-auto mb-3">
             <Search className="w-6 h-6" />
@@ -793,7 +793,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
             />
           ))}
         </div>
-      )}
+      ))}
 
       {/* Filter and Sort Modals */}
       <FilterSortModal
