@@ -76,7 +76,8 @@ export default function App() {
   // Navigation & View State
   type RouteTab = 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart';
   const routeToTab = (pathname: string): RouteTab => {
-    const route = pathname.replace(/\/$/, '') || '/home';
+    const normalizedPath = pathname.replace(/\/$/, '') || '/home';
+    const route = normalizedPath.replace(/^\/example(?=\/|$)/, '') || '/home';
     if (route === '/profile' || route === '/account') return 'account';
     if (route === '/shop' || route === '/search' || route === '/custom' || route === '/wishlist' || route === '/cart') return route.slice(1) as RouteTab;
     return 'home';
