@@ -438,16 +438,18 @@ export default function App() {
   }
 
   // Phase 4: Main Application (Home / Shop / Account / Cart / Guest Mode)
+  const isNotificationPage = activeTab === 'notifications';
+
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex justify-center selection:bg-[#D9232D] selection:text-white font-sans antialiased text-[#1E232A]">
       {/* App Container (Mobile Frame or Full Width based on toggle) */}
       <div
-        className={`w-full bg-[#FDFDFD] min-h-screen flex flex-col relative pb-28 shadow-2xl transition-all duration-300 ${
-          isMobileFrameMode ? 'max-w-[440px]' : 'max-w-4xl'
-        }`}
+        className={`w-full bg-[#FDFDFD] min-h-screen flex flex-col relative shadow-2xl transition-all duration-300 ${
+          isNotificationPage ? '' : 'pb-28'
+        } ${isMobileFrameMode ? 'max-w-[440px]' : 'max-w-4xl'}`}
       >
         {/* Main Header */}
-        {activeTab !== 'search' && activeTab !== 'notifications' && <Header
+        {!isNotificationPage && activeTab !== 'search' && <Header
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
           wishlistCount={wishlist.length}
           currentUser={currentUser}
@@ -937,7 +939,7 @@ export default function App() {
         )}
 
   {/* Bottom Tab Bar Navigation */}
-  {activeTab !== 'search' && activeTab !== 'notifications' && <BottomNav
+  {!isNotificationPage && activeTab !== 'search' && <BottomNav
           activeTab={activeTab as 'home' | 'shop' | 'custom' | 'wishlist' | 'account' | 'cart'}
           setActiveTab={(tab) => setActiveTab(tab as RouteTab)}
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}

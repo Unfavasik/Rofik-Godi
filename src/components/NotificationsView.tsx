@@ -17,7 +17,7 @@ export function NotificationsView({ onBack }: { onBack: () => void }) {
   ], []);
   const visible = filter === 'All' ? items : items.filter((item) => filter === 'Orders' ? item.title.includes('Order') || item.title.includes('Delivery') : filter === 'Offers' ? item.title.includes('Offer') || item.title.includes('Coupon') : !item.title.includes('Order') && !item.title.includes('Offer') && !item.title.includes('Coupon') && !item.title.includes('Delivery'));
 
-  return <main className="min-h-screen bg-white text-slate-800 font-sans">
+  return <main className="min-h-screen w-full overflow-x-hidden bg-white text-slate-800 font-sans">
     <header className="px-5 pt-4 pb-3 flex items-start justify-between">
       <button onClick={onBack} aria-label="Go back" className="p-1 -ml-1 mt-1"><ArrowLeft className="h-6 w-6" /></button>
       <div className="flex-1 px-4"><h1 className="text-[25px] font-extrabold tracking-tight leading-snug">Notifications</h1><p className="text-xs text-slate-500 font-medium mt-0.5">Stay updated with your orders, offers and more</p></div>
