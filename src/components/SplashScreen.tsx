@@ -15,9 +15,9 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
       role="img"
       aria-label="Premium Bike Seat Covers onboarding"
     >
-      <main className="relative flex h-[100dvh] w-full max-w-[414px] flex-col justify-between overflow-hidden bg-white">
+      <main className="relative flex h-[100dvh] w-full max-w-[390px] flex-col justify-between overflow-hidden bg-white sm:h-[min(844px,100dvh)] sm:rounded-[32px] sm:shadow-[0_18px_60px_rgba(20,35,60,0.16)]">
         {/* Hero Section */}
-        <section className="relative w-full flex-shrink-0 overflow-hidden" style={{ height: '58%' }} data-purpose="hero-illustration">
+        <section className="relative w-full flex-shrink-0 overflow-hidden" style={{ height: '55%' }} data-purpose="hero-illustration">
           <img
             src={HERO_IMAGE}
             alt="Smiling cartoon boy in red hoodie presenting premium quilted bike seat cover on motorcycle"
