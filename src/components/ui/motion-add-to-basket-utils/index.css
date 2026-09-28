@@ -1,0 +1,11 @@
+.add-to-basket { display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; }
+.add-to-basket-cart { position: relative; display: grid; place-items: center; flex: 0 0 auto; width: 42px; height: 42px; border-radius: 14px; color: #fff; background: #d9232d; box-shadow: 0 6px 14px rgba(217,35,45,.18); }
+.add-to-basket-ping { position: absolute; inset: 8px; border-radius: 999px; background: rgba(255,255,255,.55); opacity: 0; pointer-events: none; }
+.add-to-basket-product { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+.add-to-basket-tile { display: grid; place-items: center; flex: 0 0 auto; width: 42px; height: 42px; overflow: hidden; border-radius: 12px; background: #f4f4f6; color: #d9232d; font-size: 22px; font-weight: 800; transform-origin: center; }
+.add-to-basket-tile img { width: 100%; height: 100%; object-fit: cover; }
+.add-to-basket-meta { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
+.add-to-basket-name { overflow: hidden; color: #1e232a; font-size: 11px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.add-to-basket-price { color: #d9232d; font-size: 12px; font-weight: 900; }
+.add-to-basket-button { flex: 0 0 auto; border: 0; border-radius: 10px; background: #d9232d; padding: 9px 10px; color: white; font-size: 10px; font-weight: 800; cursor: pointer; }
+.add-to-basket-button:disabled { cursor: wait; }

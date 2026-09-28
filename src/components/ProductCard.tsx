@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Product } from '../types';
-import { Heart, Plus, Star, Check } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Heart, Star } from 'lucide-react';
+import { AddToBasket } from './ui/motion-add-to-basket';
 
 interface ProductCardProps {
   product: Product;
@@ -118,24 +118,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             />
           </button>
 
-          <motion.button
-            whileTap={{ scale: 0.88 }}
-            type="button"
-            onClick={(e) => onQuickAddToCart(product, e)}
-            aria-label="Add to cart"
-            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all shadow-sm ${
-              isAddedJustNow
-                ? 'bg-emerald-600 text-white'
-                : 'bg-[#D9232D] text-white hover:bg-red-700 active:scale-95'
-            }`}
-            title="Quick add to cart"
-          >
-            {isAddedJustNow ? (
-              <Check className="w-4 h-4" />
-            ) : (
-              <Plus className="w-4 h-4 stroke-[3]" />
-            )}
-          </motion.button>
+          <AddToBasket
+            image={product.image}
+            name={product.title}
+            price={product.price}
+            onAdd={() => onQuickAddToCart(product, { stopPropagation: () => {} } as React.MouseEvent)}
+          />
         </div>
       </article>
     );
@@ -223,24 +211,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* Red Quick Add Button matching mockup (+) */}
-        <motion.button
-          whileTap={{ scale: 0.88 }}
-          type="button"
-          onClick={(e) => onQuickAddToCart(product, e)}
-          aria-label="Add to cart"
-          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all shadow-xs ${
-            isAddedJustNow
-              ? 'bg-emerald-600 text-white'
-              : 'bg-[#D9232D] text-white hover:bg-red-700 active:scale-95'
-          }`}
-          title="Quick add to cart"
-        >
-          {isAddedJustNow ? (
-            <Check className="w-3.5 h-3.5" />
-          ) : (
-            <Plus className="w-4 h-4 stroke-[3]" />
-          )}
-        </motion.button>
+        <AddToBasket
+          image={product.image}
+          name={product.title}
+          price={product.price}
+          onAdd={() => onQuickAddToCart(product, { stopPropagation: () => {} } as React.MouseEvent)}
+        />
       </div>
     </article>
   );
