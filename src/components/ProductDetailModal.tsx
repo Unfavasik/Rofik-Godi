@@ -86,17 +86,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-          className="relative w-full max-w-[480px] max-h-[92vh] sm:max-h-[85vh] bg-white rounded-t-[28px] sm:rounded-[28px] shadow-2xl flex flex-col z-10 overflow-hidden"
+          className="relative w-full max-w-[480px] h-[100dvh] sm:h-[94vh] sm:max-h-[940px] bg-[#F8FAFC] sm:rounded-[24px] shadow-2xl flex flex-col z-10 overflow-hidden"
         >
           {/* Header Bar */}
-          <div className="sticky top-0 z-20 flex justify-between items-center px-5 py-3.5 bg-white/95 backdrop-blur-md border-b border-gray-100">
-            <div>
-              <span className="text-[10px] font-bold tracking-wider text-[#D9232D] uppercase">
-                {product.categoryLabel}
-              </span>
-              <h3 className="text-[15px] font-black text-gray-900 leading-tight">
-                {product.title}
-              </h3>
+          <div className="sticky top-0 z-20 flex justify-between items-center px-4 py-3 bg-white/95 backdrop-blur-md border-b border-gray-100"
+            aria-label="Product details header">
+            <div className="flex items-center gap-2">
+              <span className="text-[17px] font-black text-gray-900">ROFIK GODI CENTRE</span>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -121,10 +117,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           </div>
 
           {/* Modal Scrollable Body */}
-          <div className="overflow-y-auto px-5 py-4 space-y-5 no-scrollbar pb-28">
+          <div className="overflow-y-auto px-4 py-3 space-y-4 no-scrollbar pb-28">
             {/* Image Showcase & Gallery */}
             <div className="space-y-2.5">
-              <div className="relative w-full h-[210px] bg-gradient-to-b from-gray-100 to-gray-50 rounded-2xl overflow-hidden border border-gray-100 flex items-center justify-center">
+              <div className="relative w-full h-[300px] bg-gradient-to-b from-gray-100 to-gray-50 rounded-2xl overflow-hidden border border-gray-100 flex items-center justify-center">
                 <img
                   src={activeImage}
                   alt={product.title}
