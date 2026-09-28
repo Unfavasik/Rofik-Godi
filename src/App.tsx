@@ -58,10 +58,7 @@ import { motion } from 'motion/react';
 
 export default function App() {
   // App Phase State: Splash -> Welcome -> Auth -> Main
-  const [appPhase, setAppPhase] = useState<'splash' | 'welcome' | 'auth' | 'main'>(() => {
-    const path = window.location.pathname.replace(/\/$/, '') || '/';
-    return path === '/' ? 'splash' : 'main';
-  });
+  const [appPhase, setAppPhase] = useState<'splash' | 'welcome' | 'auth' | 'main'>('splash');
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>('signup');
 
   // User Authentication State (Default: Guest User)
