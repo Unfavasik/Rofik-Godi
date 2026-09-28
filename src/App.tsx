@@ -28,6 +28,7 @@ import { AuthScreen } from './components/AuthScreen';
 import { LoginRequiredModal } from './components/LoginRequiredModal';
 import { SearchView } from './components/SearchView';
 import { NotificationsView } from './components/NotificationsView';
+import { ShopView } from './components/ShopView';
 import {
   FilterSortModal,
   FilterState,
@@ -449,7 +450,7 @@ export default function App() {
         } ${isMobileFrameMode ? 'max-w-[440px]' : 'max-w-4xl'}`}
       >
         {/* Main Header */}
-        {!isNotificationPage && activeTab !== 'search' && <Header
+        {!isNotificationPage && activeTab !== 'search' && activeTab !== 'shop' && <Header
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
           wishlistCount={wishlist.length}
           currentUser={currentUser}
@@ -476,6 +477,8 @@ export default function App() {
         {/* View Switcher: Search View / Account View / Home & Shop Experience */}
         {activeTab === 'notifications' ? (
           <NotificationsView onBack={() => setActiveTab('home')} />
+        ) : activeTab === 'shop' ? (
+          <ShopView products={filteredProducts} wishlist={wishlist} cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)} onBack={() => setActiveTab('home')} onSearch={(value) => { setSearchQuery(value); setActiveTab('search'); }} onSelectProduct={setSelectedProduct} onQuickAdd={handleQuickAddToCart} onToggleWishlist={handleToggleWishlist} />
         ) : activeTab === 'search' ? (
           <main className="flex-1 flex flex-col">
             <SearchView
@@ -939,7 +942,7 @@ export default function App() {
         )}
 
   {/* Bottom Tab Bar Navigation */}
-  {!isNotificationPage && activeTab !== 'search' && <BottomNav
+  {!isNotificationPage && activeTab !== 'search' && activeTab !== 'shop' && <BottomNav
           activeTab={activeTab as 'home' | 'shop' | 'custom' | 'wishlist' | 'account' | 'cart'}
           setActiveTab={(tab) => setActiveTab(tab as RouteTab)}
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
