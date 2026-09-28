@@ -82,7 +82,7 @@ export default function App() {
   type RouteTab = 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart' | 'notifications';
   const routeToTab = (pathname: string): RouteTab => {
     const normalizedPath = pathname.replace(/\/$/, '') || '/home';
-    const route = normalizedPath.replace(/^\/example(?=\/|$)/, '') || '/home';
+    const route = normalizedPath === '/example/shop' ? '/home' : normalizedPath.replace(/^\/example(?=\/|$)/, '') || '/home';
     if (route === '/notifications' || route === '/notification') return 'notifications';
     if (route === '/profile' || route === '/account') return 'account';
     if (route === '/shop' || route === '/search' || route === '/custom' || route === '/wishlist' || route === '/cart' || route === '/notifications') return route.slice(1) as RouteTab;
@@ -440,17 +440,18 @@ export default function App() {
 
   // Phase 4: Main Application (Home / Shop / Account / Cart / Guest Mode)
   const isNotificationPage = activeTab === 'notifications';
+  const isShopPage = activeTab === 'shop';
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex justify-center selection:bg-[#D9232D] selection:text-white font-sans antialiased text-[#1E232A]">
       {/* App Container (Mobile Frame or Full Width based on toggle) */}
       <div
         className={`w-full bg-[#FDFDFD] min-h-screen flex flex-col relative shadow-2xl transition-all duration-300 ${
-          isNotificationPage ? '' : 'pb-28'
+          isNotificationPage || isShopPage ? '' : 'pb-28'
         } ${isMobileFrameMode ? 'max-w-[440px]' : 'max-w-4xl'}`}
       >
         {/* Main Header */}
-        {!isNotificationPage && activeTab !== 'search' && activeTab !== 'shop' && <Header
+        {!isNotificationPage && !isShopPage && activeTab !== 'search' && <Header
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
           wishlistCount={wishlist.length}
           currentUser={currentUser}
@@ -942,7 +943,7 @@ export default function App() {
         )}
 
   {/* Bottom Tab Bar Navigation */}
-  {!isNotificationPage && activeTab !== 'search' && activeTab !== 'shop' && <BottomNav
+  {!isNotificationPage && !isShopPage && activeTab !== 'search' && <BottomNav
           activeTab={activeTab as 'home' | 'shop' | 'custom' | 'wishlist' | 'account' | 'cart'}
           setActiveTab={(tab) => setActiveTab(tab as RouteTab)}
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
