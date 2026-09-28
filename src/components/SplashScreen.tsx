@@ -30,7 +30,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
             style={{ left: isExploreSlide ? '-100%' : isRideBetterSlide ? '-200%' : '0%' }}
             draggable={false}
           />
-          <div className="absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-white via-white/80 to-transparent" aria-hidden="true" />
+          <div className="absolute inset-x-0 bottom-0 z-10 h-2/5 bg-gradient-to-t from-white via-white via-70% to-transparent" aria-hidden="true" />
         </section>
 
         <section className="relative z-10 -mt-14 flex flex-1 flex-col justify-between rounded-t-[38px] bg-white px-8 pb-9 pt-8 shadow-[0_-10px_30px_rgba(255,255,255,0.9)]" data-purpose="onboarding-text-content">
