@@ -9,14 +9,35 @@ const HERO_IMAGE =
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
   const [step, setStep] = useState(1);
-  const isExploreStep = step === 2;
-  const heroImage = isExploreStep
-    ? 'https://lh3.googleusercontent.com/aida-public/AB6AXuB7L5-TNZ84jec6E8GES7-jP7U6VZMRZ3OhVNT2bVlu033jPeRRReBxCIjfW4djByeme8QvlqF1o6iRKlCfqdJL5aBp7ggXz4dKw0uyUBibGbifNvbPwoMsxrcGj41ioaxMPshXXNMYVoVxaCpVS4EEmAjBo_c1ijgRiCFnhCy0dxIKcuvLApmBA-yUSoBS1179DfdBciLtHXzjCk2KKLj64729LJcNGGC9_2MjwxpXxnyAZDVTPtSvQpmxT7p7zN77jsI'
-    : HERO_IMAGE;
+  const slides = [
+    {
+      image: HERO_IMAGE,
+      alt: 'Young man finding a premium motorcycle seat cover',
+      title: 'Find the Perfect',
+      accent: 'Seat Cover',
+      description: 'Explore premium seat covers for bikes and totos with ease.',
+    },
+    {
+      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB7L5-TNZ84jec6E8GES7-jP7U6VZMRZ3OhVNT2bVlu033jPeRRReBxCIjfW4djByeme8QvlqF1o6iRKlCfqdJL5aBp7ggXz4dKw0uyUBibGbifNvbPwoMsxrcGj41ioaxMPshXXNMYVoVxaCpVS4EEmAjBo_c1ijgRiCFnhCy0dxIKcuvLApmBA-yUSoBS1179DfdBciLtHXzjCk2KKLj64729LJcNGGC9_2MjwxpXxnyAZDVTPtSvQpmxT7p7zN77jsI',
+      alt: 'Young man viewing different seat cover designs',
+      title: 'View Different',
+      accent: 'Designs',
+      description: 'Check various seat cover designs, colors and materials.',
+    },
+    {
+      image: HERO_IMAGE,
+      alt: 'Young man enjoying a reliable motorcycle seat cover',
+      title: 'Reliable Quality',
+      accent: '& Service',
+      description: 'Get durable seat covers with the best quality and support.',
+    },
+  ];
+  const currentSlide = slides[step - 1];
+  const isLastStep = step === slides.length;
 
   const goNext = () => {
-    if (isExploreStep) onFinish();
-    else setStep(2);
+    if (isLastStep) onFinish();
+    else setStep((current) => current + 1);
   };
 
   return (
@@ -30,8 +51,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
         {/* Hero Section */}
         <section className="relative w-full flex-shrink-0 overflow-hidden" style={{ height: '55%' }} data-purpose="hero-illustration">
           <img
-            src={heroImage}
-            alt={isExploreStep ? 'Young man in red hoodie exploring customized motorcycle seat cover designs' : 'Smiling cartoon boy in red hoodie presenting premium quilted bike seat cover on motorcycle'}
+            src={currentSlide.image}
+            alt={currentSlide.alt}
             className="h-full w-full object-cover object-top"
             draggable={false}
           />
@@ -48,19 +69,23 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
           {/* Text Content */}
           <div className="space-y-3">
             <h1 className="text-[34px] leading-[1.12] tracking-tight font-black">
-              <span className="text-[#0b1b36] block">{isExploreStep ? 'Explore' : 'Premium Bike'}</span>
-              <span className="text-[#f50b2b] block">{isExploreStep ? 'Different Designs' : 'Seat Covers'}</span>
+              <span className="text-[#0b1b36] block">{currentSlide.title}</span>
+              <span className="text-[#f50b2b] block">{currentSlide.accent}</span>
             </h1>
             <p className="text-[#60728c] text-[17px] font-medium leading-[1.38] pr-4">
-              {isExploreStep ? 'Choose from various bike seat cover designs, colors and materials to match your style.' : 'High quality bike seat covers for a more comfortable and stylish ride.'}
+              {currentSlide.description}
             </p>
           </div>
 
           {/* Pagination Indicators */}
           <div aria-label="Slide Indicator" className="flex items-center justify-center gap-2 pt-2" data-purpose="carousel-dots">
-            <span aria-current={!isExploreStep} className={`h-2.5 rounded-full transition-all ${isExploreStep ? 'w-2.5 bg-[#dbe0ea]' : 'w-[18px] bg-[#f50b2b]'}`} />
-            <span aria-current={isExploreStep} className={`h-2.5 rounded-full transition-all ${isExploreStep ? 'w-[18px] bg-[#f50b2b]' : 'w-2.5 bg-[#dbe0ea]'}`} />
-            <span className="w-2.5 h-2.5 bg-[#dbe0ea] rounded-full" />
+            {slides.map((slide, index) => (
+              <span
+                key={slide.title}
+                aria-current={step === index + 1}
+                className={`h-2.5 rounded-full transition-all ${step === index + 1 ? 'w-[18px] bg-[#f50b2b]' : 'w-2.5 bg-[#dbe0ea]'}`}
+              />
+            ))}
           </div>
 
           {/* Navigation Buttons */}
@@ -77,7 +102,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
               onClick={goNext}
               type="button"
             >
-              <span>{isExploreStep ? 'Get Started' : 'Next'}</span>
+              <span>{isLastStep ? 'Start Now' : step === 1 ? 'Get Started' : 'Next'}</span>
               <svg
                 aria-hidden="true"
                 className="w-5 h-5 ml-0.5"
