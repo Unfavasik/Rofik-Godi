@@ -27,6 +27,7 @@ import { WelcomeAuthScreen } from './components/WelcomeAuthScreen';
 import { AuthScreen } from './components/AuthScreen';
 import { LoginRequiredModal } from './components/LoginRequiredModal';
 import { SearchView } from './components/SearchView';
+import { NotificationsView } from './components/NotificationsView';
 import {
   FilterSortModal,
   FilterState,
@@ -77,12 +78,13 @@ export default function App() {
   const [pendingCheckoutAfterLogin, setPendingCheckoutAfterLogin] = useState(false);
 
   // Navigation & View State
-  type RouteTab = 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart';
+  type RouteTab = 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart' | 'notifications';
   const routeToTab = (pathname: string): RouteTab => {
     const normalizedPath = pathname.replace(/\/$/, '') || '/home';
     const route = normalizedPath.replace(/^\/example(?=\/|$)/, '') || '/home';
+    if (route === '/notifications' || route === '/notification') return 'notifications';
     if (route === '/profile' || route === '/account') return 'account';
-    if (route === '/shop' || route === '/search' || route === '/custom' || route === '/wishlist' || route === '/cart') return route.slice(1) as RouteTab;
+    if (route === '/shop' || route === '/search' || route === '/custom' || route === '/wishlist' || route === '/cart' || route === '/notifications') return route.slice(1) as RouteTab;
     return 'home';
   };
   const tabToRoute = (tab: RouteTab) => tab === 'account' ? '/profile' : `/${tab}`;
@@ -445,7 +447,7 @@ export default function App() {
         }`}
       >
         {/* Main Header */}
-        {activeTab !== 'search' && <Header
+        {activeTab !== 'search' && activeTab !== 'notifications' && <Header
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
           wishlistCount={wishlist.length}
           currentUser={currentUser}
@@ -470,7 +472,9 @@ export default function App() {
         />}
 
         {/* View Switcher: Search View / Account View / Home & Shop Experience */}
-        {activeTab === 'search' ? (
+        {activeTab === 'notifications' ? (
+          <NotificationsView onBack={() => setActiveTab('home')} />
+        ) : activeTab === 'search' ? (
           <main className="flex-1 flex flex-col">
             <SearchView
               searchQuery={searchQuery}
@@ -933,9 +937,9 @@ export default function App() {
         )}
 
   {/* Bottom Tab Bar Navigation */}
-  {activeTab !== 'search' && <BottomNav
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
+  {activeTab !== 'search' && activeTab !== 'notifications' && <BottomNav
+          activeTab={activeTab as 'home' | 'shop' | 'custom' | 'wishlist' | 'account' | 'cart'}
+          setActiveTab={(tab) => setActiveTab(tab as RouteTab)}
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
           wishlistCount={wishlist.length}
           onOpenCart={() => setIsCartOpen(true)}
