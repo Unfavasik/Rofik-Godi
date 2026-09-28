@@ -973,6 +973,19 @@ export default function App() {
           onAddToCart={handleDetailAddToCart}
           isWishlisted={selectedProduct ? wishlist.some((w) => w.id === selectedProduct.id) : false}
           onToggleWishlist={(p) => handleToggleWishlist(p)}
+          cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
+          onOpenCart={() => {
+            setSelectedProduct(null);
+            setIsCartOpen(true);
+          }}
+          onOpenSearch={() => {
+            setSelectedProduct(null);
+            setActiveTab('search');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onBuyNow={() => setIsCartOpen(true)}
+          onSelectProduct={(p) => setSelectedProduct(p)}
+          onQuickAdd={(p) => handleDetailAddToCart(p, p.colors[0], p.stitchPatterns[0] || '', p.thicknessOptions[0])}
         />
 
         <CustomSeatBuilder
