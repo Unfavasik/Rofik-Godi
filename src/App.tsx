@@ -23,6 +23,7 @@ import { CustomerReviews } from './components/CustomerReviews';
 import { AccountView } from './components/AccountView';
 import { BottomNav } from './components/BottomNav';
 import { SplashScreen } from './components/SplashScreen';
+import Onboarding from './components/Onboarding';
 import RofikOnboarding from './components/RofikOnboarding';
 import { AuthScreen } from './components/AuthScreen';
 import { LoginRequiredModal } from './components/LoginRequiredModal';
@@ -57,8 +58,8 @@ import {
 import { motion } from 'motion/react';
 
 export default function App() {
-  // App Phase State: Onboarding -> Splash -> Main
-  const [appPhase, setAppPhase] = useState<'onboarding' | 'splash' | 'auth' | 'main'>('onboarding');
+  // App Phase State: Intro -> Main -> Account Onboarding -> Loading -> Auth
+  const [appPhase, setAppPhase] = useState<'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth'>('onboarding');
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>('signup');
 
   // User Authentication State (Default: Guest User)
@@ -392,23 +393,26 @@ export default function App() {
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Phase 1: Onboarding
+  // Phase 1: Product introduction. Once completed, open the app directly.
   if (appPhase === 'onboarding') {
+    return <Onboarding onFinish={() => setAppPhase('main')} />;
+  }
+
+  // Account creation starts with the dedicated Rofik welcome flow.
+  if (appPhase === 'account-onboarding') {
     return <RofikOnboarding onFinish={() => setAppPhase('splash')} />;
   }
 
-  // Phase 2: Splash Screen
+  // Show the loading screen after Rofik onboarding, then open auth.
   if (appPhase === 'splash') {
     return (
       <div className="min-h-screen bg-[#0E0E0E] flex items-center justify-center">
-        <SplashScreen
-          onFinish={() => setAppPhase('main')}
-        />
+        <SplashScreen onFinish={() => setAppPhase('auth')} />
       </div>
     );
   }
 
-  // Phase 3: Login / Signup Screen
+  // Login / Signup Screen
   if (appPhase === 'auth') {
     return (
       <div className="min-h-screen bg-[#f7d9de] flex justify-center selection:bg-[#e0182d] selection:text-white font-sans antialiased text-[#0f1a3a]">
@@ -489,10 +493,9 @@ export default function App() {
           <main className="flex-1 flex flex-col">
             <AccountView
               currentUser={currentUser}
-              onOpenLogin={() => {
-                setLoginModalReason('Please login to access all garage features.');
-                setIsLoginModalOpen(true);
-              }}
+onOpenLogin={() => {
+  setAppPhase('account-onboarding');
+}}
               onLogout={() => {
                 setCurrentUser({
                   id: `guest-${Date.now()}`,
