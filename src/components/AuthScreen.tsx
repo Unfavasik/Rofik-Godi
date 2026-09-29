@@ -188,28 +188,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             </div>
           )}
 
-          {mode === 'signup' && (
-            <div>
-              <div className="relative flex items-center bg-[#F8FAFC] border border-gray-200/80 rounded-2xl px-3.5 py-2.5 focus-within:border-[#D9232D] focus-within:bg-white transition-all shadow-2xs">
-                <div className="w-7 text-gray-400">
-                  <Phone className="w-4 h-4" />
-                </div>
-                <div className="flex-1">
-                  <label className="text-[10px] uppercase font-bold text-gray-400 block leading-tight">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 9876543210"
-                    className="w-full bg-transparent text-[13.5px] font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+
 
           {mode !== 'phone_otp' && (
             <div>
@@ -252,19 +231,19 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 className="w-4 h-4 rounded text-[#D9232D] focus:ring-[#D9232D] border-gray-300 accent-[#D9232D] cursor-pointer"
               />
               <label htmlFor="terms" className="text-[12px] text-gray-600 font-normal cursor-pointer select-none">
-                I agree to the{' '}
-                <button
+I agree to the processing of{' '}
+                  <button
                   type="button"
                   onClick={onOpenTerms}
                   className="text-[#D9232D] font-bold hover:underline"
                 >
-                  Terms &amp; Conditions
+                  Personal data
                 </button>{' '}
-                and{' '}
+                <span className="sr-only">and </span>
                 <button
                   type="button"
                   onClick={onOpenPrivacy}
-                  className="text-[#D9232D] font-bold hover:underline"
+                  className="sr-only"
                 >
                   Privacy Policy
                 </button>
@@ -301,11 +280,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         </div>
 
         {/* Social Logins (Google & Facebook Matching Image 3) */}
-        <div className="space-y-2.5">
+        <div className="flex items-center justify-center gap-4">
           {/* Google */}
           <button
             onClick={() => handleSocialLogin('Google')}
-            className="w-full h-11 bg-white hover:bg-gray-50 active:scale-[0.98] text-gray-900 border border-gray-200 rounded-2xl flex items-center justify-center space-x-3 transition-all font-semibold text-[13.5px] shadow-2xs"
+            className="grid h-14 w-14 place-items-center rounded-full border border-gray-200 bg-white text-gray-900 shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all active:scale-[0.98]"
           >
             <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center">
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -327,20 +306,20 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 />
               </svg>
             </div>
-            <span>Continue with Google</span>
+            <span className="sr-only">Continue with Google</span>
           </button>
 
           {/* Facebook */}
           <button
             onClick={() => handleSocialLogin('Facebook')}
-            className="w-full h-11 bg-white hover:bg-gray-50 active:scale-[0.98] text-gray-900 border border-gray-200 rounded-2xl flex items-center justify-center space-x-3 transition-all font-semibold text-[13.5px] shadow-2xs"
+            className="grid h-14 w-14 place-items-center rounded-full border border-gray-200 bg-white text-gray-900 shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all active:scale-[0.98]"
           >
             <div className="w-5 h-5 rounded-full bg-[#1877F2] flex items-center justify-center text-white">
               <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
               </svg>
             </div>
-            <span>Continue with Facebook</span>
+            <span className="sr-only">Continue with Facebook</span>
           </button>
         </div>
       </div>
