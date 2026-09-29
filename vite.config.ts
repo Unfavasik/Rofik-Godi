@@ -10,6 +10,8 @@ export default defineConfig(() => {
       alias: {
         '@': path.resolve(__dirname, '.'),
       },
+      // Keep every component on the same React dispatcher instance.
+      dedupe: ['react', 'react-dom'],
     },
     server: {
       host: '0.0.0.0',
