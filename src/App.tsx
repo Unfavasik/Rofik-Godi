@@ -23,6 +23,7 @@ import { CustomerReviews } from './components/CustomerReviews';
 import { AccountView } from './components/AccountView';
 import { BottomNav } from './components/BottomNav';
 import { SplashScreen } from './components/SplashScreen';
+import Onboarding from './components/Onboarding';
 import { WelcomeAuthScreen } from './components/WelcomeAuthScreen';
 import { AuthScreen } from './components/AuthScreen';
 import { LoginRequiredModal } from './components/LoginRequiredModal';
@@ -57,8 +58,8 @@ import {
 import { motion } from 'motion/react';
 
 export default function App() {
-  // App Phase State: Splash -> Welcome -> Auth -> Main
-  const [appPhase, setAppPhase] = useState<'splash' | 'welcome' | 'auth' | 'main'>('splash');
+  // App Phase State: Onboarding -> Splash -> Welcome -> Auth -> Main
+  const [appPhase, setAppPhase] = useState<'onboarding' | 'splash' | 'welcome' | 'auth' | 'main'>('onboarding');
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>('signup');
 
   // User Authentication State (Default: Guest User)
@@ -388,7 +389,12 @@ export default function App() {
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Phase 1: Splash Screen
+  // Phase 1: Onboarding
+  if (appPhase === 'onboarding') {
+    return <Onboarding onFinish={() => setAppPhase('splash')} />;
+  }
+
+  // Phase 2: Splash Screen
   if (appPhase === 'splash') {
     return (
       <div className="min-h-screen bg-[#0E0E0E] flex items-center justify-center">
