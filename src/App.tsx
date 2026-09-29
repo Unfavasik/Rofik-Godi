@@ -108,6 +108,10 @@ export default function App() {
     } else {
       isPopState.current = false;
     }
+
+    if (activeTab === 'shop') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
   }, [activeTab]);
 
   const [shopLayoutMode, setShopLayoutMode] = useState<'grid' | 'list'>('grid');
@@ -506,10 +510,9 @@ export default function App() {
               onOpenWishlist={() => setIsWishlistOpen(true)}
               onOpenStoreInfo={() => setIsStoreInfoOpen(true)}
               onOpenCustomBuilder={() => setIsCustomBuilderOpen(true)}
-              onOpenShop={() => {
-                setActiveTab('shop');
-                scrollToShop();
-              }}
+      onOpenShop={() => {
+        setActiveTab('shop');
+      }}
             />
           </main>
         ) : (
