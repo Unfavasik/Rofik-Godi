@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowLeft,
@@ -103,6 +103,21 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
     return curated?.length ? curated : [product.image, ...(product.additionalImages ?? [])];
   }, [product]);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const swipeStartX = useRef<number | null>(null);
+  const swipeStartY = useRef<number | null>(null);
+  const handleGalleryTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    swipeStartX.current = event.touches[0]?.clientX ?? null;
+    swipeStartY.current = event.touches[0]?.clientY ?? null;
+  };
+  const handleGalleryTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (swipeStartX.current === null || swipeStartY.current === null) return;
+    const deltaX = event.changedTouches[0]?.clientX - swipeStartX.current;
+    const deltaY = event.changedTouches[0]?.clientY - swipeStartY.current;
+    swipeStartX.current = null;
+    swipeStartY.current = null;
+    if (Math.abs(deltaX) < 45 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+    setActiveImageIndex((current) => Math.max(0, Math.min(images.length - 1, current + (deltaX < 0 ? 1 : -1))));
+  };
   const [selectedColor, setSelectedColor] = useState(product.colors[0]);
   const [selectedStitch, setSelectedStitch] = useState(product.stitchPatterns[0] || 'Standard');
   const [selectedThickness, setSelectedThickness] = useState(
@@ -176,7 +191,11 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
 
           <main className="product-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pb-5">
             <section className="relative">
-              <div className="relative h-[340px] bg-[#f1f1f2] sm:h-[365px]">
+              <div
+                className="relative h-[340px] touch-pan-y bg-[#f1f1f2] sm:h-[365px]"
+                onTouchStart={handleGalleryTouchStart}
+                onTouchEnd={handleGalleryTouchEnd}
+              >
                 <img
                   src={images[activeImageIndex] ?? product.image}
                   alt={product.title}
