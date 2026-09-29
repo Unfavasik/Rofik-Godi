@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, ShoppingBag, Search, Heart, User } from 'lucide-react';
+import { Home, ShoppingBag, Heart, User } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface BottomNavProps {
@@ -22,7 +22,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   wishlistCount,
   onOpenWishlist,
   onOpenShop,
-  onOpenSearch,
   onOpenAccount,
   onScrollToTop,
 }) => {
@@ -57,20 +56,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           <ShoppingBag className={`w-5 h-5 transition-colors ${activeTab === 'shop' ? 'text-[#D9232D]' : 'text-gray-400 group-hover:text-gray-600'}`} />
           <span className={`text-[10.5px] mt-1 ${activeTab === 'shop' ? 'font-bold text-[#D9232D]' : 'font-semibold text-gray-500'}`}>
             Shop
-          </span>
-        </button>
-
-        {/* Search (Screen 1 from mockup) */}
-        <button
-          onClick={() => {
-            setActiveTab('search');
-            if (onOpenSearch) onOpenSearch();
-          }}
-          className="flex flex-col items-center group py-1 active:scale-95 transition-transform"
-        >
-          <Search className={`w-5 h-5 transition-colors ${activeTab === 'search' ? 'text-[#D9232D]' : 'text-gray-400 group-hover:text-gray-600'}`} />
-          <span className={`text-[10.5px] mt-1 ${activeTab === 'search' ? 'font-bold text-[#D9232D]' : 'font-semibold text-gray-500'}`}>
-            Search
           </span>
         </button>
 
