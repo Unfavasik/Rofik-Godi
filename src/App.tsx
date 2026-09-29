@@ -432,7 +432,7 @@ export default function App() {
         } ${isMobileFrameMode ? 'max-w-[440px]' : 'max-w-4xl'}`}
       >
         {/* Main Header */}
-        {!isNotificationPage && !isShopPage && activeTab !== 'search' && <Header
+        {!isNotificationPage && !isShopPage && activeTab !== 'search' && activeTab !== 'account' && <Header
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
           wishlistCount={wishlist.length}
           currentUser={currentUser}
