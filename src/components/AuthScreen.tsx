@@ -1,19 +1,16 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { FormEvent, useState } from 'react';
 import {
   ArrowLeft,
-  User,
-  Mail,
-  Phone,
-  Lock,
+  ArrowRight,
   Eye,
   EyeOff,
-  Check,
-  ShieldCheck,
-  Smartphone,
-  ArrowRight,
+  LockKeyhole,
+  Mail,
+  Phone,
+  UserRound,
 } from 'lucide-react';
 import { UserProfile } from '../types';
+import './AuthScreen.css';
 
 interface AuthScreenProps {
   initialMode?: 'signup' | 'login' | 'phone_otp';
@@ -31,341 +28,247 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   onOpenPrivacy,
 }) => {
   const [mode, setMode] = useState<'signup' | 'login' | 'phone_otp'>(initialMode);
-
-  // Form fields
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [agreeTerms, setAgreeTerms] = useState(true);
-
-  // OTP state for Phone login
-  const [otpCode, setOtpCode] = useState(['5', '8', '2', '4', '', '']);
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
-  const [timer, setTimer] = useState(30);
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-
-    if (mode === 'signup') {
-      if (!fullName.trim()) {
-        setError('Please enter your full name');
-        return;
-      }
-      if (!email.trim() || !email.includes('@')) {
-        setError('Please enter a valid email address');
-        return;
-      }
-      if (!agreeTerms) {
-        setError('Please agree to the Terms & Conditions');
-        return;
-      }
-    }
-
-    if (mode === 'login' && (!email.trim() || !password.trim())) {
-      setError('Please fill in all login credentials');
-      return;
-    }
-
+  const finishSignIn = (provider?: 'Google' | 'Facebook') => {
     setIsLoading(true);
-    setTimeout(() => {
+    window.setTimeout(() => {
       setIsLoading(false);
-      const user: UserProfile = {
-        id: `usr-${Date.now()}`,
-        name: mode === 'login' ? (fullName || 'Rider Asif') : fullName,
-        email: email || 'asif@example.com',
+      onSuccess({
+        id: `usr${provider ? `-${provider.toLowerCase()}` : ''}-${Date.now()}`,
+        name: provider
+          ? `Asif Ikbal (${provider})`
+          : mode === 'login'
+            ? fullName || 'Rider Asif'
+            : fullName,
+        email: email || (provider === 'Google' ? 'asif.ikbal@gmail.com' : 'asif@example.com'),
         phone: phone || '+91 98765 43210',
         isGuest: false,
         vehicle: 'Hero Splendor Plus & Toto',
         joinedDate: 'September 2026',
-      };
-      onSuccess(user);
-    }, 800);
+      });
+    }, provider ? 650 : 800);
   };
 
-  const handleSocialLogin = (provider: 'Google' | 'Facebook') => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      const user: UserProfile = {
-        id: `usr-${provider.toLowerCase()}-${Date.now()}`,
-        name: provider === 'Google' ? 'Asif Ikbal (Google)' : 'Asif Ikbal (Facebook)',
-        email: 'asif.ikbal@gmail.com',
-        phone: '+91 98765 43210',
-        isGuest: false,
-        vehicle: 'Universal Garage Fitment',
-        joinedDate: 'September 2026',
-      };
-      onSuccess(user);
-    }, 700);
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setNotice(null);
+
+    if (mode === 'signup') {
+      if (!fullName.trim()) return setError('Enter your full name');
+      if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError('Enter a valid email address');
+      if (password.length < 6) return setError('Password must be at least 6 characters');
+      if (!agreeTerms) return setError('Please accept the personal data terms');
+    }
+
+    if (mode === 'login') {
+      if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError('Enter a valid email address');
+      if (!password) return setError('Enter your password');
+    }
+
+    if (mode === 'phone_otp') {
+      if (!/^\+?[\d\s()-]{7,}$/.test(phone.trim())) return setError('Enter a valid phone number');
+      if (!isOtpSent) {
+        setIsOtpSent(true);
+        setNotice('A verification code has been sent to your phone.');
+        return;
+      }
+      if (!/^\d{6}$/.test(otp)) return setError('Enter the 6-digit verification code');
+    }
+
+    finishSignIn();
   };
+
+  const switchMode = (nextMode: 'signup' | 'login' | 'phone_otp') => {
+    setMode(nextMode);
+    setError(null);
+    setNotice(null);
+  };
+
+  const subtitle = mode === 'signup'
+    ? 'Create your account to explore Rofik Godi Centre.'
+    : mode === 'login'
+      ? 'Sign in to continue to Rofik Godi Centre.'
+      : isOtpSent
+        ? `Enter the 6-digit code sent to ${phone}.`
+        : 'Enter your phone number to receive a verification code.';
 
   return (
-    <div className="relative min-h-screen w-full max-w-[430px] mx-auto overflow-y-auto bg-[linear-gradient(180deg,#fdeff1_0%,#fbe0e4_42%,#fdeff1_100%)] px-6 pb-5 pt-[calc(env(safe-area-inset-top)+22px)] select-none font-sans animate-fade-in">
-      {/* Top Header Row with Back Button (Matching Image 3) */}
-      <div>
-        <div className="flex items-center space-x-3 pt-2 mb-4">
-          <button
-            onClick={onBack}
-            aria-label="Go Back"
-            className="grid h-12 w-12 place-items-center rounded-full bg-white text-gray-900 shadow-[0_6px_16px_rgba(224,24,45,0.15)] transition-all active:scale-95"
-          >
-            <ArrowLeft className="w-6 h-6 stroke-[2.2]" />
+    <main className="auth-page">
+      <section className="auth-screen" aria-label="Account access">
+        <div className="auth-hero">
+          <button className="auth-back" type="button" aria-label="Go back" onClick={onBack}>
+            <ArrowLeft aria-hidden="true" />
           </button>
-        </div>
-
-        {/* Title & Subtitle */}
-        <div className="mt-[52px] mb-6 space-y-1">
-          <h1 className="text-[26px] font-extrabold text-gray-950 tracking-tight leading-tight">
-            {mode === 'signup' && <>Get <span className="text-[#e0182d]">Started</span></>}
-            {mode === 'login' && <>Welcome <span className="text-[#e0182d]">Back</span></>}
-            {mode === 'phone_otp' && 'Verify Phone'}
+          <h1>
+            {mode === 'signup' ? <>Get <strong>Started</strong></> : mode === 'login' ? <>Welcome <strong>Back</strong></> : <><strong>Verify</strong> Phone</>}
           </h1>
-          <p className="text-[13.5px] text-gray-500 font-normal">
-            {mode === 'signup' && 'Create your account for Rofik Godi Centre.'}
-            {mode === 'login' && <>Sign in to continue to<br />Rofik Godi Centre.</>}
-            {mode === 'phone_otp' && `Enter 6-digit code sent to ${phone}`}
-          </p>
+          <p>{mode === 'signup' ? <>Create your account to explore<br />Rofik Godi Centre.</> : subtitle}</p>
         </div>
 
-        {/* Error banner */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-2xl animate-shake">
-            {error}
-          </div>
-        )}
-
-        {/* Form Fields */}
-        <form onSubmit={handleSubmit} className="relative mt-[26px] space-y-3 rounded-[60px_24px_0_0] bg-white px-[18px] pb-6 pt-[26px] shadow-[0_-6px_30px_rgba(224,24,45,0.08)]">
+        <form className="auth-card" onSubmit={handleSubmit} noValidate>
           {mode === 'signup' && (
-            <div>
-              <div className="relative flex items-center bg-[#F8FAFC] border border-gray-200/80 rounded-2xl px-3.5 py-2.5 focus-within:border-[#D9232D] focus-within:bg-white transition-all shadow-2xs">
-                <div className="w-7 text-gray-400">
-                  <User className="w-4 h-4" />
-                </div>
-                <div className="flex-1">
-                  <label className="text-[10px] uppercase font-bold text-gray-400 block leading-tight">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Enter your name"
-                    className="w-full bg-transparent text-[13.5px] font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none"
-                  />
-                </div>
-              </div>
+            <div className="auth-field-group">
+              <label className="auth-field">
+                <UserRound aria-hidden="true" />
+                <input
+                  autoComplete="name"
+                  aria-label="Full name"
+                  placeholder="Full Name"
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
+                />
+              </label>
+              <p className="auth-hint">Enter Full Name</p>
             </div>
           )}
 
-          {mode !== 'phone_otp' && (
-            <div>
-              <div className="relative flex items-center bg-[#F8FAFC] border border-gray-200/80 rounded-2xl px-3.5 py-2.5 focus-within:border-[#D9232D] focus-within:bg-white transition-all shadow-2xs">
-                <div className="w-7 text-gray-400">
-                  <Mail className="w-4 h-4" />
-                </div>
-                <div className="flex-1">
-                  <label className="sr-only">
-                    Email
+          {mode === 'phone_otp' ? (
+            <>
+              <div className="auth-field-group">
+                <label className="auth-field">
+                  <Phone aria-hidden="true" />
+                  <input
+                    autoComplete="tel"
+                    aria-label="Phone number"
+                    inputMode="tel"
+                    placeholder="Phone Number"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                  />
+                </label>
+                <p className="auth-hint">Enter Phone Number</p>
+              </div>
+              {isOtpSent && (
+                <div className="auth-field-group">
+                  <label className="auth-field">
+                    <LockKeyhole aria-hidden="true" />
+                    <input
+                      aria-label="6-digit verification code"
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="6-digit code"
+                      value={otp}
+                      onChange={(event) => setOtp(event.target.value.replace(/\D/g, ''))}
+                    />
                   </label>
+                  <p className="auth-hint">Enter Verification Code</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="auth-field-group">
+                <label className="auth-field">
+                  <Mail aria-hidden="true" />
                   <input
                     type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    aria-label="Email"
                     placeholder="Email"
-                    className="w-full bg-transparent text-[13.5px] font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
                   />
-                </div>
+                </label>
+                <p className="auth-hint">Enter Email</p>
               </div>
-              <p className="mt-1 pl-3 text-[13px] text-[#9aa0ad]">Enter Email</p>
-            </div>
-          )}
 
-
-
-          {mode !== 'phone_otp' && (
-            <div>
-              <div className="relative flex items-center bg-[#F8FAFC] border border-gray-200/80 rounded-2xl px-3.5 py-2.5 focus-within:border-[#D9232D] focus-within:bg-white transition-all shadow-2xs">
-                <div className="w-7 text-gray-400">
-                  <Lock className="w-4 h-4" />
-                </div>
-                <div className="flex-1">
-                  <label className="sr-only">
-                    Password
-                  </label>
+              <div className="auth-field-group">
+                <label className="auth-field">
+                  <LockKeyhole aria-hidden="true" />
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                    aria-label="Password"
                     placeholder="Password"
-                    className="w-full bg-transparent text-[13.5px] font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
                   />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+                  <button
+                    type="button"
+                    className="auth-password-toggle"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    onClick={() => setShowPassword((shown) => !shown)}
+                  >
+                    {showPassword ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+                  </button>
+                </label>
+                <p className="auth-hint">Enter Password</p>
               </div>
-            </div>
+            </>
+          )}
+
+          {mode === 'signup' && (
+            <label className="auth-consent">
+              <input
+                type="checkbox"
+                checked={agreeTerms}
+                onChange={(event) => setAgreeTerms(event.target.checked)}
+              />
+              <span>I agree to the processing of{' '}
+                <button type="button" onClick={onOpenPrivacy}>Personal data</button>
+              </span>
+            </label>
           )}
 
           {mode === 'login' && (
-            <div className="flex items-center justify-between px-1 pt-1 text-[13px]">
-              <label className="flex items-center gap-2 text-gray-600"><input type="checkbox" className="h-5 w-5 rounded border-2 border-gray-700 accent-[#e0182d]" />Remember me</label>
-              <button type="button" className="font-semibold text-[#e0182d]">Forgot password?</button>
+            <div className="auth-login-options">
+              <label><input type="checkbox" /> Remember me</label>
+              <button type="button" onClick={() => setNotice('Password recovery is not available yet.')}>Forgot password?</button>
             </div>
           )}
 
-          {/* Terms & Conditions Checkbox (Matching Image 3) */}
-          {mode === 'signup' && (
-            <div className="flex items-center space-x-2.5 pt-1 px-1">
-              <input
-                type="checkbox"
-                id="terms"
-                checked={agreeTerms}
-                onChange={(e) => setAgreeTerms(e.target.checked)}
-                className="w-4 h-4 rounded text-[#D9232D] focus:ring-[#D9232D] border-gray-300 accent-[#D9232D] cursor-pointer"
-              />
-              <label htmlFor="terms" className="text-[12px] text-gray-600 font-normal cursor-pointer select-none">
-I agree to the processing of{' '}
-                  <button
-                  type="button"
-                  onClick={onOpenTerms}
-                  className="text-[#D9232D] font-bold hover:underline"
-                >
-                  Personal data
-                </button>{' '}
-                <span className="sr-only">and </span>
-                <button
-                  type="button"
-                  onClick={onOpenPrivacy}
-                  className="sr-only"
-                >
-                  Privacy Policy
+          {error && <p className="auth-message auth-error" role="alert">{error}</p>}
+          {notice && <p className="auth-message auth-notice" role="status">{notice}</p>}
+
+          <button className="auth-submit" type="submit" disabled={isLoading}>
+            <span>{isLoading ? 'Please wait…' : mode === 'signup' ? 'Sign up' : mode === 'login' ? 'Sign in' : isOtpSent ? 'Verify & proceed' : 'Send code'}</span>
+            {!isLoading && <ArrowRight aria-hidden="true" />}
+          </button>
+
+          {mode !== 'phone_otp' && (
+            <>
+              <div className="auth-divider"><span>{mode === 'signup' ? 'Sign up with' : 'Sign in with'}</span></div>
+              <div className="auth-socials" aria-label="Other sign-in options">
+                <button type="button" aria-label="Continue with Facebook" onClick={() => finishSignIn('Facebook')}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#1877f2"/><path d="M13.4 21v-7h2.4l.4-2.8h-2.8V9.5c0-.8.3-1.4 1.4-1.4h1.5V5.6c-.3 0-1.1-.1-2.1-.1-2.2 0-3.6 1.3-3.6 3.7v2H8.2V14h2.4v7z" fill="#fff"/></svg>
                 </button>
-              </label>
-            </div>
+                <button type="button" aria-label="Continue with Google" onClick={() => finishSignIn('Google')}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#ea4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3-3C17.3 1.8 14.9.8 12 .8 7.7.8 4 3.3 2.2 6.9l3.5 2.7C6.6 7.1 9 5 12 5z"/><path fill="#4285f4" d="M23.2 12.3c0-.8-.1-1.5-.2-2.2H12v4.3h6.3c-.3 1.4-1.1 2.6-2.3 3.4l3.5 2.7c2.1-1.9 3.7-4.8 3.7-8.2z"/><path fill="#fbbc05" d="M5.7 14.3c-.2-.7-.4-1.5-.4-2.3s.1-1.6.4-2.3L2.2 7C1.5 8.5 1.1 10.2 1.1 12s.4 3.5 1.1 5z"/><path fill="#34a853" d="M12 23.2c3 0 5.5-1 7.4-2.7l-3.5-2.7c-1 .7-2.3 1.1-3.9 1.1-3 0-5.5-2-6.4-4.8l-3.5 2.7C4 20.7 7.7 23.2 12 23.2z"/></svg>
+                </button>
+                <button type="button" aria-label="Apple sign-in unavailable" onClick={() => setNotice('Apple sign-in is not connected yet.')}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#111" d="M16.4 12.7c0-2.4 2-3.5 2.1-3.6-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.5 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8 2.2-1.2 3-2.4c.9-1.4 1.3-2.7 1.3-2.8 0 0-2.6-1-2.6-4.1zM14.1 5.6c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.1 1.8-1 2.9 1.1.1 2.1-.6 2.8-1.4z"/></svg>
+                </button>
+                <button type="button" aria-label="Twitter sign-in unavailable" onClick={() => setNotice('Twitter sign-in is not connected yet.')}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#1d9bf0" d="M23 4.6c-.8.4-1.7.6-2.6.7.9-.6 1.6-1.4 2-2.5-.9.5-1.9.9-2.9 1.1a4.5 4.5 0 0 0-7.7 4.1C8 7.8 4.7 6 2.5 3.3c-1.2 2-.6 4.7 1.4 6-.7 0-1.4-.2-2-.6 0 2.2 1.5 4.1 3.6 4.5-.7.2-1.4.2-2 .1.6 1.8 2.2 3.1 4.2 3.1A9 9 0 0 1 1 18.3a12.8 12.8 0 0 0 6.9 2c8.3 0 12.9-6.9 12.7-13 .9-.6 1.7-1.4 2.4-2.4z"/></svg>
+                </button>
+              </div>
+            </>
           )}
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full h-12 bg-[#D9232D] hover:bg-[#C01B24] active:scale-[0.98] text-white rounded-2xl flex items-center justify-center space-x-2 shadow-[0_4px_14px_rgba(217,35,45,0.3)] transition-all font-bold text-[15px] mt-4"
-          >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          <p className="auth-switch">
+            {mode === 'signup' ? (
+              <>Already have an account? <button type="button" onClick={() => switchMode('login')}>Sign in</button></>
+            ) : mode === 'login' ? (
+              <>New to Rofik Godi Centre? <button type="button" onClick={() => switchMode('signup')}>Sign up</button></>
             ) : (
-              <>
-                <span>
-                  {mode === 'signup' && 'Sign up'}
-                  {mode === 'login' && 'Sign In'}
-                  {mode === 'phone_otp' && 'Verify & Proceed'}
-                </span>
-                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-              </>
+              <>Use email instead? <button type="button" onClick={() => switchMode('login')}>Sign in</button></>
             )}
-          </button>
+          </p>
+          <div className="auth-home-indicator" aria-hidden="true" />
         </form>
-
-        {/* OR Divider */}
-        <div className="flex items-center space-x-3 my-5">
-          <div className="flex-1 h-[1px] bg-gray-200" />
-          <span className="text-[15px] font-medium text-gray-500">Sign in with</span>
-          <div className="flex-1 h-[1px] bg-gray-200" />
-        </div>
-
-        {/* Social Logins (Google & Facebook Matching Image 3) */}
-        <div className="flex items-center justify-center gap-4">
-          {/* Google */}
-          <button
-            onClick={() => handleSocialLogin('Google')}
-            className="grid h-14 w-14 place-items-center rounded-full border border-gray-200 bg-white text-gray-900 shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all active:scale-[0.98]"
-          >
-            <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center">
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-                />
-              </svg>
-            </div>
-            <span className="sr-only">Continue with Google</span>
-          </button>
-
-          {/* Facebook */}
-          <button
-            onClick={() => handleSocialLogin('Facebook')}
-            className="grid h-14 w-14 place-items-center rounded-full border border-gray-200 bg-white text-gray-900 shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all active:scale-[0.98]"
-          >
-            <div className="w-5 h-5 rounded-full bg-[#1877F2] flex items-center justify-center text-white">
-              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-            </div>
-            <span className="sr-only">Continue with Facebook</span>
-          </button>
-          <button type="button" aria-label="Apple" onClick={() => handleSocialLogin('Google')} className="grid h-14 w-14 place-items-center rounded-full border border-gray-200 bg-white text-[28px] text-black shadow-[0_4px_12px_rgba(0,0,0,0.08)]">●</button>
-          <button type="button" aria-label="Twitter" onClick={() => handleSocialLogin('Google')} className="grid h-14 w-14 place-items-center rounded-full border border-gray-200 bg-white text-[22px] font-bold text-[#1d9bf0] shadow-[0_4px_12px_rgba(0,0,0,0.08)]">t</button>
-        </div>
-      </div>
-
-      {/* Switch between Login and Sign up */}
-      <div className="pt-6 pb-2 text-center">
-        {mode === 'signup' ? (
-          <p className="text-[13px] text-gray-600">
-            Already have an account?{' '}
-            <button
-              type="button"
-              onClick={() => {
-                setError(null);
-                setMode('login');
-              }}
-              className="text-[#D9232D] font-bold hover:underline ml-1"
-            >
-              Login
-            </button>
-          </p>
-        ) : (
-          <p className="text-[13px] text-gray-600">
-            Don't have an account?{' '}
-            <button
-              type="button"
-              onClick={() => {
-                setError(null);
-                setMode('signup');
-              }}
-              className="text-[#D9232D] font-bold hover:underline ml-1"
-            >
-              Create Account
-            </button>
-          </p>
-        )}
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };
