@@ -9,7 +9,7 @@ const WELCOME_IMAGE =
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[#f7dfe5] select-none" data-purpose="splash-screen" role="dialog" aria-label="Welcome to Rofik Godi Centre">
-    <main className="relative h-full w-full max-w-[430px] overflow-hidden bg-[#6b0a1a] sm:h-[896px] sm:rounded-[42px] sm:shadow-2xl">
+    <main className="relative h-full w-full max-w-none overflow-hidden bg-[#6b0a1a] sm:h-[896px] sm:rounded-[42px] sm:shadow-2xl">
       <img src={WELCOME_IMAGE} alt="Young man using a phone on a red premium background" className="absolute inset-0 h-full w-full scale-[1.18] object-cover object-top" draggable={false} />
       <div className="absolute inset-x-0 bottom-0 h-[43%] bg-gradient-to-t from-[#6b0a1a] via-[#6b0a1a]/80 to-transparent" aria-hidden="true" />
       <section className="absolute inset-x-0 bottom-0 z-10 px-6 pb-[calc(env(safe-area-inset-bottom)+14px)] text-center text-white sm:px-8">
