@@ -133,6 +133,9 @@ export default function Onboarding({ onFinish }: Props) {
                 src={s.image}
                 alt={s.alt}
                 draggable={false}
+                loading={k === i ? "eager" : "lazy"}
+                decoding="async"
+                fetchPriority={k === i ? "high" : "low"}
                 className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[50%_35%]"
               />
             </div>
