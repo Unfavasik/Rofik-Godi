@@ -154,6 +154,9 @@ export default function RofikOnboarding({ onFinish }: Props) {
               src={s.image}
               alt={s.alt}
               draggable={false}
+              loading={k === i ? "eager" : "lazy"}
+              decoding="async"
+              fetchPriority={k === i ? "high" : "low"}
               className="pointer-events-none absolute left-0 top-0 h-auto w-full [-webkit-mask-image:linear-gradient(to_bottom,#000_82%,transparent)] [mask-image:linear-gradient(to_bottom,#000_82%,transparent)] [transform:translateY(clamp(-14%,calc((100dvh_-_760px)*.45),0px))]"
             />
           </div>

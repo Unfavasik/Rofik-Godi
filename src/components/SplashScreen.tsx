@@ -4,12 +4,12 @@ interface SplashScreenProps {
   onFinish: (mode?: 'signup' | 'login') => void;
 }
 
-const WELCOME_IMAGE =
-  'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/file_000000000628821191103c9d96178cc2-nOY3IKKReKcFxU2mJ45b4VXCibGzdr.png';
+// Keep this local and optimized so the auth transition does not wait on a remote 1.5 MB PNG.
+const WELCOME_IMAGE = '/images/rofiq-splash.webp';
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
   useEffect(() => {
-    const timer = window.setTimeout(() => onFinish(), 900);
+    const timer = window.setTimeout(() => onFinish(), 450);
     return () => window.clearTimeout(timer);
   }, [onFinish]);
 
@@ -18,6 +18,9 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
       <img
         src={WELCOME_IMAGE}
         alt=""
+        loading="eager"
+        decoding="async"
+        fetchPriority="high"
         className="absolute inset-0 h-full w-full scale-[1.18] object-cover object-top opacity-80"
         draggable={false}
       />
@@ -30,4 +33,3 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
     </div>
   );
 };
-
