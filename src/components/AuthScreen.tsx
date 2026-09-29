@@ -33,10 +33,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const [mode, setMode] = useState<'signup' | 'login' | 'phone_otp'>(initialMode);
 
   // Form fields
-  const [fullName, setFullName] = useState('Asif Ikbal');
-  const [email, setEmail] = useState('asif@example.com');
-  const [phone, setPhone] = useState('+91 98765 43210');
-  const [password, setPassword] = useState('password123');
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(true);
 
@@ -106,28 +106,28 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   };
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col justify-between p-5 max-w-[440px] mx-auto select-none font-sans animate-fade-in">
+    <div className="relative min-h-screen w-full max-w-[430px] mx-auto overflow-y-auto bg-[linear-gradient(180deg,#fdeff1_0%,#fbe0e4_42%,#fdeff1_100%)] px-6 pb-5 pt-[calc(env(safe-area-inset-top)+22px)] select-none font-sans animate-fade-in">
       {/* Top Header Row with Back Button (Matching Image 3) */}
       <div>
         <div className="flex items-center space-x-3 pt-2 mb-4">
           <button
             onClick={onBack}
             aria-label="Go Back"
-            className="p-1 -ml-1 text-gray-900 hover:bg-gray-100 rounded-full transition-all active:scale-95"
+            className="grid h-12 w-12 place-items-center rounded-full bg-white text-gray-900 shadow-[0_6px_16px_rgba(224,24,45,0.15)] transition-all active:scale-95"
           >
             <ArrowLeft className="w-6 h-6 stroke-[2.2]" />
           </button>
         </div>
 
         {/* Title & Subtitle */}
-        <div className="space-y-1 mb-6">
+        <div className="mt-[52px] mb-6 space-y-1">
           <h1 className="text-[26px] font-extrabold text-gray-950 tracking-tight leading-tight">
-            {mode === 'signup' && 'Create Account'}
+            {mode === 'signup' && <>Get <span className="text-[#e0182d]">Started</span></>}
             {mode === 'login' && 'Welcome Back'}
             {mode === 'phone_otp' && 'Verify Phone'}
           </h1>
           <p className="text-[13.5px] text-gray-500 font-normal">
-            {mode === 'signup' && 'Join Rofik Godi Centre for tracking & discounts'}
+            {mode === 'signup' && 'Create your account for Rofik Godi Centre.'}
             {mode === 'login' && 'Sign in to access your garage & orders'}
             {mode === 'phone_otp' && `Enter 6-digit code sent to ${phone}`}
           </p>
@@ -141,7 +141,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         )}
 
         {/* Form Fields */}
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="relative mt-[26px] space-y-3 rounded-[60px_24px_0_0] bg-white px-[18px] pb-6 pt-[26px] shadow-[0_-6px_30px_rgba(224,24,45,0.08)]">
           {mode === 'signup' && (
             <div>
               <div className="relative flex items-center bg-[#F8FAFC] border border-gray-200/80 rounded-2xl px-3.5 py-2.5 focus-within:border-[#D9232D] focus-within:bg-white transition-all shadow-2xs">
@@ -283,7 +283,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             ) : (
               <>
                 <span>
-                  {mode === 'signup' && 'Create Account'}
+                  {mode === 'signup' && 'Sign up'}
                   {mode === 'login' && 'Sign In'}
                   {mode === 'phone_otp' && 'Verify & Proceed'}
                 </span>
