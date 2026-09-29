@@ -23,7 +23,7 @@ import { CustomerReviews } from './components/CustomerReviews';
 import { AccountView } from './components/AccountView';
 import { BottomNav } from './components/BottomNav';
 import { SplashScreen } from './components/SplashScreen';
-import Onboarding from './components/Onboarding';
+import RofikOnboarding from './components/RofikOnboarding';
 import { AuthScreen } from './components/AuthScreen';
 import { LoginRequiredModal } from './components/LoginRequiredModal';
 import { SearchView } from './components/SearchView';
@@ -394,7 +394,7 @@ export default function App() {
 
   // Phase 1: Onboarding
   if (appPhase === 'onboarding') {
-    return <Onboarding onFinish={() => setAppPhase('splash')} />;
+    return <RofikOnboarding onFinish={() => setAppPhase('splash')} />;
   }
 
   // Phase 2: Splash Screen
