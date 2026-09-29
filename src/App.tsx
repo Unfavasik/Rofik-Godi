@@ -501,7 +501,7 @@ export default function App() {
                   phone: '',
                   isGuest: true,
                 });
-                setAppPhase('welcome');
+                setAppPhase('main');
               }}
               onBackToHome={() => {
                 setActiveTab('home');
