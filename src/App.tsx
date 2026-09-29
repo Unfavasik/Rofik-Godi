@@ -24,7 +24,6 @@ import { AccountView } from './components/AccountView';
 import { BottomNav } from './components/BottomNav';
 import { SplashScreen } from './components/SplashScreen';
 import Onboarding from './components/Onboarding';
-import { WelcomeAuthScreen } from './components/WelcomeAuthScreen';
 import { AuthScreen } from './components/AuthScreen';
 import { LoginRequiredModal } from './components/LoginRequiredModal';
 import { SearchView } from './components/SearchView';
@@ -58,8 +57,8 @@ import {
 import { motion } from 'motion/react';
 
 export default function App() {
-  // App Phase State: Onboarding -> Splash -> Welcome -> Auth -> Main
-  const [appPhase, setAppPhase] = useState<'onboarding' | 'splash' | 'welcome' | 'auth' | 'main'>('onboarding');
+  // App Phase State: Onboarding -> Splash -> Main
+  const [appPhase, setAppPhase] = useState<'onboarding' | 'splash' | 'auth' | 'main'>('onboarding');
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>('signup');
 
   // User Authentication State (Default: Guest User)
@@ -359,7 +358,7 @@ export default function App() {
   const handleLoginSuccess = (user: UserProfile) => {
     setCurrentUser(user);
     setIsLoginModalOpen(false);
-    if (appPhase === 'auth' || appPhase === 'welcome') {
+    if (appPhase === 'auth') {
       setAppPhase('main');
     }
     if (pendingCheckoutAfterLogin) {
@@ -399,35 +398,7 @@ export default function App() {
     return (
       <div className="min-h-screen bg-[#0E0E0E] flex items-center justify-center">
         <SplashScreen
-          onFinish={(mode) => {
-            if (mode) setAuthInitialMode(mode);
-            setAppPhase('auth');
-          }}
-        />
-      </div>
-    );
-  }
-
-  // Phase 2: Welcome / Auth Screen
-  if (appPhase === 'welcome') {
-    return (
-      <div className="min-h-screen bg-[#F0F2F5] flex justify-center selection:bg-[#D9232D] selection:text-white font-sans antialiased text-[#1E232A]">
-        <WelcomeAuthScreen
-          onContinueGoogle={() => {
-            const user: UserProfile = {
-              id: `usr-google-${Date.now()}`,
-              name: 'Asif Ikbal (Google)',
-              email: 'asif.ikbal@gmail.com',
-              phone: '+91 98765 43210',
-              isGuest: false,
-              vehicle: 'Hero Splendor Plus & Toto',
-              joinedDate: 'September 2026',
-            };
-            handleLoginSuccess(user);
-          }}
-          onContinuePhone={() => handleOpenAuth('login')}
-          onContinueEmail={() => handleOpenAuth('login')}
-          onContinueGuest={handleContinueGuest}
+          onFinish={() => setAppPhase('main')}
         />
       </div>
     );
