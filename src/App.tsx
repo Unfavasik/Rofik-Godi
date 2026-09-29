@@ -392,7 +392,12 @@ export default function App() {
   if (appPhase === 'splash') {
     return (
       <div className="min-h-screen bg-[#0E0E0E] flex items-center justify-center">
-        <SplashScreen onFinish={() => setAppPhase('welcome')} />
+        <SplashScreen
+          onFinish={(mode) => {
+            if (mode) setAuthInitialMode(mode);
+            setAppPhase('auth');
+          }}
+        />
       </div>
     );
   }
@@ -414,7 +419,7 @@ export default function App() {
             };
             handleLoginSuccess(user);
           }}
-          onContinuePhone={() => handleOpenAuth('phone_otp')}
+          onContinuePhone={() => handleOpenAuth('login')}
           onContinueEmail={() => handleOpenAuth('login')}
           onContinueGuest={handleContinueGuest}
         />
@@ -422,14 +427,16 @@ export default function App() {
     );
   }
 
-  // Phase 3: Login / Signup / Phone OTP Screen
+  // Phase 3: Login / Signup Screen
   if (appPhase === 'auth') {
     return (
-      <div className="min-h-screen bg-[#F0F2F5] flex justify-center selection:bg-[#D9232D] selection:text-white font-sans antialiased text-[#1E232A]">
+      <div className="min-h-screen bg-[#f7d9de] flex justify-center selection:bg-[#e0182d] selection:text-white font-sans antialiased text-[#0f1a3a]">
         <AuthScreen
           initialMode={authInitialMode}
           onSuccess={handleLoginSuccess}
-          onBack={() => setAppPhase('welcome')}
+          onBack={handleContinueGuest}
+          onOpenTerms={() => setIsTermsConditionsOpen(true)}
+          onOpenPrivacy={() => setIsPrivacyPolicyOpen(true)}
         />
       </div>
     );

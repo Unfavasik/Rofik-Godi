@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface SplashScreenProps {
-  onFinish: () => void;
+  onFinish: (mode?: 'signup' | 'login') => void;
 }
 
 const WELCOME_IMAGE =
@@ -16,7 +16,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => (
         <h1 className="text-[clamp(30px,9vw,38px)] font-bold leading-none tracking-[-0.5px] [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">Welcome <span className="text-[#ff8a96]">Back!</span></h1>
         <p className="mt-1.5 text-base leading-6 text-white/90">Explore premium products<br />for bikes and totos.</p>
         <div className="my-3.5 flex items-center justify-center gap-2"><span className="h-[9px] w-[22px] rounded-full bg-white" /><span className="h-[9px] w-[9px] rounded-full bg-[#e0182d]" /><span className="h-[9px] w-[9px] rounded-full bg-[#e0182d]" /></div>
-        <div className="flex gap-3.5"><button type="button" onClick={onFinish} className="h-[58px] flex-1 rounded-[20px] bg-[#1c060a] text-[18px] font-semibold text-white transition-transform active:scale-[0.97]">Sign in</button><button type="button" onClick={onFinish} className="h-[58px] flex-1 rounded-[20px] bg-white text-[18px] font-semibold text-[#e0182d] transition-transform active:scale-[0.97]">Sign up</button></div>
+        <div className="flex gap-3.5"><button type="button" onClick={() => onFinish('login')} className="h-[58px] flex-1 rounded-[20px] bg-[#1c060a] text-[18px] font-semibold text-white transition-transform active:scale-[0.97] cursor-pointer">Sign in</button><button type="button" onClick={() => onFinish('signup')} className="h-[58px] flex-1 rounded-[20px] bg-white text-[18px] font-semibold text-[#e0182d] transition-transform active:scale-[0.97] cursor-pointer">Sign up</button></div>
         <div className="mx-auto mt-3.5 h-[5px] w-[130px] rounded-full bg-white" aria-hidden="true" />
       </section>
     </main>

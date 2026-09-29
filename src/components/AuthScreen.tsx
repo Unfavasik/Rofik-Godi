@@ -1,18 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import {
-  ArrowLeft,
-  User,
-  Mail,
-  Phone,
-  Lock,
-  Eye,
-  EyeOff,
-  Check,
-  ShieldCheck,
-  Smartphone,
-  ArrowRight,
-} from 'lucide-react';
 import { UserProfile } from '../types';
 
 interface AuthScreenProps {
@@ -30,341 +16,508 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   onOpenTerms,
   onOpenPrivacy,
 }) => {
-  const [mode, setMode] = useState<'signup' | 'login' | 'phone_otp'>(initialMode);
+  const [mode, setMode] = useState<'signup' | 'login'>(
+    initialMode === 'login' ? 'login' : 'signup'
+  );
 
-  // Form fields
-  const [fullName, setFullName] = useState('');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [agreeTerms, setAgreeTerms] = useState(true);
+  const [agree, setAgree] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [error, setError] = useState('');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // OTP state for Phone login
-  const [otpCode, setOtpCode] = useState(['5', '8', '2', '4', '', '']);
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [timer, setTimer] = useState(30);
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage((prev) => (prev === msg ? null : prev));
+    }, 2000);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setError('');
 
     if (mode === 'signup') {
-      if (!fullName.trim()) {
-        setError('Please enter your full name');
+      if (!name.trim()) {
+        setError('Enter your full name');
         return;
       }
-      if (!email.trim() || !email.includes('@')) {
-        setError('Please enter a valid email address');
+      if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) {
+        setError('Enter a valid email');
         return;
       }
-      if (!agreeTerms) {
-        setError('Please agree to the Terms & Conditions');
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters');
         return;
       }
-    }
+      if (!agree) {
+        setError('Please accept the personal data terms');
+        return;
+      }
 
-    if (mode === 'login' && (!email.trim() || !password.trim())) {
-      setError('Please fill in all login credentials');
-      return;
-    }
+      showToast('Account created');
+      setTimeout(() => {
+        const user: UserProfile = {
+          id: `usr-${Date.now()}`,
+          name: name.trim(),
+          email: email.trim(),
+          phone: '+91 98765 43210',
+          isGuest: false,
+          vehicle: 'Hero Splendor Plus & Toto',
+          joinedDate: 'September 2026',
+        };
+        onSuccess(user);
+      }, 500);
+    } else {
+      if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) {
+        setError('Enter a valid email');
+        return;
+      }
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters');
+        return;
+      }
 
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      const user: UserProfile = {
-        id: `usr-${Date.now()}`,
-        name: mode === 'login' ? (fullName || 'Rider Asif') : fullName,
-        email: email || 'asif@example.com',
-        phone: phone || '+91 98765 43210',
-        isGuest: false,
-        vehicle: 'Hero Splendor Plus & Toto',
-        joinedDate: 'September 2026',
-      };
-      onSuccess(user);
-    }, 800);
+      showToast('Signed in');
+      setTimeout(() => {
+        const user: UserProfile = {
+          id: `usr-${Date.now()}`,
+          name: name.trim() || 'Rider Asif',
+          email: email.trim(),
+          phone: '+91 98765 43210',
+          isGuest: false,
+          vehicle: 'Hero Splendor Plus & Toto',
+          joinedDate: 'September 2026',
+        };
+        onSuccess(user);
+      }, 500);
+    }
   };
 
-  const handleSocialLogin = (provider: 'Google' | 'Facebook') => {
-    setIsLoading(true);
+  const handleSocial = (provider: string) => {
+    showToast(`${provider} login`);
     setTimeout(() => {
-      setIsLoading(false);
       const user: UserProfile = {
         id: `usr-${provider.toLowerCase()}-${Date.now()}`,
-        name: provider === 'Google' ? 'Asif Ikbal (Google)' : 'Asif Ikbal (Facebook)',
-        email: 'asif.ikbal@gmail.com',
+        name: `Asif Ikbal (${provider})`,
+        email: `asif.${provider.toLowerCase()}@example.com`,
         phone: '+91 98765 43210',
         isGuest: false,
-        vehicle: 'Universal Garage Fitment',
+        vehicle: 'Rofik Godi Rider',
         joinedDate: 'September 2026',
       };
       onSuccess(user);
-    }, 700);
+    }, 600);
   };
 
   return (
-    <div className="relative min-h-screen w-full max-w-[430px] mx-auto overflow-y-auto bg-[linear-gradient(180deg,#fdeff1_0%,#fbe0e4_42%,#fdeff1_100%)] px-6 pb-5 pt-[calc(env(safe-area-inset-top)+22px)] select-none font-sans animate-fade-in">
-      {/* Top Header Row with Back Button (Matching Image 3) */}
-      <div>
-        <div className="flex items-center space-x-3 pt-2 mb-4">
+    <div className="flex min-h-screen w-full justify-center bg-[#f7d9de] font-['Poppins',sans-serif] text-[#0f1a3a] select-none antialiased">
+      {/* App Container matching exact 430px phone view */}
+      <div className="relative flex min-h-full w-full max-w-[430px] flex-col overflow-y-auto bg-[linear-gradient(180deg,#fdeff1_0%,#fbe0e4_40%,#fdeff1_100%)] shadow-2xl">
+        
+        {/* Decorative Background Glow Spheres */}
+        <div
+          className="pointer-events-none absolute -right-[60px] -top-[70px] h-[230px] w-[230px] rounded-full"
+          style={{ background: 'radial-gradient(circle at 35% 30%, #ff5a6b, #c4102a)' }}
+        />
+        <div
+          className="pointer-events-none absolute -right-[90px] top-[50px] h-[170px] w-[170px] rounded-full bg-[#f9b7bf] opacity-70"
+        />
+        <div
+          className="pointer-events-none absolute left-[105px] top-[80px] h-[34px] w-[34px] rounded-full bg-[#f7b9c0]"
+        />
+
+        {/* Top Header & Back Button */}
+        <div className="relative px-6 pt-[calc(env(safe-area-inset-top,0px)+22px)]">
           <button
+            type="button"
+            aria-label="Back"
             onClick={onBack}
-            aria-label="Go Back"
-            className="grid h-12 w-12 place-items-center rounded-full bg-white text-gray-900 shadow-[0_6px_16px_rgba(224,24,45,0.15)] transition-all active:scale-95"
+            className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border-0 bg-white text-[#111] shadow-[0_6px_16px_rgba(224,24,45,0.15)] transition-transform active:scale-95"
           >
-            <ArrowLeft className="w-6 h-6 stroke-[2.2]" />
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#111"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 12H5M11 6l-6 6 6 6" />
+            </svg>
           </button>
-        </div>
 
-        {/* Title & Subtitle */}
-        <div className="mt-[52px] mb-6 space-y-1">
-          <h1 className="text-[26px] font-extrabold text-gray-950 tracking-tight leading-tight">
-            {mode === 'signup' && <>Get <span className="text-[#e0182d]">Started</span></>}
-            {mode === 'login' && <>Welcome <span className="text-[#e0182d]">Back</span></>}
-            {mode === 'phone_otp' && 'Verify Phone'}
-          </h1>
-          <p className="text-[13.5px] text-gray-500 font-normal">
-            {mode === 'signup' && 'Create your account for Rofik Godi Centre.'}
-            {mode === 'login' && <>Sign in to continue to<br />Rofik Godi Centre.</>}
-            {mode === 'phone_otp' && `Enter 6-digit code sent to ${phone}`}
-          </p>
-        </div>
-
-        {/* Error banner */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-2xl animate-shake">
-            {error}
-          </div>
-        )}
-
-        {/* Form Fields */}
-        <form onSubmit={handleSubmit} className="relative mt-[26px] space-y-3 rounded-[60px_24px_0_0] bg-white px-[18px] pb-6 pt-[26px] shadow-[0_-6px_30px_rgba(224,24,45,0.08)]">
-          {mode === 'signup' && (
-            <div>
-              <div className="relative flex items-center bg-[#F8FAFC] border border-gray-200/80 rounded-2xl px-3.5 py-2.5 focus-within:border-[#D9232D] focus-within:bg-white transition-all shadow-2xs">
-                <div className="w-7 text-gray-400">
-                  <User className="w-4 h-4" />
-                </div>
-                <div className="flex-1">
-                  <label className="text-[10px] uppercase font-bold text-gray-400 block leading-tight">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Enter your name"
-                    className="w-full bg-transparent text-[13.5px] font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {mode !== 'phone_otp' && (
-            <div>
-              <div className="relative flex items-center bg-[#F8FAFC] border border-gray-200/80 rounded-2xl px-3.5 py-2.5 focus-within:border-[#D9232D] focus-within:bg-white transition-all shadow-2xs">
-                <div className="w-7 text-gray-400">
-                  <Mail className="w-4 h-4" />
-                </div>
-                <div className="flex-1">
-                  <label className="sr-only">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email"
-                    className="w-full bg-transparent text-[13.5px] font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none"
-                  />
-                </div>
-              </div>
-              <p className="mt-1 pl-3 text-[13px] text-[#9aa0ad]">Enter Email</p>
-            </div>
-          )}
-
-
-
-          {mode !== 'phone_otp' && (
-            <div>
-              <div className="relative flex items-center bg-[#F8FAFC] border border-gray-200/80 rounded-2xl px-3.5 py-2.5 focus-within:border-[#D9232D] focus-within:bg-white transition-all shadow-2xs">
-                <div className="w-7 text-gray-400">
-                  <Lock className="w-4 h-4" />
-                </div>
-                <div className="flex-1">
-                  <label className="sr-only">
-                    Password
-                  </label>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
-                    className="w-full bg-transparent text-[13.5px] font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {mode === 'login' && (
-            <div className="flex items-center justify-between px-1 pt-1 text-[13px]">
-              <label className="flex items-center gap-2 text-gray-600"><input type="checkbox" className="h-5 w-5 rounded border-2 border-gray-700 accent-[#e0182d]" />Remember me</label>
-              <button type="button" className="font-semibold text-[#e0182d]">Forgot password?</button>
-            </div>
-          )}
-
-          {/* Terms & Conditions Checkbox (Matching Image 3) */}
-          {mode === 'signup' && (
-            <div className="flex items-center space-x-2.5 pt-1 px-1">
-              <input
-                type="checkbox"
-                id="terms"
-                checked={agreeTerms}
-                onChange={(e) => setAgreeTerms(e.target.checked)}
-                className="w-4 h-4 rounded text-[#D9232D] focus:ring-[#D9232D] border-gray-300 accent-[#D9232D] cursor-pointer"
-              />
-              <label htmlFor="terms" className="text-[12px] text-gray-600 font-normal cursor-pointer select-none">
-I agree to the processing of{' '}
-                  <button
-                  type="button"
-                  onClick={onOpenTerms}
-                  className="text-[#D9232D] font-bold hover:underline"
-                >
-                  Personal data
-                </button>{' '}
-                <span className="sr-only">and </span>
-                <button
-                  type="button"
-                  onClick={onOpenPrivacy}
-                  className="sr-only"
-                >
-                  Privacy Policy
-                </button>
-              </label>
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full h-12 bg-[#D9232D] hover:bg-[#C01B24] active:scale-[0.98] text-white rounded-2xl flex items-center justify-center space-x-2 shadow-[0_4px_14px_rgba(217,35,45,0.3)] transition-all font-bold text-[15px] mt-4"
-          >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          {/* Title & Subtitle */}
+          <h1 className="mt-[44px] text-[clamp(34px,9vw,40px)] font-bold tracking-tight text-[#0f1a3a] leading-tight">
+            {mode === 'signup' ? (
+              <>
+                Get <span className="text-[#e0182d]">Started</span>
+              </>
             ) : (
               <>
-                <span>
-                  {mode === 'signup' && 'Sign up'}
-                  {mode === 'login' && 'Sign In'}
-                  {mode === 'phone_otp' && 'Verify & Proceed'}
-                </span>
-                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                Welcome <span className="text-[#e0182d]">Back</span>
               </>
             )}
-          </button>
-        </form>
-
-        {/* OR Divider */}
-        <div className="flex items-center space-x-3 my-5">
-          <div className="flex-1 h-[1px] bg-gray-200" />
-          <span className="text-[15px] font-medium text-gray-500">Sign in with</span>
-          <div className="flex-1 h-[1px] bg-gray-200" />
+          </h1>
+          <p className="mt-2.5 max-w-[280px] text-[15px] font-normal leading-[1.55] text-[#3b4258]">
+            {mode === 'signup' ? (
+              <>
+                Create your account to explore
+                <br />
+                Rofik Godi Centre.
+              </>
+            ) : (
+              <>
+                Sign in to continue to
+                <br />
+                Rofik Godi Centre.
+              </>
+            )}
+          </p>
         </div>
 
-        {/* Social Logins (Google & Facebook Matching Image 3) */}
-        <div className="flex items-center justify-center gap-4">
-          {/* Google */}
-          <button
-            onClick={() => handleSocialLogin('Google')}
-            className="grid h-14 w-14 place-items-center rounded-full border border-gray-200 bg-white text-gray-900 shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all active:scale-[0.98]"
-          >
-            <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center">
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+        {/* Bottom Form Card */}
+        <div className="relative mt-7 flex-1 rounded-t-[54px] bg-white px-6 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] pt-7 shadow-[0_-6px_30px_rgba(224,24,45,0.08)]">
+          <form onSubmit={handleSubmit} className="space-y-0">
+            {/* Full Name Input (Signup only) */}
+            {mode === 'signup' && (
+              <div className="mb-2.5">
+                <label className="flex h-[54px] items-center gap-3.5 rounded-[28px] border-[1.5px] border-[#ece4e6] bg-[#fffafa] px-5 transition-all focus-within:border-[#e0182d] focus-within:shadow-[0_0_0_4px_rgba(224,24,45,0.1)]">
+                  <svg
+                    className="shrink-0"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#7a7f8e"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                  >
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z" />
+                  </svg>
+                  <input
+                    id="n"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Full Name"
+                    autoComplete="name"
+                    className="w-full min-w-0 border-0 bg-transparent text-[16px] font-medium text-[#0f1a3a] placeholder:text-[#3d4358] focus:outline-none"
+                  />
+                </label>
+                <div className="ml-3 mt-1 text-[13px] text-[#9aa0ad]">Enter Full Name</div>
+              </div>
+            )}
+
+            {/* Email Input */}
+            <div className="mb-2.5">
+              <label className="flex h-[54px] items-center gap-3.5 rounded-[28px] border-[1.5px] border-[#ece4e6] bg-[#fffafa] px-5 transition-all focus-within:border-[#e0182d] focus-within:shadow-[0_0_0_4px_rgba(224,24,45,0.1)]">
+                <svg
+                  className="shrink-0"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#7a7f8e"
+                  strokeWidth="1.7"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="5" width="18" height="14" rx="3" />
+                  <path d="M4 7l8 6 8-6" />
+                </svg>
+                <input
+                  id="e"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  autoComplete="email"
+                  className="w-full min-w-0 border-0 bg-transparent text-[16px] font-medium text-[#0f1a3a] placeholder:text-[#3d4358] focus:outline-none"
                 />
-                <path
-                  fill="#34A853"
-                  d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+              </label>
+              <div className="ml-3 mt-1 text-[13px] text-[#9aa0ad]">Enter Email</div>
+            </div>
+
+            {/* Password Input */}
+            <div className="mb-2.5">
+              <label className="flex h-[54px] items-center gap-3.5 rounded-[28px] border-[1.5px] border-[#ece4e6] bg-[#fffafa] px-5 transition-all focus-within:border-[#e0182d] focus-within:shadow-[0_0_0_4px_rgba(224,24,45,0.1)]">
+                <svg
+                  className="shrink-0"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#7a7f8e"
+                  strokeWidth="1.7"
+                  strokeLinejoin="round"
+                >
+                  <rect x="4" y="10" width="16" height="11" rx="3" />
+                  <path d="M8 10V7a4 4 0 018 0v3" />
+                  <circle cx="12" cy="15.5" r="1.3" fill="#7a7f8e" />
+                </svg>
+                <input
+                  id="p"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                  className="w-full min-w-0 border-0 bg-transparent text-[16px] font-medium text-[#0f1a3a] placeholder:text-[#3d4358] focus:outline-none"
                 />
-                <path
-                  fill="#FBBC05"
-                  d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                <button
+                  type="button"
+                  aria-label="Show password"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="cursor-pointer border-0 bg-transparent p-0 text-[#6b7080] focus:outline-none"
+                >
+                  <svg
+                    width="26"
+                    height="26"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#6b7080"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </label>
+              <div className="ml-3 mt-1 text-[13px] text-[#9aa0ad]">Enter Password</div>
+            </div>
+
+            {/* Checkbox Rows */}
+            {mode === 'signup' ? (
+              <label className="mx-1 mb-4 mt-2 flex cursor-pointer items-center gap-3 text-[14px] font-medium text-[#0f1a3a]">
+                <input
+                  type="checkbox"
+                  checked={agree}
+                  onChange={(e) => setAgree(e.target.checked)}
+                  className="h-[22px] w-[22px] cursor-pointer rounded-md border-2 border-[#333] accent-[#e0182d]"
                 />
+                <span>
+                  I agree to the processing of{' '}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (onOpenTerms) onOpenTerms();
+                      else if (onOpenPrivacy) onOpenPrivacy();
+                    }}
+                    className="font-semibold text-[#e0182d] hover:underline"
+                  >
+                    Personal data
+                  </button>
+                </span>
+              </label>
+            ) : (
+              <div className="mx-1 mb-4 mt-2 flex items-center justify-between text-[14px] font-medium">
+                <label className="flex cursor-pointer items-center gap-2.5 text-[#0f1a3a]">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-5 w-5 cursor-pointer rounded border-2 border-[#333] accent-[#e0182d]"
+                  />
+                  <span>Remember me</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => showToast('Password reset link sent to your email')}
+                  className="font-semibold text-[#e0182d] hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-2.5 ml-3 text-[13px] font-medium text-[#e0182d]">
+                {error}
+              </div>
+            )}
+
+            {/* Main Submit Action Button with right pill arrow icon */}
+            <button
+              type="submit"
+              id="go"
+              className="relative flex h-14 w-full cursor-pointer items-center justify-center overflow-hidden rounded-[28px] border-0 bg-[linear-gradient(180deg,#ea2a3d_0%,#d0132a_100%)] text-[19px] font-semibold text-white shadow-[0_10px_22px_rgba(224,24,45,0.32)] transition-transform active:scale-[0.985]"
+            >
+              <span>{mode === 'signup' ? 'Sign up' : 'Sign in'}</span>
+              <i className="absolute bottom-0 right-0 top-0 flex w-[66px] items-center justify-center rounded-l-[28px] bg-white/10">
+                <svg
+                  width="26"
+                  height="26"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#fff"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </i>
+            </button>
+          </form>
+
+          {/* Social Divider */}
+          <div className="mx-1 my-5 flex items-center gap-3.5 text-[15px] text-[#5b6070]">
+            <div className="h-[1px] flex-1 bg-[#d9d3d5]" />
+            <span>{mode === 'signup' ? 'Sign up with' : 'Sign in with'}</span>
+            <div className="h-[1px] flex-1 bg-[#d9d3d5]" />
+          </div>
+
+          {/* Social Buttons */}
+          <div className="flex justify-center gap-4">
+            {/* Facebook */}
+            <button
+              type="button"
+              aria-label="Facebook"
+              onClick={() => handleSocial('Facebook')}
+              className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 bg-white shadow-[0_6px_16px_rgba(224,24,45,0.12)] transition-transform active:scale-95"
+            >
+              <svg width="34" height="34" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="11" fill="#1877f2" />
                 <path
-                  fill="#EA4335"
-                  d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                  d="M13.4 21v-7h2.4l.4-2.8h-2.8V9.5c0-.8.3-1.4 1.4-1.4h1.5V5.6c-.3 0-1.1-.1-2.1-.1-2.2 0-3.6 1.3-3.6 3.7v2H8.2V14h2.4v7z"
+                  fill="#fff"
                 />
               </svg>
-            </div>
-            <span className="sr-only">Continue with Google</span>
-          </button>
+            </button>
 
-          {/* Facebook */}
-          <button
-            onClick={() => handleSocialLogin('Facebook')}
-            className="grid h-14 w-14 place-items-center rounded-full border border-gray-200 bg-white text-gray-900 shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all active:scale-[0.98]"
-          >
-            <div className="w-5 h-5 rounded-full bg-[#1877F2] flex items-center justify-center text-white">
-              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+            {/* Google */}
+            <button
+              type="button"
+              aria-label="Google"
+              onClick={() => handleSocial('Google')}
+              className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 bg-white shadow-[0_6px_16px_rgba(224,24,45,0.12)] transition-transform active:scale-95"
+            >
+              <svg width="32" height="32" viewBox="0 0 24 24">
+                <path
+                  fill="#ea4335"
+                  d="M12 5c1.6 0 3 .6 4.1 1.6l3-3C17.3 1.8 14.9.8 12 .8 7.7.8 4 3.3 2.2 6.9l3.5 2.7C6.6 7.1 9 5 12 5z"
+                />
+                <path
+                  fill="#4285f4"
+                  d="M23.2 12.3c0-.8-.1-1.5-.2-2.2H12v4.3h6.3c-.3 1.4-1.1 2.6-2.3 3.4l3.5 2.7c2.1-1.9 3.7-4.8 3.7-8.2z"
+                />
+                <path
+                  fill="#fbbc05"
+                  d="M5.7 14.3c-.2-.7-.4-1.5-.4-2.3s.1-1.6.4-2.3L2.2 7C1.5 8.5 1.1 10.2 1.1 12s.4 3.5 1.1 5z"
+                />
+                <path
+                  fill="#34a853"
+                  d="M12 23.2c3 0 5.5-1 7.4-2.7l-3.5-2.7c-1 .7-2.3 1.1-3.9 1.1-3 0-5.5-2-6.4-4.8l-3.5 2.7C4 20.7 7.7 23.2 12 23.2z"
+                />
               </svg>
-            </div>
-            <span className="sr-only">Continue with Facebook</span>
-          </button>
-          <button type="button" aria-label="Apple" onClick={() => handleSocialLogin('Google')} className="grid h-14 w-14 place-items-center rounded-full border border-gray-200 bg-white text-[28px] text-black shadow-[0_4px_12px_rgba(0,0,0,0.08)]">●</button>
-          <button type="button" aria-label="Twitter" onClick={() => handleSocialLogin('Google')} className="grid h-14 w-14 place-items-center rounded-full border border-gray-200 bg-white text-[22px] font-bold text-[#1d9bf0] shadow-[0_4px_12px_rgba(0,0,0,0.08)]">t</button>
-        </div>
-      </div>
+            </button>
 
-      {/* Switch between Login and Sign up */}
-      <div className="pt-6 pb-2 text-center">
-        {mode === 'signup' ? (
-          <p className="text-[13px] text-gray-600">
-            Already have an account?{' '}
+            {/* Apple */}
+            <button
+              type="button"
+              aria-label="Apple"
+              onClick={() => handleSocial('Apple')}
+              className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 bg-white shadow-[0_6px_16px_rgba(224,24,45,0.12)] transition-transform active:scale-95"
+            >
+              <svg width="30" height="30" viewBox="0 0 24 24">
+                <path
+                  fill="#111"
+                  d="M16.4 12.7c0-2.4 2-3.5 2.1-3.6-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.5 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8 2.2-1.2 3-2.4c.9-1.4 1.3-2.7 1.3-2.8 0 0-2.6-1-2.6-4.1zM14.1 5.6c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.1 1.8-1 2.9 1.1.1 2.1-.6 2.8-1.4z"
+                />
+              </svg>
+            </button>
+
+            {/* Twitter */}
+            <button
+              type="button"
+              aria-label="Twitter"
+              onClick={() => handleSocial('Twitter')}
+              className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 bg-white shadow-[0_6px_16px_rgba(224,24,45,0.12)] transition-transform active:scale-95"
+            >
+              <svg width="32" height="32" viewBox="0 0 24 24">
+                <path
+                  fill="#1d9bf0"
+                  d="M23 4.6c-.8.4-1.7.6-2.6.7.9-.6 1.6-1.4 2-2.5-.9.5-1.9.9-2.9 1.1a4.5 4.5 0 00-7.7 4.1C8 7.8 4.7 6 2.5 3.3c-1.2 2-.6 4.7 1.4 6-.7 0-1.4-.2-2-.6 0 2.2 1.5 4.1 3.6 4.5-.7.2-1.4.2-2 .1.6 1.8 2.2 3.1 4.2 3.1A9 9 0 011 18.3 12.8 12.8 0 007.9 20.3c8.3 0 12.9-6.9 12.7-13 .9-.6 1.7-1.4 2.4-2.4z"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {/* Switch Mode Footer */}
+          <div className="mt-6 text-center text-[15px] font-medium text-[#0f1a3a]">
+            {mode === 'signup' ? (
+              <>
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError('');
+                    setMode('login');
+                  }}
+                  className="font-semibold text-[#e0182d] hover:underline"
+                >
+                  Sign in
+                </button>
+              </>
+            ) : (
+              <>
+                Don&rsquo;t have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError('');
+                    setMode('signup');
+                  }}
+                  className="font-semibold text-[#e0182d] hover:underline"
+                >
+                  Sign up
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Guest rider link */}
+          <div className="mt-3 text-center">
             <button
               type="button"
               onClick={() => {
-                setError(null);
-                setMode('login');
+                const guestUser: UserProfile = {
+                  id: `guest-${Date.now()}`,
+                  name: 'Guest Rider',
+                  email: '',
+                  phone: '',
+                  isGuest: true,
+                };
+                onSuccess(guestUser);
               }}
-              className="text-[#D9232D] font-bold hover:underline ml-1"
+              className="text-[13px] font-medium text-[#6b7280] hover:text-[#0f1a3a] hover:underline"
             >
-              Login
+              Skip & Continue as Guest →
             </button>
-          </p>
-        ) : (
-          <p className="text-[13px] text-gray-600">
-            Don't have an account?{' '}
-            <button
-              type="button"
-              onClick={() => {
-                setError(null);
-                setMode('signup');
-              }}
-              className="text-[#D9232D] font-bold hover:underline ml-1"
-            >
-              Create Account
-            </button>
-          </p>
-        )}
+          </div>
+
+          {/* Home indicator bar */}
+          <div className="mx-auto mt-5 h-[5px] w-[130px] rounded-[5px] bg-[#111]" />
+        </div>
+
+        {/* Toast Component */}
+        <div
+          className={`fixed left-1/2 top-[calc(env(safe-area-inset-top,0px)+14px)] z-50 -translate-x-1/2 rounded-[14px] bg-[#0f1a3a] px-4 py-2.5 text-[14px] font-medium text-white shadow-xl transition-all duration-350 ${
+            toastMessage ? 'translate-y-0 opacity-100' : '-translate-y-20 opacity-0 pointer-events-none'
+          }`}
+        >
+          {toastMessage}
+        </div>
       </div>
     </div>
   );
