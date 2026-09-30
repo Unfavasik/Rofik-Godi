@@ -466,7 +466,7 @@ export default function App() {
         } ${isMobileFrameMode ? 'max-w-[440px]' : 'max-w-4xl'}`}
       >
         {/* Main Header */}
-        {!isNotificationPage && !isShopPage && activeTab !== 'search' && activeTab !== 'account' && <Header
+        {!isNotificationPage && !isShopPage && activeTab !== 'search' && activeTab !== 'account' && !['cart', 'wishlist', 'custom'].includes(activeTab) && <Header
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
           wishlistCount={wishlist.length}
           currentUser={currentUser}
@@ -498,7 +498,7 @@ export default function App() {
         {activeTab === 'notifications' ? (
           <NotificationsView onBack={() => setActiveTab('home')} />
         ) : activeTab === 'shop' ? (
-          <ShopView products={filteredProducts} wishlist={wishlist} cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)} onBack={() => setActiveTab('home')} onSearch={(value) => { setSearchQuery(value); setActiveTab('search'); }} onSelectProduct={setSelectedProduct} onQuickAdd={handleQuickAddToCart} onToggleWishlist={handleToggleWishlist} />
+          <ShopView products={filteredProducts} wishlist={wishlist} cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)} onBack={() => setActiveTab('home')} onSearch={(value) => { setSearchQuery(value); setActiveTab('search'); }} onSelectProduct={setSelectedProduct} onQuickAdd={handleQuickAddToCart} onToggleWishlist={handleToggleWishlist} onOpenCart={() => { setActiveTab('cart'); setIsCartOpen(true); }} />
         ) : activeTab === 'search' ? (
           <main className="flex-1 flex flex-col">
             <SearchView
@@ -545,6 +545,8 @@ export default function App() {
       }}
             />
           </main>
+        ) : activeTab === 'cart' || activeTab === 'wishlist' || activeTab === 'custom' ? (
+          <main className="min-h-screen flex-1 bg-[#FDFDFD]" aria-label={`${activeTab} view`} />
         ) : (
           <main className="flex-1 flex flex-col">
             {/* Hero Section Banner */}
@@ -961,7 +963,7 @@ export default function App() {
         )}
 
   {/* Bottom Tab Bar Navigation */}
-  {!isNotificationPage && !isShopPage && activeTab !== 'search' && <BottomNav
+  {!isNotificationPage && !isShopPage && activeTab !== 'search' && !['cart', 'wishlist', 'custom'].includes(activeTab) && <BottomNav
           activeTab={activeTab as 'home' | 'shop' | 'custom' | 'wishlist' | 'account' | 'cart'}
           setActiveTab={(tab) => setActiveTab(tab as RouteTab)}
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
@@ -1007,17 +1009,17 @@ export default function App() {
         />
 
         <CustomSeatBuilder
-          isOpen={isCustomBuilderOpen}
-          onClose={() => setIsCustomBuilderOpen(false)}
+          isOpen={isCustomBuilderOpen || activeTab === 'custom'}
+          onClose={() => { setIsCustomBuilderOpen(false); setActiveTab('home'); }}
           onAddCustomSeatToCart={(p, col, stitch, thick, emb) => {
             handleDetailAddToCart(p, col, stitch, thick, emb);
             setIsCartOpen(true);
           }}
         />
 
-        <CartDrawer
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
+          <CartDrawer
+          isOpen={isCartOpen || activeTab === 'cart'}
+          onClose={() => { setIsCartOpen(false); setActiveTab('home'); }}
           items={cart}
           onUpdateQuantity={handleUpdateQuantity}
           onRemoveItem={handleRemoveCartItem}
@@ -1034,8 +1036,8 @@ export default function App() {
         />
 
         <WishlistModal
-          isOpen={isWishlistOpen}
-          onClose={() => setIsWishlistOpen(false)}
+          isOpen={isWishlistOpen || activeTab === 'wishlist'}
+          onClose={() => { setIsWishlistOpen(false); setActiveTab('home'); }}
           wishlist={wishlist}
           onRemoveWishlist={(p) => handleToggleWishlist(p)}
           onSelectProduct={(p) => setSelectedProduct(p)}

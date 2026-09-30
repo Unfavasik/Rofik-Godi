@@ -15,8 +15,6 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
   onClose,
   onAddCustomSeatToCart,
 }) => {
-  if (!isOpen) return null;
-
   const [vehicleType, setVehicleType] = useState<'bike' | 'scooter' | 'toto'>('bike');
   const [brand, setBrand] = useState('Hero');
   const [model, setModel] = useState('Splendor Plus');
@@ -25,6 +23,8 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
   const [stitchPattern, setStitchPattern] = useState<'diamond' | 'ribbed' | 'racing' | 'plain'>('diamond');
   const [pipingColor, setPipingColor] = useState<{ name: string; hex: string }>({ name: 'Crimson Red', hex: '#D9232D' });
   const [embroideryText, setEmbroideryText] = useState('');
+
+  if (!isOpen) return null;
 
   // Calculate dynamic price
   let basePrice = vehicleType === 'toto' ? 1499 : 899;
