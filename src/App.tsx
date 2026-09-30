@@ -60,7 +60,8 @@ import { motion } from 'motion/react';
 export default function App() {
   // Route flow: /Onboarding -> /home, and account creation opens at /signup.
   const phaseFromPath = (pathname: string): 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth' => {
-    const route = pathname.replace(/\/$/, '') || '/home';
+    const route = pathname.replace(/\/$/, '') || '/';
+    if (route === '/') return 'splash';
     if (route === '/Onboarding' || route === '/onboarding') return 'onboarding';
     if (route === '/signup') return 'auth';
     if (route === '/signup/onboarding') return 'account-onboarding';
@@ -429,7 +430,7 @@ export default function App() {
   if (appPhase === 'splash') {
     return (
       <div className="min-h-screen bg-[#0E0E0E] flex items-center justify-center">
-        <SplashScreen onFinish={() => goToPhase('auth')} />
+        <SplashScreen onFinish={() => goToPhase('onboarding')} />
       </div>
     );
   }
@@ -752,7 +753,7 @@ export default function App() {
                         {homeFilters.priceRange === 'under_300' && 'Under ৳300'}
                         {homeFilters.priceRange === '300_600' && '৳300 - ৳600'}
                         {homeFilters.priceRange === '600_1000' && '৳600 - ৳1000'}
-                        {homeFilters.priceRange === 'above_1000' && 'Above ৳1000'}
+                        {homeFilters.priceRange === 'above_1000' && 'Above ��1000'}
                       </span>
                       <span>✕</span>
                     </button>
