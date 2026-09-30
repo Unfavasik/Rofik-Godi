@@ -141,8 +141,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             loading="eager"
             decoding="async"
             fetchPriority="high"
-            className="pointer-events-none absolute right-0 top-0 h-[290px] w-[250px] max-w-none object-cover object-[right_top]"
+            className="pointer-events-none absolute inset-x-0 top-0 h-[290px] w-full object-cover object-[right_top]"
           />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-[68%] bg-gradient-to-r from-[#fdeff1] via-[#fdeff1]/95 to-transparent" />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#fbe0e4] via-[#fbe0e4]/55 to-transparent" />
           <button
             type="button"
