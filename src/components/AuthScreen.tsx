@@ -133,7 +133,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         />
 
         {/* Top Header & Back Button */}
-        <div className="relative min-h-[250px] overflow-hidden bg-[linear-gradient(180deg,#fdeff1_0%,#fbe0e4_72%,#fbe0e4_100%)] px-5 pt-[calc(env(safe-area-inset-top,0px)+18px)]">
+        <div className={`relative overflow-hidden bg-[#fdeff1] px-5 pt-[calc(env(safe-area-inset-top,0px)+18px)] ${mode === 'signup' ? 'min-h-[259px]' : 'min-h-[278px]'}`}>
           <img
             src={mode === 'signup' ? signupAvatar : loginAvatar}
             alt=""
@@ -141,10 +141,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             loading="eager"
             decoding="async"
             fetchPriority="high"
-            className="pointer-events-none absolute right-0 top-0 h-[250px] w-[62%] object-contain object-right-top"
+            className={`pointer-events-none absolute inset-0 h-full w-full object-cover ${mode === 'signup' ? 'object-[center_top]' : 'object-[center_top]'}`}
           />
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-[68%] bg-gradient-to-r from-[#fdeff1] via-[#fdeff1]/95 to-transparent" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#fbe0e4] via-[#fbe0e4]/55 to-transparent" />
           <button
             type="button"
             aria-label="Back"
@@ -166,7 +164,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           </button>
 
           {/* Title & Subtitle */}
-          <h1 className="relative z-10 mt-[38px] max-w-[215px] whitespace-normal text-[clamp(24px,7vw,30px)] font-bold tracking-tight leading-[1.08] text-[#0f1a3a]">
+          <h1 className={`relative z-10 max-w-[220px] whitespace-nowrap font-bold tracking-tight leading-[1.08] text-[#0f1a3a] ${mode === 'signup' ? 'mt-[38px] text-[clamp(28px,8.4vw,36px)]' : 'mt-[54px] text-[clamp(25px,7.3vw,31px)]'}`}>
             {mode === 'signup' ? (
               <>
                 Get <span className="text-[#e0182d]">Started</span>
@@ -195,7 +193,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         </div>
 
         {/* Bottom Form Card */}
-        <div className="relative mt-3 flex-1 rounded-t-[38px] bg-white px-4 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] pt-5 shadow-[0_-6px_30px_rgba(224,24,45,0.08)]">
+        <div className={`relative flex-1 rounded-t-[44px] bg-white px-4 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] pt-5 shadow-[0_-6px_30px_rgba(224,24,45,0.08)] ${mode === 'signup' ? '-mt-[34px]' : '-mt-[25px]'}`}>
           <form onSubmit={handleSubmit} className="space-y-0">
             {/* Full Name Input (Signup only) */}
             {mode === 'signup' && (
