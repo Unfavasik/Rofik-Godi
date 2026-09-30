@@ -58,9 +58,29 @@ import {
 import { motion } from 'motion/react';
 
 export default function App() {
-  // App Phase State: Intro -> Main -> Account Onboarding -> Loading -> Auth
-  const [appPhase, setAppPhase] = useState<'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth'>('onboarding');
+  // Route flow: /Onboarding -> /home, and account creation opens at /signup.
+  const phaseFromPath = (pathname: string): 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth' => {
+    const route = pathname.replace(/\/$/, '') || '/home';
+    if (route === '/Onboarding' || route === '/onboarding') return 'onboarding';
+    if (route === '/signup') return 'auth';
+    if (route === '/signup/onboarding') return 'account-onboarding';
+    if (route === '/signup/loading') return 'splash';
+    return 'main';
+  };
+  const pathFromPhase = (phase: 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth') => {
+    if (phase === 'onboarding') return '/Onboarding';
+    if (phase === 'auth') return '/signup';
+    if (phase === 'account-onboarding') return '/signup/onboarding';
+    if (phase === 'splash') return '/signup/loading';
+    return '/home';
+  };
+  const [appPhase, setAppPhase] = useState<'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth'>(() => phaseFromPath(window.location.pathname));
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>('signup');
+  const goToPhase = (phase: 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth') => {
+    setAppPhase(phase);
+    const nextPath = pathFromPhase(phase);
+    if (window.location.pathname !== nextPath) window.history.pushState({ phase }, '', nextPath);
+  };
 
   // User Authentication State (Default: Guest User)
   const [currentUser, setCurrentUser] = useState<UserProfile>({
@@ -92,6 +112,7 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       isPopState.current = true;
+      setAppPhase(phaseFromPath(window.location.pathname));
       setActiveTab(routeToTab(window.location.pathname));
     };
     window.addEventListener('popstate', handlePopState);
@@ -99,6 +120,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (appPhase !== 'main') return;
     const nextPath = tabToRoute(activeTab);
     if (window.location.pathname !== nextPath) {
       if (isPopState.current) {
@@ -113,7 +135,7 @@ export default function App() {
     if (activeTab === 'shop') {
       window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     }
-  }, [activeTab]);
+  }, [activeTab, appPhase]);
 
   const [shopLayoutMode, setShopLayoutMode] = useState<'grid' | 'list'>('grid');
   const [isMobileFrameMode, setIsMobileFrameMode] = useState<boolean>(true);
@@ -363,9 +385,9 @@ export default function App() {
   const handleLoginSuccess = (user: UserProfile) => {
     setCurrentUser(user);
     setIsLoginModalOpen(false);
-    if (appPhase === 'auth') {
-      setAppPhase('main');
-    }
+  if (appPhase === 'auth') {
+  goToPhase('main');
+  }
     if (pendingCheckoutAfterLogin) {
       setPendingCheckoutAfterLogin(false);
       setIsCheckoutOpen(true);
@@ -380,12 +402,12 @@ export default function App() {
       phone: '',
       isGuest: true,
     });
-    setAppPhase('main');
+    goToPhase('main');
   };
 
   const handleOpenAuth = (mode: 'signup' | 'login' | 'phone_otp' = 'signup') => {
-    setAuthInitialMode(mode);
-    setAppPhase('auth');
+  setAuthInitialMode(mode);
+  goToPhase('auth');
   };
 
   const scrollToShop = () => {
@@ -395,19 +417,19 @@ export default function App() {
 
   // Phase 1: Product introduction. Once completed, open the app directly.
   if (appPhase === 'onboarding') {
-    return <Onboarding onFinish={() => setAppPhase('main')} />;
+    return <Onboarding onFinish={() => goToPhase('main')} />;
   }
 
   // Account creation starts with the dedicated Rofik welcome flow.
   if (appPhase === 'account-onboarding') {
-    return <RofikOnboarding onFinish={() => setAppPhase('splash')} />;
+    return <RofikOnboarding onFinish={() => goToPhase('splash')} />;
   }
 
   // Show the loading screen after Rofik onboarding, then open auth.
   if (appPhase === 'splash') {
     return (
       <div className="min-h-screen bg-[#0E0E0E] flex items-center justify-center">
-        <SplashScreen onFinish={() => setAppPhase('auth')} />
+        <SplashScreen onFinish={() => goToPhase('auth')} />
       </div>
     );
   }
@@ -419,7 +441,10 @@ export default function App() {
         <AuthScreen
           initialMode={authInitialMode}
           onSuccess={handleLoginSuccess}
-          onBack={handleContinueGuest}
+          onBack={() => {
+  handleContinueGuest();
+  window.history.replaceState({ phase: 'main' }, '', '/home');
+  }}
           onOpenTerms={() => setIsTermsConditionsOpen(true)}
           onOpenPrivacy={() => setIsPrivacyPolicyOpen(true)}
         />
@@ -493,9 +518,10 @@ export default function App() {
           <main className="flex-1 flex flex-col">
             <AccountView
               currentUser={currentUser}
-onOpenLogin={() => {
-  setAppPhase('account-onboarding');
-}}
+  onOpenLogin={() => {
+  setAuthInitialMode('signup');
+  goToPhase('auth');
+  }}
               onLogout={() => {
                 setCurrentUser({
                   id: `guest-${Date.now()}`,
@@ -504,7 +530,7 @@ onOpenLogin={() => {
                   phone: '',
                   isGuest: true,
                 });
-                setAppPhase('main');
+                goToPhase('main');
               }}
               onBackToHome={() => {
                 setActiveTab('home');
@@ -1080,8 +1106,8 @@ onOpenLogin={() => {
           }}
           reason={loginModalReason}
           onOpenAuth={(mode) => {
-            setAuthInitialMode(mode || 'signup');
-            setAppPhase('auth');
+  setAuthInitialMode(mode || 'signup');
+  goToPhase('auth');
           }}
           onFastLogin={handleLoginSuccess}
         />
