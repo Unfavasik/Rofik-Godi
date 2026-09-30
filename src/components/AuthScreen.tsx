@@ -133,7 +133,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         />
 
         {/* Top Header & Back Button */}
-        <div className="relative min-h-[290px] overflow-hidden bg-[linear-gradient(180deg,#fdeff1_0%,#fbe0e4_72%,#fbe0e4_100%)] px-6 pt-[calc(env(safe-area-inset-top,0px)+22px)]">
+        <div className={`relative overflow-hidden bg-[#fdeff1] px-5 pt-[calc(env(safe-area-inset-top,0px)+18px)] ${mode === 'signup' ? 'min-h-[259px]' : 'min-h-[278px]'}`}>
           <img
             src={mode === 'signup' ? signupAvatar : loginAvatar}
             alt=""
@@ -141,10 +141,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             loading="eager"
             decoding="async"
             fetchPriority="high"
-            className="pointer-events-none absolute inset-x-0 top-0 h-[290px] w-full object-cover object-[right_top]"
+            className={`pointer-events-none absolute inset-0 h-full w-full object-cover ${mode === 'signup' ? 'object-[center_top]' : 'object-[center_top]'}`}
           />
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-[68%] bg-gradient-to-r from-[#fdeff1] via-[#fdeff1]/95 to-transparent" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#fbe0e4] via-[#fbe0e4]/55 to-transparent" />
           <button
             type="button"
             aria-label="Back"
@@ -166,7 +164,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           </button>
 
           {/* Title & Subtitle */}
-          <h1 className="relative z-10 mt-[44px] max-w-[235px] whitespace-nowrap text-[clamp(29px,8vw,36px)] font-bold tracking-tight text-[#0f1a3a] leading-tight">
+          <h1 className={`relative z-10 max-w-[220px] whitespace-nowrap font-bold tracking-tight leading-[1.08] text-[#0f1a3a] ${mode === 'signup' ? 'mt-[38px] text-[clamp(28px,8.4vw,36px)]' : 'mt-[54px] text-[clamp(25px,7.3vw,31px)]'}`}>
             {mode === 'signup' ? (
               <>
                 Get <span className="text-[#e0182d]">Started</span>
@@ -195,12 +193,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         </div>
 
         {/* Bottom Form Card */}
-        <div className="relative mt-7 flex-1 rounded-t-[54px] bg-white px-6 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] pt-7 shadow-[0_-6px_30px_rgba(224,24,45,0.08)]">
+        <div className={`relative flex-1 rounded-t-[44px] bg-white px-4 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] pt-5 shadow-[0_-6px_30px_rgba(224,24,45,0.08)] ${mode === 'signup' ? '-mt-[34px]' : '-mt-[25px]'}`}>
           <form onSubmit={handleSubmit} className="space-y-0">
             {/* Full Name Input (Signup only) */}
             {mode === 'signup' && (
               <div className="mb-2.5">
-                <label className="flex h-[54px] items-center gap-3.5 rounded-[28px] border-[1.5px] border-[#ece4e6] bg-[#fffafa] px-5 transition-all focus-within:border-[#e0182d] focus-within:shadow-[0_0_0_4px_rgba(224,24,45,0.1)]">
+                <label className="flex h-[48px] items-center gap-3 rounded-[24px] border-[1.5px] border-[#ece4e6] bg-[#fffafa] px-5 transition-all focus-within:border-[#e0182d] focus-within:shadow-[0_0_0_4px_rgba(224,24,45,0.1)]">
                   <svg
                     className="shrink-0"
                     width="24"
@@ -221,7 +219,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Full Name"
                     autoComplete="name"
-                    className="w-full min-w-0 border-0 bg-transparent text-[16px] font-medium text-[#0f1a3a] placeholder:text-[#3d4358] focus:outline-none"
+                    className="w-full min-w-0 border-0 bg-transparent text-[14px] font-medium text-[#0f1a3a] placeholder:text-[#3d4358] focus:outline-none"
                   />
                 </label>
                 <div className="ml-3 mt-1 text-[13px] text-[#9aa0ad]">Enter Full Name</div>
@@ -230,7 +228,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
             {/* Email Input */}
             <div className="mb-2.5">
-              <label className="flex h-[54px] items-center gap-3.5 rounded-[28px] border-[1.5px] border-[#ece4e6] bg-[#fffafa] px-5 transition-all focus-within:border-[#e0182d] focus-within:shadow-[0_0_0_4px_rgba(224,24,45,0.1)]">
+              <label className="flex h-[48px] items-center gap-3 rounded-[24px] border-[1.5px] border-[#ece4e6] bg-[#fffafa] px-5 transition-all focus-within:border-[#e0182d] focus-within:shadow-[0_0_0_4px_rgba(224,24,45,0.1)]">
                 <svg
                   className="shrink-0"
                   width="24"
@@ -251,7 +249,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
                   autoComplete="email"
-                  className="w-full min-w-0 border-0 bg-transparent text-[16px] font-medium text-[#0f1a3a] placeholder:text-[#3d4358] focus:outline-none"
+                  className="w-full min-w-0 border-0 bg-transparent text-[14px] font-medium text-[#0f1a3a] placeholder:text-[#3d4358] focus:outline-none"
                 />
               </label>
               <div className="ml-3 mt-1 text-[13px] text-[#9aa0ad]">Enter Email</div>
@@ -259,7 +257,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
             {/* Password Input */}
             <div className="mb-2.5">
-              <label className="flex h-[54px] items-center gap-3.5 rounded-[28px] border-[1.5px] border-[#ece4e6] bg-[#fffafa] px-5 transition-all focus-within:border-[#e0182d] focus-within:shadow-[0_0_0_4px_rgba(224,24,45,0.1)]">
+              <label className="flex h-[48px] items-center gap-3 rounded-[24px] border-[1.5px] border-[#ece4e6] bg-[#fffafa] px-5 transition-all focus-within:border-[#e0182d] focus-within:shadow-[0_0_0_4px_rgba(224,24,45,0.1)]">
                 <svg
                   className="shrink-0"
                   width="24"
@@ -281,7 +279,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
                   autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                  className="w-full min-w-0 border-0 bg-transparent text-[16px] font-medium text-[#0f1a3a] placeholder:text-[#3d4358] focus:outline-none"
+                  className="w-full min-w-0 border-0 bg-transparent text-[14px] font-medium text-[#0f1a3a] placeholder:text-[#3d4358] focus:outline-none"
                 />
                 <button
                   type="button"
