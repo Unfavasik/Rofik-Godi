@@ -401,7 +401,8 @@ export const REVIEWS: Review[] = [
 export const WORKSHOP_INFO = {
   name: 'ROFIK GODI CENTRE',
   subtitle: 'Local Ride Essentials & Seat Manufacturing',
-  address: 'Main Station Road, Near Central Auto Stand, West Bengal',
+  address: 'Kadbeltala, Berhampore, Murshidabad, West Bengal - 742101',
+  mapsUrl: 'https://maps.app.goo.gl/dyY4Uru6FwLUycvv5?g_st=ac',
   phone: '+91 98321 45678',
   whatsapp: '+91 98321 45678',
   email: 'support@rofikgodi.com',
