@@ -1,8 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { WORKSHOP_INFO } from '../data/products';
-import { Map as MapLibreMap, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl';
-import mapWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
-import 'maplibre-gl/dist/maplibre-gl.css';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, MapPin, Phone, ShieldCheck, CheckCircle2, Heart, Share2, Copy, Star, Navigation, Car, Bike, Footprints, Mic, Volume2, ArrowUpRight } from 'lucide-react';
 
@@ -12,34 +9,10 @@ interface StoreLocationModalProps {
 }
 
 export const StoreLocationModal: React.FC<StoreLocationModalProps> = ({ isOpen, onClose }) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<MapLibreMap | null>(null);
   const [screen, setScreen] = React.useState<'detail' | 'directions' | 'navigation'>('detail');
   const [travelMode, setTravelMode] = React.useState<'drive' | 'bike' | 'walk'>('drive');
 
-  useEffect(() => {
-    if (!mapContainer.current) return;
-    const apiKey = import.meta.env.VITE_MAPTILER_API_KEY;
-    if (!apiKey) return;
-
-    setWorkerUrl(mapWorkerUrl);
-    const map = new MapLibreMap({
-      container: mapContainer.current,
-      style: `https://api.maptiler.com/maps/streets-v4/style.json?key=${apiKey}`,
-      center: [88.2528, 24.0988],
-      zoom: screen === 'detail' ? 14 : 13.8,
-      attributionControl: false,
-    });
-    mapRef.current = map;
-    map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
-    new Marker({ color: '#ef233c' }).setLngLat([88.2528, 24.0988]).addTo(map);
-    map.on('load', () => {
-      if (screen !== 'navigation') return;
-      map.addSource('route', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [[88.244, 24.075], [88.247, 24.083], [88.2528, 24.0988]] }, properties: {} } });
-      map.addLayer({ id: 'route-line', type: 'line', source: 'route', paint: { 'line-color': '#1769ff', 'line-width': 7, 'line-cap': 'round', 'line-join': 'round' } });
-    });
-    return () => { mapRef.current = null; map.remove(); };
-  }, [isOpen, screen]);
+  const mapEmbedUrl = 'https://www.google.com/maps?q=Kadbeltala%2C%20Berhampore%2C%20Murshidabad%2C%20West%20Bengal%20742101&output=embed';
 
   if (!isOpen) return null;
 
@@ -48,8 +21,11 @@ export const StoreLocationModal: React.FC<StoreLocationModalProps> = ({ isOpen, 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 overflow-y-auto bg-white text-[#101828]">
         <div className="mx-auto min-h-screen w-full max-w-[460px] bg-white pb-8">
           <div className="relative h-[310px] overflow-hidden bg-slate-100">
-            <div ref={mapContainer} className="absolute inset-0" aria-label="Map showing Rofik Godi Centre" />
+            <iframe src={mapEmbedUrl} title="Map showing Rofik Godi Centre" className="absolute inset-0 h-full w-full border-0" loading="eager" referrerPolicy="no-referrer-when-downgrade" />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/10" />
+            <div className="absolute left-1/2 top-1/2 flex size-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-4 border-white bg-[#ef233c] text-white shadow-xl"><MapPin className="size-7 fill-white" /></div>
+            {screen === 'navigation' && <div className="pointer-events-none absolute left-[28%] top-[52%] h-24 w-3 rotate-[28deg] rounded-full bg-[#1769ff] shadow-[0_0_0_3px_white]" />}
+
             {screen === 'navigation' && <><div className="absolute left-4 right-4 top-5 rounded-3xl bg-[#111820] p-5 text-white shadow-2xl"><div className="flex items-start gap-4"><ArrowUpRight className="mt-1 size-12 rotate-45" /><div><p className="text-3xl font-extrabold">200 m</p><p className="text-base">Turn right onto</p><p className="text-lg font-bold">Kadbeltala Road</p></div><Mic className="ml-auto size-7 rounded-full bg-white/15 p-1" /></div></div><div className="absolute bottom-4 left-4 right-4 rounded-3xl bg-white p-5 text-center shadow-2xl"><p className="text-4xl font-extrabold text-emerald-600">6 min</p><p className="text-sm text-slate-500">1.8 km&nbsp; · &nbsp;9:47 AM</p><button type="button" onClick={() => setScreen('directions')} className="mt-3 text-sm font-bold text-slate-700">Exit navigation</button></div></>}
             <div className="absolute bottom-4 left-4 rounded-2xl bg-white/95 px-4 py-3 shadow-lg backdrop-blur-sm">
               <p className="text-sm font-extrabold text-[#101828]">Rofik Godi Centre</p>
