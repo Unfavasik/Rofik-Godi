@@ -4,7 +4,7 @@
  *
  * Files:
  *   src/components/RofikOnboarding.tsx
- *   src/assets/onboarding/welcome-1.webp | welcome-2.webp | welcome-3.webp
+ *   src/assets/onboarding/welcome-1.svg | welcome-2.svg | welcome-3.svg
  *
  * Optional font (index.html <head>):
  *   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
@@ -15,9 +15,9 @@
  */
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent } from "react";
-import welcome1 from "../assets/onboarding/welcome-1.webp";
-import welcome2 from "../assets/onboarding/welcome-2.webp";
-import welcome3 from "../assets/onboarding/welcome-3.webp";
+import welcome1 from "../assets/onboarding/welcome-1.svg";
+import welcome2 from "../assets/onboarding/welcome-2.svg";
+import welcome3 from "../assets/onboarding/welcome-3.svg";
 
 type Theme = "dark" | "light";
 type Slide = {

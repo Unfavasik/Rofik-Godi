@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
-import signupAvatar from '../assets/onboarding/signup.webp';
-import loginAvatar from '../assets/onboarding/singing.webp';
+import signupAvatar from '../assets/onboarding/signup.svg';
+import loginAvatar from '../assets/onboarding/singing.svg';
 
 interface AuthScreenProps {
   initialMode?: 'signup' | 'login' | 'phone_otp';
