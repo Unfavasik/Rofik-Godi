@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
+import signupAvatar from '../assets/onboarding/signup.webp';
+import loginAvatar from '../assets/onboarding/singing.webp';
 
 interface AuthScreenProps {
   initialMode?: 'signup' | 'login' | 'phone_otp';
@@ -131,12 +133,22 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         />
 
         {/* Top Header & Back Button */}
-        <div className="relative px-6 pt-[calc(env(safe-area-inset-top,0px)+22px)]">
+        <div className="relative min-h-[305px] overflow-hidden px-6 pt-[calc(env(safe-area-inset-top,0px)+22px)]">
+          <img
+            src={mode === 'signup' ? signupAvatar : loginAvatar}
+            alt=""
+            aria-hidden="true"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            className="pointer-events-none absolute inset-x-0 top-0 h-[330px] w-full object-cover object-[center_top]"
+          />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#fbe0e4] via-[#fbe0e4]/55 to-transparent" />
           <button
             type="button"
             aria-label="Back"
             onClick={onBack}
-            className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border-0 bg-white text-[#111] shadow-[0_6px_16px_rgba(224,24,45,0.15)] transition-transform active:scale-95"
+            className="relative z-10 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border-0 bg-white text-[#111] shadow-[0_6px_16px_rgba(224,24,45,0.15)] transition-transform active:scale-95"
           >
             <svg
               width="24"
@@ -153,7 +165,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           </button>
 
           {/* Title & Subtitle */}
-          <h1 className="mt-[44px] text-[clamp(34px,9vw,40px)] font-bold tracking-tight text-[#0f1a3a] leading-tight">
+          <h1 className="relative z-10 mt-[44px] text-[clamp(34px,9vw,40px)] font-bold tracking-tight text-[#0f1a3a] leading-tight">
             {mode === 'signup' ? (
               <>
                 Get <span className="text-[#e0182d]">Started</span>
@@ -164,7 +176,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               </>
             )}
           </h1>
-          <p className="mt-2.5 max-w-[280px] text-[15px] font-normal leading-[1.55] text-[#3b4258]">
+          <p className="relative z-10 mt-2.5 max-w-[280px] text-[15px] font-normal leading-[1.55] text-[#3b4258]">
             {mode === 'signup' ? (
               <>
                 Create your account to explore
