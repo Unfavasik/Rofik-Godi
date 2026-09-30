@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { WORKSHOP_INFO } from '../data/products';
 import { Map as MapLibreMap, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl';
+import mapWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, MapPin, Phone, ShieldCheck, CheckCircle2, Heart, Share2, Copy, Star, Navigation, Car, Bike, Footprints, Mic, Volume2, ArrowUpRight } from 'lucide-react';
@@ -21,7 +22,7 @@ export const StoreLocationModal: React.FC<StoreLocationModalProps> = ({ isOpen, 
     const apiKey = import.meta.env.VITE_MAPTILER_API_KEY;
     if (!apiKey) return;
 
-    setWorkerUrl('https://cdn.jsdelivr.net/npm/maplibre-gl@6.11.2/dist/maplibre-gl-csp-worker.js');
+    setWorkerUrl(mapWorkerUrl);
     const map = new MapLibreMap({
       container: mapContainer.current,
       style: `https://api.maptiler.com/maps/streets-v4/style.json?key=${apiKey}`,
