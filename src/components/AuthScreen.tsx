@@ -116,9 +116,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   };
 
   return (
-    <div className="flex min-h-screen w-full justify-center bg-[#f7d9de] font-['Poppins',sans-serif] text-[#0f1a3a] select-none antialiased">
+    <div className="flex min-h-screen w-full justify-center overflow-x-hidden bg-[#f7d9de] font-['Poppins',sans-serif] text-[#0f1a3a] select-none antialiased">
       {/* App Container matching exact 430px phone view */}
-      <div className="relative flex min-h-full w-full max-w-[430px] flex-col overflow-y-auto bg-[linear-gradient(180deg,#fdeff1_0%,#fbe0e4_40%,#fdeff1_100%)] shadow-2xl">
+      <div className="relative flex min-h-full w-full min-w-0 max-w-[430px] flex-col overflow-x-hidden overflow-y-auto bg-[linear-gradient(180deg,#fdeff1_0%,#fbe0e4_40%,#fdeff1_100%)] shadow-2xl">
         
         {/* Decorative Background Glow Spheres */}
         <div
@@ -133,7 +133,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         />
 
         {/* Top Header & Back Button */}
-        <div className="relative min-h-[305px] overflow-hidden bg-[linear-gradient(180deg,#fdeff1_0%,#fbe0e4_72%,#fbe0e4_100%)] px-6 pt-[calc(env(safe-area-inset-top,0px)+22px)]">
+        <div className="relative min-h-[290px] overflow-hidden bg-[linear-gradient(180deg,#fdeff1_0%,#fbe0e4_72%,#fbe0e4_100%)] px-6 pt-[calc(env(safe-area-inset-top,0px)+22px)]">
           <img
             src={mode === 'signup' ? signupAvatar : loginAvatar}
             alt=""
@@ -141,7 +141,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             loading="eager"
             decoding="async"
             fetchPriority="high"
-            className="pointer-events-none absolute right-[-8px] top-0 h-[330px] w-[300px] max-w-none object-cover object-[center_top]"
+            className="pointer-events-none absolute right-0 top-0 h-[290px] w-[250px] max-w-none object-cover object-[right_top]"
           />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#fbe0e4] via-[#fbe0e4]/55 to-transparent" />
           <button
@@ -165,7 +165,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           </button>
 
           {/* Title & Subtitle */}
-          <h1 className="relative z-10 mt-[44px] max-w-[250px] text-[clamp(32px,8.5vw,38px)] font-bold tracking-tight text-[#0f1a3a] leading-tight">
+          <h1 className="relative z-10 mt-[44px] max-w-[235px] whitespace-nowrap text-[clamp(29px,8vw,36px)] font-bold tracking-tight text-[#0f1a3a] leading-tight">
             {mode === 'signup' ? (
               <>
                 Get <span className="text-[#e0182d]">Started</span>
@@ -176,7 +176,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               </>
             )}
           </h1>
-          <p className="relative z-10 mt-2.5 max-w-[225px] text-[15px] font-normal leading-[1.55] text-[#3b4258]">
+          <p className="relative z-10 mt-2.5 max-w-[205px] text-[15px] font-normal leading-[1.55] text-[#3b4258]">
             {mode === 'signup' ? (
               <>
                 Create your account to explore
