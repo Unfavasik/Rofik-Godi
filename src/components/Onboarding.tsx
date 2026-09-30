@@ -4,7 +4,7 @@
  *
  * Files:
  *   src/components/Onboarding.tsx
- *   src/assets/onboarding/slide-1.svg | slide-2.svg | slide-3.svg
+ *   src/assets/onboarding/slide-1.webp | slide-2.svg | slide-3.svg
  *
  * Optional font (index.html <head>):
  *   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
@@ -15,7 +15,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent } from "react";
-import slide1 from "../assets/onboarding/slide-1.svg";
+import slide1 from "../assets/onboarding/slide-1.webp";
 import slide2 from "../assets/onboarding/slide-2.svg";
 import slide3 from "../assets/onboarding/slide-3.svg";
 
