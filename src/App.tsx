@@ -422,10 +422,10 @@ export default function App() {
 
   // Account creation starts with the dedicated Rofik welcome flow.
   if (appPhase === 'account-onboarding') {
-    return <RofikOnboarding onFinish={() => goToPhase('splash')} />;
+    return <RofikOnboarding onFinish={() => goToPhase('auth')} />;
   }
 
-  // Show the loading screen after Rofik onboarding, then open auth.
+  // Keep the legacy loading phase available for existing links, but the signup onboarding now opens /signup directly.
   if (appPhase === 'splash') {
     return (
       <div className="min-h-screen bg-[#0E0E0E] flex items-center justify-center">
@@ -520,7 +520,7 @@ export default function App() {
               currentUser={currentUser}
   onOpenLogin={() => {
   setAuthInitialMode('signup');
-  goToPhase('auth');
+  goToPhase('account-onboarding');
   }}
               onLogout={() => {
                 setCurrentUser({
