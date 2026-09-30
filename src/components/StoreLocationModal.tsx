@@ -1,7 +1,7 @@
 import React from 'react';
 import { WORKSHOP_INFO } from '../data/products';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, MapPin, Phone, MessageCircle, Clock, Wrench, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { X, MapPin, Phone, ShieldCheck, CheckCircle2, Heart, Share2, Copy, Star, Navigation } from 'lucide-react';
 
 interface StoreLocationModalProps {
   isOpen: boolean;
@@ -13,112 +13,26 @@ export const StoreLocationModal: React.FC<StoreLocationModalProps> = ({ isOpen, 
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-black/65 backdrop-blur-sm"
-        />
-
-        {/* Modal */}
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          className="relative w-full max-w-[460px] max-h-[90vh] bg-white rounded-[28px] shadow-2xl flex flex-col z-10 overflow-hidden text-gray-800"
-        >
-          {/* Top Banner */}
-          <div className="bg-gradient-to-r from-gray-950 via-gray-900 to-[#1e232a] text-white p-5 pt-6 relative">
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-8 h-8 rounded-lg bg-[#D9232D] flex items-center justify-center font-black text-sm">
-                R
-              </div>
-              <h3 className="text-xl font-black tracking-tight">{WORKSHOP_INFO.name}</h3>
-            </div>
-            <p className="text-[11px] text-gray-300">{WORKSHOP_INFO.subtitle}</p>
-          </div>
-
-          {/* Body Content */}
-          <div className="overflow-y-auto px-5 py-4 space-y-4 no-scrollbar">
-            {/* Address Card */}
-            <div className="bg-gray-50 rounded-2xl p-3.5 border border-gray-100 flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-red-100 text-[#D9232D] flex items-center justify-center flex-shrink-0 mt-0.5">
-                <MapPin className="w-4 h-4" />
-              </div>
-              <div>
-                <span className="text-[12px] font-black text-gray-900 block">Workshop & Retail Hub</span>
-                <p className="text-[11.5px] text-gray-600 mt-0.5">{WORKSHOP_INFO.address}</p>
-              </div>
-            </div>
-
-            {/* Timings */}
-            <div className="bg-gray-50 rounded-2xl p-3.5 border border-gray-100 flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Clock className="w-4 h-4" />
-              </div>
-              <div>
-                <span className="text-[12px] font-black text-gray-900 block">Working Hours</span>
-                <p className="text-[11.5px] text-gray-600 mt-0.5">{WORKSHOP_INFO.workingHours}</p>
-              </div>
-            </div>
-
-            {/* Direct Contacts */}
-            <div className="grid grid-cols-2 gap-2">
-              <a
-                href={`tel:${WORKSHOP_INFO.phone}`}
-                className="p-3 bg-gray-100 hover:bg-gray-200 rounded-2xl flex items-center justify-center gap-2 text-[12px] font-bold text-gray-900 transition-colors"
-              >
-                <Phone className="w-4 h-4 text-[#D9232D]" />
-                <span>Call Workshop</span>
-              </a>
-
-              <a
-                href={`https://wa.me/919832145678?text=Hello%20Rofik%20Godi,%20I%20want%20to%20inquire%20about%20seat%20covers.`}
-                target="_blank"
-                rel="noreferrer"
-                className="p-3 bg-emerald-600 hover:bg-emerald-700 rounded-2xl flex items-center justify-center gap-2 text-[12px] font-bold text-white transition-colors"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>WhatsApp Chat</span>
-              </a>
-            </div>
-
-            {/* Free Fitment Services */}
-            <div>
-              <h4 className="text-[12px] font-black text-gray-900 mb-2 flex items-center gap-1.5">
-                <Wrench className="w-3.5 h-3.5 text-[#D9232D]" />
-                <span>On-Site Workshop Services:</span>
-              </h4>
-              <div className="space-y-1.5">
-                {WORKSHOP_INFO.services.map((s, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-[11.5px] text-gray-700 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                    <span>{s}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Quality Guarantee Notice */}
-            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-start gap-2.5">
-              <ShieldCheck className="w-5 h-5 text-emerald-700 flex-shrink-0 mt-0.5" />
-              <div className="text-[11px] text-emerald-900">
-                <strong>100% Genuine Stitched Quality:</strong> Every seat cover crafted at Rofik Godi is quality inspected with UV-resistant Japanese thread and 1-year tear guarantee.
-              </div>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 overflow-y-auto bg-white text-[#101828]">
+        <div className="mx-auto min-h-screen w-full max-w-[460px] bg-white pb-8">
+          <div className="relative h-[310px] overflow-hidden bg-slate-100">
+            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot_2026-09-30-18-57-57-27_99c04817c0de5652397fc8b56c3b3817-x5zsZMZBI9xvrT5IVQ8L6B6ZBVKe9u.jpg" alt="Rofik Godi Centre storefront" className="h-full w-full object-cover object-center" />
+            <div className="absolute inset-x-0 top-0 flex items-center justify-between p-5 pt-[calc(env(safe-area-inset-top,0px)+18px)]">
+              <button onClick={onClose} aria-label="Back" className="flex size-10 items-center justify-center rounded-full bg-white/95 shadow-md"><X className="size-5" /></button>
+              <div className="flex gap-2"><button aria-label="Favorite store" className="flex size-10 items-center justify-center rounded-full bg-white/95 text-[#ef233c] shadow-md"><Heart className="size-5 fill-[#ef233c]" /></button><button aria-label="Share store" className="flex size-10 items-center justify-center rounded-full bg-white/95 shadow-md"><Share2 className="size-5" /></button></div>
             </div>
           </div>
-        </motion.div>
-      </div>
+          <div className="-mt-7 relative rounded-t-[30px] bg-white px-5 pt-5">
+            <div className="flex items-center gap-1 text-sm text-amber-500"><Star className="size-5 fill-amber-400" /><strong className="text-lg text-[#101828]">4.8</strong><span className="text-slate-500">(128 reviews)</span></div>
+            <h1 className="mt-2 text-[30px] font-extrabold tracking-tight">Rofik Godi Centre</h1>
+            <p className="text-sm font-medium text-slate-500">BIKE · TOTO · SEAT COVERS</p>
+            <div className="mt-5 grid grid-cols-4 gap-2">{['Premium Seat Covers','Professional Fitting','All Bike & Toto Models','Expert Support'].map((item) => <div key={item} className="flex min-h-[92px] flex-col items-center justify-center rounded-2xl border border-slate-100 bg-white p-2 text-center shadow-sm"><ShieldCheck className="mb-2 size-7 text-[#ef233c]" /><span className="text-[11px] font-semibold leading-tight text-slate-700">{item}</span></div>)}</div>
+            <div className="mt-5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm"><div className="flex items-start gap-3 p-4"><MapPin className="mt-1 size-6 shrink-0 text-slate-900" /><div className="flex-1 text-sm font-medium leading-snug text-slate-700"><p>{WORKSHOP_INFO.address}</p></div><button aria-label="Copy address" className="text-slate-700"><Copy className="size-5" /></button></div><div className="border-t border-slate-100 px-4 py-3"><span className="font-bold text-emerald-600">Open Now</span><span className="ml-6 text-sm text-slate-500">{WORKSHOP_INFO.workingHours}</span></div></div>
+            <div className="mt-5 grid grid-cols-2 gap-3"><a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(WORKSHOP_INFO.address)}`} target="_blank" rel="noreferrer" className="flex h-14 items-center justify-center gap-2 rounded-2xl border-2 border-[#ef233c] text-base font-bold text-[#ef233c]"><Navigation className="size-5" />Get Directions</a><a href={`tel:${WORKSHOP_INFO.phone}`} className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-[#ef233c] text-base font-bold text-white"><Phone className="size-5" />Call Now</a></div>
+            <div className="mt-7"><h2 className="text-xl font-extrabold">Visit us for</h2><div className="mt-3 flex flex-col gap-2">{WORKSHOP_INFO.services.map((s) => <div key={s} className="flex items-center gap-2 rounded-xl bg-slate-50 p-3 text-sm text-slate-700"><CheckCircle2 className="size-4 text-emerald-600" />{s}</div>)}</div></div>
+          </div>
+        </div>
+      </motion.div>
     </AnimatePresence>
   );
 };

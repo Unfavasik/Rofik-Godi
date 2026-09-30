@@ -478,19 +478,18 @@ export const AccountView: React.FC<AccountViewProps> = ({
               </div>
               {/* Get directions pill button */}
               <div className="pt-2">
-                <a
-                  href="https://maps.google.com/?q=Kadbeltala,+Murshidabad"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center space-x-1.5 bg-[#FEE5DF] hover:bg-[#FCD8CF] text-[#C83F2D] text-xs font-semibold px-4 py-1.5 rounded-full transition-colors"
+  <button
+  type="button"
+  onClick={onOpenStoreInfo}
+  className="inline-flex items-center space-x-1.5 bg-[#FEE5DF] hover:bg-[#FCD8CF] text-[#C83F2D] text-xs font-semibold px-4 py-1.5 rounded-full transition-colors"
                 >
                   <span>Get directions</span>
                   <svg className="w-3 h-3 text-[#C83F2D]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                     <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                </a>
-              </div>
-            </div>
+  </button>
+  </div>
+  </div>
 
             {/* Right 3D Isometric Map / Store Preview Graphic */}
             <div className="col-span-5 h-full min-h-[140px] rounded-2xl overflow-hidden relative shadow-inner bg-[#E7F0FA] flex items-center justify-center p-2">
