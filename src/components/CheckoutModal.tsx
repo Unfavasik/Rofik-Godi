@@ -35,8 +35,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   couponCode,
   onClearCart,
 }) => {
-  if (!isOpen) return null;
-
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
@@ -48,6 +46,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod' | 'card'>('upi');
   const [placedOrder, setPlacedOrder] = useState<OrderDetails | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  if (!isOpen) return null;
 
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const deliveryFee = deliveryType === 'workshop_pickup' || subtotal >= 999 ? 0 : 70;
