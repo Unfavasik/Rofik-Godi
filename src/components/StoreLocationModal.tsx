@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { WORKSHOP_INFO } from '../data/products';
+import { Map as MapLibreMap, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, MapPin, Phone, ShieldCheck, CheckCircle2, Heart, Share2, Copy, Star, Navigation } from 'lucide-react';
 
@@ -9,6 +11,26 @@ interface StoreLocationModalProps {
 }
 
 export const StoreLocationModal: React.FC<StoreLocationModalProps> = ({ isOpen, onClose }) => {
+  const mapContainer = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!mapContainer.current) return;
+    const apiKey = import.meta.env.VITE_MAPTILER_API_KEY;
+    if (!apiKey) return;
+
+    setWorkerUrl('https://cdn.jsdelivr.net/npm/maplibre-gl@6.11.2/dist/maplibre-gl-csp-worker.js');
+    const map = new MapLibreMap({
+      container: mapContainer.current,
+      style: `https://api.maptiler.com/maps/streets-v4/style.json?key=${apiKey}`,
+      center: [88.2528, 24.0988],
+      zoom: 14,
+      attributionControl: false,
+    });
+    map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
+    new Marker({ color: '#ef233c' }).setLngLat([88.2528, 24.0988]).addTo(map);
+    return () => map.remove();
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -16,7 +38,12 @@ export const StoreLocationModal: React.FC<StoreLocationModalProps> = ({ isOpen, 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 overflow-y-auto bg-white text-[#101828]">
         <div className="mx-auto min-h-screen w-full max-w-[460px] bg-white pb-8">
           <div className="relative h-[310px] overflow-hidden bg-slate-100">
-            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot_2026-09-30-18-57-57-27_99c04817c0de5652397fc8b56c3b3817-x5zsZMZBI9xvrT5IVQ8L6B6ZBVKe9u.jpg" alt="Rofik Godi Centre storefront" className="h-full w-full object-cover object-center" />
+            <div ref={mapContainer} className="absolute inset-0" aria-label="Map showing Rofik Godi Centre" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/10" />
+            <div className="absolute bottom-4 left-4 rounded-2xl bg-white/95 px-4 py-3 shadow-lg backdrop-blur-sm">
+              <p className="text-sm font-extrabold text-[#101828]">Rofik Godi Centre</p>
+              <p className="text-xs text-slate-500">Kadbeltala, Murshidabad</p>
+            </div>
             <div className="absolute inset-x-0 top-0 flex items-center justify-between p-5 pt-[calc(env(safe-area-inset-top,0px)+18px)]">
               <button onClick={onClose} aria-label="Back" className="flex size-10 items-center justify-center rounded-full bg-white/95 shadow-md"><X className="size-5" /></button>
               <div className="flex gap-2"><button aria-label="Favorite store" className="flex size-10 items-center justify-center rounded-full bg-white/95 text-[#ef233c] shadow-md"><Heart className="size-5 fill-[#ef233c]" /></button><button aria-label="Share store" className="flex size-10 items-center justify-center rounded-full bg-white/95 shadow-md"><Share2 className="size-5" /></button></div>
