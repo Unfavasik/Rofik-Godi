@@ -30,6 +30,7 @@ import { LoginRequiredModal } from './components/LoginRequiredModal';
 import { SearchView } from './components/SearchView';
 import { NotificationsView } from './components/NotificationsView';
 import { ShopView } from './components/ShopView';
+import { AdminPanel } from './components/AdminPanel';
 import {
   FilterSortModal,
   FilterState,
@@ -417,6 +418,13 @@ export default function App() {
   };
 
   // Phase 1: Product introduction. Once completed, open the app directly.
+  if (window.location.pathname.replace(/\/$/, '') === '/admin') {
+    return <AdminPanel onBackToStore={() => {
+      window.history.pushState({}, '', '/home');
+      window.location.reload();
+    }} />;
+  }
+
   if (appPhase === 'onboarding') {
     return <Onboarding onFinish={() => goToPhase('main')} />;
   }
