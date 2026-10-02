@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { PRODUCTS } from '../data/products';
 import type { Product } from '../types';
+import { AdminProductManager } from './AdminProductManager';
 
 type AdminSection = 'overview' | 'orders' | 'products' | 'customers' | 'reviews' | 'marketing' | 'analytics' | 'settings';
 type OrderStatus = 'Processing' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled';
@@ -131,7 +132,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
       <main className="mx-auto max-w-[1440px] p-4 md:p-8">
         {section === 'overview' && <Overview onNavigate={goTo} notify={notify} />}
         {section === 'orders' && <OrdersView orders={filteredOrders} filter={orderFilter} setFilter={setOrderFilter} query={query} notify={notify} />}
-        {section === 'products' && <ProductsView products={filteredProducts} onAdd={() => setShowProductModal(true)} onToggle={(id) => { setProductList((items) => items.map((p) => p.id === id ? { ...p, inStock: !p.inStock } : p)); notify('Product inventory updated'); }} notify={notify} />}
+        {section === 'products' && <AdminProductManager initialProducts={productList} onProductsChange={setProductList} notify={notify} />}
         {section === 'customers' && <CustomersView query={query} notify={notify} />}
         {section === 'reviews' && <ReviewsView notify={notify} />}
         {section === 'marketing' && <MarketingView notify={notify} />}
