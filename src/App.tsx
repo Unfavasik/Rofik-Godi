@@ -57,6 +57,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { loadPublicProducts } from './lib/supabaseProducts';
 
 export default function App() {
   // Route flow: /Onboarding -> /home, and account creation opens at /signup.
@@ -198,6 +199,14 @@ export default function App() {
   const [checkoutDiscount, setCheckoutDiscount] = useState(0);
   const [checkoutCoupon, setCheckoutCoupon] = useState('');
 
+  // Supabase is the live catalog source; bundled products remain the offline fallback.
+  const [catalogProducts, setCatalogProducts] = useState<Product[]>(PRODUCTS);
+  useEffect(() => {
+    loadPublicProducts().then(setCatalogProducts).catch(() => {
+      // Keep the bundled catalog available if the public API is temporarily unavailable.
+    });
+  }, []);
+
   // Active home filters count
   const activeHomeFiltersCount = useMemo(() => {
     let count = 0;
@@ -214,7 +223,7 @@ export default function App() {
 
   // Filtered Products
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter((p) => {
+    return catalogProducts.filter((p) => {
       // Category check (sync selectedCategory with homeFilters)
       const effectiveCategory = homeFilters.category !== 'all' ? homeFilters.category : selectedCategory;
       if (effectiveCategory !== 'all' && p.category !== effectiveCategory) {
@@ -607,7 +616,7 @@ export default function App() {
 
                 {/* Horizontal scrolling shelf */}
                 <div className="flex space-x-3.5 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-5 px-5">
-                  {PRODUCTS.slice(0, 4).map((prod) => (
+                  {catalogProducts.slice(0, 4).map((prod) => (
                     <ProductCard
                       key={prod.id}
                       product={prod}
