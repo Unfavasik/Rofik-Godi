@@ -45,3 +45,9 @@ export async function verifyPickupPayment(orderNumber: string) {
   });
   return { error };
 }
+
+export async function verifyStorePickupToken(token: string) {
+  if (!supabase) return { data: null, error: new Error('Service configuration unavailable. Please try again.') };
+  const { data, error } = await supabase.rpc('verify_store_pickup_token', { p_token: token.trim() });
+  return { data: data as { order_number?: string; status?: string; picked_up_at?: string } | null, error };
+}

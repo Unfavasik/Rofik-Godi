@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, VehicleCategory } from '../types';
-import { PRODUCTS } from '../data/products';
 import { ProductCard } from './ProductCard';
 import {
   FilterSortModal,
@@ -31,6 +30,7 @@ import {
 } from './FilterSortModal';
 
 interface SearchViewProps {
+  products: Product[];
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   onSelectProduct: (p: Product) => void;
@@ -51,6 +51,7 @@ const DEFAULT_RECENT_SEARCHES = [
 ];
 
 export const SearchView: React.FC<SearchViewProps> = ({
+  products,
   searchQuery,
   setSearchQuery,
   onSelectProduct,
@@ -204,7 +205,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
     const q = searchQuery.toLowerCase().trim();
 
     // 1. Filter
-    let list = PRODUCTS.filter((p) => {
+    let list = products.filter((p) => {
       // Category filter
       if (filters.category !== 'all' && p.category !== filters.category) {
         return false;
@@ -285,7 +286,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
           );
       }
     });
-  }, [searchQuery, filters, sortBy]);
+  }, [searchQuery, filters, sortBy, products]);
 
   // Quick reset all filters
   const resetAllFilters = () => {

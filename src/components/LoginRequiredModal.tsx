@@ -1,13 +1,11 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Lock, X, ShieldCheck, ArrowRight, UserCheck, Sparkles } from 'lucide-react';
-import { UserProfile } from '../types';
 
 interface LoginRequiredModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenAuth: (mode?: 'signup' | 'login') => void;
-  onFastLogin: (user: UserProfile) => void;
   reason?: string;
 }
 
@@ -15,23 +13,9 @@ export const LoginRequiredModal: React.FC<LoginRequiredModalProps> = ({
   isOpen,
   onClose,
   onOpenAuth,
-  onFastLogin,
   reason = 'Please login to place your order.',
 }) => {
   if (!isOpen) return null;
-
-  const handleQuickGoogle = () => {
-    const guestToUser: UserProfile = {
-      id: `usr-google-${Date.now()}`,
-      name: 'Asif Ikbal',
-      email: 'asif.ikbal@gmail.com',
-      phone: '+91 98765 43210',
-      isGuest: false,
-      vehicle: 'Hero Splendor Plus & Toto',
-      joinedDate: 'September 2026',
-    };
-    onFastLogin(guestToUser);
-  };
 
   return (
     <AnimatePresence>
@@ -72,7 +56,7 @@ export const LoginRequiredModal: React.FC<LoginRequiredModalProps> = ({
             </h3>
 
             <p className="text-[13px] text-gray-500 leading-relaxed max-w-[320px]">
-              Sign in with your account to securely track orders, save your garage addresses and earn loyalty rewards.
+              Sign in with your account to securely track pickup orders, save your profile and earn loyalty rewards.
             </p>
           </div>
 
@@ -92,7 +76,10 @@ export const LoginRequiredModal: React.FC<LoginRequiredModalProps> = ({
           <div className="space-y-2.5 pt-1">
             {/* Google 1-Tap */}
             <button
-              onClick={handleQuickGoogle}
+              onClick={() => {
+                onClose();
+                onOpenAuth('login');
+              }}
               className="w-full h-12 bg-[#D9232D] hover:bg-[#C01B24] active:scale-[0.98] text-white rounded-2xl flex items-center justify-center space-x-3 shadow-[0_4px_14px_rgba(217,35,45,0.3)] transition-all font-bold text-[14.5px]"
             >
               <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center flex-shrink-0">

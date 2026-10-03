@@ -27,6 +27,8 @@ import { ReviewComposer } from './ReviewComposer';
 import { SettingsView } from './SettingsView';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
+import { WORKSHOP_INFO } from '../data/products';
+import { getMyProfile, saveMyProfile } from '../lib/supabaseCustomer';
 
 interface AccountViewProps {
   currentUser?: UserProfile;
@@ -58,7 +60,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
     if (onBackToHome) onBackToHome();
     else if (onContinueShopping) onContinueShopping();
   };
-  const [activeModal, setActiveModal] = useState<'orders' | 'address' | 'settings' | 'profile' | 'privacy' | 'terms' | null>(null);
+  const [activeModal, setActiveModal] = useState<'orders' | 'pickupStore' | 'settings' | 'profile' | 'privacy' | 'terms' | null>(null);
 
   const isGuest = currentUser?.isGuest ?? false;
 
@@ -86,8 +88,42 @@ export const AccountView: React.FC<AccountViewProps> = ({
     return () => { active = false; };
   }, [activeModal, currentUser?.id, currentUser?.isGuest]);
 
-  const handleProtectedAction = (modalType: 'orders' | 'address' | 'settings' | 'profile' | 'privacy' | 'terms') => {
-    if (isGuest && (modalType === 'orders' || modalType === 'address' || modalType === 'profile')) {
+  const [profileName, setProfileName] = useState('');
+  const [profilePhone, setProfilePhone] = useState('');
+  const [profileVehicle, setProfileVehicle] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState('');
+  useEffect(() => {
+    let active = true;
+    if (!currentUser || currentUser.isGuest) {
+      setProfileName('');
+      setProfilePhone('');
+      setProfileVehicle('');
+      return () => { active = false; };
+    }
+    setProfileName(currentUser.name || '');
+    setProfilePhone(currentUser.phone || '');
+    setProfileVehicle(currentUser.vehicle || '');
+    void getMyProfile().then((profile) => {
+      if (!active || !profile) return;
+      setProfileName(profile.full_name || currentUser.name || '');
+      setProfilePhone(profile.phone || currentUser.phone || '');
+      setProfileVehicle(profile.vehicle_model || currentUser.vehicle || '');
+    });
+    return () => { active = false; };
+  }, [currentUser?.id]);
+
+  const handleSaveProfile = async () => {
+    if (!currentUser || currentUser.isGuest) return;
+    setProfileSaving(true);
+    setProfileMessage('');
+    const { error } = await saveMyProfile({ full_name: profileName.trim(), phone: profilePhone.trim(), vehicle_model: profileVehicle.trim() });
+    setProfileSaving(false);
+    setProfileMessage(error ? 'Unable to save profile. Please try again.' : 'Profile saved.');
+  };
+
+  const handleProtectedAction = (modalType: 'orders' | 'pickupStore' | 'settings' | 'profile' | 'privacy' | 'terms') => {
+    if (isGuest && (modalType === 'orders' || modalType === 'pickupStore' || modalType === 'profile')) {
       if (onOpenLogin) onOpenLogin();
       else setActiveModal(modalType);
     } else {
@@ -96,32 +132,6 @@ export const AccountView: React.FC<AccountViewProps> = ({
   };
 
 
-  // Pickup Store list
-  const [addresses, setAddresses] = useState([
-    {
-      id: 'addr-1',
-      tag: 'Primary Residence',
-      name: 'Subhash Mondal',
-      phone: '+91 98321 45678',
-      address: 'House 42, Station Road, Near Central Masjid',
-      city: 'Kadbeltala, Murshidabad, WB - 742136',
-      isDefault: true,
-    },
-    {
-      id: 'addr-2',
-      tag: 'Auto / Toto Garage',
-      name: 'Subhash (Garage Stand)',
-      phone: '+91 98321 45678',
-      address: 'Shop No. 7, Central Toto Stand, Main Road',
-      city: 'Murshidabad, WB - 742136',
-      isDefault: false,
-    },
-  ]);
-
-  // Profile state
-  const [profileName, setProfileName] = useState('Subhash Mondal');
-  const [profilePhone, setProfilePhone] = useState('+91 98321 45678');
-  const [profileVehicle, setProfileVehicle] = useState('Hero Splendor Plus & Yatri Toto');
   const [language, setLanguage] = useState<'en' | 'bn' | 'hi'>('en');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
@@ -161,7 +171,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 leading-tight">Account</h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5 tracking-tight">
-            {isGuest ? 'Guest User · Sign in for orders & garage' : 'Pickup orders, help and store information'}
+            {isGuest ? 'Guest User · Sign in for pickup orders' : 'Pickup orders, help and store information'}
           </p>
         </div>
         {/* User Avatar / Profile Icon Button */}
@@ -186,7 +196,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 Unlock Account Features
               </h4>
               <p className="text-[11.5px] text-gray-600 font-medium mt-0.5">
-                Login to track orders, save garage addresses, wishlist &amp; earn rewards.
+                Login to track orders, save your profile, wishlist &amp; earn rewards.
               </p>
             </div>
           </div>
@@ -361,18 +371,18 @@ export const AccountView: React.FC<AccountViewProps> = ({
             </svg>
           </button>
 
-          {/* 3. Address (Soft Green) */}
+          {/* 3. Pickup Store (Soft Green) */}
           <button
             type="button"
-            onClick={() => handleProtectedAction('address')}
+            onClick={() => handleProtectedAction('pickupStore')}
             className="bg-[#ECF8F1] hover:bg-[#DCF2E4] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
           >
             <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#16A34A]">
               <MapPin className="w-4 h-4 text-[#16A34A] fill-[#16A34A]" />
             </div>
             <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">Address</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">Manage</p>
+              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">Pickup Store</h3>
+              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">View details</p>
             </div>
             <svg className="w-3 h-3 text-slate-700 absolute bottom-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -678,9 +688,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
         if (currentUser && !currentUser.isGuest) void listMyProductReviews(currentUser.id).then(setMyReviews);
       }} />}
 
-      {/* 2. Address Modal */}
+      {/* 2. Pickup Store Modal */}
       <AnimatePresence>
-        {activeModal === 'address' && (
+        {activeModal === 'pickupStore' && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
             <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="relative w-full max-w-[440px] max-h-[85vh] bg-white rounded-[28px] shadow-2xl flex flex-col z-10 overflow-hidden">
@@ -691,7 +701,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   </div>
                   <div>
                     <h3 className="text-[15px] font-black text-gray-900">Pickup Store</h3>
-                    <p className="text-[11px] text-gray-400">Pickup store & garage information</p>
+                    <p className="text-[11px] text-gray-400">Store pickup location and hours</p>
                   </div>
                 </div>
                 <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
@@ -700,17 +710,15 @@ export const AccountView: React.FC<AccountViewProps> = ({
               </div>
 
               <div className="overflow-y-auto px-5 py-4 space-y-3 flex-1 no-scrollbar">
-                {[{ id: 'store', tag: 'PICKUP LOCATION', name: 'ROFIK GODI CENTRE', phone: '+91 98321 45678', address: 'Main Station Road, Near Central Auto Stand, West Bengal', city: 'Mon - Sun: 8:00 AM – 9:30 PM', isDefault: true }].map((a) => (
-                  <div key={a.id} className="bg-gray-50 border border-gray-200 rounded-2xl p-3.5 space-y-1 relative">
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-3.5 space-y-1 relative">
                     <div className="flex justify-between items-center">
-                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#16A34A]">{a.tag}</span>
-                      {a.isDefault && <span className="text-[9.5px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">Default</span>}
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#16A34A]">PICKUP LOCATION</span>
+                      <span className="text-[9.5px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">Store</span>
                     </div>
-                    <div className="text-[12.5px] font-bold text-gray-900">{a.name} ({a.phone})</div>
-                    <p className="text-[11.5px] text-gray-600">{a.address}</p>
-                    <p className="text-[11px] text-gray-500 font-medium">{a.city}</p>
+                    <div className="text-[12.5px] font-bold text-gray-900">{WORKSHOP_INFO.name} ({WORKSHOP_INFO.phone})</div>
+                    <p className="text-[11.5px] text-gray-600">{WORKSHOP_INFO.address}</p>
+                    <p className="text-[11px] text-gray-500 font-medium">{WORKSHOP_INFO.workingHours}</p>
                   </div>
-                ))}
               </div>
             </motion.div>
           </div>
@@ -730,7 +738,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   </div>
                   <div>
                     <h3 className="text-[15px] font-black text-gray-900">Rider Profile</h3>
-                    <p className="text-[11px] text-gray-400">Personal & registered garage details</p>
+                    <p className="text-[11px] text-gray-400">Your Supabase customer profile</p>
                   </div>
                 </div>
                 <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
@@ -768,11 +776,13 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 </div>
 
                 <button
-                  onClick={() => setActiveModal(null)}
-                  className="w-full py-3 bg-[#D9232D] text-white text-[12.5px] font-bold rounded-xl shadow-sm mt-2"
+                  disabled={profileSaving}
+                  onClick={() => void handleSaveProfile()}
+                  className="w-full py-3 bg-[#D9232D] text-white text-[12.5px] font-bold rounded-xl shadow-sm mt-2 disabled:opacity-60"
                 >
-                  Save Profile
+                  {profileSaving ? 'Saving…' : 'Save Profile'}
                 </button>
+                {profileMessage && <p className="text-center text-[11px] font-semibold text-gray-500">{profileMessage}</p>}
               </div>
             </motion.div>
           </div>

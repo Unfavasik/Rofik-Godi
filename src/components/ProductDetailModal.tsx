@@ -22,11 +22,11 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { PRODUCTS } from '../data/products';
 import { Product } from '../types';
 import { ProductReviews } from './ProductReviews';
 
 interface ProductDetailModalProps {
+  products: Product[];
   product: Product | null;
   onClose: () => void;
   onAddToCart: (
@@ -67,6 +67,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = (props) => 
 
 const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }> = ({
   product,
+  products,
   onClose,
   onAddToCart,
   isWishlisted,
@@ -138,7 +139,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
     }
   };
 
-  const suggested = PRODUCTS.filter((item) => item.id !== product.id).slice(0, 4);
+  const suggested = products.filter((item) => item.id !== product.id).slice(0, 4);
   const reviewsValue = (product.rating ?? 4.8).toFixed(1);
   const modelOptions = product.compatibility.length ? product.compatibility : ['Universal fit'];
 

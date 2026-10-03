@@ -59,7 +59,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { loadPublicProducts } from './lib/supabaseProducts';
-import { supabase } from './lib/supabase';
+import { isSupabaseConfigured, supabase } from './lib/supabase';
 import { listMyNotifications } from './lib/supabaseCustomer';
 export default function App() {
   // Route flow: /Onboarding -> /home, and account creation opens at /signup.
@@ -299,8 +299,8 @@ export default function App() {
   const [checkoutCoupon, setCheckoutCoupon] = useState('');
   const [checkoutQuote, setCheckoutQuote] = useState<{ subtotal: number; total: number } | null>(null);
 
-  // Supabase is the live catalog source; bundled products remain the offline fallback.
-  const [catalogProducts, setCatalogProducts] = useState<Product[]>(PRODUCTS);
+  // When Supabase is configured, only its catalog may enter the cart/order flow.
+  const [catalogProducts, setCatalogProducts] = useState<Product[]>(isSupabaseConfigured ? [] : PRODUCTS);
   useEffect(() => {
     loadPublicProducts().then(setCatalogProducts).catch(() => {
       // Keep the bundled catalog available if the public API is temporarily unavailable.
@@ -648,6 +648,7 @@ export default function App() {
         ) : activeTab === 'search' ? (
           <main className="flex-1 flex flex-col">
             <SearchView
+              products={catalogProducts}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               onSelectProduct={(p) => setSelectedProduct(p)}
@@ -1127,6 +1128,7 @@ export default function App() {
 
         {/* Modals & Slide-overs */}
         <ProductDetailModal
+          products={catalogProducts}
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
           onAddToCart={handleDetailAddToCart}
@@ -1262,7 +1264,6 @@ export default function App() {
   setAuthInitialMode(mode || 'signup');
   goToPhase('auth');
           }}
-          onFastLogin={handleLoginSuccess}
         />
       </div>
     </div>
