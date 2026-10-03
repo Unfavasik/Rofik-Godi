@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import signupAvatar from '../assets/onboarding/signup.webp';
 import loginAvatar from '../assets/onboarding/singing.webp';
 
@@ -38,7 +39,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     }, 2000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -57,6 +58,29 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       }
       if (!agree) {
         setError('Please accept the personal data terms');
+        return;
+      }
+
+      if (isSupabaseConfigured && supabase) {
+        const { data, error: authError } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            emailRedirectTo: import.meta.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`,
+            data: { full_name: name.trim() },
+          },
+        });
+        if (authError) {
+          setError(authError.message.toLowerCase().includes('already') ? 'This email is already registered' : 'Unable to create account. Please try again.');
+          return;
+        }
+        if (!data.user) {
+          setError('Unable to create account. Please try again.');
+          return;
+        }
+        showToast(data.session ? 'Account created' : 'Check your email to confirm your account');
+        if (!data.session) return;
+        onSuccess({ id: data.user.id, name: name.trim(), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) });
         return;
       }
 
@@ -80,6 +104,17 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       }
       if (password.length < 6) {
         setError('Password must be at least 6 characters');
+        return;
+      }
+
+      if (isSupabaseConfigured && supabase) {
+        const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (authError || !data.user) {
+          setError('Invalid email or password');
+          return;
+        }
+        showToast('Signed in');
+        onSuccess({ id: data.user.id, name: String(data.user.user_metadata?.full_name || 'Rider'), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) });
         return;
       }
 
