@@ -413,9 +413,3 @@ export const WORKSHOP_INFO = {
     'Same-Day Store Pickup & Expert Fitment'
   ],
 };
-
-export const COUPONS: { code: string; discount: number; minOrder: number; description: string }[] = [
-  { code: 'ROFIK100', discount: 100, minOrder: 799, description: '₹100 Instant Discount on orders above ₹799' },
-  { code: 'FIRST50', discount: 50, minOrder: 499, description: '₹50 Flat Off for new riders' },
-  { code: 'TOTOEXPRESS', discount: 200, minOrder: 1400, description: '₹200 Mega Discount on Toto seat sets' },
-];

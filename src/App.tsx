@@ -31,6 +31,7 @@ import { SearchView } from './components/SearchView';
 import { NotificationsView } from './components/NotificationsView';
 import { ShopView } from './components/ShopView';
 import { AdminPanel } from './components/AdminPanel';
+import { AdminAccessGate } from './components/AdminAccessGate';
 import {
   FilterSortModal,
   FilterState,
@@ -169,6 +170,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if ((window.location.pathname.replace(/\/$/, '') || '/') === '/admin') return;
     if (appPhase !== 'main') return;
     const nextPath = tabToRoute(activeTab);
     if (window.location.pathname !== nextPath) {
@@ -262,6 +264,7 @@ export default function App() {
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
   const [checkoutDiscount, setCheckoutDiscount] = useState(0);
   const [checkoutCoupon, setCheckoutCoupon] = useState('');
+  const [checkoutQuote, setCheckoutQuote] = useState<{ subtotal: number; total: number } | null>(null);
 
   // Supabase is the live catalog source; bundled products remain the offline fallback.
   const [catalogProducts, setCatalogProducts] = useState<Product[]>(PRODUCTS);
@@ -440,9 +443,10 @@ export default function App() {
     setCart(cart.filter((i) => i.cartItemId !== cartItemId));
   };
 
-  const handleProceedToCheckout = (discount: number, coupon: string) => {
+  const handleProceedToCheckout = (discount: number, coupon: string, quote?: { subtotal: number; total: number }) => {
     setCheckoutDiscount(discount);
     setCheckoutCoupon(coupon);
+    setCheckoutQuote(quote || null);
 
     // 🔐 GUEST USER CHECK: If guest, trigger Login Required modal
     if (currentUser.isGuest) {
@@ -493,10 +497,16 @@ export default function App() {
 
   // Phase 1: Product introduction. Once completed, open the app directly.
   if (window.location.pathname.replace(/\/$/, '') === '/admin') {
-    return <AdminPanel onBackToStore={() => {
+    return <AdminAccessGate onBackToStore={() => {
       window.history.pushState({}, '', '/home');
       window.location.reload();
-    }} />;
+    }} onSignIn={() => {
+      window.history.pushState({}, '', '/signup');
+      window.location.reload();
+    }}><AdminPanel onBackToStore={() => {
+      window.history.pushState({}, '', '/home');
+      window.location.reload();
+    }} /></AdminAccessGate>;
   }
 
   if (appPhase === 'onboarding') {
@@ -1106,6 +1116,7 @@ export default function App() {
           isOpen={isCartOpen || activeTab === 'cart'}
           onClose={() => { setIsCartOpen(false); setActiveTab('home'); }}
           items={cart}
+          userId={currentUser.id}
           onUpdateQuantity={handleUpdateQuantity}
           onRemoveItem={handleRemoveCartItem}
           onProceedToCheckout={handleProceedToCheckout}
@@ -1119,6 +1130,8 @@ export default function App() {
           items={cart}
           discount={checkoutDiscount}
           couponCode={checkoutCoupon}
+          couponSubtotal={checkoutQuote?.subtotal}
+          couponTotal={checkoutQuote?.total}
           onClearCart={() => setCart([])}
         />
 

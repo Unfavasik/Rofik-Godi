@@ -6,9 +6,9 @@ import { X, CheckCircle2, MapPin, CreditCard, QrCode, Banknote, Download, Share2
 import { WORKSHOP_INFO } from '../data/products';
 import { createSupabaseOrder } from '../lib/supabaseOrders';
 
-interface CheckoutModalProps { isOpen: boolean; onClose: () => void; items: CartItem[]; discount: number; couponCode: string; onClearCart: () => void; userId: string; onOrderPlaced: () => void; }
+interface CheckoutModalProps { isOpen: boolean; onClose: () => void; items: CartItem[]; discount: number; couponCode: string; couponSubtotal?: number; couponTotal?: number; onClearCart: () => void; userId: string; onOrderPlaced: () => void; }
 
-export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, items, discount, couponCode, onClearCart, userId, onOrderPlaced }) => {
+export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, items, discount, couponCode, couponSubtotal, couponTotal, onClearCart, userId, onOrderPlaced }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
@@ -20,8 +20,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, i
   const [orderSyncState, setOrderSyncState] = useState<'idle' | 'synced' | 'local'>('idle');
   const [submissionError, setSubmissionError] = useState('');
   if (!isOpen) return null;
-  const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
-  const total = Math.max(0, subtotal - discount);
+  const localSubtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+  const subtotal = couponCode && couponSubtotal !== undefined ? couponSubtotal : localSubtotal;
+  const total = couponCode && couponTotal !== undefined ? couponTotal : Math.max(0, subtotal - discount);
 
   const handlePlaceOrder = async () => {
     setIsProcessing(true);
