@@ -1,5 +1,4 @@
 import { supabase } from './supabase';
-import { deleteLocalCustomerNotification, listLocalCustomerNotifications, markLocalCustomerNotificationRead } from './localCustomerData';
 
 export async function getMyProfile() {
   if (!supabase) return null;
@@ -44,7 +43,7 @@ export async function toggleWishlist(productId: string, saved: boolean) {
 }
 
 export async function listMyNotifications(expectedUserId?: string) {
-  if (!supabase) return expectedUserId ? listLocalCustomerNotifications(expectedUserId) : [];
+  if (!supabase) return [];
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return [];
   const now = new Date().toISOString();
@@ -54,20 +53,14 @@ export async function listMyNotifications(expectedUserId?: string) {
 }
 
 export async function markNotificationRead(id: string, expectedUserId?: string) {
-  if (!supabase) {
-    if (expectedUserId) markLocalCustomerNotificationRead(expectedUserId, id);
-    return { error: null };
-  }
+  if (!supabase) return { error: new Error('Service configuration unavailable. Please try again.') };
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return { error: new Error('Sign in required') };
   return supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id).eq('user_id', userData.user.id);
 }
 
 export async function deleteMyNotification(id: string, expectedUserId?: string) {
-  if (!supabase) {
-    if (expectedUserId) deleteLocalCustomerNotification(expectedUserId, id);
-    return { error: null };
-  }
+  if (!supabase) return { error: new Error('Service configuration unavailable. Please try again.') };
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return { error: new Error('Sign in required') };
   return supabase.from('notifications').delete().eq('id', id).eq('user_id', userData.user.id);

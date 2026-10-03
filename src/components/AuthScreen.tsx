@@ -43,6 +43,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     e.preventDefault();
     setError('');
 
+    if (!isSupabaseConfigured || !supabase) {
+      setError('Service configuration unavailable. Please try again.');
+      return;
+    }
+
     if (mode === 'signup') {
       if (!name.trim()) {
         setError('Enter your full name');
@@ -61,42 +66,25 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         return;
       }
 
-      if (isSupabaseConfigured && supabase) {
-        const { data, error: authError } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            emailRedirectTo: import.meta.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`,
-            data: { full_name: name.trim() },
-          },
-        });
-        if (authError) {
-          setError(authError.message.toLowerCase().includes('already') ? 'This email is already registered' : 'Unable to create account. Please try again.');
-          return;
-        }
-        if (!data.user) {
-          setError('Unable to create account. Please try again.');
-          return;
-        }
-        showToast(data.session ? 'Account created' : 'Check your email to confirm your account');
-        if (!data.session) return;
-        onSuccess({ id: data.user.id, name: name.trim(), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) }, true);
+      const { data, error: authError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          emailRedirectTo: import.meta.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`,
+          data: { full_name: name.trim() },
+        },
+      });
+      if (authError) {
+        setError(authError.message.toLowerCase().includes('already') ? 'This email is already registered' : 'Unable to create account. Please try again.');
         return;
       }
-
-      showToast('Account created');
-      setTimeout(() => {
-        const user: UserProfile = {
-          id: `usr-${Date.now()}`,
-          name: name.trim(),
-          email: email.trim(),
-          phone: '+91 98765 43210',
-          isGuest: false,
-          vehicle: 'Hero Splendor Plus & Toto',
-          joinedDate: 'September 2026',
-        };
-        onSuccess(user, true);
-      }, 500);
+      if (!data.user) {
+        setError('Unable to create account. Please try again.');
+        return;
+      }
+      showToast(data.session ? 'Account created' : 'Check your email to confirm your account');
+      if (!data.session) return;
+      onSuccess({ id: data.user.id, name: name.trim(), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) }, true);
     } else {
       if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) {
         setError('Enter a valid email');
@@ -107,59 +95,30 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         return;
       }
 
-      if (isSupabaseConfigured && supabase) {
-        const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-        if (authError || !data.user) {
-          setError('Invalid email or password');
-          return;
-        }
-        showToast('Signed in');
-        onSuccess({ id: data.user.id, name: String(data.user.user_metadata?.full_name || 'Rider'), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) }, false);
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (authError || !data.user) {
+        setError('Invalid email or password');
         return;
       }
-
       showToast('Signed in');
-      setTimeout(() => {
-        const user: UserProfile = {
-          id: `usr-${Date.now()}`,
-          name: name.trim() || 'Rider Asif',
-          email: email.trim(),
-          phone: '+91 98765 43210',
-          isGuest: false,
-          vehicle: 'Hero Splendor Plus & Toto',
-          joinedDate: 'September 2026',
-        };
-        onSuccess(user, false);
-      }, 500);
+      onSuccess({ id: data.user.id, name: String(data.user.user_metadata?.full_name || 'Rider'), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) }, false);
     }
   };
 
   const handleSocial = async (provider: string) => {
-    if (isSupabaseConfigured && supabase) {
-      if (provider !== 'Google') {
-        setError(`${provider} sign-in is not configured yet. Use email sign-in.`);
-        return;
-      }
-      const { error: authError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
-      });
-      if (authError) setError('Unable to start Google sign-in. Please try email sign-in.');
+    if (!isSupabaseConfigured || !supabase) {
+      setError('Service configuration unavailable. Please try again.');
       return;
     }
-    showToast(`${provider} login`);
-    setTimeout(() => {
-      const user: UserProfile = {
-        id: `usr-${provider.toLowerCase()}-${Date.now()}`,
-        name: `Asif Ikbal (${provider})`,
-        email: `asif.${provider.toLowerCase()}@example.com`,
-        phone: '+91 98765 43210',
-        isGuest: false,
-        vehicle: 'Rofik Godi Rider',
-        joinedDate: 'September 2026',
-      };
-      onSuccess(user, mode === 'signup');
-    }, 600);
+    if (provider !== 'Google') {
+      setError(`${provider} sign-in is not configured yet. Use email sign-in.`);
+      return;
+    }
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (authError) setError('Unable to start Google sign-in. Please try email sign-in.');
   };
 
 

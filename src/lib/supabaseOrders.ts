@@ -1,6 +1,5 @@
 import type { CustomerOrderRecord, OrderDetails } from '../types';
 import { supabase } from './supabase';
-import { listLocalCustomerOrders, saveLocalCustomerOrder } from './localCustomerData';
 
 const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 
@@ -18,11 +17,7 @@ type SecureOrderResponse = {
 
 export async function createSupabaseOrder(order: OrderDetails, expectedUserId: string, couponCode = '') {
   if (!supabase) {
-    if (couponCode.trim() || order.discount > 0) {
-      return { synced: false, error: new Error('Coupon discounts require the secure Supabase order service. Please reconnect and try again.'), order: null };
-    }
-    const localOrder = saveLocalCustomerOrder(expectedUserId, order);
-    return { synced: false, error: null, order: localOrder };
+    return { synced: false, error: new Error('Service configuration unavailable. Please try again.'), order: null };
   }
 
   const { data: userData, error: authError } = await supabase.auth.getUser();
@@ -65,7 +60,7 @@ export async function createSupabaseOrder(order: OrderDetails, expectedUserId: s
 }
 
 export async function listMyOrders(expectedUserId: string): Promise<CustomerOrderRecord[]> {
-  if (!supabase) return listLocalCustomerOrders(expectedUserId);
+  if (!supabase) return [];
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user || userData.user.id !== expectedUserId) return [];
   const { data, error } = await supabase

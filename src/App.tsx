@@ -61,7 +61,6 @@ import { motion } from 'motion/react';
 import { loadPublicProducts } from './lib/supabaseProducts';
 import { supabase } from './lib/supabase';
 import { listMyNotifications } from './lib/supabaseCustomer';
-import { createLocalCustomerWelcomeNotification } from './lib/localCustomerData';
 export default function App() {
   // Route flow: /Onboarding -> /home, and account creation opens at /signup.
   const phaseFromPath = (pathname: string): 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth' => {
@@ -495,8 +494,7 @@ export default function App() {
     setIsCheckoutOpen(true);
   };
 
-  const handleLoginSuccess = (user: UserProfile, isNewAccount = false) => {
-    if (isNewAccount && !supabase) createLocalCustomerWelcomeNotification(user.id, user.name);
+  const handleLoginSuccess = (user: UserProfile) => {
     setCurrentUser(user);
     setAuthStatus('AUTHENTICATED');
     setIsLoginModalOpen(false);
