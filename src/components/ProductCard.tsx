@@ -69,12 +69,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Middle: Title, Subtitle, Rating, Price */}
         <div className="flex-1 min-w-0 pr-1">
-          <h4 className="text-[13.5px] font-bold text-gray-900 group-hover:text-[#D9232D] transition-colors truncate leading-tight">
+          <h4 className="text-[13.5px] font-bold text-gray-900 group-hover:text-[#D9232D] transition-colors leading-tight break-words">
             {product.title}
           </h4>
 
           {product.subtitle && (
-            <p className="text-[11px] text-gray-400 font-medium truncate mt-0.5">
+            <p className="text-[11px] text-gray-400 font-medium mt-0.5 break-words">
               {product.subtitle}
             </p>
           )}
@@ -200,13 +200,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
 
       {/* Product Title */}
-      <h4 className="text-[12.5px] font-bold text-gray-800 leading-tight mb-0.5 line-clamp-1 group-hover:text-[#D9232D] transition-colors">
+      <h4 className="text-[12.5px] font-bold text-gray-800 leading-tight mb-0.5 break-words group-hover:text-[#D9232D] transition-colors">
         {product.title}
       </h4>
 
       {/* Subtitle / Short Description */}
       {product.subtitle && (
-        <p className="text-[10.5px] text-gray-400 font-medium truncate mb-1.5">
+        <p className="text-[10.5px] text-gray-400 font-medium mb-1.5 break-words">
           {product.subtitle}
         </p>
       )}

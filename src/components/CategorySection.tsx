@@ -102,7 +102,7 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
                 )}
               </div>
 
-              <span className="text-[10px] sm:text-[11px] font-bold text-gray-900 leading-tight mb-1.5 text-center truncate w-full px-0.5">
+              <span className="text-[10px] sm:text-[11px] font-bold text-gray-900 leading-tight mb-1.5 text-center break-words w-full px-0.5">
                 {cat.title}
               </span>
 

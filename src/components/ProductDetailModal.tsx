@@ -366,8 +366,8 @@ const SuggestionCard: React.FC<{ product: Product; onAdd: () => void; onSelect: 
   <article className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_3px_14px_rgba(15,23,42,.045)]">
     <button type="button" onClick={onSelect} className="block h-[112px] w-full bg-slate-100"><img src={localProductImages[product.id]?.[0] ?? product.image} alt={product.title} className="h-full w-full object-cover" /></button>
     <div className="p-2.5">
-      <button type="button" onClick={onSelect} className="block truncate text-left text-[12px] font-bold">{product.title}</button>
-      <p className="mt-0.5 truncate text-[10px] text-slate-500">{product.subtitle}</p>
+      <button type="button" onClick={onSelect} className="block text-left text-[12px] font-bold break-words">{product.title}</button>
+      <p className="mt-0.5 text-[10px] text-slate-500 break-words">{product.subtitle}</p>
       <div className="mt-2 flex items-center justify-between gap-1">
         <span className="text-[16px] font-extrabold">₹{product.price} <small className="text-[9px] font-normal text-slate-400 line-through">₹{product.originalPrice}</small></span>
         <button type="button" onClick={onAdd} aria-label={`Add ${product.title} to cart`} className="grid h-8 w-8 place-items-center rounded-full bg-[#d9232d] text-white"><Plus className="h-4 w-4" /></button>

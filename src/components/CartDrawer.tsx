@@ -166,7 +166,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <div className="flex-1 flex flex-col justify-between min-w-0">
                     <div>
                       <div className="flex justify-between items-start gap-1">
-                        <h4 className="text-[12px] font-black text-gray-900 leading-tight truncate">
+                        <h4 className="min-w-0 pr-1 text-[12px] font-black text-gray-900 leading-tight break-words">
                           {item.product.title}
                         </h4>
                         <button
