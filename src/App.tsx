@@ -142,7 +142,7 @@ export default function App() {
         isGuest: false,
       });
       setAuthStatus('AUTHENTICATED');
-      if (!isPublicAuthPath() || appPhase !== 'main') goToPhase('main');
+      if (location.pathname !== '/admin' && (!isPublicAuthPath() || appPhase !== 'main')) goToPhase('main');
     };
     const applyNoSession = () => {
       resetAuthenticatedState();
@@ -501,10 +501,15 @@ export default function App() {
     setIsCheckoutOpen(true);
   };
 
-  const handleLoginSuccess = (user: UserProfile) => {
+  const handleLoginSuccess = async (user: UserProfile) => {
     setCurrentUser(user);
     setAuthStatus('AUTHENTICATED');
     setIsLoginModalOpen(false);
+    const { data: admin, error } = supabase ? await supabase.rpc('is_admin') : { data: false, error: null };
+    if (!error && admin === true) {
+      navigate('/admin');
+      return;
+    }
     goToPhase('main');
     if (pendingCheckoutAfterLogin) {
       setPendingCheckoutAfterLogin(false);
@@ -536,16 +541,10 @@ export default function App() {
 
   // Phase 1: Product introduction. Once completed, open the app directly.
   if (window.location.pathname.replace(/\/$/, '') === '/admin') {
-    return <AdminAccessGate onBackToStore={() => {
-      window.history.pushState({}, '', '/home');
-      window.location.reload();
-    }} onSignIn={() => {
-      window.history.pushState({}, '', '/signup');
-      window.location.reload();
-    }}><Suspense fallback={<div className="min-h-screen p-8 text-sm font-bold">Loading admin workspace…</div>}><AdminPanel onBackToStore={() => {
-      window.history.pushState({}, '', '/home');
-      window.location.reload();
-    }} /></Suspense></AdminAccessGate>;
+    return <AdminAccessGate onBackToStore={() => navigate('/home')} onSignIn={() => {
+      setAuthInitialMode('login');
+      goToPhase('auth');
+    }}><Suspense fallback={<div className="min-h-screen p-8 text-sm font-bold">Loading admin workspace…</div>}><AdminPanel onBackToStore={() => navigate('/home')} /></Suspense></AdminAccessGate>;
   }
 
   // Never render a protected page while Supabase is still resolving the session.

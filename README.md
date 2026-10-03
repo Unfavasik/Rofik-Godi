@@ -21,3 +21,19 @@ pnpm format
 ## Supabase
 
 Apply migrations in `supabase/migrations/` in order. The catalog migration keeps `is_active` (publication) separate from `in_stock` (availability), adds atomic gallery replacement, and provides the admin customer summary RPC. Product images are converted to WebP and uploaded to the `product-images` Storage bucket.
+
+## Admin login flow
+
+Admin access is verified server-side through `public.admin_users` and the `is_admin()` RPC. The login page uses the same Supabase Auth email/password login for everyone: an authorized admin is redirected to `/admin`; a normal customer is redirected to the storefront/user panel.
+
+Bootstrap the first administrator once in the Supabase SQL editor after that user has signed up and confirmed their email:
+
+```sql
+insert into public.admin_users (user_id, display_name, role)
+select id, 'Admin Name', 'admin'
+from auth.users
+where lower(email) = lower('admin@gmail.com')
+on conflict (user_id) do update set display_name = excluded.display_name, role = excluded.role;
+```
+
+After one administrator exists, an existing admin can grant or update another admin using `public.grant_admin_by_email(email, display_name, role)`. Do not put admin emails in frontend code or expose a public admin-registration form.
