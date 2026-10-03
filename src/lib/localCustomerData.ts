@@ -48,6 +48,7 @@ export function saveLocalCustomerOrder(userId: string, order: OrderDetails): Ord
     pickup_store: savedOrder.pickupStore,
     created_at: savedOrder.createdAt,
     order_items: savedOrder.items.map((item) => ({
+      product_id: item.product.id || null,
       product_name: item.product.title,
       color: item.selectedColor?.name || null,
       quantity: item.quantity,

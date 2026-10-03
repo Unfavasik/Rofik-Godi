@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { CustomerOrderRecord, Product, UserProfile } from '../types';
 import { listMyOrders } from '../lib/supabaseOrders';
+import { listMyProductReviews, type ProductReviewRecord } from '../lib/supabaseReviews';
+import { ReviewComposer } from './ReviewComposer';
 import { SettingsView } from './SettingsView';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
@@ -62,6 +64,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
   const [customerOrders, setCustomerOrders] = useState<CustomerOrderRecord[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [myReviews, setMyReviews] = useState<ProductReviewRecord[]>([]);
+  const [reviewComposer, setReviewComposer] = useState<{ productId: string; orderId: string; orderNumber: string; productTitle: string; review?: ProductReviewRecord } | null>(null);
   useEffect(() => {
     let active = true;
     if (activeModal !== 'orders') return () => { active = false; };
@@ -71,8 +75,11 @@ export const AccountView: React.FC<AccountViewProps> = ({
       return () => { active = false; };
     }
     setOrdersLoading(true);
-    void listMyOrders(currentUser.id).then((orders) => {
-      if (active) setCustomerOrders(orders);
+    void Promise.all([listMyOrders(currentUser.id), listMyProductReviews(currentUser.id)]).then(([orders, reviews]) => {
+      if (active) {
+        setCustomerOrders(orders);
+        setMyReviews(reviews);
+      }
     }).finally(() => {
       if (active) setOrdersLoading(false);
     });
@@ -636,6 +643,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   const itemSummary = ord.order_items.map((item) => `${item.product_name} × ${item.quantity}`).join(', ');
                   const orderDate = new Date(ord.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
                   const statusTone = ord.status === 'COMPLETED' || ord.status === 'PICKED_UP' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : ord.status === 'CANCELLED' ? 'text-red-700 bg-red-50 border-red-200' : 'text-amber-700 bg-amber-50 border-amber-200';
+                  const uniqueItems = ord.order_items.filter((item, index, items) => item.product_id && /^[0-9a-f-]{36}$/i.test(item.product_id) && items.findIndex((candidate) => candidate.product_id === item.product_id) === index);
                   return <article key={ord.id} className="bg-gray-50 border border-gray-200 rounded-2xl p-3.5 space-y-2.5">
                     <div className="flex justify-between items-start gap-2">
                       <div className="min-w-0">
@@ -650,6 +658,13 @@ export const AccountView: React.FC<AccountViewProps> = ({
                       <span>Payment: {ord.payment_status}</span>
                       <strong className="text-gray-900 text-[12.5px]">₹{ord.total}</strong>
                     </div>
+                    {uniqueItems.length > 0 && <div className="space-y-2 border-t border-gray-200/60 pt-2">{uniqueItems.map((item) => {
+                      const productReview = myReviews.find((review) => review.order_id === ord.id && review.product_id === item.product_id);
+                      return <div key={`${ord.id}-${item.product_id}`} className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2">
+                        <div className="min-w-0"><p className="truncate text-[11px] font-bold text-gray-800">{item.product_name}</p>{productReview?.is_verified_purchase && <p className="text-[9px] font-semibold text-emerald-700">Verified purchase · Your review</p>}</div>
+                        {ord.status === 'COMPLETED' ? <button type="button" onClick={() => setReviewComposer({ productId: item.product_id!, orderId: ord.id, orderNumber: ord.order_number, productTitle: item.product_name, review: productReview })} className="shrink-0 rounded-lg bg-rose-50 px-3 py-2 text-[10px] font-bold text-[#d9232d]">{productReview ? 'Edit review' : 'Rate & Review'}</button> : <span className="shrink-0 text-[9px] text-gray-400">Available after completion</span>}
+                      </div>;
+                    })}</div>}
                   </article>;
                 })}
               </div>
@@ -657,6 +672,11 @@ export const AccountView: React.FC<AccountViewProps> = ({
           </div>
         )}
       </AnimatePresence>
+
+      {reviewComposer && <ReviewComposer productId={reviewComposer.productId} orderId={reviewComposer.orderId} orderNumber={reviewComposer.orderNumber} productTitle={reviewComposer.productTitle} review={reviewComposer.review} onClose={() => setReviewComposer(null)} onSaved={() => {
+        setReviewComposer(null);
+        if (currentUser && !currentUser.isGuest) void listMyProductReviews(currentUser.id).then(setMyReviews);
+      }} />}
 
       {/* 2. Address Modal */}
       <AnimatePresence>

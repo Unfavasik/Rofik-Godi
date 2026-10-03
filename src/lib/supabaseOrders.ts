@@ -70,7 +70,7 @@ export async function listMyOrders(expectedUserId: string): Promise<CustomerOrde
   if (!userData.user || userData.user.id !== expectedUserId) return [];
   const { data, error } = await supabase
     .from('orders')
-    .select('id,order_number,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,vehicle_model,fulfillment_method,pickup_store,created_at,order_items(product_name,color,quantity,unit_price)')
+    .select('id,order_number,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,vehicle_model,fulfillment_method,pickup_store,created_at,order_items(product_id,product_name,color,quantity,unit_price)')
     .eq('user_id', userData.user.id)
     .order('created_at', { ascending: false })
     .limit(50);

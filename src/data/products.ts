@@ -1,4 +1,4 @@
-import { Product, Review } from '../types';
+import { Product } from '../types';
 
 export const VEHICLE_BRANDS = {
   bike: [
@@ -33,8 +33,8 @@ export const PRODUCTS: Product[] = [
     categoryLabel: 'Bike Covers',
     price: 499,
     originalPrice: 799,
-    rating: 4.8,
-    reviewCount: 120,
+    rating: 0,
+    reviewCount: 0,
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDb5u48v7PwFdzn4_BDUM6odmmk6dQ6EEFTBHcMU2Vvqmj-mj8_HCSFiKFjFHFE28XP0BEf29q0dNjhDNJWeg1YF6PXBX_ZDE4cNO5vnZNt8sXT1Gg1clWlo0JhPzMC6b8SW0xe55pAzGblTlmIYLFNO42qMW1tZll0FORMuLzrSyCzfeKOTsViJYDp698zO-5g-hSJWj67NhZWKkiMtBiEXY3ANGfMGU7GBpKmeFflSdXYihz2Tf9g',
     additionalImages: [
       'https://lh3.googleusercontent.com/aida-public/AB6AXuDAjFNhnvx67fMNCi-wjG2VkzCG3eepkjtic7Nj24eji8Rrrv0Rhnq4KFU9wJHdrwp7784pw1GNs5VE2iGlugNVQrtIGk6nwTTvowkjY8kHDM2zCE8YTqybFSfNuN2izIuwMxn4TtVGcqv_KUOPTwarQZiJ2iyHkDx3puw-I78co_S8s6ediLq7o6imwneOjXgAJewkt8GehwmI63owlK3TU42a6TYoxu5FsZF_ndPdymgD2dZEzyG4',
@@ -78,8 +78,8 @@ export const PRODUCTS: Product[] = [
     categoryLabel: 'Bike Covers',
     price: 599,
     originalPrice: 899,
-    rating: 4.7,
-    reviewCount: 85,
+    rating: 0,
+    reviewCount: 0,
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCgCNrpgX6xcs_W5GFaZI5-0fRdK3Sj6Mwpf5uEaUWzRHmsPK3gkkM0FihbAWSRjnIKLWsBpVyEh5Xyj0ugI9fHeOdR9a78TGZjTKv_F1YkIz3T4LMuKzT_UjNlNvd1v_Rlq6qLOLq2_RwGOOo5Bce7-3pRoYFX54R8qz_MQTUTX_ggTeGuXdbnaHZuSs4Jd8z6bOaLjAj2QuBtv1S6RY-EeIw06gJwe1HjBO65e2pvv4k2ZArWsnSh',
     description: 'Aerodynamic sporty seat cover with dual-tone red racing accents, high traction honeycomb grip, and water-repellent finish.',
     features: [
@@ -116,8 +116,8 @@ export const PRODUCTS: Product[] = [
     categoryLabel: 'Toto Covers',
     price: 699,
     originalPrice: 1099,
-    rating: 4.6,
-    reviewCount: 72,
+    rating: 0,
+    reviewCount: 0,
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCzTHkKzZX3hEhUBbabXIUneCj4SbDLyVsoF5AC3mdG30c9fCfPXqTgtBkXXWSD-RQBMK9hGQ7z84-5HlSRv8pNH-4-nhZsrWMMJUF69Mc1C6yg3hIwq74HgmiQK54CCZs4pxtjnZHbNYGDr2Fr3XmUg5eQWe2mID_3rZrHE3_63rpzsGPmT3YgGkE0N8MSSMBr0lyBJaJ31aqCyTuF8-Gp68q6FO8TI5qD0duMd8hT-Do-pGwNJO4E',
     description: 'Commercial-grade heavy duty passenger seat bench cover with diamond quilt pattern for Indian e-rickshaws. Easy to clean and durable for daily commercial passenger use.',
     features: [
@@ -155,8 +155,8 @@ export const PRODUCTS: Product[] = [
     categoryLabel: 'Cushions',
     price: 799,
     originalPrice: 1299,
-    rating: 4.8,
-    reviewCount: 64,
+    rating: 0,
+    reviewCount: 0,
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDu5-CGg28Q38Jwi82dIPnslpsouzooyZpMiv3-vgUpdGLfCdHhkksJIG0UKtq5K-2-7O2WEz6z4ONItckDrnZRkwrDpEouPSsGjVw4TgNHouusUYoqMjpB2Uqv7aIkx5DyzGf7_X35uMYr2Th70J1ANlfN9YgxQR8fuL92G1Gcarn57DKGBCAzAKpXDVFXBNGARd97pV-bOx2LVEa8AEZ-HkFj_GrLUlOesJNdnl9pzaENCg7eYWBL',
     description: 'Medical-grade polymer honeycomb gel cushion with breathable 3D mesh cover. Relieves pressure on hips and tailbone during extended rides.',
     features: [
@@ -190,8 +190,8 @@ export const PRODUCTS: Product[] = [
     categoryLabel: 'Bike Covers',
     price: 549,
     originalPrice: 799,
-    rating: 4.7,
-    reviewCount: 58,
+    rating: 0,
+    reviewCount: 0,
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDAjFNhnvx67fMNCi-wjG2VkzCG3eepkjtic7Nj24eji8Rrrv0Rhnq4KFU9wJHdrwp7784pw1GNs5VE2iGlugNVQrtIGk6nwTTvowkjY8kHDM2zCE8YTqybFSfNuN2izIuwMxn4TtVGcqv_KUOPTwarQZiJ2iyHkDx3puw-I78co_S8s6ediLq7o6imwneOjXgAJewkt8GehwmI63owlK3TU42a6TYoxu5FsZF_ndPdymgD2dZEzyG4',
     description: 'Handcrafted black seat cover with cross quilted red stitching, double piping and premium synthetic leatherette.',
     features: [
@@ -227,8 +227,8 @@ export const PRODUCTS: Product[] = [
     categoryLabel: 'Bike Covers',
     price: 649,
     originalPrice: 949,
-    rating: 4.8,
-    reviewCount: 47,
+    rating: 0,
+    reviewCount: 0,
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBuO4XQdWqc-kUg5IUB_VTmVBLmMffKdds2ZTy87k3Q0B82ZVYRWuPT_c9mSYEek1eHo2Sip9Dp2NaKTxuLDQBUS6iAyj3rtQER7qjJUJ37nUu1XeKuAsc92EV_q-JKRWEGgEYwUdbhyfDpXh1mFd9IcEynUgyVmv4GHF9jYMx4Qk-PLD_IKADWXzmxQwe1QmF4qADxPyZOl4yjS3YLSSnALZgy-cuhWWSWFV8X9Ie_mMD4wYO96lxe',
     description: '100% waterproof monsoon grade seat cover with sealed seams and water-repellent surface that dries instantly.',
     features: [
@@ -262,8 +262,8 @@ export const PRODUCTS: Product[] = [
     categoryLabel: 'Toto Covers',
     price: 799,
     originalPrice: 1100,
-    rating: 4.8,
-    reviewCount: 164,
+    rating: 0,
+    reviewCount: 0,
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDu5-CGg28Q38Jwi82dIPnslpsouzooyZpMiv3-vgUpdGLfCdHhkksJIG0UKtq5K-2-7O2WEz6z4ONItckDrnZRkwrDpEouPSsGjVw4TgNHouusUYoqMjpB2Uqv7aIkx5DyzGf7_X35uMYr2Th70J1ANlfN9YgxQR8fuL92G1Gcarn57DKGBCAzAKpXDVFXBNGARd97pV-bOx2LVEa8AEZ-HkFj_GrLUlOesJNdnl9pzaENCg7eYWBL',
     description: 'Specially engineered for Toto and E-Rickshaw drivers spending 10-14 hours on road. Ergonomic foam contour reduces tailbone pressure and lower back strain.',
     features: [
@@ -298,8 +298,8 @@ export const PRODUCTS: Product[] = [
     categoryLabel: 'Cushions',
     price: 499,
     originalPrice: 700,
-    rating: 4.7,
-    reviewCount: 88,
+    rating: 0,
+    reviewCount: 0,
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAXb-sDFoKe1hr9HZ8QJS-_Y5MZ1Vskn9GUIw74w5kxFEuO81OX2Th9U7J6vhCVUbMO8NeRulf7EghBpWwi6Uatj7ddzbViVQp2nUm085zPoLKcg4PntDCTe4HR7WVT_0GkQEbniLuknwt-Mjid1ejdW48pt2W1od3QWLE8inEBJzqRf534dmczQPBref_y-l3kgLfK7YxZvv1PwkaC8jDn5nehOFP2ilvgTCOdvFgFatyqcBXNjqa6',
     description: 'Universal clip-on 3D breathable honeycomb air-mesh cushion. Allows continuous airflow beneath rider preventing sweating, heat buildup, and moisture during summer rides.',
     features: [
@@ -334,8 +334,8 @@ export const PRODUCTS: Product[] = [
     categoryLabel: 'Accessories',
     price: 1099,
     originalPrice: 1499,
-    rating: 4.9,
-    reviewCount: 52,
+    rating: 0,
+    reviewCount: 0,
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDAjFNhnvx67fMNCi-wjG2VkzCG3eepkjtic7Nj24eji8Rrrv0Rhnq4KFU9wJHdrwp7784pw1GNs5VE2iGlugNVQrtIGk6nwTTvowkjY8kHDM2zCE8YTqybFSfNuN2izIuwMxn4TtVGcqv_KUOPTwarQZiJ2iyHkDx3puw-I78co_S8s6ediLq7o6imwneOjXgAJewkt8GehwmI63owlK3TU42a6TYoxu5FsZF_ndPdymgD2dZEzyG4',
     description: 'Personalized handcrafted seat cover tailored at Rofik Godi workshop with your custom name, initials, or lucky number machine-embroidered with Japanese threads.',
     features: [
@@ -362,39 +362,6 @@ export const PRODUCTS: Product[] = [
       { label: 'Single Layer Foam (12mm)', extraPrice: 0 },
       { label: 'Double Thick Foam Cushion (20mm)', extraPrice: 180 },
     ],
-  },
-];
-
-export const REVIEWS: Review[] = [
-  {
-    id: 'rev-1',
-    userName: 'Subhash Mondal',
-    userCity: 'Kolkata, WB',
-    rating: 5,
-    date: '2 days ago',
-    comment: 'Splendor bike seat was feeling very hard. Ordered Rofik Godi diamond cover with double foam. Fitted easily and ride is super smooth now! Delivery in 24 hours.',
-    vehicle: 'Hero Splendor Plus (2022)',
-    verifiedPurchase: true,
-  },
-  {
-    id: 'rev-2',
-    userName: 'Md. Rafiqul Islam',
-    userCity: 'Murshidabad',
-    rating: 5,
-    date: '1 week ago',
-    comment: 'I drive Toto e-rickshaw for 12 hours every day. The passenger bench cover set is very thick and strong. Rain doesn\'t seep inside. Best quality godi in Bengal.',
-    vehicle: 'Yatri E-Rickshaw',
-    verifiedPurchase: true,
-  },
-  {
-    id: 'rev-3',
-    userName: 'Amitabh Sharma',
-    userCity: 'Siliguri',
-    rating: 5,
-    date: '3 weeks ago',
-    comment: 'Custom embroidery with my name "AMIT-07" looks like original company factory fitment on my Pulsar NS200. Very happy with Rofik Godi Centre service!',
-    vehicle: 'Bajaj Pulsar NS200',
-    verifiedPurchase: true,
   },
 ];
 

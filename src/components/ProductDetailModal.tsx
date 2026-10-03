@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { PRODUCTS } from '../data/products';
 import { Product } from '../types';
+import { ProductReviews } from './ProductReviews';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -44,6 +45,9 @@ interface ProductDetailModalProps {
   onBuyNow?: () => void;
   onSelectProduct?: (p: Product) => void;
   onQuickAdd?: (p: Product) => void;
+  isAuthenticated?: boolean;
+  customerId?: string;
+  onRequestLogin?: () => void;
 }
 
 const localProductImages: Record<string, string[]> = {
@@ -55,30 +59,6 @@ const localProductImages: Record<string, string[]> = {
     '/images/premium-seat-gallery-05.webp',
   ],
 };
-
-const reviewRows = [
-  {
-    name: 'Arman Sk', initial: 'A', tint: 'blue',
-    text: 'Quality khub bhalo. Perfectly fit hoyeche amar bike a. Definitely recommend!',
-    images: ['/images/premium-seat-gallery-02.webp', '/images/premium-seat-gallery-05.webp'],
-  },
-  {
-    name: 'Sahidul Islam', initial: 'S', tint: 'violet',
-    text: 'Material ta khub strong. Rain eo kono problem hoyni, value for money.',
-    images: ['/images/premium-seat-gallery-03.webp', '/images/premium-seat-gallery-04.webp'],
-  },
-  {
-    name: 'Hasan Ali', initial: 'H', tint: 'green',
-    text: 'Look ta onek stylish. Install kora o khub easy chilo. Thanks Rofik Godi Centre!',
-    images: ['/images/premium-seat-gallery-04.webp', '/images/premium-seat-gallery-02.webp'],
-  },
-];
-
-const stars = (count = 5) => (
-  <span className="inline-flex items-center gap-[2px] text-amber-400" aria-label={`${count} out of 5 stars`}>
-    {Array.from({ length: count }, (_, i) => <Star key={i} className="h-3.5 w-3.5 fill-current" />)}
-  </span>
-);
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = (props) => {
   if (!props.product) return null;
@@ -97,6 +77,9 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   onBuyNow,
   onSelectProduct,
   onQuickAdd,
+  isAuthenticated = false,
+  customerId,
+  onRequestLogin,
 }) => {
   const images = useMemo(() => {
     const curated = localProductImages[product.id];
@@ -126,9 +109,6 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   const [vehicleType, setVehicleType] = useState('Bike');
   const [selectedModel, setSelectedModel] = useState('');
   const [descriptionOpen, setDescriptionOpen] = useState(false);
-  const [reviewOpen, setReviewOpen] = useState(false);
-  const [reviewText, setReviewText] = useState('');
-  const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [added, setAdded] = useState(false);
   const [quantity] = useState(1);
   const totalPrice = (product.price + selectedThickness.extraPrice) * quantity;
@@ -340,45 +320,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               </div>
             </section>
 
-            <section className="border-t border-slate-100 px-5 py-5">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-[17px] font-extrabold tracking-tight">Customer Reviews</h2>
-                <button type="button" onClick={() => setReviewOpen(true)} className="text-[12px] font-bold text-[#d9232d]">See all</button>
-              </div>
-              <div className="grid grid-cols-[105px_1fr] gap-3 rounded-2xl bg-slate-50 p-4">
-                <div className="text-center">
-                  <div className="text-[38px] font-black leading-none tracking-[-.06em]">{reviewsValue}</div>
-                  <div className="mt-1">{stars()}</div>
-                  <div className="mt-1 text-[11px] text-slate-500">{product.reviewCount} reviews</div>
-                </div>
-                <div className="space-y-1.5 pt-0.5">
-                  {[['5', '70%'], ['4', '20%'], ['3', '7%'], ['2', '2%'], ['1', '1%']].map(([number, width]) => (
-                    <div key={number} className="flex items-center gap-1.5 text-[10px] text-slate-500"><span>{number} ★</span><span className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200"><span className="block h-full rounded-full bg-amber-400" style={{ width }} /></span><span className="w-7 text-right">{width}</span></div>
-                  ))}
-                </div>
-              </div>
-              <div className="mt-3 space-y-2.5">
-                {reviewRows.map((review) => (
-                  <article key={review.name} className="rounded-2xl border border-slate-100 bg-white p-3.5 shadow-[0_2px_10px_rgba(15,23,42,.025)]">
-                    <div className="flex items-center gap-2.5">
-                      <span className={`grid h-10 w-10 place-items-center rounded-full text-[16px] font-bold ${review.tint === 'blue' ? 'bg-blue-100 text-blue-600' : review.tint === 'violet' ? 'bg-violet-100 text-violet-600' : 'bg-emerald-100 text-emerald-600'}`}>{review.initial}</span>
-                      <span className="min-w-0 flex-1"><b className="block text-[12px]">{review.name}</b><span className="mt-0.5 block">{stars()}</span></span>
-                      <span className="whitespace-nowrap rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-semibold text-emerald-700">Verified Purchase</span>
-                    </div>
-                    <p className="mt-2.5 text-[11px] leading-relaxed text-slate-600">{review.text}</p>
-                    <div className="mt-2.5 flex gap-2">{review.images.map((src) => <img key={src} src={src} alt="Customer's seat cover" className="h-[58px] w-[76px] rounded-lg object-cover" />)}</div>
-                  </article>
-                ))}
-              </div>
-              <button type="button" onClick={() => setReviewOpen((open) => !open)} className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-rose-50 text-[13px] font-extrabold text-[#d9232d]">
-                <Wrench className="h-4 w-4" />{reviewSubmitted ? 'Thanks for your review!' : 'Write a Review'}
-              </button>
-              {reviewOpen && !reviewSubmitted && <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3">
-                <div className="mb-2 text-[12px] font-bold">How was your purchase?</div><div className="mb-2">{stars()}</div>
-                <textarea value={reviewText} onChange={(event) => setReviewText(event.target.value)} placeholder="Share your experience..." rows={3} className="w-full resize-none rounded-lg border border-slate-200 p-2.5 text-[12px] outline-none focus:border-[#d9232d]" />
-                <button type="button" onClick={() => { if (reviewText.trim()) setReviewSubmitted(true); }} className="mt-2 w-full rounded-lg bg-[#d9232d] py-2.5 text-[12px] font-bold text-white">Submit review</button>
-              </div>}
-            </section>
+            <ProductReviews productId={product.id} productTitle={product.title} isAuthenticated={isAuthenticated} customerId={customerId} onRequestLogin={onRequestLogin || (() => undefined)} />
 
             <section className="border-t border-slate-100 px-5 py-5">
               <div className="mb-3 flex items-center justify-between"><h2 className="text-[17px] font-extrabold tracking-tight">You may also like</h2><button type="button" onClick={() => onSelectProduct?.(suggested[0])} className="text-[12px] font-bold text-[#d9232d]">See all</button></div>
