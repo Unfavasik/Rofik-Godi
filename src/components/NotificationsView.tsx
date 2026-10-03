@@ -1,27 +1,101 @@
-import React, { useMemo, useState } from 'react';
-import { ArrowLeft, Bell, ChevronRight, CircleCheck, Gift, Package, Settings, ShieldCheck, Star, Tag, Truck, Volume2, Moon, Smartphone, Megaphone, TrendingDown, CheckCircle2 } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, Bell, ChevronRight, CircleCheck, Gift, Package, Settings, Star, Tag, Truck, Volume2, Moon, Smartphone, Megaphone, TrendingDown } from 'lucide-react';
+import { listMyNotifications, markNotificationRead } from '../lib/supabaseCustomer';
 
-type NotificationItem = { title: string; body: React.ReactNode; time: string; tone: string; icon: React.ReactNode; unread?: boolean };
+type NotificationItem = {
+  id: string;
+  kind: string;
+  title: string;
+  body: string;
+  action_url: string | null;
+  read_at: string | null;
+  created_at: string;
+};
 
-export function NotificationsView({ onBack }: { onBack: () => void }) {
-  const [filter, setFilter] = useState('All');
+type NotificationFilter = 'All' | 'Orders' | 'Offers' | 'Updates';
+
+const timeAgo = (value: string) => {
+  const timestamp = new Date(value).getTime();
+  if (!Number.isFinite(timestamp)) return '';
+  const minutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60_000));
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr${hours === 1 ? '' : 's'} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? '' : 's'} ago`;
+};
+
+const filterMatches = (item: NotificationItem, filter: NotificationFilter): boolean => {
+  const kind = item.kind.toLowerCase();
+  if (filter === 'All') return true;
+  if (filter === 'Orders') return kind.includes('order') || kind.includes('pickup') || item.title.toLowerCase().includes('order');
+  if (filter === 'Offers') return kind.includes('offer') || kind.includes('promo') || kind.includes('coupon') || item.title.toLowerCase().includes('offer');
+  return !filterMatches(item, 'Orders') && !filterMatches(item, 'Offers');
+};
+
+const iconFor = (kind: string) => {
+  const value = kind.toLowerCase();
+  if (value.includes('order') || value.includes('pickup')) return <Truck className="h-6 w-6" />;
+  if (value.includes('offer') || value.includes('promo') || value.includes('coupon')) return <Tag className="h-6 w-6" />;
+  if (value.includes('review')) return <Star className="h-6 w-6" />;
+  if (value.includes('arrival') || value.includes('product')) return <Package className="h-6 w-6" />;
+  return <Bell className="h-6 w-6" />;
+};
+
+const toneFor = (kind: string) => {
+  const value = kind.toLowerCase();
+  if (value.includes('order') || value.includes('pickup')) return 'bg-red-50 text-red-500';
+  if (value.includes('offer') || value.includes('promo') || value.includes('coupon')) return 'bg-rose-50 text-rose-500';
+  if (value.includes('review')) return 'bg-amber-50 text-amber-500';
+  if (value.includes('arrival') || value.includes('product')) return 'bg-purple-50 text-purple-600';
+  return 'bg-blue-50 text-blue-500';
+};
+
+export function NotificationsView({ userId, isGuest, onBack }: { userId: string; isGuest: boolean; onBack: () => void }) {
+  const [filter, setFilter] = useState<NotificationFilter>('All');
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const items = useMemo<NotificationItem[]>(() => [
-    { title: 'Pickup Order Update', body: <>Your order <b className="text-slate-700">#RGD5821</b> is being prepared for store pickup.</>, time: '2 min ago', tone: 'bg-red-50 text-red-500', icon: <Truck className="h-6 w-6 fill-current" />, unread: true },
-    { title: 'Special Offer', body: <>Flat 30% OFF on all Bike Seat Covers. Limited time offer!</>, time: '1 hour ago', tone: 'bg-red-50 text-red-500', icon: <Tag className="h-6 w-6 fill-current" />, unread: true },
-    { title: 'Order Confirmed', body: <>Your order <b className="text-slate-700">#RGD5820</b> has been confirmed. We will notify you soon.</>, time: '3 hours ago', tone: 'bg-emerald-50 text-emerald-500', icon: <CircleCheck className="h-6 w-6" /> },
-    { title: 'New Arrivals', body: <>Check out our new premium seat covers collection.</>, time: '1 day ago', tone: 'bg-purple-50 text-purple-600', icon: <Package className="h-6 w-6 fill-current" /> },
-    { title: 'Pickup Ready', body: <>Your order <b className="text-slate-700">#RGD5819</b> is ready for pickup at Rofik Godi Centre.</>, time: '2 days ago', tone: 'bg-blue-50 text-blue-500', icon: <Truck className="h-6 w-6 fill-current" /> },
-    { title: 'Exclusive Coupon', body: <>Use code <b className="text-slate-700">RGD50</b> and get ₹50 OFF on your next order.</>, time: '3 days ago', tone: 'bg-rose-50 text-rose-500', icon: <Gift className="h-6 w-6 fill-current" /> },
-    { title: 'Review Reminder', body: <>How was your purchase? Share your review and help others.</>, time: '4 days ago', tone: 'bg-amber-50 text-amber-500', icon: <Star className="h-6 w-6 fill-current" /> },
-    { title: 'Account Update', body: <>Your profile information has been updated successfully.</>, time: '5 days ago', tone: 'bg-sky-50 text-sky-500', icon: <Bell className="h-6 w-6 fill-current" /> },
-  ], []);
-  const visible = filter === 'All' ? items : items.filter((item) => filter === 'Orders' ? item.title.includes('Order') || item.title.includes('Delivery') : filter === 'Offers' ? item.title.includes('Offer') || item.title.includes('Coupon') : !item.title.includes('Order') && !item.title.includes('Offer') && !item.title.includes('Coupon') && !item.title.includes('Delivery'));
+  const [items, setItems] = useState<NotificationItem[]>([]);
+  const [loading, setLoading] = useState(!isGuest);
 
-  if (showSettings) {
-    return <NotificationSettingsView onBack={() => setShowSettings(false)} />;
-  }
+  useEffect(() => {
+    let active = true;
+    setSelectedNotification(null);
+    setFilter('All');
+    if (isGuest || !userId) {
+      setItems([]);
+      setLoading(false);
+      return () => { active = false; };
+    }
+    setItems([]);
+    setLoading(true);
+    void listMyNotifications(userId).then((rows) => {
+      if (active) setItems(rows as NotificationItem[]);
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, [userId, isGuest]);
+
+  const visible = useMemo(() => items.filter((item) => filterMatches(item, filter)), [items, filter]);
+  const counts = useMemo(() => ({
+    All: items.length,
+    Orders: items.filter((item) => filterMatches(item, 'Orders')).length,
+    Offers: items.filter((item) => filterMatches(item, 'Offers')).length,
+    Updates: items.filter((item) => filterMatches(item, 'Updates')).length,
+  }), [items]);
+
+  const openNotification = (item: NotificationItem) => {
+    setSelectedNotification(item);
+    if (!item.read_at && !isGuest) {
+      const readAt = new Date().toISOString();
+      setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, read_at: readAt } : entry));
+      void markNotificationRead(item.id, userId);
+    }
+  };
+
+  if (showSettings) return <NotificationSettingsView onBack={() => setShowSettings(false)} />;
 
   if (selectedNotification) {
     return <main className="min-h-screen w-full bg-white text-slate-800 font-sans">
@@ -31,20 +105,12 @@ export function NotificationsView({ onBack }: { onBack: () => void }) {
       </header>
       <div className="px-4 py-4">
         <section className="rounded-3xl bg-gradient-to-br from-red-50 to-pink-50 p-5">
-          <div className={`mb-4 flex h-14 w-14 items-center justify-center rounded-full ${selectedNotification.tone}`}>{selectedNotification.icon}</div>
-          <p className="mb-2 text-xs font-bold text-[#E51E2B]">{selectedNotification.time}</p>
+          <div className={`mb-4 flex h-14 w-14 items-center justify-center rounded-full ${toneFor(selectedNotification.kind)}`}>{iconFor(selectedNotification.kind)}</div>
+          <p className="mb-2 text-xs font-bold text-[#E51E2B]">{timeAgo(selectedNotification.created_at)}</p>
           <h2 className="text-[24px] font-extrabold leading-tight text-slate-900">{selectedNotification.title}</h2>
-          <p className="mt-2 text-[15px] leading-relaxed text-slate-500">{selectedNotification.body}</p>
+          <p className="mt-2 text-[15px] leading-relaxed text-slate-600">{selectedNotification.body}</p>
         </section>
-        <section className="mt-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <h2 className="text-lg font-extrabold text-slate-900">Order Summary</h2>
-          <div className="mt-3 flex items-center gap-3 border-t border-slate-100 pt-3"><div className="h-14 w-14 rounded-xl bg-slate-100" /><div><p className="font-bold">Premium Bike Seat Cover</p><p className="text-sm text-slate-500">Black Red · Qty: 1</p><p className="font-extrabold">₹499</p></div></div>
-        </section>
-        <section className="mt-4 rounded-2xl border border-slate-100 p-4">
-          <h2 className="text-lg font-extrabold">Tracking Information</h2>
-          {['Order Received', 'Confirmed', 'Preparing', 'Ready for Pickup', 'Picked Up', 'Completed'].map((step, index) => <div key={step} className="flex items-center gap-3 py-2"><span className={`h-4 w-4 rounded-full border-2 ${index < 3 ? 'border-[#E51E2B] bg-[#E51E2B]' : 'border-slate-300'}`} /><span className={`text-sm font-semibold ${index === 2 ? 'text-[#E51E2B]' : 'text-slate-500'}`}>{step}</span></div>)}
-        </section>
-        <button className="mt-5 w-full rounded-2xl bg-[#E51E2B] py-4 text-base font-extrabold text-white">Track Order <ChevronRight className="ml-2 inline h-5 w-5" /></button>
+        {selectedNotification.action_url && <a href={selectedNotification.action_url} className="mt-5 block w-full rounded-2xl bg-[#E51E2B] py-4 text-center text-base font-extrabold text-white">View details <ChevronRight className="ml-2 inline h-5 w-5" /></a>}
       </div>
     </main>;
   }
@@ -56,15 +122,21 @@ export function NotificationsView({ onBack }: { onBack: () => void }) {
       <button onClick={() => setShowSettings(true)} aria-label="Notification settings" className="p-1 mt-1"><Settings className="h-6 w-6" /></button>
     </header>
     <nav className="flex gap-2.5 px-5 py-2.5 overflow-x-auto no-scrollbar">
-      {['All', 'Orders', 'Offers', 'Updates'].map((name) => <button key={name} onClick={() => setFilter(name)} className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold ${filter === name ? 'bg-[#E51E2B] text-white shadow-sm' : 'bg-gray-100 text-slate-700'}`}>{name} ({name === 'All' ? 12 : name === 'Orders' ? 4 : name === 'Offers' ? 4 : 3})</button>)}
+      {(['All', 'Orders', 'Offers', 'Updates'] as NotificationFilter[]).map((name) => <button key={name} onClick={() => setFilter(name)} className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold ${filter === name ? 'bg-[#E51E2B] text-white shadow-sm' : 'bg-gray-100 text-slate-700'}`}>{name} ({counts[name]})</button>)}
     </nav>
-    <section className="mt-1 divide-y divide-gray-100">
-      {visible.map((item) => <article key={item.title} onClick={() => setSelectedNotification(item)} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') setSelectedNotification(item); }} className="flex items-start px-5 py-4 hover:bg-slate-50 transition-colors cursor-pointer">
-        <div className={`h-12 w-12 shrink-0 mr-3.5 rounded-2xl flex items-center justify-center shadow-sm ${item.tone}`}>{item.icon}</div>
-        <div className="flex-1 pr-2"><div className="flex items-center"><h2 className="text-sm font-bold tracking-tight text-gray-900">{item.title}</h2>{item.unread && <span className="ml-2 h-2 w-2 rounded-full bg-[#E51E2B]" />}</div><p className="mt-1 text-xs leading-relaxed text-gray-500">{item.body}</p></div>
-        <div className="self-stretch shrink-0 flex flex-col items-end justify-between pt-0.5"><span className="text-[11px] font-medium text-gray-400">{item.time}</span><ChevronRight className="h-4 w-4 text-gray-400" /></div>
+    {loading ? <div className="px-5 py-16 text-center text-sm text-slate-500">Loading your notifications…</div> : visible.length === 0 ? (
+      <section className="mx-5 mt-8 rounded-3xl border border-slate-100 bg-slate-50 px-6 py-12 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm"><Bell className="h-6 w-6" /></div>
+        <h2 className="mt-4 text-base font-bold text-slate-800">{isGuest ? 'Sign in to see your notifications' : 'You’re all caught up'}</h2>
+        <p className="mt-1 text-sm text-slate-500">{isGuest ? 'Account notifications will appear here after you sign in.' : 'New updates for your account will appear here.'}</p>
+      </section>
+    ) : <section className="mt-1 divide-y divide-gray-100">
+      {visible.map((item) => <article key={item.id} onClick={() => openNotification(item)} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') openNotification(item); }} className="flex items-start px-5 py-4 hover:bg-slate-50 transition-colors cursor-pointer">
+        <div className={`h-12 w-12 shrink-0 mr-3.5 rounded-2xl flex items-center justify-center shadow-sm ${toneFor(item.kind)}`}>{iconFor(item.kind)}</div>
+        <div className="flex-1 pr-2"><div className="flex items-center"><h2 className="text-sm font-bold tracking-tight text-gray-900">{item.title}</h2>{!item.read_at && <span className="ml-2 h-2 w-2 rounded-full bg-[#E51E2B]" />}</div><p className="mt-1 text-xs leading-relaxed text-gray-500">{item.body}</p></div>
+        <div className="self-stretch shrink-0 flex flex-col items-end justify-between pt-0.5"><span className="text-[11px] font-medium text-gray-400">{timeAgo(item.created_at)}</span><ChevronRight className="h-4 w-4 text-gray-400" /></div>
       </article>)}
-    </section>
+    </section>}
   </main>;
 }
 

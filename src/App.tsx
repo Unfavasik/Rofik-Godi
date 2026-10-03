@@ -58,7 +58,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { loadPublicProducts } from './lib/supabaseProducts';
-
+import { supabase } from './lib/supabase';
 export default function App() {
   // Route flow: /Onboarding -> /home, and account creation opens at /signup.
   const phaseFromPath = (pathname: string): 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth' => {
@@ -93,6 +93,29 @@ export default function App() {
     phone: '',
     isGuest: true,
   });
+
+  useEffect(() => {
+    if (!supabase) return;
+    const applyAuthUser = (user: { id: string; email?: string; user_metadata?: Record<string, unknown> }) => {
+      setCurrentUser({
+        id: user.id,
+        name: String(user.user_metadata?.full_name || 'Rider'),
+        email: user.email || '',
+        phone: String(user.user_metadata?.phone || ''),
+        isGuest: false,
+      });
+    };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) applyAuthUser(session.user);
+      else if (event === 'SIGNED_OUT') {
+        setCurrentUser({ id: `guest-${Date.now()}`, name: 'Guest Rider', email: '', phone: '', isGuest: true });
+      }
+    });
+    void supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) applyAuthUser(data.session.user);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Login Required Modal State
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -163,38 +186,56 @@ export default function App() {
   const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
   const [isTermsConditionsOpen, setIsTermsConditionsOpen] = useState(false);
 
-  // Cart & Wishlist State
-  const [cart, setCart] = useState<CartItem[]>([
-    {
-      cartItemId: 'init-1',
-      product: PRODUCTS[0],
-      quantity: 1,
-      selectedColor: PRODUCTS[0].colors[0],
-      selectedStitch: 'Quilted Diamond',
-      selectedThickness: PRODUCTS[0].thicknessOptions[0],
-      unitPrice: PRODUCTS[0].price,
-    },
-    {
-      cartItemId: 'init-2',
-      product: PRODUCTS[1],
-      quantity: 1,
-      selectedColor: PRODUCTS[1].colors[0],
-      selectedStitch: 'Single Border Stitched',
-      selectedThickness: PRODUCTS[1].thicknessOptions[0],
-      unitPrice: PRODUCTS[1].price,
-    },
-    {
-      cartItemId: 'init-3',
-      product: PRODUCTS[4],
-      quantity: 1,
-      selectedColor: PRODUCTS[4].colors[0],
-      selectedStitch: 'Honeycomb Grid Pattern',
-      selectedThickness: PRODUCTS[4].thicknessOptions[0],
-      unitPrice: PRODUCTS[4].price,
-    },
-  ]);
+  // Customer-owned state is keyed by auth identity. A new account never inherits demo or prior-user data.
+  const [customerState, setCustomerState] = useState<{
+    ownerId: string;
+    cart: CartItem[];
+    wishlist: Product[];
+  }>({ ownerId: 'guest-user', cart: [], wishlist: [] });
+  const cart = customerState.ownerId === currentUser.id ? customerState.cart : [];
+  const wishlist = customerState.ownerId === currentUser.id ? customerState.wishlist : [];
 
-  const [wishlist, setWishlist] = useState<Product[]>([PRODUCTS[0], PRODUCTS[2]]);
+  useEffect(() => {
+    if (customerState.ownerId === currentUser.id) return;
+    let savedCart: CartItem[] = [];
+    let savedWishlist: Product[] = [];
+    if (!currentUser.isGuest) {
+      try {
+        const cartValue = localStorage.getItem(`work-app:${currentUser.id}:cart`);
+        const wishlistValue = localStorage.getItem(`work-app:${currentUser.id}:wishlist`);
+        const parsedCart: unknown = cartValue ? JSON.parse(cartValue) : [];
+        const parsedWishlist: unknown = wishlistValue ? JSON.parse(wishlistValue) : [];
+        if (Array.isArray(parsedCart)) savedCart = parsedCart as CartItem[];
+        if (Array.isArray(parsedWishlist)) savedWishlist = parsedWishlist as Product[];
+      } catch {
+        // Ignore malformed or unavailable browser storage and start this account empty.
+      }
+    }
+    setCustomerState({ ownerId: currentUser.id, cart: savedCart, wishlist: savedWishlist });
+  }, [currentUser.id, currentUser.isGuest, customerState.ownerId]);
+
+  useEffect(() => {
+    if (customerState.ownerId !== currentUser.id || currentUser.isGuest) return;
+    try {
+      localStorage.setItem(`work-app:${currentUser.id}:cart`, JSON.stringify(customerState.cart));
+      localStorage.setItem(`work-app:${currentUser.id}:wishlist`, JSON.stringify(customerState.wishlist));
+    } catch {
+      // The in-memory account state still works when storage is blocked or full.
+    }
+  }, [customerState, currentUser.id, currentUser.isGuest]);
+
+  const setCart = (next: CartItem[] | ((current: CartItem[]) => CartItem[])) => {
+    setCustomerState((state) => {
+      const current = state.ownerId === currentUser.id ? state.cart : [];
+      return { ownerId: currentUser.id, cart: typeof next === 'function' ? next(current) : next, wishlist: state.ownerId === currentUser.id ? state.wishlist : [] };
+    });
+  };
+  const setWishlist = (next: Product[] | ((current: Product[]) => Product[])) => {
+    setCustomerState((state) => {
+      const current = state.ownerId === currentUser.id ? state.wishlist : [];
+      return { ownerId: currentUser.id, cart: state.ownerId === currentUser.id ? state.cart : [], wishlist: typeof next === 'function' ? next(current) : next };
+    });
+  };
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
   const [checkoutDiscount, setCheckoutDiscount] = useState(0);
   const [checkoutCoupon, setCheckoutCoupon] = useState('');
@@ -513,7 +554,7 @@ export default function App() {
 
         {/* View Switcher: Search View / Account View / Home & Shop Experience */}
         {activeTab === 'notifications' ? (
-          <NotificationsView onBack={() => setActiveTab('home')} />
+          <NotificationsView userId={currentUser.id} isGuest={currentUser.isGuest} onBack={() => setActiveTab('home')} />
         ) : activeTab === 'shop' ? (
           <ShopView products={filteredProducts} wishlist={wishlist} cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)} onBack={() => setActiveTab('home')} onSearch={(value) => { setSearchQuery(value); setActiveTab('search'); }} onSelectProduct={setSelectedProduct} onQuickAdd={handleQuickAddToCart} onToggleWishlist={handleToggleWishlist} onOpenCart={() => { setActiveTab('cart'); setIsCartOpen(true); }} />
         ) : activeTab === 'search' ? (
@@ -541,6 +582,7 @@ export default function App() {
   goToPhase('account-onboarding');
   }}
               onLogout={() => {
+                void supabase?.auth.signOut();
                 setCurrentUser({
                   id: `guest-${Date.now()}`,
                   name: 'Guest Rider',

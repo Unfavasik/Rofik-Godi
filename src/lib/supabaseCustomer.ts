@@ -28,7 +28,9 @@ export async function saveAddress(address: Record<string, unknown>) {
 
 export async function listMyWishlist() {
   if (!supabase) return [];
-  const { data } = await supabase.from('wishlists').select('product_id,created_at').order('created_at', { ascending: false });
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+  const { data } = await supabase.from('wishlists').select('product_id,created_at').eq('user_id', userData.user.id).order('created_at', { ascending: false });
   return data || [];
 }
 
@@ -53,15 +55,19 @@ export async function submitReview(review: { product_id: string; author_name: st
   return supabase.from('reviews').insert({ ...review, user_id: userData.user.id }).select().single();
 }
 
-export async function listMyNotifications() {
+export async function listMyNotifications(expectedUserId?: string) {
   if (!supabase) return [];
-  const { data } = await supabase.from('notifications').select('id,kind,title,body,action_url,read_at,created_at').order('created_at', { ascending: false }).limit(50);
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return [];
+  const { data } = await supabase.from('notifications').select('id,kind,title,body,action_url,read_at,created_at').eq('user_id', userData.user.id).order('created_at', { ascending: false }).limit(50);
   return data || [];
 }
 
-export async function markNotificationRead(id: string) {
+export async function markNotificationRead(id: string, expectedUserId?: string) {
   if (!supabase) return { error: null };
-  return supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id);
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return { error: new Error('Sign in required') };
+  return supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id).eq('user_id', userData.user.id);
 }
 
 export async function listMyOrders() {
