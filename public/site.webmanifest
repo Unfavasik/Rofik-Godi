@@ -1,0 +1,17 @@
+{
+  "name": "Rofik Godi Center",
+  "short_name": "Rofik Godi",
+  "description": "Comfort for every ride.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#D9232D",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
