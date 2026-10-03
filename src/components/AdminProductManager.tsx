@@ -4,6 +4,7 @@ import { PRODUCTS } from '../data/products';
 import type { Product, VehicleCategory } from '../types';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { deleteSupabaseProduct, loadAdminProducts, uploadProductImage, upsertSupabaseProduct } from '../lib/supabaseProducts';
+import { ConfirmDialog } from './ConfirmDialog';
 
 type ProductDraft = Omit<Product, 'id' | 'rating' | 'reviewCount'> & { id?: string; rating: number; reviewCount: number };
 
@@ -41,6 +42,7 @@ export const AdminProductManager: React.FC<{ initialProducts?: Product[]; onProd
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<ProductDraft | null>(null);
   const [saving, setSaving] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,8 +63,9 @@ export const AdminProductManager: React.FC<{ initialProducts?: Product[]; onProd
         const uploaded = await uploadProductImage(new File([blob], `${slugify(draft.title) || 'product'}.jpg`, { type: blob.type || 'image/jpeg' }));
         image = uploaded.url;
         uploadedAsWebP = uploaded.format === 'webp';
-      } catch {
-        notify('Image kept locally; sign in as an admin to upload to Storage');
+      } catch (error) {
+        notify(error instanceof Error ? error.message : 'Image upload failed; sign in as an admin to upload to Storage');
+        return;
       }
     }
     const normalized: Product = { ...draft, image, id: draft.id || `rg-prod-${Date.now()}`, slug: slugify(draft.slug || draft.title), categoryLabel: draft.categoryLabel || categoryLabels[draft.category], additionalImages: (draft.additionalImages || []).filter(Boolean) };
@@ -72,7 +75,8 @@ export const AdminProductManager: React.FC<{ initialProducts?: Product[]; onProd
     setEditorOpen(false); setEditing(null);
     notify(uploadedAsWebP ? 'Converted to WebP and saved to Supabase Storage' : (draft.id ? 'Product updated in Supabase' : 'Product added to Supabase'));
   };
-  const remove = async (id: string) => { const product = products.find((item) => item.id === id); if (!product) return; const result = await deleteSupabaseProduct(product); if (result.error) { notify(`Product was not deleted: ${result.error.message}`); return; } setProducts((current) => current.filter((item) => item.id !== id)); notify('Product deleted'); };
+  const remove = (id: string) => setPendingDeleteId(id);
+  const confirmRemove = async () => { const id = pendingDeleteId; setPendingDeleteId(null); if (!id) return; const product = products.find((item) => item.id === id); if (!product) return; const result = await deleteSupabaseProduct(product); if (result.error) { notify(`Product was not deleted: ${result.error.message}`); return; } setProducts((current) => current.filter((item) => item.id !== id)); notify('Product deleted'); };
   const duplicate = (product: Product) => { const copy = { ...product, id: `rg-prod-${Date.now()}`, title: `${product.title} Copy`, slug: `${product.slug}-copy` }; setProducts((current) => [copy, ...current]); notify('Product duplicated'); };
   const toggleStock = (id: string) => { setProducts((current) => current.map((item) => item.id === id ? { ...item, inStock: !item.inStock } : item)); notify('Inventory visibility updated'); };
 
@@ -82,6 +86,7 @@ export const AdminProductManager: React.FC<{ initialProducts?: Product[]; onProd
     <div className="mb-5 grid gap-3 sm:grid-cols-3"><Summary label="Total products" value={products.length.toString()} tone="text-slate-900" /><Summary label="Visible in store" value={products.filter((product) => product.inStock).length.toString()} tone="text-emerald-600" /><Summary label="Low / out of stock" value={products.filter((product) => !product.inStock).length.toString()} tone="text-red-600" /></div>
     <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:flex-row"><div className="flex flex-1 items-center gap-2 rounded-xl bg-slate-50 px-3 py-2"><Search className="h-4 w-4 text-slate-400" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by product name, category or slug..." className="w-full bg-transparent text-xs font-semibold outline-none" /></div><select value={category} onChange={(event) => setCategory(event.target.value as 'all' | VehicleCategory)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 outline-none"><option value="all">All categories</option>{categories.map((item) => <option key={item} value={item}>{categoryLabels[item]}</option>)}</select></div>
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="overflow-x-auto"><table className="w-full min-w-[880px] text-left"><thead><tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-black uppercase tracking-wider text-slate-400"><th className="px-5 py-3">Product</th><th className="py-3">Category</th><th className="py-3">Price</th><th className="py-3">Stock</th><th className="py-3">Status</th><th className="py-3 pr-5 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-100">{filtered.map((product) => <tr key={product.id} className="text-xs hover:bg-slate-50/60"><td className="px-5 py-3"><div className="flex items-center gap-3"><div className="h-12 w-12 overflow-hidden rounded-xl bg-slate-100"><img src={product.image} alt="" className="h-full w-full object-cover" onError={(event) => { event.currentTarget.style.display = 'none'; }} /></div><div><p className="max-w-[240px] truncate font-black text-slate-800">{product.title}</p><p className="mt-1 max-w-[250px] truncate text-[10px] text-slate-400">/{product.slug}</p></div></div></td><td className="py-3 font-semibold text-slate-500">{product.categoryLabel}</td><td className="py-3"><p className="font-black">{money(product.price)}</p><p className="text-[10px] text-slate-400 line-through">{money(product.originalPrice)}</p></td><td className="py-3 font-semibold text-slate-600">{product.inStock ? 'Available' : 'Hidden'}</td><td className="py-3"><button onClick={() => toggleStock(product.id)} className={`rounded-full px-2.5 py-1 text-[10px] font-black ${product.inStock ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>{product.inStock ? 'Published' : 'Unpublished'}</button></td><td className="py-3 pr-5"><div className="flex justify-end gap-1"><button title="Edit product" onClick={() => openEdit(product)} className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-[#D9232D]"><Pencil className="h-4 w-4" /></button><button title="Duplicate product" onClick={() => duplicate(product)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-800"><Copy className="h-4 w-4" /></button><button title="Delete product" onClick={() => remove(product.id)} className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"><Trash2 className="h-4 w-4" /></button></div></td></tr>)}</tbody></table></div>{filtered.length === 0 && <div className="py-14 text-center text-sm font-semibold text-slate-400">No products match your filters.</div>}</div>
+    <ConfirmDialog open={Boolean(pendingDeleteId)} title="Delete product?" message="This permanently removes the product from the catalog and database." confirmLabel="Delete product" onCancel={() => setPendingDeleteId(null)} onConfirm={() => void confirmRemove()} />
     {editorOpen && editing && <ProductEditor draft={editing} saving={saving} setSaving={setSaving} onClose={() => { setEditorOpen(false); setEditing(null); }} onSave={save} />}
   </section>;
 };
@@ -114,11 +119,12 @@ const ProductEditor: React.FC<{ draft: ProductDraft; saving: boolean; setSaving:
   const set = <K extends keyof ProductDraft>(key: K, value: ProductDraft[K]) => setForm((current) => ({ ...current, [key]: value }));
   const upload = async (file?: File) => {
     if (!file) return;
-    if (!file.type.startsWith('image/')) return;
-    if (file.size > 5 * 1024 * 1024) return;
+    setValidationError('');
+    if (!file.type.startsWith('image/')) { setValidationError('Please choose an image file.'); return; }
+    if (file.size > 5 * 1024 * 1024) { setValidationError('Image must be 5MB or smaller.'); return; }
     if (isSupabaseConfigured) {
       try { setSaving(true); const uploaded = await uploadProductImage(file); set('image', uploaded.url); }
-      catch (error) { setSaving(false); return; }
+      catch (error) { setValidationError(error instanceof Error ? error.message : 'Image upload failed. Check your admin session and try again.'); return; }
       finally { setSaving(false); }
     } else set('image', URL.createObjectURL(file));
   };

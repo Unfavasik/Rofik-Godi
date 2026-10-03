@@ -47,6 +47,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   if (!isOpen) return null;
 
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+  const hasUnavailableItems = items.some((item) => !item.product.inStock);
   const displayedSubtotal = appliedCoupon?.subtotal ?? subtotal;
   const discount = appliedCoupon ? appliedCoupon.discount : 0;
   const grandTotal = appliedCoupon?.total ?? Math.max(0, subtotal - discount);
@@ -226,7 +227,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => onUpdateQuantity(item.cartItemId, item.quantity + 1)}
+                          onClick={() => onUpdateQuantity(item.cartItemId, item.quantity + 1)} disabled={!item.product.inStock}
                           className="w-5 h-5 rounded bg-white shadow-2xs text-gray-700 text-xs font-bold flex items-center justify-center hover:bg-gray-100"
                         >
                           +
@@ -317,10 +318,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
               <motion.button
                 whileTap={{ scale: 0.97 }}
-                onClick={() => onProceedToCheckout(discount, appliedCoupon?.code || '', appliedCoupon ? { subtotal: appliedCoupon.subtotal, total: appliedCoupon.total } : undefined)}
+                onClick={() => onProceedToCheckout(discount, appliedCoupon?.code || '', appliedCoupon ? { subtotal: appliedCoupon.subtotal, total: appliedCoupon.total } : undefined)} disabled={hasUnavailableItems}
                 className="w-full py-3.5 bg-[#D9232D] hover:bg-[#c01d26] text-white rounded-xl text-[13px] font-black shadow-md flex items-center justify-center gap-2 transition-all"
               >
-                <span>Proceed to Checkout</span>
+                <span>{hasUnavailableItems ? 'Remove unavailable items first' : 'Proceed to Checkout'}</span>
                 <ArrowRight className="w-4 h-4" />
               </motion.button>
 

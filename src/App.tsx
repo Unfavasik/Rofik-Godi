@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { lazy, Suspense, useState, useMemo, useEffect, useRef } from 'react';
+import React, { lazy, Suspense, useState, useMemo, useEffect } from 'react';
 import { PRODUCTS, WORKSHOP_INFO } from './data/products';
 import { Product, CartItem, VehicleCategory, UserProfile } from './types';
 import { Header } from './components/Header';
@@ -83,7 +83,7 @@ export default function App() {
     return '/home';
   };
   type AuthStatus = 'AUTH_LOADING' | 'AUTHENTICATED' | 'UNAUTHENTICATED';
-  const [appPhase, setAppPhase] = useState<'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth'>(() => phaseFromPath(window.location.pathname));
+  const [appPhase, setAppPhase] = useState<'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth'>(() => phaseFromPath(location.pathname));
   const [authStatus, setAuthStatus] = useState<AuthStatus>('AUTH_LOADING');
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>('signup');
   const goToPhase = (phase: 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth') => {
@@ -130,7 +130,7 @@ export default function App() {
       setNotificationCount(0);
     };
     const isPublicAuthPath = () => {
-      const route = window.location.pathname.replace(/\/$/, '') || '/';
+      const route = location.pathname.replace(/\/$/, '') || '/';
       return route === '/Onboarding' || route === '/onboarding' || route === '/signup' || route === '/signup/onboarding';
     };
     const applyAuthUser = (user: { id: string; email?: string; user_metadata?: Record<string, unknown> }) => {
@@ -147,7 +147,7 @@ export default function App() {
     const applyNoSession = () => {
       resetAuthenticatedState();
       setAuthStatus('UNAUTHENTICATED');
-      const route = window.location.pathname.replace(/\/$/, '') || '/';
+      const route = location.pathname.replace(/\/$/, '') || '/';
       if (!isPublicAuthPath() && route !== '/admin') goToPhase('onboarding');
     };
 
@@ -193,26 +193,17 @@ export default function App() {
     return 'home';
   };
   const tabToRoute = (tab: RouteTab) => tab === 'account' ? '/profile' : `/${tab}`;
-  const [activeTab, setActiveTab] = useState<RouteTab>(() => routeToTab(window.location.pathname));
-  const isPopState = useRef(false);
+  const [activeTab, setActiveTab] = useState<RouteTab>(() => routeToTab(location.pathname));
   useEffect(() => {
     setAppPhase(phaseFromPath(location.pathname));
     setActiveTab(routeToTab(location.pathname));
   }, [location.pathname]);
 
   useEffect(() => {
-    if ((window.location.pathname.replace(/\/$/, '') || '/') === '/admin') return;
+    if ((location.pathname.replace(/\/$/, '') || '/') === '/admin') return;
     if (appPhase !== 'main') return;
     const nextPath = tabToRoute(activeTab);
-    if (window.location.pathname !== nextPath) {
-      if (isPopState.current) {
-        isPopState.current = false;
-        return;
-      }
-      navigate(nextPath, { state: { tab: activeTab } });
-    } else {
-      isPopState.current = false;
-    }
+    if (location.pathname !== nextPath) navigate(nextPath, { state: { tab: activeTab } });
 
     if (activeTab === 'shop') {
       window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
@@ -255,7 +246,7 @@ export default function App() {
     if (customerState.ownerId === currentUser.id) return;
     let savedCart: CartItem[] = [];
     let savedWishlist: Product[] = [];
-    if (!currentUser.isGuest && !supabase) {
+    if (!currentUser.isGuest) {
       try {
         const cartValue = localStorage.getItem(`work-app:${currentUser.id}:cart`);
         const wishlistValue = localStorage.getItem(`work-app:${currentUser.id}:wishlist`);
@@ -407,6 +398,7 @@ export default function App() {
   // Quick Cart Add
   const handleQuickAddToCart = (p: Product, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!p.inStock) return;
     const existingIndex = cart.findIndex((item) => item.product.id === p.id);
 
     if (existingIndex > -1) {
@@ -439,6 +431,7 @@ export default function App() {
     customEmbroideryText?: string,
     quantity = 1
   ) => {
+    if (!product.inStock) return;
     const unitPrice =
       product.price +
       selectedThickness.extraPrice +
@@ -540,7 +533,7 @@ export default function App() {
   };
 
   // Phase 1: Product introduction. Once completed, open the app directly.
-  if (window.location.pathname.replace(/\/$/, '') === '/admin') {
+  if (location.pathname.replace(/\/$/, '') === '/admin') {
     return <AdminAccessGate onBackToStore={() => navigate('/home')} onSignIn={() => {
       setAuthInitialMode('login');
       goToPhase('auth');

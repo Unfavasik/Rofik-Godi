@@ -118,6 +118,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   const discount = Math.round((savings / displayOriginalPrice) * 100);
 
   const addToCart = (buyNow = false) => {
+    if (!product.inStock) return;
     onAddToCart(product, selectedColor, selectedStitch, selectedThickness, undefined, quantity);
     setAdded(true);
     if (buyNow) {
@@ -349,10 +350,10 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
           </main>
 
           <footer className="z-40 grid shrink-0 grid-cols-2 gap-2.5 border-t border-slate-100 bg-white px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgba(15,23,42,.08)]">
-            <button type="button" onClick={() => addToCart(false)} className="flex h-[50px] items-center justify-center gap-2 rounded-xl border border-[#d9232d] bg-white text-[13px] font-extrabold text-[#d9232d] active:scale-[.98]">
-              {added ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}{added ? 'Added to Cart' : 'Add to Cart'}
+            <button type="button" disabled={!product.inStock} onClick={() => addToCart(false)} className="flex h-[50px] items-center justify-center gap-2 rounded-xl border border-[#d9232d] bg-white text-[13px] font-extrabold text-[#d9232d] active:scale-[.98]">
+              {added ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}{!product.inStock ? 'Out of stock' : added ? 'Added to Cart' : 'Add to Cart'}
             </button>
-            <button type="button" onClick={() => addToCart(true)} className="flex h-[50px] items-center justify-center gap-2 rounded-xl bg-[#d9232d] text-[13px] font-extrabold text-white shadow-sm active:scale-[.98]">
+            <button type="button" disabled={!product.inStock} onClick={() => addToCart(true)} className="flex h-[50px] items-center justify-center gap-2 rounded-xl bg-[#d9232d] text-[13px] font-extrabold text-white shadow-sm active:scale-[.98]">
               <Zap className="h-4 w-4 fill-current" />Buy Now
             </button>
           </footer>
@@ -370,7 +371,7 @@ const SuggestionCard: React.FC<{ product: Product; onAdd: () => void; onSelect: 
       <p className="mt-0.5 text-[10px] text-slate-500 break-words">{product.subtitle}</p>
       <div className="mt-2 flex items-center justify-between gap-1">
         <span className="text-[16px] font-extrabold">₹{product.price} <small className="text-[9px] font-normal text-slate-400 line-through">₹{product.originalPrice}</small></span>
-        <button type="button" onClick={onAdd} aria-label={`Add ${product.title} to cart`} className="grid h-8 w-8 place-items-center rounded-full bg-[#d9232d] text-white"><Plus className="h-4 w-4" /></button>
+        <button type="button" disabled={!product.inStock} onClick={onAdd} aria-label={`Add ${product.title} to cart`} className="grid h-8 w-8 place-items-center rounded-full bg-[#d9232d] text-white"><Plus className="h-4 w-4" /></button>
       </div>
       <div className="mt-1 flex items-center gap-1 text-[10px] text-amber-500"><Star className="h-3 w-3 fill-current" />{product.rating} <span className="text-slate-400">({product.reviewCount})</span></div>
     </div>

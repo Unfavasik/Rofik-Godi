@@ -123,7 +123,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
 
   return (
-    <div className="flex min-h-screen w-full justify-center overflow-x-hidden bg-[#f7d9de] font-['Poppins',sans-serif] text-[#0f1a3a] select-none antialiased">
+    <div className="flex min-h-screen w-full justify-center overflow-x-hidden bg-[#f7d9de] font-sans text-[#0f1a3a] select-none antialiased">
       {/* App Container matching exact 430px phone view */}
       <div className="relative flex min-h-full w-full min-w-0 max-w-[430px] flex-col overflow-x-hidden overflow-y-auto bg-[linear-gradient(180deg,#fdeff1_0%,#fbe0e4_40%,#fdeff1_100%)] shadow-2xl">
         

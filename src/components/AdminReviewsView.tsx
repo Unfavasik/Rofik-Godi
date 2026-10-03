@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BadgeCheck, Check, Eye, EyeOff, Star, Trash2 } from 'lucide-react';
+import { ConfirmDialog } from './ConfirmDialog';
 import { deleteProductReview, listAdminProductReviews, setProductReviewPublished, type ProductReviewRecord } from '../lib/supabaseReviews';
 
 interface AdminReviewsViewProps {
@@ -14,6 +15,7 @@ export const AdminReviewsView: React.FC<AdminReviewsViewProps> = ({ notify, quer
   const [ratingFilter, setRatingFilter] = useState('all');
   const [publicationFilter, setPublicationFilter] = useState<'all' | 'published' | 'hidden'>('all');
   const [verificationFilter, setVerificationFilter] = useState<'all' | 'verified' | 'unverified'>('all');
+  const [pendingDelete, setPendingDelete] = useState<ProductReviewRecord | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -40,6 +42,7 @@ export const AdminReviewsView: React.FC<AdminReviewsViewProps> = ({ notify, quer
     if (error) notify(error.message || 'Review moderation failed');
     else { notify(review.is_published ? 'Review hidden from the storefront' : 'Review published'); await refresh(); }
   };
+  const requestRemoveReview = (review: ProductReviewRecord) => setPendingDelete(review);
   const removeReview = async (review: ProductReviewRecord) => {
     const { error } = await deleteProductReview(review.id);
     if (error) notify(error.message || 'Review deletion failed');
@@ -58,8 +61,9 @@ export const AdminReviewsView: React.FC<AdminReviewsViewProps> = ({ notify, quer
     {loading ? <p className="rounded-2xl border border-slate-200 bg-white py-12 text-center text-sm text-slate-500">Loading reviews…</p> : reviews === null ? <p role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">Could not load admin reviews. Sign in with a user that has a matching <code>admin_users</code> record.</p> : filtered.length === 0 ? <p className="rounded-2xl border border-slate-200 bg-white py-12 text-center text-sm text-slate-500">No reviews match these filters.</p> : <div className="space-y-3">{filtered.map((review) => <article key={review.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex flex-col justify-between gap-3 sm:flex-row"><div><div className="flex flex-wrap items-center gap-2"><span className="text-sm font-black text-slate-900">{review.author_name || 'Customer'}</span>{review.is_verified_purchase && <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700"><BadgeCheck className="h-3.5 w-3.5" />Verified purchase</span>}<span className={`rounded-full px-2 py-1 text-[10px] font-bold ${review.is_published ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{review.is_published ? 'Published' : 'Hidden'}</span></div><p className="mt-1 text-[11px] font-bold text-[#D9232D]">{review.product_name || 'Product'}</p><p className="mt-1 break-all text-[10px] text-slate-400">Customer ID: {review.customer_id || 'Legacy review'} · Order ID: {review.order_id || 'Legacy review'}</p></div><div className="flex items-center gap-1 text-amber-500">{[1,2,3,4,5].map((value) => <Star key={value} className={`h-4 w-4 ${value <= review.rating ? 'fill-current' : 'text-slate-200'}`} />)}<span className="ml-2 text-[11px] font-bold text-slate-400">{new Date(review.created_at).toLocaleDateString('en-IN')}</span></div></div>
       {review.review_text && <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-slate-600">“{review.review_text}”</p>}
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3"><button type="button" onClick={() => void togglePublished(review)} className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-[11px] font-bold text-white">{review.is_published ? <><EyeOff className="h-3.5 w-3.5" />Hide</> : <><Eye className="h-3.5 w-3.5" />Publish</>}</button><button type="button" onClick={() => void removeReview(review)} className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-[11px] font-bold text-red-700 hover:bg-red-50"><Trash2 className="h-3.5 w-3.5" />Delete</button><span className="ml-auto inline-flex items-center gap-1 text-[10px] text-slate-400"><Check className="h-3.5 w-3.5" />Verified flag is database-controlled</span></div>
+      <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3"><button type="button" onClick={() => void togglePublished(review)} className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-[11px] font-bold text-white">{review.is_published ? <><EyeOff className="h-3.5 w-3.5" />Hide</> : <><Eye className="h-3.5 w-3.5" />Publish</>}</button><button type="button" onClick={() => requestRemoveReview(review)} className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-[11px] font-bold text-red-700 hover:bg-red-50"><Trash2 className="h-3.5 w-3.5" />Delete</button><span className="ml-auto inline-flex items-center gap-1 text-[10px] text-slate-400"><Check className="h-3.5 w-3.5" />Verified flag is database-controlled</span></div>
     </article>)}</div>}
+    <ConfirmDialog open={Boolean(pendingDelete)} title="Delete review?" message="This permanently removes the review from the database." confirmLabel="Delete review" onCancel={() => setPendingDelete(null)} onConfirm={() => { const review = pendingDelete; setPendingDelete(null); if (review) void removeReview(review); }} />
   </section>;
 };
 

@@ -37,6 +37,7 @@ import {
   type DiscountType,
   type CouponUsageRecord,
 } from '../lib/supabaseCoupons';
+import { ConfirmDialog } from './ConfirmDialog';
 
 const IST = 'Asia/Kolkata';
 const categories = [
@@ -128,6 +129,7 @@ export const CouponManagement: React.FC<{ notify: (message: string) => void }> =
   const [usageRows, setUsageRows] = useState<CouponUsageRecord[]>([]);
   const [usageSummary, setUsageSummary] = useState<CouponAnalyticsSummary>({ total_uses: 0, remaining_uses: 0, total_discount_given: 0 });
   const [detailsLoading, setDetailsLoading] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{ type: 'disable' | 'delete'; coupon: CouponRecord } | null>(null);
 
   const refresh = async () => {
     setLoading(true);
@@ -193,6 +195,8 @@ export const CouponManagement: React.FC<{ notify: (message: string) => void }> =
     if (response.error) notify(response.error);
   };
 
+  const requestDisable = (coupon: CouponRecord) => setPendingAction({ type: 'disable', coupon });
+  const requestDelete = (coupon: CouponRecord) => setPendingAction({ type: 'delete', coupon });
   const handleDisable = async (coupon: CouponRecord) => {
     const response = await disableAdminCoupon(coupon.id);
     if (response.error) { notify(response.error); return; }
@@ -261,12 +265,13 @@ export const CouponManagement: React.FC<{ notify: (message: string) => void }> =
         <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0"><Filter className="h-4 w-4 shrink-0 text-slate-400" />{filters.map((value) => <button key={value} onClick={() => setFilter(value)} className={`whitespace-nowrap rounded-full px-3 py-2 text-[10px] font-black transition ${filter === value ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-500 ring-1 ring-slate-200 hover:bg-slate-100'}`}>{value === 'All' ? `All (${coupons.length})` : `${statusLabels[value]} (${counts[value] || 0})`}</button>)}</div>
       </div>
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        {loading ? <div className="flex items-center justify-center gap-2 py-16 text-sm font-bold text-slate-400"><Loader2 className="h-4 w-4 animate-spin" />Loading coupons…</div> : visibleCoupons.length === 0 ? <div className="px-6 py-16 text-center"><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-[#D9232D]"><Tag className="h-5 w-5" /></span><h3 className="mt-4 text-sm font-black text-slate-800">{coupons.length ? 'No coupons match this view' : 'No coupons yet'}</h3><p className="mt-1 text-xs text-slate-500">Create a coupon to start a campaign; usage limits are enforced by the database.</p>{!coupons.length && <button onClick={openCreate} className="mt-4 rounded-xl bg-[#D9232D] px-4 py-2.5 text-xs font-black text-white"><Plus className="mr-1 inline h-4 w-4" />Create your first coupon</button>}</div> : <div className="divide-y divide-slate-100">{visibleCoupons.map((coupon) => <CouponRow key={coupon.id} coupon={coupon} onEdit={() => openEdit(coupon)} onDetails={() => void showDetails(coupon)} onDisable={() => void handleDisable(coupon)} onDelete={() => void handleDelete(coupon)} notify={notify} />)}</div>}
+        {loading ? <div className="flex items-center justify-center gap-2 py-16 text-sm font-bold text-slate-400"><Loader2 className="h-4 w-4 animate-spin" />Loading coupons…</div> : visibleCoupons.length === 0 ? <div className="px-6 py-16 text-center"><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-[#D9232D]"><Tag className="h-5 w-5" /></span><h3 className="mt-4 text-sm font-black text-slate-800">{coupons.length ? 'No coupons match this view' : 'No coupons yet'}</h3><p className="mt-1 text-xs text-slate-500">Create a coupon to start a campaign; usage limits are enforced by the database.</p>{!coupons.length && <button onClick={openCreate} className="mt-4 rounded-xl bg-[#D9232D] px-4 py-2.5 text-xs font-black text-white"><Plus className="mr-1 inline h-4 w-4" />Create your first coupon</button>}</div> : <div className="divide-y divide-slate-100">{visibleCoupons.map((coupon) => <CouponRow key={coupon.id} coupon={coupon} onEdit={() => openEdit(coupon)} onDetails={() => void showDetails(coupon)} onDisable={() => requestDisable(coupon)} onDelete={() => requestDelete(coupon)} notify={notify} />)}</div>}
       </div>
       <p className="flex items-center gap-2 text-[11px] font-medium text-slate-400"><ShieldGlyph />Coupon checks and final order totals are calculated by secure Supabase functions, not by this page.</p>
     </>}
 
     {form && <CouponFormModal form={form} setForm={setForm} saving={saving} products={filteredProducts} productSearch={productSearch} setProductSearch={setProductSearch} onClose={() => setForm(null)} onSubmit={handleSubmit} />}
+    <ConfirmDialog open={Boolean(pendingAction)} title={pendingAction?.type === 'disable' ? 'Disable coupon?' : 'Delete coupon?'} message={pendingAction?.type === 'disable' ? `Customers will no longer be able to use ${pendingAction?.coupon.code}.` : `Delete unused coupon ${pendingAction?.coupon.code}? This cannot be undone.`} confirmLabel={pendingAction?.type === 'disable' ? 'Disable coupon' : 'Delete coupon'} onCancel={() => setPendingAction(null)} onConfirm={() => { const action = pendingAction; setPendingAction(null); if (action?.type === 'disable') void handleDisable(action.coupon); if (action?.type === 'delete') void handleDelete(action.coupon); }} />
     {details && <CouponDetailsModal coupon={details} usageRows={usageRows} summary={usageSummary} loading={detailsLoading} onClose={() => setDetails(null)} />}
   </div>;
 };
