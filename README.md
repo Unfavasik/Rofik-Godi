@@ -36,4 +36,4 @@ where lower(email) = lower('admin@gmail.com')
 on conflict (user_id) do update set display_name = excluded.display_name, role = excluded.role;
 ```
 
-After one administrator exists, an existing admin can grant or update another admin using `public.grant_admin_by_email(email, display_name, role)`. Do not put admin emails in frontend code or expose a public admin-registration form.
+Only the `admin` role is supported; manager memberships are removed by the role migration and no longer pass `is_admin()`. After one administrator exists, an existing admin can grant or update another admin using `public.grant_admin_by_email(email, display_name, 'admin')`. Do not put admin emails in frontend code or expose a public admin-registration form.
