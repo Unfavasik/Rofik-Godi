@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Check, Copy, Phone, MessageCircle, Star, ShieldCheck, Globe, Bell } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
+import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -33,6 +34,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   // States for sub-modals
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
+  const [couponOffers, setCouponOffers] = useState<CustomerCouponOffer[]>([]);
+  const [couponOffersLoading, setCouponOffersLoading] = useState(false);
+  const [couponOffersError, setCouponOffersError] = useState('');
   const [notificationState, setNotificationState] = useState({
     offers: true,
     orderUpdates: true,
@@ -45,10 +49,41 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [logoutConfirmed, setLogoutConfirmed] = useState(false);
 
+  useEffect(() => {
+    if (activeModal !== 'coupons') return;
+    let active = true;
+    setCouponOffersLoading(true);
+    setCouponOffersError('');
+    void loadCustomerCouponOffers().then(({ data, error }) => {
+      if (!active) return;
+      setCouponOffers(data);
+      setCouponOffersError(error);
+    }).catch(() => {
+      if (active) setCouponOffersError('Offers are temporarily unavailable. Please try again later.');
+    }).finally(() => {
+      if (active) setCouponOffersLoading(false);
+    });
+    return () => { active = false; };
+  }, [activeModal]);
+
   const handleCopyCoupon = (code: string) => {
     navigator.clipboard?.writeText(code);
     setCopiedCoupon(code);
     setTimeout(() => setCopiedCoupon(null), 2000);
+  };
+
+  const couponBenefit = (offer: CustomerCouponOffer) => offer.discount_type === 'PERCENTAGE'
+    ? `${offer.discount_value}% off${offer.max_discount ? ` · up to ₹${offer.max_discount}` : ''}`
+    : `₹${offer.discount_value} off`;
+  const couponDetails = (offer: CustomerCouponOffer) => {
+    const parts = [offer.description?.trim() || ''];
+    if (offer.minimum_order_value > 0) parts.push(`Minimum order ₹${offer.minimum_order_value}`);
+    if (offer.apply_to === 'SELECTED_PRODUCTS' && offer.product_names.length) parts.push(`Selected products: ${offer.product_names.join(', ')}`);
+    else if (offer.apply_to === 'SELECTED_CATEGORIES' && offer.category_keys.length) parts.push(`Categories: ${offer.category_keys.join(', ')}`);
+    else if (offer.apply_to === 'ALL_PRODUCTS') parts.push('Valid on all products');
+    if (offer.eligibility === 'FIRST_ORDER') parts.push('First order only');
+    if (offer.eligibility === 'EXISTING_CUSTOMERS') parts.push('Returning customers');
+    return parts.filter(Boolean).join(' · ');
   };
 
   return (
@@ -433,30 +468,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </button>
               </div>
 
-              <div className="space-y-2.5">
-                {[
-                  { code: 'ROFIK100', desc: 'Flat ₹100 off on seat covers above ₹799', tag: 'BEST VALUE' },
-                  { code: 'TOTO50', desc: '₹50 discount on Toto full-bench cushions', tag: 'POPULAR' },
-                  { code: 'FIRSTFIT', desc: 'Free 15-min fitting + ₹30 instant rebate', tag: 'NEW CUSTOMER' },
-                ].map((c) => (
-                  <div key={c.code} className="p-3 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200/70 rounded-2xl flex justify-between items-center">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-black text-sm text-[#D9232D] tracking-wide">{c.code}</span>
-                        <span className="text-[9px] font-extrabold bg-[#D9232D] text-white px-1.5 py-0.5 rounded">{c.tag}</span>
+              <div className="max-h-[60vh] space-y-2.5 overflow-y-auto">
+                {couponOffersLoading ? <p className="py-8 text-center text-xs font-semibold text-gray-400">Loading active offers…</p>
+                  : couponOffersError ? <p role="status" className="rounded-xl bg-amber-50 p-4 text-center text-xs font-semibold text-amber-800">{couponOffersError}</p>
+                  : couponOffers.length === 0 ? <p className="py-8 text-center text-xs font-semibold text-gray-400">No active coupon offers right now. Please check back later.</p>
+                  : couponOffers.map((offer) => (
+                    <div key={offer.code} className="rounded-2xl border border-red-200/70 bg-gradient-to-r from-red-50 to-orange-50 p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-mono text-sm font-black tracking-wide text-[#D9232D]">{offer.code}</span>
+                            <span className="rounded bg-[#D9232D] px-1.5 py-0.5 text-[9px] font-extrabold text-white">{couponBenefit(offer)}</span>
+                          </div>
+                          <p className="mt-1 text-[11.5px] text-gray-600">{couponDetails(offer)}</p>
+                          <p className="mt-1 text-[10px] font-semibold text-gray-400">Valid until {new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }).format(new Date(offer.expires_at))}</p>
+                        </div>
+                        <button onClick={() => handleCopyCoupon(offer.code)} className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${copiedCoupon === offer.code ? 'bg-emerald-600 text-white' : 'border border-gray-200 bg-white text-gray-900 shadow-xs'}`}>
+                          {copiedCoupon === offer.code ? 'Copied!' : 'Copy'}
+                        </button>
                       </div>
-                      <p className="text-[11.5px] text-gray-600 mt-0.5">{c.desc}</p>
                     </div>
-                    <button
-                      onClick={() => handleCopyCoupon(c.code)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                        copiedCoupon === c.code ? 'bg-emerald-600 text-white' : 'bg-white text-gray-900 border border-gray-200 shadow-xs'
-                      }`}
-                    >
-                      {copiedCoupon === c.code ? 'Copied!' : 'Copy'}
-                    </button>
-                  </div>
-                ))}
+                  ))}
               </div>
             </motion.div>
           </div>

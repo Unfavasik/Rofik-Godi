@@ -18,6 +18,9 @@ type SecureOrderResponse = {
 
 export async function createSupabaseOrder(order: OrderDetails, expectedUserId: string, couponCode = '') {
   if (!supabase) {
+    if (couponCode.trim() || order.discount > 0) {
+      return { synced: false, error: new Error('Coupon discounts require the secure Supabase order service. Please reconnect and try again.'), order: null };
+    }
     const localOrder = saveLocalCustomerOrder(expectedUserId, order);
     return { synced: false, error: null, order: localOrder };
   }

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CartItem } from '../types';
-import { COUPONS } from '../data/products';
 import { motion, AnimatePresence } from 'motion/react';
+import { validateCustomerCoupon } from '../lib/supabaseCoupons';
 import {
   X,
   ShoppingBag,
@@ -12,52 +12,69 @@ import {
   Sparkles,
   Check,
   ShieldCheck,
+  Loader2,
 } from 'lucide-react';
 
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   items: CartItem[];
+  userId: string;
   onUpdateQuantity: (cartItemId: string, newQty: number) => void;
   onRemoveItem: (cartItemId: string) => void;
-  onProceedToCheckout: (appliedDiscount: number, couponCode: string) => void;
+  onProceedToCheckout: (appliedDiscount: number, couponCode: string, quote?: { subtotal: number; total: number }) => void;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
   isOpen,
   onClose,
   items,
+  userId,
   onUpdateQuantity,
   onRemoveItem,
   onProceedToCheckout,
 }) => {
   const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; subtotal: number; total: number } | null>(null);
   const [couponError, setCouponError] = useState('');
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+
+  useEffect(() => {
+    setAppliedCoupon(null);
+    setCouponError('');
+  }, [items]);
 
   if (!isOpen) return null;
 
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+  const displayedSubtotal = appliedCoupon?.subtotal ?? subtotal;
   const discount = appliedCoupon ? appliedCoupon.discount : 0;
-  const grandTotal = Math.max(0, subtotal - discount);
+  const grandTotal = appliedCoupon?.total ?? Math.max(0, subtotal - discount);
 
-  const handleApplyCoupon = (codeToApply?: string) => {
-    const code = (codeToApply || couponCode).trim().toUpperCase();
+  const handleApplyCoupon = async () => {
+    const code = couponCode.trim().toUpperCase().replace(/\s+/g, '');
+    if (!code) {
+      setCouponError('Enter a coupon code first.');
+      return;
+    }
     setCouponError('');
-
-    const matched = COUPONS.find((c) => c.code === code);
-    if (!matched) {
-      setCouponError('Invalid coupon code');
-      return;
+    setIsApplyingCoupon(true);
+    try {
+      const quote = await validateCustomerCoupon(code, items, userId);
+      if (!quote.valid) {
+        setAppliedCoupon(null);
+        setCouponError(quote.message || 'Coupon is invalid or expired.');
+        return;
+      }
+      const quotedDiscount = Number(quote.discount_amount ?? quote.discount ?? 0);
+      const quotedSubtotal = Number(quote.subtotal ?? subtotal);
+      setAppliedCoupon({ code: quote.code || code, discount: quotedDiscount, subtotal: quotedSubtotal, total: Number(quote.final_total ?? Math.max(0, quotedSubtotal - quotedDiscount)) });
+      setCouponCode('');
+    } catch {
+      setCouponError('Coupon validation is temporarily unavailable. Please try again.');
+    } finally {
+      setIsApplyingCoupon(false);
     }
-
-    if (subtotal < matched.minOrder) {
-      setCouponError(`Min order ₹${matched.minOrder} required for ${code}`);
-      return;
-    }
-
-    setAppliedCoupon({ code: matched.code, discount: matched.discount });
-    setCouponCode('');
   };
 
   const handleRemoveCoupon = () => {
@@ -227,7 +244,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[11.5px] font-black text-gray-900 flex items-center gap-1">
                     <Tag className="w-3.5 h-3.5 text-[#D9232D]" />
-                    <span>Apply Discount Coupon</span>
+                    <span>🎟️ Have a coupon?</span>
                   </span>
                   {appliedCoupon && (
                     <button
@@ -253,14 +270,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       type="text"
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      placeholder="e.g. ROFIK100"
+                      placeholder="Enter coupon code"
                       className="flex-1 bg-white text-[12px] font-bold uppercase rounded-xl px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#D9232D]"
                     />
                     <button
-                      onClick={() => handleApplyCoupon()}
-                      className="bg-gray-900 text-white text-[11.5px] font-bold px-3.5 py-2 rounded-xl hover:bg-black transition-colors"
+                      disabled={isApplyingCoupon}
+                      onClick={() => void handleApplyCoupon()}
+                      className="bg-gray-900 text-white text-[11.5px] font-bold px-3.5 py-2 rounded-xl hover:bg-black transition-colors disabled:opacity-60"
                     >
-                      Apply
+                      {isApplyingCoupon ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Apply'}
                     </button>
                   </div>
                 )}
@@ -269,20 +287,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <p className="text-[10px] font-semibold text-red-600 mt-1.5">{couponError}</p>
                 )}
 
-                {/* Quick Coupon Chips */}
-                {!appliedCoupon && (
-                  <div className="flex flex-wrap gap-1.5 mt-2.5">
-                    {COUPONS.map((c) => (
-                      <button
-                        key={c.code}
-                        onClick={() => handleApplyCoupon(c.code)}
-                        className="text-[10px] font-bold bg-white text-gray-700 border border-gray-200 hover:border-[#D9232D] hover:text-[#D9232D] px-2 py-0.5 rounded-md transition-colors"
-                      >
-                        {c.code} ({c.description.split('on')[0]})
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -293,7 +297,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               <div className="space-y-1 text-[11.5px]">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
-                  <span>₹{subtotal}</span>
+                  <span>₹{displayedSubtotal}</span>
                 </div>
                 {appliedCoupon && (
                   <div className="flex justify-between text-emerald-600 font-semibold">
@@ -313,7 +317,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
               <motion.button
                 whileTap={{ scale: 0.97 }}
-                onClick={() => onProceedToCheckout(discount, appliedCoupon?.code || '')}
+                onClick={() => onProceedToCheckout(discount, appliedCoupon?.code || '', appliedCoupon ? { subtotal: appliedCoupon.subtotal, total: appliedCoupon.total } : undefined)}
                 className="w-full py-3.5 bg-[#D9232D] hover:bg-[#c01d26] text-white rounded-xl text-[13px] font-black shadow-md flex items-center justify-center gap-2 transition-all"
               >
                 <span>Proceed to Checkout</span>
