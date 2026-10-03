@@ -1101,6 +1101,12 @@ export default function App() {
           onBuyNow={() => setIsCartOpen(true)}
           onSelectProduct={(p) => setSelectedProduct(p)}
           onQuickAdd={(p) => handleDetailAddToCart(p, p.colors[0], p.stitchPatterns[0] || '', p.thicknessOptions[0])}
+          isAuthenticated={!currentUser.isGuest}
+          customerId={currentUser.isGuest ? undefined : currentUser.id}
+          onRequestLogin={() => {
+            setLoginModalReason('Sign in to review products you have purchased.');
+            setIsLoginModalOpen(true);
+          }}
         />
 
         <CustomSeatBuilder

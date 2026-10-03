@@ -1,70 +1,20 @@
-import React from 'react';
-import { REVIEWS } from '../data/products';
-import { Star, CheckCircle, Quote, ThumbsUp } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { BadgeCheck, Star } from 'lucide-react';
+import { listPublishedReviews, type ProductReviewRecord } from '../lib/supabaseReviews';
 
 export const CustomerReviews: React.FC = () => {
-  return (
-    <section className="px-5 mb-8" data-purpose="customer-reviews-section">
-      <div className="flex justify-between items-baseline mb-3">
-        <div>
-          <h3 className="text-[17px] font-black text-gray-900 tracking-tight">Rider Reviews</h3>
-          <p className="text-[11.5px] text-gray-400 font-medium">Tested on Indian roads & monsoons</p>
-        </div>
-        <div className="flex items-center gap-1 text-[12px] font-bold text-gray-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-          <span>4.9 / 5.0 (480+ Reviews)</span>
-        </div>
-      </div>
+  const [reviews, setReviews] = useState<ProductReviewRecord[]>([]);
+  useEffect(() => { void listPublishedReviews(undefined, 3).then(setReviews); }, []);
+  if (!reviews.length) return null;
 
-      <div className="space-y-3">
-        {REVIEWS.map((rev) => (
-          <article
-            key={rev.id}
-            className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-2"
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[12.5px] font-bold text-gray-900">{rev.userName}</span>
-                  {rev.verifiedPurchase && (
-                    <span className="inline-flex items-center gap-0.5 text-[9.5px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-                      <CheckCircle className="w-2.5 h-2.5" />
-                      Verified
-                    </span>
-                  )}
-                </div>
-                <div className="text-[10px] text-gray-400 mt-0.5">
-                  {rev.userCity} · {rev.vehicle}
-                </div>
-              </div>
-
-              {/* Stars */}
-              <div className="flex items-center gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-3 h-3 ${
-                      i < rev.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <p className="text-[11.5px] text-gray-700 leading-relaxed italic">
-              "{rev.comment}"
-            </p>
-
-            <div className="flex justify-between items-center text-[10px] text-gray-400 pt-1 border-t border-gray-50">
-              <span>{rev.date}</span>
-              <span className="flex items-center gap-1 text-gray-500">
-                <ThumbsUp className="w-2.5 h-2.5" />
-                Helpful review
-              </span>
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
+  return <section className="mb-8 px-5" data-purpose="customer-reviews-section">
+    <div className="mb-3 flex items-baseline justify-between gap-3">
+      <div><h3 className="text-[17px] font-black tracking-tight text-gray-900">Recent Rider Reviews</h3><p className="text-[11.5px] font-medium text-gray-400">Reviews shared by our customers</p></div>
+    </div>
+    <div className="space-y-3">{reviews.map((review) => <article key={review.id} className="space-y-2 rounded-2xl border border-gray-100 bg-white p-3.5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+      <div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-1.5"><span className="text-[12.5px] font-bold text-gray-900">{review.author_name || 'Customer'}</span>{review.is_verified_purchase && <span className="inline-flex items-center gap-0.5 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[9.5px] font-semibold text-emerald-600"><BadgeCheck className="h-2.5 w-2.5" />Verified Purchase</span>}</div><p className="mt-0.5 text-[10px] text-gray-400">{review.product_name || 'Rofik Godi Centre product'}</p></div><div className="flex shrink-0">{[1,2,3,4,5].map((value) => <Star key={value} className={`h-3 w-3 ${value <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />)}</div></div>
+      {review.review_text && <p className="whitespace-pre-wrap text-[11.5px] leading-relaxed text-gray-700">“{review.review_text}”</p>}
+      <div className="border-t border-gray-50 pt-1 text-[10px] text-gray-400">{new Date(review.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+    </article>)}</div>
+  </section>;
 };

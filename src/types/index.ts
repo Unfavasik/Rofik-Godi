@@ -6,17 +6,6 @@ export interface VehicleCompatibility {
   models: string[];
 }
 
-export interface Review {
-  id: string;
-  userName: string;
-  userCity: string;
-  rating: number;
-  date: string;
-  comment: string;
-  vehicle: string;
-  verifiedPurchase: boolean;
-}
-
 export interface Product {
   id: string;
   title: string;
@@ -114,7 +103,7 @@ export interface CustomerOrderRecord {
   fulfillment_method: string;
   pickup_store: string;
   created_at: string;
-  order_items: { product_name: string; color: string | null; quantity: number; unit_price: number }[];
+  order_items: { product_id: string | null; product_name: string; color: string | null; quantity: number; unit_price: number }[];
 }
 
 export interface CustomerNotificationRecord {

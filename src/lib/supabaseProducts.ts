@@ -30,24 +30,42 @@ export const mapSupabaseProduct = (row: ProductRow): Product => {
   };
 };
 
+const mapProductsWithReviewSummaries = async (rows: ProductRow[]): Promise<Product[]> => {
+  if (!supabase || !rows.length) return rows.map(mapSupabaseProduct);
+  const ids = rows.map((row) => String(row.id)).filter((id) => /^[0-9a-f-]{36}$/i.test(id));
+  if (!ids.length) return rows.map(mapSupabaseProduct);
+  const { data } = await supabase.from('product_rating_summary')
+    .select('product_id,average_rating,review_count')
+    .in('product_id', ids);
+  const summaries = new Map((data || []).map((summary) => [summary.product_id, summary]));
+  return rows.map((row) => {
+    const summary = summaries.get(String(row.id));
+    return mapSupabaseProduct({
+      ...row,
+      rating: Number(summary?.average_rating || 0),
+      review_count: Number(summary?.review_count || 0),
+    });
+  });
+};
+
 export const loadPublicProducts = async (): Promise<Product[]> => {
   if (!supabase) return PRODUCTS;
   const { data, error } = await supabase.from('products').select('*').eq('is_active', true).order('updated_at', { ascending: false });
   if (error || !data?.length) return PRODUCTS;
-  return data.map(mapSupabaseProduct);
+  return mapProductsWithReviewSummaries(data as ProductRow[]);
 };
 
 export const loadAdminProducts = async (): Promise<Product[] | null> => {
   if (!supabase) return null;
   const { data, error } = await supabase.from('products').select('*').order('updated_at', { ascending: false });
   if (error || !data) return null;
-  return data.map(mapSupabaseProduct);
+  return mapProductsWithReviewSummaries(data as ProductRow[]);
 };
 
 const toRow = (product: Product) => ({
   ...(product.id.match(/^[0-9a-f-]{36}$/i) ? { id: product.id } : {}), slug: product.slug, name: product.title, subtitle: product.subtitle || '',
   category: product.categoryLabel || categoryLabels[product.category], category_key: product.category, price: product.price, original_price: product.originalPrice,
-  rating: product.rating, review_count: product.reviewCount, image_url: product.image, additional_images: product.additionalImages || [], description: product.description,
+  image_url: product.image, additional_images: product.additionalImages || [], description: product.description,
   features: product.features || [], materials: product.materials || [], stitch_patterns: product.stitchPatterns || [], thickness_options: product.thicknessOptions || [], colors_json: product.colors || [],
   colors: (product.colors || []).map((color) => color.name), compatibility_list: product.compatibility || [], compatibility: (product.compatibility || []).join(', '), badge: product.badge || null,
   badge_color: product.badgeColor || null, is_bestseller: Boolean(product.isBestseller), is_new: Boolean(product.isNew), is_waterproof: Boolean(product.isWaterproof),

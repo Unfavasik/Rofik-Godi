@@ -43,19 +43,6 @@ export async function toggleWishlist(productId: string, saved: boolean) {
   return supabase.from('wishlists').insert({ user_id: userData.user.id, product_id: productId });
 }
 
-export async function listPublishedReviews(productId: string) {
-  if (!supabase) return [];
-  const { data } = await supabase.from('reviews').select('id,author_name,rating,body,verified_purchase,admin_reply,created_at').eq('product_id', productId).eq('status', 'published').order('created_at', { ascending: false });
-  return data || [];
-}
-
-export async function submitReview(review: { product_id: string; author_name: string; rating: number; body: string }) {
-  if (!supabase) return { data: null, error: null };
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { data: null, error: new Error('Sign in required') };
-  return supabase.from('reviews').insert({ ...review, user_id: userData.user.id }).select().single();
-}
-
 export async function listMyNotifications(expectedUserId?: string) {
   if (!supabase) return expectedUserId ? listLocalCustomerNotifications(expectedUserId) : [];
   const { data: userData } = await supabase.auth.getUser();
