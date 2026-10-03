@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Package,
@@ -11,14 +11,11 @@ import {
   ChevronRight,
   User,
   X,
-  CheckCircle2,
-  Truck,
-  RotateCcw,
-  Sparkles,
-  Globe,
-  Bell,
   ShieldCheck,
   FileText,
+  Camera,
+  LockKeyhole,
+  Trash2,
 } from 'lucide-react';
 import { CustomerOrderRecord, Product, UserProfile } from '../types';
 import { listMyOrders } from '../lib/supabaseOrders';
@@ -28,7 +25,9 @@ import { SettingsView } from './SettingsView';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { WORKSHOP_INFO } from '../data/products';
-import { getMyProfile, saveMyProfile } from '../lib/supabaseCustomer';
+import { deleteMyAvatar, getMyAuthEmail, getMyProfile, saveMyProfile, uploadMyAvatar } from '../lib/supabaseCustomer';
+import { getInitials, validateProfileFields } from '../lib/profileValidation';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface AccountViewProps {
   currentUser?: UserProfile;
@@ -42,19 +41,18 @@ interface AccountViewProps {
   onOpenStoreInfo?: () => void;
   onOpenCustomBuilder?: () => void;
   onOpenShop?: () => void;
+  onProfileChange?: (profile: Pick<UserProfile, 'name' | 'phone' | 'avatar' | 'vehicle'>) => void;
 }
 
 export const AccountView: React.FC<AccountViewProps> = ({
   currentUser,
   onOpenLogin,
-  onLogout,
   onContinueShopping,
   onBackToHome,
   onOpenWishlist,
   wishlistCount = 0,
   onOpenStoreInfo,
-  onOpenCustomBuilder,
-  onOpenShop,
+  onProfileChange,
 }) => {
   const handleGoHome = () => {
     if (onBackToHome) onBackToHome();
@@ -86,54 +84,191 @@ export const AccountView: React.FC<AccountViewProps> = ({
       if (active) setOrdersLoading(false);
     });
     return () => { active = false; };
-  }, [activeModal, currentUser?.id, currentUser?.isGuest]);
+  }, [activeModal, currentUser]);
 
   const [profileName, setProfileName] = useState('');
   const [profilePhone, setProfilePhone] = useState('');
   const [profileVehicle, setProfileVehicle] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
+  const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null);
+  const [profileSnapshot, setProfileSnapshot] = useState({ name: '', phone: '', vehicle: '', avatar: null as string | null });
+  const [profileLoading, setProfileLoading] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMetadataSyncFailed, setProfileMetadataSyncFailed] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
+  const [confirmProfileClose, setConfirmProfileClose] = useState(false);
+  const profileSavingRef = useRef(false);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
+  const profileDirty = profileName !== profileSnapshot.name
+    || profilePhone !== profileSnapshot.phone
+    || profileVehicle !== profileSnapshot.vehicle
+    || profileAvatarUrl !== profileSnapshot.avatar
+    || profileAvatarFile !== null
+    || profileMetadataSyncFailed;
+  const profileFieldErrors = validateProfileFields({ full_name: profileName, phone: profilePhone, vehicle_model: profileVehicle });
+
   useEffect(() => {
     let active = true;
+    if (activeModal !== 'profile') return () => { active = false; };
     if (!currentUser || currentUser.isGuest) {
       setProfileName('');
       setProfilePhone('');
       setProfileVehicle('');
+      setProfileEmail('');
+      setProfileAvatarUrl(null);
+      setProfileAvatarFile(null);
+      setProfileSnapshot({ name: '', phone: '', vehicle: '', avatar: null });
+      setProfileMetadataSyncFailed(false);
+      setProfileLoading(false);
       return () => { active = false; };
     }
-    setProfileName(currentUser.name || '');
-    setProfilePhone(currentUser.phone || '');
-    setProfileVehicle(currentUser.vehicle || '');
-    void getMyProfile().then((profile) => {
-      if (!active || !profile) return;
-      setProfileName(profile.full_name || currentUser.name || '');
-      setProfilePhone(profile.phone || currentUser.phone || '');
-      setProfileVehicle(profile.vehicle_model || currentUser.vehicle || '');
+    const fallback = {
+      name: currentUser.name || '',
+      phone: currentUser.phone || '',
+      vehicle: currentUser.vehicle || '',
+      avatar: currentUser.avatar || null,
+    };
+    setProfileName(fallback.name);
+    setProfilePhone(fallback.phone);
+    setProfileVehicle(fallback.vehicle);
+    setProfileEmail(currentUser.email || '');
+    setProfileAvatarUrl(fallback.avatar);
+    setProfileAvatarFile(null);
+    setProfileSnapshot(fallback);
+    setProfileMetadataSyncFailed(false);
+    setProfileMessage('');
+    setProfileLoading(true);
+    void Promise.all([getMyProfile(currentUser.id), getMyAuthEmail()]).then(([profile, email]) => {
+      if (!active) return;
+      const loaded = {
+        name: profile?.full_name?.trim() || fallback.name,
+        phone: profile?.phone || fallback.phone,
+        vehicle: profile?.vehicle_model || fallback.vehicle,
+        avatar: profile?.avatar_url || fallback.avatar,
+      };
+      setProfileName(loaded.name);
+      setProfilePhone(loaded.phone);
+      setProfileVehicle(loaded.vehicle);
+      setProfileEmail(email || currentUser.email || '');
+      setProfileAvatarUrl(loaded.avatar);
+      setProfileSnapshot(loaded);
+    }).catch(() => {
+      if (active) setProfileMessage('Could not load the saved profile. You can still edit and try saving.');
+    }).finally(() => {
+      if (active) setProfileLoading(false);
     });
     return () => { active = false; };
-  }, [currentUser?.id]);
+  }, [activeModal, currentUser]);
 
   const handleSaveProfile = async () => {
-    if (!currentUser || currentUser.isGuest) return;
+    if (!currentUser || currentUser.isGuest || profileSavingRef.current) return;
+    const errors = validateProfileFields({ full_name: profileName, phone: profilePhone, vehicle_model: profileVehicle });
+    if (Object.keys(errors).length > 0) return;
+    profileSavingRef.current = true;
     setProfileSaving(true);
     setProfileMessage('');
-    const { error } = await saveMyProfile({ full_name: profileName.trim(), phone: profilePhone.trim(), vehicle_model: profileVehicle.trim() });
-    setProfileSaving(false);
-    setProfileMessage(error ? 'Unable to save profile. Please try again.' : 'Profile saved.');
+    let uploadedAvatarUrl: string | null = null;
+    try {
+      let nextAvatarUrl = profileAvatarUrl;
+      if (profileAvatarFile) {
+        const upload = await uploadMyAvatar(profileAvatarFile);
+        if (upload.error || !upload.data) throw upload.error || new Error('Avatar upload failed. Please try again.');
+        uploadedAvatarUrl = upload.data.url;
+        nextAvatarUrl = upload.data.url;
+      }
+      const cleanName = profileName.trim();
+      const cleanPhone = profilePhone.trim();
+      const cleanVehicle = profileVehicle.trim();
+      const { error, metadataError } = await saveMyProfile({
+        full_name: cleanName,
+        phone: cleanPhone,
+        avatar_url: nextAvatarUrl,
+        vehicle_model: cleanVehicle,
+      });
+      if (error) {
+        if (uploadedAvatarUrl) {
+          try { await deleteMyAvatar(uploadedAvatarUrl); } catch { /* The failed profile save remains the primary error. */ }
+        }
+        throw error;
+      }
+      let warning = '';
+      if (profileSnapshot.avatar && profileSnapshot.avatar !== nextAvatarUrl) {
+        try {
+          const removed = await deleteMyAvatar(profileSnapshot.avatar);
+          if (removed.error) warning = ' Profile saved, but the previous photo could not be deleted.';
+        } catch {
+          warning = ' Profile saved, but the previous photo could not be deleted.';
+        }
+      }
+      const updated = { name: cleanName, phone: cleanPhone, vehicle: cleanVehicle, avatar: nextAvatarUrl };
+      setProfileName(updated.name);
+      setProfilePhone(updated.phone);
+      setProfileVehicle(updated.vehicle);
+      setProfileAvatarFile(null);
+      setProfileAvatarUrl(updated.avatar);
+      setProfileSnapshot(updated);
+      setProfileMetadataSyncFailed(Boolean(metadataError));
+      onProfileChange?.({ name: updated.name, phone: updated.phone, vehicle: updated.vehicle, avatar: updated.avatar || undefined });
+      setProfileMessage(metadataError
+        ? `Profile saved, but account details could not be synced. Please try saving again.${warning}`
+        : `Profile saved.${warning}`);
+    } catch (error) {
+      setProfileMessage(error instanceof Error ? error.message : 'Unable to save profile. Please try again.');
+    } finally {
+      profileSavingRef.current = false;
+      setProfileSaving(false);
+    }
+  };
+
+  const handleAvatarFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setProfileMessage('Choose an image file.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setProfileMessage('The original image must be 5 MB or smaller.');
+      return;
+    }
+    if (file.size === 0) {
+      setProfileMessage('The selected image is empty. Choose another file.');
+      return;
+    }
+    setProfileMessage('');
+    setProfileAvatarFile(file);
+    setProfileAvatarUrl(URL.createObjectURL(file));
+  };
+
+  useEffect(() => {
+    if (!profileAvatarUrl?.startsWith('blob:')) return;
+    return () => URL.revokeObjectURL(profileAvatarUrl);
+  }, [profileAvatarUrl]);
+
+  const closeProfileModal = () => {
+    setConfirmProfileClose(false);
+    setProfileAvatarFile(null);
+    setProfileAvatarUrl(profileSnapshot.avatar);
+    setActiveModal(null);
+  };
+
+  const requestCloseProfile = () => {
+    if (profileSavingRef.current) return;
+    if (profileDirty) setConfirmProfileClose(true);
+    else closeProfileModal();
   };
 
   const handleProtectedAction = (modalType: 'orders' | 'pickupStore' | 'settings' | 'profile' | 'privacy' | 'terms') => {
     if (isGuest && (modalType === 'orders' || modalType === 'pickupStore' || modalType === 'profile')) {
       if (onOpenLogin) onOpenLogin();
-      else setActiveModal(modalType);
+      else if (modalType !== 'profile') setActiveModal(modalType);
     } else {
       setActiveModal(modalType);
     }
   };
 
-
-  const [language, setLanguage] = useState<'en' | 'bn' | 'hi'>('en');
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   if (activeModal === 'settings') {
     return (
@@ -176,11 +311,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
         </div>
         {/* User Avatar / Profile Icon Button */}
         <button
+          type="button"
           onClick={() => handleProtectedAction('profile')}
           aria-label="Profile Details"
           className="w-10 h-10 rounded-full bg-[#FCE6E1] flex items-center justify-center transition-transform active:scale-95 text-slate-700 shadow-xs hover:bg-[#FCD8CF]"
         >
-          <User className="w-5 h-5 text-slate-700" />
+          {currentUser?.avatar
+            ? <img src={currentUser.avatar} alt={`${currentUser.name || 'Rider'} avatar`} className="h-full w-full rounded-full object-cover" />
+            : <span aria-hidden="true" className="text-sm font-black text-[#D9232D]">{getInitials(currentUser?.name || '')}</span>}
         </button>
       </section>
 
@@ -729,65 +867,127 @@ export const AccountView: React.FC<AccountViewProps> = ({
       <AnimatePresence>
         {activeModal === 'profile' && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
-            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="relative w-full max-w-[440px] max-h-[85vh] bg-white rounded-[28px] shadow-2xl flex flex-col z-10 overflow-hidden">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={requestCloseProfile} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
+            <motion.div role="dialog" aria-modal="true" aria-labelledby="profile-modal-title" initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="relative w-full max-w-[440px] max-h-[85vh] bg-white rounded-[28px] shadow-2xl flex flex-col z-10 overflow-hidden">
               <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100 bg-white">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-[#FCE6E1] flex items-center justify-center text-[#E55845]">
                     <User className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-[15px] font-black text-gray-900">Rider Profile</h3>
+                    <h3 id="profile-modal-title" className="text-[15px] font-black text-gray-900">Rider Profile</h3>
                     <p className="text-[11px] text-gray-400">Your Supabase customer profile</p>
                   </div>
                 </div>
-                <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
+                <button type="button" onClick={requestCloseProfile} disabled={profileSaving} aria-label="Close profile editor" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 disabled:opacity-50">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="overflow-y-auto px-5 py-4 space-y-3 flex-1 no-scrollbar text-gray-800">
+                <div className="flex items-center gap-4 rounded-2xl border border-rose-100 bg-rose-50/60 p-3">
+                  <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-white bg-[#FCE6E1] text-lg font-black text-[#D9232D] shadow-sm">
+                    {profileAvatarUrl
+                      ? <img src={profileAvatarUrl} alt={`${profileName || 'Rider'} profile photo`} className="h-full w-full object-cover" />
+                      : <span aria-label={`${getInitials(profileName)} initials`}>{getInitials(profileName)}</span>}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-extrabold text-gray-900">Profile photo</p>
+                    <p className="mt-0.5 text-[10px] leading-relaxed text-gray-500">Image files up to 5 MB. Saved as a square WebP.</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <input ref={avatarFileInputRef} type="file" accept="image/*" aria-label="Choose profile photo" className="sr-only" onChange={handleAvatarFile} />
+                      <button type="button" aria-label="Upload profile photo" disabled={profileSaving || profileLoading} onClick={() => avatarFileInputRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-lg bg-[#D9232D] px-3 py-2 text-[10px] font-bold text-white disabled:opacity-50">
+                        <Camera className="h-3.5 w-3.5" aria-hidden="true" /> Change photo
+                      </button>
+                      {(profileAvatarUrl || profileAvatarFile) && <button type="button" aria-label="Remove profile photo" disabled={profileSaving || profileLoading} onClick={() => { setProfileAvatarFile(null); setProfileAvatarUrl(null); setProfileMessage(''); }} className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-[10px] font-bold text-[#D9232D] disabled:opacity-50">
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" /> Remove photo
+                      </button>}
+                    </div>
+                  </div>
+                </div>
                 <div>
-                  <label className="text-[11px] font-bold text-gray-700 block mb-1">Your Name</label>
+                  <label htmlFor="profile-name" className="text-[11px] font-bold text-gray-700 block mb-1">Your Name</label>
                   <input
+                    id="profile-name"
                     type="text"
+                    required
+                    minLength={2}
+                    maxLength={50}
+                    autoComplete="name"
                     value={profileName}
-                    onChange={(e) => setProfileName(e.target.value)}
+                    onChange={(e) => { setProfileName(e.target.value); setProfileMessage(''); }}
+                    aria-invalid={Boolean(profileFieldErrors.full_name)}
+                    aria-describedby={profileFieldErrors.full_name ? 'profile-name-error' : undefined}
+                    disabled={profileLoading || profileSaving}
                     className="w-full bg-gray-50 text-[12.5px] rounded-xl px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#D9232D]"
                   />
+                  {profileFieldErrors.full_name && <p id="profile-name-error" role="alert" className="mt-1 text-[10px] font-medium text-red-600">{profileFieldErrors.full_name}</p>}
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-gray-700 block mb-1">Phone Number</label>
+                  <label htmlFor="profile-phone" className="text-[11px] font-bold text-gray-700 block mb-1">Phone Number <span className="font-normal text-gray-400">(optional)</span></label>
                   <input
+                    id="profile-phone"
                     type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    maxLength={10}
                     value={profilePhone}
-                    onChange={(e) => setProfilePhone(e.target.value)}
+                    onChange={(e) => { setProfilePhone(e.target.value); setProfileMessage(''); }}
+                    aria-invalid={Boolean(profileFieldErrors.phone)}
+                    aria-describedby={profileFieldErrors.phone ? 'profile-phone-error' : undefined}
+                    disabled={profileLoading || profileSaving}
                     className="w-full bg-gray-50 text-[12.5px] rounded-xl px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#D9232D]"
                   />
+                  {profileFieldErrors.phone && <p id="profile-phone-error" role="alert" className="mt-1 text-[10px] font-medium text-red-600">{profileFieldErrors.phone}</p>}
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-gray-700 block mb-1">Registered Vehicles</label>
+                  <label htmlFor="profile-vehicle" className="text-[11px] font-bold text-gray-700 block mb-1">Vehicle Model <span className="font-normal text-gray-400">(optional)</span></label>
                   <input
+                    id="profile-vehicle"
                     type="text"
+                    maxLength={60}
                     value={profileVehicle}
-                    onChange={(e) => setProfileVehicle(e.target.value)}
+                    onChange={(e) => { setProfileVehicle(e.target.value); setProfileMessage(''); }}
+                    aria-invalid={Boolean(profileFieldErrors.vehicle_model)}
+                    aria-describedby={profileFieldErrors.vehicle_model ? 'profile-vehicle-error' : undefined}
+                    disabled={profileLoading || profileSaving}
                     className="w-full bg-gray-50 text-[12.5px] rounded-xl px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#D9232D]"
                   />
+                  {profileFieldErrors.vehicle_model && <p id="profile-vehicle-error" role="alert" className="mt-1 text-[10px] font-medium text-red-600">{profileFieldErrors.vehicle_model}</p>}
+                </div>
+                <div>
+                  <label htmlFor="profile-email" className="text-[11px] font-bold text-gray-700 block mb-1">Email</label>
+                  <div className="relative">
+                    <input id="profile-email" type="email" value={profileEmail} readOnly disabled aria-describedby="profile-email-hint" className="w-full rounded-xl border border-gray-200 bg-gray-100 px-3 py-2 pr-9 text-[12.5px] text-gray-500 disabled:cursor-not-allowed" />
+                    <LockKeyhole className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+                  </div>
+                  <p id="profile-email-hint" className="mt-1 text-[10px] text-gray-500">Email cannot be changed</p>
                 </div>
 
                 <button
-                  disabled={profileSaving}
+                  type="button"
+                  aria-label="Save profile changes"
+                  disabled={profileSaving || profileLoading || !profileDirty || Object.keys(profileFieldErrors).length > 0}
                   onClick={() => void handleSaveProfile()}
                   className="w-full py-3 bg-[#D9232D] text-white text-[12.5px] font-bold rounded-xl shadow-sm mt-2 disabled:opacity-60"
                 >
-                  {profileSaving ? 'Saving…' : 'Save Profile'}
+                  {profileSaving ? 'Saving…' : profileLoading ? 'Loading…' : 'Save Profile'}
                 </button>
-                {profileMessage && <p className="text-center text-[11px] font-semibold text-gray-500">{profileMessage}</p>}
+                {profileMessage && <p role="status" className={`text-center text-[11px] font-semibold ${profileMessage.toLowerCase().includes('saved') && !profileMessage.toLowerCase().includes('could not') ? 'text-emerald-700' : 'text-red-600'}`}>{profileMessage}</p>}
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+      <ConfirmDialog
+        open={confirmProfileClose}
+        title="Discard profile changes?"
+        message="You have unsaved changes to your profile. Close without saving?"
+        confirmLabel="Discard changes"
+        cancelLabel="Keep editing"
+        onCancel={() => setConfirmProfileClose(false)}
+        onConfirm={closeProfileModal}
+      />
     </div>
   );
 };

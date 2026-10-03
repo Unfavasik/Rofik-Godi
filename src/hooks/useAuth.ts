@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { UserProfile } from '../types';
 import { supabase } from '../lib/supabase';
+import { getMyProfile } from '../lib/supabaseCustomer';
 
 export type AuthStatus = 'AUTH_LOADING' | 'AUTHENTICATED' | 'UNAUTHENTICATED';
 
@@ -49,8 +50,18 @@ export function useAuth() {
       });
       setAuthStatus('AUTHENTICATED');
       setIsAdmin(null);
-      void checkIsAdmin().then((admin) => {
-        if (active && resolutionId === currentResolution) setIsAdmin(admin);
+      void Promise.all([checkIsAdmin(), getMyProfile(user.id).catch(() => null)]).then(([admin, profile]) => {
+        if (!active || resolutionId !== currentResolution) return;
+        setIsAdmin(admin);
+        if (profile) {
+          setCurrentUser((current) => current.id === user.id ? {
+            ...current,
+            name: profile.full_name?.trim() || current.name,
+            phone: profile.phone || current.phone,
+            avatar: profile.avatar_url || undefined,
+            vehicle: profile.vehicle_model || current.vehicle,
+          } : current);
+        }
       });
     };
 

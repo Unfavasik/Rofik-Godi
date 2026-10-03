@@ -578,6 +578,7 @@ export default function App() {
           <main className="flex-1 flex flex-col">
             <AccountView
               currentUser={currentUser}
+              onProfileChange={(profile) => setCurrentUser((user) => user.id === currentUser.id ? { ...user, ...profile } : user)}
   onOpenLogin={() => {
   setAuthInitialMode('signup');
   goToPhase('account-onboarding');

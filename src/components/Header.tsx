@@ -1,7 +1,8 @@
 import React, { useRef } from 'react';
-import { ShoppingBag, Search, X, User, Sparkles, Bell } from 'lucide-react';
+import { ShoppingBag, Search, X, Sparkles, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../types';
+import { getInitials } from '../lib/profileValidation';
 
 interface HeaderProps {
   cartCount: number;
@@ -39,15 +40,17 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Top Main Bar */}
       <div className="px-4 pt-3 pb-2 flex justify-between items-center bg-white min-h-[52px]">
         {/* Left: User Avatar & Welcome greeting */}
-        <div 
+        <button
+          type="button"
           onClick={onOpenAccount}
+          aria-label={`Open account profile for ${currentUser?.name || 'Rider'}`}
           className="flex items-center gap-2.5 cursor-pointer group select-none"
         >
           <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 shadow-2xs group-hover:border-[#D9232D]/40 transition-all overflow-hidden relative">
             {currentUser?.avatar ? (
-              <img src={currentUser.avatar} alt="User" className="w-full h-full object-cover" />
+              <img src={currentUser.avatar} alt={`${currentUser.name || 'Rider'} profile photo`} className="w-full h-full object-cover" />
             ) : (
-              <User className="w-4 h-4 text-slate-600 group-hover:text-[#D9232D] transition-colors" />
+              <span aria-hidden="true" className="text-xs font-black text-[#D9232D]">{getInitials(currentUser?.name || '')}</span>
             )}
             {currentUser?.isGuest && (
               <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-amber-400 border border-white rounded-full" title="Guest Mode" />
@@ -55,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-none flex items-center gap-1">
-              Welcome {currentUser?.isGuest ? 'Guest' : ''}
+              Welcome {currentUser?.isGuest ? 'Guest' : currentUser?.name?.split(/\s+/)[0] || ''}
               <Sparkles className="w-2.5 h-2.5 text-amber-500" />
             </span>
             <h1 className="text-[15px] font-black tracking-tight flex items-center leading-tight mt-0.5 text-slate-900 group-hover:text-[#D9232D] transition-colors">
@@ -63,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="text-[#D9232D] ml-1">GODI</span>
             </h1>
           </div>
-        </div>
+        </button>
 
         {/* Right: Actions (Search & Cart) - Location removed as requested */}
         <div className="flex items-center gap-2">

@@ -13,14 +13,16 @@ pnpm dev
 
 ```bash
 pnpm lint       # TypeScript + ESLint
-pnpm test       # Catalog, cart, coupon, and order-flow tests
+pnpm test       # Catalog, cart, coupon, order-flow, and profile tests
 pnpm build
 pnpm format
 ```
 
 ## Supabase
 
-Apply migrations in `supabase/migrations/` in order. The catalog migration keeps `is_active` (publication) separate from `in_stock` (availability), adds atomic gallery replacement, and provides the admin customer summary RPC. Product images are converted to WebP and uploaded to the `product-images` Storage bucket.
+Apply migrations in `supabase/migrations/` in order. The catalog migration keeps `is_active` (publication) separate from `in_stock` (availability), adds atomic gallery replacement, and provides the admin customer summary RPC. Product images are converted to WebP and uploaded to the `product-images` Storage bucket. Customer profile photos use the public-read, WebP-only `avatars` bucket (2 MB object limit); authenticated writes are restricted to each user's own UUID folder.
+
+Customer email is read from Supabase Auth and is not stored in `public.profiles` or editable in the app. In **Supabase Dashboard → Authentication → Settings**, keep **Secure email change** enabled. Email changes, if ever needed, must go through Supabase Auth rather than profile updates.
 
 ## Admin login flow
 

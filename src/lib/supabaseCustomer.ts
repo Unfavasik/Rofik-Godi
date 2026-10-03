@@ -1,16 +1,80 @@
 import { supabase } from './supabase';
+import { convertImageToWebP } from './imagePipeline';
+import { buildAvatarStoragePath } from './profileValidation';
 
-export async function getMyProfile() {
+export async function getMyProfile(expectedUserId?: string) {
   if (!supabase) return null;
-  const { data } = await supabase.from('profiles').select('id,full_name,phone,avatar_url,vehicle_model,marketing_opt_in').maybeSingle();
+  const { data: authData } = await supabase.auth.getUser();
+  const user = authData.user;
+  if (!user || (expectedUserId && expectedUserId !== user.id)) return null;
+  const { data } = await supabase.from('profiles').select('id,full_name,phone,avatar_url,vehicle_model,marketing_opt_in').eq('id', user.id).maybeSingle();
   return data;
 }
 
-export async function saveMyProfile(profile: { full_name?: string; phone?: string; avatar_url?: string; vehicle_model?: string; marketing_opt_in?: boolean }) {
-  if (!supabase) return { data: null, error: null };
+export async function getMyAuthEmail() {
+  if (!supabase) return '';
+  const { data } = await supabase.auth.getUser();
+  return data.user?.email || '';
+}
+
+export async function saveMyProfile(profile: { full_name: string; phone: string; avatar_url: string | null; vehicle_model: string }) {
+  if (!supabase) return { data: null, error: new Error('Profile service is unavailable.'), metadataError: null };
   const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { data: null, error: new Error('Sign in required') };
-  return supabase.from('profiles').upsert({ id: userData.user.id, ...profile }).select().single();
+  if (!userData.user) return { data: null, error: new Error('Sign in required.'), metadataError: null };
+  const payload = {
+    full_name: profile.full_name,
+    phone: profile.phone,
+    avatar_url: profile.avatar_url,
+    vehicle_model: profile.vehicle_model,
+  };
+  const { data, error } = await supabase.from('profiles').upsert({ id: userData.user.id, ...payload }).select().single();
+  if (error) return { data: null, error, metadataError: null };
+  const { error: metadataError } = await supabase.auth.updateUser({ data: { full_name: payload.full_name, phone: payload.phone } });
+  return { data, error: null, metadataError };
+}
+
+export async function uploadMyAvatar(file: File): Promise<{ data: { path: string; url: string } | null; error: Error | null }> {
+  if (!supabase) return { data: null, error: new Error('Avatar storage is unavailable.') };
+  if (!file.type.startsWith('image/')) return { data: null, error: new Error('Choose an image file.') };
+  if (file.size === 0 || file.size > 5 * 1024 * 1024) return { data: null, error: new Error('The original image must be larger than 0 bytes and no more than 5 MB.') };
+  const { data: authData } = await supabase.auth.getUser();
+  const user = authData.user;
+  if (!user) return { data: null, error: new Error('Sign in required.') };
+  try {
+    const webpFile = await convertImageToWebP(file, { squareSize: 512 });
+    if (webpFile.size > 2 * 1024 * 1024) return { data: null, error: new Error('The converted avatar must be 2 MB or smaller.') };
+    const path = buildAvatarStoragePath(user.id, Date.now());
+    const { error } = await supabase.storage.from('avatars').upload(path, webpFile, {
+      cacheControl: '3600',
+      contentType: 'image/webp',
+      upsert: false,
+    });
+    if (error) return { data: null, error };
+    const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+    return { data: { path, url: data.publicUrl }, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error : new Error('Could not process this avatar image.') };
+  }
+}
+
+export async function deleteMyAvatar(avatarUrl: string | null | undefined): Promise<{ error: Error | null }> {
+  if (!avatarUrl) return { error: null };
+  if (!supabase) return { error: new Error('Avatar storage is unavailable.') };
+  const { data: authData } = await supabase.auth.getUser();
+  const user = authData.user;
+  if (!user) return { error: new Error('Sign in required.') };
+  const marker = '/storage/v1/object/public/avatars/';
+  const markerIndex = avatarUrl.indexOf(marker);
+  if (markerIndex < 0) return { error: new Error('The previous avatar file could not be located.') };
+  let path: string;
+  try {
+    path = decodeURIComponent(avatarUrl.slice(markerIndex + marker.length));
+  } catch {
+    return { error: new Error('The previous avatar path is invalid.') };
+  }
+  if (!path.startsWith(`${user.id}/`)) return { error: new Error('You can only remove your own avatar.') };
+  const { error } = await supabase.storage.from('avatars').remove([path]);
+  return { error };
 }
 
 export async function listMyAddresses() {
