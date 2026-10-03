@@ -1,37 +1,76 @@
-import type { OrderDetails } from '../types';
+import type { CustomerOrderRecord, OrderDetails } from '../types';
 import { supabase } from './supabase';
+import { listLocalCustomerOrders, saveLocalCustomerOrder } from './localCustomerData';
 
-const isUuid = (value: string) => /^[0-9a-f-]{36}$/i.test(value);
+const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 
-export async function createSupabaseOrder(order: OrderDetails) {
-  if (!supabase) return { synced: false, error: null };
-  const paymentMethod = order.paymentMethod === 'pay_online' ? 'PAY_ONLINE' : 'PAY_AT_STORE';
+type SecureOrderResponse = {
+  id: string;
+  order_number: string;
+  status: OrderDetails['status'];
+  payment_status: string;
+  subtotal: number;
+  discount: number;
+  total: number;
+  created_at: string;
+  pickup_token: string;
+};
+
+export async function createSupabaseOrder(order: OrderDetails, expectedUserId: string, couponCode = '') {
+  if (!supabase) {
+    const localOrder = saveLocalCustomerOrder(expectedUserId, order);
+    return { synced: false, error: null, order: localOrder };
+  }
+
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+  if (authError || !userData.user || userData.user.id !== expectedUserId) {
+    return { synced: false, error: new Error('Your sign-in session is unavailable. Please sign in again.'), order: null };
+  }
+  if (order.items.some((item) => !isUuid(item.product.id))) {
+    return { synced: false, error: new Error('One or more products are not synced to the secure order catalog.'), order: null };
+  }
+
+  const { data, error } = await supabase.rpc('create_store_pickup_order', {
+    p_items: order.items.map((item) => ({
+      product_id: item.product.id,
+      quantity: item.quantity,
+      color: item.selectedColor?.name || '',
+    })),
+    p_customer_name: order.customerName,
+    p_customer_phone: order.phone,
+    p_vehicle_model: order.vehicleModel,
+    p_note: order.note || null,
+    p_payment_method: order.paymentMethod === 'pay_at_store' ? 'PAY_AT_STORE' : 'PAY_ONLINE',
+    p_coupon_code: couponCode.trim().toUpperCase() || null,
+  });
+  if (error || !data) return { synced: false, error: error || new Error('The secure order service returned no order.'), order: null };
+
+  const result = (Array.isArray(data) ? data[0] : data) as unknown as SecureOrderResponse;
+  if (!result?.order_number) return { synced: false, error: new Error('The secure order service returned an invalid order.'), order: null };
+  const savedOrder: OrderDetails = {
+    ...order,
+    orderId: result.order_number,
+    status: result.status || 'NEW',
+    paymentStatus: result.payment_status?.toLowerCase() === 'paid' ? 'paid' : 'pending',
+    subtotal: Number(result.subtotal),
+    discount: Number(result.discount),
+    total: Number(result.total),
+    createdAt: result.created_at || order.createdAt,
+    pickupToken: result.pickup_token,
+  };
+  return { synced: true, error: null, order: savedOrder };
+}
+
+export async function listMyOrders(expectedUserId: string): Promise<CustomerOrderRecord[]> {
+  if (!supabase) return listLocalCustomerOrders(expectedUserId);
   const { data: userData } = await supabase.auth.getUser();
-  const { data, error } = await supabase.from('orders').insert({
-    order_number: order.orderId,
-    user_id: userData.user?.id || null,
-    customer_name: order.customerName,
-    customer_phone: order.phone,
-    payment_method: paymentMethod,
-    payment_status: order.paymentStatus === 'paid' ? 'PAID' : 'PENDING',
-    status: order.status,
-    subtotal: order.subtotal,
-    discount: order.discount,
-    vehicle_model: order.vehicleModel,
-    fulfillment_method: order.fulfillmentMethod,
-    pickup_store: order.pickupStore,
-    pickup_note: order.note || null,
-    total: order.total,
-  }).select('id').single();
-  if (error || !data) return { synced: false, error: error || new Error('Order was not created') };
-
-  const { error: itemsError } = await supabase.from('order_items').insert(order.items.map((item) => ({
-    order_id: data.id,
-    product_id: isUuid(item.product.id) ? item.product.id : null,
-    product_name: item.product.title,
-    color: item.selectedColor?.name || '',
-    quantity: item.quantity,
-    unit_price: item.unitPrice,
-  })));
-  return { synced: !itemsError, error: itemsError || null };
+  if (!userData.user || userData.user.id !== expectedUserId) return [];
+  const { data, error } = await supabase
+    .from('orders')
+    .select('id,order_number,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,vehicle_model,fulfillment_method,pickup_store,created_at,order_items(product_name,color,quantity,unit_price)')
+    .eq('user_id', userData.user.id)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error || !data) return [];
+  return data as unknown as CustomerOrderRecord[];
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Package,
@@ -20,7 +20,8 @@ import {
   ShieldCheck,
   FileText,
 } from 'lucide-react';
-import { OrderDetails, Product, UserProfile } from '../types';
+import { CustomerOrderRecord, Product, UserProfile } from '../types';
+import { listMyOrders } from '../lib/supabaseOrders';
 import { SettingsView } from './SettingsView';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
@@ -33,7 +34,6 @@ interface AccountViewProps {
   onBackToHome?: () => void;
   onOpenWishlist: () => void;
   wishlistCount?: number;
-  recentOrders?: OrderDetails[];
   onOpenProduct?: (p: Product) => void;
   onOpenStoreInfo?: () => void;
   onOpenCustomBuilder?: () => void;
@@ -60,6 +60,25 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
   const isGuest = currentUser?.isGuest ?? false;
 
+  const [customerOrders, setCustomerOrders] = useState<CustomerOrderRecord[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  useEffect(() => {
+    let active = true;
+    if (activeModal !== 'orders') return () => { active = false; };
+    if (!currentUser || currentUser.isGuest) {
+      setCustomerOrders([]);
+      setOrdersLoading(false);
+      return () => { active = false; };
+    }
+    setOrdersLoading(true);
+    void listMyOrders(currentUser.id).then((orders) => {
+      if (active) setCustomerOrders(orders);
+    }).finally(() => {
+      if (active) setOrdersLoading(false);
+    });
+    return () => { active = false; };
+  }, [activeModal, currentUser?.id, currentUser?.isGuest]);
+
   const handleProtectedAction = (modalType: 'orders' | 'address' | 'settings' | 'profile' | 'privacy' | 'terms') => {
     if (isGuest && (modalType === 'orders' || modalType === 'address' || modalType === 'profile')) {
       if (onOpenLogin) onOpenLogin();
@@ -69,33 +88,6 @@ export const AccountView: React.FC<AccountViewProps> = ({
     }
   };
 
-  // Mock initial orders list
-  const [mockOrders] = useState([
-    {
-      orderId: 'RFK-892410',
-      date: 'Today, 2:30 PM',
-      status: 'Preparing for Pickup',
-      statusColor: 'text-amber-600 bg-amber-50 border-amber-200',
-      step: 2,
-      itemTitle: 'ROFIK Pro Diamond-Stitch Bike Seat Cover',
-      vehicle: 'Hero Splendor Plus',
-      color: 'Crimson Red Piping',
-      price: 899,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDb5u48v7PwFdzn4_BDUM6odmmk6dQ6EEFTBHcMU2Vvqmj-mj8_HCSFiKFjFHFE28XP0BEf29q0dNjhDNJWeg1YF6PXBX_ZDE4cNO5vnZNt8sXT1Gg1clWlo0JhPzMC6b8SW0xe55pAzGblTlmIYLFNO42qMW1tZll0FORMuLzrSyCzfeKOTsViJYDp698zO-5g-hSJWj67NhZWKkiMtBiEXY3ANGfMGU7GBpKmeFflSdXYihz2Tf9g',
-    },
-    {
-      orderId: 'RFK-761942',
-      date: '24 Sep 2026',
-      status: 'Completed',
-      statusColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
-      step: 4,
-      itemTitle: 'AirFlow 3D Honeycomb Mesh Seat Cushion Pad',
-      vehicle: 'Universal Rider',
-      color: 'Pitch Black',
-      price: 499,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAXb-sDFoKe1hr9HZ8QJS-_Y5MZ1Vskn9GUIw74w5kxFEuO81OX2Th9U7J6vhCVUbMO8NeRulf7EghBpWwi6Uatj7ddzbViVQp2nUm085zPoLKcg4PntDCTe4HR7WVT_0GkQEbniLuknwt-Mjid1ejdW48pt2W1od3QWLE8inEBJzqRf534dmczQPBref_y-l3kgLfK7YxZvv1PwkaC8jDn5nehOFP2ilvgTCOdvFgFatyqcBXNjqa6',
-    },
-  ]);
 
   // Pickup Store list
   const [addresses, setAddresses] = useState([
@@ -633,30 +625,33 @@ export const AccountView: React.FC<AccountViewProps> = ({
               </div>
 
               <div className="overflow-y-auto px-5 py-4 space-y-3 flex-1 no-scrollbar">
-                {mockOrders.map((ord) => (
-                  <div key={ord.orderId} className="bg-gray-50 border border-gray-200 rounded-2xl p-3.5 space-y-2.5">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className="text-[11px] font-mono font-bold text-gray-500">{ord.orderId}</span>
-                        <h4 className="text-[12.5px] font-black text-gray-900 leading-tight">{ord.itemTitle}</h4>
-                        <p className="text-[11px] text-gray-500 mt-0.5">{ord.vehicle} · {ord.color}</p>
-                      </div>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${ord.statusColor}`}>
-                        {ord.status}
-                      </span>
-                    </div>
-
-                    {/* Progress tracking line */}
-                    <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-[#D9232D] h-full rounded-full" style={{ width: `${(ord.step / 4) * 100}%` }} />
-                    </div>
-
-                    <div className="flex justify-between items-center text-[11px] pt-1 text-gray-600 border-t border-gray-200/60">
-                      <span>{ord.date}</span>
-                      <strong className="text-gray-900 text-[12.5px]">₹{ord.price}</strong>
-                    </div>
+                {ordersLoading ? <p className="py-10 text-center text-sm text-gray-500">Loading your orders…</p> : customerOrders.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <Package className="mx-auto h-9 w-9 text-gray-300" />
+                    <h4 className="mt-3 text-sm font-bold text-gray-800">No orders yet</h4>
+                    <p className="mt-1 text-xs text-gray-500">Orders you place will appear here.</p>
                   </div>
-                ))}
+                ) : customerOrders.map((ord) => {
+                  const status = ord.status.replaceAll('_', ' ');
+                  const itemSummary = ord.order_items.map((item) => `${item.product_name} × ${item.quantity}`).join(', ');
+                  const orderDate = new Date(ord.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+                  const statusTone = ord.status === 'COMPLETED' || ord.status === 'PICKED_UP' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : ord.status === 'CANCELLED' ? 'text-red-700 bg-red-50 border-red-200' : 'text-amber-700 bg-amber-50 border-amber-200';
+                  return <article key={ord.id} className="bg-gray-50 border border-gray-200 rounded-2xl p-3.5 space-y-2.5">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="min-w-0">
+                        <span className="text-[11px] font-mono font-bold text-gray-500">#{ord.order_number}</span>
+                        <h4 className="mt-1 text-[12.5px] font-black text-gray-900 leading-tight">{itemSummary || 'Store pickup order'}</h4>
+                        <p className="text-[11px] text-gray-500 mt-0.5">{ord.vehicle_model || 'Vehicle not specified'} · Store pickup</p>
+                      </div>
+                      <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusTone}`}>{status}</span>
+                    </div>
+                    <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 items-center text-[11px] pt-2 text-gray-600 border-t border-gray-200/60">
+                      <span>{orderDate}</span>
+                      <span>Payment: {ord.payment_status}</span>
+                      <strong className="text-gray-900 text-[12.5px]">₹{ord.total}</strong>
+                    </div>
+                  </article>;
+                })}
               </div>
             </motion.div>
           </div>

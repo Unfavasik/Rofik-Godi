@@ -96,4 +96,33 @@ export interface OrderDetails {
   pickupStore: string;
   status: 'NEW' | 'CONFIRMED' | 'PREPARING' | 'READY_FOR_PICKUP' | 'PICKED_UP' | 'COMPLETED' | 'CANCELLED';
   createdAt: string;
+  pickupToken?: string;
+}
+
+export interface CustomerOrderRecord {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  customer_phone: string;
+  payment_method: string;
+  payment_status: string;
+  status: string;
+  subtotal: number;
+  discount: number;
+  total: number;
+  vehicle_model: string | null;
+  fulfillment_method: string;
+  pickup_store: string;
+  created_at: string;
+  order_items: { product_name: string; color: string | null; quantity: number; unit_price: number }[];
+}
+
+export interface CustomerNotificationRecord {
+  id: string;
+  kind: string;
+  title: string;
+  body: string;
+  action_url: string | null;
+  read_at: string | null;
+  created_at: string;
 }

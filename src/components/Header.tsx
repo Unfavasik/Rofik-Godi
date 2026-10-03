@@ -5,6 +5,7 @@ import { UserProfile } from '../types';
 
 interface HeaderProps {
   cartCount: number;
+  notificationCount?: number;
   wishlistCount?: number;
   onOpenCart: () => void;
   onOpenWishlist?: () => void;
@@ -22,6 +23,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   cartCount,
+  notificationCount = 0,
   onOpenCart,
   onOpenAccount,
   onOpenSearch,
@@ -74,7 +76,7 @@ export const Header: React.FC<HeaderProps> = ({
               title="Notifications"
             >
               <Bell className="w-[18px] h-[18px] text-slate-900" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#D9232D] text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">3</span>
+              {notificationCount > 0 && <span aria-label={`${notificationCount} unread notifications`} className="absolute -top-1 -right-1 min-w-4 h-4 px-0.5 bg-[#D9232D] text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">{notificationCount > 9 ? '9+' : notificationCount}</span>}
             </button>
 
           </div>

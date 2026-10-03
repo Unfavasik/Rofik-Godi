@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { listLocalCustomerNotifications, markLocalCustomerNotificationRead } from './localCustomerData';
 
 export async function getMyProfile() {
   if (!supabase) return null;
@@ -56,7 +57,7 @@ export async function submitReview(review: { product_id: string; author_name: st
 }
 
 export async function listMyNotifications(expectedUserId?: string) {
-  if (!supabase) return [];
+  if (!supabase) return expectedUserId ? listLocalCustomerNotifications(expectedUserId) : [];
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return [];
   const { data } = await supabase.from('notifications').select('id,kind,title,body,action_url,read_at,created_at').eq('user_id', userData.user.id).order('created_at', { ascending: false }).limit(50);
@@ -64,7 +65,10 @@ export async function listMyNotifications(expectedUserId?: string) {
 }
 
 export async function markNotificationRead(id: string, expectedUserId?: string) {
-  if (!supabase) return { error: null };
+  if (!supabase) {
+    if (expectedUserId) markLocalCustomerNotificationRead(expectedUserId, id);
+    return { error: null };
+  }
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return { error: new Error('Sign in required') };
   return supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id).eq('user_id', userData.user.id);

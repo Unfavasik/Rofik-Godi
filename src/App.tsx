@@ -59,6 +59,7 @@ import {
 import { motion } from 'motion/react';
 import { loadPublicProducts } from './lib/supabaseProducts';
 import { supabase } from './lib/supabase';
+import { listMyNotifications } from './lib/supabaseCustomer';
 export default function App() {
   // Route flow: /Onboarding -> /home, and account creation opens at /signup.
   const phaseFromPath = (pathname: string): 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth' => {
@@ -93,6 +94,27 @@ export default function App() {
     phone: '',
     isGuest: true,
   });
+  const [notificationCount, setNotificationCount] = useState(0);
+  const refreshNotificationCount = () => {
+    if (currentUser.isGuest) {
+      setNotificationCount(0);
+      return;
+    }
+    void listMyNotifications(currentUser.id).then((notifications) => {
+      setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
+    });
+  };
+  useEffect(() => {
+    let active = true;
+    if (currentUser.isGuest) {
+      setNotificationCount(0);
+      return () => { active = false; };
+    }
+    void listMyNotifications(currentUser.id).then((notifications) => {
+      if (active) setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
+    });
+    return () => { active = false; };
+  }, [currentUser.id, currentUser.isGuest]);
 
   useEffect(() => {
     if (!supabase) return;
@@ -526,6 +548,7 @@ export default function App() {
         {/* Main Header */}
         {!isNotificationPage && !isShopPage && activeTab !== 'search' && activeTab !== 'account' && !['cart', 'wishlist', 'custom'].includes(activeTab) && <Header
           cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
+          notificationCount={notificationCount}
           wishlistCount={wishlist.length}
           currentUser={currentUser}
           onOpenCart={() => setIsCartOpen(true)}
@@ -533,6 +556,7 @@ export default function App() {
           onOpenStoreInfo={() => setIsStoreInfoOpen(true)}
   onOpenAccount={() => setActiveTab('account')}
   onOpenNotifications={() => {
+    refreshNotificationCount();
     setActiveTab('notifications');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }}
@@ -554,7 +578,7 @@ export default function App() {
 
         {/* View Switcher: Search View / Account View / Home & Shop Experience */}
         {activeTab === 'notifications' ? (
-          <NotificationsView userId={currentUser.id} isGuest={currentUser.isGuest} onBack={() => setActiveTab('home')} />
+          <NotificationsView userId={currentUser.id} isGuest={currentUser.isGuest} onBack={() => setActiveTab('home')} onNotificationsChanged={refreshNotificationCount} />
         ) : activeTab === 'shop' ? (
           <ShopView products={filteredProducts} wishlist={wishlist} cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)} onBack={() => setActiveTab('home')} onSearch={(value) => { setSearchQuery(value); setActiveTab('search'); }} onSelectProduct={setSelectedProduct} onQuickAdd={handleQuickAddToCart} onToggleWishlist={handleToggleWishlist} onOpenCart={() => { setActiveTab('cart'); setIsCartOpen(true); }} />
         ) : activeTab === 'search' ? (
@@ -1087,6 +1111,8 @@ export default function App() {
 
         <CheckoutModal
           isOpen={isCheckoutOpen}
+          userId={currentUser.id}
+          onOrderPlaced={refreshNotificationCount}
           onClose={() => setIsCheckoutOpen(false)}
           items={cart}
           discount={checkoutDiscount}

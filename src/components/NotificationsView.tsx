@@ -52,7 +52,7 @@ const toneFor = (kind: string) => {
   return 'bg-blue-50 text-blue-500';
 };
 
-export function NotificationsView({ userId, isGuest, onBack }: { userId: string; isGuest: boolean; onBack: () => void }) {
+export function NotificationsView({ userId, isGuest, onBack, onNotificationsChanged }: { userId: string; isGuest: boolean; onBack: () => void; onNotificationsChanged?: () => void }) {
   const [filter, setFilter] = useState<NotificationFilter>('All');
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -91,7 +91,7 @@ export function NotificationsView({ userId, isGuest, onBack }: { userId: string;
     if (!item.read_at && !isGuest) {
       const readAt = new Date().toISOString();
       setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, read_at: readAt } : entry));
-      void markNotificationRead(item.id, userId);
+      void markNotificationRead(item.id, userId).then(() => onNotificationsChanged?.());
     }
   };
 
