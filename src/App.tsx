@@ -80,7 +80,9 @@ export default function App() {
     if (phase === 'splash') return '/signup/loading';
     return '/home';
   };
+  type AuthStatus = 'AUTH_LOADING' | 'AUTHENTICATED' | 'UNAUTHENTICATED';
   const [appPhase, setAppPhase] = useState<'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth'>(() => phaseFromPath(window.location.pathname));
+  const [authStatus, setAuthStatus] = useState<AuthStatus>('AUTH_LOADING');
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>('signup');
   const goToPhase = (phase: 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth') => {
     setAppPhase(phase);
@@ -88,7 +90,7 @@ export default function App() {
     if (window.location.pathname !== nextPath) window.history.pushState({ phase }, '', nextPath);
   };
 
-  // User Authentication State (Default: Guest User)
+  // Supabase Auth is the source of truth. The guest shape is only the cleared UI state.
   const [currentUser, setCurrentUser] = useState<UserProfile>({
     id: 'guest-user',
     name: 'Guest Rider',
@@ -119,7 +121,16 @@ export default function App() {
   }, [currentUser.id, currentUser.isGuest]);
 
   useEffect(() => {
-    if (!supabase) return;
+    let active = true;
+    const resetAuthenticatedState = () => {
+      setCurrentUser({ id: 'guest-user', name: 'Guest Rider', email: '', phone: '', isGuest: true });
+      setCustomerState({ ownerId: 'guest-user', cart: [], wishlist: [] });
+      setNotificationCount(0);
+    };
+    const isPublicAuthPath = () => {
+      const route = window.location.pathname.replace(/\/$/, '') || '/';
+      return route === '/Onboarding' || route === '/onboarding' || route === '/signup' || route === '/signup/onboarding';
+    };
     const applyAuthUser = (user: { id: string; email?: string; user_metadata?: Record<string, unknown> }) => {
       setCurrentUser({
         id: user.id,
@@ -128,19 +139,42 @@ export default function App() {
         phone: String(user.user_metadata?.phone || ''),
         isGuest: false,
       });
+      setAuthStatus('AUTHENTICATED');
+      if (!isPublicAuthPath() || appPhase !== 'main') goToPhase('main');
     };
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) applyAuthUser(session.user);
-      else if (event === 'SIGNED_OUT') {
-        setCurrentUser({ id: `guest-${Date.now()}`, name: 'Guest Rider', email: '', phone: '', isGuest: true });
-      }
-    });
-    void supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user) applyAuthUser(data.session.user);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+    const applyNoSession = () => {
+      resetAuthenticatedState();
+      setAuthStatus('UNAUTHENTICATED');
+      const route = window.location.pathname.replace(/\/$/, '') || '/';
+      if (!isPublicAuthPath() && route !== '/admin') goToPhase('onboarding');
+    };
 
+    if (!supabase) {
+      applyNoSession();
+      return () => { active = false; };
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!active) return;
+      if (session?.user) {
+        applyAuthUser(session.user);
+      } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
+        applyNoSession();
+      }
+      // TOKEN_REFRESHED keeps the existing authenticated state and session.
+    });
+    void supabase.auth.getSession().then(({ data, error }) => {
+      if (!active) return;
+      if (error || !data.session?.user) applyNoSession();
+      else applyAuthUser(data.session.user);
+    });
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  // Auth initialization intentionally runs once; the listener is the single ongoing source.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Login Required Modal State
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginModalReason, setLoginModalReason] = useState('Please login to place your order.');
@@ -464,25 +498,25 @@ export default function App() {
   const handleLoginSuccess = (user: UserProfile, isNewAccount = false) => {
     if (isNewAccount && !supabase) createLocalCustomerWelcomeNotification(user.id, user.name);
     setCurrentUser(user);
+    setAuthStatus('AUTHENTICATED');
     setIsLoginModalOpen(false);
-  if (appPhase === 'auth') {
-  goToPhase('main');
-  }
+    goToPhase('main');
     if (pendingCheckoutAfterLogin) {
       setPendingCheckoutAfterLogin(false);
       setIsCheckoutOpen(true);
     }
   };
 
-  const handleContinueGuest = () => {
-    setCurrentUser({
-      id: `guest-${Date.now()}`,
-      name: 'Guest Rider',
-      email: '',
-      phone: '',
-      isGuest: true,
-    });
-    goToPhase('main');
+  const handleLogout = async () => {
+    const previousUserId = currentUser.id;
+    if (supabase) await supabase.auth.signOut();
+    window.localStorage.removeItem(`work-app:${previousUserId}:cart`);
+    window.localStorage.removeItem(`work-app:${previousUserId}:wishlist`);
+    setCustomerState({ ownerId: 'guest-user', cart: [], wishlist: [] });
+    setCurrentUser({ id: 'guest-user', name: 'Guest Rider', email: '', phone: '', isGuest: true });
+    setNotificationCount(0);
+    setAuthStatus('UNAUTHENTICATED');
+    goToPhase('onboarding');
   };
 
   const handleOpenAuth = (mode: 'signup' | 'login' | 'phone_otp' = 'signup') => {
@@ -509,8 +543,29 @@ export default function App() {
     }} /></AdminAccessGate>;
   }
 
+  // Never render a protected page while Supabase is still resolving the session.
+  if (authStatus === 'AUTH_LOADING') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#FDFDFD] text-[#D9232D]" role="status" aria-live="polite">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-red-100 border-t-[#D9232D]" />
+          <span className="text-xs font-bold text-slate-500">Checking your session…</span>
+        </div>
+      </div>
+    );
+  }
+  if (authStatus === 'UNAUTHENTICATED' && appPhase === 'main') {
+    return <Onboarding onFinish={() => goToPhase('auth')} />;
+  }
+  if (authStatus === 'AUTHENTICATED' && appPhase !== 'main') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#FDFDFD] text-[#D9232D]" role="status" aria-live="polite">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-red-100 border-t-[#D9232D]" />
+      </div>
+    );
+  }
   if (appPhase === 'onboarding') {
-    return <Onboarding onFinish={() => goToPhase('main')} />;
+    return <Onboarding onFinish={() => goToPhase('auth')} />;
   }
 
   // Account creation starts with the dedicated Rofik welcome flow.
@@ -535,9 +590,8 @@ export default function App() {
           initialMode={authInitialMode}
           onSuccess={handleLoginSuccess}
           onBack={() => {
-  handleContinueGuest();
-  window.history.replaceState({ phase: 'main' }, '', '/home');
-  }}
+            goToPhase('onboarding');
+          }}
           onOpenTerms={() => setIsTermsConditionsOpen(true)}
           onOpenPrivacy={() => setIsPrivacyPolicyOpen(true)}
         />
@@ -618,15 +672,7 @@ export default function App() {
   goToPhase('account-onboarding');
   }}
               onLogout={() => {
-                void supabase?.auth.signOut();
-                setCurrentUser({
-                  id: `guest-${Date.now()}`,
-                  name: 'Guest Rider',
-                  email: '',
-                  phone: '',
-                  isGuest: true,
-                });
-                goToPhase('main');
+                void handleLogout();
               }}
               onBackToHome={() => {
                 setActiveTab('home');

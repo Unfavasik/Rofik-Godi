@@ -9,9 +9,7 @@
  * Optional font (index.html <head>):
  *   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
  *
- * Usage (App.tsx):
- *   const [seen, setSeen] = useState(() => localStorage.getItem("onboarded") === "1");
- *   if (!seen) return <Onboarding onFinish={() => { localStorage.setItem("onboarded", "1"); setSeen(true); }} />;
+ * Usage (App.tsx): render from the Supabase auth guard while unauthenticated.
  */
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent } from "react";

@@ -134,7 +134,19 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     }
   };
 
-  const handleSocial = (provider: string) => {
+  const handleSocial = async (provider: string) => {
+    if (isSupabaseConfigured && supabase) {
+      if (provider !== 'Google') {
+        setError(`${provider} sign-in is not configured yet. Use email sign-in.`);
+        return;
+      }
+      const { error: authError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (authError) setError('Unable to start Google sign-in. Please try email sign-in.');
+      return;
+    }
     showToast(`${provider} login`);
     setTimeout(() => {
       const user: UserProfile = {
@@ -149,6 +161,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       onSuccess(user, mode === 'signup');
     }, 600);
   };
+
 
   return (
     <div className="flex min-h-screen w-full justify-center overflow-x-hidden bg-[#f7d9de] font-['Poppins',sans-serif] text-[#0f1a3a] select-none antialiased">
@@ -530,26 +543,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 </button>
               </>
             )}
-          </div>
-
-          {/* Guest rider link */}
-          <div className="mt-3 text-center">
-            <button
-              type="button"
-              onClick={() => {
-                const guestUser: UserProfile = {
-                  id: `guest-${Date.now()}`,
-                  name: 'Guest Rider',
-                  email: '',
-                  phone: '',
-                  isGuest: true,
-                };
-                onSuccess(guestUser);
-              }}
-              className="text-[13px] font-medium text-[#6b7280] hover:text-[#0f1a3a] hover:underline"
-            >
-              Skip & Continue as Guest →
-            </button>
           </div>
 
           {/* Home indicator bar */}
