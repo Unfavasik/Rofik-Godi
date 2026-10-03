@@ -51,7 +51,7 @@ export const PrivacyPolicyView: React.FC<PrivacyPolicyViewProps> = ({
       details: [
         {
           label: 'Customer Identification & Contact',
-          text: 'Full Name, verified WhatsApp telephone number, delivery address with PIN code, and optional email address.',
+          text: 'Full Name, verified WhatsApp telephone number, mobile number, vehicle model, pickup notes, and optional email address.',
         },
         {
           label: 'Vehicle & Custom Seat Dimensions',
@@ -103,7 +103,7 @@ export const PrivacyPolicyView: React.FC<PrivacyPolicyViewProps> = ({
         },
         {
           label: 'Cash on Delivery (COD) Assurance',
-          text: 'Pay safely only upon physical delivery of your inspected seat cover at your doorstep.',
+          text: 'Pay safely at the store when you collect your inspected seat cover, or use the online UPI option.',
         },
       ],
     },
@@ -117,7 +117,7 @@ export const PrivacyPolicyView: React.FC<PrivacyPolicyViewProps> = ({
       details: [
         {
           label: 'Courier & Logistics Dispatch Only',
-          text: 'Only strictly necessary delivery info (recipient name, address, phone number) is shared with verified shipping partners (India Post, BlueDart, DTDC, local express riders).',
+          text: 'Only order and pickup information needed by the Rofik Godi Centre team is used to prepare your collection.',
         },
         {
           label: 'No Telemarketing or Spam Lists',
@@ -139,11 +139,11 @@ export const PrivacyPolicyView: React.FC<PrivacyPolicyViewProps> = ({
       details: [
         {
           label: 'Review & Update Information',
-          text: 'Access saved addresses, vehicle specs, and profile details anytime from your Account screen.',
+          text: 'Access your vehicle specs, pickup orders, and profile details anytime from your Account screen.',
         },
         {
           label: 'Right to Erase & Delete Data',
-          text: 'Request permanent deletion of saved delivery addresses and account records by messaging our support.',
+          text: 'Request permanent deletion of saved pickup notes and account records by messaging our support.',
         },
         {
           label: 'Opt-Out of WhatsApp Notifications',
@@ -241,7 +241,7 @@ export const PrivacyPolicyView: React.FC<PrivacyPolicyViewProps> = ({
                 Your Privacy & Vehicle Data Protection
               </h2>
               <p className="text-xs sm:text-[13px] text-emerald-100/90 leading-relaxed font-normal">
-                At <strong>Rofik Godi Centre</strong>, Murshidabad, we treat your custom automotive measurements, delivery address, and WhatsApp contact details with the highest care and absolute confidentiality.
+                At <strong>Rofik Godi Centre</strong>, Murshidabad, we treat your custom automotive measurements, vehicle model, pickup notes, and WhatsApp contact details with the highest care and absolute confidentiality.
               </p>
             </div>
 

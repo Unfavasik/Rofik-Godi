@@ -8,7 +8,7 @@ import {
   Trash2,
   Tag,
   ArrowRight,
-  Truck,
+  Store,
   Sparkles,
   Check,
   ShieldCheck,
@@ -37,14 +37,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   if (!isOpen) return null;
 
-  const FREE_DELIVERY_THRESHOLD = 999;
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const discount = appliedCoupon ? appliedCoupon.discount : 0;
-  const isFreeDelivery = subtotal >= FREE_DELIVERY_THRESHOLD || subtotal === 0;
-  const deliveryFee = isFreeDelivery ? 0 : 70;
-  const grandTotal = Math.max(0, subtotal - discount + deliveryFee);
-  const remainingForFreeDelivery = Math.max(0, FREE_DELIVERY_THRESHOLD - subtotal);
-  const deliveryProgress = Math.min(100, (subtotal / FREE_DELIVERY_THRESHOLD) * 100);
+  const grandTotal = Math.max(0, subtotal - discount);
 
   const handleApplyCoupon = (codeToApply?: string) => {
     const code = (codeToApply || couponCode).trim().toUpperCase();
@@ -111,27 +106,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             </button>
           </div>
 
-          {/* Free Delivery Goal Bar */}
-          <div className="bg-gray-50 px-5 py-3 border-b border-gray-100">
-            <div className="flex items-center justify-between text-[11.5px] font-bold mb-1.5">
-              <span className="flex items-center gap-1 text-gray-700">
-                <Truck className="w-3.5 h-3.5 text-[#D9232D]" />
-                {isFreeDelivery ? (
-                  <strong className="text-emerald-600">🎉 Free Express Delivery Unlocked!</strong>
-                ) : (
-                  <span>
-                    Add <strong className="text-[#D9232D]">₹{remainingForFreeDelivery}</strong> more for Free Delivery
-                  </span>
-                )}
-              </span>
-              <span className="text-[10px] text-gray-400">{Math.round(deliveryProgress)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-              <div
-                className="bg-gradient-to-r from-[#D9232D] to-emerald-500 h-full rounded-full transition-all duration-300"
-                style={{ width: `${deliveryProgress}%` }}
-              />
-            </div>
+          {/* Store Pickup Banner */}
+          <div className="border-b border-gray-100 bg-red-50 px-5 py-3">
+            <div className="flex items-center gap-2 text-[11.5px] font-bold text-gray-800"><Store className="h-4 w-4 text-[#D9232D]" />🏪 Pickup from Rofik Godi Centre</div>
+            <p className="mt-1 pl-6 text-[10px] text-gray-500">We&apos;ll prepare your order for collection at the store.</p>
           </div>
 
           {/* Items List / Empty State */}
@@ -323,9 +301,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     <span>-₹{discount}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-gray-600">
-                  <span>Express Delivery</span>
-                  <span>{deliveryFee === 0 ? <strong className="text-emerald-600">FREE</strong> : `₹${deliveryFee}`}</span>
+                <div className="flex justify-between text-emerald-600">
+                  <span>Store Pickup</span>
+                  <strong>FREE</strong>
                 </div>
                 <div className="flex justify-between text-[14px] font-black text-gray-900 pt-1 border-t border-gray-100">
                   <span>Grand Total</span>

@@ -86,7 +86,7 @@ export const TermsConditionsView: React.FC<TermsConditionsViewProps> = ({
       iconColor: 'text-[#EA580C]',
       badgeBg: 'bg-[#F5EBE6] text-[#6B2828]',
       details: [
-        'Standard delivery takes 2 to 5 business days across West Bengal and 4 to 7 business days for other Indian states via reliable courier partners (Delhivery, DTDC, India Post).',
+        'Orders are prepared for collection from Rofik Godi Centre. We notify you when your order is ready for pickup.',
         'Same-day local pickup and express workshop fitting are available at Kadbeltala, Murshidabad during operating hours (9:00 AM – 8:00 PM daily).',
         'Real-time courier dispatch tracking links are dispatched directly to your registered WhatsApp number as soon as the parcel leaves our dispatch unit.',
       ],

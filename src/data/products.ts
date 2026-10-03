@@ -410,7 +410,7 @@ export const WORKSHOP_INFO = {
     'Free On-Spot Seat Fitment at Workshop',
     'Custom Foam Modification & Tailbone Cutout',
     'Custom Machine Embroidery & Name Stitching',
-    'Same-Day Delivery & Express Courier Across India'
+    'Same-Day Store Pickup & Expert Fitment'
   ],
 };
 

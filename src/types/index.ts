@@ -85,16 +85,15 @@ export interface OrderDetails {
   items: CartItem[];
   subtotal: number;
   discount: number;
-  deliveryFee: number;
   total: number;
   customerName: string;
   phone: string;
-  address: string;
-  city: string;
-  pincode: string;
-  deliveryType: 'home_delivery' | 'workshop_pickup';
-  paymentMethod: 'upi' | 'cod' | 'card';
-  status: 'confirmed' | 'processing' | 'shipped' | 'delivered';
+  vehicleModel: string;
+  note?: string;
+  paymentMethod: 'pay_at_store' | 'pay_online';
+  paymentStatus: 'pending' | 'paid' | 'failed';
+  fulfillmentMethod: 'STORE_PICKUP';
+  pickupStore: string;
+  status: 'NEW' | 'CONFIRMED' | 'PREPARING' | 'READY_FOR_PICKUP' | 'PICKED_UP' | 'COMPLETED' | 'CANCELLED';
   createdAt: string;
-  vehicleModel?: string;
 }

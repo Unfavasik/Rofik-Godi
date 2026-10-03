@@ -74,7 +74,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
     {
       orderId: 'RFK-892410',
       date: 'Today, 2:30 PM',
-      status: 'In Workshop Fitment',
+      status: 'Preparing for Pickup',
       statusColor: 'text-amber-600 bg-amber-50 border-amber-200',
       step: 2,
       itemTitle: 'ROFIK Pro Diamond-Stitch Bike Seat Cover',
@@ -86,7 +86,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
     {
       orderId: 'RFK-761942',
       date: '24 Sep 2026',
-      status: 'Delivered',
+      status: 'Completed',
       statusColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
       step: 4,
       itemTitle: 'AirFlow 3D Honeycomb Mesh Seat Cushion Pad',
@@ -97,7 +97,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
     },
   ]);
 
-  // Saved Addresses list
+  // Pickup Store list
   const [addresses, setAddresses] = useState([
     {
       id: 'addr-1',
@@ -162,7 +162,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 leading-tight">Account</h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5 tracking-tight">
-            {isGuest ? 'Guest User · Sign in for orders & garage' : 'Orders, help and store information'}
+            {isGuest ? 'Guest User · Sign in for orders & garage' : 'Pickup orders, help and store information'}
           </p>
         </div>
         {/* User Avatar / Profile Icon Button */}
@@ -675,8 +675,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
                     <MapPin className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-[15px] font-black text-gray-900">Saved Addresses</h3>
-                    <p className="text-[11px] text-gray-400">Manage delivery spots & garage location</p>
+                    <h3 className="text-[15px] font-black text-gray-900">Pickup Store</h3>
+                    <p className="text-[11px] text-gray-400">Pickup store & garage information</p>
                   </div>
                 </div>
                 <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
@@ -685,7 +685,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
               </div>
 
               <div className="overflow-y-auto px-5 py-4 space-y-3 flex-1 no-scrollbar">
-                {addresses.map((a) => (
+                {[{ id: 'store', tag: 'PICKUP LOCATION', name: 'ROFIK GODI CENTRE', phone: '+91 98321 45678', address: 'Main Station Road, Near Central Auto Stand, West Bengal', city: 'Mon - Sun: 8:00 AM – 9:30 PM', isDefault: true }].map((a) => (
                   <div key={a.id} className="bg-gray-50 border border-gray-200 rounded-2xl p-3.5 space-y-1 relative">
                     <div className="flex justify-between items-center">
                       <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#16A34A]">{a.tag}</span>

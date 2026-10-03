@@ -8,11 +8,11 @@ export function NotificationsView({ onBack }: { onBack: () => void }) {
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const items = useMemo<NotificationItem[]>(() => [
-    { title: 'Order Shipped', body: <>Your order <b className="text-slate-700">#RGD5821</b> has been shipped and is on the way.</>, time: '2 min ago', tone: 'bg-red-50 text-red-500', icon: <Truck className="h-6 w-6 fill-current" />, unread: true },
+    { title: 'Pickup Order Update', body: <>Your order <b className="text-slate-700">#RGD5821</b> is being prepared for store pickup.</>, time: '2 min ago', tone: 'bg-red-50 text-red-500', icon: <Truck className="h-6 w-6 fill-current" />, unread: true },
     { title: 'Special Offer', body: <>Flat 30% OFF on all Bike Seat Covers. Limited time offer!</>, time: '1 hour ago', tone: 'bg-red-50 text-red-500', icon: <Tag className="h-6 w-6 fill-current" />, unread: true },
     { title: 'Order Confirmed', body: <>Your order <b className="text-slate-700">#RGD5820</b> has been confirmed. We will notify you soon.</>, time: '3 hours ago', tone: 'bg-emerald-50 text-emerald-500', icon: <CircleCheck className="h-6 w-6" /> },
     { title: 'New Arrivals', body: <>Check out our new premium seat covers collection.</>, time: '1 day ago', tone: 'bg-purple-50 text-purple-600', icon: <Package className="h-6 w-6 fill-current" /> },
-    { title: 'Delivery Update', body: <>Your order <b className="text-slate-700">#RGD5819</b> is out for delivery.</>, time: '2 days ago', tone: 'bg-blue-50 text-blue-500', icon: <Truck className="h-6 w-6 fill-current" /> },
+    { title: 'Pickup Ready', body: <>Your order <b className="text-slate-700">#RGD5819</b> is ready for pickup at Rofik Godi Centre.</>, time: '2 days ago', tone: 'bg-blue-50 text-blue-500', icon: <Truck className="h-6 w-6 fill-current" /> },
     { title: 'Exclusive Coupon', body: <>Use code <b className="text-slate-700">RGD50</b> and get ₹50 OFF on your next order.</>, time: '3 days ago', tone: 'bg-rose-50 text-rose-500', icon: <Gift className="h-6 w-6 fill-current" /> },
     { title: 'Review Reminder', body: <>How was your purchase? Share your review and help others.</>, time: '4 days ago', tone: 'bg-amber-50 text-amber-500', icon: <Star className="h-6 w-6 fill-current" /> },
     { title: 'Account Update', body: <>Your profile information has been updated successfully.</>, time: '5 days ago', tone: 'bg-sky-50 text-sky-500', icon: <Bell className="h-6 w-6 fill-current" /> },
@@ -42,7 +42,7 @@ export function NotificationsView({ onBack }: { onBack: () => void }) {
         </section>
         <section className="mt-4 rounded-2xl border border-slate-100 p-4">
           <h2 className="text-lg font-extrabold">Tracking Information</h2>
-          {['Order Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered'].map((step, index) => <div key={step} className="flex items-center gap-3 py-2"><span className={`h-4 w-4 rounded-full border-2 ${index < 3 ? 'border-[#E51E2B] bg-[#E51E2B]' : 'border-slate-300'}`} /><span className={`text-sm font-semibold ${index === 2 ? 'text-[#E51E2B]' : 'text-slate-500'}`}>{step}</span></div>)}
+          {['Order Received', 'Confirmed', 'Preparing', 'Ready for Pickup', 'Picked Up', 'Completed'].map((step, index) => <div key={step} className="flex items-center gap-3 py-2"><span className={`h-4 w-4 rounded-full border-2 ${index < 3 ? 'border-[#E51E2B] bg-[#E51E2B]' : 'border-slate-300'}`} /><span className={`text-sm font-semibold ${index === 2 ? 'text-[#E51E2B]' : 'text-slate-500'}`}>{step}</span></div>)}
         </section>
         <button className="mt-5 w-full rounded-2xl bg-[#E51E2B] py-4 text-base font-extrabold text-white">Track Order <ChevronRight className="ml-2 inline h-5 w-5" /></button>
       </div>
@@ -72,7 +72,7 @@ function NotificationSettingsView({ onBack }: { onBack: () => void }) {
   const [preferences, setPreferences] = useState({ order: true, offers: true, arrivals: true, priceDrops: true, reviews: false, appUpdates: true, promotions: false, quietHours: false });
   const toggle = (key: keyof typeof preferences) => setPreferences((current) => ({ ...current, [key]: !current[key] }));
   const rows = [
-    { key: 'order' as const, title: 'Order Updates', description: 'Order confirmation, shipping, delivery', icon: <Truck className="h-5 w-5 text-[#E51E2B]" />, tone: 'bg-rose-50' },
+    { key: 'order' as const, title: 'Pickup Order Updates', description: 'Confirmation, preparation and pickup status', icon: <Truck className="h-5 w-5 text-[#E51E2B]" />, tone: 'bg-rose-50' },
     { key: 'offers' as const, title: 'Offers & Discounts', description: 'Special offers, coupons, deals', icon: <Tag className="h-5 w-5 fill-current text-[#E51E2B]" />, tone: 'bg-red-50' },
     { key: 'arrivals' as const, title: 'New Arrivals', description: 'Latest products and collections', icon: <Package className="h-5 w-5 text-purple-600" />, tone: 'bg-purple-50' },
     { key: 'priceDrops' as const, title: 'Price Drop Alerts', description: 'Get notified when prices drop', icon: <TrendingDown className="h-5 w-5 text-[#E51E2B]" />, tone: 'bg-rose-50' },
