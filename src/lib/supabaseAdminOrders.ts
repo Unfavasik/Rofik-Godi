@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 
 export type AdminOrderRecord = {
   id: string;
+  orderNumber: string;
   customer: string;
   phone: string;
   initials: string;
@@ -12,16 +13,21 @@ export type AdminOrderRecord = {
   status: 'NEW' | 'CONFIRMED' | 'PREPARING' | 'READY_FOR_PICKUP' | 'PICKED_UP' | 'COMPLETED' | 'CANCELLED';
   date: string;
   channel: string;
+  vehicleModel: string;
+  pickupStore: string;
+  items: Array<{ product_name?: string; quantity?: number; unit_price?: number }>;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export async function loadAdminOrders(): Promise<AdminOrderRecord[] | null> {
   if (!supabase) return null;
-  const { data, error } = await supabase.from('orders').select('id,order_number,customer_name,customer_phone,vehicle_model,total,payment_method,payment_status,fulfillment_method,pickup_store,status,created_at,order_items(product_name,quantity)').order('created_at', { ascending: false }).limit(50);
+  const { data, error } = await supabase.from('orders').select('id,order_number,customer_name,customer_phone,vehicle_model,total,payment_method,payment_status,fulfillment_method,pickup_store,status,created_at,updated_at,order_items(product_name,quantity,unit_price)').order('created_at', { ascending: false }).limit(100);
   if (error || !data) return null;
   return data.map((row) => {
     const customer = String(row.customer_name || 'Customer');
-    const items = Array.isArray(row.order_items) ? row.order_items as Array<{ product_name?: string }> : [];
-    return { id: `#${row.order_number}`, customer, phone: String(row.customer_phone || ''), initials: customer.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(), product: items[0]?.product_name || 'Multiple products', amount: Number(row.total || 0), paymentMethod: String(row.payment_method || 'PAY_AT_STORE'), paymentStatus: String(row.payment_status || 'PENDING'), status: String(row.status) as AdminOrderRecord['status'], date: new Date(String(row.created_at)).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), channel: 'STORE_PICKUP' };
+    const items = Array.isArray(row.order_items) ? row.order_items as Array<{ product_name?: string; quantity?: number; unit_price?: number }> : [];
+    return { id: `#${row.order_number}`, orderNumber: String(row.order_number), customer, phone: String(row.customer_phone || ''), initials: customer.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(), product: items[0]?.product_name || 'Multiple products', amount: Number(row.total || 0), paymentMethod: String(row.payment_method || 'PAY_AT_STORE'), paymentStatus: String(row.payment_status || 'PENDING'), status: String(row.status) as AdminOrderRecord['status'], date: new Date(String(row.created_at)).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), channel: String(row.fulfillment_method || 'STORE_PICKUP'), vehicleModel: String(row.vehicle_model || ''), pickupStore: String(row.pickup_store || ''), items, createdAt: String(row.created_at), updatedAt: String(row.updated_at || row.created_at) };
   });
 }
 
