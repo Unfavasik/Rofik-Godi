@@ -6,14 +6,21 @@ const isUuid = (value: string) => /^[0-9a-f-]{36}$/i.test(value);
 export async function createSupabaseOrder(order: OrderDetails) {
   if (!supabase) return { synced: false, error: null };
   const paymentMethod = order.paymentMethod === 'card' ? 'CARD' : order.paymentMethod === 'upi' ? 'UPI' : 'COD';
+  const { data: userData } = await supabase.auth.getUser();
   const { data, error } = await supabase.from('orders').insert({
     order_number: order.orderId,
+    user_id: userData.user?.id || null,
     customer_name: order.customerName,
     customer_phone: order.phone,
     delivery_address: `${order.address}, ${order.city} - ${order.pincode}`,
     payment_method: paymentMethod,
     status: order.status,
     subtotal: order.subtotal,
+    discount: order.discount,
+    delivery_type: order.deliveryType,
+    city: order.city,
+    pincode: order.pincode,
+    vehicle_model: order.vehicleModel || null,
     delivery_fee: order.deliveryFee,
     total: order.total,
   }).select('id').single();
