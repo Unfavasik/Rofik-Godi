@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CartItem, OrderDetails } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
+import { createSupabaseOrder } from '../lib/supabaseOrders';
 import confetti from 'canvas-confetti';
 import {
   X,
@@ -46,6 +47,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod' | 'card'>('upi');
   const [placedOrder, setPlacedOrder] = useState<OrderDetails | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [orderSyncState, setOrderSyncState] = useState<'idle' | 'synced' | 'local'>('idle');
 
   if (!isOpen) return null;
 
@@ -62,40 +64,36 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     });
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     setIsProcessing(true);
-    setTimeout(() => {
-      const newOrder: OrderDetails = {
-        orderId: `RFK-${Math.floor(100000 + Math.random() * 900000)}`,
-        items: [...items],
-        subtotal,
-        discount,
-        deliveryFee,
-        total,
-        customerName: customerName || 'Valued Rider',
-        phone: phone || '+91 9876543210',
-        address: deliveryType === 'workshop_pickup' ? 'Rofik Godi Centre Workshop (Self Pickup)' : address,
-        city: city || 'Local',
-        pincode: pincode || '700001',
-        deliveryType,
-        paymentMethod,
-        status: 'confirmed',
-        createdAt: new Date().toLocaleDateString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-        vehicleModel: vehicleModel || undefined,
-      };
-
-      setPlacedOrder(newOrder);
-      setIsProcessing(false);
-      setStep(4);
-      triggerConfetti();
-      onClearCart();
-    }, 1000);
+    setOrderSyncState('idle');
+    const newOrder: OrderDetails = {
+      orderId: `RFK-${Math.floor(100000 + Math.random() * 900000)}`,
+      items: [...items],
+      subtotal,
+      discount,
+      deliveryFee,
+      total,
+      customerName: customerName || 'Valued Rider',
+      phone: phone || '+91 9876543210',
+      address: deliveryType === 'workshop_pickup' ? 'Rofik Godi Centre Workshop (Self Pickup)' : address,
+      city: city || 'Local',
+      pincode: pincode || '700001',
+      deliveryType,
+      paymentMethod,
+      status: 'confirmed',
+      createdAt: new Date().toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+      }),
+      vehicleModel: vehicleModel || undefined,
+    };
+    const persisted = await createSupabaseOrder(newOrder);
+    setOrderSyncState(persisted.synced ? 'synced' : 'local');
+    setPlacedOrder(newOrder);
+    setIsProcessing(false);
+    setStep(4);
+    triggerConfetti();
+    onClearCart();
   };
 
   const handleDownloadInvoice = () => {
@@ -420,6 +418,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <h4 className="text-xl font-black text-gray-900">Ride in Comfort!</h4>
                   <p className="text-[12px] text-gray-500 mt-1">
                     Your seat order is confirmed and sent to Rofik Godi workshop.
+                  </p>
+                  <p className={`text-[11px] mt-2 font-semibold ${orderSyncState === 'synced' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {orderSyncState === 'synced' ? 'Order securely saved to Rofik Godi Centre.' : 'Order saved locally. We will confirm it with the workshop.'}
                   </p>
                 </div>
 

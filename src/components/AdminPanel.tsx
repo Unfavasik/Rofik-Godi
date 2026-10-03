@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
   Archive,
@@ -32,6 +32,7 @@ import {
 import { PRODUCTS } from '../data/products';
 import type { Product } from '../types';
 import { AdminProductManager } from './AdminProductManager';
+import { loadAdminOrders, type AdminOrderRecord } from '../lib/supabaseAdminOrders';
 
 type AdminSection = 'overview' | 'orders' | 'products' | 'customers' | 'reviews' | 'marketing' | 'analytics' | 'settings';
 type OrderStatus = 'Processing' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled';
@@ -110,10 +111,13 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
   const [showProductModal, setShowProductModal] = useState(false);
   const [toast, setToast] = useState('');
   const [productList, setProductList] = useState<Product[]>(PRODUCTS);
+  const [liveOrders, setLiveOrders] = useState<AdminOrderRecord[] | null>(null);
   const [settings, setSettings] = useState({ alerts: true, lowStock: true, whatsapp: true, maintenance: false });
 
   const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2600); };
-  const filteredOrders = useMemo(() => ORDERS.filter((order) => (orderFilter === 'All' || order.status === orderFilter) && `${order.id} ${order.customer} ${order.product}`.toLowerCase().includes(query.toLowerCase())), [orderFilter, query]);
+  useEffect(() => { loadAdminOrders().then((orders) => { if (orders) setLiveOrders(orders); }); }, []);
+  const sourceOrders = liveOrders || ORDERS;
+  const filteredOrders = useMemo(() => sourceOrders.filter((order) => (orderFilter === 'All' || order.status === orderFilter) && `${order.id} ${order.customer} ${order.product}`.toLowerCase().includes(query.toLowerCase())), [orderFilter, query, sourceOrders]);
   const filteredProducts = useMemo(() => productList.filter((product) => `${product.title} ${product.categoryLabel}`.toLowerCase().includes(query.toLowerCase())), [productList, query]);
 
   const goTo = (next: AdminSection) => { setSection(next); setSidebarOpen(false); setQuery(''); };

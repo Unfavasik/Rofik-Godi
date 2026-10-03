@@ -1,6 +1,7 @@
 import type { Product, VehicleCategory } from '../types';
 import { PRODUCTS } from '../data/products';
 import { supabase } from './supabase';
+import { convertImageToWebP } from './imagePipeline';
 
 const categoryLabels: Record<VehicleCategory, string> = { bike: 'Bike Covers', scooter: 'Scooter Covers', toto: 'Toto Covers', cushion: 'Cushions', accessory: 'Accessories' };
 const categoryKeys: Record<string, VehicleCategory> = { 'Bike Covers': 'bike', 'Scooter Covers': 'scooter', 'Toto Covers': 'toto', Cushions: 'cushion', Accessories: 'accessory' };
@@ -58,7 +59,19 @@ export const upsertSupabaseProduct = async (product: Product) => {
   const payload = toRow(product);
   const { data, error } = await supabase.from('products').upsert(payload, { onConflict: 'slug' }).select('*').single();
   if (error) return { product, synced: false, error };
-  return { product: mapSupabaseProduct(data), synced: true, error: null };
+  const savedProduct = mapSupabaseProduct(data);
+  const gallery = [savedProduct.image, ...(savedProduct.additionalImages || [])].filter(Boolean).filter((url, index, items) => items.indexOf(url) === index);
+  const galleryResult = await syncProductGallery(savedProduct.id, gallery);
+  return { product: savedProduct, synced: !galleryResult.error, error: galleryResult.error };
+};
+
+export const syncProductGallery = async (productId: string, urls: string[]) => {
+  if (!supabase || !productId.match(/^[0-9a-f-]{36}$/i)) return { error: null };
+  const { error: deleteError } = await supabase.from('product_images').delete().eq('product_id', productId);
+  if (deleteError) return { error: deleteError };
+  if (!urls.length) return { error: null };
+  const { error } = await supabase.from('product_images').insert(urls.map((publicUrl, sort_order) => ({ product_id: productId, public_url: publicUrl, sort_order, alt_text: 'Rofik Godi product image' })));
+  return { error };
 };
 
 export const deleteSupabaseProduct = async (product: Product) => {
@@ -69,10 +82,10 @@ export const deleteSupabaseProduct = async (product: Product) => {
 
 export const uploadProductImage = async (file: File) => {
   if (!supabase) throw new Error('Supabase is not configured');
-  const extension = file.name.split('.').pop() || 'jpg';
-  const path = `products/${crypto.randomUUID()}.${extension}`;
-  const { error } = await supabase.storage.from('product-images').upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+  const webp = await convertImageToWebP(file);
+  const path = `products/${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.webp`;
+  const { error } = await supabase.storage.from('product-images').upload(path, webp, { cacheControl: '31536000', upsert: false, contentType: 'image/webp' });
   if (error) throw error;
   const { data } = supabase.storage.from('product-images').getPublicUrl(path);
-  return { path, url: data.publicUrl };
+  return { path, url: data.publicUrl, bytes: webp.size, format: 'webp' as const };
 };

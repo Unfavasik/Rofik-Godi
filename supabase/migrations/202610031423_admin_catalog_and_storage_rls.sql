@@ -33,6 +33,8 @@ alter table public.products add column if not exists is_featured boolean not nul
 
 alter table public.products drop constraint if exists products_category_check;
 alter table public.products add constraint products_category_check check (category = any (array['Bike Covers','Scooter Covers','Toto Covers','Cushions','Accessories']));
+alter table public.orders drop constraint if exists orders_payment_method_check;
+alter table public.orders add constraint orders_payment_method_check check (payment_method = any (array['COD','UPI','WA','CARD']));
 update public.products set category_key = case category when 'Bike Covers' then 'bike' when 'Scooter Covers' then 'scooter' when 'Toto Covers' then 'toto' when 'Cushions' then 'cushion' else 'accessory' end where category_key is null;
 update public.products set in_stock = is_active where in_stock is distinct from is_active;
 
@@ -56,10 +58,15 @@ create policy "product_images_admin_manage" on public.product_images for all to 
 create policy "products_admin_insert" on public.products for insert to authenticated with check (public.is_admin());
 create policy "products_admin_update" on public.products for update to authenticated using (public.is_admin()) with check (public.is_admin());
 create policy "products_admin_delete" on public.products for delete to authenticated using (public.is_admin());
+create policy "orders_admin_read" on public.orders for select to authenticated using (public.is_admin());
+create policy "orders_admin_update" on public.orders for update to authenticated using (public.is_admin()) with check (public.is_admin());
+create policy "orders_admin_delete" on public.orders for delete to authenticated using (public.is_admin());
+create policy "order_items_admin_read" on public.order_items for select to authenticated using (public.is_admin());
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('product-images', 'product-images', true, 5242880, array['image/jpeg','image/png','image/webp','image/gif']::text[])
-on conflict (id) do update set public = excluded.public, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+values ('product-images', 'product-images', true, 5242880, array['image/webp']::text[])
+on conflict (id) do update set public = excluded.public, file_size_limit = excluded.file_size_limit, allowed_mime_types = array['image/webp']::text[];
+update storage.buckets set allowed_mime_types = array['image/webp']::text[] where id = 'product-images';
 create policy "product_images_bucket_public_read" on storage.objects for select to anon, authenticated using (bucket_id = 'product-images');
 create policy "product_images_bucket_admin_insert" on storage.objects for insert to authenticated with check (bucket_id = 'product-images' and public.is_admin());
 create policy "product_images_bucket_admin_update" on storage.objects for update to authenticated using (bucket_id = 'product-images' and public.is_admin()) with check (bucket_id = 'product-images' and public.is_admin());
