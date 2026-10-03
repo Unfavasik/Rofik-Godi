@@ -3,6 +3,7 @@ import { supabase } from './supabase';
 export type AdminOrderRecord = {
   id: string;
   customer: string;
+  phone: string;
   initials: string;
   product: string;
   amount: number;
@@ -20,7 +21,7 @@ export async function loadAdminOrders(): Promise<AdminOrderRecord[] | null> {
   return data.map((row) => {
     const customer = String(row.customer_name || 'Customer');
     const items = Array.isArray(row.order_items) ? row.order_items as Array<{ product_name?: string }> : [];
-    return { id: `#${row.order_number}`, customer, initials: customer.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(), product: items[0]?.product_name || 'Multiple products', amount: Number(row.total || 0), paymentMethod: String(row.payment_method || 'PAY_AT_STORE'), paymentStatus: String(row.payment_status || 'PENDING'), status: String(row.status) as AdminOrderRecord['status'], date: new Date(String(row.created_at)).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), channel: 'STORE_PICKUP' };
+    return { id: `#${row.order_number}`, customer, phone: String(row.customer_phone || ''), initials: customer.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(), product: items[0]?.product_name || 'Multiple products', amount: Number(row.total || 0), paymentMethod: String(row.payment_method || 'PAY_AT_STORE'), paymentStatus: String(row.payment_status || 'PENDING'), status: String(row.status) as AdminOrderRecord['status'], date: new Date(String(row.created_at)).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), channel: 'STORE_PICKUP' };
   });
 }
 
