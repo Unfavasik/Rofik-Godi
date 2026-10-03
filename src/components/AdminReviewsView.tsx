@@ -41,7 +41,6 @@ export const AdminReviewsView: React.FC<AdminReviewsViewProps> = ({ notify, quer
     else { notify(review.is_published ? 'Review hidden from the storefront' : 'Review published'); await refresh(); }
   };
   const removeReview = async (review: ProductReviewRecord) => {
-    if (!window.confirm(`Permanently delete this review for ${review.product_name || 'the product'}?`)) return;
     const { error } = await deleteProductReview(review.id);
     if (error) notify(error.message || 'Review deletion failed');
     else { notify('Review deleted'); await refresh(); }

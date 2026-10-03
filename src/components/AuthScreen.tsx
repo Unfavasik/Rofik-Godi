@@ -57,8 +57,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         setError('Enter a valid email');
         return;
       }
-      if (password.length < 6) {
-        setError('Password must be at least 6 characters');
+      if (password.length < 8) {
+        setError('Password must be at least 8 characters');
         return;
       }
       if (!agree) {
@@ -90,8 +90,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         setError('Enter a valid email');
         return;
       }
-      if (password.length < 6) {
-        setError('Password must be at least 6 characters');
+      if (password.length < 8) {
+        setError('Password must be at least 8 characters');
         return;
       }
 

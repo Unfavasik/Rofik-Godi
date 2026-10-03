@@ -23,7 +23,7 @@ export const mapSupabaseProduct = (row: ProductRow): Product => {
     category, categoryLabel: String(row.category || categoryLabels[category]), price: Number(row.price || 0), originalPrice: Number(row.original_price || row.price || 0),
     rating: Number(row.rating || 0), reviewCount: Number(row.review_count || 0), image: String(row.image_url || ''), additionalImages: asStrings(row.additional_images),
     description: String(row.description || ''), features: asStrings(row.features), isBestseller: Boolean(row.is_bestseller), isNew: Boolean(row.is_new),
-    isWaterproof: Boolean(row.is_waterproof), isCustomizable: Boolean(row.is_customizable), inStock: row.in_stock === undefined ? Boolean(row.is_active) : Boolean(row.in_stock),
+    isWaterproof: Boolean(row.is_waterproof), isCustomizable: Boolean(row.is_customizable), inStock: row.in_stock === undefined ? true : Boolean(row.in_stock),
     materials: asStrings(row.materials), colors: asColors(row.colors_json, row.colors), stitchPatterns: asStrings(row.stitch_patterns),
     compatibility: asStrings(row.compatibility_list).length ? asStrings(row.compatibility_list) : String(row.compatibility || '').split(',').map((item) => item.trim()).filter(Boolean),
     thicknessOptions: asThickness(row.thickness_options), badge: row.badge ? String(row.badge) : undefined, badgeColor: row.badge_color as Product['badgeColor'] | undefined,
@@ -69,7 +69,7 @@ const toRow = (product: Product) => ({
   features: product.features || [], materials: product.materials || [], stitch_patterns: product.stitchPatterns || [], thickness_options: product.thicknessOptions || [], colors_json: product.colors || [],
   colors: (product.colors || []).map((color) => color.name), compatibility_list: product.compatibility || [], compatibility: (product.compatibility || []).join(', '), badge: product.badge || null,
   badge_color: product.badgeColor || null, is_bestseller: Boolean(product.isBestseller), is_new: Boolean(product.isNew), is_waterproof: Boolean(product.isWaterproof),
-  is_customizable: Boolean(product.isCustomizable), in_stock: Boolean(product.inStock), is_active: Boolean(product.inStock),
+  is_customizable: Boolean(product.isCustomizable), in_stock: Boolean(product.inStock), is_active: true,
 });
 
 export const upsertSupabaseProduct = async (product: Product) => {
@@ -85,10 +85,7 @@ export const upsertSupabaseProduct = async (product: Product) => {
 
 export const syncProductGallery = async (productId: string, urls: string[]) => {
   if (!supabase || !productId.match(/^[0-9a-f-]{36}$/i)) return { error: null };
-  const { error: deleteError } = await supabase.from('product_images').delete().eq('product_id', productId);
-  if (deleteError) return { error: deleteError };
-  if (!urls.length) return { error: null };
-  const { error } = await supabase.from('product_images').insert(urls.map((publicUrl, sort_order) => ({ product_id: productId, public_url: publicUrl, sort_order, alt_text: 'Rofik Godi product image' })));
+  const { error } = await supabase.rpc('sync_product_gallery', { p_product_id: productId, p_urls: urls });
   return { error };
 };
 

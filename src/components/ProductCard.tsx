@@ -72,6 +72,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <h4 className="text-[13.5px] font-bold text-gray-900 group-hover:text-[#D9232D] transition-colors leading-tight break-words">
             {product.title}
           </h4>
+          {!product.inStock && <p className="mt-1 text-[10px] font-black uppercase text-amber-700">Out of stock</p>}
 
           {product.subtitle && (
             <p className="text-[11px] text-gray-400 font-medium mt-0.5 break-words">
@@ -121,8 +122,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <motion.button
             whileTap={{ scale: 0.88 }}
             type="button"
-            onClick={(e) => onQuickAddToCart(product, e)}
-            aria-label="Add to cart"
+            onClick={(e) => { if (product.inStock) onQuickAddToCart(product, e); }}
+            disabled={!product.inStock}
+            aria-label={product.inStock ? 'Add to cart' : 'Out of stock'}
             className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all shadow-sm ${
               isAddedJustNow
                 ? 'bg-emerald-600 text-white'
@@ -203,6 +205,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <h4 className="text-[12.5px] font-bold text-gray-800 leading-tight mb-0.5 break-words group-hover:text-[#D9232D] transition-colors">
         {product.title}
       </h4>
+      {!product.inStock && <p className="text-[10px] font-black uppercase text-amber-700">Out of stock</p>}
 
       {/* Subtitle / Short Description */}
       {product.subtitle && (

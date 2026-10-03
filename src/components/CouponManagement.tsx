@@ -194,7 +194,6 @@ export const CouponManagement: React.FC<{ notify: (message: string) => void }> =
   };
 
   const handleDisable = async (coupon: CouponRecord) => {
-    if (!window.confirm(`Disable ${coupon.code}? Customers will no longer be able to use it.`)) return;
     const response = await disableAdminCoupon(coupon.id);
     if (response.error) { notify(response.error); return; }
     notify(`${coupon.code} disabled`);
@@ -202,7 +201,6 @@ export const CouponManagement: React.FC<{ notify: (message: string) => void }> =
   };
 
   const handleDelete = async (coupon: CouponRecord) => {
-    if (!window.confirm(`Delete unused coupon ${coupon.code}? This cannot be undone.`)) return;
     const response = await deleteUnusedAdminCoupon(coupon.id);
     if (response.error) { notify(response.error); return; }
     notify(`${coupon.code} deleted`);

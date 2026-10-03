@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { lazy, Suspense, useState, useMemo, useEffect, useRef } from 'react';
 import { PRODUCTS, WORKSHOP_INFO } from './data/products';
 import { Product, CartItem, VehicleCategory, UserProfile } from './types';
 import { Header } from './components/Header';
@@ -30,7 +30,8 @@ import { LoginRequiredModal } from './components/LoginRequiredModal';
 import { SearchView } from './components/SearchView';
 import { NotificationsView } from './components/NotificationsView';
 import { ShopView } from './components/ShopView';
-import { AdminPanel } from './components/AdminPanel';
+import { useLocation, useNavigate } from 'react-router-dom';
+const AdminPanel = lazy(() => import('./components/AdminPanel').then((module) => ({ default: module.AdminPanel })));
 import { AdminAccessGate } from './components/AdminAccessGate';
 import {
   FilterSortModal,
@@ -60,8 +61,10 @@ import {
 import { motion } from 'motion/react';
 import { loadPublicProducts } from './lib/supabaseProducts';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
-import { listMyNotifications } from './lib/supabaseCustomer';
+import { listMyNotifications, listMyWishlist, toggleWishlist } from './lib/supabaseCustomer';
 export default function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
   // Route flow: /Onboarding -> /home, and account creation opens at /signup.
   const phaseFromPath = (pathname: string): 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth' => {
     const route = pathname.replace(/\/$/, '') || '/';
@@ -86,7 +89,7 @@ export default function App() {
   const goToPhase = (phase: 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth') => {
     setAppPhase(phase);
     const nextPath = pathFromPhase(phase);
-    if (window.location.pathname !== nextPath) window.history.pushState({ phase }, '', nextPath);
+    if (location.pathname !== nextPath) navigate(nextPath, { state: { phase } });
   };
 
   // Supabase Auth is the source of truth. The guest shape is only the cleared UI state.
@@ -193,14 +196,9 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<RouteTab>(() => routeToTab(window.location.pathname));
   const isPopState = useRef(false);
   useEffect(() => {
-    const handlePopState = () => {
-      isPopState.current = true;
-      setAppPhase(phaseFromPath(window.location.pathname));
-      setActiveTab(routeToTab(window.location.pathname));
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+    setAppPhase(phaseFromPath(location.pathname));
+    setActiveTab(routeToTab(location.pathname));
+  }, [location.pathname]);
 
   useEffect(() => {
     if ((window.location.pathname.replace(/\/$/, '') || '/') === '/admin') return;
@@ -211,7 +209,7 @@ export default function App() {
         isPopState.current = false;
         return;
       }
-      window.history.pushState({ tab: activeTab }, '', nextPath);
+      navigate(nextPath, { state: { tab: activeTab } });
     } else {
       isPopState.current = false;
     }
@@ -219,7 +217,7 @@ export default function App() {
     if (activeTab === 'shop') {
       window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     }
-  }, [activeTab, appPhase]);
+  }, [activeTab, appPhase, location.pathname, navigate]);
 
   const [shopLayoutMode, setShopLayoutMode] = useState<'grid' | 'list'>('grid');
   const [isMobileFrameMode, setIsMobileFrameMode] = useState<boolean>(true);
@@ -257,7 +255,7 @@ export default function App() {
     if (customerState.ownerId === currentUser.id) return;
     let savedCart: CartItem[] = [];
     let savedWishlist: Product[] = [];
-    if (!currentUser.isGuest) {
+    if (!currentUser.isGuest && !supabase) {
       try {
         const cartValue = localStorage.getItem(`work-app:${currentUser.id}:cart`);
         const wishlistValue = localStorage.getItem(`work-app:${currentUser.id}:wishlist`);
@@ -306,6 +304,14 @@ export default function App() {
       // Keep the bundled catalog available if the public API is temporarily unavailable.
     });
   }, []);
+
+  useEffect(() => {
+    if (currentUser.isGuest || !supabase || customerState.ownerId !== currentUser.id || !catalogProducts.length) return;
+    void listMyWishlist().then((rows) => {
+      const ids = new Set(rows.map((row) => String(row.product_id)));
+      setWishlist(catalogProducts.filter((product) => ids.has(product.id)));
+    });
+  }, [catalogProducts, currentUser.id, currentUser.isGuest, customerState.ownerId]);
 
   // Active home filters count
   const activeHomeFiltersCount = useMemo(() => {
@@ -396,7 +402,7 @@ export default function App() {
           );
       }
     });
-  }, [selectedCategory, vehicleFilter, searchQuery, sortBy, homeFilters]);
+  }, [catalogProducts, selectedCategory, vehicleFilter, searchQuery, sortBy, homeFilters]);
 
   // Quick Cart Add
   const handleQuickAddToCart = (p: Product, e: React.MouseEvent) => {
@@ -404,9 +410,9 @@ export default function App() {
     const existingIndex = cart.findIndex((item) => item.product.id === p.id);
 
     if (existingIndex > -1) {
-      const updated = [...cart];
-      updated[existingIndex].quantity += 1;
-      setCart(updated);
+      setCart((current) => current.map((item, index) =>
+        index === existingIndex ? { ...item, quantity: item.quantity + 1 } : item,
+      ));
     } else {
       const newItem: CartItem = {
         cartItemId: `${p.id}-${Date.now()}`,
@@ -417,7 +423,7 @@ export default function App() {
         selectedThickness: p.thicknessOptions[0],
         unitPrice: p.price,
       };
-      setCart([...cart, newItem]);
+      setCart((current) => [...current, newItem]);
     }
 
     setJustAddedId(p.id);
@@ -453,12 +459,13 @@ export default function App() {
   };
 
   // Wishlist toggle
-  const handleToggleWishlist = (p: Product, e?: React.MouseEvent) => {
+  const handleToggleWishlist = async (p: Product, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (wishlist.some((item) => item.id === p.id)) {
-      setWishlist(wishlist.filter((item) => item.id !== p.id));
-    } else {
-      setWishlist([...wishlist, p]);
+    const saved = wishlist.some((item) => item.id === p.id);
+    setWishlist((current) => saved ? current.filter((item) => item.id !== p.id) : [...current, p]);
+    if (!currentUser.isGuest && supabase) {
+      const result = await toggleWishlist(p.id, saved);
+      if (result.error) setWishlist((current) => saved ? [...current, p] : current.filter((item) => item.id !== p.id));
     }
   };
 
@@ -535,10 +542,10 @@ export default function App() {
     }} onSignIn={() => {
       window.history.pushState({}, '', '/signup');
       window.location.reload();
-    }}><AdminPanel onBackToStore={() => {
+    }}><Suspense fallback={<div className="min-h-screen p-8 text-sm font-bold">Loading admin workspace…</div>}><AdminPanel onBackToStore={() => {
       window.history.pushState({}, '', '/home');
       window.location.reload();
-    }} /></AdminAccessGate>;
+    }} /></Suspense></AdminAccessGate>;
   }
 
   // Never render a protected page while Supabase is still resolving the session.

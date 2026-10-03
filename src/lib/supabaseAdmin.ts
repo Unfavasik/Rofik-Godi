@@ -24,27 +24,15 @@ export type AdminNotification = {
 
 export async function loadAdminCustomers(): Promise<{ data: AdminCustomer[]; error: Error | null }> {
   if (!supabase) return { data: [], error: new Error('Supabase is not configured') };
-  const [{ data: profiles, error: profileError }, { data: orders, error: orderError }] = await Promise.all([
-    supabase.from('profiles').select('id,full_name,phone,created_at').order('created_at', { ascending: false }),
-    supabase.from('orders').select('user_id,total,status,created_at').not('user_id', 'is', null),
-  ]);
-  if (profileError || orderError) return { data: [], error: profileError || orderError };
-  const grouped = new Map<string, { count: number; total: number; last: string | null; completed: boolean }>();
-  for (const row of orders || []) {
-    const key = String(row.user_id);
-    const existing = grouped.get(key) || { count: 0, total: 0, last: null, completed: false };
-    existing.count += 1;
-    existing.total += Number(row.total || 0);
-    existing.last = existing.last && existing.last > String(row.created_at) ? existing.last : String(row.created_at);
-    existing.completed ||= String(row.status) === 'COMPLETED';
-    grouped.set(key, existing);
-  }
+  const { data, error } = await supabase.rpc('admin_customer_summary');
+  if (error) return { data: [], error };
   return {
-    data: (profiles || []).map((profile) => {
-      const stats = grouped.get(String(profile.id)) || { count: 0, total: 0, last: null, completed: false };
-      return { id: String(profile.id), name: String(profile.full_name || 'Customer'), email: '', phone: String(profile.phone || ''), orderCount: stats.count, totalSpent: stats.total, lastOrder: stats.last, createdAt: String(profile.created_at), status: stats.completed ? 'Returning' : stats.count ? 'Active' : 'New' };
-    }),
-    error: null,
+    data: (data || []).map((row: Record<string, unknown>) => ({
+      id: String(row.id), name: String(row.name || 'Customer'), email: String(row.email || ''),
+      phone: String(row.phone || ''), orderCount: Number(row.order_count || 0),
+      totalSpent: Number(row.total_spent || 0), lastOrder: row.last_order ? String(row.last_order) : null,
+      createdAt: String(row.created_at), status: String(row.status || 'New'),
+    })), error: null,
   };
 }
 
