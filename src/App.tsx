@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { lazy, Suspense, useState, useMemo, useEffect } from 'react';
-import { PRODUCTS, WORKSHOP_INFO } from './data/products';
+import React, { lazy, Suspense, useState, useMemo, useEffect, useCallback } from 'react';
+import { WORKSHOP_INFO } from './data/products';
 import { Product, CartItem, VehicleCategory, UserProfile } from './types';
 import { Header } from './components/Header';
 import { HeroBanner } from './components/HeroBanner';
@@ -41,26 +41,18 @@ import {
   SORT_LABELS,
 } from './components/FilterSortModal';
 import {
-  Sparkles,
   SlidersHorizontal,
   LayoutGrid,
   List,
   PhoneCall,
   MessageCircle,
-  ShieldCheck,
-  Wrench,
   Flame,
-  ArrowRight,
   ArrowUpDown,
-  Droplets,
-  Star,
-  CheckCircle2,
-  X,
-  RotateCcw,
 } from 'lucide-react';
-import { motion } from 'motion/react';
-import { loadPublicProducts } from './lib/supabaseProducts';
-import { isSupabaseConfigured, supabase } from './lib/supabase';
+import { supabase } from './lib/supabase';
+import { useAuth } from './hooks/useAuth';
+import { useCart } from './hooks/useCart';
+import { useCatalog } from './hooks/useCatalog';
 import { listMyNotifications, listMyWishlist, toggleWishlist } from './lib/supabaseCustomer';
 export default function App() {
   const location = useLocation();
@@ -75,31 +67,15 @@ export default function App() {
     if (route === '/signup/loading') return 'splash';
     return 'main';
   };
-  const pathFromPhase = (phase: 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth') => {
-    if (phase === 'onboarding') return '/Onboarding';
-    if (phase === 'auth') return '/signup';
-    if (phase === 'account-onboarding') return '/signup/onboarding';
-    if (phase === 'splash') return '/signup/loading';
-    return '/home';
-  };
-  type AuthStatus = 'AUTH_LOADING' | 'AUTHENTICATED' | 'UNAUTHENTICATED';
   const [appPhase, setAppPhase] = useState<'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth'>(() => phaseFromPath(location.pathname));
-  const [authStatus, setAuthStatus] = useState<AuthStatus>('AUTH_LOADING');
+  const { currentUser, setCurrentUser, authStatus, setAuthStatus, isAdmin, setIsAdmin, checkIsAdmin } = useAuth();
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>('signup');
-  const goToPhase = (phase: 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth') => {
+  const goToPhase = useCallback((phase: 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth') => {
     setAppPhase(phase);
-    const nextPath = pathFromPhase(phase);
+    const nextPath = phase === 'onboarding' ? '/Onboarding' : phase === 'auth' ? '/signup' : phase === 'account-onboarding' ? '/signup/onboarding' : phase === 'splash' ? '/signup/loading' : '/home';
     if (location.pathname !== nextPath) navigate(nextPath, { state: { phase } });
-  };
+  }, [location.pathname, navigate]);
 
-  // Supabase Auth is the source of truth. The guest shape is only the cleared UI state.
-  const [currentUser, setCurrentUser] = useState<UserProfile>({
-    id: 'guest-user',
-    name: 'Guest Rider',
-    email: '',
-    phone: '',
-    isGuest: true,
-  });
   const [notificationCount, setNotificationCount] = useState(0);
   const refreshNotificationCount = () => {
     if (currentUser.isGuest) {
@@ -122,61 +98,6 @@ export default function App() {
     return () => { active = false; };
   }, [currentUser.id, currentUser.isGuest]);
 
-  useEffect(() => {
-    let active = true;
-    const resetAuthenticatedState = () => {
-      setCurrentUser({ id: 'guest-user', name: 'Guest Rider', email: '', phone: '', isGuest: true });
-      setCustomerState({ ownerId: 'guest-user', cart: [], wishlist: [] });
-      setNotificationCount(0);
-    };
-    const isPublicAuthPath = () => {
-      const route = location.pathname.replace(/\/$/, '') || '/';
-      return route === '/Onboarding' || route === '/onboarding' || route === '/signup' || route === '/signup/onboarding';
-    };
-    const applyAuthUser = (user: { id: string; email?: string; user_metadata?: Record<string, unknown> }) => {
-      setCurrentUser({
-        id: user.id,
-        name: String(user.user_metadata?.full_name || 'Rider'),
-        email: user.email || '',
-        phone: String(user.user_metadata?.phone || ''),
-        isGuest: false,
-      });
-      setAuthStatus('AUTHENTICATED');
-      if (location.pathname !== '/admin' && (!isPublicAuthPath() || appPhase !== 'main')) goToPhase('main');
-    };
-    const applyNoSession = () => {
-      resetAuthenticatedState();
-      setAuthStatus('UNAUTHENTICATED');
-      const route = location.pathname.replace(/\/$/, '') || '/';
-      if (!isPublicAuthPath() && route !== '/admin') goToPhase('onboarding');
-    };
-
-    if (!supabase) {
-      applyNoSession();
-      return () => { active = false; };
-    }
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!active) return;
-      if (session?.user) {
-        applyAuthUser(session.user);
-      } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
-        applyNoSession();
-      }
-      // TOKEN_REFRESHED keeps the existing authenticated state and session.
-    });
-    void supabase.auth.getSession().then(({ data, error }) => {
-      if (!active) return;
-      if (error || !data.session?.user) applyNoSession();
-      else applyAuthUser(data.session.user);
-    });
-    return () => {
-      active = false;
-      subscription.unsubscribe();
-    };
-  // Auth initialization intentionally runs once; the listener is the single ongoing source.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   // Login Required Modal State
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginModalReason, setLoginModalReason] = useState('Please login to place your order.');
@@ -184,20 +105,36 @@ export default function App() {
 
   // Navigation & View State
   type RouteTab = 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart' | 'notifications';
-  const routeToTab = (pathname: string): RouteTab => {
+  const routeToTab = useCallback((pathname: string): RouteTab => {
     const normalizedPath = pathname.replace(/\/$/, '') || '/home';
     const route = normalizedPath === '/example/shop' ? '/home' : normalizedPath.replace(/^\/example(?=\/|$)/, '') || '/home';
     if (route === '/notifications' || route === '/notification') return 'notifications';
     if (route === '/profile' || route === '/account') return 'account';
     if (route === '/shop' || route === '/search' || route === '/custom' || route === '/wishlist' || route === '/cart' || route === '/notifications') return route.slice(1) as RouteTab;
     return 'home';
-  };
-  const tabToRoute = (tab: RouteTab) => tab === 'account' ? '/profile' : `/${tab}`;
+  }, []);
+  const tabToRoute = useCallback((tab: RouteTab) => tab === 'account' ? '/profile' : `/${tab}`, []);
   const [activeTab, setActiveTab] = useState<RouteTab>(() => routeToTab(location.pathname));
   useEffect(() => {
     setAppPhase(phaseFromPath(location.pathname));
     setActiveTab(routeToTab(location.pathname));
-  }, [location.pathname]);
+  }, [location.pathname, routeToTab]);
+
+  useEffect(() => {
+    const route = location.pathname.replace(/\/$/, '') || '/';
+    const publicAuthPath = ['/Onboarding', '/onboarding', '/signup', '/signup/onboarding'].includes(route);
+    if (authStatus === 'AUTHENTICATED' && isAdmin !== null) {
+      if (isAdmin) {
+        if (route !== '/admin') navigate('/admin');
+      } else if (route !== '/admin' && (!publicAuthPath || appPhase !== 'main')) {
+        goToPhase('main');
+      }
+      return;
+    }
+    if (authStatus === 'UNAUTHENTICATED' && !publicAuthPath && route !== '/admin' && appPhase !== 'onboarding') {
+      goToPhase('onboarding');
+    }
+  }, [authStatus, isAdmin, location.pathname, appPhase, navigate, goToPhase]);
 
   useEffect(() => {
     if ((location.pathname.replace(/\/$/, '') || '/') === '/admin') return;
@@ -208,14 +145,13 @@ export default function App() {
     if (activeTab === 'shop') {
       window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     }
-  }, [activeTab, appPhase, location.pathname, navigate]);
+  }, [activeTab, appPhase, location.pathname, navigate, tabToRoute]);
 
   const [shopLayoutMode, setShopLayoutMode] = useState<'grid' | 'list'>('grid');
   const [isMobileFrameMode, setIsMobileFrameMode] = useState<boolean>(true);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<VehicleCategory | 'all'>('all');
   const [vehicleFilter, setVehicleFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('popular');
@@ -233,76 +169,54 @@ export default function App() {
   const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
   const [isTermsConditionsOpen, setIsTermsConditionsOpen] = useState(false);
 
-  // Customer-owned state is keyed by auth identity. A new account never inherits demo or prior-user data.
-  const [customerState, setCustomerState] = useState<{
-    ownerId: string;
-    cart: CartItem[];
-    wishlist: Product[];
-  }>({ ownerId: 'guest-user', cart: [], wishlist: [] });
-  const cart = customerState.ownerId === currentUser.id ? customerState.cart : [];
-  const wishlist = customerState.ownerId === currentUser.id ? customerState.wishlist : [];
+  // Cart and catalog behavior are isolated so the storefront shell stays focused on presentation.
+  const { products: catalogProducts, isLoaded: catalogLoaded } = useCatalog();
+  const { cart, setCart, clearCart } = useCart(currentUser, catalogProducts, catalogLoaded);
+  const [ownedWishlist, setOwnedWishlist] = useState<{ ownerId: string; items: Product[] }>({ ownerId: 'guest-user', items: [] });
+  const wishlist = ownedWishlist.ownerId === currentUser.id ? ownedWishlist.items : [];
 
   useEffect(() => {
-    if (customerState.ownerId === currentUser.id) return;
-    let savedCart: CartItem[] = [];
+    if (ownedWishlist.ownerId === currentUser.id) return;
     let savedWishlist: Product[] = [];
     if (!currentUser.isGuest) {
       try {
-        const cartValue = localStorage.getItem(`work-app:${currentUser.id}:cart`);
-        const wishlistValue = localStorage.getItem(`work-app:${currentUser.id}:wishlist`);
-        const parsedCart: unknown = cartValue ? JSON.parse(cartValue) : [];
-        const parsedWishlist: unknown = wishlistValue ? JSON.parse(wishlistValue) : [];
-        if (Array.isArray(parsedCart)) savedCart = parsedCart as CartItem[];
-        if (Array.isArray(parsedWishlist)) savedWishlist = parsedWishlist as Product[];
+        const stored = localStorage.getItem(`work-app:${currentUser.id}:wishlist`);
+        const parsed: unknown = stored ? JSON.parse(stored) : [];
+        if (Array.isArray(parsed)) savedWishlist = parsed as Product[];
       } catch {
         // Ignore malformed or unavailable browser storage and start this account empty.
       }
     }
-    setCustomerState({ ownerId: currentUser.id, cart: savedCart, wishlist: savedWishlist });
-  }, [currentUser.id, currentUser.isGuest, customerState.ownerId]);
+    setOwnedWishlist({ ownerId: currentUser.id, items: savedWishlist });
+  }, [currentUser.id, currentUser.isGuest, ownedWishlist.ownerId]);
 
   useEffect(() => {
-    if (customerState.ownerId !== currentUser.id || currentUser.isGuest) return;
+    if (ownedWishlist.ownerId !== currentUser.id || currentUser.isGuest) return;
     try {
-      localStorage.setItem(`work-app:${currentUser.id}:cart`, JSON.stringify(customerState.cart));
-      localStorage.setItem(`work-app:${currentUser.id}:wishlist`, JSON.stringify(customerState.wishlist));
+      localStorage.setItem(`work-app:${currentUser.id}:wishlist`, JSON.stringify(ownedWishlist.items));
     } catch {
-      // The in-memory account state still works when storage is blocked or full.
+      // In-memory wishlist state still works when storage is blocked or full.
     }
-  }, [customerState, currentUser.id, currentUser.isGuest]);
+  }, [ownedWishlist, currentUser.id, currentUser.isGuest]);
 
-  const setCart = (next: CartItem[] | ((current: CartItem[]) => CartItem[])) => {
-    setCustomerState((state) => {
-      const current = state.ownerId === currentUser.id ? state.cart : [];
-      return { ownerId: currentUser.id, cart: typeof next === 'function' ? next(current) : next, wishlist: state.ownerId === currentUser.id ? state.wishlist : [] };
+  const setWishlist = useCallback((next: Product[] | ((current: Product[]) => Product[])) => {
+    setOwnedWishlist((state) => {
+      const current = state.ownerId === currentUser.id ? state.items : [];
+      return { ownerId: currentUser.id, items: typeof next === 'function' ? next(current) : next };
     });
-  };
-  const setWishlist = (next: Product[] | ((current: Product[]) => Product[])) => {
-    setCustomerState((state) => {
-      const current = state.ownerId === currentUser.id ? state.wishlist : [];
-      return { ownerId: currentUser.id, cart: state.ownerId === currentUser.id ? state.cart : [], wishlist: typeof next === 'function' ? next(current) : next };
-    });
-  };
+  }, [currentUser.id]);
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
   const [checkoutDiscount, setCheckoutDiscount] = useState(0);
   const [checkoutCoupon, setCheckoutCoupon] = useState('');
   const [checkoutQuote, setCheckoutQuote] = useState<{ subtotal: number; total: number } | null>(null);
 
-  // When Supabase is configured, only its catalog may enter the cart/order flow.
-  const [catalogProducts, setCatalogProducts] = useState<Product[]>(isSupabaseConfigured ? [] : PRODUCTS);
   useEffect(() => {
-    loadPublicProducts().then(setCatalogProducts).catch(() => {
-      // Keep the bundled catalog available if the public API is temporarily unavailable.
-    });
-  }, []);
-
-  useEffect(() => {
-    if (currentUser.isGuest || !supabase || customerState.ownerId !== currentUser.id || !catalogProducts.length) return;
+    if (currentUser.isGuest || !supabase || ownedWishlist.ownerId !== currentUser.id || !catalogProducts.length) return;
     void listMyWishlist().then((rows) => {
       const ids = new Set(rows.map((row) => String(row.product_id)));
       setWishlist(catalogProducts.filter((product) => ids.has(product.id)));
     });
-  }, [catalogProducts, currentUser.id, currentUser.isGuest, customerState.ownerId]);
+  }, [catalogProducts, currentUser.id, currentUser.isGuest, ownedWishlist.ownerId, setWishlist]);
 
   // Active home filters count
   const activeHomeFiltersCount = useMemo(() => {
@@ -448,7 +362,7 @@ export default function App() {
       unitPrice,
     };
 
-    setCart([...cart, newItem]);
+    setCart((current) => [...current, newItem]);
   };
 
   // Wishlist toggle
@@ -464,16 +378,16 @@ export default function App() {
 
   const handleUpdateQuantity = (cartItemId: string, newQty: number) => {
     if (newQty <= 0) {
-      setCart(cart.filter((i) => i.cartItemId !== cartItemId));
+      setCart((current) => current.filter((i) => i.cartItemId !== cartItemId));
     } else {
-      setCart(
-        cart.map((i) => (i.cartItemId === cartItemId ? { ...i, quantity: newQty } : i))
+      setCart((current) =>
+        current.map((i) => (i.cartItemId === cartItemId ? { ...i, quantity: newQty } : i))
       );
     }
   };
 
   const handleRemoveCartItem = (cartItemId: string) => {
-    setCart(cart.filter((i) => i.cartItemId !== cartItemId));
+    setCart((current) => current.filter((i) => i.cartItemId !== cartItemId));
   };
 
   const handleProceedToCheckout = (discount: number, coupon: string, quote?: { subtotal: number; total: number }) => {
@@ -495,11 +409,13 @@ export default function App() {
   };
 
   const handleLoginSuccess = async (user: UserProfile) => {
+    // Resolve the protected role before updating the route, so admins never flash the storefront.
+    const admin = await checkIsAdmin();
     setCurrentUser(user);
     setAuthStatus('AUTHENTICATED');
+    setIsAdmin(admin);
     setIsLoginModalOpen(false);
-    const { data: admin, error } = supabase ? await supabase.rpc('is_admin') : { data: false, error: null };
-    if (!error && admin === true) {
+    if (admin) {
       navigate('/admin');
       return;
     }
@@ -515,16 +431,13 @@ export default function App() {
     if (supabase) await supabase.auth.signOut();
     window.localStorage.removeItem(`work-app:${previousUserId}:cart`);
     window.localStorage.removeItem(`work-app:${previousUserId}:wishlist`);
-    setCustomerState({ ownerId: 'guest-user', cart: [], wishlist: [] });
+    clearCart();
+    setOwnedWishlist({ ownerId: 'guest-user', items: [] });
+    setIsAdmin(false);
     setCurrentUser({ id: 'guest-user', name: 'Guest Rider', email: '', phone: '', isGuest: true });
     setNotificationCount(0);
     setAuthStatus('UNAUTHENTICATED');
     goToPhase('onboarding');
-  };
-
-  const handleOpenAuth = (mode: 'signup' | 'login' | 'phone_otp' = 'signup') => {
-  setAuthInitialMode(mode);
-  goToPhase('auth');
   };
 
   const scrollToShop = () => {
@@ -1183,7 +1096,7 @@ export default function App() {
           couponCode={checkoutCoupon}
           couponSubtotal={checkoutQuote?.subtotal}
           couponTotal={checkoutQuote?.total}
-          onClearCart={() => setCart([])}
+          onClearCart={clearCart}
         />
 
         <WishlistModal

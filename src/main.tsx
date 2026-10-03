@@ -9,7 +9,7 @@ if ('serviceWorker' in navigator) window.addEventListener('load', () => { void n
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <Routes><Route path="/admin" element={<App />} /><Route path="*" element={<App />} /></Routes>
+      <Routes><Route path="*" element={<App />} /></Routes>
     </BrowserRouter>
   </StrictMode>,
 );
