@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { listLocalCustomerNotifications, markLocalCustomerNotificationRead } from './localCustomerData';
+import { deleteLocalCustomerNotification, listLocalCustomerNotifications, markLocalCustomerNotificationRead } from './localCustomerData';
 
 export async function getMyProfile() {
   if (!supabase) return null;
@@ -60,7 +60,9 @@ export async function listMyNotifications(expectedUserId?: string) {
   if (!supabase) return expectedUserId ? listLocalCustomerNotifications(expectedUserId) : [];
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return [];
-  const { data } = await supabase.from('notifications').select('id,kind,title,body,action_url,read_at,created_at').eq('user_id', userData.user.id).order('created_at', { ascending: false }).limit(50);
+  const now = new Date().toISOString();
+  await supabase.from('notifications').delete().eq('user_id', userData.user.id).lte('expires_at', now);
+  const { data } = await supabase.from('notifications').select('id,kind,title,body,action_url,read_at,created_at,expires_at').eq('user_id', userData.user.id).gt('expires_at', now).order('created_at', { ascending: false }).limit(50);
   return data || [];
 }
 
@@ -72,6 +74,16 @@ export async function markNotificationRead(id: string, expectedUserId?: string) 
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return { error: new Error('Sign in required') };
   return supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id).eq('user_id', userData.user.id);
+}
+
+export async function deleteMyNotification(id: string, expectedUserId?: string) {
+  if (!supabase) {
+    if (expectedUserId) deleteLocalCustomerNotification(expectedUserId, id);
+    return { error: null };
+  }
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return { error: new Error('Sign in required') };
+  return supabase.from('notifications').delete().eq('id', id).eq('user_id', userData.user.id);
 }
 
 export async function listMyOrders() {

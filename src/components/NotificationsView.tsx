@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Bell, ChevronRight, CircleCheck, Gift, Package, Settings, Star, Tag, Truck, Volume2, Moon, Smartphone, Megaphone, TrendingDown } from 'lucide-react';
-import { listMyNotifications, markNotificationRead } from '../lib/supabaseCustomer';
+import { ArrowLeft, Bell, ChevronRight, Package, Settings, Star, Tag, Truck, Volume2, Moon, Smartphone, Megaphone, TrendingDown, Trash2 } from 'lucide-react';
+import { deleteMyNotification, listMyNotifications, markNotificationRead } from '../lib/supabaseCustomer';
 
 type NotificationItem = {
   id: string;
@@ -58,6 +58,8 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
   const [showSettings, setShowSettings] = useState(false);
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(!isGuest);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -95,6 +97,25 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
     }
   };
 
+  const handleDeleteNotification = async (event: React.MouseEvent, item: NotificationItem) => {
+    event.stopPropagation();
+    setDeleteError('');
+    setDeletingId(item.id);
+    try {
+      const result = await deleteMyNotification(item.id, userId);
+      if (result.error) {
+        setDeleteError('Could not delete this notification. Please try again.');
+        return;
+      }
+      setItems((current) => current.filter((entry) => entry.id !== item.id));
+      onNotificationsChanged?.();
+    } catch {
+      setDeleteError('Could not delete this notification. Please try again.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (showSettings) return <NotificationSettingsView onBack={() => setShowSettings(false)} />;
 
   if (selectedNotification) {
@@ -124,6 +145,7 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
     <nav className="flex gap-2.5 px-5 py-2.5 overflow-x-auto no-scrollbar">
       {(['All', 'Orders', 'Offers', 'Updates'] as NotificationFilter[]).map((name) => <button key={name} onClick={() => setFilter(name)} className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold ${filter === name ? 'bg-[#E51E2B] text-white shadow-sm' : 'bg-gray-100 text-slate-700'}`}>{name} ({counts[name]})</button>)}
     </nav>
+    {deleteError && <p role="alert" className="mx-5 mt-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">{deleteError}</p>}
     {loading ? <div className="px-5 py-16 text-center text-sm text-slate-500">Loading your notifications…</div> : visible.length === 0 ? (
       <section className="mx-5 mt-8 rounded-3xl border border-slate-100 bg-slate-50 px-6 py-12 text-center">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm"><Bell className="h-6 w-6" /></div>
@@ -131,10 +153,10 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
         <p className="mt-1 text-sm text-slate-500">{isGuest ? 'Account notifications will appear here after you sign in.' : 'New updates for your account will appear here.'}</p>
       </section>
     ) : <section className="mt-1 divide-y divide-gray-100">
-      {visible.map((item) => <article key={item.id} onClick={() => openNotification(item)} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') openNotification(item); }} className="flex items-start px-5 py-4 hover:bg-slate-50 transition-colors cursor-pointer">
+      {visible.map((item) => <article key={item.id} onClick={() => openNotification(item)} role="button" tabIndex={0} onKeyDown={(event) => { if (event.target !== event.currentTarget) return; if (event.key === 'Enter' || event.key === ' ') openNotification(item); }} className="flex items-start px-5 py-4 hover:bg-slate-50 transition-colors cursor-pointer">
         <div className={`h-12 w-12 shrink-0 mr-3.5 rounded-2xl flex items-center justify-center shadow-sm ${toneFor(item.kind)}`}>{iconFor(item.kind)}</div>
         <div className="flex-1 pr-2"><div className="flex items-center"><h2 className="text-sm font-bold tracking-tight text-gray-900">{item.title}</h2>{!item.read_at && <span className="ml-2 h-2 w-2 rounded-full bg-[#E51E2B]" />}</div><p className="mt-1 text-xs leading-relaxed text-gray-500">{item.body}</p></div>
-        <div className="self-stretch shrink-0 flex flex-col items-end justify-between pt-0.5"><span className="text-[11px] font-medium text-gray-400">{timeAgo(item.created_at)}</span><ChevronRight className="h-4 w-4 text-gray-400" /></div>
+        <div className="self-stretch shrink-0 flex flex-col items-end justify-between pt-0.5"><span className="text-[11px] font-medium text-gray-400">{timeAgo(item.created_at)}</span><button type="button" disabled={deletingId === item.id} aria-label={`Delete notification: ${item.title}`} title="Delete notification" onClick={(event) => void handleDeleteNotification(event, item)} className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"><Trash2 className="h-4 w-4" /></button></div>
       </article>)}
     </section>}
   </main>;

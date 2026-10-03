@@ -2,6 +2,7 @@ import type { CustomerNotificationRecord, CustomerOrderRecord, OrderDetails } fr
 
 const ordersKey = (userId: string) => `work-app:${userId}:orders`;
 const notificationsKey = (userId: string) => `work-app:${userId}:notifications`;
+const NOTIFICATION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function readRows<T>(key: string): T[] {
   try {
@@ -62,9 +63,28 @@ export function saveLocalCustomerOrder(userId: string, order: OrderDetails): Ord
     action_url: '/profile',
     read_at: null,
     created_at: savedOrder.createdAt,
+    expires_at: new Date(new Date(savedOrder.createdAt).getTime() + NOTIFICATION_TTL_MS).toISOString(),
   };
-  writeRows(notificationsKey(userId), [notification, ...readRows<CustomerNotificationRecord>(notificationsKey(userId))].slice(0, 50));
+  writeRows(notificationsKey(userId), [notification, ...listLocalCustomerNotifications(userId)].slice(0, 50));
   return savedOrder;
+}
+
+export function createLocalCustomerWelcomeNotification(userId: string, name: string) {
+  const existing = listLocalCustomerNotifications(userId);
+  if (existing.some((row) => row.kind === 'welcome')) return;
+  const displayName = name.trim() || 'Rider';
+  const createdAt = new Date();
+  const notification: CustomerNotificationRecord = {
+    id: `local-welcome-${userId}`,
+    kind: 'welcome',
+    title: `Welcome, ${displayName}!`,
+    body: `Hi ${displayName}, welcome to Rofik Godi Centre. Explore the store and find your ride essentials here.`,
+    action_url: '/home',
+    read_at: null,
+    created_at: createdAt.toISOString(),
+    expires_at: new Date(createdAt.getTime() + NOTIFICATION_TTL_MS).toISOString(),
+  };
+  writeRows(notificationsKey(userId), [notification, ...existing].slice(0, 50));
 }
 
 export function listLocalCustomerOrders(userId: string): CustomerOrderRecord[] {
@@ -72,10 +92,28 @@ export function listLocalCustomerOrders(userId: string): CustomerOrderRecord[] {
 }
 
 export function listLocalCustomerNotifications(userId: string): CustomerNotificationRecord[] {
-  return readRows<CustomerNotificationRecord>(notificationsKey(userId));
+  const rows = readRows<CustomerNotificationRecord>(notificationsKey(userId));
+  const now = Date.now();
+  let changed = false;
+  const active = rows.flatMap((row) => {
+    const createdAt = Date.parse(row.created_at);
+    const expiresAt = row.expires_at ? Date.parse(row.expires_at) : createdAt + NOTIFICATION_TTL_MS;
+    if (!Number.isFinite(expiresAt) || expiresAt <= now) {
+      changed = true;
+      return [];
+    }
+    if (!row.expires_at) changed = true;
+    return [{ ...row, expires_at: new Date(expiresAt).toISOString() }];
+  });
+  if (changed) writeRows(notificationsKey(userId), active);
+  return active;
 }
 
 export function markLocalCustomerNotificationRead(userId: string, id: string) {
   const readAt = new Date().toISOString();
   writeRows(notificationsKey(userId), listLocalCustomerNotifications(userId).map((row) => row.id === id ? { ...row, read_at: readAt } : row));
+}
+
+export function deleteLocalCustomerNotification(userId: string, id: string) {
+  writeRows(notificationsKey(userId), listLocalCustomerNotifications(userId).filter((row) => row.id !== id));
 }

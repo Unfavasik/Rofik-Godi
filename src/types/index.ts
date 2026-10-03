@@ -125,4 +125,5 @@ export interface CustomerNotificationRecord {
   action_url: string | null;
   read_at: string | null;
   created_at: string;
+  expires_at: string;
 }

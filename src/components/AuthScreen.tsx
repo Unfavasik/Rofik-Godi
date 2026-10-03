@@ -6,7 +6,7 @@ import loginAvatar from '../assets/onboarding/singing.webp';
 
 interface AuthScreenProps {
   initialMode?: 'signup' | 'login' | 'phone_otp';
-  onSuccess: (user: UserProfile) => void;
+  onSuccess: (user: UserProfile, isNewAccount?: boolean) => void;
   onBack: () => void;
   onOpenTerms?: () => void;
   onOpenPrivacy?: () => void;
@@ -80,7 +80,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         }
         showToast(data.session ? 'Account created' : 'Check your email to confirm your account');
         if (!data.session) return;
-        onSuccess({ id: data.user.id, name: name.trim(), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) });
+        onSuccess({ id: data.user.id, name: name.trim(), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) }, true);
         return;
       }
 
@@ -95,7 +95,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           vehicle: 'Hero Splendor Plus & Toto',
           joinedDate: 'September 2026',
         };
-        onSuccess(user);
+        onSuccess(user, true);
       }, 500);
     } else {
       if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) {
@@ -114,7 +114,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           return;
         }
         showToast('Signed in');
-        onSuccess({ id: data.user.id, name: String(data.user.user_metadata?.full_name || 'Rider'), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) });
+        onSuccess({ id: data.user.id, name: String(data.user.user_metadata?.full_name || 'Rider'), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) }, false);
         return;
       }
 
@@ -129,7 +129,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           vehicle: 'Hero Splendor Plus & Toto',
           joinedDate: 'September 2026',
         };
-        onSuccess(user);
+        onSuccess(user, false);
       }, 500);
     }
   };
@@ -146,7 +146,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         vehicle: 'Rofik Godi Rider',
         joinedDate: 'September 2026',
       };
-      onSuccess(user);
+      onSuccess(user, mode === 'signup');
     }, 600);
   };
 
