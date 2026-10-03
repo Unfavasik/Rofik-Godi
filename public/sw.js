@@ -18,11 +18,20 @@ const isSupabaseRequest = (url) =>
   url.pathname.startsWith('/storage/') ||
   url.pathname.startsWith('/functions/');
 
+const isViteDevelopmentRequest = (url) =>
+  url.pathname.startsWith('/src/') ||
+  url.pathname.startsWith('/@vite/') ||
+  url.pathname.startsWith('/@id/') ||
+  url.pathname.startsWith('/@fs/') ||
+  url.pathname.startsWith('/@react-refresh') ||
+  url.pathname.startsWith('/node_modules/.vite/');
+
 const isCacheableSameOrigin = (request) => {
   const url = new URL(request.url);
   return url.origin === self.location.origin &&
     request.method === 'GET' &&
-    !isSupabaseRequest(url);
+    !isSupabaseRequest(url) &&
+    !isViteDevelopmentRequest(url);
 };
 
 self.addEventListener('install', (event) => {
@@ -56,7 +65,7 @@ self.addEventListener('fetch', (event) => {
       fetch(request)
         .then((response) => {
           const copy = response.clone();
-          void caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
+          void caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
           return response;
         })
         .catch(async () => {
@@ -74,14 +83,18 @@ self.addEventListener('fetch', (event) => {
   // Cache same-origin hashed JS/CSS/images after a successful network response.
   event.respondWith(
     caches.match(request).then((cached) => {
-      const network = fetch(request).then((response) => {
+      const cacheResponse = (response) => {
         if (response.ok) {
           const copy = response.clone();
-          void caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
+          void caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
         }
         return response;
-      });
-      return cached || network;
-    }).catch(() => caches.match(request).then((cached) => cached || new Response('', { status: 504, statusText: 'Offline' }))),
+      };
+      if (cached) {
+        void fetch(request).then(cacheResponse).catch(() => {});
+        return cached;
+      }
+      return fetch(request).then(cacheResponse).catch(() => new Response('', { status: 504, statusText: 'Offline' }));
+    }).catch(() => new Response('', { status: 504, statusText: 'Offline' })),
   );
 });

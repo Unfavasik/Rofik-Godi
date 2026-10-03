@@ -20,13 +20,13 @@ pnpm format
 
 ## Supabase
 
-Apply migrations in `supabase/migrations/` in order. The catalog migration keeps `is_active` (publication) separate from `in_stock` (availability), adds atomic gallery replacement, and provides the admin customer summary RPC. Product images are converted to WebP and uploaded to the `product-images` Storage bucket. Customer profile photos use the public-read, WebP-only `avatars` bucket (2 MB object limit); authenticated writes are restricted to each user's own UUID folder.
+Apply migrations in `supabase/migrations/` in order. When a project has later-numbered migrations already applied but older timestamps still pending, deploy with `supabase db push --include-all`; do not rename migration files already recorded in that project's history. The catalog migration keeps `is_active` (publication) separate from `in_stock` (availability), adds atomic gallery replacement, and provides the admin customer summary RPC. Product images are converted to WebP and uploaded to the `product-images` Storage bucket. Customer profile photos use the public-read, WebP-only `avatars` bucket (2 MB object limit); authenticated writes are restricted to each user's own UUID folder.
 
 Customer email is read from Supabase Auth and is not stored in `public.profiles` or editable in the app. In **Supabase Dashboard → Authentication → Settings**, keep **Secure email change** enabled. Email changes, if ever needed, must go through Supabase Auth rather than profile updates.
 
 ## Admin login flow
 
-Admin access is verified server-side through `public.admin_users` and the `is_admin()` RPC. The login page uses the same Supabase Auth email/password login for everyone: an authorized admin is redirected to `/admin`; a normal customer is redirected to the storefront/user panel. Use a unique, organization-controlled email address for each administrator; do not use a shared example or generic mailbox. Require email confirmation and enable/require multi-factor authentication (MFA) for administrator accounts in Supabase Auth settings.
+Admin access is verified server-side through `public.admin_users` and the `is_admin()` RPC. The login page uses the same Supabase Auth email/password login for everyone: after login, an authorized admin is redirected to `/admin` and can return to the storefront; a normal customer is redirected to the storefront/user panel. Use a unique, organization-controlled email address for each administrator; do not use a shared example or generic mailbox. Require email confirmation and enable/require multi-factor authentication (MFA) for administrator accounts in Supabase Auth settings.
 
 Apply the migrations in order, then bootstrap the first administrator once in the Supabase SQL editor after that user has signed up, confirmed their email, and enrolled in MFA. Replace the example address with that administrator's unique confirmed address:
 

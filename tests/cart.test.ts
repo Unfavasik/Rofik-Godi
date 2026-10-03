@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PRODUCTS } from '../src/data/products';
-import { refreshCartFromCatalog } from '../src/lib/cart';
+import { canReconcileCartFromCatalog, refreshCartFromCatalog } from '../src/lib/cart';
 import type { CartItem, Product } from '../src/types';
 
 const originalProduct = PRODUCTS[0];
@@ -12,6 +12,13 @@ const cartItem: CartItem = {
   selectedThickness: { label: 'Standard', extraPrice: 0 },
   customEmbroideryText: 'Rider',
   unitPrice: 250,
+};
+const customSeatItem: CartItem = {
+  ...cartItem,
+  cartItemId: 'custom-seat-cart-item',
+  product: { ...originalProduct, id: 'custom-seat-1728000000000', title: 'Custom seat', price: 1319 },
+  selectedThickness: { label: 'high_density', extraPrice: 0 },
+  unitPrice: 1319,
 };
 
 describe('persisted cart reconciliation', () => {
@@ -34,5 +41,16 @@ describe('persisted cart reconciliation', () => {
 
   it('removes saved items whose products are no longer in the catalog', () => {
     expect(refreshCartFromCatalog([cartItem], [])).toEqual([]);
+  });
+
+  it('does not reconcile or delete the cart when catalog loading fails or returns no products', () => {
+    expect(canReconcileCartFromCatalog(true, new Error('offline'), PRODUCTS)).toBe(false);
+    expect(canReconcileCartFromCatalog(true, null, [])).toBe(false);
+    expect(canReconcileCartFromCatalog(false, null, PRODUCTS)).toBe(false);
+    expect(canReconcileCartFromCatalog(true, null, PRODUCTS)).toBe(true);
+  });
+
+  it('preserves custom-seat products and their already-calculated price unchanged', () => {
+    expect(refreshCartFromCatalog([customSeatItem], PRODUCTS)).toEqual([customSeatItem]);
   });
 });

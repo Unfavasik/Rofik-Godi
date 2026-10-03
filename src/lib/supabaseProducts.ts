@@ -51,8 +51,8 @@ const mapProductsWithReviewSummaries = async (rows: ProductRow[]): Promise<Produ
 export const loadPublicProducts = async (): Promise<Product[]> => {
   if (!supabase) return PRODUCTS;
   const { data, error } = await supabase.from('products').select('*').eq('is_active', true).order('updated_at', { ascending: false });
-  if (error || !data?.length) return [];
-  return mapProductsWithReviewSummaries(data as ProductRow[]);
+  if (error) throw error;
+  return mapProductsWithReviewSummaries((data || []) as ProductRow[]);
 };
 
 export const loadAdminProducts = async (): Promise<Product[] | null> => {

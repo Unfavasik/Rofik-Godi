@@ -31,9 +31,15 @@ export function useAuth() {
   useEffect(() => {
     let active = true;
     let resolutionId = 0;
+    let profileSyncId = 0;
+    let initialSessionResolved = false;
+    let activeUserId: string | null = null;
 
     const clearSession = () => {
       resolutionId += 1;
+      profileSyncId += 1;
+      activeUserId = null;
+      initialSessionResolved = true;
       setCurrentUser(guestUser());
       setAuthStatus('UNAUTHENTICATED');
       setIsAdmin(false);
@@ -41,6 +47,8 @@ export function useAuth() {
 
     const applySession = (user: { id: string; email?: string; user_metadata?: Record<string, unknown> }) => {
       const currentResolution = ++resolutionId;
+      profileSyncId += 1;
+      activeUserId = user.id;
       setCurrentUser({
         id: user.id,
         name: String(user.user_metadata?.full_name || 'Rider'),
@@ -51,7 +59,7 @@ export function useAuth() {
       setAuthStatus('AUTHENTICATED');
       setIsAdmin(null);
       void Promise.all([checkIsAdmin(), getMyProfile(user.id).catch(() => null)]).then(([admin, profile]) => {
-        if (!active || resolutionId !== currentResolution) return;
+        if (!active || resolutionId !== currentResolution || activeUserId !== user.id) return;
         setIsAdmin(admin);
         if (profile) {
           setCurrentUser((current) => current.id === user.id ? {
@@ -65,6 +73,21 @@ export function useAuth() {
       });
     };
 
+    const refreshProfileFromAuthEvent = (user: { id: string; email?: string; user_metadata?: Record<string, unknown> }) => {
+      const currentProfileSync = ++profileSyncId;
+      void getMyProfile(user.id).catch(() => null).then((profile) => {
+        if (!active || profileSyncId !== currentProfileSync || activeUserId !== user.id) return;
+        setCurrentUser((current) => current.id === user.id ? {
+          ...current,
+          name: profile?.full_name?.trim() || String(user.user_metadata?.full_name || current.name),
+          email: user.email || current.email,
+          phone: profile?.phone || String(user.user_metadata?.phone || current.phone),
+          avatar: profile ? profile.avatar_url || undefined : current.avatar,
+          vehicle: profile?.vehicle_model || current.vehicle,
+        } : current);
+      });
+    };
+
     if (!supabase) {
       clearSession();
       return () => { active = false; };
@@ -72,16 +95,32 @@ export function useAuth() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
-      if (session?.user) {
-        // Defer RPC until the auth event callback releases Supabase's internal lock.
-        queueMicrotask(() => { if (active) applySession(session.user); });
-      } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
+      if (event === 'INITIAL_SESSION') {
+        if (initialSessionResolved) return;
+        initialSessionResolved = true;
+        if (session?.user) queueMicrotask(() => { if (active) applySession(session.user); });
+        else clearSession();
+        return;
+      }
+      if (event === 'SIGNED_OUT') {
         clearSession();
+        return;
+      }
+      if (event === 'TOKEN_REFRESHED') return;
+      if (event === 'SIGNED_IN' && session?.user) {
+        initialSessionResolved = true;
+        queueMicrotask(() => { if (active) applySession(session.user); });
+        return;
+      }
+      if (event === 'USER_UPDATED' && session?.user) {
+        queueMicrotask(() => { if (active) refreshProfileFromAuthEvent(session.user); });
       }
     });
 
+    // Fallback for clients that resolve getSession before dispatching INITIAL_SESSION.
     void supabase.auth.getSession().then(({ data, error }) => {
-      if (!active) return;
+      if (!active || initialSessionResolved) return;
+      initialSessionResolved = true;
       if (error || !data.session?.user) clearSession();
       else applySession(data.session.user);
     });

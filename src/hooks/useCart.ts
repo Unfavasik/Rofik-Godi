@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { CartItem, Product, UserProfile } from '../types';
-import { refreshCartFromCatalog } from '../lib/cart';
+import { canReconcileCartFromCatalog, refreshCartFromCatalog } from '../lib/cart';
 
 interface OwnedCart {
   ownerId: string;
   items: CartItem[];
 }
 
-export function useCart(user: Pick<UserProfile, 'id' | 'isGuest'>, catalogProducts: Product[], catalogLoaded: boolean) {
+export function useCart(user: Pick<UserProfile, 'id' | 'isGuest'>, catalogProducts: Product[], catalogLoaded: boolean, catalogError: Error | null) {
   const [ownedCart, setOwnedCart] = useState<OwnedCart>({ ownerId: 'guest-user', items: [] });
   const cart = ownedCart.ownerId === user.id ? ownedCart.items : [];
 
@@ -27,11 +27,11 @@ export function useCart(user: Pick<UserProfile, 'id' | 'isGuest'>, catalogProduc
   }, [ownedCart.ownerId, user.id, user.isGuest]);
 
   useEffect(() => {
-    if (ownedCart.ownerId !== user.id || user.isGuest || !catalogLoaded) return;
+    if (ownedCart.ownerId !== user.id || user.isGuest || !canReconcileCartFromCatalog(catalogLoaded, catalogError, catalogProducts)) return;
     setOwnedCart((state) => state.ownerId === user.id
       ? { ...state, items: refreshCartFromCatalog(state.items, catalogProducts) }
       : state);
-  }, [catalogLoaded, catalogProducts, ownedCart.ownerId, user.id, user.isGuest]);
+  }, [catalogError, catalogLoaded, catalogProducts, ownedCart.ownerId, user.id, user.isGuest]);
 
   useEffect(() => {
     if (ownedCart.ownerId !== user.id || user.isGuest) return;

@@ -122,10 +122,10 @@ export default function App() {
 
   useEffect(() => {
     const route = location.pathname.replace(/\/$/, '') || '/';
-    const publicAuthPath = ['/Onboarding', '/onboarding', '/signup', '/signup/onboarding'].includes(route);
+    const publicAuthPath = ['/Onboarding', '/onboarding', '/signup', '/signup/onboarding', '/signup/loading'].includes(route);
     if (authStatus === 'AUTHENTICATED' && isAdmin !== null) {
       if (isAdmin) {
-        if (route !== '/admin') navigate('/admin');
+        if (route !== '/admin' && appPhase !== 'main') goToPhase('main');
       } else if (route !== '/admin' && (!publicAuthPath || appPhase !== 'main')) {
         goToPhase('main');
       }
@@ -170,8 +170,8 @@ export default function App() {
   const [isTermsConditionsOpen, setIsTermsConditionsOpen] = useState(false);
 
   // Cart and catalog behavior are isolated so the storefront shell stays focused on presentation.
-  const { products: catalogProducts, isLoaded: catalogLoaded } = useCatalog();
-  const { cart, setCart, clearCart } = useCart(currentUser, catalogProducts, catalogLoaded);
+  const { products: catalogProducts, isLoaded: catalogLoaded, error: catalogError } = useCatalog();
+  const { cart, setCart, clearCart } = useCart(currentUser, catalogProducts, catalogLoaded, catalogError);
   const [ownedWishlist, setOwnedWishlist] = useState<{ ownerId: string; items: Product[] }>({ ownerId: 'guest-user', items: [] });
   const wishlist = ownedWishlist.ownerId === currentUser.id ? ownedWishlist.items : [];
 
