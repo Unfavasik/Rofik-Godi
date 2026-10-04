@@ -203,7 +203,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     setToast(message);
     window.setTimeout(() => setToast(''), 2600);
   }, []);
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setError('');
     const [orderResult, productResult, customerResult, metricResult, notificationResult] =
       await Promise.all([
@@ -213,16 +213,21 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
         loadDashboardMetrics(),
         loadAdminNotifications(),
       ]);
-    if (orderResult) setOrders(orderResult);
+    const errors: string[] = [];
+    if (orderResult.error) errors.push(`Orders: ${orderResult.error.message}`);
+    else setOrders(orderResult.data);
     if (productResult) setProducts(productResult);
-    if (customerResult.error) setError(customerResult.error.message);
+    if (customerResult.error) errors.push(`Customers: ${customerResult.error.message}`);
     else setCustomers(customerResult.data);
     if (metricResult.data) setMetrics(metricResult.data);
     if (!notificationResult.error) setNotifications(notificationResult.data);
-  };
+    setError(errors.join(' · '));
+  }, []);
   useEffect(() => {
     void refresh();
-  }, []);
+    const refreshTimer = window.setInterval(() => void refresh(), 30_000);
+    return () => window.clearInterval(refreshTimer);
+  }, [refresh]);
   const filteredOrders = useMemo(
     () =>
       orders.filter(
@@ -914,7 +919,7 @@ function OrdersView({
       <PageIntro
         eyebrow="Store operations"
         title="Orders"
-        description="Live orders from Supabase. Fulfillment currently follows the store-pickup workflow."
+        description="Live orders from Supabase, auto-refreshed every 30 seconds. Fulfillment currently follows the store-pickup workflow."
         action={
           <div className="flex gap-2">
             <button
