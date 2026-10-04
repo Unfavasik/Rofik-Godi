@@ -24,7 +24,6 @@ export type AdminOrderRecord = {
   pickupStore: string;
   items: Array<{ product_name?: string; quantity?: number; unit_price?: number }>;
   createdAt: string;
-  updatedAt: string;
 };
 
 export async function loadAdminOrders(): Promise<{
@@ -35,7 +34,7 @@ export async function loadAdminOrders(): Promise<{
   const { data, error } = await supabase
     .from('orders')
     .select(
-      'id,order_number,customer_name,customer_phone,vehicle_model,total,payment_method,payment_status,fulfillment_method,pickup_store,status,created_at,updated_at,order_items(product_name,quantity,unit_price)',
+      'id,order_number,customer_name,customer_phone,vehicle_model,total,payment_method,payment_status,fulfillment_method,pickup_store,status,created_at,order_items(product_name,quantity,unit_price)',
     )
     .order('created_at', { ascending: false })
     .limit(100);
@@ -78,7 +77,6 @@ export async function loadAdminOrders(): Promise<{
         pickupStore: String(row.pickup_store || ''),
         items,
         createdAt: String(row.created_at),
-        updatedAt: String(row.updated_at || row.created_at),
       };
     }),
     error: null,

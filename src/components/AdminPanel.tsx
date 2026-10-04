@@ -285,7 +285,6 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
         order_status: order.status,
         pickup_store: order.pickupStore,
         created_at: order.createdAt,
-        updated_at: order.updatedAt,
       })),
     );
     notify(ok ? 'Orders CSV downloaded' : 'No orders to export');
