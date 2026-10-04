@@ -51,6 +51,19 @@ describe('secure order creation flow', () => {
     expect(supabaseMock.rpc).not.toHaveBeenCalled();
   });
 
+  it('shows a clear already-used message if the coupon limit is reached at order submission', async () => {
+    supabaseMock.auth.getUser.mockResolvedValue({ data: { user: { id: 'customer-1' } }, error: null });
+    supabaseMock.rpc.mockResolvedValue({
+      data: null,
+      error: { message: 'You have reached this coupon’s per-customer limit.' },
+    });
+
+    const result = await createSupabaseOrder(order, 'customer-1', 'WELCOME10');
+
+    expect(result.synced).toBe(false);
+    expect(result.error?.message).toBe("You've already used this coupon.");
+  });
+
   it('submits canonical product quantities and uses totals returned by the secure transaction', async () => {
     supabaseMock.auth.getUser.mockResolvedValue({ data: { user: { id: 'customer-1' } }, error: null });
     supabaseMock.rpc.mockResolvedValue({

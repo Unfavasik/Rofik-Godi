@@ -43,6 +43,19 @@ describe('customer coupon validation flow', () => {
     expect(result).toEqual(quote);
   });
 
+  it('tells the customer when the per-customer limit means this coupon was already used', async () => {
+    supabaseMock.auth.getUser.mockResolvedValue({ data: { user: { id: 'customer-1' } }, error: null });
+    supabaseMock.rpc.mockResolvedValue({
+      data: { valid: false, message: 'You have reached this coupon’s per-customer limit.' },
+      error: null,
+    });
+
+    await expect(validateCustomerCoupon('WELCOME10', [item], 'customer-1')).resolves.toEqual({
+      valid: false,
+      message: "You've already used this coupon.",
+    });
+  });
+
   it('surfaces server-side coupon rejection without inventing a client discount', async () => {
     const quote = { valid: false, message: 'Coupon has expired.' };
     supabaseMock.auth.getUser.mockResolvedValue({ data: { user: { id: 'customer-1' } }, error: null });
