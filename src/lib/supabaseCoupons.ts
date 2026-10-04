@@ -1,6 +1,6 @@
 import type { CartItem } from '../types';
 import { supabase } from './supabase';
-
+import { normalizeCouponFailureMessage } from './couponErrors';
 export type DiscountType = 'PERCENTAGE' | 'FIXED';
 export type CouponEligibility = 'EVERYONE' | 'FIRST_ORDER' | 'EXISTING_CUSTOMERS';
 export type CouponApplyTo = 'ALL_PRODUCTS' | 'SELECTED_PRODUCTS' | 'SELECTED_CATEGORIES';
@@ -196,7 +196,9 @@ export async function validateCustomerCoupon(code: string, items: CartItem[], ex
     p_code: code,
     p_items: items.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
   });
-  if (error) return { valid: false, message: error.message || 'Coupon validation is temporarily unavailable.' };
+  if (error) return { valid: false, message: normalizeCouponFailureMessage(error.message || 'Coupon validation is temporarily unavailable.') };
   const result = (Array.isArray(data) ? data[0] : data) as CouponQuote | null;
-  return result || { valid: false, message: 'Coupon validation returned no result.' };
+  if (!result) return { valid: false, message: 'Coupon validation returned no result.' };
+  if (!result.valid) return { ...result, message: normalizeCouponFailureMessage(result.message || 'Coupon is invalid or expired.') };
+  return result;
 }

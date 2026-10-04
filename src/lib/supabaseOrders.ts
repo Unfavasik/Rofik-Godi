@@ -1,5 +1,6 @@
 import type { CustomerOrderRecord, OrderDetails } from '../types';
 import { supabase } from './supabase';
+import { normalizeCouponFailureMessage } from './couponErrors';
 
 const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 
@@ -41,7 +42,8 @@ export async function createSupabaseOrder(order: OrderDetails, expectedUserId: s
     p_payment_method: order.paymentMethod === 'pay_at_store' ? 'PAY_AT_STORE' : 'PAY_ONLINE',
     p_coupon_code: couponCode.trim().toUpperCase() || null,
   });
-  if (error || !data) return { synced: false, error: error || new Error('The secure order service returned no order.'), order: null };
+  if (error) return { synced: false, error: new Error(normalizeCouponFailureMessage(error.message)), order: null };
+  if (!data) return { synced: false, error: new Error('The secure order service returned no order.'), order: null };
 
   const result = (Array.isArray(data) ? data[0] : data) as unknown as SecureOrderResponse;
   if (!result?.order_number) return { synced: false, error: new Error('The secure order service returned an invalid order.'), order: null };
