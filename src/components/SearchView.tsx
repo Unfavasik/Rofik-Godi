@@ -21,6 +21,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, VehicleCategory } from '../types';
 import { ProductCard } from './ProductCard';
+import { CatalogStatus } from './CatalogStatus';
 import {
   FilterSortModal,
   FilterState,
@@ -31,6 +32,9 @@ import {
 
 interface SearchViewProps {
   products: Product[];
+  isCatalogLoading: boolean;
+  catalogError: Error | null;
+  onRetryCatalog: () => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   onSelectProduct: (p: Product) => void;
@@ -49,9 +53,20 @@ const DEFAULT_RECENT_SEARCHES = [
   'gel seat cover',
   'waterproof cover',
 ];
+const SEARCH_CATEGORY_FILTERS: Array<{ id: 'all' | VehicleCategory; label: string }> = [
+  { id: 'all', label: 'All' },
+  { id: 'bike', label: 'Bike' },
+  { id: 'toto', label: 'Toto' },
+  { id: 'cushion', label: 'Cushion' },
+  { id: 'scooter', label: 'Scooter' },
+  { id: 'accessory', label: 'Accessories' },
+];
 
 export const SearchView: React.FC<SearchViewProps> = ({
   products,
+  isCatalogLoading,
+  catalogError,
+  onRetryCatalog,
   searchQuery,
   setSearchQuery,
   onSelectProduct,
@@ -205,7 +220,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
     const q = searchQuery.toLowerCase().trim();
 
     // 1. Filter
-    let list = products.filter((p) => {
+    const list = products.filter((p) => {
       // Category filter
       if (filters.category !== 'all' && p.category !== filters.category) {
         return false;
@@ -361,31 +376,29 @@ export const SearchView: React.FC<SearchViewProps> = ({
 
       {/* Filter Category Pills */}
       {searchQuery && <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2 mb-2">
-        {[
-          { id: 'all', label: 'All (42)' },
-          { id: 'bike', label: 'Bike (18)' },
-          { id: 'toto', label: 'Toto (12)' },
-          { id: 'cushion', label: 'Cushion (8)' },
-          { id: 'scooter', label: 'Accessories' },
-        ].map((f) => (
+        {SEARCH_CATEGORY_FILTERS.map((f) => {
+          const count = f.id === 'all' ? products.length : products.filter((product) => product.category === f.id).length;
+          return (
           <button
             key={f.id}
             type="button"
             onClick={() =>
               setFilters((prev) => ({
                 ...prev,
-                category: f.id as any,
+                category: f.id,
               }))
             }
+            aria-pressed={filters.category === f.id}
             className={`px-4 py-2 rounded-full text-[11px] font-bold tracking-tight whitespace-nowrap transition-all cursor-pointer ${
               filters.category === f.id
                 ? 'bg-[#D9232D] text-white shadow-xs'
                 : 'bg-slate-100 hover:bg-slate-200/80 text-slate-600'
             }`}
           >
-            {f.label}
+            {f.label} ({count})
           </button>
-        ))}
+          );
+        })}
       </div>}
 
       {/* When Search Query is Empty (Screen 1): Show Recent Searches & Trending Searches */}
@@ -511,7 +524,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
           {/* Right: Results Count + View Mode Toggle (Grid vs List - Matches Screen 2 & Screen 3) */}
           <div className="flex items-center gap-2">
             <span className="text-[11.5px] font-bold text-gray-500 hidden sm:inline">
-{searchQuery ? '42 products found' : `${filteredProducts.length} products found`}
+              {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} found
             </span>
 
             {/* View Toggle */}
@@ -742,7 +755,12 @@ export const SearchView: React.FC<SearchViewProps> = ({
       </div>
 
       {/* Products Display (Grid or List - Matches Screen 2 & Screen 3) */}
-      {searchQuery && (filteredProducts.length === 0 ? (
+      {searchQuery && products.length === 0 && isCatalogLoading && <CatalogStatus state="loading" />}
+      {searchQuery && products.length === 0 && !isCatalogLoading && catalogError && (
+        <CatalogStatus state="error" onRetry={onRetryCatalog} />
+      )}
+      {searchQuery && products.length === 0 && !isCatalogLoading && !catalogError && <CatalogStatus state="empty" />}
+      {searchQuery && products.length > 0 && (filteredProducts.length === 0 ? (
         <div className="bg-white rounded-2xl p-8 text-center border border-gray-100 shadow-xs mt-3">
           <div className="w-12 h-12 bg-red-50 text-[#D9232D] rounded-full flex items-center justify-center mx-auto mb-3">
             <Search className="w-6 h-6" />

@@ -9,6 +9,7 @@ import { Product, CartItem, VehicleCategory, UserProfile } from './types';
 import { Header } from './components/Header';
 import { HeroBanner } from './components/HeroBanner';
 import { CategorySection } from './components/CategorySection';
+import { CatalogStatus } from './components/CatalogStatus';
 import { VehicleFinder } from './components/VehicleFinder';
 import { ProductCard } from './components/ProductCard';
 import { ProductDetailModal } from './components/ProductDetailModal';
@@ -173,7 +174,7 @@ export default function App() {
   const [isTermsConditionsOpen, setIsTermsConditionsOpen] = useState(false);
 
   // Cart and catalog behavior are isolated so the storefront shell stays focused on presentation.
-  const { products: catalogProducts, isLoaded: catalogLoaded, error: catalogError } = useCatalog();
+  const { products: catalogProducts, isLoaded: catalogLoaded, isLoading: catalogLoading, error: catalogError, retry: retryCatalog } = useCatalog();
   const { cart, setCart, clearCart } = useCart(currentUser, catalogProducts, catalogLoaded, catalogError);
   const [ownedWishlist, setOwnedWishlist] = useState<{ ownerId: string; items: Product[] }>({ ownerId: 'guest-user', items: [] });
   const wishlist = ownedWishlist.ownerId === currentUser.id ? ownedWishlist.items : [];
@@ -559,11 +560,27 @@ export default function App() {
         {activeTab === 'notifications' ? (
           <NotificationsView userId={currentUser.id} isGuest={currentUser.isGuest} onBack={() => setActiveTab('home')} onNotificationsChanged={refreshNotificationCount} />
         ) : activeTab === 'shop' ? (
-          <ShopView products={filteredProducts} wishlist={wishlist} cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)} onBack={() => setActiveTab('home')} onSearch={(value) => { setSearchQuery(value); setActiveTab('search'); }} onSelectProduct={setSelectedProduct} onQuickAdd={handleQuickAddToCart} onToggleWishlist={handleToggleWishlist} onOpenCart={() => { setActiveTab('cart'); setIsCartOpen(true); }} />
+          <ShopView
+            products={filteredProducts}
+            wishlist={wishlist}
+            cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
+            isLoading={catalogLoading}
+            error={catalogError}
+            onRetry={retryCatalog}
+            onBack={() => setActiveTab('home')}
+            onSearch={(value) => { setSearchQuery(value); setActiveTab('search'); }}
+            onSelectProduct={setSelectedProduct}
+            onQuickAdd={handleQuickAddToCart}
+            onToggleWishlist={handleToggleWishlist}
+            onOpenCart={() => { setActiveTab('cart'); setIsCartOpen(true); }}
+          />
         ) : activeTab === 'search' ? (
           <main className="flex-1 flex flex-col">
             <SearchView
               products={catalogProducts}
+              isCatalogLoading={catalogLoading}
+              catalogError={catalogError}
+              onRetryCatalog={retryCatalog}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               onSelectProduct={(p) => setSelectedProduct(p)}
@@ -654,20 +671,28 @@ export default function App() {
                 </div>
 
                 {/* Horizontal scrolling shelf */}
-                <div className="flex space-x-3.5 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-5 px-5">
-                  {catalogProducts.slice(0, 4).map((prod) => (
-                    <ProductCard
-                      key={prod.id}
-                      product={prod}
-                      layoutMode="shelf"
-                      onSelectProduct={(p) => setSelectedProduct(p)}
-                      onQuickAddToCart={(p, e) => handleQuickAddToCart(p, e)}
-                      isWishlisted={wishlist.some((w) => w.id === prod.id)}
-                      onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
-                      isAddedJustNow={justAddedId === prod.id}
-                    />
-                  ))}
-                </div>
+                {catalogError && catalogProducts.length === 0 ? (
+                  <CatalogStatus state="error" onRetry={retryCatalog} compact />
+                ) : catalogLoading && catalogProducts.length === 0 ? (
+                  <CatalogStatus state="loading" compact />
+                ) : catalogProducts.length === 0 ? (
+                  <CatalogStatus state="empty" compact />
+                ) : (
+                  <div className="flex space-x-3.5 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-5 px-5">
+                    {catalogProducts.slice(0, 4).map((prod) => (
+                      <ProductCard
+                        key={prod.id}
+                        product={prod}
+                        layoutMode="shelf"
+                        onSelectProduct={(p) => setSelectedProduct(p)}
+                        onQuickAddToCart={(p, e) => handleQuickAddToCart(p, e)}
+                        isWishlisted={wishlist.some((w) => w.id === prod.id)}
+                        onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
+                        isAddedJustNow={justAddedId === prod.id}
+                      />
+                    ))}
+                  </div>
+                )}
               </section>
             )}
 
