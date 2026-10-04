@@ -47,6 +47,7 @@ interface AccountViewProps {
 export const AccountView: React.FC<AccountViewProps> = ({
   currentUser,
   onOpenLogin,
+  onLogout,
   onContinueShopping,
   onBackToHome,
   onOpenWishlist,
@@ -278,6 +279,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
     return (
       <SettingsView
         onBack={() => setActiveModal(null)}
+        onLogout={onLogout}
         onOpenOrders={() => setActiveModal('orders')}
         onOpenWishlist={onOpenWishlist}
         onOpenStoreInfo={onOpenStoreInfo}
