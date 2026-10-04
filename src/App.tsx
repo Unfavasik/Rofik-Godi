@@ -30,7 +30,7 @@ import { LoginRequiredModal } from './components/LoginRequiredModal';
 import { SearchView } from './components/SearchView';
 import { NotificationsView } from './components/NotificationsView';
 import { ShopView } from './components/ShopView';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 const AdminPanel = lazy(() => import('./components/AdminPanel').then((module) => ({ default: module.AdminPanel })));
 import { AdminAccessGate } from './components/AdminAccessGate';
 import {
@@ -1178,6 +1178,7 @@ export default function App() {
   goToPhase('auth');
           }}
         />
+        <Outlet />
       </div>
     </div>
   );
