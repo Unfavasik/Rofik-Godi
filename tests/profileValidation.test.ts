@@ -43,6 +43,11 @@ describe('avatar helpers', () => {
     expect(buildAvatarStoragePath('user-123', 1700000000000)).toBe('user-123/avatar-1700000000000.webp');
   });
 
+  it('matches the avatar URL constraint path shape for UUID users', () => {
+    const path = buildAvatarStoragePath('550e8400-e29b-41d4-a716-446655440000', 1700000000000);
+    expect(path).toMatch(/^[0-9a-f-]{36}\/avatar-\d+\.webp$/);
+  });
+
   it('returns name initials and a safe fallback', () => {
     expect(getInitials('  Rofik Godi Center ')).toBe('RC');
     expect(getInitials('roFik')).toBe('R');

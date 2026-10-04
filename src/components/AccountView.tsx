@@ -61,6 +61,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
   const [activeModal, setActiveModal] = useState<'orders' | 'pickupStore' | 'settings' | 'profile' | 'privacy' | 'terms' | null>(null);
 
   const isGuest = currentUser?.isGuest ?? false;
+  const currentUserRef = useRef(currentUser);
+  currentUserRef.current = currentUser;
 
   const [customerOrders, setCustomerOrders] = useState<CustomerOrderRecord[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -69,13 +71,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
   useEffect(() => {
     let active = true;
     if (activeModal !== 'orders') return () => { active = false; };
-    if (!currentUser || currentUser.isGuest) {
+    const ordersUser = currentUserRef.current;
+    if (!ordersUser || ordersUser.isGuest) {
       setCustomerOrders([]);
       setOrdersLoading(false);
       return () => { active = false; };
     }
     setOrdersLoading(true);
-    void Promise.all([listMyOrders(currentUser.id), listMyProductReviews(currentUser.id)]).then(([orders, reviews]) => {
+    void Promise.all([listMyOrders(ordersUser.id), listMyProductReviews(ordersUser.id)]).then(([orders, reviews]) => {
       if (active) {
         setCustomerOrders(orders);
         setMyReviews(reviews);
@@ -84,7 +87,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
       if (active) setOrdersLoading(false);
     });
     return () => { active = false; };
-  }, [activeModal, currentUser]);
+  }, [activeModal, currentUser?.id, currentUser?.isGuest]);
 
   const [profileName, setProfileName] = useState('');
   const [profilePhone, setProfilePhone] = useState('');
@@ -111,7 +114,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
   useEffect(() => {
     let active = true;
     if (activeModal !== 'profile') return () => { active = false; };
-    if (!currentUser || currentUser.isGuest) {
+    const profileUser = currentUserRef.current;
+    if (!profileUser || profileUser.isGuest) {
       setProfileName('');
       setProfilePhone('');
       setProfileVehicle('');
@@ -124,22 +128,22 @@ export const AccountView: React.FC<AccountViewProps> = ({
       return () => { active = false; };
     }
     const fallback = {
-      name: currentUser.name || '',
-      phone: currentUser.phone || '',
-      vehicle: currentUser.vehicle || '',
-      avatar: currentUser.avatar || null,
+      name: profileUser.name || '',
+      phone: profileUser.phone || '',
+      vehicle: profileUser.vehicle || '',
+      avatar: profileUser.avatar || null,
     };
     setProfileName(fallback.name);
     setProfilePhone(fallback.phone);
     setProfileVehicle(fallback.vehicle);
-    setProfileEmail(currentUser.email || '');
+    setProfileEmail(profileUser.email || '');
     setProfileAvatarUrl(fallback.avatar);
     setProfileAvatarFile(null);
     setProfileSnapshot(fallback);
     setProfileMetadataSyncFailed(false);
     setProfileMessage('');
     setProfileLoading(true);
-    void Promise.all([getMyProfile(currentUser.id), getMyAuthEmail()]).then(([profile, email]) => {
+    void Promise.all([getMyProfile(profileUser.id), getMyAuthEmail()]).then(([profile, email]) => {
       if (!active) return;
       const loaded = {
         name: profile?.full_name?.trim() || fallback.name,
@@ -150,7 +154,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
       setProfileName(loaded.name);
       setProfilePhone(loaded.phone);
       setProfileVehicle(loaded.vehicle);
-      setProfileEmail(email || currentUser.email || '');
+      setProfileEmail(email || profileUser.email || '');
       setProfileAvatarUrl(loaded.avatar);
       setProfileSnapshot(loaded);
     }).catch(() => {
@@ -159,7 +163,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
       if (active) setProfileLoading(false);
     });
     return () => { active = false; };
-  }, [activeModal, currentUser]);
+  }, [activeModal, currentUser?.id, currentUser?.isGuest]);
 
   const handleSaveProfile = async () => {
     if (!currentUser || currentUser.isGuest || profileSavingRef.current) return;

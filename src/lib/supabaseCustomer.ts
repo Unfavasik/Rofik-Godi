@@ -4,8 +4,8 @@ import { buildAvatarStoragePath } from './profileValidation';
 
 export async function getMyProfile(expectedUserId?: string) {
   if (!supabase) return null;
-  const { data: authData } = await supabase.auth.getUser();
-  const user = authData.user;
+  const { data: authData } = await supabase.auth.getSession();
+  const user = authData.session?.user;
   if (!user || (expectedUserId && expectedUserId !== user.id)) return null;
   const { data } = await supabase.from('profiles').select('id,full_name,phone,avatar_url,vehicle_model,marketing_opt_in').eq('id', user.id).maybeSingle();
   return data;
@@ -13,8 +13,8 @@ export async function getMyProfile(expectedUserId?: string) {
 
 export async function getMyAuthEmail() {
   if (!supabase) return '';
-  const { data } = await supabase.auth.getUser();
-  return data.user?.email || '';
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user?.email || '';
 }
 
 export async function saveMyProfile(profile: { full_name: string; phone: string; avatar_url: string | null; vehicle_model: string }) {

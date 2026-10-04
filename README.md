@@ -20,7 +20,7 @@ pnpm format
 
 ## Supabase
 
-Apply migrations in `supabase/migrations/` in order. When a project has later-numbered migrations already applied but older timestamps still pending, deploy with `supabase db push --include-all`; do not rename migration files already recorded in that project's history. The catalog migration keeps `is_active` (publication) separate from `in_stock` (availability), adds atomic gallery replacement, and provides the admin customer summary RPC. Product images are converted to WebP and uploaded to the `product-images` Storage bucket. Customer profile photos use the public-read, WebP-only `avatars` bucket (2 MB object limit); authenticated writes are restricted to each user's own UUID folder.
+Apply migrations in `supabase/migrations/` in order. Use 14-digit timestamps (`YYYYMMDDHHMMSS`) for new migrations; do not rename migrations already applied. When a project has later-numbered migrations already applied but older timestamps still pending, deploy with `supabase db push --include-all`. The catalog migration keeps `is_active` (publication) separate from `in_stock` (availability), adds atomic gallery replacement, and provides the admin customer summary RPC. Product images are converted to WebP and uploaded to the `product-images` Storage bucket. Customer profile photos use the public-read, WebP-only `avatars` bucket (2 MB object limit); authenticated writes are restricted to each user's own UUID folder.
 
 Customer email is read from Supabase Auth and is not stored in `public.profiles` or editable in the app. In **Supabase Dashboard → Authentication → Settings**, keep **Secure email change** enabled. Email changes, if ever needed, must go through Supabase Auth rather than profile updates.
 
@@ -39,4 +39,12 @@ where lower(email) = lower('admin@your-unique-domain.example')
 on conflict (user_id) do update set display_name = excluded.display_name, role = excluded.role;
 ```
 
-Only the `admin` role is supported; manager memberships are removed by the role migration and no longer pass `is_admin()`. After one administrator exists, an existing admin can grant or update another admin using `public.grant_admin_by_email(email, display_name, 'admin')`. The `20261003173544_admin_grant_audit.sql` migration preserves an existing display name when the optional name is omitted and records the granting admin, target account, and action in `public.admin_role_audit_log`. Do not put admin emails in frontend code or expose a public admin-registration form.
+Only the `admin` role is supported; manager memberships are removed by the role migration and no longer pass `is_admin()`. After one administrator exists, an existing admin can grant or update another admin using `public.grant_admin_by_email(email, display_name, 'admin')`. The `20261004000000_final_admin_grant.sql` migration is the final override: it preserves an existing display name when the optional name is omitted and records the granting admin, target account, and action in `public.admin_role_audit_log`. Do not put admin emails in frontend code or expose a public admin-registration form.
+
+Manual verification (run in the Supabase SQL Editor after applying the final grant migration):
+
+```sql
+select pg_get_functiondef('public.grant_admin_by_email(text,text,text)'::regprocedure);
+```
+
+Expected: the function definition does not allow the `manager` role and includes an insert into `public.admin_role_audit_log`.
