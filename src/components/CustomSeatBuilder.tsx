@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Sparkles, Check, Scissors, Layers, ShieldCheck, ShoppingBag } from 'lucide-react';
+import { X, Sparkles, Scissors, Layers, ShoppingBag } from 'lucide-react';
 import { VEHICLE_BRANDS } from '../data/products';
 import { Product } from '../types';
 
@@ -20,7 +20,7 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
   const [model, setModel] = useState('Splendor Plus');
   const [foamDensity, setFoamDensity] = useState<'standard' | 'high_density' | 'gel_infused'>('high_density');
   const [material, setMaterial] = useState<'rexine' | 'carbon' | 'mesh' | 'leatherette'>('carbon');
-  const [stitchPattern, setStitchPattern] = useState<'diamond' | 'ribbed' | 'racing' | 'plain'>('diamond');
+  const [stitchPattern] = useState<'diamond' | 'ribbed' | 'racing' | 'plain'>('diamond');
   const [pipingColor, setPipingColor] = useState<{ name: string; hex: string }>({ name: 'Crimson Red', hex: '#D9232D' });
   const [embroideryText, setEmbroideryText] = useState('');
 

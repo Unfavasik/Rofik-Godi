@@ -5,7 +5,6 @@ import {
   CalendarClock,
   Check,
   CheckCircle2,
-  ChevronDown,
   Clock3,
   Edit3,
   Eye,
@@ -278,7 +277,7 @@ export const CouponManagement: React.FC<{ notify: (message: string) => void }> =
 
 const Metric: React.FC<{ label: string; value: string; icon: React.ReactNode; tone: string }> = ({ label, value, icon, tone }) => <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><span className={`flex h-9 w-9 items-center justify-center rounded-xl ${tone}`}>{icon}</span><p className="mt-4 text-[11px] font-semibold text-slate-500">{label}</p><p className="mt-0.5 text-xl font-black text-slate-900">{value}</p></div>;
 
-const CouponRow: React.FC<{ coupon: CouponRecord; onEdit: () => void; onDetails: () => void; onDisable: () => void; onDelete: () => void; notify: (message: string) => void }> = ({ coupon, onEdit, onDetails, onDisable, onDelete, notify }) => {
+const CouponRow: React.FC<{ coupon: CouponRecord; onEdit: () => void; onDetails: () => void; onDisable: () => void; onDelete: () => void; notify: (message: string) => void }> = ({ coupon, onEdit, onDetails, onDisable, onDelete }) => {
   const status = getCouponStatus(coupon);
   const description = coupon.discount_type === 'PERCENTAGE' ? `${Number(coupon.discount_value)}% OFF${coupon.max_discount ? ` · max ${money(coupon.max_discount)}` : ''}` : `${money(coupon.discount_value)} OFF`;
   return <div className="grid gap-4 px-4 py-5 md:grid-cols-[minmax(230px,1.4fr)_minmax(190px,1fr)_minmax(180px,1fr)_auto] md:items-center md:px-5">

@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Check, Copy, Phone, MessageCircle, Star, ShieldCheck, Globe, Bell } from 'lucide-react';
+import { X, Check, Phone, MessageCircle, Star, Globe, Bell } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
 
 interface SettingsViewProps {
   onBack: () => void;
+  onLogout?: () => void | Promise<void>;
   onOpenOrders?: () => void;
   onOpenWishlist?: () => void;
   onOpenStoreInfo?: () => void;
@@ -14,8 +15,8 @@ interface SettingsViewProps {
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
   onBack,
+  onLogout,
   onOpenOrders,
-  onOpenWishlist,
   onOpenStoreInfo,
 }) => {
   const [activeModal, setActiveModal] = useState<
@@ -48,6 +49,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [reviewFeedback, setReviewFeedback] = useState('');
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [logoutConfirmed, setLogoutConfirmed] = useState(false);
+  const [logoutError, setLogoutError] = useState('');
 
   useEffect(() => {
     if (activeModal !== 'coupons') return;
@@ -373,7 +375,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         {/* Item 11: Logout */}
         <button
-          onClick={() => setActiveModal('logout')}
+          onClick={() => {
+            setLogoutConfirmed(false);
+            setLogoutError('');
+            setActiveModal('logout');
+          }}
           className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-red-50/40 active:scale-[0.99] transition-all duration-150 text-left"
           type="button"
         >
@@ -781,18 +787,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   Cancel
                 </button>
                 <button
-                  onClick={() => {
+                  disabled={logoutConfirmed}
+                  onClick={async () => {
+                    if (!onLogout) {
+                      setLogoutError('Logout is unavailable right now. Please try again.');
+                      return;
+                    }
                     setLogoutConfirmed(true);
-                    setTimeout(() => {
-                      setActiveModal(null);
-                      onBack();
-                    }, 800);
+                    setLogoutError('');
+                    try {
+                      await onLogout();
+                    } catch {
+                      setLogoutConfirmed(false);
+                      setLogoutError('Could not sign out. Please try again.');
+                    }
                   }}
                   className="py-2.5 bg-[#EF4444] text-white text-xs font-bold rounded-xl"
                 >
                   {logoutConfirmed ? 'Signing out...' : 'Sign Out'}
                 </button>
               </div>
+              {logoutError && <p role="alert" className="text-xs font-semibold text-red-600">{logoutError}</p>}
             </motion.div>
           </div>
         )}

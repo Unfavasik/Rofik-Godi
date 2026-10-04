@@ -19,7 +19,6 @@ import {
   Star,
   Truck,
   Wrench,
-  X,
   Zap,
 } from 'lucide-react';
 import { Product } from '../types';
@@ -103,8 +102,8 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
     setActiveImageIndex((current) => Math.max(0, Math.min(images.length - 1, current + (deltaX < 0 ? 1 : -1))));
   };
   const [selectedColor, setSelectedColor] = useState(product.colors[0]);
-  const [selectedStitch, setSelectedStitch] = useState(product.stitchPatterns[0] || 'Standard');
-  const [selectedThickness, setSelectedThickness] = useState(
+  const [selectedStitch] = useState(product.stitchPatterns[0] || 'Standard');
+  const [selectedThickness] = useState(
     product.thicknessOptions[0] || { label: 'Standard', extraPrice: 0 }
   );
   const [vehicleType, setVehicleType] = useState('Bike');

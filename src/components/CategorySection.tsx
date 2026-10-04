@@ -1,6 +1,5 @@
 import React from 'react';
 import { VehicleCategory } from '../types';
-import { motion } from 'motion/react';
 
 interface CategorySectionProps {
   selectedCategory: VehicleCategory | 'all';

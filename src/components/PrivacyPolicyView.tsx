@@ -6,17 +6,13 @@ import {
   Lock,
   Database,
   Eye,
-  FileText,
   Phone,
   MapPin,
-  Clock,
   Calendar,
   CheckCircle2,
   Share2,
   ChevronRight,
   MessageCircle,
-  HelpCircle,
-  ExternalLink,
   Sparkles,
 } from 'lucide-react';
 

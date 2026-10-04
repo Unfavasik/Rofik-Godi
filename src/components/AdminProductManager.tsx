@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Copy, ExternalLink, ImagePlus, Package, Pencil, Plus, Search, Trash2, Upload, X } from 'lucide-react';
+import { Check, Copy, ExternalLink, ImagePlus, Pencil, Plus, Search, Trash2, Upload, X } from 'lucide-react';
 import { PRODUCTS } from '../data/products';
 import type { Product, VehicleCategory } from '../types';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';

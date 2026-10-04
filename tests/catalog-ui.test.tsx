@@ -2,7 +2,12 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { CatalogStatus } from '../src/components/CatalogStatus';
+import { ProductCard } from '../src/components/ProductCard';
 import { ShopView } from '../src/components/ShopView';
+import { PRODUCTS } from '../src/data/products';
+import type { Product } from '../src/types';
+
+const sampleProduct = PRODUCTS[0]!;
 
 const renderShop = (overrides: Partial<React.ComponentProps<typeof ShopView>> = {}) => renderToStaticMarkup(
   <ShopView
@@ -22,12 +27,61 @@ const renderShop = (overrides: Partial<React.ComponentProps<typeof ShopView>> = 
   />,
 );
 
+const renderCard = (product: Product, layoutMode: 'grid' | 'list' = 'grid') => renderToStaticMarkup(
+  <ProductCard
+    product={product}
+    layoutMode={layoutMode}
+    onSelectProduct={() => {}}
+    onQuickAddToCart={() => {}}
+    isWishlisted={false}
+    onToggleWishlist={() => {}}
+  />,
+);
+
 describe('catalog feedback', () => {
   it('shows an explicit empty state and an accurate zero count instead of a fake total', () => {
     const html = renderShop();
     expect(html).toContain('0 products found');
-    expect(html).toContain('No active products yet');
+    expect(html).toContain('No products found');
     expect(html).not.toContain('128 products found');
+  });
+
+  it('uses renderable products as the shared source for count, categories, and cards', () => {
+    const renderable = {
+      ...sampleProduct,
+      id: 'valid-product',
+      title: 'Renderable seat cover',
+      categoryLabel: 'Bike Covers',
+    };
+    const invalid = {
+      ...sampleProduct,
+      id: 'missing-title',
+      title: '   ',
+      categoryLabel: 'Invalid category',
+    };
+    const html = renderShop({ products: [renderable, invalid] });
+
+    expect(html).toContain('1 product found');
+    expect(html).toContain('Renderable seat cover');
+    expect(html).toContain('Bike Covers');
+    expect(html).not.toContain('Invalid category');
+  });
+
+  it('shows the empty state if backend rows exist but none has both an id and title', () => {
+    const invalidProduct = { ...sampleProduct, id: '', title: 'Missing identifier' };
+    const html = renderShop({ products: [invalidProduct] });
+
+    expect(html).toContain('0 products found');
+    expect(html).toContain('No products found');
+    expect(html).not.toContain('Products Catalog');
+  });
+
+  it.each(['grid', 'list'] as const)('shows an image placeholder in %s mode when the image URL is blank', (layoutMode) => {
+    const product = { ...sampleProduct, image: '' };
+    const html = renderCard(product, layoutMode);
+
+    expect(html).toContain('Image unavailable');
+    expect(html).not.toContain('src=""');
   });
 
   it('shows a loading status while the catalog request is pending', () => {

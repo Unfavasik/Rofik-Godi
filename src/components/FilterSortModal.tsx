@@ -79,7 +79,6 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
   filters,
   onUpdateFilters,
   onResetFilters,
-  matchingCount,
 }) => {
   // Temporary state for the filter modal before applying
   const [draftFilters, setDraftFilters] = React.useState<FilterState>(filters);

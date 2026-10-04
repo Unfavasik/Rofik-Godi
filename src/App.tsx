@@ -51,6 +51,8 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
+import { getPathForPhase } from './lib/appRoutes';
+import { signOutCurrentDevice } from './lib/authLogout';
 import { useAuth } from './hooks/useAuth';
 import { useCart } from './hooks/useCart';
 import { useCatalog } from './hooks/useCatalog';
@@ -73,7 +75,7 @@ export default function App() {
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>('signup');
   const goToPhase = useCallback((phase: 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth') => {
     setAppPhase(phase);
-    const nextPath = phase === 'onboarding' ? '/Onboarding' : phase === 'auth' ? '/signup' : phase === 'account-onboarding' ? '/signup/onboarding' : phase === 'splash' ? '/signup/loading' : '/home';
+    const nextPath = getPathForPhase(phase, location.pathname);
     if (location.pathname !== nextPath) navigate(nextPath, { state: { phase } });
   }, [location.pathname, navigate]);
 
@@ -130,7 +132,7 @@ export default function App() {
         // Always move a verified admin into the protected workspace, even if the
         // storefront was rendered during that short async window.
         if (route !== '/admin') navigate('/admin', { replace: true });
-      } else if (route !== '/admin' && (!publicAuthPath || appPhase !== 'main')) {
+      } else if (route !== '/admin' && appPhase !== 'main') {
         goToPhase('main');
       }
       return;
@@ -432,16 +434,31 @@ export default function App() {
 
   const handleLogout = async () => {
     const previousUserId = currentUser.id;
-    if (supabase) await supabase.auth.signOut();
-    window.localStorage.removeItem(`work-app:${previousUserId}:cart`);
-    window.localStorage.removeItem(`work-app:${previousUserId}:wishlist`);
-    clearCart();
+    const authClient = supabase?.auth;
+    const signOutSucceeded = await signOutCurrentDevice(
+      authClient ? (options) => authClient.signOut(options) : null,
+    );
+    for (const key of [`work-app:${previousUserId}:cart`, `work-app:${previousUserId}:wishlist`]) {
+      try {
+        window.localStorage.removeItem(key);
+      } catch {
+        // Continue signing out even when browser storage is unavailable.
+      }
+    }
+    try {
+      clearCart();
+    } catch {
+      // Keep auth and route state consistent if cart storage cannot be cleared.
+    }
     setOwnedWishlist({ ownerId: 'guest-user', items: [] });
     setIsAdmin(false);
     setCurrentUser({ id: 'guest-user', name: 'Guest Rider', email: '', phone: '', isGuest: true });
     setNotificationCount(0);
+    setPendingCheckoutAfterLogin(false);
+    setIsLoginModalOpen(false);
     setAuthStatus('UNAUTHENTICATED');
     goToPhase('onboarding');
+    if (!signOutSucceeded) console.warn('Supabase local sign-out could not be confirmed.');
   };
 
   const scrollToShop = () => {
@@ -603,9 +620,7 @@ export default function App() {
   setAuthInitialMode('signup');
   goToPhase('account-onboarding');
   }}
-              onLogout={() => {
-                void handleLogout();
-              }}
+              onLogout={handleLogout}
               onBackToHome={() => {
                 setActiveTab('home');
                 window.scrollTo({ top: 0, behavior: 'smooth' });

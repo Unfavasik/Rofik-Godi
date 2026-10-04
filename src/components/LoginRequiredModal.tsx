@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Lock, X, ShieldCheck, ArrowRight, UserCheck, Sparkles } from 'lucide-react';
+import { Lock, X, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react';
 
 interface LoginRequiredModalProps {
   isOpen: boolean;
