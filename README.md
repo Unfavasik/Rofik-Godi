@@ -39,7 +39,7 @@ where lower(email) = lower('admin@your-unique-domain.example')
 on conflict (user_id) do update set display_name = excluded.display_name, role = excluded.role;
 ```
 
-Only the `admin` role is supported; manager memberships are removed by the role migration and no longer pass `is_admin()`. After one administrator exists, an existing admin can grant or update another admin using `public.grant_admin_by_email(email, display_name, 'admin')`. The `20261004000000_final_admin_grant.sql` migration is the final override: it preserves an existing display name when the optional name is omitted and records the granting admin, target account, and action in `public.admin_role_audit_log`. Do not put admin emails in frontend code or expose a public admin-registration form.
+Only the `admin` role is supported; manager memberships are removed by the role migration and no longer pass `is_admin()`. After one administrator exists, an existing admin can grant or update another admin using `public.grant_admin_by_email(email, display_name, 'admin')`. The `20261004022511_final_admin_grant.sql` migration is the final override: it preserves an existing display name when the optional name is omitted and records the granting admin, target account, and action in `public.admin_role_audit_log`. Do not put admin emails in frontend code or expose a public admin-registration form.
 
 Manual verification (run in the Supabase SQL Editor after applying the final grant migration):
 
