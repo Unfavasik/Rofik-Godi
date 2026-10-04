@@ -3,7 +3,6 @@ import { ArrowDownRight, ArrowUpRight, BarChart3, Bell, Check, ClipboardList, Do
 import { AdminProductManager } from './AdminProductManager';
 import { CouponManagement } from './CouponManagement';
 import { AdminReviewsView } from './AdminReviewsView';
-import { PickupVerification } from './PickupVerification';
 import { loadAdminOrders, updatePickupOrderStatus, verifyPickupPayment, type AdminOrderRecord } from '../lib/supabaseAdminOrders';
 import { loadAdminCustomers, loadAdminNotifications, loadAdminSettings, loadDashboardMetrics, markAdminNotificationRead, markAllAdminNotificationsRead, saveAdminSettings, type AdminCustomer, type AdminNotification } from '../lib/supabaseAdmin';
 

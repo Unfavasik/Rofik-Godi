@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ArrowLeft, Search, ShoppingCart, SlidersHorizontal, ArrowUpDown, LayoutGrid, List } from 'lucide-react';
 import type { Product } from '../types';
 import { ProductCard } from './ProductCard';
+import { ProductCardErrorBoundary } from './ProductCardErrorBoundary';
 import { CatalogStatus } from './CatalogStatus';
 
 interface ShopViewProps {
@@ -18,6 +19,21 @@ interface ShopViewProps {
   onToggleWishlist: (product: Product, event: React.MouseEvent) => void;
   onOpenCart: () => void;
 }
+
+const isRenderableProduct = (value: unknown): value is Product => {
+  if (!value || typeof value !== 'object') return false;
+  const product = value as Partial<Product>;
+  return typeof product.id === 'string'
+    && product.id.trim().length > 0
+    && typeof product.title === 'string'
+    && product.title.trim().length > 0;
+};
+
+const getProductCategory = (product: Product): string => {
+  const label = typeof product.categoryLabel === 'string' ? product.categoryLabel.trim() : '';
+  const category = typeof product.category === 'string' ? product.category.trim() : '';
+  return label || category;
+};
 
 export const ShopView: React.FC<ShopViewProps> = ({
   products,
@@ -36,21 +52,32 @@ export const ShopView: React.FC<ShopViewProps> = ({
   const [category, setCategory] = useState('All');
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const [sort, setSort] = useState<'featured' | 'price-low' | 'price-high'>('featured');
-  const categories = useMemo(
-    () => ['All', ...Array.from(new Set(products.map((product) => product.categoryLabel || product.category)))],
+
+  const renderableProducts = useMemo(
+    () => (Array.isArray(products) ? products : []).filter(isRenderableProduct),
     [products],
   );
+  const categories = useMemo(() => {
+    const productCategories = renderableProducts
+      .map(getProductCategory)
+      .filter((label) => label.length > 0);
+    return ['All', ...Array.from(new Set(productCategories))];
+  }, [renderableProducts]);
+  const activeCategory = categories.includes(category) ? category : 'All';
   const visibleProducts = useMemo(() => {
-    const filtered = category === 'All'
-      ? [...products]
-      : products.filter((product) => (product.categoryLabel || product.category) === category);
+    const filtered = activeCategory === 'All'
+      ? [...renderableProducts]
+      : renderableProducts.filter((product) => getProductCategory(product) === activeCategory);
     if (sort === 'price-low') return filtered.sort((a, b) => a.price - b.price);
     if (sort === 'price-high') return filtered.sort((a, b) => b.price - a.price);
     return filtered;
-  }, [category, products, sort]);
+  }, [activeCategory, renderableProducts, sort]);
 
   const cycleSort = () => setSort((current) => current === 'featured' ? 'price-low' : current === 'price-low' ? 'price-high' : 'featured');
-  const cycleFilter = () => setCategory((current) => categories[(categories.indexOf(current) + 1) % categories.length]);
+  const cycleFilter = () => {
+    const currentIndex = categories.indexOf(activeCategory);
+    setCategory(categories[(currentIndex + 1) % categories.length] ?? 'All');
+  };
 
   return (
     <main className="min-h-screen bg-[#f8f9fc] text-slate-800">
@@ -94,7 +121,8 @@ export const ShopView: React.FC<ShopViewProps> = ({
           <button
             key={item}
             onClick={() => setCategory(item)}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold ${category === item ? 'bg-[#e61e25] text-white' : 'bg-[#eceef3] text-slate-700'}`}
+            aria-pressed={activeCategory === item}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold ${activeCategory === item ? 'bg-[#e61e25] text-white' : 'bg-[#eceef3] text-slate-700'}`}
           >
             {item}
           </button>
@@ -107,7 +135,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
             <ArrowUpDown className="h-3.5 w-3.5" /> {sort === 'featured' ? 'Sort' : sort === 'price-low' ? 'Price: Low' : 'Price: High'}
           </button>
           <button onClick={cycleFilter} className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold">
-            <SlidersHorizontal className="h-3.5 w-3.5" /> {category === 'All' ? 'Filter' : category}
+            <SlidersHorizontal className="h-3.5 w-3.5" /> {activeCategory === 'All' ? 'Filter' : activeCategory}
           </button>
         </div>
         <div className="flex gap-1">
@@ -121,33 +149,33 @@ export const ShopView: React.FC<ShopViewProps> = ({
       </div>
 
       <p className="mt-3 px-5 text-xs font-medium text-slate-500" aria-live="polite">
-        {isLoading && products.length === 0
+        {isLoading && renderableProducts.length === 0
           ? 'Loading products…'
-          : error && products.length === 0
+          : error && renderableProducts.length === 0
             ? 'Products unavailable'
             : `${visibleProducts.length} ${visibleProducts.length === 1 ? 'product' : 'products'} found`}
       </p>
 
       {error && <div className="px-4 pt-3"><CatalogStatus state="error" onRetry={onRetry} /></div>}
-      {isLoading && products.length === 0 && <div className="px-4 pt-3"><CatalogStatus state="loading" /></div>}
-      {!isLoading && !error && products.length === 0 && <div className="px-4 pt-3"><CatalogStatus state="empty" /></div>}
-      {!isLoading && !error && products.length > 0 && visibleProducts.length === 0 && (
+      {isLoading && renderableProducts.length === 0 && <div className="px-4 pt-3"><CatalogStatus state="loading" /></div>}
+      {!isLoading && !error && visibleProducts.length === 0 && (
         <p className="mx-4 mt-4 rounded-2xl border border-slate-200 bg-white px-5 py-8 text-center text-sm text-slate-600" role="status">
-          No products match this category.
+          No products found
         </p>
       )}
       {visibleProducts.length > 0 && (
         <section aria-label="Products Catalog" className={`px-4 py-2 ${layout === 'grid' ? 'grid grid-cols-2 gap-3' : 'space-y-3'}`}>
           {visibleProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              layoutMode={layout}
-              onSelectProduct={onSelectProduct}
-              onQuickAddToCart={onQuickAdd}
-              isWishlisted={wishlist.some((item) => item.id === product.id)}
-              onToggleWishlist={onToggleWishlist}
-            />
+            <ProductCardErrorBoundary key={product.id} productTitle={product.title}>
+              <ProductCard
+                product={product}
+                layoutMode={layout}
+                onSelectProduct={onSelectProduct}
+                onQuickAddToCart={onQuickAdd}
+                isWishlisted={wishlist.some((item) => item.id === product.id)}
+                onToggleWishlist={onToggleWishlist}
+              />
+            </ProductCardErrorBoundary>
           ))}
         </section>
       )}

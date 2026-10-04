@@ -1,22 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  FileText,
-  Clock,
-  CheckCircle2,
-  ChevronRight,
-  Shield,
-  ShoppingBag,
-  CreditCard,
-  Truck,
-  RotateCcw,
-  UserCheck,
-  AlertTriangle,
-  History,
-  X,
-  Phone,
-  MessageCircle,
-} from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 
 interface TermsConditionsViewProps {
   onBack: () => void;
@@ -25,7 +9,6 @@ interface TermsConditionsViewProps {
 
 export const TermsConditionsView: React.FC<TermsConditionsViewProps> = ({
   onBack,
-  onOpenStoreInfo,
 }) => {
   const [expandedSection, setExpandedSection] = useState<number | null>(null);
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Check, Copy, Phone, MessageCircle, Star, ShieldCheck, Globe, Bell } from 'lucide-react';
+import { X, Check, Phone, MessageCircle, Star, Globe, Bell } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
@@ -15,7 +15,6 @@ interface SettingsViewProps {
 export const SettingsView: React.FC<SettingsViewProps> = ({
   onBack,
   onOpenOrders,
-  onOpenWishlist,
   onOpenStoreInfo,
 }) => {
   const [activeModal, setActiveModal] = useState<

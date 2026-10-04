@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Product } from '../types';
-import { Heart, Plus, Star, Check } from 'lucide-react';
+import { Heart, Plus, Star, Check, ImageOff } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface ProductCardProps {
@@ -13,6 +13,39 @@ interface ProductCardProps {
   layoutMode?: 'shelf' | 'grid' | 'list';
 }
 
+const ProductImage: React.FC<{ src: string | null | undefined; alt: string; variant: 'grid' | 'list' }> = ({ src, alt, variant }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasFailed, setHasFailed] = useState(false);
+  const imageSrc = typeof src === 'string' ? src.trim() : '';
+
+  if (!imageSrc || hasFailed) {
+    return (
+      <div
+        className="absolute inset-0 z-0 flex flex-col items-center justify-center gap-1 bg-[#F4F4F6] text-slate-400"
+        role="img"
+        aria-label={`Image unavailable for ${alt}`}
+      >
+        <ImageOff className={variant === 'list' ? 'h-4 w-4' : 'h-6 w-6'} aria-hidden="true" />
+        <span className={variant === 'list' ? 'text-[8px]' : 'text-[9px]'}>Image unavailable</span>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {!isLoaded && <div className="skeleton-shimmer absolute inset-0 z-0 bg-gray-200" />}
+      <img
+        src={imageSrc}
+        alt={alt}
+        onLoad={() => setIsLoaded(true)}
+        onError={() => setHasFailed(true)}
+        className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        loading="lazy"
+      />
+    </>
+  );
+};
+
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onSelectProduct,
@@ -22,8 +55,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   isAddedJustNow = false,
   layoutMode = 'grid',
 }) => {
-  const [imgLoaded, setImgLoaded] = useState(false);
-
   // Determine badge label and color
   const badgeLabel = product.badge || (product.isBestseller ? 'Bestseller' : product.isNew ? 'New' : null);
   const badgeColorClass = (() => {
@@ -44,9 +75,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       >
         {/* Left: Thumbnail with Badge */}
         <div className="relative w-20 h-20 sm:w-24 sm:h-24 bg-[#F4F4F6] rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center">
-          {!imgLoaded && (
-            <div className="skeleton-shimmer absolute inset-0 bg-gray-200 z-0" />
-          )}
+          <ProductImage src={product.image} alt={product.title} variant="list" />
 
           {badgeLabel && (
             <span
@@ -56,15 +85,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </span>
           )}
 
-          <img
-            src={product.image}
-            alt={product.title}
-            onLoad={() => setImgLoaded(true)}
-            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
-              imgLoaded ? 'opacity-100' : 'opacity-0'
-            }`}
-            loading="lazy"
-          />
         </div>
 
         {/* Middle: Title, Subtitle, Rating, Price */}
@@ -155,10 +175,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     >
       {/* Card Image & Badges Container */}
       <div className="relative w-full h-[124px] sm:h-[145px] bg-[#F4F4F6] rounded-xl overflow-hidden flex items-center justify-center mb-2">
-        {/* Shimmer skeleton before loaded */}
-        {!imgLoaded && (
-          <div className="skeleton-shimmer absolute inset-0 bg-gray-200 z-0" />
-        )}
+        <ProductImage src={product.image} alt={product.title} variant="grid" />
 
         {/* Dynamic Badge (Bestseller, New, Gel, Waterproof, etc.) */}
         {badgeLabel && (
@@ -182,17 +199,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             }`}
           />
         </button>
-
-        {/* Product Image */}
-        <img
-          src={product.image}
-          alt={product.title}
-          onLoad={() => setImgLoaded(true)}
-          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
-            imgLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-          loading="lazy"
-        />
 
         {/* Rating overlay pill */}
         <div className="absolute bottom-1.5 left-2 bg-black/60 backdrop-blur-xs text-white text-[9.5px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5">

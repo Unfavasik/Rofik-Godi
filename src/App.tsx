@@ -51,6 +51,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
+import { getPathForPhase } from './lib/appRoutes';
 import { useAuth } from './hooks/useAuth';
 import { useCart } from './hooks/useCart';
 import { useCatalog } from './hooks/useCatalog';
@@ -73,7 +74,7 @@ export default function App() {
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>('signup');
   const goToPhase = useCallback((phase: 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth') => {
     setAppPhase(phase);
-    const nextPath = phase === 'onboarding' ? '/Onboarding' : phase === 'auth' ? '/signup' : phase === 'account-onboarding' ? '/signup/onboarding' : phase === 'splash' ? '/signup/loading' : '/home';
+    const nextPath = getPathForPhase(phase, location.pathname);
     if (location.pathname !== nextPath) navigate(nextPath, { state: { phase } });
   }, [location.pathname, navigate]);
 
@@ -130,7 +131,7 @@ export default function App() {
         // Always move a verified admin into the protected workspace, even if the
         // storefront was rendered during that short async window.
         if (route !== '/admin') navigate('/admin', { replace: true });
-      } else if (route !== '/admin' && (!publicAuthPath || appPhase !== 'main')) {
+      } else if (route !== '/admin' && appPhase !== 'main') {
         goToPhase('main');
       }
       return;
