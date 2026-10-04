@@ -22,3 +22,11 @@ export function getPathForPhase(phase: AppPhase, currentPath: string): string {
   const normalizedPath = currentPath.replace(/\/+$/, '') || '/';
   return mainAppPaths.has(normalizedPath) ? normalizedPath : '/home';
 }
+
+export function shouldRedirectAdminToWorkspace(
+  pathname: string,
+  storefrontRequested: boolean,
+): boolean {
+  const route = pathname.replace(/\/+$/, '') || '/';
+  return route !== '/admin' && !storefrontRequested;
+}
