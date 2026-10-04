@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { lazy, Suspense, useState, useMemo, useEffect, useCallback } from 'react';
+import React, { lazy, Suspense, useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { WORKSHOP_INFO } from './data/products';
 import { Product, CartItem, VehicleCategory, UserProfile } from './types';
 import { Header } from './components/Header';
@@ -32,7 +32,9 @@ import { SearchView } from './components/SearchView';
 import { NotificationsView } from './components/NotificationsView';
 import { ShopView } from './components/ShopView';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-const AdminPanel = lazy(() => import('./components/AdminPanel').then((module) => ({ default: module.AdminPanel })));
+const AdminPanel = lazy(() =>
+  import('./components/AdminPanel').then((module) => ({ default: module.AdminPanel })),
+);
 import { AdminAccessGate } from './components/AdminAccessGate';
 import {
   FilterSortModal,
@@ -51,7 +53,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
-import { getPathForPhase } from './lib/appRoutes';
+import { getPathForPhase, shouldRedirectAdminToWorkspace } from './lib/appRoutes';
 import { signOutCurrentDevice } from './lib/authLogout';
 import { useAuth } from './hooks/useAuth';
 import { useCart } from './hooks/useCart';
@@ -61,7 +63,9 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
   // Route flow: /Onboarding -> /home, and account creation opens at /signup.
-  const phaseFromPath = (pathname: string): 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth' => {
+  const phaseFromPath = (
+    pathname: string,
+  ): 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth' => {
     const route = pathname.replace(/\/$/, '') || '/';
     if (route === '/') return 'splash';
     if (route === '/Onboarding' || route === '/onboarding') return 'onboarding';
@@ -70,14 +74,30 @@ export default function App() {
     if (route === '/signup/loading') return 'splash';
     return 'main';
   };
-  const [appPhase, setAppPhase] = useState<'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth'>(() => phaseFromPath(location.pathname));
-  const { currentUser, setCurrentUser, authStatus, setAuthStatus, isAdmin, setIsAdmin, checkIsAdmin } = useAuth();
-  const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>('signup');
-  const goToPhase = useCallback((phase: 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth') => {
-    setAppPhase(phase);
-    const nextPath = getPathForPhase(phase, location.pathname);
-    if (location.pathname !== nextPath) navigate(nextPath, { state: { phase } });
-  }, [location.pathname, navigate]);
+  const [appPhase, setAppPhase] = useState<
+    'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth'
+  >(() => phaseFromPath(location.pathname));
+  const {
+    currentUser,
+    setCurrentUser,
+    authStatus,
+    setAuthStatus,
+    isAdmin,
+    setIsAdmin,
+    checkIsAdmin,
+  } = useAuth();
+  const adminStorefrontRequested = useRef(false);
+  const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>(
+    'signup',
+  );
+  const goToPhase = useCallback(
+    (phase: 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth') => {
+      setAppPhase(phase);
+      const nextPath = getPathForPhase(phase, location.pathname);
+      if (location.pathname !== nextPath) navigate(nextPath, { state: { phase } });
+    },
+    [location.pathname, navigate],
+  );
 
   const [notificationCount, setNotificationCount] = useState(0);
   const refreshNotificationCount = () => {
@@ -93,12 +113,17 @@ export default function App() {
     let active = true;
     if (currentUser.isGuest) {
       setNotificationCount(0);
-      return () => { active = false; };
+      return () => {
+        active = false;
+      };
     }
     void listMyNotifications(currentUser.id).then((notifications) => {
-      if (active) setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
+      if (active)
+        setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
     });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [currentUser.id, currentUser.isGuest]);
 
   // Login Required Modal State
@@ -107,16 +132,31 @@ export default function App() {
   const [pendingCheckoutAfterLogin, setPendingCheckoutAfterLogin] = useState(false);
 
   // Navigation & View State
-  type RouteTab = 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart' | 'notifications';
+  type RouteTab =
+    'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart' | 'notifications';
   const routeToTab = useCallback((pathname: string): RouteTab => {
     const normalizedPath = pathname.replace(/\/$/, '') || '/home';
-    const route = normalizedPath === '/example/shop' ? '/home' : normalizedPath.replace(/^\/example(?=\/|$)/, '') || '/home';
+    const route =
+      normalizedPath === '/example/shop'
+        ? '/home'
+        : normalizedPath.replace(/^\/example(?=\/|$)/, '') || '/home';
     if (route === '/notifications' || route === '/notification') return 'notifications';
     if (route === '/profile' || route === '/account') return 'account';
-    if (route === '/shop' || route === '/search' || route === '/custom' || route === '/wishlist' || route === '/cart' || route === '/notifications') return route.slice(1) as RouteTab;
+    if (
+      route === '/shop' ||
+      route === '/search' ||
+      route === '/custom' ||
+      route === '/wishlist' ||
+      route === '/cart' ||
+      route === '/notifications'
+    )
+      return route.slice(1) as RouteTab;
     return 'home';
   }, []);
-  const tabToRoute = useCallback((tab: RouteTab) => tab === 'account' ? '/profile' : `/${tab}`, []);
+  const tabToRoute = useCallback(
+    (tab: RouteTab) => (tab === 'account' ? '/profile' : `/${tab}`),
+    [],
+  );
   const [activeTab, setActiveTab] = useState<RouteTab>(() => routeToTab(location.pathname));
   useEffect(() => {
     setAppPhase(phaseFromPath(location.pathname));
@@ -125,13 +165,21 @@ export default function App() {
 
   useEffect(() => {
     const route = location.pathname.replace(/\/$/, '') || '/';
-    const publicAuthPath = ['/Onboarding', '/onboarding', '/signup', '/signup/onboarding', '/signup/loading'].includes(route);
+    const publicAuthPath = [
+      '/Onboarding',
+      '/onboarding',
+      '/signup',
+      '/signup/onboarding',
+      '/signup/loading',
+    ].includes(route);
     if (authStatus === 'AUTHENTICATED' && isAdmin !== null) {
       if (isAdmin) {
-        // Role resolution can finish after the initial password login callback.
-        // Always move a verified admin into the protected workspace, even if the
-        // storefront was rendered during that short async window.
-        if (route !== '/admin') navigate('/admin', { replace: true });
+        // Role resolution can finish after login; enter admin unless the admin
+        // explicitly chose to return to the storefront for this session.
+        if (route === '/admin') adminStorefrontRequested.current = false;
+        else if (shouldRedirectAdminToWorkspace(route, adminStorefrontRequested.current)) {
+          navigate('/admin', { replace: true });
+        }
       } else if (route !== '/admin' && appPhase !== 'main') {
         goToPhase('main');
       }
@@ -142,7 +190,12 @@ export default function App() {
       goToPhase('onboarding');
       return;
     }
-    if (authStatus === 'UNAUTHENTICATED' && !publicAuthPath && route !== '/admin' && appPhase !== 'onboarding') {
+    if (
+      authStatus === 'UNAUTHENTICATED' &&
+      !publicAuthPath &&
+      route !== '/admin' &&
+      appPhase !== 'onboarding'
+    ) {
       goToPhase('onboarding');
     }
   }, [authStatus, isAdmin, location.pathname, appPhase, navigate, goToPhase]);
@@ -181,9 +234,23 @@ export default function App() {
   const [isTermsConditionsOpen, setIsTermsConditionsOpen] = useState(false);
 
   // Cart and catalog behavior are isolated so the storefront shell stays focused on presentation.
-  const { products: catalogProducts, isLoaded: catalogLoaded, isLoading: catalogLoading, error: catalogError, retry: retryCatalog } = useCatalog();
-  const { cart, setCart, clearCart } = useCart(currentUser, catalogProducts, catalogLoaded, catalogError);
-  const [ownedWishlist, setOwnedWishlist] = useState<{ ownerId: string; items: Product[] }>({ ownerId: 'guest-user', items: [] });
+  const {
+    products: catalogProducts,
+    isLoaded: catalogLoaded,
+    isLoading: catalogLoading,
+    error: catalogError,
+    retry: retryCatalog,
+  } = useCatalog();
+  const { cart, setCart, clearCart } = useCart(
+    currentUser,
+    catalogProducts,
+    catalogLoaded,
+    catalogError,
+  );
+  const [ownedWishlist, setOwnedWishlist] = useState<{ ownerId: string; items: Product[] }>({
+    ownerId: 'guest-user',
+    items: [],
+  });
   const wishlist = ownedWishlist.ownerId === currentUser.id ? ownedWishlist.items : [];
 
   useEffect(() => {
@@ -204,25 +271,42 @@ export default function App() {
   useEffect(() => {
     if (ownedWishlist.ownerId !== currentUser.id || currentUser.isGuest) return;
     try {
-      localStorage.setItem(`work-app:${currentUser.id}:wishlist`, JSON.stringify(ownedWishlist.items));
+      localStorage.setItem(
+        `work-app:${currentUser.id}:wishlist`,
+        JSON.stringify(ownedWishlist.items),
+      );
     } catch {
       // In-memory wishlist state still works when storage is blocked or full.
     }
   }, [ownedWishlist, currentUser.id, currentUser.isGuest]);
 
-  const setWishlist = useCallback((next: Product[] | ((current: Product[]) => Product[])) => {
-    setOwnedWishlist((state) => {
-      const current = state.ownerId === currentUser.id ? state.items : [];
-      return { ownerId: currentUser.id, items: typeof next === 'function' ? next(current) : next };
-    });
-  }, [currentUser.id]);
+  const setWishlist = useCallback(
+    (next: Product[] | ((current: Product[]) => Product[])) => {
+      setOwnedWishlist((state) => {
+        const current = state.ownerId === currentUser.id ? state.items : [];
+        return {
+          ownerId: currentUser.id,
+          items: typeof next === 'function' ? next(current) : next,
+        };
+      });
+    },
+    [currentUser.id],
+  );
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
   const [checkoutDiscount, setCheckoutDiscount] = useState(0);
   const [checkoutCoupon, setCheckoutCoupon] = useState('');
-  const [checkoutQuote, setCheckoutQuote] = useState<{ subtotal: number; total: number } | null>(null);
+  const [checkoutQuote, setCheckoutQuote] = useState<{ subtotal: number; total: number } | null>(
+    null,
+  );
 
   useEffect(() => {
-    if (currentUser.isGuest || !supabase || ownedWishlist.ownerId !== currentUser.id || !catalogProducts.length) return;
+    if (
+      currentUser.isGuest ||
+      !supabase ||
+      ownedWishlist.ownerId !== currentUser.id ||
+      !catalogProducts.length
+    )
+      return;
     void listMyWishlist().then((rows) => {
       const ids = new Set(rows.map((row) => String(row.product_id)));
       setWishlist(catalogProducts.filter((product) => ids.has(product.id)));
@@ -245,79 +329,79 @@ export default function App() {
 
   // Filtered Products
   const filteredProducts = useMemo(() => {
-    return catalogProducts.filter((p) => {
-      // Category check (sync selectedCategory with homeFilters)
-      const effectiveCategory = homeFilters.category !== 'all' ? homeFilters.category : selectedCategory;
-      if (effectiveCategory !== 'all' && p.category !== effectiveCategory) {
-        return false;
-      }
-
-      // Vehicle filter
-      if (vehicleFilter) {
-        const matchesCompat = p.compatibility.some((comp) =>
-          comp.toLowerCase().includes(vehicleFilter.toLowerCase())
-        );
-        const matchesTitle = p.title.toLowerCase().includes(vehicleFilter.toLowerCase());
-        if (!matchesCompat && !matchesTitle) return false;
-      }
-
-      if (homeFilters.vehicleBrand !== 'all') {
-        const b = homeFilters.vehicleBrand.toLowerCase();
-        const matchesBrand =
-          p.compatibility.some((c) => c.toLowerCase().includes(b)) ||
-          p.title.toLowerCase().includes(b) ||
-          p.category.toLowerCase().includes(b);
-        if (!matchesBrand) return false;
-      }
-
-      // Price filter
-      if (homeFilters.priceRange === 'under_300' && p.price >= 300) return false;
-      if (homeFilters.priceRange === '300_600' && (p.price < 300 || p.price > 600)) return false;
-      if (homeFilters.priceRange === '600_1000' && (p.price < 600 || p.price > 1000)) return false;
-      if (homeFilters.priceRange === 'above_1000' && p.price <= 1000) return false;
-      if (p.price > homeFilters.maxPrice) return false;
-
-      // Feature toggles
-      if (homeFilters.waterproofOnly && !p.isWaterproof) return false;
-      if (homeFilters.bestsellerOnly && !p.isBestseller && p.badge !== 'Bestseller') return false;
-      if (homeFilters.inStockOnly && !p.inStock) return false;
-      if (homeFilters.customizableOnly && !p.isCustomizable) return false;
-      if (homeFilters.minRating > 0 && p.rating < homeFilters.minRating) return false;
-
-      // Search query
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchesName = p.title.toLowerCase().includes(q);
-        const matchesDesc = p.description.toLowerCase().includes(q);
-        const matchesCat = p.categoryLabel.toLowerCase().includes(q);
-        const matchesCompat = p.compatibility.some((c) => c.toLowerCase().includes(q));
-        if (!matchesName && !matchesDesc && !matchesCat && !matchesCompat) return false;
-      }
-      return true;
-    }).sort((a, b) => {
-      switch (sortBy) {
-        case 'price_asc':
-          return a.price - b.price;
-        case 'price_desc':
-          return b.price - a.price;
-        case 'rating':
-          return b.rating - a.rating || b.reviewCount - a.reviewCount;
-        case 'newest':
-          return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
-        case 'discount': {
-          const discA = ((a.originalPrice - a.price) / a.originalPrice) * 100;
-          const discB = ((b.originalPrice - b.price) / b.originalPrice) * 100;
-          return discB - discA;
+    return catalogProducts
+      .filter((p) => {
+        // Category check (sync selectedCategory with homeFilters)
+        const effectiveCategory =
+          homeFilters.category !== 'all' ? homeFilters.category : selectedCategory;
+        if (effectiveCategory !== 'all' && p.category !== effectiveCategory) {
+          return false;
         }
-        case 'popular':
-        default:
-          return (
-            (b.isBestseller ? 2 : 0) +
-            b.rating -
-            ((a.isBestseller ? 2 : 0) + a.rating)
+
+        // Vehicle filter
+        if (vehicleFilter) {
+          const matchesCompat = p.compatibility.some((comp) =>
+            comp.toLowerCase().includes(vehicleFilter.toLowerCase()),
           );
-      }
-    });
+          const matchesTitle = p.title.toLowerCase().includes(vehicleFilter.toLowerCase());
+          if (!matchesCompat && !matchesTitle) return false;
+        }
+
+        if (homeFilters.vehicleBrand !== 'all') {
+          const b = homeFilters.vehicleBrand.toLowerCase();
+          const matchesBrand =
+            p.compatibility.some((c) => c.toLowerCase().includes(b)) ||
+            p.title.toLowerCase().includes(b) ||
+            p.category.toLowerCase().includes(b);
+          if (!matchesBrand) return false;
+        }
+
+        // Price filter
+        if (homeFilters.priceRange === 'under_300' && p.price >= 300) return false;
+        if (homeFilters.priceRange === '300_600' && (p.price < 300 || p.price > 600)) return false;
+        if (homeFilters.priceRange === '600_1000' && (p.price < 600 || p.price > 1000))
+          return false;
+        if (homeFilters.priceRange === 'above_1000' && p.price <= 1000) return false;
+        if (p.price > homeFilters.maxPrice) return false;
+
+        // Feature toggles
+        if (homeFilters.waterproofOnly && !p.isWaterproof) return false;
+        if (homeFilters.bestsellerOnly && !p.isBestseller && p.badge !== 'Bestseller') return false;
+        if (homeFilters.inStockOnly && !p.inStock) return false;
+        if (homeFilters.customizableOnly && !p.isCustomizable) return false;
+        if (homeFilters.minRating > 0 && p.rating < homeFilters.minRating) return false;
+
+        // Search query
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          const matchesName = p.title.toLowerCase().includes(q);
+          const matchesDesc = p.description.toLowerCase().includes(q);
+          const matchesCat = p.categoryLabel.toLowerCase().includes(q);
+          const matchesCompat = p.compatibility.some((c) => c.toLowerCase().includes(q));
+          if (!matchesName && !matchesDesc && !matchesCat && !matchesCompat) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case 'price_asc':
+            return a.price - b.price;
+          case 'price_desc':
+            return b.price - a.price;
+          case 'rating':
+            return b.rating - a.rating || b.reviewCount - a.reviewCount;
+          case 'newest':
+            return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
+          case 'discount': {
+            const discA = ((a.originalPrice - a.price) / a.originalPrice) * 100;
+            const discB = ((b.originalPrice - b.price) / b.originalPrice) * 100;
+            return discB - discA;
+          }
+          case 'popular':
+          default:
+            return (b.isBestseller ? 2 : 0) + b.rating - ((a.isBestseller ? 2 : 0) + a.rating);
+        }
+      });
   }, [catalogProducts, selectedCategory, vehicleFilter, searchQuery, sortBy, homeFilters]);
 
   // Quick Cart Add
@@ -327,9 +411,11 @@ export default function App() {
     const existingIndex = cart.findIndex((item) => item.product.id === p.id);
 
     if (existingIndex > -1) {
-      setCart((current) => current.map((item, index) =>
-        index === existingIndex ? { ...item, quantity: item.quantity + 1 } : item,
-      ));
+      setCart((current) =>
+        current.map((item, index) =>
+          index === existingIndex ? { ...item, quantity: item.quantity + 1 } : item,
+        ),
+      );
     } else {
       const newItem: CartItem = {
         cartItemId: `${p.id}-${Date.now()}`,
@@ -354,13 +440,11 @@ export default function App() {
     selectedStitch: string,
     selectedThickness: { label: string; extraPrice: number },
     customEmbroideryText?: string,
-    quantity = 1
+    quantity = 1,
   ) => {
     if (!product.inStock) return;
     const unitPrice =
-      product.price +
-      selectedThickness.extraPrice +
-      (customEmbroideryText ? 150 : 0);
+      product.price + selectedThickness.extraPrice + (customEmbroideryText ? 150 : 0);
 
     const newItem: CartItem = {
       cartItemId: `${product.id}-${selectedColor.name}-${selectedStitch}-${Date.now()}`,
@@ -380,10 +464,15 @@ export default function App() {
   const handleToggleWishlist = async (p: Product, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     const saved = wishlist.some((item) => item.id === p.id);
-    setWishlist((current) => saved ? current.filter((item) => item.id !== p.id) : [...current, p]);
+    setWishlist((current) =>
+      saved ? current.filter((item) => item.id !== p.id) : [...current, p],
+    );
     if (!currentUser.isGuest && supabase) {
       const result = await toggleWishlist(p.id, saved);
-      if (result.error) setWishlist((current) => saved ? [...current, p] : current.filter((item) => item.id !== p.id));
+      if (result.error)
+        setWishlist((current) =>
+          saved ? [...current, p] : current.filter((item) => item.id !== p.id),
+        );
     }
   };
 
@@ -392,7 +481,7 @@ export default function App() {
       setCart((current) => current.filter((i) => i.cartItemId !== cartItemId));
     } else {
       setCart((current) =>
-        current.map((i) => (i.cartItemId === cartItemId ? { ...i, quantity: newQty } : i))
+        current.map((i) => (i.cartItemId === cartItemId ? { ...i, quantity: newQty } : i)),
       );
     }
   };
@@ -401,7 +490,11 @@ export default function App() {
     setCart((current) => current.filter((i) => i.cartItemId !== cartItemId));
   };
 
-  const handleProceedToCheckout = (discount: number, coupon: string, quote?: { subtotal: number; total: number }) => {
+  const handleProceedToCheckout = (
+    discount: number,
+    coupon: string,
+    quote?: { subtotal: number; total: number },
+  ) => {
     setCheckoutDiscount(discount);
     setCheckoutCoupon(coupon);
     setCheckoutQuote(quote || null);
@@ -427,6 +520,7 @@ export default function App() {
     setIsAdmin(admin);
     setIsLoginModalOpen(false);
     if (admin) {
+      adminStorefrontRequested.current = false;
       navigate('/admin');
       return;
     }
@@ -457,6 +551,7 @@ export default function App() {
     }
     setOwnedWishlist({ ownerId: 'guest-user', items: [] });
     setIsAdmin(false);
+    adminStorefrontRequested.current = false;
     setCurrentUser({ id: 'guest-user', name: 'Guest Rider', email: '', phone: '', isGuest: true });
     setNotificationCount(0);
     setPendingCheckoutAfterLogin(false);
@@ -471,12 +566,45 @@ export default function App() {
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const handleBannerClick = useCallback(
+    (url: string) => {
+      const target = url.trim();
+      if (target.startsWith('/')) {
+        navigate(target);
+        return;
+      }
+      if (/^https?:\/\//i.test(target)) window.open(target, '_blank', 'noopener,noreferrer');
+    },
+    [navigate],
+  );
+
   // Phase 1: Product introduction. Once completed, open the app directly.
   if (location.pathname.replace(/\/$/, '') === '/admin') {
-    return <AdminAccessGate onBackToStore={() => navigate('/home')} onSignIn={() => {
-      setAuthInitialMode('login');
-      goToPhase('auth');
-    }}><Suspense fallback={<div className="min-h-screen p-8 text-sm font-bold">Loading admin workspace…</div>}><AdminPanel onBackToStore={() => navigate('/home')} /></Suspense></AdminAccessGate>;
+    return (
+      <AdminAccessGate
+        onBackToStore={() => {
+          adminStorefrontRequested.current = true;
+          navigate('/home', { replace: true });
+        }}
+        onSignIn={() => {
+          setAuthInitialMode('login');
+          goToPhase('auth');
+        }}
+      >
+        <Suspense
+          fallback={
+            <div className="min-h-screen p-8 text-sm font-bold">Loading admin workspace…</div>
+          }
+        >
+          <AdminPanel
+            onBackToStore={() => {
+              adminStorefrontRequested.current = true;
+              navigate('/home', { replace: true });
+            }}
+          />
+        </Suspense>
+      </AdminAccessGate>
+    );
   }
 
   // Never render a protected page while Supabase is still resolving the session.
@@ -533,39 +661,50 @@ export default function App() {
         } ${isMobileFrameMode ? 'max-w-[440px]' : 'max-w-4xl'}`}
       >
         {/* Main Header */}
-        {!isNotificationPage && !isShopPage && activeTab !== 'search' && activeTab !== 'account' && !['cart', 'wishlist', 'custom'].includes(activeTab) && <Header
-          cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
-          notificationCount={notificationCount}
-          wishlistCount={wishlist.length}
-          currentUser={currentUser}
-          onOpenCart={() => setIsCartOpen(true)}
-          onOpenWishlist={() => setIsWishlistOpen(true)}
-          onOpenStoreInfo={() => setIsStoreInfoOpen(true)}
-  onOpenAccount={() => setActiveTab('account')}
-  onOpenNotifications={() => {
-    refreshNotificationCount();
-    setActiveTab('notifications');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }}
-  onOpenSearch={() => {
-            setActiveTab('search');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          searchQuery={searchQuery}
-          setSearchQuery={(q) => {
-            setSearchQuery(q);
-            if (q.trim()) {
-              setActiveTab('search');
-            }
-          }}
-          hideSearchInput={false}
-          isMobileFrameMode={isMobileFrameMode}
-          setIsMobileFrameMode={setIsMobileFrameMode}
-        />}
+        {!isNotificationPage &&
+          !isShopPage &&
+          activeTab !== 'search' &&
+          activeTab !== 'account' &&
+          !['cart', 'wishlist', 'custom'].includes(activeTab) && (
+            <Header
+              cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
+              notificationCount={notificationCount}
+              wishlistCount={wishlist.length}
+              currentUser={currentUser}
+              onOpenCart={() => setIsCartOpen(true)}
+              onOpenWishlist={() => setIsWishlistOpen(true)}
+              onOpenStoreInfo={() => setIsStoreInfoOpen(true)}
+              onOpenAccount={() => setActiveTab('account')}
+              onOpenNotifications={() => {
+                refreshNotificationCount();
+                setActiveTab('notifications');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onOpenSearch={() => {
+                setActiveTab('search');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              searchQuery={searchQuery}
+              setSearchQuery={(q) => {
+                setSearchQuery(q);
+                if (q.trim()) {
+                  setActiveTab('search');
+                }
+              }}
+              hideSearchInput={false}
+              isMobileFrameMode={isMobileFrameMode}
+              setIsMobileFrameMode={setIsMobileFrameMode}
+            />
+          )}
 
         {/* View Switcher: Search View / Account View / Home & Shop Experience */}
         {activeTab === 'notifications' ? (
-          <NotificationsView userId={currentUser.id} isGuest={currentUser.isGuest} onBack={() => setActiveTab('home')} onNotificationsChanged={refreshNotificationCount} />
+          <NotificationsView
+            userId={currentUser.id}
+            isGuest={currentUser.isGuest}
+            onBack={() => setActiveTab('home')}
+            onNotificationsChanged={refreshNotificationCount}
+          />
         ) : activeTab === 'shop' ? (
           <ShopView
             products={filteredProducts}
@@ -575,11 +714,17 @@ export default function App() {
             error={catalogError}
             onRetry={retryCatalog}
             onBack={() => setActiveTab('home')}
-            onSearch={(value) => { setSearchQuery(value); setActiveTab('search'); }}
+            onSearch={(value) => {
+              setSearchQuery(value);
+              setActiveTab('search');
+            }}
             onSelectProduct={setSelectedProduct}
             onQuickAdd={handleQuickAddToCart}
             onToggleWishlist={handleToggleWishlist}
-            onOpenCart={() => { setActiveTab('cart'); setIsCartOpen(true); }}
+            onOpenCart={() => {
+              setActiveTab('cart');
+              setIsCartOpen(true);
+            }}
           />
         ) : activeTab === 'search' ? (
           <main className="flex-1 flex flex-col">
@@ -606,11 +751,15 @@ export default function App() {
             <AccountView
               currentUser={currentUser}
               products={catalogProducts}
-              onProfileChange={(profile) => setCurrentUser((user) => user.id === currentUser.id ? { ...user, ...profile } : user)}
-  onOpenLogin={() => {
-  setAuthInitialMode('signup');
-  goToPhase('account-onboarding');
-  }}
+              onProfileChange={(profile) =>
+                setCurrentUser((user) =>
+                  user.id === currentUser.id ? { ...user, ...profile } : user,
+                )
+              }
+              onOpenLogin={() => {
+                setAuthInitialMode('signup');
+                goToPhase('account-onboarding');
+              }}
               onLogout={handleLogout}
               onBackToHome={() => {
                 setActiveTab('home');
@@ -619,9 +768,9 @@ export default function App() {
               onOpenWishlist={() => setIsWishlistOpen(true)}
               onOpenStoreInfo={() => setIsStoreInfoOpen(true)}
               onOpenCustomBuilder={() => setIsCustomBuilderOpen(true)}
-      onOpenShop={() => {
-        setActiveTab('shop');
-      }}
+              onOpenShop={() => {
+                setActiveTab('shop');
+              }}
             />
           </main>
         ) : activeTab === 'cart' || activeTab === 'wishlist' || activeTab === 'custom' ? (
@@ -632,6 +781,7 @@ export default function App() {
             <HeroBanner
               onExploreClick={scrollToShop}
               onCustomClick={() => setIsCustomBuilderOpen(true)}
+              onBannerClick={handleBannerClick}
             />
 
             {/* Categories Section */}
@@ -736,7 +886,8 @@ export default function App() {
                       : `${selectedCategory.toUpperCase()} COLLECTION`}
                   </h3>
                   <p className="text-[11.5px] text-gray-400 font-medium">
-                    {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'} available
+                    {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}{' '}
+                    available
                   </p>
                 </div>
 
@@ -749,7 +900,11 @@ export default function App() {
                     title="Change sorting order"
                   >
                     <ArrowUpDown className="w-3.5 h-3.5 text-gray-500" />
-                    <span>{SORT_LABELS[sortBy]?.label ? SORT_LABELS[sortBy].label.split(' ')[0] : 'Sort'}</span>
+                    <span>
+                      {SORT_LABELS[sortBy]?.label
+                        ? SORT_LABELS[sortBy].label.split(' ')[0]
+                        : 'Sort'}
+                    </span>
                   </button>
 
                   {/* Filter Trigger Button with badge */}
@@ -815,7 +970,10 @@ export default function App() {
                       }}
                       className="bg-red-50 text-[#D9232D] border border-red-200 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
                     >
-                      <span>Category: {homeFilters.category !== 'all' ? homeFilters.category : selectedCategory}</span>
+                      <span>
+                        Category:{' '}
+                        {homeFilters.category !== 'all' ? homeFilters.category : selectedCategory}
+                      </span>
                       <span>✕</span>
                     </button>
                   )}
@@ -890,7 +1048,9 @@ export default function App() {
 
                   {homeFilters.customizableOnly && (
                     <button
-                      onClick={() => setHomeFilters((prev) => ({ ...prev, customizableOnly: false }))}
+                      onClick={() =>
+                        setHomeFilters((prev) => ({ ...prev, customizableOnly: false }))
+                      }
                       className="bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
                     >
                       <span>Custom Fit</span>
@@ -1020,7 +1180,9 @@ export default function App() {
                 </div>
 
                 <p className="text-[11.5px] text-gray-400 leading-relaxed">
-                  Leading seat cover manufacturer for bikes, toto e-rickshaws, and scooters. Handcrafted with Japanese stitching cords, anti-fatigue memory foam, and weather-proof rexine.
+                  Leading seat cover manufacturer for bikes, toto e-rickshaws, and scooters.
+                  Handcrafted with Japanese stitching cords, anti-fatigue memory foam, and
+                  weather-proof rexine.
                 </p>
 
                 <div className="border-t border-gray-800 pt-3 flex flex-wrap justify-between items-center text-[10.5px] text-gray-500 gap-2">
@@ -1049,29 +1211,34 @@ export default function App() {
           </main>
         )}
 
-  {/* Bottom Tab Bar Navigation */}
-  {!isNotificationPage && !isShopPage && activeTab !== 'search' && !['cart', 'wishlist', 'custom'].includes(activeTab) && <BottomNav
-          activeTab={activeTab as 'home' | 'shop' | 'custom' | 'wishlist' | 'account' | 'cart'}
-          setActiveTab={(tab) => setActiveTab(tab as RouteTab)}
-          cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
-          wishlistCount={wishlist.length}
-          onOpenCart={() => setIsCartOpen(true)}
-          onOpenWishlist={() => setIsWishlistOpen(true)}
-          onOpenCustomBuilder={() => setIsCustomBuilderOpen(true)}
-          onOpenShop={() => {
-            setActiveTab('shop');
-            scrollToShop();
-          }}
-          onOpenSearch={() => {
-            setActiveTab('search');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onOpenAccount={() => {
-            setActiveTab('account');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onScrollToTop={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        />}
+        {/* Bottom Tab Bar Navigation */}
+        {!isNotificationPage &&
+          !isShopPage &&
+          activeTab !== 'search' &&
+          !['cart', 'wishlist', 'custom'].includes(activeTab) && (
+            <BottomNav
+              activeTab={activeTab as 'home' | 'shop' | 'custom' | 'wishlist' | 'account' | 'cart'}
+              setActiveTab={(tab) => setActiveTab(tab as RouteTab)}
+              cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
+              wishlistCount={wishlist.length}
+              onOpenCart={() => setIsCartOpen(true)}
+              onOpenWishlist={() => setIsWishlistOpen(true)}
+              onOpenCustomBuilder={() => setIsCustomBuilderOpen(true)}
+              onOpenShop={() => {
+                setActiveTab('shop');
+                scrollToShop();
+              }}
+              onOpenSearch={() => {
+                setActiveTab('search');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onOpenAccount={() => {
+                setActiveTab('account');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onScrollToTop={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            />
+          )}
 
         {/* Modals & Slide-overs */}
         <ProductDetailModal
@@ -1093,7 +1260,9 @@ export default function App() {
           }}
           onBuyNow={() => setIsCartOpen(true)}
           onSelectProduct={(p) => setSelectedProduct(p)}
-          onQuickAdd={(p) => handleDetailAddToCart(p, p.colors[0], p.stitchPatterns[0] || '', p.thicknessOptions[0])}
+          onQuickAdd={(p) =>
+            handleDetailAddToCart(p, p.colors[0], p.stitchPatterns[0] || '', p.thicknessOptions[0])
+          }
           isAuthenticated={!currentUser.isGuest}
           customerId={currentUser.isGuest ? undefined : currentUser.id}
           onRequestLogin={() => {
@@ -1104,16 +1273,22 @@ export default function App() {
 
         <CustomSeatBuilder
           isOpen={isCustomBuilderOpen || activeTab === 'custom'}
-          onClose={() => { setIsCustomBuilderOpen(false); setActiveTab('home'); }}
+          onClose={() => {
+            setIsCustomBuilderOpen(false);
+            setActiveTab('home');
+          }}
           onAddCustomSeatToCart={(p, col, stitch, thick, emb) => {
             handleDetailAddToCart(p, col, stitch, thick, emb);
             setIsCartOpen(true);
           }}
         />
 
-          <CartDrawer
+        <CartDrawer
           isOpen={isCartOpen || activeTab === 'cart'}
-          onClose={() => { setIsCartOpen(false); setActiveTab('home'); }}
+          onClose={() => {
+            setIsCartOpen(false);
+            setActiveTab('home');
+          }}
           items={cart}
           userId={currentUser.id}
           onUpdateQuantity={handleUpdateQuantity}
@@ -1136,7 +1311,10 @@ export default function App() {
 
         <WishlistModal
           isOpen={isWishlistOpen || activeTab === 'wishlist'}
-          onClose={() => { setIsWishlistOpen(false); setActiveTab('home'); }}
+          onClose={() => {
+            setIsWishlistOpen(false);
+            setActiveTab('home');
+          }}
           wishlist={wishlist}
           onRemoveWishlist={(p) => handleToggleWishlist(p)}
           onSelectProduct={(p) => setSelectedProduct(p)}
@@ -1145,10 +1323,7 @@ export default function App() {
           }}
         />
 
-        <StoreLocationModal
-          isOpen={isStoreInfoOpen}
-          onClose={() => setIsStoreInfoOpen(false)}
-        />
+        <StoreLocationModal isOpen={isStoreInfoOpen} onClose={() => setIsStoreInfoOpen(false)} />
 
         {/* 📜 Privacy Policy Modal / Slide-over */}
         {isPrivacyPolicyOpen && (
@@ -1208,8 +1383,8 @@ export default function App() {
           }}
           reason={loginModalReason}
           onOpenAuth={(mode) => {
-  setAuthInitialMode(mode || 'signup');
-  goToPhase('auth');
+            setAuthInitialMode(mode || 'signup');
+            goToPhase('auth');
           }}
         />
         <Outlet />

@@ -439,7 +439,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     </div>
                     <input
                       type="checkbox"
-                      checked={(notificationState as any)[item.key]}
+                      checked={notificationState[item.key as keyof typeof notificationState]}
                       onChange={(e) => setNotificationState({ ...notificationState, [item.key]: e.target.checked })}
                       className="w-5 h-5 rounded text-[#D9232D] focus:ring-[#D9232D] cursor-pointer"
                     />
@@ -656,7 +656,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     ].map((l) => (
                       <button
                         key={l.id}
-                        onClick={() => setLanguage(l.id as any)}
+                        onClick={() => setLanguage(l.id as 'en' | 'bn' | 'hi')}
                         className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${
                           language === l.id ? 'border-[#D9232D] bg-[#FEECEC] text-[#D9232D]' : 'border-gray-200 text-gray-700'
                         }`}
@@ -776,7 +776,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               <div>
                 <h3 className="text-base font-bold text-gray-900">Sign out of account?</h3>
-                <p className="text-xs text-gray-500 mt-1">You will need to verify your phone number to sign back in.</p>
+                <p className="text-xs text-gray-500 mt-1">You'll need to sign in again to access your account.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-2.5 pt-2">
