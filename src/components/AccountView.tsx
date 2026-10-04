@@ -43,6 +43,7 @@ interface AccountViewProps {
   onOpenCustomBuilder?: () => void;
   onOpenShop?: () => void;
   onProfileChange?: (profile: Pick<UserProfile, 'name' | 'phone' | 'avatar' | 'vehicle'>) => void;
+  products?: Product[];
 }
 
 export const AccountView: React.FC<AccountViewProps> = ({
@@ -765,14 +766,24 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
       {/* Sub-Modals for Account Features */}
       <AnimatePresence>
-        {activeModal === 'orders' && <CustomerOrdersModal
-          orders={customerOrders}
-          reviews={myReviews}
-          loading={ordersLoading}
-          customerName={currentUser?.name || ''}
-          onClose={() => setActiveModal(null)}
-          onReview={(order, productId, productTitle, review) => setReviewComposer({ productId, orderId: order.id, orderNumber: order.order_number, productTitle, review })}
-        />}
+        {activeModal === 'orders' && (
+          <CustomerOrdersModal
+            orders={customerOrders}
+            reviews={myReviews}
+            loading={ordersLoading}
+            customerName={currentUser?.name || ''}
+            onClose={() => setActiveModal(null)}
+            onReview={(order, productId, productTitle, review) =>
+              setReviewComposer({
+                productId,
+                orderId: order.id,
+                orderNumber: order.order_number,
+                productTitle,
+                review,
+              })
+            }
+          />
+        )}
       </AnimatePresence>
 
       {reviewComposer && <ReviewComposer productId={reviewComposer.productId} orderId={reviewComposer.orderId} orderNumber={reviewComposer.orderNumber} productTitle={reviewComposer.productTitle} review={reviewComposer.review} onClose={() => setReviewComposer(null)} onSaved={() => {

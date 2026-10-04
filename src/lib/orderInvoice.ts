@@ -10,7 +10,10 @@ const dateLabel = (value: string) => {
   return Number.isNaN(date.getTime()) ? 'Date unavailable' : date.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
 };
 
-export const downloadOrderInvoice = (order: CustomerOrderRecord, customerName: string) => {
+export const downloadOrderInvoice = (
+  order: CustomerOrderRecord,
+  customerName = order.customer_name,
+) => {
   if (!isOrderComplete(order.status)) return false;
 
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });

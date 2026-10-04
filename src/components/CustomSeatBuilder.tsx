@@ -195,7 +195,7 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
                     <button
                       key={f.id}
                       type="button"
-                      onClick={() => setFoamDensity(f.id as any)}
+                      onClick={() => setFoamDensity(f.id as 'standard' | 'high_density' | 'gel_infused')}
                       className={`w-full p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
                         isSel
                           ? 'border-[#D9232D] bg-[#FEECEC]/50 text-gray-900'
@@ -228,7 +228,7 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
                   <button
                     key={m.id}
                     type="button"
-                    onClick={() => setMaterial(m.id as any)}
+                    onClick={() => setMaterial(m.id as 'rexine' | 'carbon' | 'mesh' | 'leatherette')}
                     className={`p-2 rounded-xl border text-[11.5px] font-bold text-left flex flex-col justify-between transition-all ${
                       material === m.id
                         ? 'border-[#D9232D] bg-[#FEECEC]/40 text-[#D9232D]'
