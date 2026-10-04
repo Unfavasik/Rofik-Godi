@@ -27,6 +27,7 @@ import { AdminReviewsView } from './AdminReviewsView';
 import { BannersView, CategoriesView, NotificationsView, ReportsView } from './AdminSections';
 import {
   loadAdminOrders,
+  matchesAdminOrderToCustomer,
   updatePickupOrderStatus,
   verifyPickupPayment,
   type AdminOrderRecord,
@@ -219,8 +220,10 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     if (productResult) setProducts(productResult);
     if (customerResult.error) errors.push(`Customers: ${customerResult.error.message}`);
     else setCustomers(customerResult.data);
-    if (metricResult.data) setMetrics(metricResult.data);
-    if (!notificationResult.error) setNotifications(notificationResult.data);
+    if (metricResult.error) errors.push(`Dashboard: ${metricResult.error.message}`);
+    else if (metricResult.data) setMetrics(metricResult.data);
+    if (notificationResult.error) errors.push(`Notifications: ${notificationResult.error.message}`);
+    else setNotifications(notificationResult.data);
     setError(errors.join(' · '));
   }, []);
   useEffect(() => {
@@ -526,6 +529,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
           {section === 'settings' && (
             <SettingsAdmin
               notify={notify}
+              productCount={products.length}
               onSignOut={async () => {
                 await supabase?.auth.signOut();
                 onBackToStore?.();
@@ -1179,9 +1183,7 @@ function CustomerProfile({
   onClose: () => void;
 }) {
   const history = orders
-    .filter((order) =>
-      customer.phone ? order.phone === customer.phone : order.customer === customer.name,
-    )
+    .filter((order) => matchesAdminOrderToCustomer(order, customer))
     .slice(0, 10);
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/40">
@@ -1218,7 +1220,7 @@ function CustomerProfile({
         <div className="mt-8 border-t border-slate-100 pt-5">
           <h3 className="text-sm font-black">Recent order history</h3>
           <p className="mt-1 text-[10px] text-slate-400">
-            Matched from the latest 100 orders by phone or name.
+            Matched from the latest 100 orders by account, phone or name.
           </p>
           <div className="mt-3 divide-y divide-slate-100">
             {history.map((order) => (
@@ -1243,9 +1245,11 @@ function CustomerProfile({
 }
 function SettingsAdmin({
   notify,
+  productCount,
   onSignOut,
 }: {
   notify: (message: string) => void;
+  productCount: number;
   onSignOut: () => void;
 }) {
   const [settings, setSettings] = useState({
@@ -1300,8 +1304,8 @@ function SettingsAdmin({
               <b>INR · ₹</b>
             </p>
             <p className="flex justify-between">
-              <span className="text-slate-500">Catalog</span>
-              <b>{PRODUCTS.length} starter products</b>
+              <span className="text-slate-500">Active products</span>
+              <b>{productCount}</b>
             </p>
           </div>
         </section>

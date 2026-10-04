@@ -566,6 +566,18 @@ export default function App() {
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const handleBannerClick = useCallback(
+    (url: string) => {
+      const target = url.trim();
+      if (target.startsWith('/')) {
+        navigate(target);
+        return;
+      }
+      if (/^https?:\/\//i.test(target)) window.open(target, '_blank', 'noopener,noreferrer');
+    },
+    [navigate],
+  );
+
   // Phase 1: Product introduction. Once completed, open the app directly.
   if (location.pathname.replace(/\/$/, '') === '/admin') {
     return (
@@ -768,6 +780,7 @@ export default function App() {
             <HeroBanner
               onExploreClick={scrollToShop}
               onCustomClick={() => setIsCustomBuilderOpen(true)}
+              onBannerClick={handleBannerClick}
             />
 
             {/* Categories Section */}

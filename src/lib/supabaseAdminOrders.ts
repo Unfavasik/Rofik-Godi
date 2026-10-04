@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 
 export type AdminOrderRecord = {
   id: string;
+  userId: string;
   orderNumber: string;
   customer: string;
   phone: string;
@@ -34,7 +35,7 @@ export async function loadAdminOrders(): Promise<{
   const { data, error } = await supabase
     .from('orders')
     .select(
-      'id,order_number,customer_name,customer_phone,vehicle_model,total,payment_method,payment_status,fulfillment_method,pickup_store,status,created_at,order_items(product_name,quantity,unit_price)',
+      'id,user_id,order_number,customer_name,customer_phone,vehicle_model,total,payment_method,payment_status,fulfillment_method,pickup_store,status,created_at,order_items(product_name,quantity,unit_price)',
     )
     .order('created_at', { ascending: false })
     .limit(100);
@@ -52,6 +53,7 @@ export async function loadAdminOrders(): Promise<{
         : [];
       return {
         id: `#${row.order_number}`,
+        userId: String(row.user_id || ''),
         orderNumber: String(row.order_number),
         customer,
         phone: String(row.customer_phone || ''),
@@ -81,6 +83,15 @@ export async function loadAdminOrders(): Promise<{
     }),
     error: null,
   };
+}
+
+export function matchesAdminOrderToCustomer(
+  order: Pick<AdminOrderRecord, 'userId' | 'phone' | 'customer'>,
+  customer: { id: string; phone: string; name: string },
+) {
+  if (order.userId) return order.userId === customer.id;
+  if (customer.phone && order.phone) return order.phone === customer.phone;
+  return order.customer === customer.name;
 }
 
 function normalizeOrderNumber(orderNumber: string) {

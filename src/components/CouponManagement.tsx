@@ -69,10 +69,6 @@ const inputIST = (value: string) => {
   return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 };
 const asTimestamp = (value: string) => `${value}:00+05:30`;
-const istDateInput = (day: number, hour: number, minute: number) => {
-  const date = new Intl.DateTimeFormat('en-CA', { timeZone: IST, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-  return `${date}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`.replace(/-\d{2}T/, `-${String(day).padStart(2, '0')}T`);
-};
 
 interface CouponFormState {
   id?: string;
@@ -93,23 +89,27 @@ interface CouponFormState {
   is_enabled: boolean;
 }
 
-const freshForm = (): CouponFormState => ({
-  code: 'WELCOME10',
-  discount_type: 'PERCENTAGE',
-  discount_value: '10',
-  max_discount: '1000',
-  minimum_order_value: '3000',
-  starts_at: istDateInput(3, 10, 0),
-  expires_at: istDateInput(31, 23, 59),
-  usage_limit: '100',
-  per_customer_limit: '1',
-  eligibility: 'FIRST_ORDER',
-  apply_to: 'ALL_PRODUCTS',
-  product_ids: [],
-  category_keys: [],
-  description: 'October first-order promotional campaign.',
-  is_enabled: true,
-});
+const freshForm = (): CouponFormState => {
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  return {
+    code: '',
+    discount_type: 'PERCENTAGE',
+    discount_value: '10',
+    max_discount: '',
+    minimum_order_value: '0',
+    starts_at: inputIST(now.toISOString()),
+    expires_at: inputIST(expiresAt.toISOString()),
+    usage_limit: '',
+    per_customer_limit: '',
+    eligibility: 'EVERYONE',
+    apply_to: 'ALL_PRODUCTS',
+    product_ids: [],
+    category_keys: [],
+    description: '',
+    is_enabled: false,
+  };
+};
 
 const inputClass = 'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-[#D9232D] focus:ring-4 focus:ring-red-50';
 const labelClass = 'block text-xs font-bold text-slate-600';

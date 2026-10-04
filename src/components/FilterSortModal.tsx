@@ -291,7 +291,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                           onClick={() =>
                             setDraftFilters((prev) => ({
                               ...prev,
-                              category: cat.id as any,
+                              category: cat.id as FilterState['category'],
                             }))
                           }
                           className={`py-2 px-2.5 text-center text-[12px] font-bold rounded-xl border transition-all cursor-pointer ${
@@ -342,7 +342,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                           onClick={() =>
                             setDraftFilters((prev) => ({
                               ...prev,
-                              priceRange: p.id as any,
+                              priceRange: p.id as FilterState['priceRange'],
                               maxPrice: p.id === 'under_300' ? 300 : p.id === '300_600' ? 600 : p.id === '600_1000' ? 1000 : 2500,
                             }))
                           }

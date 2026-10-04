@@ -1,28 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, ShieldCheck, Droplets, ArrowRight } from 'lucide-react';
+import { loadActiveStorefrontBanners, type StorefrontBanner } from '../lib/supabaseBanners';
 
 interface HeroBannerProps {
   onExploreClick: () => void;
   onCustomClick: () => void;
+  onBannerClick: (url: string) => void;
 }
 
-export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onCustomClick }) => {
+export const HeroBanner: React.FC<HeroBannerProps> = ({
+  onExploreClick,
+  onCustomClick,
+  onBannerClick,
+}) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [managedBanners, setManagedBanners] = useState<StorefrontBanner[]>([]);
 
-  const slides = [
+  useEffect(() => {
+    let active = true;
+    void loadActiveStorefrontBanners().then(({ data }) => {
+      if (active) setManagedBanners(data);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const defaultSlides = [
     {
       id: 0,
       badge: 'PREMIUM SEAT COVERS',
       headline: (
         <>
-          Comfort<br />for every ride.
+          Comfort
+          <br />
+          for every ride.
         </>
       ),
       subtext: 'Durable seat covers and accessories for bike, toto and more.',
       ctaText: 'Explore collection',
       ctaAction: onExploreClick,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDAjFNhnvx67fMNCi-wjG2VkzCG3eepkjtic7Nj24eji8Rrrv0Rhnq4KFU9wJHdrwp7784pw1GNs5VE2iGlugNVQrtIGk6nwTTvowkjY8kHDM2zCE8YTqybFSfNuN2izIuwMxn4TtVGcqv_KUOPTwarQZiJ2iyHkDx3puw-I78co_S8s6ediLq7o6imwneOjXgAJewkt8GehwmI63owlK3TU42a6TYoxu5FsZF_ndPdymgD2dZEzyG4',
+      image:
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuDAjFNhnvx67fMNCi-wjG2VkzCG3eepkjtic7Nj24eji8Rrrv0Rhnq4KFU9wJHdrwp7784pw1GNs5VE2iGlugNVQrtIGk6nwTTvowkjY8kHDM2zCE8YTqybFSfNuN2izIuwMxn4TtVGcqv_KUOPTwarQZiJ2iyHkDx3puw-I78co_S8s6ediLq7o6imwneOjXgAJewkt8GehwmI63owlK3TU42a6TYoxu5FsZF_ndPdymgD2dZEzyG4',
       badgeIcon: <ShieldCheck className="w-3 h-3 text-[#D9232D]" />,
       tagColor: '#D9232D',
     },
@@ -31,13 +51,16 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onCustom
       badge: 'TOTO / E-RICKSHAW SPECIAL',
       headline: (
         <>
-          Heavy Duty<br />Toto Cushions.
+          Heavy Duty
+          <br />
+          Toto Cushions.
         </>
       ),
       subtext: 'Driver lumbar godi & passenger sets for 12+ hour daily rides.',
       ctaText: 'View Toto Range',
       ctaAction: onExploreClick,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCzTHkKzZX3hEhUBbabXIUneCj4SbDLyVsoF5AC3mdG30c9fCfPXqTgtBkXXWSD-RQBMK9hGQ7z84-5HlSRv8pNH-4-nhZsrWMMJUF69Mc1C6yg3hIwq74HgmiQK54CCZs4pxtjnZHbNYGDr2Fr3XmUg5eQWe2mID_3rZrHE3_63rpzsGPmT3YgGkE0N8MSSMBr0lyBJaJ31aqCyTuF8-Gp68q6FO8TI5qD0duMd8hT-Do-pGwNJO4E',
+      image:
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuCzTHkKzZX3hEhUBbabXIUneCj4SbDLyVsoF5AC3mdG30c9fCfPXqTgtBkXXWSD-RQBMK9hGQ7z84-5HlSRv8pNH-4-nhZsrWMMJUF69Mc1C6yg3hIwq74HgmiQK54CCZs4pxtjnZHbNYGDr2Fr3XmUg5eQWe2mID_3rZrHE3_63rpzsGPmT3YgGkE0N8MSSMBr0lyBJaJ31aqCyTuF8-Gp68q6FO8TI5qD0duMd8hT-Do-pGwNJO4E',
       badgeIcon: <Droplets className="w-3 h-3 text-emerald-400" />,
       tagColor: '#059669',
     },
@@ -46,17 +69,35 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onCustom
       badge: 'CUSTOM GODI STUDIO',
       headline: (
         <>
-          Your Name<br />Stitched Custom.
+          Your Name
+          <br />
+          Stitched Custom.
         </>
       ),
       subtext: 'Choose your foam thickness, diamond quilting, and name embroidery.',
       ctaText: 'Design My Seat',
       ctaAction: onCustomClick,
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDb5u48v7PwFdzn4_BDUM6odmmk6dQ6EEFTBHcMU2Vvqmj-mj8_HCSFiKFjFHFE28XP0BEf29q0dNjhDNJWeg1YF6PXBX_ZDE4cNO5vnZNt8sXT1Gg1clWlo0JhPzMC6b8SW0xe55pAzGblTlmIYLFNO42qMW1tZll0FORMuLzrSyCzfeKOTsViJYDp698zO-5g-hSJWj67NhZWKkiMtBiEXY3ANGfMGU7GBpKmeFflSdXYihz2Tf9g',
+      image:
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuDb5u48v7PwFdzn4_BDUM6odmmk6dQ6EEFTBHcMU2Vvqmj-mj8_HCSFiKFjFHFE28XP0BEf29q0dNjhDNJWeg1YF6PXBX_ZDE4cNO5vnZNt8sXT1Gg1clWlo0JhPzMC6b8SW0xe55pAzGblTlmIYLFNO42qMW1tZll0FORMuLzrSyCzfeKOTsViJYDp698zO-5g-hSJWj67NhZWKkiMtBiEXY3ANGfMGU7GBpKmeFflSdXYihz2Tf9g',
       badgeIcon: <Sparkles className="w-3 h-3 text-amber-400" />,
       tagColor: '#D97706',
     },
   ];
+
+  const slides = managedBanners.length
+    ? managedBanners.map((banner) => ({
+        id: banner.id,
+        badge: 'ROFIK GODI CENTRE',
+        headline: banner.title,
+        subtext: banner.subtitle,
+        ctaText: banner.buttonLabel || 'Shop now',
+        ctaAction: () =>
+          banner.linkUrl.trim() ? onBannerClick(banner.linkUrl.trim()) : onExploreClick(),
+        image: banner.imageUrl,
+        badgeIcon: <Sparkles className="w-3 h-3 text-[#D9232D]" />,
+        tagColor: '#D9232D',
+      }))
+    : defaultSlides;
 
   // Auto-advance banner
   useEffect(() => {
@@ -66,7 +107,8 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onCustom
     return () => clearInterval(timer);
   }, [slides.length]);
 
-  const slide = slides[currentSlide];
+  const currentIndex = currentSlide % slides.length;
+  const slide = slides[currentIndex];
 
   return (
     <section className="px-5 mb-6" data-purpose="promotional-banner">
@@ -85,11 +127,13 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onCustom
             transition={{ duration: 0.5, ease: 'easeOut' }}
             className="absolute right-[-14px] -top-2 bottom-[-8px] w-1/2 flex items-center justify-end pointer-events-none z-0"
           >
-            <img
-              src={slide.image}
-              alt="Premium Seat Cover"
-              className="object-cover h-[115%] w-full rotate-[14deg] drop-shadow-[0_12px_24px_rgba(0,0,0,0.85)] filter contrast-125 brightness-105"
-            />
+            {slide.image && (
+              <img
+                src={slide.image}
+                alt={slide.badge}
+                className="object-cover h-[115%] w-full rotate-[14deg] drop-shadow-[0_12px_24px_rgba(0,0,0,0.85)] filter contrast-125 brightness-105"
+              />
+            )}
             {/* Dark gradient overlay for seamless blending */}
             <div className="absolute inset-0 bg-gradient-to-r from-[#0E0F12] via-transparent to-transparent" />
           </motion.div>
@@ -141,7 +185,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onCustom
               onClick={() => setCurrentSlide(idx)}
               aria-label={`Slide ${idx + 1}`}
               className={`transition-all ${
-                currentSlide === idx
+                currentIndex === idx
                   ? 'w-5 h-1.5 bg-[#D9232D] rounded-full'
                   : 'w-1.5 h-1.5 bg-gray-500/70 rounded-full hover:bg-gray-400'
               }`}

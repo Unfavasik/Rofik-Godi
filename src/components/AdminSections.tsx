@@ -56,7 +56,7 @@ export function CategoriesView({
                   <Tag className="h-5 w-5" />
                 </span>
                 <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600">
-                  {rows.length} products
+                  {rows.length} {rows.length === 1 ? 'product' : 'products'}
                 </span>
               </div>
               <h3 className="mt-4 text-sm font-black">{category.name}</h3>
@@ -169,9 +169,8 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
         </button>
       </div>
       <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[11px] leading-relaxed text-amber-900">
-        <b>Integration note:</b> these banner records are saved securely for admins; the current
-        storefront hero remains driven by its existing content until a storefront banner-feed
-        migration is connected.
+        <b>Storefront feed:</b> active banners appear in the home-page carousel. Paused banners stay
+        hidden, and the existing hero slides remain as the fallback when no banner is active.
       </div>
       {loading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-xs text-slate-400">
