@@ -125,7 +125,10 @@ export default function App() {
     const publicAuthPath = ['/Onboarding', '/onboarding', '/signup', '/signup/onboarding', '/signup/loading'].includes(route);
     if (authStatus === 'AUTHENTICATED' && isAdmin !== null) {
       if (isAdmin) {
-        if (route !== '/admin' && appPhase !== 'main') goToPhase('main');
+        // Role resolution can finish after the initial password login callback.
+        // Always move a verified admin into the protected workspace, even if the
+        // storefront was rendered during that short async window.
+        if (route !== '/admin') navigate('/admin', { replace: true });
       } else if (route !== '/admin' && (!publicAuthPath || appPhase !== 'main')) {
         goToPhase('main');
       }

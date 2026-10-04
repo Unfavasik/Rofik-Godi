@@ -64,7 +64,9 @@ export const loadAdminProducts = async (): Promise<Product[] | null> => {
 
 const toRow = (product: Product) => ({
   ...(product.id.match(/^[0-9a-f-]{36}$/i) ? { id: product.id } : {}), slug: product.slug, name: product.title, subtitle: product.subtitle || '',
-  category: product.categoryLabel || categoryLabels[product.category], category_key: product.category, price: product.price, original_price: product.originalPrice,
+  // The database constraint is authoritative; never let a stale display label
+  // such as "Bike" or "Bike Cover" reach the products.category column.
+  category: categoryLabels[product.category], category_key: product.category, price: product.price, original_price: product.originalPrice,
   image_url: product.image, additional_images: product.additionalImages || [], description: product.description,
   features: product.features || [], materials: product.materials || [], stitch_patterns: product.stitchPatterns || [], thickness_options: product.thicknessOptions || [], colors_json: product.colors || [],
   colors: (product.colors || []).map((color) => color.name), compatibility_list: product.compatibility || [], compatibility: (product.compatibility || []).join(', '), badge: product.badge || null,
