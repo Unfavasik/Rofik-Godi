@@ -21,6 +21,7 @@ import { CustomerOrderRecord, Product, UserProfile } from '../types';
 import { listMyOrders } from '../lib/supabaseOrders';
 import { listMyProductReviews, type ProductReviewRecord } from '../lib/supabaseReviews';
 import { ReviewComposer } from './ReviewComposer';
+import { CustomerOrdersModal } from './CustomerOrdersModal';
 import { SettingsView } from './SettingsView';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
@@ -763,68 +764,15 @@ export const AccountView: React.FC<AccountViewProps> = ({
       </main>
 
       {/* Sub-Modals for Account Features */}
-
-      {/* 1. My Orders Modal */}
       <AnimatePresence>
-        {activeModal === 'orders' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
-            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="relative w-full max-w-[440px] max-h-[85vh] bg-white rounded-[28px] shadow-2xl flex flex-col z-10 overflow-hidden">
-              <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100 bg-white">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-[#FDECE9] flex items-center justify-center text-[#E55845]">
-                    <Package className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-[15px] font-black text-gray-900">Your Orders</h3>
-                    <p className="text-[11px] text-gray-400">Track current status & past crafted seats</p>
-                  </div>
-                </div>
-                <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="overflow-y-auto px-5 py-4 space-y-3 flex-1 no-scrollbar">
-                {ordersLoading ? <p className="py-10 text-center text-sm text-gray-500">Loading your orders…</p> : customerOrders.length === 0 ? (
-                  <div className="py-12 text-center">
-                    <Package className="mx-auto h-9 w-9 text-gray-300" />
-                    <h4 className="mt-3 text-sm font-bold text-gray-800">No orders yet</h4>
-                    <p className="mt-1 text-xs text-gray-500">Orders you place will appear here.</p>
-                  </div>
-                ) : customerOrders.map((ord) => {
-                  const status = ord.status.replaceAll('_', ' ');
-                  const itemSummary = ord.order_items.map((item) => `${item.product_name} × ${item.quantity}`).join(', ');
-                  const orderDate = new Date(ord.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
-                  const statusTone = ord.status === 'COMPLETED' || ord.status === 'PICKED_UP' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : ord.status === 'CANCELLED' ? 'text-red-700 bg-red-50 border-red-200' : 'text-amber-700 bg-amber-50 border-amber-200';
-                  const uniqueItems = ord.order_items.filter((item, index, items) => item.product_id && /^[0-9a-f-]{36}$/i.test(item.product_id) && items.findIndex((candidate) => candidate.product_id === item.product_id) === index);
-                  return <article key={ord.id} className="bg-gray-50 border border-gray-200 rounded-2xl p-3.5 space-y-2.5">
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="min-w-0">
-                        <span className="text-[11px] font-mono font-bold text-gray-500">#{ord.order_number}</span>
-                        <h4 className="mt-1 text-[12.5px] font-black text-gray-900 leading-tight">{itemSummary || 'Store pickup order'}</h4>
-                        <p className="text-[11px] text-gray-500 mt-0.5">{ord.vehicle_model || 'Vehicle not specified'} · Store pickup</p>
-                      </div>
-                      <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusTone}`}>{status}</span>
-                    </div>
-                    <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 items-center text-[11px] pt-2 text-gray-600 border-t border-gray-200/60">
-                      <span>{orderDate}</span>
-                      <span>Payment: {ord.payment_status}</span>
-                      <strong className="text-gray-900 text-[12.5px]">₹{ord.total}</strong>
-                    </div>
-                    {uniqueItems.length > 0 && <div className="space-y-2 border-t border-gray-200/60 pt-2">{uniqueItems.map((item) => {
-                      const productReview = myReviews.find((review) => review.order_id === ord.id && review.product_id === item.product_id);
-                      return <div key={`${ord.id}-${item.product_id}`} className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2">
-                        <div className="min-w-0"><p className="truncate text-[11px] font-bold text-gray-800">{item.product_name}</p>{productReview?.is_verified_purchase && <p className="text-[9px] font-semibold text-emerald-700">Verified purchase · Your review</p>}</div>
-                        {ord.status === 'COMPLETED' ? <button type="button" onClick={() => setReviewComposer({ productId: item.product_id!, orderId: ord.id, orderNumber: ord.order_number, productTitle: item.product_name, review: productReview })} className="shrink-0 rounded-lg bg-rose-50 px-3 py-2 text-[10px] font-bold text-[#d9232d]">{productReview ? 'Edit review' : 'Rate & Review'}</button> : <span className="shrink-0 text-[9px] text-gray-400">Available after completion</span>}
-                      </div>;
-                    })}</div>}
-                  </article>;
-                })}
-              </div>
-            </motion.div>
-          </div>
-        )}
+        {activeModal === 'orders' && <CustomerOrdersModal
+          orders={customerOrders}
+          reviews={myReviews}
+          loading={ordersLoading}
+          customerName={currentUser?.name || ''}
+          onClose={() => setActiveModal(null)}
+          onReview={(order, productId, productTitle, review) => setReviewComposer({ productId, orderId: order.id, orderNumber: order.order_number, productTitle, review })}
+        />}
       </AnimatePresence>
 
       {reviewComposer && <ReviewComposer productId={reviewComposer.productId} orderId={reviewComposer.orderId} orderNumber={reviewComposer.orderNumber} productTitle={reviewComposer.productTitle} review={reviewComposer.review} onClose={() => setReviewComposer(null)} onSaved={() => {
