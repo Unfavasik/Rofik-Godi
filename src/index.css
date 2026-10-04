@@ -13,9 +13,17 @@
     --border-subtle: rgba(15, 23, 42, 0.08);
   }
 
+  html,
+  body,
+  #root {
+    min-height: 100%;
+    background-color: #D9232D;
+  }
+
   body {
+    min-height: 100vh;
     font-family: var(--font-sans);
-    background-color: var(--bg-primary);
+    background-color: #D9232D;
     color: #13161B;
     -webkit-tap-highlight-color: transparent;
   }

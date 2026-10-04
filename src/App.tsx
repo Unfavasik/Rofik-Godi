@@ -137,6 +137,11 @@ export default function App() {
       }
       return;
     }
+    // Legacy splash URLs have no timer now; route them as soon as auth has resolved.
+    if (authStatus === 'UNAUTHENTICATED' && appPhase === 'splash') {
+      goToPhase('onboarding');
+      return;
+    }
     if (authStatus === 'UNAUTHENTICATED' && !publicAuthPath && route !== '/admin' && appPhase !== 'onboarding') {
       goToPhase('onboarding');
     }
@@ -476,24 +481,13 @@ export default function App() {
 
   // Never render a protected page while Supabase is still resolving the session.
   if (authStatus === 'AUTH_LOADING') {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#FDFDFD] text-[#D9232D]" role="status" aria-live="polite">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-red-100 border-t-[#D9232D]" />
-          <span className="text-xs font-bold text-slate-500">Checking your session…</span>
-        </div>
-      </div>
-    );
+    return <SplashScreen />;
   }
   if (authStatus === 'UNAUTHENTICATED' && appPhase === 'main') {
     return <Onboarding onFinish={() => goToPhase('auth')} />;
   }
   if (authStatus === 'AUTHENTICATED' && appPhase !== 'main') {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#FDFDFD] text-[#D9232D]" role="status" aria-live="polite">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-red-100 border-t-[#D9232D]" />
-      </div>
-    );
+    return <SplashScreen />;
   }
   if (appPhase === 'onboarding') {
     return <Onboarding onFinish={() => goToPhase('auth')} />;
@@ -506,11 +500,7 @@ export default function App() {
 
   // Keep the legacy loading phase available for existing links, but the signup onboarding now opens /signup directly.
   if (appPhase === 'splash') {
-    return (
-      <div className="min-h-screen bg-[#0E0E0E] flex items-center justify-center">
-        <SplashScreen onFinish={() => goToPhase('onboarding')} />
-      </div>
-    );
+    return <SplashScreen />;
   }
 
   // Login / Signup Screen
