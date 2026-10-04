@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Menu,
   Package,
+  Printer,
   Search,
   Settings,
   ShoppingBag,
@@ -24,10 +25,12 @@ import {
 import { AdminProductManager } from './AdminProductManager';
 import { CouponManagement } from './CouponManagement';
 import { AdminReviewsView } from './AdminReviewsView';
+import { InvoiceTemplate } from './InvoiceTemplate';
 import { BannersView, CategoriesView, NotificationsView, ReportsView } from './AdminSections';
 import {
   loadAdminOrders,
   matchesAdminOrderToCustomer,
+  toCustomerOrderRecord,
   updatePickupOrderStatus,
   verifyPickupPayment,
   type AdminOrderRecord,
@@ -1027,6 +1030,7 @@ function OrderDetails({
   onChanged: () => void;
   notify: (message: string) => void;
 }) {
+  const [showInvoice, setShowInvoice] = useState(false);
   const nextStatus = (
     {
       NEW: 'CONFIRMED',
@@ -1037,76 +1041,92 @@ function OrderDetails({
     } as Partial<Record<OrderStatus, OrderStatus>>
   )[order.status];
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/40">
-      <aside className="h-full w-full max-w-lg overflow-y-auto bg-white p-6 shadow-2xl">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-black">Order {order.id}</h2>
-          <button onClick={onClose}>
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="mt-6 space-y-3 text-sm">
-          <p>
-            <b>Customer:</b> {order.customer}
-          </p>
-          <p>
-            <b>Phone:</b> {order.phone || '—'}
-          </p>
-          <p>
-            <b>Vehicle:</b> {order.vehicleModel || '—'}
-          </p>
-          <p>
-            <b>Pickup store:</b> {order.pickupStore || '—'}
-          </p>
-          <p>
-            <b>Total:</b> {money(order.amount)}
-          </p>
-          <p>
-            <b>Payment:</b> {order.paymentStatus}
-          </p>
-          <p>
-            <b>Status:</b> {order.status}
-          </p>
-          <p>
-            <b>Created:</b> {dateLabel(order.createdAt)}
-          </p>
-          <div>
-            <b>Products:</b>
-            {order.items.map((item, index) => (
-              <p key={index} className="mt-1 text-slate-600">
-                {item.product_name || 'Product'} × {item.quantity || 1}
-              </p>
-            ))}
+    <>
+      <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/40">
+        <aside className="h-full w-full max-w-lg overflow-y-auto bg-white p-6 shadow-2xl">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-black">Order {order.id}</h2>
+            <button onClick={onClose}>
+              <X className="h-5 w-5" />
+            </button>
           </div>
-        </div>
-        <div className="mt-8 flex flex-wrap gap-2">
-          {nextStatus && (
+          <div className="mt-6 space-y-3 text-sm">
+            <p>
+              <b>Customer:</b> {order.customer}
+            </p>
+            <p>
+              <b>Phone:</b> {order.phone || '—'}
+            </p>
+            <p>
+              <b>Vehicle:</b> {order.vehicleModel || '—'}
+            </p>
+            <p>
+              <b>Pickup store:</b> {order.pickupStore || '—'}
+            </p>
+            <p>
+              <b>Total:</b> {money(order.amount)}
+            </p>
+            <p>
+              <b>Payment:</b> {order.paymentStatus}
+            </p>
+            <p>
+              <b>Status:</b> {order.status}
+            </p>
+            <p>
+              <b>Created:</b> {dateLabel(order.createdAt)}
+            </p>
+            <div>
+              <b>Products:</b>
+              {order.items.map((item, index) => (
+                <p key={index} className="mt-1 text-slate-600">
+                  {item.product_name || 'Product'} × {item.quantity || 1}
+                </p>
+              ))}
+            </div>
+          </div>
+          <div className="mt-8 flex flex-wrap gap-2">
             <button
-              onClick={async () => {
-                const result = await updatePickupOrderStatus(order.orderNumber, nextStatus);
-                notify(result.error ? result.error.message : `Order marked ${nextStatus}`);
-                if (!result.error) onChanged();
-              }}
-              className="rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white"
+              onClick={() => setShowInvoice(true)}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700"
             >
-              Mark {nextStatus}
+              <Printer className="h-4 w-4" /> Invoice / Print
             </button>
-          )}
-          {order.paymentStatus !== 'PAID' && (
-            <button
-              onClick={async () => {
-                const result = await verifyPickupPayment(order.orderNumber);
-                notify(result.error ? result.error.message : 'Payment verified');
-                if (!result.error) onChanged();
-              }}
-              className="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white"
-            >
-              Verify payment
-            </button>
-          )}
+            {nextStatus && (
+              <button
+                onClick={async () => {
+                  const result = await updatePickupOrderStatus(order.orderNumber, nextStatus);
+                  notify(result.error ? result.error.message : `Order marked ${nextStatus}`);
+                  if (!result.error) onChanged();
+                }}
+                className="rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white"
+              >
+                Mark {nextStatus}
+              </button>
+            )}
+            {order.paymentStatus !== 'PAID' && (
+              <button
+                onClick={async () => {
+                  const result = await verifyPickupPayment(order.orderNumber);
+                  notify(result.error ? result.error.message : 'Payment verified');
+                  if (!result.error) onChanged();
+                }}
+                className="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white"
+              >
+                Verify payment
+              </button>
+            )}
+          </div>
+        </aside>
+      </div>
+      {showInvoice && (
+        <div className="fixed inset-0 z-[60] overflow-y-auto">
+          <InvoiceTemplate
+            order={toCustomerOrderRecord(order)}
+            onClose={() => setShowInvoice(false)}
+          />
         </div>
-      </aside>
-    </div>
+      )}
+    </>
   );
 }
 function CustomersView({

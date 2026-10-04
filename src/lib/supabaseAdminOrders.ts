@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import type { CustomerOrderRecord } from '../types';
 
 export type AdminOrderRecord = {
   id: string;
@@ -9,6 +10,8 @@ export type AdminOrderRecord = {
   initials: string;
   product: string;
   amount: number;
+  subtotal: number;
+  discount: number;
   paymentMethod: string;
   paymentStatus: string;
   status:
@@ -23,7 +26,13 @@ export type AdminOrderRecord = {
   channel: string;
   vehicleModel: string;
   pickupStore: string;
-  items: Array<{ product_name?: string; quantity?: number; unit_price?: number }>;
+  items: Array<{
+    product_id?: string | null;
+    product_name?: string;
+    color?: string | null;
+    quantity?: number;
+    unit_price?: number;
+  }>;
   createdAt: string;
 };
 
@@ -35,7 +44,7 @@ export async function loadAdminOrders(): Promise<{
   const { data, error } = await supabase
     .from('orders')
     .select(
-      'id,user_id,order_number,customer_name,customer_phone,vehicle_model,total,payment_method,payment_status,fulfillment_method,pickup_store,status,created_at,order_items(product_name,quantity,unit_price)',
+      'id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,status,created_at,order_items(product_id,product_name,color,quantity,unit_price)',
     )
     .order('created_at', { ascending: false })
     .limit(100);
@@ -46,7 +55,9 @@ export async function loadAdminOrders(): Promise<{
       const customer = String(row.customer_name || 'Customer');
       const items = Array.isArray(row.order_items)
         ? (row.order_items as Array<{
+            product_id?: string | null;
             product_name?: string;
+            color?: string | null;
             quantity?: number;
             unit_price?: number;
           }>)
@@ -65,6 +76,8 @@ export async function loadAdminOrders(): Promise<{
           .toUpperCase(),
         product: items[0]?.product_name || 'Multiple products',
         amount: Number(row.total || 0),
+        subtotal: Number(row.subtotal ?? row.total ?? 0),
+        discount: Number(row.discount || 0),
         paymentMethod: String(row.payment_method || 'PAY_AT_STORE'),
         paymentStatus: String(row.payment_status || 'PENDING'),
         status: String(row.status) as AdminOrderRecord['status'],
@@ -82,6 +95,32 @@ export async function loadAdminOrders(): Promise<{
       };
     }),
     error: null,
+  };
+}
+
+export function toCustomerOrderRecord(order: AdminOrderRecord): CustomerOrderRecord {
+  return {
+    id: order.orderNumber,
+    order_number: order.orderNumber,
+    customer_name: order.customer,
+    customer_phone: order.phone,
+    payment_method: order.paymentMethod,
+    payment_status: order.paymentStatus,
+    status: order.status,
+    subtotal: order.subtotal,
+    discount: order.discount,
+    total: order.amount,
+    vehicle_model: order.vehicleModel || null,
+    fulfillment_method: order.channel,
+    pickup_store: order.pickupStore,
+    created_at: order.createdAt,
+    order_items: order.items.map((item) => ({
+      product_id: item.product_id || null,
+      product_name: item.product_name || 'Product',
+      color: item.color || null,
+      quantity: item.quantity || 1,
+      unit_price: item.unit_price || 0,
+    })),
   };
 }
 
