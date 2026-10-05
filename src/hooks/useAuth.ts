@@ -88,6 +88,15 @@ export function useAuth() {
       });
     };
 
+    const requestWelcomeEmail = () => {
+      setTimeout(() => {
+        if (!active || !supabase) return;
+        void supabase.functions.invoke('send-order-confirmation', { body: { type: 'welcome' } })
+          .then(({ error }) => { if (error) console.warn('Welcome email request failed'); })
+          .catch(() => console.warn('Welcome email request failed'));
+      }, 0);
+    };
+
     if (!supabase) {
       clearSession();
       return () => { active = false; };
@@ -98,7 +107,11 @@ export function useAuth() {
       if (event === 'INITIAL_SESSION') {
         if (initialSessionResolved) return;
         initialSessionResolved = true;
-        if (session?.user) queueMicrotask(() => { if (active) applySession(session.user); });
+        if (session?.user) queueMicrotask(() => {
+          if (!active) return;
+          applySession(session.user);
+          requestWelcomeEmail();
+        });
         else clearSession();
         return;
       }
@@ -109,7 +122,11 @@ export function useAuth() {
       if (event === 'TOKEN_REFRESHED') return;
       if (event === 'SIGNED_IN' && session?.user) {
         initialSessionResolved = true;
-        queueMicrotask(() => { if (active) applySession(session.user); });
+        queueMicrotask(() => {
+          if (!active) return;
+          applySession(session.user);
+          requestWelcomeEmail();
+        });
         return;
       }
       if (event === 'USER_UPDATED' && session?.user) {
@@ -122,7 +139,10 @@ export function useAuth() {
       if (!active || initialSessionResolved) return;
       initialSessionResolved = true;
       if (error || !data.session?.user) clearSession();
-      else applySession(data.session.user);
+      else {
+        applySession(data.session.user);
+        requestWelcomeEmail();
+      }
     });
 
     return () => {

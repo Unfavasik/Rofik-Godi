@@ -234,6 +234,18 @@ function normalizeOrderNumber(orderNumber: string) {
   return orderNumber.trim().replace(/^#/, '');
 }
 
+async function requestOrderUpdateEmail(orderNumber: string, event: string) {
+  if (!supabase || event !== 'COMPLETED') return;
+  try {
+    const { error } = await supabase.functions.invoke('send-order-confirmation', {
+      body: { type: 'order_status_update', orderNumber: normalizeOrderNumber(orderNumber), event },
+    });
+    if (error) console.warn('Order update email request failed');
+  } catch {
+    console.warn('Order update email request failed');
+  }
+}
+
 export async function updatePickupOrderStatus(
   orderNumber: string,
   status: AdminOrderRecord['status'],
@@ -243,6 +255,7 @@ export async function updatePickupOrderStatus(
     p_order_number: normalizeOrderNumber(orderNumber),
     p_status: status,
   });
+  if (!error) await requestOrderUpdateEmail(orderNumber, status);
   return { error };
 }
 
@@ -276,6 +289,7 @@ export async function verifyPickupPayment(orderNumber: string) {
   const { error } = await supabase.rpc('admin_verify_pickup_payment', {
     p_order_number: normalizeOrderNumber(orderNumber),
   });
+  if (!error) await requestOrderUpdateEmail(orderNumber, 'PAYMENT_PAID');
   return { error };
 }
 
@@ -285,6 +299,9 @@ export async function verifyStorePickupToken(token: string) {
   const { data, error } = await supabase.rpc('verify_store_pickup_token', {
     p_token: token.trim(),
   });
+  if (!error && data?.status === 'COMPLETED' && data?.order_number) {
+    await requestOrderUpdateEmail(String(data.order_number), 'COMPLETED');
+  }
   return {
     data: data as { order_number?: string; status?: string; picked_up_at?: string; completed_at?: string } | null,
     error,

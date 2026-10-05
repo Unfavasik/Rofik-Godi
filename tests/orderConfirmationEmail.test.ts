@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { buildOrderConfirmationEmail, isValidCustomerEmail } from '../supabase/functions/send-order-confirmation/email-template';
+import {
+  buildOrderConfirmationEmail,
+  buildOrderStatusEmail,
+  buildWelcomeEmail,
+  isValidCustomerEmail,
+} from '../supabase/functions/send-order-confirmation/email-template';
 
 const order = {
   orderNumber: 'RGC-ABC123DEF456',
@@ -35,6 +40,10 @@ describe('order confirmation email', () => {
     expect(email.html).toContain('https://cdn.example.com/seat.jpg');
     expect(email.html).not.toContain('http://insecure.example.com/grip.jpg');
     expect(email.html).toContain('https://shop.example.com/profile');
+    expect(email.html).toContain('+91 9775333555');
+    expect(email.html).toContain('rofikgodicentre.store@gmail.com');
+    expect(email.html).toContain('href="https://maps.app.goo.gl/hRVfWHTkQ6vkrcS7A"');
+    expect(email.text).toContain('Google Maps: https://maps.app.goo.gl/hRVfWHTkQ6vkrcS7A');
   });
 
   it('escapes customer and product text and rejects unsafe CTA URLs', () => {
@@ -50,5 +59,30 @@ describe('order confirmation email', () => {
     expect(isValidCustomerEmail('')).toBe(false);
     expect(isValidCustomerEmail('not-an-email')).toBe(false);
     expect(isValidCustomerEmail('customer @example.com')).toBe(false);
+  });
+
+  it('sends only a completion status email and never includes a QR attachment', () => {
+    const email = buildOrderStatusEmail({
+      orderNumber: 'RGC-ABC123DEF456',
+      customerName: 'Rider',
+      pickupStore: 'ROFIK GODI CENTRE',
+      event: 'COMPLETED',
+    });
+
+    expect(email.subject).toContain('Completed');
+    expect(email.text).toContain('order is complete');
+    expect(email.html).not.toContain('src="cid:');
+    expect(email.html).toContain('Open store location in Google Maps');
+    expect(email.text).not.toContain('pickup QR is attached');
+  });
+
+  it('builds a friendly account welcome email with escaped name and store links', () => {
+    const email = buildWelcomeEmail('<Rider>', 'https://shop.example.com/home');
+
+    expect(email.subject).toContain('<Rider>');
+    expect(email.html).toContain('Welcome, &lt;Rider&gt;.');
+    expect(email.html).toContain('https://shop.example.com/home');
+    expect(email.html).toContain('rofikgodicentre.store@gmail.com');
+    expect(email.text).toContain('Your Rofik Godi Centre account is ready.');
   });
 });
