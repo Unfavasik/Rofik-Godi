@@ -21,11 +21,11 @@ describe('customer order presentation helpers', () => {
     expect(isOrderComplete(status)).toBe(false);
   });
 
-  it.each(['NEW', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP'])('shows a pickup QR while %s is awaiting pickup', (status) => {
-    expect(canShowPickupQr(status)).toBe(true);
+  it('shows a pickup QR only once the order is ready for pickup', () => {
+    expect(canShowPickupQr('READY_FOR_PICKUP')).toBe(true);
   });
 
-  it.each(['PICKED_UP', 'COMPLETED', 'CANCELLED'])('hides a pickup QR after %s', (status) => {
+  it.each(['NEW', 'CONFIRMED', 'PREPARING', 'PICKED_UP', 'COMPLETED', 'CANCELLED'])('hides a pickup QR for %s', (status) => {
     expect(canShowPickupQr(status)).toBe(false);
   });
 

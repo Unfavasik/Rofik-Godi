@@ -4,9 +4,8 @@ type OrderItem = CustomerOrderRecord['order_items'][number];
 
 export const isOrderComplete = (status: string) => status === 'COMPLETED' || status === 'PICKED_UP';
 
-/** Pickup QR codes are valid only until the order is picked up, completed or cancelled. */
-export const canShowPickupQr = (status: string) =>
-  status !== 'PICKED_UP' && status !== 'COMPLETED' && status !== 'CANCELLED';
+/** The one-time pickup QR is shown only when the admin scanner can accept it. */
+export const canShowPickupQr = (status: string) => status === 'READY_FOR_PICKUP';
 
 const statusLabels: Record<string, string> = {
   NEW: 'Order placed',
