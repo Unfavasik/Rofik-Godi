@@ -671,7 +671,10 @@ export default function App() {
               notificationCount={notificationCount}
               wishlistCount={wishlist.length}
               currentUser={currentUser}
-              onOpenCart={() => setIsCartOpen(true)}
+              onOpenCart={() => {
+                setActiveTab('cart');
+                setIsCartOpen(true);
+              }}
               onOpenWishlist={() => setIsWishlistOpen(true)}
               onOpenStoreInfo={() => setIsStoreInfoOpen(true)}
               onOpenAccount={() => setActiveTab('account')}
@@ -1221,7 +1224,10 @@ export default function App() {
               setActiveTab={(tab) => setActiveTab(tab as RouteTab)}
               cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
               wishlistCount={wishlist.length}
-              onOpenCart={() => setIsCartOpen(true)}
+              onOpenCart={() => {
+                setActiveTab('cart');
+                setIsCartOpen(true);
+              }}
               onOpenWishlist={() => setIsWishlistOpen(true)}
               onOpenCustomBuilder={() => setIsCustomBuilderOpen(true)}
               onOpenShop={() => {
@@ -1251,6 +1257,7 @@ export default function App() {
           cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
           onOpenCart={() => {
             setSelectedProduct(null);
+            setActiveTab('cart');
             setIsCartOpen(true);
           }}
           onOpenSearch={() => {
@@ -1258,7 +1265,10 @@ export default function App() {
             setActiveTab('search');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          onBuyNow={() => setIsCartOpen(true)}
+          onBuyNow={() => {
+            setActiveTab('cart');
+            setIsCartOpen(true);
+          }}
           onSelectProduct={(p) => setSelectedProduct(p)}
           onQuickAdd={(p) =>
             handleDetailAddToCart(p, p.colors[0], p.stitchPatterns[0] || '', p.thicknessOptions[0])
@@ -1279,6 +1289,7 @@ export default function App() {
           }}
           onAddCustomSeatToCart={(p, col, stitch, thick, emb) => {
             handleDetailAddToCart(p, col, stitch, thick, emb);
+            setActiveTab('cart');
             setIsCartOpen(true);
           }}
         />
