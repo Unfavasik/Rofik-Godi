@@ -9,7 +9,7 @@ const { supabaseMock } = vi.hoisted(() => ({
 
 vi.mock('../src/lib/supabase', () => ({ supabase: supabaseMock }));
 
-import { createSupabaseOrder } from '../src/lib/supabaseOrders';
+import { createSupabaseOrder, issueMyStorePickupToken } from '../src/lib/supabaseOrders';
 import type { CartItem, OrderDetails } from '../src/types';
 
 const productId = '123e4567-e89b-42d3-a456-426614174000';
@@ -83,5 +83,25 @@ describe('secure order creation flow', () => {
     }));
     expect(result.synced).toBe(true);
     expect(result.order).toMatchObject({ orderId: 'RGC-1001', subtotal: 950, discount: 95, total: 855, pickupToken: 'pickup-secret' });
+  });
+
+  it('requests a pickup token only for the signed-in customer through the owner-scoped RPC', async () => {
+    supabaseMock.auth.getUser.mockResolvedValue({ data: { user: { id: 'customer-1' } }, error: null });
+    supabaseMock.rpc.mockResolvedValue({ data: 'one-time-pickup-token', error: null });
+
+    const result = await issueMyStorePickupToken(' RGC-1001 ');
+
+    expect(supabaseMock.rpc).toHaveBeenCalledWith('issue_my_store_pickup_token', { p_order_number: 'RGC-1001' });
+    expect(result).toEqual({ data: 'one-time-pickup-token', error: null });
+  });
+
+  it('does not request a pickup token when no authenticated customer is available', async () => {
+    supabaseMock.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+
+    const result = await issueMyStorePickupToken('RGC-1001');
+
+    expect(result.data).toBeNull();
+    expect(result.error?.message).toMatch(/sign in/i);
+    expect(supabaseMock.rpc).not.toHaveBeenCalled();
   });
 });

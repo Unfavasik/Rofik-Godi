@@ -61,13 +61,23 @@ export async function createSupabaseOrder(order: OrderDetails, expectedUserId: s
   return { synced: true, error: null, order: savedOrder };
 }
 
+export async function issueMyStorePickupToken(orderNumber: string) {
+  if (!supabase) return { data: null, error: new Error('Service configuration unavailable. Please try again.') };
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+  if (authError || !userData.user) return { data: null, error: new Error('Sign in to view your pickup QR.') };
+  const { data, error } = await supabase.rpc('issue_my_store_pickup_token', {
+    p_order_number: orderNumber.trim(),
+  });
+  return { data: data as string | null, error };
+}
+
 export async function listMyOrders(expectedUserId: string): Promise<CustomerOrderRecord[]> {
   if (!supabase) return [];
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user || userData.user.id !== expectedUserId) return [];
   const { data, error } = await supabase
     .from('orders')
-    .select('id,order_number,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,vehicle_model,fulfillment_method,pickup_store,created_at,order_items(product_id,product_name,color,quantity,unit_price)')
+    .select('id,order_number,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,vehicle_model,fulfillment_method,pickup_store,pickup_note,created_at,order_items(product_id,product_name,color,quantity,unit_price)')
     .eq('user_id', userData.user.id)
     .order('created_at', { ascending: false })
     .limit(50);

@@ -32,6 +32,7 @@ import { PickupVerification } from './PickupVerification';
 import { BannersView, CategoriesView, NotificationsView, ReportsView } from './AdminSections';
 import {
   loadAdminOrders,
+  completePickupOrderManually,
   getNextPickupOrderStatus,
   matchesAdminOrderToCustomer,
   matchesAdminOrderSearch,
@@ -1052,8 +1053,16 @@ function OrdersView({
                   {order.items.length > 0 && <span className="ml-1.5 font-medium text-slate-400">· {order.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)} units</span>}
                 </p>
               </div>
-              <div className="mt-3 flex justify-end">
-                <OrderActionMenu order={order} onSelect={onSelect} onOpenInvoice={onOpenInvoice} onRefresh={onRefresh} notify={notify} />
+              <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                <div className="flex min-w-0 gap-2">
+                  <button type="button" onClick={() => onSelect(order)} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-[11px] font-extrabold text-slate-800 transition hover:bg-slate-50">
+                    <Eye className="h-4 w-4 text-slate-500" /> Details
+                  </button>
+                  <button type="button" onClick={() => onOpenInvoice(order)} disabled={!isOrderComplete(order.status)} title={isOrderComplete(order.status) ? 'Open order invoice' : 'Invoice available after pickup'} className={`inline-flex min-h-10 items-center gap-2 rounded-xl border px-3.5 text-[11px] font-extrabold transition disabled:cursor-not-allowed disabled:opacity-45 ${isOrderComplete(order.status) ? 'border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100' : 'border-slate-200 bg-slate-50 text-slate-400'}`}>
+                    <Printer className="h-4 w-4" /> Invoice
+                  </button>
+                </div>
+                <OrderActionMenu order={order} onRefresh={onRefresh} notify={notify} />
               </div>
             </article>
           );
@@ -1070,18 +1079,15 @@ function OrdersView({
 
 function OrderActionMenu({
   order,
-  onSelect,
-  onOpenInvoice,
   onRefresh,
   notify,
 }: {
   order: AdminOrderRecord;
-  onSelect: (order: AdminOrderRecord) => void;
-  onOpenInvoice: (order: AdminOrderRecord) => void;
   onRefresh: () => void;
   notify: (message: string) => void;
 }) {
   const nextStatus = getNextPickupOrderStatus(order.status);
+  const canCompleteWithoutQr = order.status === 'READY_FOR_PICKUP' || order.status === 'PICKED_UP';
   const [busyAction, setBusyAction] = useState(false);
   const closeMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.currentTarget.closest('details')?.removeAttribute('open');
@@ -1100,6 +1106,29 @@ function OrderActionMenu({
       }
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Order status could not be updated.');
+    } finally {
+      setBusyAction(false);
+    }
+  };
+
+  const completeWithoutQr = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    closeMenu(event);
+    if (!canCompleteWithoutQr || busyAction) return;
+    setBusyAction(true);
+    try {
+      const result = await completePickupOrderManually(order.orderNumber, order.status);
+      if (result.error) {
+        notify(result.partial
+          ? `Pickup is recorded, but completion failed: ${result.error.message}`
+          : result.error.message || 'Order could not be completed.');
+        if (result.partial) onRefresh();
+      } else {
+        notify('Order completed without a QR scan.');
+        onRefresh();
+      }
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Order could not be completed.');
+      onRefresh();
     } finally {
       setBusyAction(false);
     }
@@ -1129,22 +1158,19 @@ function OrderActionMenu({
         <MoreHorizontal className="h-4 w-4" /> Actions
       </summary>
       <div className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
-        <button type="button" onClick={(event) => { closeMenu(event); onSelect(order); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-bold text-slate-700 hover:bg-slate-50">
-          <Eye className="h-3.5 w-3.5 text-slate-400" /> View order details
-        </button>
         {nextStatus && (
           <button type="button" onClick={(event) => void applyStatus(event)} disabled={busyAction} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
             <Package className="h-3.5 w-3.5 text-blue-600" /> Mark {getOrderStatusLabel(nextStatus)}
           </button>
         )}
+        {canCompleteWithoutQr && (
+          <button type="button" onClick={(event) => void completeWithoutQr(event)} disabled={busyAction} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-bold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">
+            <Check className="h-3.5 w-3.5" /> Complete without QR
+          </button>
+        )}
         {order.paymentStatus.toUpperCase() === 'PENDING' && order.status !== 'CANCELLED' && (
           <button type="button" onClick={(event) => void verifyPayment(event)} disabled={busyAction} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-bold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">
             <Check className="h-3.5 w-3.5" /> Verify payment
-          </button>
-        )}
-        {isOrderComplete(order.status) && (
-          <button type="button" onClick={(event) => { closeMenu(event); onOpenInvoice(order); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-bold text-emerald-700 hover:bg-emerald-50">
-            <Printer className="h-3.5 w-3.5" /> View / print invoice
           </button>
         )}
       </div>

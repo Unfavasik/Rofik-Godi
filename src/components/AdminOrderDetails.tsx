@@ -23,6 +23,7 @@ import {
 import type { Product } from '../types';
 import { InvoiceTemplate } from './InvoiceTemplate';
 import {
+  completePickupOrderManually,
   getAdminOrderTimelineEvents,
   getNextPickupOrderStatus,
   toCustomerOrderRecord,
@@ -160,6 +161,28 @@ export function AdminOrderDetails({
     }
   };
 
+  const completeWithoutQr = async () => {
+    if (order.status !== 'READY_FOR_PICKUP' || busyAction) return;
+    setBusyAction('status');
+    try {
+      const result = await completePickupOrderManually(order.orderNumber, order.status);
+      if (result.error) {
+        notify(result.partial
+          ? `Pickup is recorded, but completion failed: ${result.error.message}`
+          : result.error.message || 'Order could not be completed.');
+        if (result.partial) onChanged();
+        return;
+      }
+      notify('Order completed without a QR scan.');
+      onChanged();
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Order could not be completed.');
+      onChanged();
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
   const copyOrderNumber = async () => {
     try {
       if (!navigator.clipboard) throw new Error('Clipboard access is unavailable.');
@@ -180,6 +203,15 @@ export function AdminOrderDetails({
   const renderOverview = () => (
     <div className="space-y-4">
       <StatusHero hero={hero} status={order.status} />
+      {order.status === 'COMPLETED' && (
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:p-5">
+          <div className="flex min-w-0 items-center gap-3 text-emerald-800">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white"><FileText className="h-5 w-5" /></span>
+            <div><h3 className="text-sm font-black">Order completed</h3><p className="mt-0.5 text-[11px] leading-relaxed">The customer invoice is ready to view or print.</p></div>
+          </div>
+          <button type="button" onClick={() => setShowInvoice(true)} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-700 px-3.5 text-xs font-black text-white transition hover:bg-emerald-800"><Printer className="h-4 w-4" />Open invoice</button>
+        </section>
+      )}
       <section aria-label="Order information" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <InformationCard icon={UserRound} label="Customer" value={order.customer || '—'} />
         <InformationCard icon={Phone} label="Phone" value={order.phone || '—'} />
@@ -324,6 +356,7 @@ export function AdminOrderDetails({
                 <summary aria-label="Order actions" className="grid h-11 w-11 cursor-pointer list-none place-items-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 [&::-webkit-details-marker]:hidden"><MoreHorizontal className="h-5 w-5" /></summary>
                 <div className="absolute right-0 top-full z-30 mt-2 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
                   <button type="button" onClick={() => void copyOrderNumber()} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-xs font-bold text-slate-700 hover:bg-slate-50"><Copy className="h-3.5 w-3.5 text-slate-400" />Copy order number</button>
+                  {order.status === 'READY_FOR_PICKUP' && <button type="button" onClick={() => void completeWithoutQr()} disabled={busyAction !== null} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-xs font-bold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"><Check className="h-3.5 w-3.5" />Complete without QR</button>}
                   {pendingPayment && <button type="button" onClick={() => void verifyPayment()} disabled={busyAction !== null} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-xs font-bold text-emerald-700 hover:bg-emerald-50"><CreditCard className="h-3.5 w-3.5" />Verify payment</button>}
                   {hasInvoice && <button type="button" onClick={() => setShowInvoice(true)} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-xs font-bold text-emerald-700 hover:bg-emerald-50"><Printer className="h-3.5 w-3.5" />Open invoice</button>}
                 </div>

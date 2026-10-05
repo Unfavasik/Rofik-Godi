@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getOrderPreviewItems, getOrderStatusLabel, isOrderComplete } from '../src/lib/orderPresentation';
+import { canShowPickupQr, getOrderPreviewItems, getOrderStatusLabel, isOrderComplete } from '../src/lib/orderPresentation';
 
 describe('customer order presentation helpers', () => {
   it('shows one preview thumbnail per distinct product while retaining separate unlinked rows', () => {
@@ -19,6 +19,14 @@ describe('customer order presentation helpers', () => {
 
   it.each(['NEW', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP', 'CANCELLED'])('does not mark %s as complete', (status) => {
     expect(isOrderComplete(status)).toBe(false);
+  });
+
+  it.each(['NEW', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP'])('shows a pickup QR while %s is awaiting pickup', (status) => {
+    expect(canShowPickupQr(status)).toBe(true);
+  });
+
+  it.each(['PICKED_UP', 'COMPLETED', 'CANCELLED'])('hides a pickup QR after %s', (status) => {
+    expect(canShowPickupQr(status)).toBe(false);
   });
 
   it('uses clear human-readable labels for completed statuses', () => {

@@ -102,6 +102,7 @@ export interface CustomerOrderRecord {
   vehicle_model: string | null;
   fulfillment_method: string;
   pickup_store: string;
+  pickup_note?: string | null;
   created_at: string;
   order_items: { product_id: string | null; product_name: string; color: string | null; quantity: number; unit_price: number; image_url?: string | null }[];
 }

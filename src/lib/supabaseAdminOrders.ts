@@ -246,6 +246,31 @@ export async function updatePickupOrderStatus(
   return { error };
 }
 
+export async function completePickupOrderManually(
+  orderNumber: string,
+  currentStatus: AdminOrderRecord['status'],
+) {
+  if (currentStatus !== 'READY_FOR_PICKUP' && currentStatus !== 'PICKED_UP') {
+    return { error: new Error('Only ready or picked-up orders can be completed manually.'), partial: false };
+  }
+
+  let pickupRecorded = currentStatus === 'PICKED_UP';
+  try {
+    if (!pickupRecorded) {
+      const pickup = await updatePickupOrderStatus(orderNumber, 'PICKED_UP');
+      if (pickup.error) return { error: pickup.error, partial: false };
+      pickupRecorded = true;
+    }
+    const completed = await updatePickupOrderStatus(orderNumber, 'COMPLETED');
+    return { error: completed.error, partial: Boolean(completed.error) && pickupRecorded };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error : new Error('Order completion could not be recorded.'),
+      partial: pickupRecorded,
+    };
+  }
+}
+
 export async function verifyPickupPayment(orderNumber: string) {
   if (!supabase) return { error: null };
   const { error } = await supabase.rpc('admin_verify_pickup_payment', {
@@ -261,7 +286,7 @@ export async function verifyStorePickupToken(token: string) {
     p_token: token.trim(),
   });
   return {
-    data: data as { order_number?: string; status?: string; picked_up_at?: string } | null,
+    data: data as { order_number?: string; status?: string; picked_up_at?: string; completed_at?: string } | null,
     error,
   };
 }

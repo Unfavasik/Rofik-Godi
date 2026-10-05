@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Package,
@@ -91,6 +91,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
     });
     return () => { active = false; };
   }, [activeModal, currentUser?.id, currentUser?.isGuest]);
+
+  const refreshCustomerOrders = useCallback(async () => {
+    const ordersUser = currentUserRef.current;
+    if (!ordersUser || ordersUser.isGuest) return;
+    const latestOrders = await listMyOrders(ordersUser.id);
+    if (currentUserRef.current?.id !== ordersUser.id) return;
+    setCustomerOrders((current) => latestOrders.length || current.length === 0 ? latestOrders : current);
+  }, []);
 
   const [profileName, setProfileName] = useState('');
   const [profilePhone, setProfilePhone] = useState('');
@@ -773,6 +781,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             loading={ordersLoading}
             customerName={currentUser?.name || ''}
             onClose={() => setActiveModal(null)}
+            onRefresh={refreshCustomerOrders}
             onReview={(order, productId, productTitle, review) =>
               setReviewComposer({
                 productId,
