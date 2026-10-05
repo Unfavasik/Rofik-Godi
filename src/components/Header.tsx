@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { ShoppingBag, Search, X, Sparkles, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../types';
@@ -35,14 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
   hideSearchInput = false,
 }) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [currentTime, setCurrentTime] = useState(() => new Date());
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setCurrentTime(new Date()), 60_000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  const hour = currentTime.getHours();
+  const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   return (
