@@ -12,6 +12,7 @@ import {
   Image,
   LayoutDashboard,
   Menu,
+  MoreHorizontal,
   Package,
   Printer,
   Search,
@@ -29,7 +30,9 @@ import { InvoiceTemplate } from './InvoiceTemplate';
 import { BannersView, CategoriesView, NotificationsView, ReportsView } from './AdminSections';
 import {
   loadAdminOrders,
+  getNextPickupOrderStatus,
   matchesAdminOrderToCustomer,
+  matchesAdminOrderSearch,
   toCustomerOrderRecord,
   updatePickupOrderStatus,
   verifyPickupPayment,
@@ -243,9 +246,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
       orders.filter(
         (order) =>
           (orderFilter === 'All' || order.status === orderFilter) &&
-          `${order.id} ${order.customer} ${order.phone} ${order.product}`
-            .toLowerCase()
-            .includes(query.toLowerCase()),
+          matchesAdminOrderSearch(order, query),
       ),
     [orders, orderFilter, query],
   );
@@ -941,6 +942,9 @@ function OrdersView({
   onOpenInvoice: (order: AdminOrderRecord) => void;
   notify: (message: string) => void;
 }) {
+  const [orderSearch, setOrderSearch] = useState('');
+  const visibleOrders = orders.filter((order) => matchesAdminOrderSearch(order, orderSearch));
+
   return (
     <>
       <PageIntro
@@ -988,8 +992,22 @@ function OrdersView({
           </button>
         ))}
       </div>
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <label className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3.5 shadow-sm focus-within:border-red-300 focus-within:ring-2 focus-within:ring-red-100 sm:max-w-xl">
+          <Search className="h-4 w-4 shrink-0 text-slate-400" />
+          <input
+            value={orderSearch}
+            onChange={(event) => setOrderSearch(event.target.value)}
+            placeholder="Search order ID, customer, phone, vehicle or product"
+            aria-label="Search orders"
+            className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-slate-400"
+          />
+          {orderSearch && <button type="button" onClick={() => setOrderSearch('')} aria-label="Clear order search" className="text-[10px] font-bold text-slate-500">Clear</button>}
+        </label>
+        <p className="text-[10px] font-semibold text-slate-400">{visibleOrders.length} of {orders.length} shown</p>
+      </div>
       <div className="space-y-3">
-        {orders.map((order) => (
+        {visibleOrders.map((order) => (
           <div
             key={order.id}
             className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
@@ -1007,48 +1025,85 @@ function OrdersView({
                   {order.product} · {money(order.amount)} · {order.paymentStatus} · {dateLabel(order.createdAt)}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => onSelect(order)}
-                  className="rounded-xl border border-slate-200 px-3 py-2 text-[10px] font-bold"
-                >
-                  <Eye className="mr-1 inline h-3 w-3" />
-                  Details
-                </button>
-                {isOrderComplete(order.status) && (
-                  <button
-                    onClick={() => onOpenInvoice(order)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-[10px] font-bold text-emerald-700 transition hover:bg-emerald-100"
-                    aria-label={`Open invoice for order ${order.orderNumber}`}
-                  >
-                    <Printer className="h-3.5 w-3.5" /> Invoice
-                  </button>
-                )}
-                {order.paymentStatus !== 'PAID' && (
-                  <button
-                    onClick={async () => {
-                      const result = await verifyPickupPayment(order.orderNumber);
-                      notify(result.error ? result.error.message : 'Payment verified');
-                      onRefresh();
-                    }}
-                    className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-[10px] font-bold text-emerald-700"
-                  >
-                    Verify payment
-                  </button>
-                )}
+              <div className="flex justify-end">
+                <OrderActionMenu
+                  order={order}
+                  onSelect={onSelect}
+                  onOpenInvoice={onOpenInvoice}
+                  onRefresh={onRefresh}
+                  notify={notify}
+                />
               </div>
             </div>
           </div>
         ))}
-        {!orders.length && (
+        {!visibleOrders.length && (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-14 text-center text-sm font-semibold text-slate-400">
-            No orders found
+            {orderSearch ? 'No orders match your search' : 'No orders found'}
           </div>
         )}
       </div>
     </>
   );
 }
+
+function OrderActionMenu({
+  order,
+  onSelect,
+  onOpenInvoice,
+  onRefresh,
+  notify,
+}: {
+  order: AdminOrderRecord;
+  onSelect: (order: AdminOrderRecord) => void;
+  onOpenInvoice: (order: AdminOrderRecord) => void;
+  onRefresh: () => void;
+  notify: (message: string) => void;
+}) {
+  const nextStatus = getNextPickupOrderStatus(order.status);
+  const closeMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.currentTarget.closest('details')?.removeAttribute('open');
+  };
+
+  return (
+    <details className="relative">
+      <summary aria-label={`Actions for order ${order.orderNumber}`} className="inline-flex cursor-pointer list-none items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[11px] font-extrabold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+        <MoreHorizontal className="h-4 w-4" /> Actions
+      </summary>
+      <div className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
+        <button type="button" onClick={(event) => { closeMenu(event); onSelect(order); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-bold text-slate-700 hover:bg-slate-50">
+          <Eye className="h-3.5 w-3.5 text-slate-400" /> View order details
+        </button>
+        {nextStatus && (
+          <button type="button" onClick={async (event) => {
+            closeMenu(event);
+            const result = await updatePickupOrderStatus(order.orderNumber, nextStatus);
+            notify(result.error ? result.error.message : `Order moved to ${getOrderStatusLabel(nextStatus)}`);
+            if (!result.error) onRefresh();
+          }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-bold text-slate-700 hover:bg-slate-50">
+            <Package className="h-3.5 w-3.5 text-blue-600" /> Mark {getOrderStatusLabel(nextStatus)}
+          </button>
+        )}
+        {order.paymentStatus.toUpperCase() !== 'PAID' && order.status !== 'CANCELLED' && (
+          <button type="button" onClick={async (event) => {
+            closeMenu(event);
+            const result = await verifyPickupPayment(order.orderNumber);
+            notify(result.error ? result.error.message : 'Payment verified');
+            if (!result.error) onRefresh();
+          }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-bold text-emerald-700 hover:bg-emerald-50">
+            <Check className="h-3.5 w-3.5" /> Verify payment
+          </button>
+        )}
+        {isOrderComplete(order.status) && (
+          <button type="button" onClick={(event) => { closeMenu(event); onOpenInvoice(order); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-bold text-emerald-700 hover:bg-emerald-50">
+            <Printer className="h-3.5 w-3.5" /> View / print invoice
+          </button>
+        )}
+      </div>
+    </details>
+  );
+}
+
 function OrderDetails({
   order,
   onClose,
@@ -1061,15 +1116,7 @@ function OrderDetails({
   notify: (message: string) => void;
 }) {
   const [showInvoice, setShowInvoice] = useState(false);
-  const nextStatus = (
-    {
-      NEW: 'CONFIRMED',
-      CONFIRMED: 'PREPARING',
-      PREPARING: 'READY_FOR_PICKUP',
-      READY_FOR_PICKUP: 'PICKED_UP',
-      PICKED_UP: 'COMPLETED',
-    } as Partial<Record<OrderStatus, OrderStatus>>
-  )[order.status];
+  const nextStatus = getNextPickupOrderStatus(order.status);
   return (
     <>
       <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/40">
@@ -1129,12 +1176,18 @@ function OrderDetails({
             </div>
           )}
           <div className="mt-8 flex flex-wrap gap-2">
-            <button
-              onClick={() => setShowInvoice(true)}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700"
-            >
-              <Printer className="h-4 w-4" /> Invoice / Print
-            </button>
+            {isOrderComplete(order.status) ? (
+              <button
+                onClick={() => setShowInvoice(true)}
+                className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700"
+              >
+                <Printer className="h-4 w-4" /> View / print invoice
+              </button>
+            ) : (
+              <p className="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-500">
+                Invoice unlocks when the order is complete
+              </p>
+            )}
             {nextStatus && (
               <button
                 onClick={async () => {

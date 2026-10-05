@@ -72,7 +72,17 @@ export async function listMyOrders(expectedUserId: string): Promise<CustomerOrde
     .order('created_at', { ascending: false })
     .limit(50);
   if (error || !data) return [];
-  const orders = data as unknown as CustomerOrderRecord[];
+  const orders = (data as unknown as CustomerOrderRecord[]).map((order) => ({
+    ...order,
+    subtotal: Number(order.subtotal || 0),
+    discount: Number(order.discount || 0),
+    total: Number(order.total || 0),
+    order_items: (order.order_items || []).map((item) => ({
+      ...item,
+      quantity: Number(item.quantity || 0),
+      unit_price: Number(item.unit_price || 0),
+    })),
+  }));
   const productIds = [...new Set(orders.flatMap((order) => order.order_items || []).map((item) => item.product_id).filter((id): id is string => Boolean(id)))];
   if (!productIds.length) return orders;
   const { data: productRows } = await supabase.from('products').select('id,image_url').in('id', productIds);

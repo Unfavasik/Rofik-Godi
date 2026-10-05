@@ -36,6 +36,36 @@ export type AdminOrderRecord = {
   createdAt: string;
 };
 
+export function getNextPickupOrderStatus(status: AdminOrderRecord['status']) {
+  return (
+    {
+      NEW: 'CONFIRMED',
+      CONFIRMED: 'PREPARING',
+      PREPARING: 'READY_FOR_PICKUP',
+      READY_FOR_PICKUP: 'PICKED_UP',
+      PICKED_UP: 'COMPLETED',
+    } as Partial<Record<AdminOrderRecord['status'], AdminOrderRecord['status']>>
+  )[status] || null;
+}
+
+export function matchesAdminOrderSearch(order: AdminOrderRecord, query: string) {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return true;
+  const searchable = [
+    order.id,
+    order.orderNumber,
+    order.customer,
+    order.phone,
+    order.product,
+    order.vehicleModel,
+    order.paymentStatus,
+    order.status,
+    order.createdAt,
+    ...order.items.map((item) => item.product_name || ''),
+  ].join(' ').toLowerCase();
+  return searchable.includes(normalized);
+}
+
 export async function loadAdminOrders(): Promise<{
   data: AdminOrderRecord[];
   error: Error | null;
@@ -62,6 +92,11 @@ export async function loadAdminOrders(): Promise<{
             unit_price?: number;
           }>)
         : [];
+      const normalizedItems = items.map((item) => ({
+        ...item,
+        quantity: Number(item.quantity || 0),
+        unit_price: Number(item.unit_price || 0),
+      }));
       return {
         id: `#${row.order_number}`,
         userId: String(row.user_id || ''),
@@ -74,7 +109,7 @@ export async function loadAdminOrders(): Promise<{
           .join('')
           .slice(0, 2)
           .toUpperCase(),
-        product: items[0]?.product_name || 'Multiple products',
+        product: normalizedItems[0]?.product_name || 'Multiple products',
         amount: Number(row.total || 0),
         subtotal: Number(row.subtotal ?? row.total ?? 0),
         discount: Number(row.discount || 0),
@@ -90,7 +125,7 @@ export async function loadAdminOrders(): Promise<{
         channel: String(row.fulfillment_method || 'STORE_PICKUP'),
         vehicleModel: String(row.vehicle_model || ''),
         pickupStore: String(row.pickup_store || ''),
-        items,
+        items: normalizedItems,
         createdAt: String(row.created_at),
       };
     }),
@@ -118,8 +153,8 @@ export function toCustomerOrderRecord(order: AdminOrderRecord): CustomerOrderRec
       product_id: item.product_id || null,
       product_name: item.product_name || 'Product',
       color: item.color || null,
-      quantity: item.quantity || 1,
-      unit_price: item.unit_price || 0,
+      quantity: Number(item.quantity ?? 1),
+      unit_price: Number(item.unit_price ?? 0),
     })),
   };
 }

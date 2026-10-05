@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
-  ArrowDownToLine,
   ArrowLeft,
   CalendarDays,
   Check,
@@ -13,13 +12,14 @@ import {
   MapPin,
   Package,
   PackageCheck,
+  Printer,
   ShieldCheck,
   X,
 } from 'lucide-react';
 import type { CustomerOrderRecord } from '../types';
 import type { ProductReviewRecord } from '../lib/supabaseReviews';
-import { downloadOrderInvoice } from '../lib/orderInvoice';
 import { getOrderPreviewItems, isOrderComplete } from '../lib/orderPresentation';
+import { InvoiceTemplate } from './InvoiceTemplate';
 
 interface CustomerOrdersModalProps {
   orders: CustomerOrderRecord[];
@@ -123,6 +123,7 @@ const OrderTimeline = ({ status }: { status: string }) => {
 export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders, reviews, loading, customerName, onClose, onReview }) => {
   const [filter, setFilter] = useState<OrderFilter>('all');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [invoiceOrder, setInvoiceOrder] = useState<CustomerOrderRecord | null>(null);
   const selectedOrder = orders.find((order) => order.id === selectedOrderId) || null;
   const completedCount = orders.filter((order) => isOrderComplete(order.status)).length;
   const activeCount = orders.filter((order) => !isOrderComplete(order.status) && order.status !== 'CANCELLED').length;
@@ -133,9 +134,10 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
     return true;
   }), [filter, orders]);
 
-  const openInvoice = (order: CustomerOrderRecord) => downloadOrderInvoice(order, customerName);
+  const openInvoice = (order: CustomerOrderRecord) => setInvoiceOrder(order);
 
   return (
+    <>
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-0 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="customer-orders-title">
       <motion.button type="button" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} aria-label="Close orders" className="fixed inset-0 bg-slate-950/55 backdrop-blur-[3px]" />
       <motion.section
@@ -205,6 +207,12 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
         </AnimatePresence>
       </motion.section>
     </div>
+    {invoiceOrder && (
+      <div className="fixed inset-0 z-[80] overflow-y-auto bg-slate-200">
+        <InvoiceTemplate order={invoiceOrder} onClose={() => setInvoiceOrder(null)} />
+      </div>
+    )}
+    </>
   );
 };
 
@@ -242,7 +250,7 @@ const OrderCard = ({ order, index, onOpen, onInvoice }: { order: CustomerOrderRe
         </div>
         <div className="mt-3 flex items-center justify-between gap-2 text-[10px] font-bold text-slate-500"><span className="inline-flex items-center gap-1.5"><CreditCard className="h-3.5 w-3.5 text-slate-400" />{order.payment_status?.toLowerCase() === 'paid' ? 'Paid' : 'Pay at store'}</span><span className="inline-flex items-center gap-1 text-[#cf4033]">View details<ChevronRight className="h-3.5 w-3.5" /></span></div>
       </button>
-      {complete && <div className="flex items-center justify-between gap-3 border-t border-emerald-100 bg-emerald-50/60 px-4 py-2.5 sm:px-5"><span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-800"><CheckCircle2 className="h-3.5 w-3.5" />Order complete · Invoice ready</span><button type="button" onClick={onInvoice} className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[10px] font-extrabold text-emerald-800 shadow-sm ring-1 ring-emerald-200 transition hover:bg-emerald-100"><ArrowDownToLine className="h-3.5 w-3.5" />Invoice</button></div>}
+      {complete && <div className="flex items-center justify-between gap-3 border-t border-emerald-100 bg-emerald-50/60 px-4 py-2.5 sm:px-5"><span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-800"><CheckCircle2 className="h-3.5 w-3.5" />Order complete · Invoice ready</span><button type="button" onClick={onInvoice} className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[10px] font-extrabold text-emerald-800 shadow-sm ring-1 ring-emerald-200 transition hover:bg-emerald-100"><Printer className="h-3.5 w-3.5" />View invoice</button></div>}
     </motion.article>
   );
 };
@@ -254,7 +262,7 @@ const OrderDetails = ({ order, customerName, reviews, onInvoice, onReview }: { o
     <div className="space-y-4 pb-2">
       <div className="rounded-[22px] border border-slate-200/80 bg-white p-4 shadow-[0_4px_18px_rgba(15,23,42,0.035)] sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[9px] font-extrabold uppercase tracking-[0.15em] text-slate-400">{formatDate(order.created_at, true)}</p><p className="mt-1 text-lg font-black tracking-tight text-slate-900">Order #{order.order_number}</p><p className="mt-1 text-[11px] font-medium text-slate-500">{items.length} {items.length === 1 ? 'product' : 'products'} · {order.vehicle_model || 'Vehicle not specified'}</p></div><OrderStatusBadge status={order.status} /></div>
-        {complete && <button type="button" onClick={onInvoice} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#d94335] px-4 py-3 text-xs font-extrabold text-white shadow-[0_7px_16px_rgba(217,67,53,0.2)] transition hover:bg-[#be3429] sm:w-auto"><ArrowDownToLine className="h-4 w-4" />Download invoice PDF</button>}
+        {complete && <button type="button" onClick={onInvoice} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#d94335] px-4 py-3 text-xs font-extrabold text-white shadow-[0_7px_16px_rgba(217,67,53,0.2)] transition hover:bg-[#be3429] sm:w-auto"><Printer className="h-4 w-4" />View / print invoice</button>}
       </div>
 
       <OrderTimeline status={order.status} />
