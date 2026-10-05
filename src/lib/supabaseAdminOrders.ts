@@ -26,6 +26,10 @@ export type AdminOrderRecord = {
   channel: string;
   vehicleModel: string;
   pickupStore: string;
+  pickupNote: string;
+  pickedUpAt: string | null;
+  completedAt: string | null;
+  statusHistory: AdminOrderStatusHistoryRecord[];
   items: Array<{
     product_id?: string | null;
     product_name?: string;
@@ -34,6 +38,22 @@ export type AdminOrderRecord = {
     unit_price?: number;
   }>;
   createdAt: string;
+};
+
+export type AdminOrderStatusHistoryRecord = {
+  id: string;
+  from_status: string | null;
+  to_status: string;
+  note: string | null;
+  created_at: string;
+};
+
+export type AdminOrderTimelineEvent = {
+  id: string;
+  status: string;
+  createdAt: string;
+  note: string | null;
+  kind: 'placed' | 'status';
 };
 
 export function getNextPickupOrderStatus(status: AdminOrderRecord['status']) {
@@ -66,6 +86,29 @@ export function matchesAdminOrderSearch(order: AdminOrderRecord, query: string) 
   return searchable.includes(normalized);
 }
 
+export function getAdminOrderTimelineEvents(order: AdminOrderRecord): AdminOrderTimelineEvent[] {
+  const events: AdminOrderTimelineEvent[] = [
+    { id: `placed-${order.id}`, status: 'NEW', createdAt: order.createdAt, note: null, kind: 'placed' as const },
+    ...order.statusHistory.map((entry) => ({
+      id: entry.id,
+      status: entry.to_status,
+      createdAt: entry.created_at,
+      note: entry.note,
+      kind: 'status' as const,
+    })),
+  ].filter((event) => Boolean(event.status && event.createdAt) && !Number.isNaN(Date.parse(event.createdAt)));
+
+  const recordedStatuses = new Set(events.map((event) => event.status));
+  if (order.pickedUpAt && !Number.isNaN(Date.parse(order.pickedUpAt)) && !recordedStatuses.has('PICKED_UP')) {
+    events.push({ id: `picked-up-${order.id}`, status: 'PICKED_UP', createdAt: order.pickedUpAt, note: null, kind: 'status' });
+  }
+  if (order.completedAt && !Number.isNaN(Date.parse(order.completedAt)) && !recordedStatuses.has('COMPLETED')) {
+    events.push({ id: `completed-${order.id}`, status: 'COMPLETED', createdAt: order.completedAt, note: null, kind: 'status' });
+  }
+
+  return events.sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt));
+}
+
 export async function loadAdminOrders(): Promise<{
   data: AdminOrderRecord[];
   error: Error | null;
@@ -74,7 +117,7 @@ export async function loadAdminOrders(): Promise<{
   const { data, error } = await supabase
     .from('orders')
     .select(
-      'id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,status,created_at,order_items(product_id,product_name,color,quantity,unit_price)',
+      'id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price),order_status_history(id,from_status,to_status,note,created_at)',
     )
     .order('created_at', { ascending: false })
     .limit(100);
@@ -97,6 +140,21 @@ export async function loadAdminOrders(): Promise<{
         quantity: Number(item.quantity || 0),
         unit_price: Number(item.unit_price || 0),
       }));
+      const statusHistory = Array.isArray(row.order_status_history)
+        ? (row.order_status_history as Array<{
+            id?: string;
+            from_status?: string | null;
+            to_status?: string;
+            note?: string | null;
+            created_at?: string;
+          }>).map((event) => ({
+            id: String(event.id || ''),
+            from_status: event.from_status || null,
+            to_status: String(event.to_status || ''),
+            note: event.note || null,
+            created_at: String(event.created_at || ''),
+          }))
+        : [];
       return {
         id: `#${row.order_number}`,
         userId: String(row.user_id || ''),
@@ -125,6 +183,10 @@ export async function loadAdminOrders(): Promise<{
         channel: String(row.fulfillment_method || 'STORE_PICKUP'),
         vehicleModel: String(row.vehicle_model || ''),
         pickupStore: String(row.pickup_store || ''),
+        pickupNote: String(row.pickup_note || ''),
+        pickedUpAt: row.picked_up_at ? String(row.picked_up_at) : null,
+        completedAt: row.completed_at ? String(row.completed_at) : null,
+        statusHistory,
         items: normalizedItems,
         createdAt: String(row.created_at),
       };

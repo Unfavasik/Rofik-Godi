@@ -78,15 +78,20 @@ export const PickupVerification: React.FC<PickupVerificationProps> = ({ onVerifi
     }
     setIsBusy(true);
     setMessage('Verifying pickup token…');
-    const result = await verifyStorePickupToken(token);
-    setIsBusy(false);
-    if (result.error) {
-      setMessage(result.error.message || 'Pickup token could not be verified.');
-      return;
+    try {
+      const result = await verifyStorePickupToken(token);
+      if (result.error) {
+        setMessage(result.error.message || 'Pickup token could not be verified.');
+        return;
+      }
+      setMessage(`Order #${result.data?.order_number || ''} marked as picked up.`);
+      setToken('');
+      onVerified();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Pickup token could not be verified.');
+    } finally {
+      setIsBusy(false);
     }
-    setMessage(`Order #${result.data?.order_number || ''} marked as picked up.`);
-    setToken('');
-    onVerified();
   };
 
   return (

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getAdminOrderTimelineEvents,
   getNextPickupOrderStatus,
   matchesAdminOrderSearch,
   matchesAdminOrderToCustomer,
@@ -12,7 +13,7 @@ const order: AdminOrderRecord = {
   initials: 'CR', product: 'Seat cover', amount: 900, subtotal: 1000, discount: 100, paymentMethod: 'PAY_AT_STORE',
   paymentStatus: 'PENDING', status: 'READY_FOR_PICKUP', date: '5 Oct 2026', channel: 'STORE_PICKUP',
   vehicleModel: 'Hero Splendor', pickupStore: 'Main store', items: [{ product_name: 'Red seat cushion', quantity: 1, unit_price: 900 }],
-  createdAt: '2026-10-05T10:00:00Z',
+  pickupNote: 'Please call on arrival.', pickedUpAt: null, completedAt: null, statusHistory: [], createdAt: '2026-10-05T10:00:00Z',
 };
 
 describe('admin customer order history matching', () => {
@@ -64,5 +65,31 @@ describe('admin customer order history matching', () => {
     expect(getNextPickupOrderStatus('PICKED_UP')).toBe('COMPLETED');
     expect(getNextPickupOrderStatus('COMPLETED')).toBeNull();
     expect(getNextPickupOrderStatus('CANCELLED')).toBeNull();
+  });
+
+  it('shows only order-created and recorded status timestamps in the timeline', () => {
+    const currentOrder = {
+      ...order,
+      status: 'PICKED_UP' as const,
+      pickedUpAt: '2026-10-05T11:00:00Z',
+      statusHistory: [
+        { id: 'history-2', from_status: 'CONFIRMED', to_status: 'PICKED_UP', note: 'Verified pickup', created_at: '2026-10-05T11:00:00Z' },
+        { id: 'history-1', from_status: 'NEW', to_status: 'CONFIRMED', note: null, created_at: '2026-10-05T10:15:00Z' },
+      ],
+    };
+    const events = getAdminOrderTimelineEvents(currentOrder);
+    expect(events.map((event) => event.status)).toEqual(['NEW', 'CONFIRMED', 'PICKED_UP']);
+    expect(events.map((event) => event.createdAt)).toEqual([
+      '2026-10-05T10:00:00Z',
+      '2026-10-05T10:15:00Z',
+      '2026-10-05T11:00:00Z',
+    ]);
+    expect(events[2]?.note).toBe('Verified pickup');
+  });
+
+  it('does not infer missing intermediate statuses or dates', () => {
+    expect(getAdminOrderTimelineEvents(order)).toEqual([
+      { id: 'placed-#RGC-101', status: 'NEW', createdAt: '2026-10-05T10:00:00Z', note: null, kind: 'placed' },
+    ]);
   });
 });

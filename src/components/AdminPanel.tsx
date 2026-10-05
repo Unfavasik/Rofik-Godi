@@ -27,6 +27,8 @@ import { AdminProductManager } from './AdminProductManager';
 import { CouponManagement } from './CouponManagement';
 import { AdminReviewsView } from './AdminReviewsView';
 import { InvoiceTemplate } from './InvoiceTemplate';
+import { AdminOrderDetails } from './AdminOrderDetails';
+import { PickupVerification } from './PickupVerification';
 import { BannersView, CategoriesView, NotificationsView, ReportsView } from './AdminSections';
 import {
   loadAdminOrders,
@@ -472,6 +474,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
           {section === 'orders' && (
             <OrdersView
               orders={filteredOrders}
+              products={products}
               filter={orderFilter}
               setFilter={setOrderFilter}
               onExport={exportOrders}
@@ -556,6 +559,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
       {selectedOrder && (
         <OrderDetails
           order={selectedOrder}
+          products={products}
           onClose={() => setSelectedOrder(null)}
           onChanged={() => {
             setSelectedOrder(null);
@@ -925,6 +929,7 @@ function Overview({
 }
 function OrdersView({
   orders,
+  products,
   filter,
   setFilter,
   onExport,
@@ -934,6 +939,7 @@ function OrdersView({
   notify,
 }: {
   orders: AdminOrderRecord[];
+  products: Product[];
   filter: 'All' | OrderStatus;
   setFilter: (value: 'All' | OrderStatus) => void;
   onExport: () => void;
@@ -944,6 +950,7 @@ function OrdersView({
 }) {
   const [orderSearch, setOrderSearch] = useState('');
   const visibleOrders = orders.filter((order) => matchesAdminOrderSearch(order, orderSearch));
+  const productsById = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
 
   return (
     <>
@@ -952,7 +959,8 @@ function OrdersView({
         title="Orders"
         description="Live orders from Supabase, auto-refreshed every 30 seconds. Fulfillment currently follows the store-pickup workflow."
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <PickupVerification onVerified={onRefresh} />
             <button
               onClick={onExport}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold"
@@ -1007,36 +1015,49 @@ function OrdersView({
         <p className="text-[10px] font-semibold text-slate-400">{visibleOrders.length} of {orders.length} shown</p>
       </div>
       <div className="space-y-3">
-        {visibleOrders.map((order) => (
-          <div
-            key={order.id}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-          >
-            <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-              <div>
-                <div className="flex items-center gap-2">
-                  <b className="font-mono text-[12px]">{order.id}</b>
-                  <StatusPill status={order.status} />
+        {visibleOrders.map((order) => {
+          const seenProducts = new Set<string>();
+          const previews = order.items.filter((item, index) => {
+            const key = item.product_id || item.product_name || String(index);
+            if (seenProducts.has(key)) return false;
+            seenProducts.add(key);
+            return true;
+          });
+          return (
+            <article key={order.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300 hover:shadow-md sm:p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <b className="font-mono text-[12px] font-black text-[#0F172A]">{order.id}</b>
+                    <StatusPill status={order.status} />
+                  </div>
+                  <p className="mt-2 truncate text-xs font-extrabold text-slate-800">{order.customer} <span className="font-medium text-slate-500">· {order.phone || 'No phone'}</span></p>
+                  <p className="mt-1 text-[10px] font-medium text-slate-500">{dateLabel(order.createdAt)} <span className="mx-1 text-slate-300">·</span> {money(order.amount)} <span className="mx-1 text-slate-300">·</span> {order.paymentStatus}</p>
                 </div>
-                <p className="mt-2 text-xs font-bold">
-                  {order.customer} · {order.phone || 'No phone'}
-                </p>
-                <p className="mt-1 text-[11px] text-slate-500">
-                  {order.product} · {money(order.amount)} · {order.paymentStatus} · {dateLabel(order.createdAt)}
+              </div>
+              <div className="mt-4 flex items-center gap-3 rounded-xl bg-[#F6F8FB] p-3">
+                <div className="flex shrink-0 items-center">
+                  {previews.slice(0, 3).map((item, index) => {
+                    const image = item.product_id ? productsById.get(item.product_id)?.image : undefined;
+                    return (
+                      <div key={`${item.product_id || item.product_name}-${index}`} className={`grid h-11 w-11 place-items-center overflow-hidden rounded-xl border border-white bg-white ${index ? '-ml-2.5 ring-2 ring-[#F6F8FB]' : ''}`}>
+                        {image ? <img src={image} alt={item.product_name || 'Product'} loading="lazy" className="h-full w-full object-cover" /> : <Package className="h-4 w-4 text-slate-300" />}
+                      </div>
+                    );
+                  })}
+                  {previews.length > 3 && <span className="-ml-2.5 grid h-11 w-11 place-items-center rounded-xl border-2 border-[#F6F8FB] bg-slate-200 text-[10px] font-black text-slate-600">+{previews.length - 3}</span>}
+                </div>
+                <p className="min-w-0 flex-1 truncate text-[11px] font-bold text-slate-600">
+                  {previews.length ? `${previews[0]?.product_name || order.product}${previews.length > 1 ? ` + ${previews.length - 1} more` : ''}` : 'No product details saved'}
+                  {order.items.length > 0 && <span className="ml-1.5 font-medium text-slate-400">· {order.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)} units</span>}
                 </p>
               </div>
-              <div className="flex justify-end">
-                <OrderActionMenu
-                  order={order}
-                  onSelect={onSelect}
-                  onOpenInvoice={onOpenInvoice}
-                  onRefresh={onRefresh}
-                  notify={notify}
-                />
+              <div className="mt-3 flex justify-end">
+                <OrderActionMenu order={order} onSelect={onSelect} onOpenInvoice={onOpenInvoice} onRefresh={onRefresh} notify={notify} />
               </div>
-            </div>
-          </div>
-        ))}
+            </article>
+          );
+        })}
         {!visibleOrders.length && (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-14 text-center text-sm font-semibold text-slate-400">
             {orderSearch ? 'No orders match your search' : 'No orders found'}
@@ -1061,8 +1082,45 @@ function OrderActionMenu({
   notify: (message: string) => void;
 }) {
   const nextStatus = getNextPickupOrderStatus(order.status);
+  const [busyAction, setBusyAction] = useState(false);
   const closeMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.currentTarget.closest('details')?.removeAttribute('open');
+  };
+
+  const applyStatus = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    closeMenu(event);
+    if (!nextStatus || busyAction) return;
+    setBusyAction(true);
+    try {
+      const result = await updatePickupOrderStatus(order.orderNumber, nextStatus);
+      if (result.error) notify(result.error.message || 'Order status could not be updated.');
+      else {
+        notify(`Order moved to ${getOrderStatusLabel(nextStatus)}.`);
+        onRefresh();
+      }
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Order status could not be updated.');
+    } finally {
+      setBusyAction(false);
+    }
+  };
+
+  const verifyPayment = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    closeMenu(event);
+    if (busyAction) return;
+    setBusyAction(true);
+    try {
+      const result = await verifyPickupPayment(order.orderNumber);
+      if (result.error) notify(result.error.message || 'Payment could not be verified.');
+      else {
+        notify('Payment verified.');
+        onRefresh();
+      }
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Payment could not be verified.');
+    } finally {
+      setBusyAction(false);
+    }
   };
 
   return (
@@ -1075,22 +1133,12 @@ function OrderActionMenu({
           <Eye className="h-3.5 w-3.5 text-slate-400" /> View order details
         </button>
         {nextStatus && (
-          <button type="button" onClick={async (event) => {
-            closeMenu(event);
-            const result = await updatePickupOrderStatus(order.orderNumber, nextStatus);
-            notify(result.error ? result.error.message : `Order moved to ${getOrderStatusLabel(nextStatus)}`);
-            if (!result.error) onRefresh();
-          }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-bold text-slate-700 hover:bg-slate-50">
+          <button type="button" onClick={(event) => void applyStatus(event)} disabled={busyAction} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
             <Package className="h-3.5 w-3.5 text-blue-600" /> Mark {getOrderStatusLabel(nextStatus)}
           </button>
         )}
-        {order.paymentStatus.toUpperCase() !== 'PAID' && order.status !== 'CANCELLED' && (
-          <button type="button" onClick={async (event) => {
-            closeMenu(event);
-            const result = await verifyPickupPayment(order.orderNumber);
-            notify(result.error ? result.error.message : 'Payment verified');
-            if (!result.error) onRefresh();
-          }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-bold text-emerald-700 hover:bg-emerald-50">
+        {order.paymentStatus.toUpperCase() === 'PENDING' && order.status !== 'CANCELLED' && (
+          <button type="button" onClick={(event) => void verifyPayment(event)} disabled={busyAction} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-bold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">
             <Check className="h-3.5 w-3.5" /> Verify payment
           </button>
         )}
@@ -1104,127 +1152,14 @@ function OrderActionMenu({
   );
 }
 
-function OrderDetails({
-  order,
-  onClose,
-  onChanged,
-  notify,
-}: {
+function OrderDetails({ order, products, onClose, onChanged, notify }: {
   order: AdminOrderRecord;
+  products: Product[];
   onClose: () => void;
   onChanged: () => void;
   notify: (message: string) => void;
 }) {
-  const [showInvoice, setShowInvoice] = useState(false);
-  const nextStatus = getNextPickupOrderStatus(order.status);
-  return (
-    <>
-      <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/40">
-        <aside className="h-full w-full max-w-lg overflow-y-auto bg-white p-6 shadow-2xl">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-black">Order {order.id}</h2>
-            <button onClick={onClose}>
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="mt-6 space-y-3 text-sm">
-            <p>
-              <b>Customer:</b> {order.customer}
-            </p>
-            <p>
-              <b>Phone:</b> {order.phone || '—'}
-            </p>
-            <p>
-              <b>Vehicle:</b> {order.vehicleModel || '—'}
-            </p>
-            <p>
-              <b>Pickup store:</b> {order.pickupStore || '—'}
-            </p>
-            <p>
-              <b>Total:</b> {money(order.amount)}
-            </p>
-            <p>
-              <b>Payment:</b> {order.paymentStatus}
-            </p>
-            <p>
-              <b>Status:</b> <StatusPill status={order.status} />
-            </p>
-            <p>
-              <b>Created:</b> {dateLabel(order.createdAt)}
-            </p>
-            <div>
-              <b>Products:</b>
-              {order.items.map((item, index) => (
-                <p key={index} className="mt-1 text-slate-600">
-                  {item.product_name || 'Product'} × {item.quantity || 1}
-                </p>
-              ))}
-            </div>
-          </div>
-          {isOrderComplete(order.status) && (
-            <div className="mt-6 flex items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-              <div>
-                <p className="text-xs font-black text-emerald-800">Order completed</p>
-                <p className="mt-1 text-[11px] text-emerald-700">The customer invoice is ready to view or print.</p>
-              </div>
-              <button
-                onClick={() => setShowInvoice(true)}
-                className="shrink-0 rounded-xl bg-emerald-700 px-3 py-2 text-[10px] font-bold text-white"
-              >
-                Open invoice
-              </button>
-            </div>
-          )}
-          <div className="mt-8 flex flex-wrap gap-2">
-            {isOrderComplete(order.status) ? (
-              <button
-                onClick={() => setShowInvoice(true)}
-                className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700"
-              >
-                <Printer className="h-4 w-4" /> View / print invoice
-              </button>
-            ) : (
-              <p className="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-500">
-                Invoice unlocks when the order is complete
-              </p>
-            )}
-            {nextStatus && (
-              <button
-                onClick={async () => {
-                  const result = await updatePickupOrderStatus(order.orderNumber, nextStatus);
-                  notify(result.error ? result.error.message : `Order marked ${nextStatus}`);
-                  if (!result.error) onChanged();
-                }}
-                className="rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white"
-              >
-                Mark {nextStatus}
-              </button>
-            )}
-            {order.paymentStatus !== 'PAID' && (
-              <button
-                onClick={async () => {
-                  const result = await verifyPickupPayment(order.orderNumber);
-                  notify(result.error ? result.error.message : 'Payment verified');
-                  if (!result.error) onChanged();
-                }}
-                className="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white"
-              >
-                Verify payment
-              </button>
-            )}
-          </div>
-        </aside>
-      </div>
-      {showInvoice && (
-        <div className="fixed inset-0 z-[60] overflow-y-auto">
-          <InvoiceTemplate
-            order={toCustomerOrderRecord(order)}
-            onClose={() => setShowInvoice(false)}
-          />
-        </div>
-      )}
-    </>
-  );
+  return <AdminOrderDetails order={order} products={products} onClose={onClose} onChanged={onChanged} notify={notify} />;
 }
 function CustomersView({
   customers,

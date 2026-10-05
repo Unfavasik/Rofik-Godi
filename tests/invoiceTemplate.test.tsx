@@ -22,6 +22,10 @@ const adminOrder: AdminOrderRecord = {
   channel: 'STORE_PICKUP',
   vehicleModel: 'Hero Splendor Plus',
   pickupStore: 'Rofik Godi Centre',
+  pickupNote: '',
+  pickedUpAt: null,
+  completedAt: null,
+  statusHistory: [],
   items: [
     {
       product_id: 'product-1',
