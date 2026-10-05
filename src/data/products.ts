@@ -368,7 +368,7 @@ export const PRODUCTS: Product[] = [
 export const WORKSHOP_INFO = {
   name: 'ROFIK GODI CENTRE',
   subtitle: 'Local Ride Essentials & Seat Manufacturing',
-  address: 'Main Station Road, Near Central Auto Stand, West Bengal',
+  address: 'Jalangi Road, Raninagar, Keshobnagar, Berhampore, West Bengal 742102',
   phone: '+91 98321 45678',
   whatsapp: '+91 98321 45678',
   email: 'support@rofikgodi.com',

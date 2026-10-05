@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /account
+Disallow: /profile
+Disallow: /wishlist
+Disallow: /cart
+Disallow: /notifications
+Disallow: /notification
+Disallow: /signup
+Disallow: /onboarding
+Disallow: /Onboarding
+Disallow: /signup/onboarding
+Disallow: /signup/loading
+Disallow: /auth/
+
+Sitemap: https://work-app-dun.vercel.app/sitemap.xml
