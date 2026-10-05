@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CartItem } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { validateCustomerCoupon } from '../lib/supabaseCoupons';
+import { loadCustomerCouponOffers, validateCustomerCoupon, type CustomerCouponOffer } from '../lib/supabaseCoupons';
 import {
   X,
   ShoppingBag,
@@ -38,6 +38,23 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; subtotal: number; total: number } | null>(null);
   const [couponError, setCouponError] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [couponOffers, setCouponOffers] = useState<CustomerCouponOffer[]>([]);
+  const [couponOffersLoading, setCouponOffersLoading] = useState(false);
+  const [couponOffersError, setCouponOffersError] = useState('');
+
+  useEffect(() => {
+    if (!isOpen || items.length === 0) return;
+    let cancelled = false;
+    setCouponOffersLoading(true);
+    setCouponOffersError('');
+    void loadCustomerCouponOffers().then((response) => {
+      if (cancelled) return;
+      setCouponOffers(response.data);
+      setCouponOffersError(response.error);
+      setCouponOffersLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [isOpen, items.length, userId]);
 
   useEffect(() => {
     setAppliedCoupon(null);
@@ -52,8 +69,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const discount = appliedCoupon ? appliedCoupon.discount : 0;
   const grandTotal = appliedCoupon?.total ?? Math.max(0, subtotal - discount);
 
-  const handleApplyCoupon = async () => {
-    const code = couponCode.trim().toUpperCase().replace(/\s+/g, '');
+  const handleApplyCoupon = async (selectedCode = couponCode) => {
+    const code = selectedCode.trim().toUpperCase().replace(/\s+/g, '');
     if (!code) {
       setCouponError('Enter a coupon code first.');
       return;
@@ -287,6 +304,43 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 {couponError && (
                   <p className="text-[10px] font-semibold text-red-600 mt-1.5">{couponError}</p>
                 )}
+
+                <div className="mt-3 border-t border-gray-200 pt-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-gray-500">Eligible offers</p>
+                    {couponOffers.length > 0 && <span className="text-[10px] font-semibold text-emerald-600">{couponOffers.length} available</span>}
+                  </div>
+                  {couponOffersLoading ? (
+                    <p className="rounded-xl bg-white px-3 py-2 text-[10px] font-semibold text-gray-400">Loading eligible coupons…</p>
+                  ) : couponOffersError ? (
+                    <p className="rounded-xl bg-amber-50 px-3 py-2 text-[10px] font-semibold text-amber-800">{couponOffersError}</p>
+                  ) : couponOffers.length === 0 ? (
+                    <p className="rounded-xl bg-white px-3 py-2 text-[10px] font-semibold text-gray-400">No eligible coupons right now.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {couponOffers.map((offer) => (
+                        <button
+                          key={offer.code}
+                          type="button"
+                          onClick={() => void handleApplyCoupon(offer.code)}
+                          disabled={isApplyingCoupon}
+                          className="w-full rounded-xl border border-red-100 bg-gradient-to-r from-red-50 to-orange-50 p-2.5 text-left transition hover:border-red-200 hover:shadow-sm disabled:opacity-60"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-mono text-[11px] font-black tracking-wide text-[#D9232D]">{offer.code}</span>
+                            <span className="rounded bg-[#D9232D] px-1.5 py-0.5 text-[9px] font-extrabold text-white">
+                              {offer.discount_type === 'PERCENTAGE' ? `${offer.discount_value}% OFF` : `₹${offer.discount_value} OFF`}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-[10px] font-medium text-gray-600">
+                            {offer.minimum_order_value > 0 ? `Min order ₹${offer.minimum_order_value}` : 'No minimum order'} · Valid until {new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' }).format(new Date(offer.expires_at))}
+                          </p>
+                          <p className="mt-1 text-[9.5px] font-bold text-[#D9232D]">Tap to apply</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
               </div>
             )}
