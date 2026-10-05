@@ -38,13 +38,12 @@ export const Header: React.FC<HeaderProps> = ({
   const [currentTime, setCurrentTime] = useState(() => new Date());
 
   useEffect(() => {
-    const timer = window.setInterval(() => setCurrentTime(new Date()), 1000);
+    const timer = window.setInterval(() => setCurrentTime(new Date()), 60_000);
     return () => window.clearInterval(timer);
   }, []);
 
   const hour = currentTime.getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const timeLabel = currentTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
   return (
     <header className="w-full flex flex-col bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-[0_1px_6px_rgba(0,0,0,0.03)] sticky top-0 z-40 transition-all">
@@ -75,9 +74,6 @@ export const Header: React.FC<HeaderProps> = ({
             <h1 className="text-[15px] font-black tracking-tight flex items-center leading-tight mt-0.5 text-slate-900 group-hover:text-[#D9232D] transition-colors">
               {currentUser?.isGuest ? 'Guest' : currentUser?.name?.trim() || 'Rider'}
             </h1>
-            <span className="text-[10px] font-semibold text-slate-400 leading-none mt-0.5" aria-live="polite">
-              {timeLabel}
-            </span>
           </div>
         </button>
 
