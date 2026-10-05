@@ -69,12 +69,11 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-none flex items-center gap-1">
-              {greeting}, {currentUser?.isGuest ? 'Guest' : currentUser?.name?.split(/\s+/)[0] || 'Rider'}
+              {greeting}
               <Sparkles className="w-2.5 h-2.5 text-amber-500" />
             </span>
             <h1 className="text-[15px] font-black tracking-tight flex items-center leading-tight mt-0.5 text-slate-900 group-hover:text-[#D9232D] transition-colors">
-              <span>ROFIK</span>
-              <span className="text-[#D9232D] ml-1">GODI</span>
+              {currentUser?.isGuest ? 'Guest' : currentUser?.name?.trim() || 'Rider'}
             </h1>
             <span className="text-[10px] font-semibold text-slate-400 leading-none mt-0.5" aria-live="polite">
               {timeLabel}
