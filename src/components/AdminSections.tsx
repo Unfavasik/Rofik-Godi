@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Bell, Download, Image, Plus, Tag, Trash2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Bell, Download, Image, Plus, Tag, Trash2, Upload } from 'lucide-react';
 import type { Product, VehicleCategory } from '../types';
 import type { AdminNotification } from '../lib/supabaseAdmin';
 import { loadAdminJsonSetting, saveAdminJsonSetting } from '../lib/supabaseAdmin';
 import type { AdminOrderRecord } from '../lib/supabaseAdminOrders';
+import { uploadStorefrontBannerImage } from '../lib/supabaseBanners';
 
 const money = (value: number) => `₹${value.toLocaleString('en-IN')}`;
 const dateLabel = (value: string) =>
@@ -105,6 +106,8 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
   const [draft, setDraft] = useState<StoreBanner | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     let active = true;
     void loadAdminJsonSetting<StoreBanner[]>('store_banners', []).then((result) => {
@@ -132,6 +135,19 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
   };
   const setField = <K extends keyof StoreBanner>(key: K, value: StoreBanner[K]) =>
     setDraft((current) => (current ? { ...current, [key]: value } : current));
+  const uploadImage = async (file?: File) => {
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const result = await uploadStorefrontBannerImage(file);
+      setField('imageUrl', result.url);
+      notify('Banner image uploaded');
+    } catch (error) {
+      notify(`Banner image upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
   const saveDraft = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!draft?.title.trim()) {
@@ -281,22 +297,50 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                 />
               </label>
               <label className="text-[11px] font-bold text-slate-600">
-                Image URL
+                Banner image
+                <div className="mt-1 flex gap-2">
+                  <input
+                    type="url"
+                    value={draft.imageUrl}
+                    onChange={(event) => setField('imageUrl', event.target.value)}
+                    placeholder="https://…"
+                    className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={uploadingImage}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-[11px] font-bold text-slate-600 disabled:opacity-50"
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    {uploadingImage ? 'Uploading…' : 'Upload'}
+                  </button>
+                </div>
                 <input
-                  type="url"
-                  value={draft.imageUrl}
-                  onChange={(event) => setField('imageUrl', event.target.value)}
-                  placeholder="https://…"
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-xs"
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  className="hidden"
+                  onChange={(event) => {
+                    void uploadImage(event.target.files?.[0]);
+                    event.currentTarget.value = '';
+                  }}
                 />
+                <span className="mt-1 block text-[10px] font-normal text-slate-400">
+                  Upload JPG, PNG, WEBP or GIF; it is converted to WebP and saved securely.
+                </span>
               </label>
               <label className="text-[11px] font-bold text-slate-600">
-                Link URL
+                Shop button link
                 <input
                   value={draft.linkUrl}
                   onChange={(event) => setField('linkUrl', event.target.value)}
+                  placeholder="/shop or https://example.com/page"
                   className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-xs"
                 />
+                <span className="mt-1 block text-[10px] font-normal text-slate-400">
+                  Tapping the button opens this internal page or external website.
+                </span>
               </label>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="text-[11px] font-bold text-slate-600">

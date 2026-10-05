@@ -573,7 +573,12 @@ export default function App() {
         navigate(target);
         return;
       }
-      if (/^https?:\/\//i.test(target)) window.open(target, '_blank', 'noopener,noreferrer');
+      const externalUrl = /^https?:\/\//i.test(target)
+        ? target
+        : /^www\./i.test(target)
+          ? `https://${target}`
+          : '';
+      if (externalUrl) window.open(externalUrl, '_blank', 'noopener,noreferrer');
     },
     [navigate],
   );
