@@ -22,6 +22,7 @@ import {
 import type { CustomerOrderRecord, Product } from '../types';
 import type { ProductReviewRecord } from '../lib/supabaseReviews';
 import { downloadOrderInvoice } from '../lib/orderInvoice';
+import { getOrderStatusLabel, isOrderComplete } from '../lib/orderPresentation';
 
 interface MyOrdersViewProps {
   orders: CustomerOrderRecord[];
@@ -42,8 +43,9 @@ const steps = [
   { key: 'PREPARING', label: 'Being prepared' },
   { key: 'READY_FOR_PICKUP', label: 'Ready for pickup' },
   { key: 'PICKED_UP', label: 'Picked up' },
+  { key: 'COMPLETED', label: 'Completed' },
 ];
-const statusIndex: Record<string, number> = { NEW: 0, CONFIRMED: 1, PREPARING: 2, READY_FOR_PICKUP: 3, PICKED_UP: 4, COMPLETED: 4 };
+const statusIndex: Record<string, number> = { NEW: 0, CONFIRMED: 1, PREPARING: 2, READY_FOR_PICKUP: 3, PICKED_UP: 4, COMPLETED: 5 };
 const formatMoney = (amount: number) => `₹${Number(amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 const formatDate = (date: string, withTime = false) => {
   const value = new Date(date);
@@ -51,11 +53,8 @@ const formatDate = (date: string, withTime = false) => {
     ? { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }
     : { day: 'numeric', month: 'short', year: 'numeric' });
 };
-const isComplete = (status: string) => status === 'COMPLETED' || status === 'PICKED_UP';
-const statusCopy = (status: string) => ({
-  NEW: 'Order placed', CONFIRMED: 'Confirmed', PREPARING: 'Being prepared', READY_FOR_PICKUP: 'Ready for pickup',
-  PICKED_UP: 'Picked up', COMPLETED: 'Completed', CANCELLED: 'Cancelled',
-} as Record<string, string>)[status] || status.replaceAll('_', ' ').toLowerCase();
+const isComplete = isOrderComplete;
+const statusCopy = getOrderStatusLabel;
 
 export function MyOrdersView({ orders, loading, products, reviews, customerName, onClose, onShop, onReview }: MyOrdersViewProps) {
   const [filter, setFilter] = useState<OrderFilter>('All orders');
@@ -208,14 +207,14 @@ function OrderDetails({ order, products, reviews, customerName, onBack, onReview
       <section className={`relative overflow-hidden rounded-[22px] p-5 text-white shadow-sm sm:p-6 ${cancelled ? 'bg-[#33343a]' : complete ? 'bg-[#17251f]' : 'bg-[#23252a]'}`}>
         <div className="pointer-events-none absolute -right-5 -top-14 h-44 w-44 rounded-full bg-[#d9232d]/25 blur-3xl" />
         <div className="relative flex items-start justify-between gap-3">
-          <div><p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/50">{cancelled ? 'Order update' : complete ? 'All set' : 'We’re on it'}</p><h1 className="mt-2 text-[21px] font-black tracking-[-0.04em] sm:text-[25px]">{cancelled ? 'Order cancelled' : complete ? 'Ready for the road.' : 'Your order is moving.'}</h1><p className="mt-1.5 max-w-[370px] text-[11px] leading-5 text-white/65">{cancelled ? 'This order was cancelled. Need a hand? Contact our workshop.' : complete ? 'Your order is complete. Thanks for riding with us.' : 'We’ll update you here as your order gets prepared for pickup.'}</p></div>
+          <div><p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/50">{cancelled ? 'Order update' : complete ? 'All set' : 'We’re on it'}</p><h1 className="mt-2 text-[21px] font-black tracking-[-0.04em] sm:text-[25px]">{cancelled ? 'Order cancelled' : complete ? 'Order completed' : 'Your order is moving.'}</h1><p className="mt-1.5 max-w-[370px] text-[11px] leading-5 text-white/65">{cancelled ? 'This order was cancelled. Need a hand? Contact our workshop.' : complete ? 'Your order is complete. Thanks for riding with us.' : 'We’ll update you here as your order gets prepared for pickup.'}</p></div>
           <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] ${cancelled ? 'bg-white/10 text-white/70' : complete ? 'bg-emerald-400/15 text-emerald-300' : 'bg-[#ed4049]/15 text-[#ff777d]'}`}>{cancelled ? <X className="h-5 w-5" /> : complete ? <CheckCircle2 className="h-5 w-5" /> : <PackageCheck className="h-5 w-5" />}</div>
         </div>
         {!cancelled && <div className="relative mt-5 rounded-2xl border border-white/10 bg-white/[0.055] px-3 py-3.5 sm:px-4">
-          <div className="absolute left-[25px] right-[25px] top-[25px] h-px bg-white/15 sm:left-[34px] sm:right-[34px]" /><div className="absolute left-[25px] top-[25px] h-px bg-[#f0525b] transition-all sm:left-[34px]" style={{ width: `${(currentStep / (steps.length - 1)) * 100}%`, maxWidth: 'calc(100% - 50px)' }} />
+          <div className="absolute left-[25px] right-[25px] top-[25px] h-px bg-white/15 sm:left-[34px] sm:right-[34px]" /><div className={`absolute left-[25px] top-[25px] h-px transition-all sm:left-[34px] ${complete ? 'bg-emerald-400' : 'bg-[#f0525b]'}`} style={{ width: `${(currentStep / (steps.length - 1)) * 100}%`, maxWidth: 'calc(100% - 50px)' }} />
           <div className="relative flex justify-between gap-1">{steps.map((step, index) => {
             const done = index <= currentStep;
-            return <div key={step.key} className="flex w-[65px] flex-col items-center text-center sm:w-[90px]"><span className={`flex h-[22px] w-[22px] items-center justify-center rounded-full border ${done ? 'border-[#ef535b] bg-[#d9232d] text-white' : 'border-white/20 bg-[#25272c] text-white/35'}`}>{done ? <Check className="h-3 w-3" /> : <span className="text-[8px] font-bold">{index + 1}</span>}</span><span className={`mt-2 text-[8px] font-bold leading-3 sm:text-[9px] ${done ? 'text-white/85' : 'text-white/35'}`}>{step.label}</span></div>;
+            return <div key={step.key} className="flex w-[48px] flex-col items-center text-center sm:w-[90px]"><span className={`flex h-[22px] w-[22px] items-center justify-center rounded-full border ${done ? complete ? 'border-emerald-400 bg-emerald-500 text-white' : 'border-[#ef535b] bg-[#d9232d] text-white' : 'border-white/20 bg-[#25272c] text-white/35'}`}>{done ? <Check className="h-3 w-3" /> : <span className="text-[8px] font-bold">{index + 1}</span>}</span><span className={`mt-2 text-[8px] font-bold leading-3 sm:text-[9px] ${done ? complete ? 'text-emerald-200' : 'text-white/85' : 'text-white/35'}`}>{step.label}</span></div>;
           })}</div>
         </div>}
         <div className="relative mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[9px] font-medium text-white/50"><span>Placed {formatDate(order.created_at, true)}</span>{complete && <span className="inline-flex items-center gap-1 text-emerald-300"><CheckCircle2 className="h-3 w-3" />Fulfilled</span>}</div>

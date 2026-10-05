@@ -50,6 +50,7 @@ import { loadAdminProducts } from '../lib/supabaseProducts';
 import { PRODUCTS } from '../data/products';
 import type { Product } from '../types';
 import { supabase } from '../lib/supabase';
+import { getOrderStatusLabel, isOrderComplete } from '../lib/orderPresentation';
 
 type AdminSection =
   | 'overview'
@@ -116,10 +117,12 @@ const downloadCsv = (filename: string, rows: Array<Record<string, unknown>>) => 
 };
 
 function StatusPill({ status }: { status: string }) {
+  const complete = isOrderComplete(status);
+  const cancelled = status === 'CANCELLED';
   return (
-    <span className="inline-flex items-center rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-700 ring-1 ring-slate-200">
+    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${complete ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : cancelled ? 'bg-rose-50 text-rose-700 ring-rose-200' : 'bg-amber-50 text-amber-700 ring-amber-200'}`}>
       <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-current" />
-      {status}
+      {getOrderStatusLabel(status)}
     </span>
   );
 }
@@ -202,6 +205,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
   const [toast, setToast] = useState('');
   const [error, setError] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<AdminOrderRecord | null>(null);
+  const [invoiceOrder, setInvoiceOrder] = useState<AdminOrderRecord | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<AdminCustomer | null>(null);
   const notify = useCallback((message: string) => {
     setToast(message);
@@ -472,6 +476,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
               onExport={exportOrders}
               onRefresh={() => void refresh()}
               onSelect={setSelectedOrder}
+              onOpenInvoice={setInvoiceOrder}
               notify={notify}
             />
           )}
@@ -551,6 +556,14 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
           }}
           notify={notify}
         />
+      )}
+      {invoiceOrder && (
+        <div className="fixed inset-0 z-[60] overflow-y-auto">
+          <InvoiceTemplate
+            order={toCustomerOrderRecord(invoiceOrder)}
+            onClose={() => setInvoiceOrder(null)}
+          />
+        </div>
       )}
       {selectedCustomer && (
         <CustomerProfile
@@ -910,6 +923,7 @@ function OrdersView({
   onExport,
   onRefresh,
   onSelect,
+  onOpenInvoice,
   notify,
 }: {
   orders: AdminOrderRecord[];
@@ -918,6 +932,7 @@ function OrdersView({
   onExport: () => void;
   onRefresh: () => void;
   onSelect: (order: AdminOrderRecord) => void;
+  onOpenInvoice: (order: AdminOrderRecord) => void;
   notify: (message: string) => void;
 }) {
   return (
@@ -963,7 +978,7 @@ function OrdersView({
             onClick={() => setFilter(value)}
             className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${filter === value ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 ring-1 ring-slate-200'}`}
           >
-            {value}
+            {value === 'All' ? value : getOrderStatusLabel(value)}
           </button>
         ))}
       </div>
@@ -976,14 +991,14 @@ function OrdersView({
             <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
               <div>
                 <div className="flex items-center gap-2">
-                  <b>{order.id}</b>
+                  <b className="font-mono text-[12px]">{order.id}</b>
                   <StatusPill status={order.status} />
                 </div>
                 <p className="mt-2 text-xs font-bold">
                   {order.customer} · {order.phone || 'No phone'}
                 </p>
                 <p className="mt-1 text-[11px] text-slate-500">
-                  {order.product} · {money(order.amount)} · {order.paymentStatus}
+                  {order.product} · {money(order.amount)} · {order.paymentStatus} · {dateLabel(order.createdAt)}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -994,6 +1009,15 @@ function OrdersView({
                   <Eye className="mr-1 inline h-3 w-3" />
                   Details
                 </button>
+                {isOrderComplete(order.status) && (
+                  <button
+                    onClick={() => onOpenInvoice(order)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-[10px] font-bold text-emerald-700 transition hover:bg-emerald-100"
+                    aria-label={`Open invoice for order ${order.orderNumber}`}
+                  >
+                    <Printer className="h-3.5 w-3.5" /> Invoice
+                  </button>
+                )}
                 {order.paymentStatus !== 'PAID' && (
                   <button
                     onClick={async () => {
@@ -1070,7 +1094,7 @@ function OrderDetails({
               <b>Payment:</b> {order.paymentStatus}
             </p>
             <p>
-              <b>Status:</b> {order.status}
+              <b>Status:</b> <StatusPill status={order.status} />
             </p>
             <p>
               <b>Created:</b> {dateLabel(order.createdAt)}
@@ -1084,6 +1108,20 @@ function OrderDetails({
               ))}
             </div>
           </div>
+          {isOrderComplete(order.status) && (
+            <div className="mt-6 flex items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+              <div>
+                <p className="text-xs font-black text-emerald-800">Order completed</p>
+                <p className="mt-1 text-[11px] text-emerald-700">The customer invoice is ready to view or print.</p>
+              </div>
+              <button
+                onClick={() => setShowInvoice(true)}
+                className="shrink-0 rounded-xl bg-emerald-700 px-3 py-2 text-[10px] font-bold text-white"
+              >
+                Open invoice
+              </button>
+            </div>
+          )}
           <div className="mt-8 flex flex-wrap gap-2">
             <button
               onClick={() => setShowInvoice(true)}

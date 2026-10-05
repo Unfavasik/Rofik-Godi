@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getOrderPreviewItems, isOrderComplete } from '../src/lib/orderPresentation';
+import { getOrderPreviewItems, getOrderStatusLabel, isOrderComplete } from '../src/lib/orderPresentation';
 
 describe('customer order presentation helpers', () => {
   it('shows one preview thumbnail per distinct product while retaining separate unlinked rows', () => {
@@ -19,5 +19,10 @@ describe('customer order presentation helpers', () => {
 
   it.each(['NEW', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP', 'CANCELLED'])('does not mark %s as complete', (status) => {
     expect(isOrderComplete(status)).toBe(false);
+  });
+
+  it('uses clear human-readable labels for completed statuses', () => {
+    expect(getOrderStatusLabel('COMPLETED')).toBe('Completed');
+    expect(getOrderStatusLabel('PICKED_UP')).toBe('Picked up');
   });
 });

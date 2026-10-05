@@ -4,6 +4,19 @@ type OrderItem = CustomerOrderRecord['order_items'][number];
 
 export const isOrderComplete = (status: string) => status === 'COMPLETED' || status === 'PICKED_UP';
 
+const statusLabels: Record<string, string> = {
+  NEW: 'Order placed',
+  CONFIRMED: 'Confirmed',
+  PREPARING: 'Being prepared',
+  READY_FOR_PICKUP: 'Ready for pickup',
+  PICKED_UP: 'Picked up',
+  COMPLETED: 'Completed',
+  CANCELLED: 'Cancelled',
+};
+
+export const getOrderStatusLabel = (status: string) =>
+  statusLabels[status] || status.replaceAll('_', ' ').toLowerCase();
+
 /** Return one representative thumbnail per distinct product, in the order it was bought. */
 export const getOrderPreviewItems = (items: OrderItem[]) => {
   const seen = new Set<string>();
