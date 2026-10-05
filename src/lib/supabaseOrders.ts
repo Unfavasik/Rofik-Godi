@@ -58,6 +58,18 @@ export async function createSupabaseOrder(order: OrderDetails, expectedUserId: s
     createdAt: result.created_at || order.createdAt,
     pickupToken: result.pickup_token,
   };
+  try {
+    const emailRequest = supabase.functions.invoke('send-order-confirmation', {
+      body: { orderNumber: savedOrder.orderId },
+    });
+    void Promise.resolve(emailRequest)
+      .then((response) => {
+        if (response?.error) console.warn('Order confirmation email request failed');
+      })
+      .catch(() => console.warn('Order confirmation email request failed'));
+  } catch {
+    console.warn('Order confirmation email request failed');
+  }
   return { synced: true, error: null, order: savedOrder };
 }
 

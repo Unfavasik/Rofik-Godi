@@ -4,6 +4,7 @@ const { supabaseMock } = vi.hoisted(() => ({
   supabaseMock: {
     auth: { getUser: vi.fn() },
     rpc: vi.fn(),
+    functions: { invoke: vi.fn() },
   },
 }));
 
@@ -28,7 +29,10 @@ const order: OrderDetails = {
 };
 
 describe('secure order creation flow', () => {
-  beforeEach(() => vi.resetAllMocks());
+  beforeEach(() => {
+    vi.resetAllMocks();
+    supabaseMock.functions.invoke.mockResolvedValue({ error: null });
+  });
 
   it('blocks an order when the current session does not match the customer', async () => {
     supabaseMock.auth.getUser.mockResolvedValue({ data: { user: { id: 'other-user' } }, error: null });
@@ -83,6 +87,26 @@ describe('secure order creation flow', () => {
     }));
     expect(result.synced).toBe(true);
     expect(result.order).toMatchObject({ orderId: 'RGC-1001', subtotal: 950, discount: 95, total: 855, pickupToken: 'pickup-secret' });
+    expect(supabaseMock.functions.invoke).toHaveBeenCalledWith('send-order-confirmation', {
+      body: { orderNumber: 'RGC-1001' },
+    });
+  });
+
+  it('keeps a successfully created order successful when the email function fails', async () => {
+    supabaseMock.auth.getUser.mockResolvedValue({ data: { user: { id: 'customer-1' } }, error: null });
+    supabaseMock.rpc.mockResolvedValue({
+      data: [{
+        id: 'order-id', order_number: 'RGC-1001', status: 'NEW', payment_status: 'PENDING',
+        subtotal: 950, discount: 95, total: 855, created_at: '2026-10-03T01:00:00.000Z', pickup_token: 'pickup-secret',
+      }],
+      error: null,
+    });
+    supabaseMock.functions.invoke.mockRejectedValue(new Error('Email provider unavailable'));
+
+    const result = await createSupabaseOrder(order, 'customer-1');
+
+    expect(result.synced).toBe(true);
+    expect(result.order?.orderId).toBe('RGC-1001');
   });
 
   it('requests a pickup token only for the signed-in customer through the owner-scoped RPC', async () => {
