@@ -18,9 +18,35 @@ export type AdminNotification = {
   title: string;
   body: string;
   action_url: string | null;
+  image_url: string | null;
   read_at: string | null;
   created_at: string;
 };
+
+export type AdminNotificationPayload = {
+  title: string;
+  body: string;
+  kind: string;
+  actionUrl: string | null;
+  imageUrl: string | null;
+  userIds: string[] | null;
+};
+
+export async function sendAdminNotification(payload: AdminNotificationPayload) {
+  if (!supabase) return { count: 0, error: new Error('Supabase is not configured') };
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user)
+    return { count: 0, error: userError || new Error('Administrator sign-in required') };
+  const { data, error } = await supabase.rpc('admin_send_notification', {
+    p_title: payload.title,
+    p_body: payload.body,
+    p_kind: payload.kind,
+    p_action_url: payload.actionUrl,
+    p_image_url: payload.imageUrl,
+    p_user_ids: payload.userIds,
+  });
+  return { count: Number(data || 0), error };
+}
 
 export async function loadAdminCustomers(): Promise<{
   data: AdminCustomer[];
@@ -55,7 +81,7 @@ export async function loadAdminNotifications(): Promise<{
     return { data: [], error: userError || new Error('Administrator sign-in required') };
   const { data, error } = await supabase
     .from('notifications')
-    .select('id,kind,title,body,action_url,read_at,created_at')
+    .select('id,kind,title,body,action_url,image_url,read_at,created_at')
     .eq('user_id', userData.user.id)
     .order('created_at', { ascending: false })
     .limit(50);

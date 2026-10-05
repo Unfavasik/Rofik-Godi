@@ -8,6 +8,7 @@ type NotificationItem = {
   title: string;
   body: string;
   action_url: string | null;
+  image_url?: string | null;
   read_at: string | null;
   created_at: string;
 };
@@ -126,6 +127,7 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
       </header>
       <div className="px-4 py-4">
         <section className="rounded-3xl bg-gradient-to-br from-red-50 to-pink-50 p-5">
+          {selectedNotification.image_url && <img src={selectedNotification.image_url} alt="" className="mb-4 max-h-72 w-full rounded-2xl object-cover" />}
           <div className={`mb-4 flex h-14 w-14 items-center justify-center rounded-full ${toneFor(selectedNotification.kind)}`}>{iconFor(selectedNotification.kind)}</div>
           <p className="mb-2 text-xs font-bold text-[#E51E2B]">{timeAgo(selectedNotification.created_at)}</p>
           <h2 className="text-[24px] font-extrabold leading-tight text-slate-900">{selectedNotification.title}</h2>
@@ -154,7 +156,7 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
       </section>
     ) : <section className="mt-1 divide-y divide-gray-100">
       {visible.map((item) => <article key={item.id} onClick={() => openNotification(item)} role="button" tabIndex={0} onKeyDown={(event) => { if (event.target !== event.currentTarget) return; if (event.key === 'Enter' || event.key === ' ') openNotification(item); }} className="flex items-start px-5 py-4 hover:bg-slate-50 transition-colors cursor-pointer">
-        <div className={`h-12 w-12 shrink-0 mr-3.5 rounded-2xl flex items-center justify-center shadow-sm ${toneFor(item.kind)}`}>{iconFor(item.kind)}</div>
+        <div className={`h-12 w-12 shrink-0 mr-3.5 overflow-hidden rounded-2xl flex items-center justify-center shadow-sm ${toneFor(item.kind)}`}>{item.image_url ? <img src={item.image_url} alt="" className="h-full w-full object-cover" /> : iconFor(item.kind)}</div>
         <div className="flex-1 pr-2"><div className="flex items-center"><h2 className="text-sm font-bold tracking-tight text-gray-900">{item.title}</h2>{!item.read_at && <span className="ml-2 h-2 w-2 rounded-full bg-[#E51E2B]" />}</div><p className="mt-1 text-xs leading-relaxed text-gray-500">{item.body}</p></div>
         <div className="self-stretch shrink-0 flex flex-col items-end justify-between pt-0.5"><span className="text-[11px] font-medium text-gray-400">{timeAgo(item.created_at)}</span><button type="button" disabled={deletingId === item.id} aria-label={`Delete notification: ${item.title}`} title="Delete notification" onClick={(event) => void handleDeleteNotification(event, item)} className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"><Trash2 className="h-4 w-4" /></button></div>
       </article>)}

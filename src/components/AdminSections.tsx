@@ -5,6 +5,8 @@ import type { AdminNotification } from '../lib/supabaseAdmin';
 import { loadAdminJsonSetting, saveAdminJsonSetting } from '../lib/supabaseAdmin';
 import type { AdminOrderRecord } from '../lib/supabaseAdminOrders';
 import { uploadStorefrontBannerImage } from '../lib/supabaseBanners';
+import { AdminNotificationComposer } from './AdminNotificationComposer';
+import type { AdminCustomer } from '../lib/supabaseAdmin';
 
 const money = (value: number) => `₹${value.toLocaleString('en-IN')}`;
 const dateLabel = (value: string) =>
@@ -386,12 +388,16 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
 
 export function NotificationsView({
   notifications,
+  customers,
   onRead,
   onReadAll,
+  notify,
 }: {
   notifications: AdminNotification[];
+  customers: AdminCustomer[];
   onRead: (id: string) => void;
   onReadAll: () => void;
+  notify: (message: string) => void;
 }) {
   return (
     <section>
@@ -402,7 +408,7 @@ export function NotificationsView({
           </p>
           <h2 className="mt-1 text-2xl font-black tracking-tight md:text-3xl">Notifications</h2>
           <p className="mt-1 text-xs text-slate-500">
-            Alerts for the currently signed-in administrator account.
+            Compose an in-app campaign, then review notifications addressed to this administrator account.
           </p>
         </div>
         <button
@@ -412,6 +418,11 @@ export function NotificationsView({
           Mark all as read
         </button>
       </div>
+      <AdminNotificationComposer
+        customers={customers}
+        notify={notify}
+        onSent={(count) => notify(`Notification sent to ${count} customer${count === 1 ? '' : 's'}.`)}
+      />
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         {notifications.length ? (
           notifications.map((item) => (
@@ -425,6 +436,7 @@ export function NotificationsView({
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-black">{item.title}</p>
                 <p className="mt-1 text-xs text-slate-600">{item.body}</p>
+                {item.image_url && <img src={item.image_url} alt="" className="mt-3 max-h-36 w-auto rounded-xl object-cover" />}
                 <p className="mt-2 text-[10px] text-slate-400">{dateLabel(item.created_at)}</p>
               </div>
               {!item.read_at && (

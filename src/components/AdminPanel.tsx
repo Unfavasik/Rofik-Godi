@@ -485,6 +485,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
               initialProducts={products}
               onProductsChange={setProducts}
               notify={notify}
+              customers={customers}
             />
           )}
           {section === 'categories' && (
@@ -503,6 +504,8 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
           {section === 'notifications' && (
             <NotificationsView
               notifications={notifications}
+              customers={customers}
+              notify={notify}
               onRead={async (id) => {
                 const result = await markAdminNotificationRead(id);
                 if (result.error) notify(result.error.message);

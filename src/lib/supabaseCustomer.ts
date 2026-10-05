@@ -112,7 +112,7 @@ export async function listMyNotifications(expectedUserId?: string) {
   if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return [];
   const now = new Date().toISOString();
   await supabase.from('notifications').delete().eq('user_id', userData.user.id).lte('expires_at', now);
-  const { data } = await supabase.from('notifications').select('id,kind,title,body,action_url,read_at,created_at,expires_at').eq('user_id', userData.user.id).gt('expires_at', now).order('created_at', { ascending: false }).limit(50);
+  const { data } = await supabase.from('notifications').select('id,kind,title,body,action_url,image_url,read_at,created_at,expires_at').eq('user_id', userData.user.id).gt('expires_at', now).order('created_at', { ascending: false }).limit(50);
   return data || [];
 }
 
