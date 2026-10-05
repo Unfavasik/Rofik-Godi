@@ -72,5 +72,13 @@ export async function listMyOrders(expectedUserId: string): Promise<CustomerOrde
     .order('created_at', { ascending: false })
     .limit(50);
   if (error || !data) return [];
-  return data as unknown as CustomerOrderRecord[];
+  const orders = data as unknown as CustomerOrderRecord[];
+  const productIds = [...new Set(orders.flatMap((order) => order.order_items || []).map((item) => item.product_id).filter((id): id is string => Boolean(id)))];
+  if (!productIds.length) return orders;
+  const { data: productRows } = await supabase.from('products').select('id,image_url').in('id', productIds);
+  const productImages = new Map((productRows || []).map((product) => [String(product.id), String(product.image_url || '')]));
+  return orders.map((order) => ({
+    ...order,
+    order_items: (order.order_items || []).map((item) => ({ ...item, image_url: item.product_id ? productImages.get(item.product_id) || null : null })),
+  }));
 }

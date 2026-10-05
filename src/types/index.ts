@@ -103,7 +103,7 @@ export interface CustomerOrderRecord {
   fulfillment_method: string;
   pickup_store: string;
   created_at: string;
-  order_items: { product_id: string | null; product_name: string; color: string | null; quantity: number; unit_price: number }[];
+  order_items: { product_id: string | null; product_name: string; color: string | null; quantity: number; unit_price: number; image_url?: string | null }[];
 }
 
 export interface CustomerNotificationRecord {

@@ -21,6 +21,7 @@ import { CustomerOrderRecord, Product, UserProfile } from '../types';
 import { listMyOrders } from '../lib/supabaseOrders';
 import { listMyProductReviews, type ProductReviewRecord } from '../lib/supabaseReviews';
 import { ReviewComposer } from './ReviewComposer';
+import { CustomerOrdersModal } from './CustomerOrdersModal';
 import { SettingsView } from './SettingsView';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
@@ -28,7 +29,6 @@ import { WORKSHOP_INFO } from '../data/products';
 import { deleteMyAvatar, getMyAuthEmail, getMyProfile, saveMyProfile, uploadMyAvatar } from '../lib/supabaseCustomer';
 import { getInitials, validateProfileFields } from '../lib/profileValidation';
 import { ConfirmDialog } from './ConfirmDialog';
-import { MyOrdersView } from './MyOrdersView';
 
 interface AccountViewProps {
   currentUser?: UserProfile;
@@ -55,9 +55,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
   onOpenWishlist,
   wishlistCount = 0,
   onOpenStoreInfo,
-  onOpenShop,
   onProfileChange,
-  products = [],
 }) => {
   const handleGoHome = () => {
     if (onBackToHome) onBackToHome();
@@ -767,19 +765,23 @@ export const AccountView: React.FC<AccountViewProps> = ({
       </main>
 
       {/* Sub-Modals for Account Features */}
-
-      {/* 1. My Orders */}
       <AnimatePresence>
         {activeModal === 'orders' && (
-          <MyOrdersView
+          <CustomerOrdersModal
             orders={customerOrders}
-            loading={ordersLoading}
-            products={products}
             reviews={myReviews}
-            customerName={currentUser?.name}
+            loading={ordersLoading}
+            customerName={currentUser?.name || ''}
             onClose={() => setActiveModal(null)}
-            onShop={() => { setActiveModal(null); onOpenShop?.(); }}
-            onReview={setReviewComposer}
+            onReview={(order, productId, productTitle, review) =>
+              setReviewComposer({
+                productId,
+                orderId: order.id,
+                orderNumber: order.order_number,
+                productTitle,
+                review,
+              })
+            }
           />
         )}
       </AnimatePresence>

@@ -1,118 +1,176 @@
 import { jsPDF } from 'jspdf';
 import type { CustomerOrderRecord } from '../types';
 import { WORKSHOP_INFO } from '../data/products';
+import { isOrderComplete } from './orderPresentation';
 
-const money = (amount: number) => `INR ${Number(amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const printable = (value: string | null | undefined) => (value || '').normalize('NFKD').replace(/[^\x20-\x7E]/g, '').trim();
+const safeFilename = (value: string) => value.replace(/[^a-z0-9-_]+/gi, '-').replace(/^-|-$/g, '') || 'order';
+const amount = (value: number) => `INR ${Number(value || 0).toLocaleString('en-IN')}`;
+const dateLabel = (value: string) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 'Date unavailable' : date.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+};
 
-export function downloadOrderInvoice(order: CustomerOrderRecord) {
+export const downloadOrderInvoice = (
+  order: CustomerOrderRecord,
+  customerName = order.customer_name,
+) => {
+  if (!isOrderComplete(order.status)) return false;
+
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageWidth = pdf.internal.pageSize.getWidth();
-  const right = pageWidth - 18;
-  const orderDate = new Date(order.created_at);
-  const dateLabel = Number.isNaN(orderDate.getTime()) ? 'Date unavailable' : orderDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  const margin = 16;
+  const right = pageWidth - margin;
+  const items = order.order_items || [];
+  const paymentState = order.payment_status?.toLowerCase() === 'paid' ? 'PAID' : 'DUE AT PICKUP';
 
-  pdf.setFillColor(217, 35, 45);
-  pdf.rect(0, 0, 5, 297, 'F');
-  pdf.setTextColor(25, 28, 34);
+  pdf.setFillColor(217, 67, 53);
+  pdf.rect(0, 0, pageWidth, 5, 'F');
+  pdf.setTextColor(24, 26, 30);
   pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(19);
-  pdf.text(WORKSHOP_INFO.name, 18, 24);
+  pdf.setFontSize(20);
+  pdf.text('ROFIK GODI CENTRE', margin, 20);
+  pdf.setTextColor(100, 105, 114);
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(9);
-  pdf.setTextColor(104, 110, 120);
-  pdf.text(printable(WORKSHOP_INFO.subtitle), 18, 31);
-  pdf.text(printable(WORKSHOP_INFO.address), 18, 37);
-  pdf.text(`${WORKSHOP_INFO.phone}  |  ${WORKSHOP_INFO.email}`, 18, 43);
+  pdf.text(String(WORKSHOP_INFO.address || 'Kadbeltala, Murshidabad'), margin, 26);
+  pdf.text(`Phone: ${WORKSHOP_INFO.phone || '+91 98321 45678'}`, margin, 31);
 
-  pdf.setFillColor(249, 245, 243);
-  pdf.roundedRect(18, 53, pageWidth - 36, 31, 3, 3, 'F');
-  pdf.setTextColor(217, 35, 45);
+  pdf.setFillColor(255, 244, 241);
+  pdf.roundedRect(right - 48, 13, 48, 24, 3, 3, 'F');
+  pdf.setTextColor(194, 57, 45);
   pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(17);
-  pdf.text('INVOICE', 24, 65);
-  pdf.setTextColor(38, 41, 47);
-  pdf.setFontSize(10);
-  pdf.text(`Order #${printable(order.order_number)}`, right, 64, { align: 'right' });
-  pdf.setTextColor(104, 110, 120);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(9);
-  pdf.text(`Placed ${dateLabel}`, right, 73, { align: 'right' });
+  pdf.setFontSize(11);
+  pdf.text('INVOICE', right - 24, 22, { align: 'center' });
+  pdf.setFontSize(8);
+  pdf.text(`ORDER #${order.order_number}`, right - 24, 29, { align: 'center' });
 
-  pdf.setTextColor(38, 41, 47);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(9);
-  pdf.text('BILLED TO', 18, 98);
-  pdf.text('PICKUP & PAYMENT', 112, 98);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(85, 91, 101);
-  pdf.setFontSize(10);
-  pdf.text(printable(order.customer_name) || 'Customer', 18, 106);
-  pdf.text(printable(order.customer_phone) || 'Phone not provided', 18, 112);
-  pdf.text(pdf.splitTextToSize(printable(order.vehicle_model) || 'Vehicle not specified', 78), 18, 118);
-  pdf.text(pdf.splitTextToSize(printable(order.pickup_store) || WORKSHOP_INFO.address, 78), 112, 106);
-  pdf.text(`Payment: ${printable(order.payment_status).toUpperCase() || 'PENDING'}`, 112, 118);
-  pdf.text(`Method: ${printable(order.payment_method).replaceAll('_', ' ').toUpperCase() || '—'}`, 112, 124);
-
-  let y = 143;
-  pdf.setFillColor(31, 34, 40);
-  pdf.roundedRect(18, y - 8, pageWidth - 36, 12, 2, 2, 'F');
-  pdf.setTextColor(255, 255, 255);
+  pdf.setDrawColor(226, 228, 232);
+  pdf.line(margin, 42, right, 42);
+  pdf.setTextColor(110, 116, 125);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(8);
-  pdf.text('ITEM', 23, y);
-  pdf.text('QTY', 132, y, { align: 'right' });
-  pdf.text('PRICE', 160, y, { align: 'right' });
-  pdf.text('AMOUNT', right - 2, y, { align: 'right' });
-  y += 11;
-
+  pdf.text('BILLED TO', margin, 52);
+  pdf.text('ORDER DATE', 112, 52);
+  pdf.setTextColor(28, 30, 34);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(10);
+  pdf.text(customerName || order.customer_name || 'Customer', margin, 59);
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(9);
-  (order.order_items || []).forEach((item) => {
-    const title = printable(item.product_name) || 'Product';
-    const color = printable(item.color);
-    const lines = pdf.splitTextToSize(color ? `${title} (${color})` : title, 92);
-    const rowHeight = Math.max(10, lines.length * 5 + 3);
-    if (y + rowHeight > 260) {
-      pdf.addPage();
-      y = 24;
-    }
-    pdf.setDrawColor(231, 233, 236);
-    pdf.line(18, y - 5, right, y - 5);
-    pdf.setTextColor(38, 41, 47);
-    pdf.text(lines, 23, y);
-    pdf.setTextColor(85, 91, 101);
-    pdf.text(String(item.quantity || 0), 132, y, { align: 'right' });
-    pdf.text(money(item.unit_price), 160, y, { align: 'right' });
-    pdf.setTextColor(38, 41, 47);
-    pdf.text(money(Number(item.unit_price || 0) * Number(item.quantity || 0)), right - 2, y, { align: 'right' });
-    y += rowHeight;
-  });
+  pdf.text(`Phone: ${order.customer_phone || '—'}`, margin, 65);
+  pdf.text(dateLabel(order.created_at), 112, 59);
+  pdf.text(`Status: ${order.status === 'PICKED_UP' ? 'Picked up' : 'Completed'}`, 112, 65);
 
-  if (y > 245) {
-    pdf.addPage();
-    y = 24;
-  }
-  y += 7;
-  pdf.setDrawColor(217, 220, 224);
-  pdf.line(112, y - 4, right, y - 4);
-  const summaryRow = (label: string, value: string, strong = false) => {
-    pdf.setFont('helvetica', strong ? 'bold' : 'normal');
-    pdf.setFontSize(strong ? 12 : 9);
-    pdf.setTextColor(strong ? 31 : 104, strong ? 34 : 110, strong ? 40 : 120);
-    pdf.text(label, 116, y);
-    pdf.text(value, right - 2, y, { align: 'right' });
-    y += strong ? 9 : 7;
+  pdf.setFillColor(247, 248, 250);
+  pdf.roundedRect(margin, 74, right - margin, 15, 2, 2, 'F');
+  pdf.setTextColor(97, 103, 113);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(8);
+  pdf.text('PICKUP LOCATION', margin + 4, 80);
+  pdf.setTextColor(31, 34, 39);
+  pdf.setFontSize(9);
+  pdf.text(String(order.pickup_store || WORKSHOP_INFO.name || 'Rofik Godi Centre'), margin + 4, 85);
+
+  let y = 101;
+  const drawTableHeader = () => {
+    pdf.setFillColor(31, 34, 39);
+    pdf.roundedRect(margin, y - 6, right - margin, 11, 2, 2, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('ITEM', margin + 3, y + 1);
+    pdf.text('QTY', 139, y + 1, { align: 'right' });
+    pdf.text('UNIT PRICE', 166, y + 1, { align: 'right' });
+    pdf.text('AMOUNT', right - 3, y + 1, { align: 'right' });
+    y += 11;
   };
-  summaryRow('Subtotal', money(order.subtotal));
-  if (Number(order.discount) > 0) summaryRow('Discount', `- ${money(order.discount)}`);
-  summaryRow('Total paid / due', money(order.total), true);
+  drawTableHeader();
 
-  const footerY = Math.min(Math.max(y + 15, 273), 284);
-  pdf.setTextColor(128, 133, 142);
-  pdf.setFont('helvetica', 'normal');
+  for (const item of items) {
+    const nameLines = pdf.splitTextToSize(String(item.product_name || 'Product'), 93) as string[];
+    const rowHeight = Math.max(11, nameLines.length * 4.4 + 5);
+    if (y + rowHeight > 264) {
+      pdf.addPage();
+      y = 23;
+      drawTableHeader();
+    }
+    pdf.setTextColor(33, 36, 41);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8.5);
+    pdf.text(nameLines, margin + 3, y + 1);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(96, 103, 112);
+    pdf.setFontSize(8);
+    pdf.text(String(item.quantity || 0), 139, y + 1, { align: 'right' });
+    pdf.text(amount(Number(item.unit_price || 0)), 166, y + 1, { align: 'right' });
+    pdf.setTextColor(33, 36, 41);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(amount(Number(item.quantity || 0) * Number(item.unit_price || 0)), right - 3, y + 1, { align: 'right' });
+    if (item.color) {
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(130, 136, 144);
+      pdf.setFontSize(7);
+      pdf.text(`Color: ${item.color}`, margin + 3, y + nameLines.length * 4.4 + 1);
+    }
+    y += rowHeight;
+    pdf.setDrawColor(232, 234, 237);
+    pdf.line(margin, y, right, y);
+    y += 2;
+  }
+
+  const summaryTop = Math.max(y + 5, 123);
+  if (summaryTop > 250) {
+    pdf.addPage();
+    y = 25;
+  } else {
+    y = summaryTop;
+  }
+  const summaryX = 119;
+  const summaryRight = right - 3;
+  const summaryRow = (label: string, value: string, rowY: number, strong = false, green = false) => {
+    pdf.setFont('helvetica', strong ? 'bold' : 'normal');
+    pdf.setFontSize(strong ? 11 : 9);
+    pdf.setTextColor(green ? 30 : strong ? 30 : 105, green ? 125 : strong ? 34 : 111, green ? 78 : strong ? 39 : 119);
+    pdf.text(label, summaryX, rowY);
+    pdf.text(value, summaryRight, rowY, { align: 'right' });
+  };
+  summaryRow('Subtotal', amount(order.subtotal), y);
+  y += 7;
+  summaryRow('Discount', `− ${amount(order.discount)}`, y, false, true);
+  y += 5;
+  pdf.setDrawColor(214, 217, 222);
+  pdf.line(summaryX, y, right, y);
+  y += 8;
+  summaryRow('TOTAL', amount(order.total), y, true);
+  y += 7;
+  summaryRow('Payment', paymentState, y, false, paymentState === 'PAID');
+  y += 13;
+
+  if (y > 264) {
+    pdf.addPage();
+    y = 25;
+  }
+  pdf.setFillColor(255, 247, 244);
+  pdf.roundedRect(margin, y, right - margin, 18, 2, 2, 'F');
+  pdf.setTextColor(183, 72, 59);
+  pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(8);
-  pdf.text('Thank you for choosing ROFIK GODI CENTRE.', 18, footerY);
-  pdf.text(`${WORKSHOP_INFO.phone}  |  ${WORKSHOP_INFO.email}`, right, footerY, { align: 'right' });
-  pdf.save(`invoice-${printable(order.order_number) || 'order'}.pdf`);
-}
+  pdf.text('THANK YOU FOR CHOOSING ROFIK GODI CENTRE', pageWidth / 2, y + 7, { align: 'center' });
+  pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(113, 118, 126);
+  pdf.setFontSize(7);
+  pdf.text(`Questions? Call ${WORKSHOP_INFO.phone || '+91 98321 45678'}`, pageWidth / 2, y + 13, { align: 'center' });
+
+  const pageCount = pdf.getNumberOfPages();
+  for (let page = 1; page <= pageCount; page += 1) {
+    pdf.setPage(page);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(150, 154, 161);
+    pdf.setFontSize(7);
+    pdf.text(`Invoice · ${order.order_number}     Page ${page} of ${pageCount}`, pageWidth / 2, 289, { align: 'center' });
+  }
+
+  pdf.setProperties({ title: `Invoice ${order.order_number}`, subject: 'Completed order invoice', author: 'Rofik Godi Centre' });
+  pdf.save(`invoice-${safeFilename(order.order_number)}.pdf`);
+  return true;
+};
