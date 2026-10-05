@@ -30,6 +30,12 @@ export interface OrderStatusEmail {
   customerName: string;
   pickupStore: string;
   event: OrderEmailEvent;
+  items: ConfirmationEmailItem[];
+  subtotal: number;
+  discount: number;
+  total: number;
+  paymentStatus: string;
+  paymentMethod: string;
   orderUrl?: string | null;
 }
 
@@ -204,11 +210,30 @@ export function buildOrderStatusEmail(order: OrderStatusEmail) {
   const name = escapeHtml(order.customerName || 'Rider');
   const orderUrl = safeHttpsUrl(order.orderUrl);
   const store = escapeHtml(order.pickupStore || STORE_NAME);
+  const paymentStatus = escapeHtml(String(order.paymentStatus || 'PENDING').toUpperCase());
+  const method = escapeHtml(paymentMethodLabel(order.paymentMethod));
   const subject = `Order completed: #${order.orderNumber} | Rofik Godi Centre`;
+  const productRows = order.items.map((item) => {
+    const productName = escapeHtml(item.product_name || 'Product');
+    const quantity = Math.max(0, Number(item.quantity) || 0);
+    const unitPrice = Math.max(0, Number(item.unit_price) || 0);
+    const lineTotal = amount(quantity * unitPrice);
+    const imageUrl = safeHttpsUrl(item.image_url);
+    const image = imageUrl
+      ? `<td width="64" style="padding:12px 10px 12px 0;vertical-align:top"><img src="${escapeHtml(imageUrl)}" width="56" height="56" alt="${productName}" style="display:block;width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0"></td>`
+      : '';
+    return `<tr>${image}<td style="padding:12px 8px;vertical-align:top;border-bottom:1px solid #edf0f4"><div style="font-size:14px;font-weight:700;color:#0f172a">${productName}</div><div style="margin-top:4px;font-size:12px;color:#64748b">Qty: ${quantity} · ${amount(unitPrice)} each</div></td><td align="right" style="padding:12px 0 12px 8px;vertical-align:top;border-bottom:1px solid #edf0f4;white-space:nowrap;font-size:14px;font-weight:700;color:#0f172a">${lineTotal}</td></tr>`;
+  }).join('');
+  const textItems = order.items.map((item) => {
+    const quantity = Math.max(0, Number(item.quantity) || 0);
+    const unitPrice = Math.max(0, Number(item.unit_price) || 0);
+    return `• ${item.product_name || 'Product'} — Qty: ${quantity} × ${amount(unitPrice)} = ${amount(quantity * unitPrice)}`;
+  }).join('\n');
+  const productRowsHtml = productRows || '<tr><td style="padding:12px 0;font-size:12px;color:#64748b">No product details available.</td></tr>';
   const button = orderUrl
     ? `<tr><td class="pad" style="padding:8px 28px 24px"><a href="${escapeHtml(orderUrl)}" style="display:inline-block;padding:14px 22px;border-radius:10px;background:#0f172a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700">View My Orders</a></td></tr>`
     : '';
-  const content = `<tr><td class="pad" style="padding:30px 28px 8px"><div style="display:inline-block;padding:7px 11px;border-radius:999px;background:#e8f8f0;color:#087443;font-size:11px;font-weight:800;letter-spacing:.06em">✓ ORDER COMPLETED</div><h1 style="margin:16px 0 8px;font-size:25px;line-height:1.25;color:#0f172a">Your order is complete, ${name}.</h1><p style="margin:0;font-size:14px;line-height:1.7;color:#475569">Thanks for choosing Rofik Godi Centre. Your pickup has been recorded and this order is now complete.</p></td></tr><tr><td class="pad" style="padding:20px 28px 18px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px"><tr><td style="padding:16px 18px;border-bottom:1px solid #e8edf3"><div style="font-size:11px;color:#64748b">ORDER NUMBER</div><div style="margin-top:5px;font-size:18px;font-weight:800;letter-spacing:.02em;color:#0f172a">#${orderNumber}</div></td></tr><tr><td style="padding:14px 18px"><div style="font-size:11px;color:#64748b">FINAL STATUS</div><div style="margin-top:5px;font-size:14px;font-weight:800;color:#087443">${escapeHtml(status)}</div><div style="margin-top:12px;font-size:11px;color:#64748b">PICKUP STORE</div><div style="margin-top:5px;font-size:13px;font-weight:700;color:#0f172a">${store}</div></td></tr></table></td></tr><tr><td class="pad" style="padding:0 28px 20px"><p style="margin:0;font-size:13px;line-height:1.65;color:#475569">We hope you enjoy your purchase. You can review your order history any time in My Orders.</p></td></tr>${button}<tr><td class="pad" style="padding:0 28px 26px">${pickupInformationHtml(store)}</td></tr>`;
+  const content = `<tr><td class="pad" style="padding:30px 28px 8px"><div style="display:inline-block;padding:7px 11px;border-radius:999px;background:#e8f8f0;color:#087443;font-size:11px;font-weight:800;letter-spacing:.06em">✓ ORDER COMPLETED</div><h1 style="margin:16px 0 8px;font-size:25px;line-height:1.25;color:#0f172a">Your order is complete, ${name}.</h1><p style="margin:0;font-size:14px;line-height:1.7;color:#475569">Thanks for choosing Rofik Godi Centre. Your pickup has been recorded and this order is now complete.</p></td></tr><tr><td class="pad" style="padding:20px 28px 18px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px"><tr><td style="padding:16px 18px;border-bottom:1px solid #e8edf3"><div style="font-size:11px;color:#64748b">ORDER NUMBER</div><div style="margin-top:5px;font-size:18px;font-weight:800;letter-spacing:.02em;color:#0f172a">#${orderNumber}</div></td></tr><tr><td style="padding:14px 18px"><div style="font-size:11px;color:#64748b">FINAL STATUS</div><div style="margin-top:5px;font-size:14px;font-weight:800;color:#087443">${escapeHtml(status)}</div><div style="margin-top:12px;font-size:11px;color:#64748b">PICKUP STORE</div><div style="margin-top:5px;font-size:13px;font-weight:700;color:#0f172a">${store}</div></td></tr></table></td></tr><tr><td class="pad" style="padding:0 28px 8px"><h2 style="margin:0 0 10px;font-size:15px;color:#0f172a">Ordered Products</h2><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">${productRowsHtml}</table></td></tr><tr><td class="pad" style="padding:16px 28px 8px"><h2 style="margin:0 0 10px;font-size:15px;color:#0f172a">Payment Summary</h2><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td style="padding:6px 0;font-size:12px;color:#64748b">Subtotal</td><td align="right" style="padding:6px 0;font-size:12px;color:#334155">${amount(order.subtotal)}</td></tr><tr><td style="padding:6px 0;font-size:12px;color:#64748b">Discount</td><td align="right" style="padding:6px 0;font-size:12px;color:#087443">−${amount(order.discount)}</td></tr><tr><td style="padding:10px 0;border-top:1px solid #e8edf3;font-size:14px;font-weight:800;color:#0f172a">Total</td><td align="right" style="padding:10px 0;border-top:1px solid #e8edf3;font-size:15px;font-weight:800;color:#0f172a">${amount(order.total)}</td></tr><tr><td style="padding:6px 0;font-size:12px;color:#64748b">Payment Status</td><td align="right" style="padding:6px 0;font-size:12px;font-weight:700;color:#087443">${paymentStatus}</td></tr><tr><td style="padding:6px 0;font-size:12px;color:#64748b">Payment Method</td><td align="right" style="padding:6px 0;font-size:12px;color:#334155">${method}</td></tr></table></td></tr><tr><td class="pad" style="padding:16px 28px 18px"><p style="margin:0;font-size:13px;line-height:1.65;color:#475569">We hope you enjoy your purchase. You can review your order history any time in My Orders.</p></td></tr>${button}<tr><td class="pad" style="padding:0 28px 26px">${pickupInformationHtml(store)}</td></tr>`;
   const html = emailShell(subject, content);
   const text = [
     STORE_NAME,
@@ -219,6 +244,16 @@ export function buildOrderStatusEmail(order: OrderStatusEmail) {
     'Thanks for choosing Rofik Godi Centre. We hope you enjoy your purchase.',
     `Final status: ${status}`,
     `Pickup store: ${order.pickupStore || STORE_NAME}`,
+    '',
+    'ORDERED PRODUCTS',
+    textItems || 'No product details available.',
+    '',
+    'PAYMENT SUMMARY',
+    `Subtotal: ${amount(order.subtotal)}`,
+    `Discount: ${amount(order.discount)}`,
+    `Total: ${amount(order.total)}`,
+    `Payment Status: ${String(order.paymentStatus || 'PENDING').toUpperCase()}`,
+    `Payment Method: ${paymentMethodLabel(order.paymentMethod)}`,
     ...(orderUrl ? ['', `View My Orders: ${orderUrl}`] : []),
     '',
     'PICKUP INFORMATION',

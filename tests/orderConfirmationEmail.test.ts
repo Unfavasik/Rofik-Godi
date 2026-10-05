@@ -69,10 +69,28 @@ describe('order confirmation email', () => {
       customerName: 'Rider',
       pickupStore: 'ROFIK GODI CENTRE',
       event: 'COMPLETED',
+      items: [
+        { product_name: 'Touring Seat Cover', quantity: 2, unit_price: 299, image_url: 'https://cdn.example.com/seat-cover.jpg' },
+        { product_name: 'Grip', quantity: 1, unit_price: 99 },
+      ],
+      subtotal: 697,
+      discount: 50,
+      total: 647,
+      paymentStatus: 'PAID',
+      paymentMethod: 'PAY_ONLINE',
     });
 
     expect(email.subject.toLowerCase()).toContain('completed');
     expect(email.text).toContain('this order is now complete');
+    expect(email.html).toContain('Ordered Products');
+    expect(email.html).toContain('Touring Seat Cover');
+    expect(email.html).toContain('https://cdn.example.com/seat-cover.jpg');
+    expect(email.html).toContain('Qty: 2 · ₹299 each');
+    expect(email.html).toContain('₹598');
+    expect(email.html).toContain('Payment Summary');
+    expect(email.html).toContain('₹647');
+    expect(email.text).toContain('• Touring Seat Cover — Qty: 2 × ₹299 = ₹598');
+    expect(email.text).toContain('Total: ₹647');
     expect(email.html).not.toContain('src="cid:');
     expect(email.html).toContain('Open store location in Google Maps');
     expect(email.html).toContain('href="mailto:rofikgodicentre.store@gmail.com"');

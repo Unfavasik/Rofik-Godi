@@ -323,7 +323,7 @@ async function handleOrderStatusEmail(
 
   const { data: order, error: orderError } = await serviceClient
     .from('orders')
-    .select('id,user_id,order_number,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,fulfillment_method,pickup_store,created_at')
+    .select('id,user_id,order_number,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,fulfillment_method,pickup_store,created_at,order_items(product_id,product_name,quantity,unit_price)')
     .eq('order_number', orderNumber)
     .maybeSingle();
   if (orderError || !order || order.fulfillment_method !== 'STORE_PICKUP') {
@@ -359,11 +359,29 @@ async function handleOrderStatusEmail(
     return jsonResponse({ ok: true, emailSent: false, reason: 'no_valid_customer_email' }, 200, origin);
   }
 
+  let productImages = new Map<string, string>();
+  const productIds = [...new Set((order.order_items || []).map((item: { product_id?: string | null }) => item.product_id).filter((id: string | null | undefined): id is string => Boolean(id)))];
+  if (productIds.length) {
+    const { data: products } = await serviceClient.from('products').select('id,image_url').in('id', productIds);
+    productImages = new Map((products || []).map((product: { id: string; image_url?: string | null }) => [String(product.id), String(product.image_url || '')]));
+  }
+  const emailItems = (order.order_items || []).map((item: { product_id?: string | null; product_name: string; quantity: number; unit_price: number }) => ({
+    product_name: item.product_name,
+    quantity: Number(item.quantity || 0),
+    unit_price: Number(item.unit_price || 0),
+    image_url: item.product_id ? productImages.get(item.product_id) || null : null,
+  }));
   const email = buildOrderStatusEmail({
     orderNumber: order.order_number,
     customerName: String(order.customer_name || customerData.user?.user_metadata?.full_name || 'Rider').slice(0, 120),
     pickupStore: order.pickup_store || 'ROFIK GODI CENTRE',
     event,
+    items: emailItems,
+    subtotal: Number(order.subtotal || 0),
+    discount: Number(order.discount || 0),
+    total: Number(order.total || 0),
+    paymentStatus: order.payment_status || 'PENDING',
+    paymentMethod: order.payment_method || 'PAY_AT_STORE',
     orderUrl: accountUrl(origin),
   });
   const sent = await sendMail(credentials, recipient, email.subject, email.text, email.html, order.order_number);
