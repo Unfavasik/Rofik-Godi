@@ -42,6 +42,8 @@ describe('order confirmation email', () => {
     expect(email.html).toContain('https://shop.example.com/profile');
     expect(email.html).toContain('+91 9775333555');
     expect(email.html).toContain('rofikgodicentre.store@gmail.com');
+    expect(email.html).toContain('href="mailto:rofikgodicentre.store@gmail.com"');
+    expect(email.html).toContain('color:#1a73e8;text-decoration:underline');
     expect(email.html).toContain('href="https://maps.app.goo.gl/hRVfWHTkQ6vkrcS7A"');
     expect(email.text).toContain('Google Maps: https://maps.app.goo.gl/hRVfWHTkQ6vkrcS7A');
   });
@@ -69,10 +71,11 @@ describe('order confirmation email', () => {
       event: 'COMPLETED',
     });
 
-    expect(email.subject).toContain('Completed');
-    expect(email.text).toContain('order is complete');
+    expect(email.subject.toLowerCase()).toContain('completed');
+    expect(email.text).toContain('this order is now complete');
     expect(email.html).not.toContain('src="cid:');
     expect(email.html).toContain('Open store location in Google Maps');
+    expect(email.html).toContain('href="mailto:rofikgodicentre.store@gmail.com"');
     expect(email.text).not.toContain('pickup QR is attached');
   });
 
@@ -80,9 +83,11 @@ describe('order confirmation email', () => {
     const email = buildWelcomeEmail('<Rider>', 'https://shop.example.com/home');
 
     expect(email.subject).toContain('<Rider>');
-    expect(email.html).toContain('Welcome, &lt;Rider&gt;.');
+    expect(email.html).toContain('Welcome to Rofik Godi Centre, &lt;Rider&gt;.');
+    expect(email.html).toContain('A smoother way to shop');
     expect(email.html).toContain('https://shop.example.com/home');
     expect(email.html).toContain('rofikgodicentre.store@gmail.com');
-    expect(email.text).toContain('Your Rofik Godi Centre account is ready.');
+    expect(email.html).toContain('href="mailto:rofikgodicentre.store@gmail.com"');
+    expect(email.text).toContain('Thanks for creating an account.');
   });
 });
