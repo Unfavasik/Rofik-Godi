@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Bell, Download, Image, Plus, Tag, Trash2, Upload } from 'lucide-react';
 import type { Product, VehicleCategory } from '../types';
 import type { AdminNotification } from '../lib/supabaseAdmin';
@@ -6,7 +6,13 @@ import { loadAdminJsonSetting, saveAdminJsonSetting } from '../lib/supabaseAdmin
 import type { AdminOrderRecord } from '../lib/supabaseAdminOrders';
 import { uploadStorefrontBannerImage } from '../lib/supabaseBanners';
 import { AdminNotificationComposer } from './AdminNotificationComposer';
-import type { AdminCustomer } from '../lib/supabaseAdmin';
+import { ConfirmDialog } from './ConfirmDialog';
+import {
+  deleteAdminNotificationCampaign,
+  loadAdminNotificationCampaigns,
+  type AdminCustomer,
+  type AdminNotificationCampaign,
+} from '../lib/supabaseAdmin';
 
 const money = (value: number) => `₹${value.toLocaleString('en-IN')}`;
 const dateLabel = (value: string) =>
@@ -391,14 +397,60 @@ export function NotificationsView({
   customers,
   onRead,
   onReadAll,
+  onCampaignDeleted,
   notify,
 }: {
   notifications: AdminNotification[];
   customers: AdminCustomer[];
   onRead: (id: string) => void;
   onReadAll: () => void;
+  onCampaignDeleted: (campaignId: string) => void;
   notify: (message: string) => void;
 }) {
+  const [campaigns, setCampaigns] = useState<AdminNotificationCampaign[]>([]);
+  const [campaignsLoading, setCampaignsLoading] = useState(true);
+  const [campaignsError, setCampaignsError] = useState('');
+  const [pendingCampaign, setPendingCampaign] = useState<AdminNotificationCampaign | null>(null);
+  const [deletingCampaign, setDeletingCampaign] = useState(false);
+
+  const refreshCampaigns = useCallback(async () => {
+    setCampaignsLoading(true);
+    try {
+      const response = await loadAdminNotificationCampaigns();
+      setCampaigns(response.data);
+      setCampaignsError(response.error?.message || '');
+    } catch (error) {
+      setCampaignsError(error instanceof Error ? error.message : 'Could not load sent notifications.');
+    } finally {
+      setCampaignsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshCampaigns();
+  }, [refreshCampaigns]);
+
+  const confirmDeleteCampaign = async () => {
+    if (!pendingCampaign || deletingCampaign) return;
+    setDeletingCampaign(true);
+    setCampaignsError('');
+    try {
+      const result = await deleteAdminNotificationCampaign(pendingCampaign.campaign_id);
+      if (result.error) {
+        setCampaignsError(result.error.message);
+        return;
+      }
+      setCampaigns((current) => current.filter((item) => item.campaign_id !== pendingCampaign.campaign_id));
+      onCampaignDeleted(pendingCampaign.campaign_id);
+      notify(`Notification removed from ${result.count} recipient inbox${result.count === 1 ? '' : 'es'}.`);
+      setPendingCampaign(null);
+    } catch (error) {
+      setCampaignsError(error instanceof Error ? error.message : 'Could not delete this notification.');
+    } finally {
+      setDeletingCampaign(false);
+    }
+  };
+
   return (
     <section>
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -421,8 +473,62 @@ export function NotificationsView({
       <AdminNotificationComposer
         customers={customers}
         notify={notify}
-        onSent={(count) => notify(`Notification sent to ${count} customer${count === 1 ? '' : 's'}.`)}
+        onSent={(count) => {
+          notify(`Notification sent to ${count} customer${count === 1 ? '' : 's'}.`);
+          void refreshCampaigns();
+        }}
       />
+      <section className="mb-8">
+        <div className="mb-3 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#D9232D]">Sent campaigns</p>
+            <h3 className="mt-1 text-base font-black text-slate-900">Notifications sent to customers</h3>
+            <p className="mt-1 text-[11px] text-slate-500">Delete a campaign to remove it from every recipient’s inbox.</p>
+          </div>
+          <button type="button" onClick={() => void refreshCampaigns()} disabled={campaignsLoading} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-600 disabled:opacity-50">
+            {campaignsLoading ? 'Refreshing…' : 'Refresh history'}
+          </button>
+        </div>
+        {campaignsError && <p role="alert" className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-[11px] font-semibold text-amber-800">{campaignsError}</p>}
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          {campaignsLoading ? (
+            <p className="p-8 text-center text-xs text-slate-400">Loading sent notifications…</p>
+          ) : campaigns.length ? (
+            <div className="divide-y divide-slate-100">
+              {campaigns.map((campaign) => (
+                <article key={campaign.campaign_id} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
+                  {campaign.image_url ? (
+                    <img src={campaign.image_url} alt="" className="h-16 w-20 shrink-0 rounded-xl object-cover" />
+                  ) : (
+                    <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-rose-50 text-[#D9232D]"><Bell className="h-5 w-5" /></span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="max-w-full truncate text-sm font-black text-slate-900">{campaign.title}</h4>
+                      <span className="rounded-full bg-slate-100 px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-slate-600">{campaign.kind}</span>
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-600">{campaign.body}</p>
+                    <p className="mt-2 text-[10px] font-medium text-slate-400">{campaign.recipient_count} recipient{campaign.recipient_count === 1 ? '' : 's'} · {dateLabel(campaign.created_at)}</p>
+                  </div>
+                  <button type="button" onClick={() => setPendingCampaign(campaign)} className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-[10px] font-black text-red-700 transition hover:bg-red-50">
+                    <Trash2 className="h-3.5 w-3.5" />Delete for everyone
+                  </button>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="p-10 text-center">
+              <span className="mx-auto grid h-11 w-11 place-items-center rounded-xl bg-slate-50 text-slate-400"><Bell className="h-5 w-5" /></span>
+              <p className="mt-3 text-xs font-bold text-slate-700">No active sent notifications</p>
+              <p className="mt-1 text-[10px] text-slate-400">Notifications you send will appear here for up to 7 days.</p>
+            </div>
+          )}
+        </div>
+      </section>
+      <div className="mb-3 mt-8">
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Admin inbox</p>
+        <h3 className="mt-1 text-base font-black text-slate-900">Notifications for this administrator</h3>
+      </div>
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         {notifications.length ? (
           notifications.map((item) => (
@@ -455,6 +561,14 @@ export function NotificationsView({
           </div>
         )}
       </div>
+      <ConfirmDialog
+        open={Boolean(pendingCampaign)}
+        title="Delete this notification?"
+        message={`This will remove “${pendingCampaign?.title || 'this notification'}” from ${pendingCampaign?.recipient_count || 0} recipient inboxes. This cannot be undone.`}
+        confirmLabel={deletingCampaign ? 'Deleting…' : 'Delete for everyone'}
+        onConfirm={() => void confirmDeleteCampaign()}
+        onCancel={() => { if (!deletingCampaign) setPendingCampaign(null); }}
+      />
     </section>
   );
 }

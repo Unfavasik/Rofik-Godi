@@ -506,6 +506,9 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
               notifications={notifications}
               customers={customers}
               notify={notify}
+              onCampaignDeleted={(campaignId) =>
+                setNotifications((items) => items.filter((item) => item.campaign_id !== campaignId))
+              }
               onRead={async (id) => {
                 const result = await markAdminNotificationRead(id);
                 if (result.error) notify(result.error.message);

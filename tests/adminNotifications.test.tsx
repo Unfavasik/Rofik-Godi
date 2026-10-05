@@ -12,7 +12,11 @@ const { supabaseMock } = vi.hoisted(() => ({
 vi.mock('../src/lib/supabase', () => ({ supabase: supabaseMock }));
 
 import { NotificationAudiencePicker } from '../src/components/NotificationAudiencePicker';
-import { sendAdminNotification } from '../src/lib/supabaseAdmin';
+import {
+  deleteAdminNotificationCampaign,
+  loadAdminNotificationCampaigns,
+  sendAdminNotification,
+} from '../src/lib/supabaseAdmin';
 import type { AdminCustomer } from '../src/lib/supabaseAdmin';
 
 const payload = {
@@ -63,6 +67,28 @@ describe('admin customer notifications', () => {
 
     expect(result.error?.message).toMatch(/administrator sign-in required/i);
     expect(supabaseMock.rpc).not.toHaveBeenCalled();
+  });
+
+  it('loads grouped campaign history with recipient counts', async () => {
+    supabaseMock.rpc.mockResolvedValue({
+      data: [{ campaign_id: 'campaign-1', kind: 'announcement', title: 'Store update', body: 'A message', action_url: '/shop', image_url: null, created_at: '2026-10-05T10:00:00Z', recipient_count: 7 }],
+      error: null,
+    });
+
+    const result = await loadAdminNotificationCampaigns();
+
+    expect(supabaseMock.rpc).toHaveBeenCalledWith('admin_list_notification_campaigns');
+    expect(result.data).toEqual([{ campaign_id: 'campaign-1', kind: 'announcement', title: 'Store update', body: 'A message', action_url: '/shop', image_url: null, created_at: '2026-10-05T10:00:00Z', recipient_count: 7 }]);
+    expect(result.error).toBeNull();
+  });
+
+  it('deletes the selected campaign through the server-side admin RPC', async () => {
+    supabaseMock.rpc.mockResolvedValue({ data: 7, error: null });
+
+    const result = await deleteAdminNotificationCampaign('campaign-1');
+
+    expect(supabaseMock.rpc).toHaveBeenCalledWith('admin_delete_notification_campaign', { p_campaign_id: 'campaign-1' });
+    expect(result).toEqual({ count: 7, error: null });
   });
 
   it('renders all-user and selected-user audience choices with identifiable accounts', () => {

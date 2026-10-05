@@ -14,6 +14,7 @@ export type AdminCustomer = {
 
 export type AdminNotification = {
   id: string;
+  campaign_id: string | null;
   kind: string;
   title: string;
   body: string;
@@ -32,6 +33,17 @@ export type AdminNotificationPayload = {
   userIds: string[] | null;
 };
 
+export type AdminNotificationCampaign = {
+  campaign_id: string;
+  kind: string;
+  title: string;
+  body: string;
+  action_url: string | null;
+  image_url: string | null;
+  created_at: string;
+  recipient_count: number;
+};
+
 export async function sendAdminNotification(payload: AdminNotificationPayload) {
   if (!supabase) return { count: 0, error: new Error('Supabase is not configured') };
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -44,6 +56,41 @@ export async function sendAdminNotification(payload: AdminNotificationPayload) {
     p_action_url: payload.actionUrl,
     p_image_url: payload.imageUrl,
     p_user_ids: payload.userIds,
+  });
+  return { count: Number(data || 0), error };
+}
+
+export async function loadAdminNotificationCampaigns(): Promise<{
+  data: AdminNotificationCampaign[];
+  error: Error | null;
+}> {
+  if (!supabase) return { data: [], error: new Error('Supabase is not configured') };
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user)
+    return { data: [], error: userError || new Error('Administrator sign-in required') };
+  const { data, error } = await supabase.rpc('admin_list_notification_campaigns');
+  return {
+    data: (data || []).map((row: Record<string, unknown>) => ({
+      campaign_id: String(row.campaign_id),
+      kind: String(row.kind || 'announcement'),
+      title: String(row.title || ''),
+      body: String(row.body || ''),
+      action_url: row.action_url ? String(row.action_url) : null,
+      image_url: row.image_url ? String(row.image_url) : null,
+      created_at: String(row.created_at),
+      recipient_count: Number(row.recipient_count || 0),
+    })),
+    error,
+  };
+}
+
+export async function deleteAdminNotificationCampaign(campaignId: string) {
+  if (!supabase) return { count: 0, error: new Error('Supabase is not configured') };
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user)
+    return { count: 0, error: userError || new Error('Administrator sign-in required') };
+  const { data, error } = await supabase.rpc('admin_delete_notification_campaign', {
+    p_campaign_id: campaignId,
   });
   return { count: Number(data || 0), error };
 }
@@ -81,7 +128,7 @@ export async function loadAdminNotifications(): Promise<{
     return { data: [], error: userError || new Error('Administrator sign-in required') };
   const { data, error } = await supabase
     .from('notifications')
-    .select('id,kind,title,body,action_url,image_url,read_at,created_at')
+    .select('id,campaign_id,kind,title,body,action_url,image_url,read_at,created_at')
     .eq('user_id', userData.user.id)
     .order('created_at', { ascending: false })
     .limit(50);
