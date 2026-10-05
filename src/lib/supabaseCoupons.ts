@@ -149,6 +149,16 @@ export async function saveAdminCoupon(payload: CouponPayload) {
   return { data: data as { id: string; code: string }, error: '' };
 }
 
+export async function notifyCouponAudience(couponId: string, userIds: string[] | null) {
+  const access = await confirmAdmin();
+  if (!access.ok || !supabase) return { count: 0, error: access.message };
+  const { data, error } = await supabase.rpc('notify_coupon_audience', {
+    p_coupon_id: couponId,
+    p_user_ids: userIds,
+  });
+  return { count: Number(data || 0), error: error?.message || '' };
+}
+
 export async function disableAdminCoupon(id: string) {
   const access = await confirmAdmin();
   if (!access.ok || !supabase) return { error: access.message };

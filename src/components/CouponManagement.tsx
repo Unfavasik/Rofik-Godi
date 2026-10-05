@@ -22,6 +22,7 @@ import {
   disableAdminCoupon,
   deleteUnusedAdminCoupon,
   loadAdminCoupons,
+  notifyCouponAudience,
   loadCouponProducts,
   loadCouponUsages,
   saveAdminCoupon,
@@ -36,6 +37,7 @@ import {
   type DiscountType,
   type CouponUsageRecord,
 } from '../lib/supabaseCoupons';
+import { loadAdminCustomers, type AdminCustomer } from '../lib/supabaseAdmin';
 import { ConfirmDialog } from './ConfirmDialog';
 
 const IST = 'Asia/Kolkata';
@@ -87,6 +89,8 @@ interface CouponFormState {
   category_keys: string[];
   description: string;
   is_enabled: boolean;
+  notify_audience: 'ALL' | 'SELECTED' | 'NONE';
+  notification_user_ids: string[];
 }
 
 const freshForm = (): CouponFormState => {
@@ -108,6 +112,8 @@ const freshForm = (): CouponFormState => {
     category_keys: [],
     description: '',
     is_enabled: false,
+    notify_audience: 'ALL',
+    notification_user_ids: [],
   };
 };
 
@@ -117,6 +123,7 @@ const labelClass = 'block text-xs font-bold text-slate-600';
 export const CouponManagement: React.FC<{ notify: (message: string) => void }> = ({ notify }) => {
   const [coupons, setCoupons] = useState<CouponRecord[]>([]);
   const [products, setProducts] = useState<CouponProductChoice[]>([]);
+  const [customers, setCustomers] = useState<AdminCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
@@ -132,7 +139,7 @@ export const CouponManagement: React.FC<{ notify: (message: string) => void }> =
 
   const refresh = async () => {
     setLoading(true);
-    const [couponResponse, productResponse] = await Promise.all([loadAdminCoupons(), loadCouponProducts()]);
+    const [couponResponse, productResponse, customerResponse] = await Promise.all([loadAdminCoupons(), loadCouponProducts(), loadAdminCustomers()]);
     setLoading(false);
     if (couponResponse.error) {
       setError(couponResponse.error);
@@ -142,6 +149,7 @@ export const CouponManagement: React.FC<{ notify: (message: string) => void }> =
     setError('');
     setCoupons(couponResponse.data);
     if (!productResponse.error) setProducts(productResponse.data);
+    if (!customerResponse.error) setCustomers(customerResponse.data);
   };
 
   useEffect(() => { void refresh(); }, []);
@@ -180,6 +188,8 @@ export const CouponManagement: React.FC<{ notify: (message: string) => void }> =
       category_keys: (coupon.coupon_categories || []).map((item) => item.category_key),
       description: coupon.description || '',
       is_enabled: coupon.is_enabled,
+      notify_audience: 'NONE',
+      notification_user_ids: [],
     });
     setProductSearch('');
   };
@@ -242,7 +252,19 @@ export const CouponManagement: React.FC<{ notify: (message: string) => void }> =
     const response = await saveAdminCoupon(payload);
     setSaving(false);
     if (response.error) { notify(response.error); return; }
-    notify(`Coupon ${code} ${form.id ? 'updated' : 'created'} successfully.`);
+    let notificationMessage = '';
+    if (!form.id && form.notify_audience !== 'NONE' && response.data?.id) {
+      const recipients = form.notify_audience === 'ALL' ? null : form.notification_user_ids;
+      if (recipients !== null && recipients.length === 0) {
+        notificationMessage = ' No customers were selected for notification.';
+      } else {
+        const notificationResponse = await notifyCouponAudience(response.data.id, recipients);
+        notificationMessage = notificationResponse.error
+          ? ` Notification failed: ${notificationResponse.error}`
+          : ` ${notificationResponse.count} customer notification${notificationResponse.count === 1 ? '' : 's'} sent.`;
+      }
+    }
+    notify(`Coupon ${code} ${form.id ? 'updated' : 'created'} successfully.${notificationMessage}`);
     setForm(null);
     await refresh();
   };
@@ -269,7 +291,7 @@ export const CouponManagement: React.FC<{ notify: (message: string) => void }> =
       <p className="flex items-center gap-2 text-[11px] font-medium text-slate-400"><ShieldGlyph />Coupon checks and final order totals are calculated by secure Supabase functions, not by this page.</p>
     </>}
 
-    {form && <CouponFormModal form={form} setForm={setForm} saving={saving} products={filteredProducts} productSearch={productSearch} setProductSearch={setProductSearch} onClose={() => setForm(null)} onSubmit={handleSubmit} />}
+    {form && <CouponFormModal form={form} setForm={setForm} saving={saving} products={filteredProducts} customers={customers} productSearch={productSearch} setProductSearch={setProductSearch} onClose={() => setForm(null)} onSubmit={handleSubmit} />}
     <ConfirmDialog open={Boolean(pendingAction)} title={pendingAction?.type === 'disable' ? 'Disable coupon?' : 'Delete coupon?'} message={pendingAction?.type === 'disable' ? `Customers will no longer be able to use ${pendingAction?.coupon.code}.` : `Delete unused coupon ${pendingAction?.coupon.code}? This cannot be undone.`} confirmLabel={pendingAction?.type === 'disable' ? 'Disable coupon' : 'Delete coupon'} onCancel={() => setPendingAction(null)} onConfirm={() => { const action = pendingAction; setPendingAction(null); if (action?.type === 'disable') void handleDisable(action.coupon); if (action?.type === 'delete') void handleDelete(action.coupon); }} />
     {details && <CouponDetailsModal coupon={details} usageRows={usageRows} summary={usageSummary} loading={detailsLoading} onClose={() => setDetails(null)} />}
   </div>;
@@ -293,15 +315,20 @@ const CouponFormModal: React.FC<{
   setForm: React.Dispatch<React.SetStateAction<CouponFormState | null>>;
   saving: boolean;
   products: CouponProductChoice[];
+  customers: AdminCustomer[];
   productSearch: string;
   setProductSearch: (value: string) => void;
   onClose: () => void;
   onSubmit: (event: React.FormEvent) => void;
-}> = ({ form, setForm, saving, products, productSearch, setProductSearch, onClose, onSubmit }) => {
+}> = ({ form, setForm, saving, products, customers, productSearch, setProductSearch, onClose, onSubmit }) => {
   const update = <K extends keyof CouponFormState>(key: K, value: CouponFormState[K]) => setForm((current) => current ? { ...current, [key]: value } : current);
   const toggle = (key: 'product_ids' | 'category_keys', id: string) => {
     const current = form[key] as string[];
     update(key, (current.includes(id) ? current.filter((value) => value !== id) : [...current, id]) as CouponFormState[typeof key]);
+  };
+  const toggleCustomer = (id: string) => {
+    const current = form.notification_user_ids;
+    update('notification_user_ids', current.includes(id) ? current.filter((value) => value !== id) : [...current, id]);
   };
   return <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 p-3 backdrop-blur-sm sm:p-6"><form onSubmit={onSubmit} className="my-2 w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl sm:my-8">
     <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-5 py-4 sm:px-7"><div><p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#D9232D]">Marketing · Coupon setup</p><h3 className="mt-1 text-lg font-black text-slate-900">{form.id ? 'Edit coupon' : 'Create coupon'}</h3></div><button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100"><X className="h-5 w-5" /></button></div>
@@ -312,7 +339,8 @@ const CouponFormModal: React.FC<{
       <FormSection number="04" title="Validity" subtitle="All start and expiry times are stored and checked as Asia/Kolkata timestamps."><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Start date & time <span className="font-normal text-slate-400">IST</span><input required type="datetime-local" value={form.starts_at} onChange={(event) => update('starts_at', event.target.value)} className={inputClass} /></label><label className={labelClass}>Expiry date & time <span className="font-normal text-slate-400">IST</span><input required type="datetime-local" value={form.expires_at} onChange={(event) => update('expires_at', event.target.value)} className={inputClass} /></label></div></FormSection>
       <FormSection number="05" title="Usage limits" subtitle="Leave blank for unlimited uses. Limits are checked inside the locked order transaction."><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Total usage limit<input type="number" min="1" step="1" value={form.usage_limit} onChange={(event) => update('usage_limit', event.target.value)} placeholder="Unlimited" className={inputClass} /></label><label className={labelClass}>Limit per customer<input type="number" min="1" step="1" value={form.per_customer_limit} onChange={(event) => update('per_customer_limit', event.target.value)} placeholder="Unlimited" className={inputClass} /></label></div></FormSection>
       <FormSection number="06" title="Product applicability" subtitle="Choose all products, selected products or product categories."><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Apply to<select value={form.apply_to} onChange={(event) => update('apply_to', event.target.value as CouponApplyTo)} className={inputClass}><option value="ALL_PRODUCTS">All products</option><option value="SELECTED_PRODUCTS">Selected products</option><option value="SELECTED_CATEGORIES">Selected categories</option></select></label><div className="flex items-end text-[11px] text-slate-400">For selective campaigns, discounts apply only to eligible item subtotals.</div></div>{form.apply_to === 'SELECTED_PRODUCTS' && <div className="mt-4 rounded-2xl border border-slate-200 p-3"><div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input value={productSearch} onChange={(event) => setProductSearch(event.target.value)} placeholder="Search active products" className="w-full rounded-xl bg-slate-50 py-2.5 pl-9 pr-3 text-xs outline-none" /></div><div className="mt-2 max-h-44 space-y-1 overflow-y-auto">{products.map((product) => <label key={product.id} className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-xs font-semibold hover:bg-slate-50"><input type="checkbox" checked={form.product_ids.includes(product.id)} onChange={() => toggle('product_ids', product.id)} className="accent-[#D9232D]" /><span className="min-w-0 flex-1 truncate">{product.name}</span><span className="text-[10px] text-slate-400">{product.category_key || '—'}</span></label>)}{products.length === 0 && <p className="px-2 py-3 text-xs text-slate-400">No matching active products loaded.</p>}</div></div>}{form.apply_to === 'SELECTED_CATEGORIES' && <div className="mt-4 grid gap-2 sm:grid-cols-2">{categories.map((category) => <label key={category.id} className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 px-3 py-3 text-xs font-bold text-slate-700"><input type="checkbox" checked={form.category_keys.includes(category.id)} onChange={() => toggle('category_keys', category.id)} className="accent-[#D9232D]" />{category.label}</label>)}</div>}</FormSection>
-      <FormSection number="07" title="Status & review" subtitle="The current status is calculated from enabled state, dates and usage limits."><label className="flex cursor-pointer items-center justify-between rounded-2xl border border-slate-200 p-4"><span><span className="block text-xs font-black text-slate-800">Enable coupon</span><span className="mt-1 block text-[10px] text-slate-500">Disabled coupons cannot be applied by customers.</span></span><button type="button" role="switch" aria-checked={form.is_enabled} onClick={() => update('is_enabled', !form.is_enabled)} className={`relative h-6 w-11 rounded-full transition ${form.is_enabled ? 'bg-emerald-500' : 'bg-slate-300'}`}><span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition ${form.is_enabled ? 'left-6' : 'left-1'}`} /></button></label><div className="mt-3 rounded-2xl bg-slate-50 p-4"><p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Review</p><p className="mt-1 font-mono text-sm font-black text-slate-900">{form.code || 'COUPON'} · {form.discount_type === 'PERCENTAGE' ? `${form.discount_value || '0'}%` : money(Number(form.discount_value || 0))} off</p><p className="mt-1 text-[11px] text-slate-500">Min {money(Number(form.minimum_order_value || 0))} · {form.usage_limit || 'Unlimited'} uses · {form.per_customer_limit || 'Unlimited'} per customer</p><p className="mt-1 text-[10px] text-slate-400">{form.starts_at || 'Start date'} → {form.expires_at || 'Expiry date'} IST · {form.eligibility.replaceAll('_', ' ').toLowerCase()}</p></div></FormSection>
+      {!form.id && <FormSection number="07" title="Customer notification" subtitle="Tell everyone about this new coupon, or choose specific customers."><div className="grid gap-2 sm:grid-cols-3"><label className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 p-3 text-xs font-bold"><input type="radio" name="notify-audience" checked={form.notify_audience === 'ALL'} onChange={() => update('notify_audience', 'ALL')} className="accent-[#D9232D]" />All customers</label><label className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 p-3 text-xs font-bold"><input type="radio" name="notify-audience" checked={form.notify_audience === 'SELECTED'} onChange={() => update('notify_audience', 'SELECTED')} className="accent-[#D9232D]" />Selected customers</label><label className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 p-3 text-xs font-bold"><input type="radio" name="notify-audience" checked={form.notify_audience === 'NONE'} onChange={() => update('notify_audience', 'NONE')} className="accent-[#D9232D]" />Do not notify</label></div>{form.notify_audience === 'SELECTED' && <div className="mt-3 max-h-44 space-y-1 overflow-y-auto rounded-2xl border border-slate-200 p-2">{customers.map((customer) => <label key={customer.id} className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-xs font-semibold hover:bg-slate-50"><input type="checkbox" checked={form.notification_user_ids.includes(customer.id)} onChange={() => toggleCustomer(customer.id)} className="accent-[#D9232D]" /><span className="min-w-0 flex-1 truncate">{customer.name}</span><span className="text-[10px] text-slate-400">{customer.email || customer.phone || 'No contact'}</span></label>)}{customers.length === 0 && <p className="px-2 py-3 text-xs text-slate-400">No customers found.</p>}</div>}</FormSection>}
+      <FormSection number="08" title="Status & review" subtitle="The current status is calculated from enabled state, dates and usage limits."><label className="flex cursor-pointer items-center justify-between rounded-2xl border border-slate-200 p-4"><span><span className="block text-xs font-black text-slate-800">Enable coupon</span><span className="mt-1 block text-[10px] text-slate-500">Disabled coupons cannot be applied by customers.</span></span><button type="button" role="switch" aria-checked={form.is_enabled} onClick={() => update('is_enabled', !form.is_enabled)} className={`relative h-6 w-11 rounded-full transition ${form.is_enabled ? 'bg-emerald-500' : 'bg-slate-300'}`}><span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition ${form.is_enabled ? 'left-6' : 'left-1'}`} /></button></label><div className="mt-3 rounded-2xl bg-slate-50 p-4"><p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Review</p><p className="mt-1 font-mono text-sm font-black text-slate-900">{form.code || 'COUPON'} · {form.discount_type === 'PERCENTAGE' ? `${form.discount_value || '0'}%` : money(Number(form.discount_value || 0))} off</p><p className="mt-1 text-[11px] text-slate-500">Min {money(Number(form.minimum_order_value || 0))} · {form.usage_limit || 'Unlimited'} uses · {form.per_customer_limit || 'Unlimited'} per customer</p><p className="mt-1 text-[10px] text-slate-400">{form.starts_at || 'Start date'} → {form.expires_at || 'Expiry date'} IST · {form.eligibility.replaceAll('_', ' ').toLowerCase()}</p></div></FormSection>
     </div>
     <div className="sticky bottom-0 flex justify-end gap-2 border-t border-slate-100 bg-white px-5 py-4 sm:px-7"><button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-3 text-xs font-black text-slate-600">Cancel</button><button disabled={saving} type="submit" className="inline-flex items-center gap-2 rounded-xl bg-[#D9232D] px-5 py-3 text-xs font-black text-white disabled:opacity-60">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}{saving ? 'Saving…' : form.id ? 'Save changes' : 'Create Coupon'}</button></div>
   </form></div>;
