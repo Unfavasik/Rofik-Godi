@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowLeft,
-  CalendarDays,
   Check,
   CheckCircle2,
   ChevronRight,
@@ -10,13 +9,20 @@ import {
   CreditCard,
   FileText,
   MapPin,
+  Navigation,
   Package,
   PackageCheck,
+  Phone,
   Printer,
+  QrCode,
+  ReceiptText,
   ShieldCheck,
+  Store,
+  Truck,
   X,
 } from 'lucide-react';
 import type { CustomerOrderRecord } from '../types';
+import { WORKSHOP_INFO } from '../data/products';
 import type { ProductReviewRecord } from '../lib/supabaseReviews';
 import { getOrderPreviewItems, isOrderComplete } from '../lib/orderPresentation';
 import { InvoiceTemplate } from './InvoiceTemplate';
@@ -78,44 +84,38 @@ const ProductThumb = ({ name, image, className = '' }: { name: string; image?: s
   </div>
 );
 
-const OrderTimeline = ({ status }: { status: string }) => {
+const OrderTimeline = ({ status, createdAt }: { status: string; createdAt: string }) => {
   const steps = [
-    { label: 'Order placed', icon: Package },
+    { label: 'Order received', icon: Package },
     { label: 'Confirmed', icon: ShieldCheck },
-    { label: 'Preparing', icon: Clock3 },
     { label: 'Ready for pickup', icon: MapPin },
     { label: 'Picked up', icon: PackageCheck },
   ];
-  const progressIndex = status === 'COMPLETED' || status === 'PICKED_UP'
-    ? 4
-    : Math.max(0, ['NEW', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP'].indexOf(status));
+  const progressIndex = status === 'PICKED_UP' || status === 'COMPLETED' ? 3
+    : status === 'READY_FOR_PICKUP' ? 2
+      : status === 'CONFIRMED' || status === 'PREPARING' ? 1 : 0;
 
   if (status === 'CANCELLED') {
     return <div className="rounded-2xl border border-rose-100 bg-rose-50/80 p-4 text-sm font-semibold text-rose-800">This order was cancelled. If you need help, contact the store team.</div>;
   }
 
   return (
-    <div className="rounded-2xl border border-slate-100 bg-[#fafafa] p-4">
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <div>
-          <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">Order journey</p>
-          <p className="mt-1 text-sm font-extrabold text-slate-900">{statusName(status)}</p>
-        </div>
-        <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-slate-500 ring-1 ring-slate-200">{progressIndex + 1} of {steps.length}</span>
+    <div id="customer-order-progress" className="overflow-hidden rounded-[22px] border border-slate-100 bg-white px-3 py-4 shadow-sm sm:px-5">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div><p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-slate-400">Order progress</p><p className="mt-1 text-[13px] font-black text-slate-900">{statusName(status)}</p></div>
+        <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[9px] font-extrabold text-[#c92330]">{progressIndex + 1} / {steps.length}</span>
       </div>
-      <div className="space-y-0">
+      <div className="relative grid grid-cols-4 gap-1">
+        <span className="absolute left-[12.5%] right-[12.5%] top-[11px] h-0.5 bg-slate-200" />
+        <span className="absolute left-[12.5%] top-[11px] h-0.5 bg-[#d9232d] transition-all" style={{ width: `${progressIndex * 25}%` }} />
         {steps.map(({ label, icon: Icon }, index) => {
           const done = index <= progressIndex;
           const current = index === progressIndex;
-          return (
-            <div key={label} className="relative flex min-h-10 items-start gap-3">
-              {index < steps.length - 1 && <span className={`absolute left-[13px] top-7 h-4 w-px ${index < progressIndex ? 'bg-emerald-400' : 'bg-slate-200'}`} />}
-              <span className={`relative z-10 grid h-[27px] w-[27px] shrink-0 place-items-center rounded-full border ${done ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-300'} ${current ? 'ring-4 ring-emerald-50' : ''}`}>
-                {done ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
-              </span>
-              <span className={`pt-1 text-[11px] ${current ? 'font-extrabold text-slate-900' : done ? 'font-semibold text-slate-600' : 'font-medium text-slate-400'}`}>{label}{current ? ' · Current' : ''}</span>
-            </div>
-          );
+          return <div key={label} className="relative z-[1] flex min-w-0 flex-col items-center text-center">
+            <span className={`grid h-[23px] w-[23px] place-items-center rounded-full ${done ? 'bg-[#d9232d] text-white' : 'bg-slate-200 text-white'} ${current ? 'ring-4 ring-rose-100' : ''}`}>{done ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3 w-3" />}</span>
+            <span className={`mt-2 text-[8px] font-bold leading-3 sm:text-[10px] ${done ? 'text-[#b51e29]' : 'text-slate-400'}`}>{label}</span>
+            <span className="mt-0.5 text-[8px] text-slate-400 sm:text-[9px]">{index === 0 ? formatDate(createdAt, true).split(', ').slice(-1)[0] : current ? 'Current' : done ? 'Done' : 'Pending'}</span>
+          </div>;
         })}
       </div>
     </div>
@@ -165,18 +165,17 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
         transition={{ duration: 0.2, ease: 'easeOut' }}
         className="relative z-10 flex h-[100dvh] max-h-[920px] w-full max-w-[760px] flex-col overflow-hidden bg-[#f7f7f8] shadow-2xl sm:h-[90vh] sm:rounded-[30px] sm:border sm:border-white/70"
       >
-        <header className="relative shrink-0 overflow-hidden bg-gradient-to-br from-[#251f20] via-[#171719] to-[#101114] px-5 pb-5 pt-5 text-white sm:px-7 sm:pt-6">
-          <div className="pointer-events-none absolute -right-12 -top-24 h-64 w-64 rounded-full bg-[#e54d3f]/20 blur-3xl" />
+        <header className="relative shrink-0 border-b border-slate-100 bg-white px-4 py-4 sm:px-7 sm:py-5">
           <div className="relative flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-start gap-3">
-              {selectedOrder && <button type="button" onClick={() => setSelectedOrderId(null)} aria-label="Back to all orders" className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/15 bg-white/10 text-white transition hover:bg-white/20"><ArrowLeft className="h-4 w-4" /></button>}
+              {selectedOrder && <button type="button" onClick={() => setSelectedOrderId(null)} aria-label="Back to all orders" className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-50 text-slate-700 transition hover:bg-slate-100"><ArrowLeft className="h-4 w-4" /></button>}
               <div>
-                <p className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-[#ffac9e]">Rofik Godi Centre · Pickup orders</p>
-                <h2 id="customer-orders-title" className="mt-1 text-[23px] font-black tracking-tight sm:text-[27px]">{selectedOrder ? 'Order details' : 'Your orders'}</h2>
-                <p className="mt-1 text-[11px] font-medium text-white/65">{selectedOrder ? `Order #${selectedOrder.order_number}` : 'Every order, update and invoice in one place.'}</p>
+                <p className="flex items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-[0.18em] text-[#cf2833]"><Store className="h-3.5 w-3.5" />Rofik Godi Centre · Pickup orders</p>
+                <h2 id="customer-orders-title" className="mt-1 text-[21px] font-black tracking-tight text-slate-900 sm:text-[25px]">{selectedOrder ? 'Order details' : 'Your orders'}</h2>
+                <p className="mt-1 text-[11px] font-medium text-slate-500">{selectedOrder ? `Order #${selectedOrder.order_number}` : 'Every order, update and invoice in one place.'}</p>
               </div>
             </div>
-            <button type="button" onClick={onClose} aria-label="Close orders" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/15 bg-white/10 text-white transition hover:bg-white/20"><X className="h-4 w-4" /></button>
+            <button type="button" onClick={onClose} aria-label="Close orders" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-50 text-slate-700 transition hover:bg-slate-100"><X className="h-4 w-4" /></button>
           </div>
           {!selectedOrder && (
             <div className="relative mt-5 grid grid-cols-3 gap-2 sm:gap-3">
@@ -235,9 +234,9 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
 };
 
 const SummaryTile = ({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) => (
-  <div className="rounded-2xl border border-white/10 bg-white/[0.075] px-3 py-2.5 backdrop-blur-sm">
-    <div className="flex items-center gap-1.5 text-white/55">{icon}<span className="text-[9px] font-bold">{label}</span></div>
-    <p className="mt-1 text-lg font-black leading-none">{value}</p>
+  <div className="rounded-2xl border border-slate-100 bg-[#fafafa] px-3 py-2.5">
+    <div className="flex items-center gap-1.5 text-slate-500">{icon}<span className="text-[9px] font-bold">{label}</span></div>
+    <p className="mt-1 text-lg font-black leading-none text-slate-900">{value}</p>
   </div>
 );
 
@@ -267,50 +266,82 @@ const OrderCard = ({ order, index, onOpen, onInvoice }: { order: CustomerOrderRe
           <div className="shrink-0 text-right"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Total</p><p className="mt-0.5 text-sm font-black text-slate-900">{formatMoney(order.total)}</p></div>
         </div>
         <div className="mt-3 flex items-center justify-between gap-2 text-[10px] font-bold text-slate-500"><span className="inline-flex items-center gap-1.5"><CreditCard className="h-3.5 w-3.5 text-slate-400" />{order.payment_status?.toLowerCase() === 'paid' ? 'Paid' : 'Pay at store'}</span><span className="inline-flex items-center gap-1 text-[#cf4033]">View details<ChevronRight className="h-3.5 w-3.5" /></span></div>
+        {order.status === 'READY_FOR_PICKUP' && <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1.5 text-[9px] font-extrabold text-emerald-800"><QrCode className="h-3.5 w-3.5" />Pickup QR ready · open details</p>}
       </button>
       {complete && <div className="flex items-center justify-between gap-3 border-t border-emerald-100 bg-emerald-50/60 px-4 py-2.5 sm:px-5"><span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-800"><CheckCircle2 className="h-3.5 w-3.5" />Order complete · Invoice ready</span><button type="button" onClick={onInvoice} className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[10px] font-extrabold text-emerald-800 shadow-sm ring-1 ring-emerald-200 transition hover:bg-emerald-100"><Printer className="h-3.5 w-3.5" />View invoice</button></div>}
     </motion.article>
   );
 };
 
-const OrderDetails = ({ order, customerName, reviews, onRefresh, onInvoice, onReview }: { order: CustomerOrderRecord; customerName: string; reviews: ProductReviewRecord[]; onRefresh?: CustomerOrdersModalProps['onRefresh']; onInvoice: () => void; onReview: CustomerOrdersModalProps['onReview'] }) => {
+export const OrderDetails = ({ order, customerName, reviews, onRefresh, onInvoice, onReview }: { order: CustomerOrderRecord; customerName: string; reviews: ProductReviewRecord[]; onRefresh?: CustomerOrdersModalProps['onRefresh']; onInvoice: () => void; onReview: CustomerOrdersModalProps['onReview'] }) => {
   const complete = isOrderComplete(order.status);
   const items = order.order_items || [];
+  const isPaid = order.payment_status?.toLowerCase() === 'paid';
+  const paymentMethod = order.payment_method === 'PAY_ONLINE' ? 'UPI online' : 'Pay at workshop on pickup';
+  const phoneHref = `tel:${WORKSHOP_INFO.phone.replace(/[^+\d]/g, '')}`;
+  const mapHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${WORKSHOP_INFO.name}, ${WORKSHOP_INFO.address}`)}`;
+  const units = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   return (
-    <div className="space-y-4 pb-2">
-      <div className="rounded-[22px] border border-slate-200/80 bg-white p-4 shadow-[0_4px_18px_rgba(15,23,42,0.035)] sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[9px] font-extrabold uppercase tracking-[0.15em] text-slate-400">{formatDate(order.created_at, true)}</p><p className="mt-1 text-lg font-black tracking-tight text-slate-900">Order #{order.order_number}</p><p className="mt-1 text-[11px] font-medium text-slate-500">{items.length} {items.length === 1 ? 'product' : 'products'} · {order.vehicle_model || 'Vehicle not specified'}</p></div><OrderStatusBadge status={order.status} /></div>
-        {complete && <button type="button" onClick={onInvoice} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#d94335] px-4 py-3 text-xs font-extrabold text-white shadow-[0_7px_16px_rgba(217,67,53,0.2)] transition hover:bg-[#be3429] sm:w-auto"><Printer className="h-4 w-4" />View / print invoice</button>}
-      </div>
+    <div className="space-y-3.5 pb-4">
+      <section className="overflow-hidden rounded-[22px] border border-rose-100 bg-white shadow-sm">
+        <div className="flex items-start justify-between gap-3 bg-gradient-to-r from-[#fff2f3] to-[#fff8f8] p-4 sm:p-5">
+          <div className="flex min-w-0 items-center gap-3"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#ffe5e8] text-[#d9232d]"><Package className="h-6 w-6" /></span><div className="min-w-0"><p className="text-[9px] font-bold uppercase tracking-[0.15em] text-slate-500">{formatDate(order.created_at, true)}</p><h2 className="mt-1 text-[17px] font-black tracking-tight text-slate-900">{statusName(order.status)}</h2><p className="mt-1 text-[10px] leading-relaxed text-slate-600">{order.status === 'CANCELLED' ? 'This order was cancelled. Contact the store if you need help.' : 'We’ll keep you updated as your order gets prepared for pickup.'}</p></div></div>
+          <OrderStatusBadge status={order.status} />
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-rose-50 px-4 py-3"><span className="font-mono text-[10px] font-bold text-slate-600">#{order.order_number}</span><span className="text-[10px] font-semibold text-slate-500">{items.length} {items.length === 1 ? 'item' : 'items'} · {units} total units</span>{complete && <button type="button" onClick={onInvoice} className="inline-flex items-center gap-1.5 rounded-full bg-[#d9232d] px-3 py-2 text-[9px] font-extrabold text-white"><Printer className="h-3.5 w-3.5" />View invoice</button>}</div>
+      </section>
 
-      <OrderTimeline status={order.status} />
+      <OrderTimeline status={order.status} createdAt={order.created_at} />
       <PickupQrCard order={order} onRefresh={onRefresh} />
 
-      <section className="overflow-hidden rounded-[22px] border border-slate-200/80 bg-white">
-        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3.5 sm:px-5"><div><p className="text-sm font-black text-slate-900">Items in your order</p><p className="mt-0.5 text-[10px] font-medium text-slate-500">{items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)} total units</p></div><Package className="h-4 w-4 text-slate-400" /></div>
-        <div className="divide-y divide-slate-100">
-          {items.map((item, index) => {
-            const productReview = reviews.find((review) => review.order_id === order.id && review.product_id === item.product_id);
-            const reviewable = complete && Boolean(item.product_id && /^[0-9a-f-]{36}$/i.test(item.product_id));
-            return <div key={`${item.product_id || item.product_name}-${index}`} className="flex items-center gap-3 px-4 py-3 sm:px-5">
-              <ProductThumb name={item.product_name} image={item.image_url} className="h-[58px] w-[58px] rounded-2xl" />
-              <div className="min-w-0 flex-1"><p className="line-clamp-2 text-[11px] font-extrabold leading-snug text-slate-900">{item.product_name}</p><p className="mt-1 text-[10px] text-slate-500">Qty {item.quantity}{item.color ? ` · ${item.color}` : ''}</p>{productReview?.is_verified_purchase && <p className="mt-1 text-[9px] font-bold text-emerald-700">Verified purchase · Review saved</p>}</div>
-              <div className="shrink-0 text-right"><p className="text-[11px] font-black text-slate-900">{formatMoney(Number(item.unit_price || 0) * Number(item.quantity || 0))}</p><p className="mt-0.5 text-[9px] text-slate-400">{formatMoney(item.unit_price)} each</p>{reviewable && <button type="button" onClick={() => onReview(order, item.product_id!, item.product_name, productReview)} className="mt-1.5 text-[9px] font-extrabold text-[#cf4033] underline decoration-[#cf4033]/30 underline-offset-2">{productReview ? 'Edit review' : 'Rate item'}</button>}</div>
-            </div>;
-          })}
-          {!items.length && <p className="px-5 py-7 text-center text-xs text-slate-500">No item details available for this order.</p>}
+      <section className="rounded-[22px] border border-slate-100 bg-white p-3.5 shadow-sm sm:p-4">
+        <div className="flex gap-3">
+          <img src="/images/rofik-godi-store.webp" alt="Rofik Godi Centre storefront" className="h-[108px] w-[108px] shrink-0 rounded-2xl object-cover sm:h-[128px] sm:w-[128px]" />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2"><h3 className="flex items-center gap-1.5 text-[11px] font-black text-[#c92330]"><MapPin className="h-4 w-4 shrink-0" />Pickup from store</h3><a href={mapHref} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1.5 text-[9px] font-extrabold text-[#c92330]"><Navigation className="h-3 w-3" />Open map</a></div>
+            <p className="mt-1 text-[11px] font-black text-slate-900">{order.pickup_store || WORKSHOP_INFO.name}</p>
+            <p className="mt-1 text-[9px] leading-relaxed text-slate-600">{WORKSHOP_INFO.address}</p>
+            <p className="mt-1 inline-flex items-center gap-1.5 text-[9px] text-slate-600"><Clock3 className="h-3 w-3 shrink-0" />{WORKSHOP_INFO.workingHours}</p>
+            <a href={phoneHref} className="mt-1 flex items-center gap-1.5 text-[9px] font-semibold text-slate-700"><Phone className="h-3 w-3" />{WORKSHOP_INFO.phone}</a>
+          </div>
         </div>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <section className="rounded-[22px] border border-slate-200/80 bg-white p-4 sm:p-5"><div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-xl bg-blue-50 text-blue-600"><MapPin className="h-4 w-4" /></span><div><p className="text-xs font-black text-slate-900">Pickup details</p><p className="text-[9px] font-medium text-slate-500">Collect from our workshop</p></div></div><p className="mt-3 text-[11px] font-extrabold text-slate-800">{order.pickup_store || 'Rofik Godi Centre'}</p><p className="mt-1 text-[10px] leading-relaxed text-slate-500">{order.fulfillment_method?.replaceAll('_', ' ') || 'Store pickup'} · Kadbeltala, Murshidabad</p></section>
-        <section className="rounded-[22px] border border-slate-200/80 bg-white p-4 sm:p-5"><div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-xl bg-violet-50 text-violet-600"><CreditCard className="h-4 w-4" /></span><div><p className="text-xs font-black text-slate-900">Payment</p><p className="text-[9px] font-medium text-slate-500">Method &amp; current state</p></div></div><p className="mt-3 text-[11px] font-extrabold capitalize text-slate-800">{order.payment_method?.replaceAll('_', ' ').toLowerCase() || 'Pay at store'}</p><p className="mt-1 text-[10px] text-slate-500">{order.payment_status?.toLowerCase() === 'paid' ? 'Payment received' : 'Payment pending'}</p></section>
-      </div>
+      <section className="overflow-hidden rounded-[22px] border border-slate-100 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3.5"><div><h3 className="flex items-center gap-2 text-[13px] font-black text-slate-900"><span className="grid h-8 w-8 place-items-center rounded-xl bg-rose-50 text-[#d9232d]"><Package className="h-4 w-4" /></span>Items ({items.length})</h3><p className="mt-1 text-[9px] font-medium text-slate-500">{units} total units</p></div></div>
+        <div className="divide-y divide-slate-100 px-3.5 sm:px-4">
+          {items.map((item, index) => {
+            const productReview = reviews.find((review) => review.order_id === order.id && review.product_id === item.product_id);
+            const reviewable = complete && Boolean(item.product_id && /^[0-9a-f-]{36}$/i.test(item.product_id));
+            return <div key={`${item.product_id || item.product_name}-${index}`} className="flex items-center gap-3 py-3">
+              <ProductThumb name={item.product_name} image={item.image_url} className="h-[58px] w-[58px] rounded-2xl" />
+              <div className="min-w-0 flex-1"><p className="line-clamp-2 text-[11px] font-extrabold leading-snug text-slate-900">{item.product_name}</p><p className="mt-1 text-[10px] text-slate-500">{item.color ? `${item.color} · ` : ''}Qty: {item.quantity}</p>{productReview?.is_verified_purchase && <p className="mt-1 text-[9px] font-bold text-emerald-700">Verified purchase · Review saved</p>}{reviewable && <button type="button" onClick={() => onReview(order, item.product_id!, item.product_name, productReview)} className="mt-1.5 text-[9px] font-extrabold text-[#cf4033] underline decoration-[#cf4033]/30 underline-offset-2">{productReview ? 'Edit review' : 'Rate item'}</button>}</div>
+              <div className="shrink-0 text-right"><p className="text-[11px] font-black text-slate-900">{formatMoney(Number(item.unit_price || 0) * Number(item.quantity || 0))}</p><p className="mt-0.5 text-[9px] text-slate-400">Qty: {item.quantity}</p></div>
+            </div>;
+          })}
+          {!items.length && <p className="py-7 text-center text-xs text-slate-500">No item details available for this order.</p>}
+        </div>
+      </section>
 
-      <section className="rounded-[22px] border border-slate-200/80 bg-white p-4 sm:p-5"><div className="mb-3 flex items-center gap-2"><FileText className="h-4 w-4 text-slate-400" /><p className="text-xs font-black text-slate-900">Bill summary</p></div><div className="space-y-2 text-[11px]"><MoneyRow label="Subtotal" amount={order.subtotal} /><MoneyRow label="Discount" amount={-Number(order.discount || 0)} discount /><div className="my-2 border-t border-dashed border-slate-200" /><div className="flex items-center justify-between text-sm"><span className="font-black text-slate-900">Total paid / due</span><span className="font-black text-slate-900">{formatMoney(order.total)}</span></div></div><p className="mt-2 text-[9px] text-slate-400">{order.payment_status?.toLowerCase() === 'paid' ? 'Paid' : 'Amount due at pickup'} · {customerName || order.customer_name}</p></section>
-      <div className="flex items-center justify-center gap-1.5 pb-2 pt-1 text-[9px] font-medium text-slate-400"><CalendarDays className="h-3 w-3" />Placed {formatDate(order.created_at)}</div>
+      <section className="rounded-[22px] border border-slate-100 bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between gap-3"><h3 className="flex items-center gap-2 text-[13px] font-black"><span className="grid h-8 w-8 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><CreditCard className="h-4 w-4" /></span>Payment details</h3><span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-extrabold ${isPaid ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}><CheckCircle2 className="h-3 w-3" />{isPaid ? 'Payment confirmed' : 'Payment pending'}</span></div>
+        <div className="mt-4 grid grid-cols-2 gap-4"><div className="border-r border-slate-100 pr-3"><p className="text-[10px] text-slate-500">Total amount</p><p className="mt-1 text-[21px] font-black text-[#d9232d]">{formatMoney(order.total)}</p><p className="mt-3 text-[10px] text-slate-500">Payment method</p><p className="mt-1 text-[11px] font-bold text-slate-800">{paymentMethod}</p><p className="mt-3 text-[10px] text-slate-500">Payment status</p><p className={`mt-1 text-[11px] font-bold ${isPaid ? 'text-emerald-700' : 'text-amber-700'}`}>{isPaid ? 'Paid' : 'Due at pickup'}</p></div><div className="space-y-2 pt-1 text-[10px]"><MoneyRow label="Items total" amount={order.subtotal} /><div className="flex items-center justify-between"><span className="text-slate-500">Store pickup</span><span className="font-bold text-emerald-700">FREE</span></div><MoneyRow label="Discount" amount={-Number(order.discount || 0)} discount /><div className="border-t border-slate-100 pt-2"><MoneyRow label={isPaid ? 'Total paid' : 'Total due'} amount={order.total} /></div></div></div>
+      </section>
+
+      <section className="rounded-[22px] border border-slate-100 bg-white p-4 shadow-sm">
+        <h3 className="flex items-center gap-2 text-[13px] font-black"><span className="grid h-8 w-8 place-items-center rounded-xl bg-rose-50 text-[#d9232d]"><ReceiptText className="h-4 w-4" /></span>Order information</h3>
+        <div className="mt-3 divide-y divide-slate-100 text-[10px]"><InfoRow label="Order ID" value={`#${order.order_number}`} /><InfoRow label="Order date" value={formatDate(order.created_at, true)} /><InfoRow label="Order type" value="Store pickup" /><InfoRow label="Customer" value={customerName || order.customer_name || '—'} /><InfoRow label="Payment status" value={isPaid ? 'Paid' : 'Pending'} /><InfoRow label="Vehicle" value={order.vehicle_model || 'Not specified'} /></div>
+      </section>
+
+      <div className="grid grid-cols-3 gap-2 pb-2">
+        <button type="button" onClick={() => document.getElementById('customer-order-progress')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="flex min-h-10 items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2 text-[9px] font-extrabold text-slate-800"><Truck className="h-3.5 w-3.5" />Track order</button>
+        <a href={`mailto:${WORKSHOP_INFO.email}?subject=${encodeURIComponent(`Help with order ${order.order_number}`)}`} className="flex min-h-10 items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2 text-[9px] font-extrabold text-slate-800"><FileText className="h-3.5 w-3.5" />Need help?</a>
+        <a href={phoneHref} className="flex min-h-10 items-center justify-center gap-1 rounded-xl bg-[#d9232d] px-2 text-[9px] font-extrabold text-white"><Phone className="h-3.5 w-3.5" />Contact store</a>
+      </div>
     </div>
   );
 };
 
 const MoneyRow = ({ label, amount, discount = false }: { label: string; amount: number; discount?: boolean }) => <div className="flex items-center justify-between"><span className="font-medium text-slate-500">{label}</span><span className={`font-bold ${discount && amount < 0 ? 'text-emerald-700' : 'text-slate-700'}`}>{discount && amount < 0 ? `−${formatMoney(Math.abs(amount))}` : formatMoney(amount)}</span></div>;
+
+const InfoRow = ({ label, value }: { label: string; value: string }) => <div className="flex items-center justify-between gap-3 py-2.5"><span className="text-slate-500">{label}</span><span className="text-right font-semibold text-slate-700">{value}</span></div>;
