@@ -4,7 +4,7 @@ export type RouteTab = 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'acc
 export const APP_ROUTE_PATHS = [
   '/', '/home', '/shop', '/search', '/custom', '/wishlist', '/cart', '/checkout',
   '/profile', '/account', '/my-orders', '/myorder', '/my-orders/:orderNumber', '/myorder/:orderNumber',
-  '/notifications', '/notification', '/products/:slug', '/product/:slug',
+  '/notifications', '/notification', '/shop/products/:slug', '/products/:slug', '/product/:slug',
   '/settings', '/privacy-policy', '/privacy', '/terms-and-conditions', '/terms', '/store', '/store-info',
   '/admin', '/Onboarding', '/onboarding', '/signup', '/signup/onboarding', '/signup/loading',
   '/auth/callback', '/example/shop',
@@ -54,13 +54,17 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
     };
   }
 
-  const productMatch = path.match(/^\/(products|product)\/([^/]+)$/i);
+  const productMatch = path.match(/^\/(?:shop\/products|products|product)\/([^/]+)$/i);
   if (productMatch) {
-    const slug = decodeSegment(productMatch[2]);
-    return { kind: 'product', tab: 'shop', slug, canonicalPath: `/products/${encodeURIComponent(slug)}` };
+    const slug = decodeSegment(productMatch[1]);
+    return { kind: 'product', tab: 'shop', slug, canonicalPath: getPathForProduct(slug) };
   }
 
   return { kind: 'not-found', tab: 'home', canonicalPath: '/home' };
+}
+
+export function getPathForProduct(slug: string): string {
+  return `/shop/products/${encodeURIComponent(slug)}`;
 }
 
 export function getPathForTab(tab: RouteTab): string {

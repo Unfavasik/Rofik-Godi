@@ -16,6 +16,7 @@
     { "path": "/myorder/:orderNumber", "title": "Order Details" },
     { "path": "/notifications", "title": "Notifications" },
     { "path": "/notification", "title": "Notifications" },
+    { "path": "/shop/products/:slug", "title": "Product Details" },
     { "path": "/products/:slug", "title": "Product Details" },
     { "path": "/product/:slug", "title": "Product Details" },
     { "path": "/settings", "title": "Settings" },

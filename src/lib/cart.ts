@@ -3,6 +3,11 @@ import type { CartItem, Product } from '../types';
 export const MAX_ORDER_ITEM_QUANTITY = 99;
 export const MAX_ORDER_LINE_ITEMS = 50;
 
+export function resolveStitchPatternSelection(availableStitches: string[] | null | undefined, selected?: string | null): string | undefined {
+  const patterns = (availableStitches || []).filter(Boolean);
+  return selected && patterns.includes(selected) ? selected : patterns[0] || undefined;
+}
+
 export function getCartItemUnitPrice(product: Product, selectedThickness?: CartItem['selectedThickness'], embroideryText?: string) {
   const thicknessOptions = product.thicknessOptions || [];
   const thickness = thicknessOptions.find((option) => option.label === selectedThickness?.label)
@@ -54,6 +59,7 @@ export function refreshCartFromCatalog(cart: CartItem[], catalogProducts: Produc
     const selectedColor = currentProduct.colors.find(
       (color) => color.name.toLowerCase() === item.selectedColor?.name?.toLowerCase(),
     ) || currentProduct.colors[0] || item.selectedColor;
+    const selectedStitch = resolveStitchPatternSelection(currentProduct.stitchPatterns, item.selectedStitch);
     const quantity = Math.max(1, Math.min(MAX_ORDER_ITEM_QUANTITY, Math.floor(Number(item.quantity) || 1)));
 
     return [{
@@ -61,6 +67,7 @@ export function refreshCartFromCatalog(cart: CartItem[], catalogProducts: Produc
       product: currentProduct,
       quantity,
       selectedColor,
+      selectedStitch,
       selectedThickness,
       unitPrice: getCartItemUnitPrice(currentProduct, selectedThickness, item.customEmbroideryText),
     }];

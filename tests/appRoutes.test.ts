@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { getPathForPhase, getPathForTab, resolveAppRoute, shouldRedirectAdminToWorkspace } from '../src/lib/appRoutes';
+import { getPathForPhase, getPathForProduct, getPathForTab, resolveAppRoute, shouldRedirectAdminToWorkspace } from '../src/lib/appRoutes';
 
 describe('main route preservation', () => {
   it.each([
     '/home', '/shop', '/profile', '/account', '/search', '/wishlist', '/cart',
     '/notifications', '/notification', '/custom', '/checkout', '/my-orders',
-    '/my-orders/RGC-ABC123', '/products/premium-bike-seat-cover', '/settings',
+    '/my-orders/RGC-ABC123', '/shop/products/premium-bike-seat-cover', '/settings',
     '/privacy-policy', '/terms-and-conditions', '/store',
   ])('keeps %s when entering the main phase', (path) => {
     expect(getPathForPhase('main', path)).toBe(path === '/account' ? '/profile' : path === '/notification' ? '/notifications' : path);
@@ -37,9 +37,12 @@ describe('main route preservation', () => {
     expect(resolveAppRoute('/myorder/RGC-ABC123')).toMatchObject({ kind: 'orders', orderNumber: 'RGC-ABC123', canonicalPath: '/my-orders/RGC-ABC123' });
   });
 
-  it('resolves stable product slugs and canonicalizes singular paths', () => {
-    expect(resolveAppRoute('/product/premium-bike-seat-cover')).toMatchObject({ kind: 'product', slug: 'premium-bike-seat-cover', canonicalPath: '/products/premium-bike-seat-cover' });
-    expect(getPathForPhase('main', '/product/premium-bike-seat-cover')).toBe('/products/premium-bike-seat-cover');
+  it('uses /shop/products/:slug as the canonical product route and normalizes legacy paths', () => {
+    expect(resolveAppRoute('/shop/products/premium-bike-seat-cover')).toMatchObject({ kind: 'product', tab: 'shop', slug: 'premium-bike-seat-cover', canonicalPath: '/shop/products/premium-bike-seat-cover' });
+    expect(resolveAppRoute('/products/premium-bike-seat-cover').canonicalPath).toBe('/shop/products/premium-bike-seat-cover');
+    expect(resolveAppRoute('/product/premium-bike-seat-cover').canonicalPath).toBe('/shop/products/premium-bike-seat-cover');
+    expect(getPathForPhase('main', '/product/premium-bike-seat-cover')).toBe('/shop/products/premium-bike-seat-cover');
+    expect(getPathForProduct('Premium Bike Cover')).toBe('/shop/products/Premium%20Bike%20Cover');
   });
 
   it('preserves an order-specific route when entering the main phase', () => {

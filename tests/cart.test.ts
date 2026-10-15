@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PRODUCTS } from '../src/data/products';
-import { canReconcileCartFromCatalog, refreshCartFromCatalog, sanitizePersistedCart } from '../src/lib/cart';
+import { canReconcileCartFromCatalog, refreshCartFromCatalog, resolveStitchPatternSelection, sanitizePersistedCart } from '../src/lib/cart';
 import type { CartItem, Product } from '../src/types';
 
 const originalProduct = PRODUCTS[0];
@@ -22,6 +22,12 @@ const customSeatItem: CartItem = {
 };
 
 describe('persisted cart reconciliation', () => {
+  it('never invents a default stitch pattern that is absent from the product catalog', () => {
+    expect(resolveStitchPatternSelection([], 'Standard')).toBeUndefined();
+    expect(resolveStitchPatternSelection(['Quilted Diamond'])).toBe('Quilted Diamond');
+    expect(resolveStitchPatternSelection(['Quilted Diamond'], 'Standard')).toBe('Quilted Diamond');
+  });
+
   it('sanitizes stored data and clamps quantities to the transaction limit', () => {
     const [safe] = sanitizePersistedCart([{ ...cartItem, quantity: 500 }, null, { cartItemId: 'broken' }]);
     expect(safe.quantity).toBe(99);
@@ -47,6 +53,15 @@ describe('persisted cart reconciliation', () => {
 
   it('removes saved items whose products are no longer in the catalog', () => {
     expect(refreshCartFromCatalog([cartItem], [])).toEqual([]);
+  });
+
+  it('replaces stale saved stitch choices with an available option or no stitch', () => {
+    const staleItem = { ...cartItem, selectedStitch: 'Standard' };
+    const withStitches = { ...originalProduct, stitchPatterns: ['Quilted Diamond'] };
+    const withoutStitches = { ...originalProduct, stitchPatterns: [] };
+
+    expect(refreshCartFromCatalog([staleItem], [withStitches])[0].selectedStitch).toBe('Quilted Diamond');
+    expect(refreshCartFromCatalog([staleItem], [withoutStitches])[0].selectedStitch).toBeUndefined();
   });
 
   it('does not reconcile or delete the cart when catalog loading fails or returns no products', () => {

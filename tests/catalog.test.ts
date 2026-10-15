@@ -22,4 +22,12 @@ describe('Supabase catalog mapping', () => {
     expect(product.inStock).toBe(true);
     expect(product.thicknessOptions[0].label).toBe('Standard');
   });
+
+  it('preserves admin-defined color names and swatch codes from Supabase', () => {
+    const product = mapSupabaseProduct({
+      id: 'product-3', name: 'Custom cover', category: 'Bike Covers', price: 250,
+      colors_json: [{ name: 'Crimson Red', hex: '#D9232D', bgClass: 'bg-slate-900' }],
+    });
+    expect(product.colors).toEqual([{ name: 'Crimson Red', hex: '#D9232D', bgClass: 'bg-slate-900' }]);
+  });
 });

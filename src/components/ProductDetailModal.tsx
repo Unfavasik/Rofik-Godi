@@ -22,6 +22,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { Product } from '../types';
+import { resolveStitchPatternSelection } from '../lib/cart';
 import { ProductReviews } from './ProductReviews';
 
 interface ProductDetailModalProps {
@@ -101,8 +102,8 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
     if (Math.abs(deltaX) < 45 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
     setActiveImageIndex((current) => Math.max(0, Math.min(images.length - 1, current + (deltaX < 0 ? 1 : -1))));
   };
-  const [selectedColor, setSelectedColor] = useState(product.colors[0]);
-  const [selectedStitch] = useState(product.stitchPatterns[0] || 'Standard');
+  const [selectedColor, setSelectedColor] = useState(() => product.colors?.[0] || { name: 'Standard', hex: '#111827', bgClass: 'bg-slate-900' });
+  const [selectedStitch] = useState(() => resolveStitchPatternSelection(product.stitchPatterns));
   const [selectedThickness] = useState(
     product.thicknessOptions[0] || { label: 'Standard', extraPrice: 0 }
   );
@@ -118,7 +119,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
 
   const addToCart = (buyNow = false) => {
     if (!product.inStock) return;
-    onAddToCart(product, selectedColor, selectedStitch, selectedThickness, undefined, quantity);
+    onAddToCart(product, selectedColor, selectedStitch || '', selectedThickness, undefined, quantity);
     setAdded(true);
     if (buyNow) {
       window.setTimeout(() => {

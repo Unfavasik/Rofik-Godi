@@ -49,7 +49,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
-import { getPathForPhase, getPathForTab, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
+import { getPathForPhase, getPathForProduct, getPathForTab, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
 import { signOutCurrentDevice } from './lib/authLogout';
 import { useAuth } from './hooks/useAuth';
 import { useCart } from './hooks/useCart';
@@ -259,12 +259,16 @@ export default function App() {
 
   const openProductRoute = useCallback((product: Product) => {
     setSelectedProduct(product);
-    navigate(`/products/${encodeURIComponent(product.slug)}`);
-  }, [navigate]);
+    navigate(getPathForProduct(product.slug), { state: { returnTo: location.pathname } });
+  }, [location.pathname, navigate]);
   const closeProductRoute = useCallback(() => {
     setSelectedProduct(null);
-    if (resolveAppRoute(location.pathname).kind === 'product') navigate('/shop');
-  }, [location.pathname, navigate]);
+    if (resolveAppRoute(location.pathname).kind !== 'product') return;
+    const routeState = location.state as { returnTo?: unknown } | null;
+    const returnTo = typeof routeState?.returnTo === 'string' ? routeState.returnTo : '/shop';
+    const returnRoute = resolveAppRoute(returnTo);
+    navigate(returnRoute.kind === 'not-found' ? '/shop' : returnRoute.canonicalPath);
+  }, [location.pathname, location.state, navigate]);
   const openPageRoute = useCallback((path: string) => {
     navigate(path, { state: { returnTo: location.pathname } });
   }, [location.pathname, navigate]);
