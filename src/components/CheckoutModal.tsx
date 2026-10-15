@@ -1,65 +1,194 @@
-import React, { useState } from 'react';
-import { CartItem, OrderDetails } from '../types';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { X, CheckCircle2, MapPin, CreditCard, QrCode, Banknote, Download, Share2, ChevronRight, Store, Clock3 } from 'lucide-react';
-import { WORKSHOP_INFO } from '../data/products';
+import { QRCodeSVG } from 'qrcode.react';
+import {
+  Banknote, CalendarDays, Check, CheckCircle2, ChevronRight, Clock3, CreditCard,
+  LoaderCircle, MapPin, Pencil, QrCode, ShieldCheck, ShoppingBag, Store, Truck,
+  UserRound, X,
+} from 'lucide-react';
+import { VEHICLE_BRANDS, WORKSHOP_INFO } from '../data/products';
+import { CartItem, OrderDetails } from '../types';
 import { createSupabaseOrder } from '../lib/supabaseOrders';
+import { supabase } from '../lib/supabase';
+import { validateIndianMobile, validateProfileName } from '../lib/profileValidation';
 
-interface CheckoutModalProps { isOpen: boolean; onClose: () => void; items: CartItem[]; discount: number; couponCode: string; couponSubtotal?: number; couponTotal?: number; onClearCart: () => void; userId: string; onOrderPlaced: () => void; }
+interface CheckoutModalProps {
+  isOpen: boolean; onClose: () => void; items: CartItem[]; discount: number; couponCode: string;
+  couponSubtotal?: number; couponTotal?: number; onClearCart: () => void; userId: string; onOrderPlaced: () => void;
+}
+type VehicleType = 'Bike' | 'Scooter' | 'Car' | 'Toto / E-rickshaw' | 'Other';
+type ProfileLoad = 'loading' | 'ready' | 'error';
+const vehicleTypes: VehicleType[] = ['Bike', 'Scooter', 'Car', 'Toto / E-rickshaw', 'Other'];
+const timeSlots = ['10:00 AM – 12:00 PM', '12:00 PM – 2:00 PM', '2:00 PM – 4:00 PM', '4:00 PM – 6:00 PM'];
+const indianMoney = (amount: number) => `₹${Math.round(amount).toLocaleString('en-IN')}`;
+const isoDate = (date: Date) => new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
-export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, items, discount, couponCode, couponSubtotal, couponTotal, onClearCart, userId, onOrderPlaced }) => {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+export const CheckoutModal: React.FC<CheckoutModalProps> = ({
+  isOpen, onClose, items, discount, couponCode, couponSubtotal, couponTotal, onClearCart, userId, onOrderPlaced,
+}) => {
   const [customerName, setCustomerName] = useState('');
+  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [savedPhone, setSavedPhone] = useState('');
+  const [vehicleType, setVehicleType] = useState<VehicleType>('Bike');
   const [vehicleModel, setVehicleModel] = useState('');
+  const [hasSavedVehicle, setHasSavedVehicle] = useState(false);
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState(false);
+  const [profileLoad, setProfileLoad] = useState<ProfileLoad>('loading');
+  const [profileError, setProfileError] = useState('');
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [pickupDate, setPickupDate] = useState('');
+  const [pickupTime, setPickupTime] = useState('');
   const [note, setNote] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'pay_at_store' | 'pay_online'>('pay_at_store');
   const [placedOrder, setPlacedOrder] = useState<OrderDetails | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [submissionError, setSubmissionError] = useState('');
-  if (!isOpen) return null;
-  const localSubtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
-  const subtotal = couponCode && couponSubtotal !== undefined ? couponSubtotal : localSubtotal;
-  const total = couponCode && couponTotal !== undefined ? couponTotal : Math.max(0, subtotal - discount);
+  const [phoneError, setPhoneError] = useState('');
 
-  const handlePlaceOrder = async () => {
-    setIsProcessing(true);
-    setSubmissionError('');
-    const order: OrderDetails = { orderId: '', items: [...items], subtotal, discount, total, customerName: customerName.trim(), phone: phone.trim(), vehicleModel: vehicleModel.trim(), note: note.trim() || undefined, paymentMethod, paymentStatus: 'pending', fulfillmentMethod: 'STORE_PICKUP', pickupStore: WORKSHOP_INFO.name, status: 'NEW', createdAt: new Date().toISOString() };
-    try {
-      const persisted = await createSupabaseOrder(order, userId, couponCode);
-      if (persisted.error || !persisted.order) {
-        setSubmissionError(persisted.error?.message || 'Unable to save your order. Please try again.');
+  const subtotal = couponCode && couponSubtotal !== undefined
+    ? couponSubtotal
+    : items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+  const total = couponCode && couponTotal !== undefined ? couponTotal : Math.max(0, subtotal - discount);
+  const upiUri = `upi://pay?pa=rofikgodi@upi&pn=${encodeURIComponent(WORKSHOP_INFO.name)}&am=${total}&cu=INR`;
+  const pickupDates = useMemo(() => Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(); date.setDate(date.getDate() + index + 1); return date;
+  }), []);
+  const vehicleSuggestions = useMemo(() => {
+    const catalogType = vehicleType === 'Bike' ? 'bike' : vehicleType === 'Scooter' ? 'scooter' : vehicleType === 'Toto / E-rickshaw' ? 'toto' : null;
+    if (!catalogType) return [];
+    return VEHICLE_BRANDS[catalogType].flatMap(({ brand, models }) => models.map((model) => `${brand} ${model}`));
+  }, [vehicleType]);
+
+  useEffect(() => {
+    if (!isOpen || !userId) return;
+    let active = true;
+    setProfileLoad('loading'); setProfileError(''); setSubmissionError(''); setStep(1); setPlacedOrder(null);
+    setEditingPhone(false); setEditingVehicle(false); setPhoneError('');
+    const loadProfile = async () => {
+      if (!supabase) {
+        if (active) { setProfileError('Account service is not configured in this preview. Profile details appear when the Supabase environment is connected.'); setProfileLoad('error'); }
         return;
       }
-      setPlacedOrder(persisted.order);
-      setStep(3);
-      onClearCart();
-      onOrderPlaced();
-      confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 }, colors: ['#D9232D', '#111827', '#EAB308', '#059669'] });
-    } catch {
-      setSubmissionError('Unable to save your order. Please try again.');
-    } finally {
-      setIsProcessing(false);
-    }
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user || authData.user.id !== userId) {
+        if (active) { setProfileError('Your sign-in session could not be verified. Sign in again before checking out.'); setProfileLoad('error'); }
+        return;
+      }
+      const { data: profile, error } = await supabase.from('profiles').select('id,full_name,phone,vehicle_model').eq('id', authData.user.id).maybeSingle();
+      if (!active) return;
+      if (error) { setProfileError('We could not load your saved profile. Close and reopen checkout to try again.'); setProfileLoad('error'); return; }
+      const metadata = authData.user.user_metadata || {};
+      const savedNumber = String(profile?.phone || '').trim();
+      const savedVehicle = String(profile?.vehicle_model || '').trim();
+      const matchedType = vehicleTypes.find((type) => savedVehicle.toLowerCase().startsWith(`${type.toLowerCase()} ·`));
+      setCustomerName(String(profile?.full_name || metadata.full_name || metadata.name || '').trim());
+      setEmail(authData.user.email || ''); setPhone(savedNumber); setSavedPhone(savedNumber);
+      setVehicleType(matchedType || 'Bike');
+      setVehicleModel(matchedType ? savedVehicle.slice(savedVehicle.indexOf('·') + 1).trim() : savedVehicle);
+      setHasSavedVehicle(Boolean(savedVehicle)); setEditingPhone(!savedNumber); setEditingVehicle(!savedVehicle); setProfileLoad('ready');
+    };
+    void loadProfile();
+    return () => { active = false; };
+  }, [isOpen, userId]);
+
+  if (!isOpen) return null;
+
+  const saveCustomerPreferences = async (verifiedUserId: string) => {
+    if (!supabase) throw new Error('Account service is unavailable. Please try again later.');
+    const patch: { phone?: string; vehicle_model?: string } = {};
+    if (phone.trim() !== savedPhone) patch.phone = phone.trim();
+    const nextVehicle = vehicleModel.trim() ? `${vehicleType} · ${vehicleModel.trim()}` : '';
+    if (editingVehicle && nextVehicle) patch.vehicle_model = nextVehicle;
+    if (!Object.keys(patch).length) return;
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user || authData.user.id !== verifiedUserId) throw new Error('Your sign-in session changed. Please sign in again.');
+    const { data: existing, error: readError } = await supabase.from('profiles').select('id').eq('id', verifiedUserId).maybeSingle();
+    if (readError) throw new Error('Your profile could not be checked. Please try again.');
+    const result = existing
+      ? await supabase.from('profiles').update(patch).eq('id', verifiedUserId)
+      : await supabase.from('profiles').upsert({ id: verifiedUserId, ...patch }, { onConflict: 'id' });
+    if (result.error) throw new Error('Your saved preferences could not be updated. Please try again.');
+    if (patch.phone) setSavedPhone(patch.phone);
+    if (patch.vehicle_model) setHasSavedVehicle(true);
   };
 
-  const handleDownloadInvoice = () => {
-    if (!placedOrder) return;
-    const content = `ROFIK GODI CENTRE\nSTORE PICKUP ORDER\n\nOrder ID: ${placedOrder.orderId}\nCustomer: ${placedOrder.customerName}\nMobile: ${placedOrder.phone}\nVehicle: ${placedOrder.vehicleModel}\nPickup: ${WORKSHOP_INFO.name}\nPayment: ${placedOrder.paymentMethod === 'pay_at_store' ? 'Pay at Store' : 'Pay Online'}\nStatus: ${placedOrder.status}\n\n${placedOrder.items.map((it, i) => `${i + 1}. ${it.product.title} x${it.quantity} - ₹${it.unitPrice * it.quantity}`).join('\n')}\n\nSubtotal: ₹${placedOrder.subtotal}\nDiscount: -₹${placedOrder.discount}\nTOTAL: ₹${placedOrder.total}`;
-    const url = URL.createObjectURL(new Blob([content], { type: 'text/plain' })); const a = document.createElement('a'); a.href = url; a.download = `Pickup-${placedOrder.orderId}.txt`; a.click(); URL.revokeObjectURL(url);
+  const handlePlaceOrder = async () => {
+    if (isProcessing) return;
+    setSubmissionError('');
+    if (profileLoad !== 'ready') { setSubmissionError('Your account details are not ready yet. Please retry.'); return; }
+    if (validateProfileName(customerName)) { setSubmissionError('Your account does not have a valid name. Update your profile before checkout.'); return; }
+    const invalidPhone = validateIndianMobile(phone);
+    if (invalidPhone || !phone.trim()) { setPhoneError(invalidPhone || 'Mobile number is required.'); setStep(1); return; }
+    if (!pickupDate || !pickupTime) { setSubmissionError('Choose a pickup date and time to continue.'); setStep(1); return; }
+    setPhoneError(''); setIsProcessing(true);
+    try {
+      const { data: authData, error: authError } = await supabase!.auth.getUser();
+      if (authError || !authData.user || authData.user.id !== userId) throw new Error('Your sign-in session is unavailable. Please sign in again.');
+      await saveCustomerPreferences(authData.user.id);
+      const pickupLabel = `${new Date(`${pickupDate}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}, ${pickupTime}`;
+      const pickupNote = [`Pickup requested: ${pickupLabel}`, note.trim()].filter(Boolean).join(' · ');
+      const order: OrderDetails = {
+        orderId: '', items: [...items], subtotal, discount, total, customerName: customerName.trim(), phone: phone.trim(),
+        vehicleModel: vehicleModel.trim() ? `${vehicleType} · ${vehicleModel.trim()}` : '', note: pickupNote,
+        paymentMethod, paymentStatus: 'pending', fulfillmentMethod: 'STORE_PICKUP', pickupStore: WORKSHOP_INFO.name,
+        status: 'NEW', createdAt: new Date().toISOString(),
+      };
+      const persisted = await createSupabaseOrder(order, userId, couponCode);
+      if (persisted.error || !persisted.order) throw new Error(persisted.error?.message || 'Unable to save your order. Please try again.');
+      setPlacedOrder(persisted.order); setStep(3); onClearCart(); onOrderPlaced();
+      confetti({ particleCount: 70, spread: 58, origin: { y: 0.65 }, colors: ['#D9232D', '#111827', '#EAB308', '#059669'] });
+    } catch (error) {
+      setSubmissionError(error instanceof Error ? error.message : 'Unable to save your order. Please try again.');
+    } finally { setIsProcessing(false); }
   };
 
-  return <AnimatePresence><div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black/65 backdrop-blur-sm" /><motion.div initial={{ scale: .95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} className="relative z-10 flex max-h-[92vh] w-full max-w-[480px] flex-col overflow-hidden rounded-[28px] bg-white text-gray-800 shadow-2xl">
-    <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5"><div className="flex items-center gap-2"><div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#D9232D] text-xs font-black text-white">R</div><h3 className="text-[14px] font-black">{step === 3 ? 'Pickup Order Received' : 'Reserve for Store Pickup'}</h3></div><button onClick={onClose} className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100"><X className="h-3.5 w-3.5" /></button></div>
-    {step < 3 && <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-6 py-2 text-[11px] font-bold text-gray-500"><span className={step >= 1 ? 'text-[#D9232D]' : ''}>1. Customer</span><ChevronRight className="h-3 w-3 text-gray-300" /><span className={step >= 2 ? 'text-[#D9232D]' : ''}>2. Payment</span><ChevronRight className="h-3 w-3 text-gray-300" /><span>3. Confirmed</span></div>}
-    <div className="no-scrollbar flex-1 space-y-4 overflow-y-auto px-5 py-4">
-      {step === 1 && <><div className="flex items-center gap-2 text-[13px] font-black"><Store className="h-4 w-4 text-[#D9232D]" />Customer information</div><div className="grid gap-3"><label className="text-[11px] font-bold">Full Name *<input required value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Your name" className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs outline-none focus:border-[#D9232D]" /></label><label className="text-[11px] font-bold">Mobile Number *<input required value={phone} onChange={e => setPhone(e.target.value)} placeholder="10-digit mobile number" className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs outline-none focus:border-[#D9232D]" /></label><label className="text-[11px] font-bold">Vehicle Name / Model *<input required value={vehicleModel} onChange={e => setVehicleModel(e.target.value)} placeholder="Toyota Fortuner / Hero Splendor" className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs outline-none focus:border-[#D9232D]" /></label><label className="text-[11px] font-bold">Optional Note<textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Any fitting or pickup note" rows={2} className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs outline-none focus:border-[#D9232D]" /></label></div><div className="rounded-2xl border border-red-100 bg-red-50 p-4"><div className="flex items-start gap-3"><MapPin className="mt-0.5 h-5 w-5 text-[#D9232D]" /><div><p className="text-xs font-black text-gray-900">Pickup from Store only</p><p className="mt-1 text-[11px] font-semibold text-gray-700">{WORKSHOP_INFO.name}</p><p className="mt-1 text-[11px] text-gray-600">{WORKSHOP_INFO.address}</p><p className="mt-1 flex items-center gap-1 text-[10px] text-gray-500"><Clock3 className="h-3 w-3" />{WORKSHOP_INFO.workingHours}</p><a href="https://www.google.com/maps/search/?api=1&query=Rofik+Godi+Centre" target="_blank" rel="noreferrer" className="mt-2 inline-block text-[11px] font-black text-[#D9232D]">Open Google Maps →</a></div></div></div></>}
-      {step === 2 && <><div className="flex items-center gap-2 text-[13px] font-black"><CreditCard className="h-4 w-4 text-[#D9232D]" />Choose payment method</div><button onClick={() => setPaymentMethod('pay_at_store')} className={`flex w-full items-center justify-between rounded-2xl border p-4 text-left ${paymentMethod === 'pay_at_store' ? 'border-[#D9232D] bg-red-50' : 'border-gray-200'}`}><span className="flex items-center gap-3"><Banknote className="h-5 w-5 text-emerald-600" /><span><b className="block text-xs">Pay at Store</b><small className="text-[10px] text-gray-500">Pay when you collect your order.</small></span></span><span className="text-[10px] font-black text-emerald-700">CASH / UPI</span></button><button onClick={() => setPaymentMethod('pay_online')} className={`flex w-full items-center justify-between rounded-2xl border p-4 text-left ${paymentMethod === 'pay_online' ? 'border-[#D9232D] bg-red-50' : 'border-gray-200'}`}><span className="flex items-center gap-3"><QrCode className="h-5 w-5 text-blue-600" /><span><b className="block text-xs">Pay Online</b><small className="text-[10px] text-gray-500">Pay using UPI.</small></span></span><span className="text-[10px] font-black text-blue-700">UPI</span></button>{paymentMethod === 'pay_online' && <div className="rounded-2xl bg-gray-900 p-4 text-center text-white"><p className="text-[11px] font-bold text-emerald-400">Pay ₹{total} via UPI</p><img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=rofikgodi@upi&pn=ROFIK%20GODI%20CENTRE&am=${total}&cu=INR`)}`} alt="UPI QR" className="mx-auto mt-2 h-28 w-28 rounded-xl bg-white p-2" /><p className="mt-2 text-[10px] text-gray-400">UPI ID: <b>rofikgodi@upi</b></p><p className="mt-2 text-[10px] text-amber-300">Payment verification will be completed by the store team.</p></div>}<div className="rounded-xl bg-gray-50 p-4 text-[11px]"><div className="flex justify-between"><span>Items total</span><b>₹{subtotal}</b></div><div className="flex justify-between text-emerald-600"><span>Discount</span><b>-₹{discount}</b></div><div className="mt-2 flex justify-between border-t pt-2 text-sm font-black"><span>Total</span><b className="text-[#D9232D]">₹{total}</b></div></div></>}
-      {step === 3 && placedOrder && <div className="space-y-4 py-2 text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600"><CheckCircle2 className="h-9 w-9" /></div><div><h4 className="text-xl font-black">Order received</h4><p className="mt-1 text-xs text-gray-500">A personal order notification is waiting in Notifications. Track this order in My Orders.</p><p className="mt-2 text-[11px] font-semibold text-emerald-600">Saved securely to the pickup order system.</p></div><div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-left"><div className="flex items-center justify-between border-b pb-2"><span className="text-xs text-gray-500">Order ID</span><b className="font-mono text-lg">#{placedOrder.orderId}</b></div><div className="mt-2 flex justify-between text-xs"><span>Pickup</span><b>🏪 Store Pickup</b></div><div className="mt-2 flex justify-between text-xs"><span>Payment</span><b>{placedOrder.paymentMethod === 'pay_at_store' ? 'Pay at Store' : 'Pay Online'}</b></div><div className="mt-2 flex justify-between text-xs"><span>Total</span><b className="text-[#D9232D]">₹{placedOrder.total}</b></div></div><img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(placedOrder.pickupToken || placedOrder.orderId)}`} alt="Pickup QR code" className="mx-auto h-36 w-36 rounded-xl border bg-white p-2" /><p className="text-[10px] font-semibold text-gray-500">Show this one-time pickup QR code or your Order ID at {WORKSHOP_INFO.name}</p><div className="grid grid-cols-2 gap-2"><button onClick={handleDownloadInvoice} className="flex items-center justify-center gap-1.5 rounded-xl bg-gray-100 px-3 py-2.5 text-[11px] font-bold"><Download className="h-3.5 w-3.5" />Invoice</button><a href={`https://wa.me/919832145678?text=My%20store%20pickup%20order%20is%20${placedOrder.orderId}`} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-[11px] font-bold text-white"><Share2 className="h-3.5 w-3.5" />WhatsApp</a></div></div>}
-      {submissionError && step < 3 && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">{submissionError}</p>}
-    </div>
-    <div className="flex gap-3 border-t border-gray-100 bg-white p-4">{step === 3 ? <button onClick={onClose} className="w-full rounded-xl bg-gray-900 py-3.5 text-[13px] font-black text-white">Continue Shopping</button> : <>{step === 2 && <button onClick={() => setStep(1)} className="rounded-xl bg-gray-100 px-4 py-3 text-xs font-bold">Back</button>}<button disabled={isProcessing} onClick={() => { if (step === 1) { if (!customerName.trim() || !phone.trim() || !vehicleModel.trim()) { setSubmissionError('Please fill in your name, mobile number and vehicle model.'); return; } setSubmissionError(''); setStep(2); } else handlePlaceOrder(); }} className="flex-1 rounded-xl bg-[#D9232D] py-3.5 text-[13px] font-black text-white disabled:opacity-60">{isProcessing ? 'Saving Pickup Order...' : step === 2 ? `Place Pickup Order · ₹${total}` : 'Continue to Payment'}<ChevronRight className="ml-1 inline h-4 w-4" /></button></>}</div>
-  </motion.div></div></AnimatePresence>;
+  const continueToPayment = () => {
+    setSubmissionError('');
+    const invalidPhone = validateIndianMobile(phone);
+    if (!customerName.trim() || !email) { setSubmissionError('Your account name or email is missing. Update your account before checkout.'); return; }
+    if (!phone.trim() || invalidPhone) { setPhoneError(invalidPhone || 'Mobile number is required.'); return; }
+    if (!pickupDate || !pickupTime) { setSubmissionError('Choose a pickup date and time first.'); return; }
+    setPhoneError(''); setStep(2);
+  };
+
+  const renderSummary = () => <section className="rounded-2xl border border-slate-200 bg-white p-4" aria-label="Order summary">
+    <div className="mb-3 flex items-center justify-between"><h3 className="flex items-center gap-2 text-sm font-black text-slate-900"><ShoppingBag className="h-4 w-4 text-[#D9232D]" />Order summary</h3><span className="text-[11px] font-semibold text-slate-400">{items.length} {items.length === 1 ? 'item' : 'items'}</span></div>
+    <div className="max-h-36 space-y-3 overflow-y-auto">{items.map((item) => <div key={item.cartItemId} className="flex items-center gap-3"><img src={item.product.image} alt="" className="h-12 w-12 rounded-xl bg-slate-100 object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-xs font-bold text-slate-800">{item.product.title}</p><p className="mt-0.5 text-[10px] text-slate-500">Qty {item.quantity} · {item.selectedColor?.name}</p></div><b className="text-xs text-slate-800">{indianMoney(item.unitPrice * item.quantity)}</b></div>)}</div>
+    <div className="mt-3 space-y-1.5 border-t border-dashed border-slate-200 pt-3 text-xs"><div className="flex justify-between text-slate-500"><span>Subtotal</span><span>{indianMoney(subtotal)}</span></div>{discount > 0 && <div className="flex justify-between font-semibold text-emerald-700"><span>Discount{couponCode ? ` · ${couponCode}` : ''}</span><span>−{indianMoney(discount)}</span></div>}<div className="flex justify-between text-slate-500"><span>Store pickup</span><span className="font-bold text-emerald-700">FREE</span></div><div className="flex justify-between border-t border-slate-100 pt-2 text-sm font-black text-slate-900"><span>Total payable</span><span className="text-[#D9232D]">{indianMoney(total)}</span></div></div>
+  </section>;
+
+  return <AnimatePresence><div className="fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/55 p-0 backdrop-blur-[2px] sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Store pickup checkout">
+    <motion.div initial={{ opacity: 0, y: 18, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 14 }} transition={{ duration: 0.2 }} className="relative flex max-h-[96dvh] w-full max-w-[650px] flex-col overflow-hidden rounded-t-[26px] bg-[#f7f8fa] text-slate-900 shadow-2xl sm:max-h-[92vh] sm:rounded-[26px]">
+      <header className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-4 sm:px-6"><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-[#D9232D]"><Store className="h-5 w-5" /></div><div><p className="text-[10px] font-extrabold uppercase tracking-[.16em] text-[#D9232D]">Rofik Godi Centre</p><h2 className="text-base font-black">{step === 3 ? 'Pickup order placed' : 'Store pickup checkout'}</h2></div></div><button onClick={onClose} aria-label="Close checkout" className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200"><X className="h-4 w-4" /></button></header>
+      {step < 3 && <div className="flex items-center gap-2 border-b border-slate-100 bg-white px-5 pb-3 sm:px-6"><span className="h-1.5 flex-1 overflow-hidden rounded bg-slate-100"><i className={`block h-full rounded bg-[#D9232D] transition-all ${step === 1 ? 'w-1/2' : 'w-full'}`} /></span><span className="whitespace-nowrap text-[10px] font-bold text-slate-500">{step === 1 ? 'Pickup details' : 'Payment & review'} · {step}/2</span></div>}
+      <main className="no-scrollbar flex-1 space-y-3 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
+        {profileLoad === 'loading' && step < 3 && <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-4 text-xs font-semibold text-slate-600"><LoaderCircle className="h-4 w-4 animate-spin text-[#D9232D]" />Loading your secure account details…</div>}
+        {profileError && step < 3 && <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">{profileError}<button type="button" onClick={onClose} className="ml-2 font-black underline">Close, then retry</button></div>}
+        {step === 1 && profileLoad === 'ready' && <>
+          <section className="rounded-2xl border border-slate-200 bg-white p-4"><div className="mb-3 flex items-center justify-between"><h3 className="flex items-center gap-2 text-sm font-black"><UserRound className="h-4 w-4 text-[#D9232D]" />Your details</h3><span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-extrabold text-emerald-700"><ShieldCheck className="h-3 w-3" />Account</span></div>
+            <div className="grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-slate-50 px-3 py-2.5"><p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Name</p><p className="mt-1 text-xs font-bold text-slate-800">{customerName || 'Name missing from account'}</p></div><div className="rounded-xl bg-slate-50 px-3 py-2.5"><p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Email</p><p className="mt-1 break-all text-xs font-semibold text-slate-700">{email}</p></div></div>
+            <div className="mt-3 rounded-xl border border-slate-200 p-3"><div className="flex items-center justify-between"><div><p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Mobile number</p><p className="mt-1 text-xs font-bold text-slate-800">{phone && !editingPhone ? phone : 'Add a mobile number'}</p></div>{savedPhone && !editingPhone && <button onClick={() => { setPhone(savedPhone); setEditingPhone(true); }} className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-[10px] font-extrabold text-[#D9232D]"><Pencil className="h-3 w-3" />Change</button>}</div>
+              {editingPhone && <div className="mt-2"><div className="flex gap-2"><input inputMode="numeric" autoComplete="tel-national" maxLength={10} value={phone} onChange={(event) => { setPhone(event.target.value.replace(/\D/g, '').slice(0, 10)); setPhoneError(''); }} placeholder="10-digit Indian mobile number" className="min-h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#D9232D]" /><button type="button" onClick={() => { setEditingPhone(false); setPhone(savedPhone); setPhoneError(''); }} className="rounded-lg px-2 text-[10px] font-bold text-slate-500">Cancel</button></div>{phoneError && <p role="alert" className="mt-1 text-[10px] font-semibold text-rose-600">{phoneError}</p>}</div>}
+            </div>
+          </section>
+          <section className="rounded-2xl border border-slate-200 bg-white p-4"><div className="flex items-center justify-between"><h3 className="flex items-center gap-2 text-sm font-black"><Truck className="h-4 w-4 text-[#D9232D]" />Vehicle for fitment</h3>{hasSavedVehicle && !editingVehicle && <button onClick={() => setEditingVehicle(true)} className="min-h-9 rounded-lg px-2 text-[10px] font-extrabold text-[#D9232D]">Change model</button>}</div>
+            {!editingVehicle && hasSavedVehicle ? <div className="mt-3 rounded-xl bg-slate-50 p-3"><p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Saved vehicle</p><p className="mt-1 text-xs font-bold text-slate-800">{vehicleType} · {vehicleModel}</p></div> : <div className="mt-3 grid gap-2 sm:grid-cols-2"><label className="text-[10px] font-bold text-slate-500">Vehicle type<select value={vehicleType} onChange={(event) => setVehicleType(event.target.value as VehicleType)} className="mt-1 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-[#D9232D]">{vehicleTypes.map((type) => <option key={type}>{type}</option>)}</select></label><label className="text-[10px] font-bold text-slate-500">Make / model<input list="vehicle-model-options" value={vehicleModel} maxLength={60} onChange={(event) => setVehicleModel(event.target.value)} placeholder={vehicleSuggestions.length ? 'Choose or type a model' : 'e.g. Toyota Fortuner'} className="mt-1 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-[#D9232D]" /><datalist id="vehicle-model-options">{vehicleSuggestions.map((model) => <option key={model} value={model} />)}</datalist></label>{hasSavedVehicle && <button onClick={() => setEditingVehicle(false)} className="justify-self-start text-[10px] font-bold text-slate-500">Keep saved vehicle</button>}</div>}
+          </section>
+          <section className="rounded-2xl border border-slate-200 bg-white p-4"><h3 className="flex items-center gap-2 text-sm font-black"><CalendarDays className="h-4 w-4 text-[#D9232D]" />Choose pickup time</h3><p className="mt-1 text-[10px] text-slate-500">Select a requested slot. The workshop will confirm availability.</p><div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">{pickupDates.map((date) => { const value = isoDate(date); const selected = pickupDate === value; return <button key={value} onClick={() => setPickupDate(value)} aria-pressed={selected} className={`min-w-[82px] rounded-xl border px-3 py-2.5 text-left ${selected ? 'border-[#D9232D] bg-red-50 text-[#D9232D]' : 'border-slate-200 bg-white text-slate-600'}`}><span className="block text-[9px] font-bold uppercase">{date.toLocaleDateString('en-IN', { weekday: 'short' })}</span><span className="mt-0.5 block text-xs font-black">{date.getDate()} {date.toLocaleDateString('en-IN', { month: 'short' })}</span></button>; })}</div><div className="mt-3 grid grid-cols-2 gap-2">{timeSlots.map((slot) => <button key={slot} onClick={() => setPickupTime(slot)} aria-pressed={pickupTime === slot} className={`flex min-h-10 items-center gap-2 rounded-xl border px-3 text-left text-[10px] font-bold ${pickupTime === slot ? 'border-[#D9232D] bg-red-50 text-[#D9232D]' : 'border-slate-200 text-slate-600'}`}><Clock3 className="h-3.5 w-3.5" />{slot}{pickupTime === slot && <Check className="ml-auto h-3.5 w-3.5" />}</button>)}</div></section>
+          <section className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50/70 p-4"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#D9232D]"><MapPin className="h-4 w-4" /></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="text-xs font-black">Pickup at {WORKSHOP_INFO.name}</h3><span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-extrabold text-emerald-800">FREE PICKUP</span></div><p className="mt-1 text-[10px] leading-relaxed text-slate-600">{WORKSHOP_INFO.address}</p><p className="mt-1 text-[10px] text-slate-500">{WORKSHOP_INFO.workingHours}</p><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${WORKSHOP_INFO.name}, ${WORKSHOP_INFO.address}`)}`} target="_blank" rel="noreferrer" className="mt-2 inline-block text-[10px] font-extrabold text-[#D9232D]">Open in Google Maps ↗</a></div></section>
+          <label className="block rounded-2xl border border-slate-200 bg-white p-4 text-[10px] font-bold text-slate-500">Pickup note <span className="font-normal">(optional)</span><textarea value={note} onChange={(event) => setNote(event.target.value)} maxLength={240} rows={2} placeholder="Anything the workshop should know?" className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-medium text-slate-800 outline-none focus:border-[#D9232D]" /></label>
+          {renderSummary()}
+        </>}
+        {step === 2 && <><section className="rounded-2xl border border-slate-200 bg-white p-4"><h3 className="mb-3 flex items-center gap-2 text-sm font-black"><CreditCard className="h-4 w-4 text-[#D9232D]" />Payment method</h3><div className="space-y-2"><button onClick={() => setPaymentMethod('pay_at_store')} aria-pressed={paymentMethod === 'pay_at_store'} className={`flex min-h-[68px] w-full items-center gap-3 rounded-xl border p-3 text-left ${paymentMethod === 'pay_at_store' ? 'border-[#D9232D] bg-red-50/70' : 'border-slate-200'}`}><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Banknote className="h-5 w-5" /></span><span className="flex-1"><b className="block text-xs">Pay at Workshop on Pickup</b><small className="mt-1 block text-[10px] text-slate-500">Cash or UPI when you collect</small></span>{paymentMethod === 'pay_at_store' && <CheckCircle2 className="h-4 w-4 text-[#D9232D]" />}</button><button onClick={() => setPaymentMethod('pay_online')} aria-pressed={paymentMethod === 'pay_online'} className={`flex min-h-[68px] w-full items-center gap-3 rounded-xl border p-3 text-left ${paymentMethod === 'pay_online' ? 'border-[#D9232D] bg-red-50/70' : 'border-slate-200'}`}><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><QrCode className="h-5 w-5" /></span><span className="flex-1"><b className="block text-xs">UPI Online Payment (Scan &amp; Pay)</b><small className="mt-1 block text-[10px] text-slate-500">Pay using your preferred UPI app</small></span>{paymentMethod === 'pay_online' && <CheckCircle2 className="h-4 w-4 text-[#D9232D]" />}</button></div>{paymentMethod === 'pay_online' && <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3 text-center text-xs text-blue-900"><p className="font-bold">Scan to pay {indianMoney(total)}</p><QRCodeSVG value={upiUri} size={152} level="M" title="UPI payment QR code" className="mx-auto mt-3 rounded-lg bg-white p-2" /><p className="mt-2 text-[10px]">UPI ID: <b>rofikgodi@upi</b></p><p className="mt-2 text-left text-[10px] leading-relaxed">Place your order after payment. Payment stays pending until verified by the store team.</p></div>}</section><div className="rounded-2xl border border-slate-200 bg-white p-4"><h3 className="mb-2 text-xs font-black">Pickup details</h3><p className="text-[11px] text-slate-600">{pickupDate && new Date(`${pickupDate}T00:00:00`).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })} · {pickupTime}</p><p className="mt-1 text-[11px] text-slate-500">{customerName} · {phone} · {vehicleType}{vehicleModel ? ` · ${vehicleModel}` : ''}</p></div>{renderSummary()}</>}
+        {step === 3 && placedOrder && <div className="space-y-4 py-4 text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><CheckCircle2 className="h-9 w-9" /></div><div><h3 className="text-xl font-black">Pickup order received</h3><p className="mt-1 text-xs text-slate-500">Your order is saved. The workshop will confirm your requested pickup slot.</p></div><div className="rounded-2xl border border-slate-200 bg-white p-4 text-left"><div className="flex justify-between border-b border-slate-100 pb-3"><span className="text-xs text-slate-500">Order ID</span><b className="font-mono text-base">#{placedOrder.orderId}</b></div><div className="mt-3 flex justify-between text-xs"><span>Pickup</span><b>{pickupDate} · {pickupTime}</b></div><div className="mt-2 flex justify-between text-xs"><span>Payment</span><b>{placedOrder.paymentMethod === 'pay_at_store' ? 'Pay on pickup' : 'UPI · pending verification'}</b></div><div className="mt-2 flex justify-between text-xs"><span>Total</span><b className="text-[#D9232D]">{indianMoney(placedOrder.total)}</b></div></div><p className="text-[10px] text-slate-500">Track your order and pickup QR from My Orders in your account.</p></div>}
+        {submissionError && step < 3 && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs font-semibold text-rose-700">{submissionError}</p>}
+      </main>
+      <footer className="border-t border-slate-100 bg-white px-4 pt-3 sm:px-6" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+        {step === 3 ? <button onClick={() => { setStep(1); setPlacedOrder(null); onClose(); }} className="min-h-12 w-full rounded-xl bg-slate-900 text-sm font-black text-white">Continue shopping</button> : <div className="flex items-center gap-3"><div className="min-w-0 flex-1"><span className="block text-[9px] font-semibold uppercase tracking-wider text-slate-400">Payable</span><b className="text-lg font-black text-slate-900">{indianMoney(total)}</b></div>{step === 2 && <button onClick={() => { setStep(1); setSubmissionError(''); }} className="min-h-12 rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-700">Back</button>}<button disabled={isProcessing || profileLoad !== 'ready'} onClick={() => step === 1 ? continueToPayment() : void handlePlaceOrder()} className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#D9232D] px-4 text-xs font-black text-white shadow-[0_6px_18px_rgba(217,35,45,.2)] disabled:cursor-not-allowed disabled:opacity-50">{isProcessing ? <><LoaderCircle className="h-4 w-4 animate-spin" />Saving order…</> : step === 1 ? <>Continue to payment<ChevronRight className="h-4 w-4" /></> : <>Confirm pickup<ChevronRight className="h-4 w-4" /></>}</button></div>}
+      </footer>
+    </motion.div>
+  </div></AnimatePresence>;
 };
