@@ -1,11 +1,12 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { AdminPanel } from '../src/components/AdminPanel';
 
 describe('admin workspace', () => {
   it('renders the requested admin navigation and dashboard panels', () => {
-    const html = renderToStaticMarkup(<AdminPanel />);
+    const html = renderToStaticMarkup(<MemoryRouter initialEntries={['/admin']}><AdminPanel /></MemoryRouter>);
     for (const label of [
       'Dashboard',
       'Orders',
@@ -30,5 +31,11 @@ describe('admin workspace', () => {
     ]) {
       expect(html).toContain(panel);
     }
+  });
+
+  it('hydrates the selected admin section from its direct route', () => {
+    const html = renderToStaticMarkup(<MemoryRouter initialEntries={['/admin/products']}><AdminPanel /></MemoryRouter>);
+    expect(html).toContain('aria-current="page"');
+    expect(html).toContain('Products</h1>');
   });
 });

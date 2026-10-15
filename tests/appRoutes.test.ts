@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getPathForPhase, getPathForProduct, getPathForTab, resolveAppRoute, shouldRedirectAdminToWorkspace } from '../src/lib/appRoutes';
+import { getAdminSectionFromPath, getPathForAdminSection, getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, resolveAppRoute, shouldRedirectAdminToWorkspace } from '../src/lib/appRoutes';
 
 describe('main route preservation', () => {
   it.each([
@@ -60,6 +60,32 @@ describe('main route preservation', () => {
 });
 
 describe('admin workspace redirect policy', () => {
+  it.each([
+    ['/admin', 'overview'],
+    ['/admin/orders', 'orders'],
+    ['/admin/products', 'products'],
+    ['/admin/categories', 'categories'],
+    ['/admin/customers', 'customers'],
+    ['/admin/reviews', 'reviews'],
+    ['/admin/coupons', 'marketing'],
+    ['/admin/banners', 'banners'],
+    ['/admin/notifications', 'notifications'],
+    ['/admin/reports', 'reports'],
+    ['/admin/settings', 'settings'],
+  ] as const)('resolves admin URL %s to section %s', (path, section) => {
+    expect(getAdminSectionFromPath(path)).toBe(section);
+    expect(resolveAppRoute(path)).toMatchObject({ kind: 'admin', section, canonicalPath: getPathForAdminSection(section) });
+    expect(getPathForPhase('main', path)).toBe(getPathForAdminSection(section));
+  });
+
+  it('canonicalizes admin aliases and identifies nested admin paths', () => {
+    expect(resolveAppRoute('/admin/dashboard').canonicalPath).toBe('/admin');
+    expect(resolveAppRoute('/admin/marketing').canonicalPath).toBe('/admin/coupons');
+    expect(isAdminPath('/admin/products')).toBe(true);
+    expect(isAdminPath('/administrator')).toBe(false);
+    expect(shouldRedirectAdminToWorkspace('/admin/products', false)).toBe(false);
+  });
+
   it('allows an admin to return to the storefront after choosing that action', () => {
     expect(shouldRedirectAdminToWorkspace('/home', true)).toBe(false);
     expect(shouldRedirectAdminToWorkspace('/shop', true)).toBe(false);

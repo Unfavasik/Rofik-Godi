@@ -49,7 +49,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
-import { getPathForPhase, getPathForProduct, getPathForTab, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
+import { getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
 import { signOutCurrentDevice } from './lib/authLogout';
 import { useAuth } from './hooks/useAuth';
 import { useCart } from './hooks/useCart';
@@ -180,7 +180,7 @@ export default function App() {
   }, [authStatus, isAdmin, location.pathname, appPhase, navigate, goToPhase]);
 
   useEffect(() => {
-    if ((location.pathname.replace(/\/$/, '') || '/') === '/admin') return;
+    if (isAdminPath(location.pathname)) return;
     if (appPhase !== 'main') return;
     if (resolveAppRoute(location.pathname).kind !== 'tab') return;
     const nextPath = tabToRoute(activeTab);
@@ -638,7 +638,7 @@ export default function App() {
   );
 
   // Phase 1: Product introduction. Once completed, open the app directly.
-  if (location.pathname.replace(/\/$/, '') === '/admin') {
+  if (isAdminPath(location.pathname)) {
     return (
       <AdminAccessGate
         onBackToStore={() => {

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -57,19 +58,9 @@ import { PRODUCTS } from '../data/products';
 import type { Product } from '../types';
 import { supabase } from '../lib/supabase';
 import { getOrderStatusLabel, isOrderComplete } from '../lib/orderPresentation';
+import { getAdminSectionFromPath, getPathForAdminSection, type AdminSectionRoute } from '../lib/appRoutes';
 
-type AdminSection =
-  | 'overview'
-  | 'orders'
-  | 'products'
-  | 'categories'
-  | 'customers'
-  | 'reviews'
-  | 'marketing'
-  | 'banners'
-  | 'notifications'
-  | 'reports'
-  | 'settings';
+type AdminSection = AdminSectionRoute;
 type OrderStatus = AdminOrderRecord['status'];
 
 const navGroups = [
@@ -198,7 +189,9 @@ function PageIntro({
 }
 
 export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToStore }) => {
-  const [section, setSection] = useState<AdminSection>('overview');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [section, setSection] = useState<AdminSection>(() => getAdminSectionFromPath(location.pathname) || 'overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [orderFilter, setOrderFilter] = useState<'All' | OrderStatus>('All');
@@ -244,6 +237,13 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     const refreshTimer = window.setInterval(() => void refresh(), 30_000);
     return () => window.clearInterval(refreshTimer);
   }, [refresh]);
+  useEffect(() => {
+    const routeSection = getAdminSectionFromPath(location.pathname);
+    if (!routeSection) return;
+    setSection(routeSection);
+    const canonicalPath = getPathForAdminSection(routeSection);
+    if (location.pathname !== canonicalPath) navigate(canonicalPath, { replace: true });
+  }, [location.pathname, navigate]);
   const filteredOrders = useMemo(
     () =>
       orders.filter(
@@ -266,6 +266,8 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     setSection(next);
     setSidebarOpen(false);
     setQuery('');
+    const path = getPathForAdminSection(next);
+    if (location.pathname !== path) navigate(path);
   };
   const title = (
     {
@@ -360,6 +362,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
                   <button
                     key={id}
                     onClick={() => goTo(id)}
+                    aria-current={section === id ? 'page' : undefined}
                     className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[12px] font-bold ${section === id ? 'bg-red-50 text-[#D9232D]' : 'text-slate-500 hover:bg-slate-50'}`}
                   >
                     <Icon className="h-4 w-4" />
