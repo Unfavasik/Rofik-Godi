@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Bell, ChevronRight, Package, Settings, Star, Tag, Truck, Volume2, Moon, Smartphone, Megaphone, TrendingDown, Trash2 } from 'lucide-react';
 import { deleteMyNotification, listMyNotifications, markNotificationRead } from '../lib/supabaseCustomer';
+import { getNotificationOrderNumber } from '../lib/orderPresentation';
+import { listMyOrders } from '../lib/supabaseOrders';
+import type { CustomerOrderRecord } from '../types';
+import { OrderNotificationDetails } from './OrderNotificationDetails';
 
 type NotificationItem = {
   id: string;
@@ -9,6 +13,8 @@ type NotificationItem = {
   body: string;
   action_url: string | null;
   image_url?: string | null;
+  orderNumber?: string | null;
+  orderRecord?: CustomerOrderRecord | null;
   read_at: string | null;
   created_at: string;
 };
@@ -73,8 +79,19 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
     }
     setItems([]);
     setLoading(true);
-    void listMyNotifications(userId).then((rows) => {
-      if (active) setItems(rows as NotificationItem[]);
+    void Promise.all([
+      listMyNotifications(userId).catch(() => []),
+      listMyOrders(userId).catch(() => []),
+    ]).then(([rows, orders]) => {
+      if (!active) return;
+      const ordersByNumber = new Map(orders.map((order) => [order.order_number.toUpperCase(), order]));
+      const enrichedRows = (rows as NotificationItem[]).map((item) => {
+        const orderNumber = getNotificationOrderNumber(`${item.title} ${item.body} ${item.action_url || ''}`);
+        const orderRecord = orderNumber ? ordersByNumber.get(orderNumber.toUpperCase()) || null : null;
+        const firstProductImage = orderRecord?.order_items.find((orderItem) => orderItem.image_url)?.image_url;
+        return { ...item, orderNumber, orderRecord, image_url: item.image_url || firstProductImage || null };
+      });
+      setItems(enrichedRows);
     }).finally(() => {
       if (active) setLoading(false);
     });
@@ -120,6 +137,13 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
   if (showSettings) return <NotificationSettingsView onBack={() => setShowSettings(false)} />;
 
   if (selectedNotification) {
+    if (selectedNotification.orderNumber) return <OrderNotificationDetails
+      key={selectedNotification.orderNumber}
+      userId={userId}
+      orderNumber={selectedNotification.orderNumber}
+      initialOrder={selectedNotification.orderRecord}
+      onBack={() => setSelectedNotification(null)}
+    />;
     return <main className="min-h-screen w-full bg-white text-slate-800 font-sans">
       <header className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
         <button onClick={() => setSelectedNotification(null)} aria-label="Back to notifications" className="rounded-full p-1"><ArrowLeft className="h-6 w-6" /></button>

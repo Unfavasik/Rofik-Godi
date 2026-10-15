@@ -20,6 +20,10 @@ const statusLabels: Record<string, string> = {
 export const getOrderStatusLabel = (status: string) =>
   statusLabels[status] || status.replaceAll('_', ' ').toLowerCase();
 
+/** Extract the store-generated order number from an in-app notification. */
+export const getNotificationOrderNumber = (content: string) =>
+  content.match(/\bRGC-[A-Z0-9]{8,32}\b/i)?.[0].toUpperCase() || null;
+
 /** Return one representative thumbnail per distinct product, in the order it was bought. */
 export const getOrderPreviewItems = (items: OrderItem[]) => {
   const seen = new Set<string>();

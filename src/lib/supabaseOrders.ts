@@ -114,3 +114,37 @@ export async function listMyOrders(expectedUserId: string): Promise<CustomerOrde
     order_items: (order.order_items || []).map((item) => ({ ...item, image_url: item.product_id ? productImages.get(item.product_id) || null : null })),
   }));
 }
+
+export async function getMyOrderByNumber(expectedUserId: string, orderNumber: string): Promise<CustomerOrderRecord | null> {
+  if (!supabase) return null;
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user || userData.user.id !== expectedUserId) return null;
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('id,order_number,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,vehicle_model,fulfillment_method,pickup_store,pickup_note,created_at,order_items(product_id,product_name,color,quantity,unit_price)')
+    .eq('user_id', userData.user.id)
+    .eq('order_number', orderNumber)
+    .maybeSingle();
+  if (error || !data) return null;
+
+  const order = data as unknown as CustomerOrderRecord;
+  const productIds = [...new Set((order.order_items || []).map((item) => item.product_id).filter((id): id is string => Boolean(id)))];
+  const { data: productRows } = productIds.length
+    ? await supabase.from('products').select('id,image_url').in('id', productIds)
+    : { data: [] };
+  const productImages = new Map((productRows || []).map((product) => [String(product.id), String(product.image_url || '')]));
+
+  return {
+    ...order,
+    subtotal: Number(order.subtotal || 0),
+    discount: Number(order.discount || 0),
+    total: Number(order.total || 0),
+    order_items: (order.order_items || []).map((item) => ({
+      ...item,
+      quantity: Number(item.quantity || 0),
+      unit_price: Number(item.unit_price || 0),
+      image_url: item.product_id ? productImages.get(item.product_id) || null : null,
+    })),
+  };
+}

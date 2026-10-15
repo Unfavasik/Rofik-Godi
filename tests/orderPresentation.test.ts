@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canShowPickupQr, getOrderPreviewItems, getOrderStatusLabel, isOrderComplete } from '../src/lib/orderPresentation';
+import { canShowPickupQr, getNotificationOrderNumber, getOrderPreviewItems, getOrderStatusLabel, isOrderComplete } from '../src/lib/orderPresentation';
 
 describe('customer order presentation helpers', () => {
   it('shows one preview thumbnail per distinct product while retaining separate unlinked rows', () => {
@@ -32,5 +32,11 @@ describe('customer order presentation helpers', () => {
   it('uses clear human-readable labels for completed statuses', () => {
     expect(getOrderStatusLabel('COMPLETED')).toBe('Completed');
     expect(getOrderStatusLabel('PICKED_UP')).toBe('Picked up');
+  });
+
+  it('extracts the order number from received and status-update notifications', () => {
+    expect(getNotificationOrderNumber('Your store-pickup order #RGC-DFDFC5D323A5 has been received.')).toBe('RGC-DFDFC5D323A5');
+    expect(getNotificationOrderNumber('Order #rgc-dfdfc5d323a5 is ready for pickup.')).toBe('RGC-DFDFC5D323A5');
+    expect(getNotificationOrderNumber('A coupon offer is waiting for you.')).toBeNull();
   });
 });
