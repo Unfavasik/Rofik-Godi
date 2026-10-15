@@ -31,7 +31,7 @@ const LoginRequiredModal = lazy(() => import('./components/LoginRequiredModal').
 const SearchView = lazy(() => import('./components/SearchView').then((module) => ({ default: module.SearchView })));
 const NotificationsView = lazy(() => import('./components/NotificationsView').then((module) => ({ default: module.NotificationsView })));
 import { ShopView } from './components/ShopView';
-import { getCartItemUnitPrice, MAX_ORDER_ITEM_QUANTITY } from './lib/cart';
+import { addOrMergeCartItem, getCartItemUnitPrice, MAX_ORDER_ITEM_QUANTITY } from './lib/cart';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 const AdminPanel = lazy(() =>
   import('./components/AdminPanel').then((module) => ({ default: module.AdminPanel })),
@@ -449,30 +449,16 @@ export default function App() {
     const defaultColor = p.colors[0] || { name: 'Standard', hex: '#111827' };
     const defaultThickness = p.thicknessOptions[0] || { label: 'Standard', extraPrice: 0 };
     const defaultStitch = p.stitchPatterns[0] || undefined;
-    const existingIndex = cart.findIndex((item) => item.product.id === p.id
-      && item.selectedColor?.name === defaultColor.name
-      && item.selectedThickness?.label === defaultThickness.label
-      && item.selectedStitch === defaultStitch
-      && !item.customEmbroideryText);
-
-    if (existingIndex > -1) {
-      setCart((current) =>
-        current.map((item, index) =>
-          index === existingIndex ? { ...item, quantity: Math.min(MAX_ORDER_ITEM_QUANTITY, item.quantity + 1) } : item,
-        ),
-      );
-    } else {
-      const newItem: CartItem = {
-        cartItemId: `${p.id}-${Date.now()}`,
-        product: p,
-        quantity: 1,
-        selectedColor: defaultColor,
-        selectedStitch: defaultStitch,
-        selectedThickness: defaultThickness,
-        unitPrice: getCartItemUnitPrice(p, defaultThickness),
-      };
-      setCart((current) => [...current, newItem]);
-    }
+    const newItem: CartItem = {
+      cartItemId: `${p.id}-${defaultColor.name}-${Date.now()}`,
+      product: p,
+      quantity: 1,
+      selectedColor: defaultColor,
+      selectedStitch: defaultStitch,
+      selectedThickness: defaultThickness,
+      unitPrice: getCartItemUnitPrice(p, defaultThickness),
+    };
+    setCart((current) => addOrMergeCartItem(current, newItem));
 
     setJustAddedId(p.id);
     setTimeout(() => setJustAddedId(null), 1200);
@@ -501,7 +487,7 @@ export default function App() {
       unitPrice,
     };
 
-    setCart((current) => [...current, newItem]);
+    setCart((current) => addOrMergeCartItem(current, newItem));
   };
 
   // Wishlist toggle

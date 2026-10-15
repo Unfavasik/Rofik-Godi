@@ -17,9 +17,64 @@ export function getCartItemUnitPrice(product: Product, selectedThickness?: CartI
   return Math.max(0, Math.round(Number(product.price || 0) + Number(thickness.extraPrice || 0) + embroiderySurcharge));
 }
 
+const normalizeCartOption = (value?: string | null) => (value || '').trim().toLowerCase();
+
+function isSameCartConfiguration(left: CartItem, right: CartItem): boolean {
+  return left.product.id === right.product.id
+    && normalizeCartOption(left.selectedColor?.name) === normalizeCartOption(right.selectedColor?.name)
+    && normalizeCartOption(left.selectedColor?.hex) === normalizeCartOption(right.selectedColor?.hex)
+    && normalizeCartOption(left.selectedStitch) === normalizeCartOption(right.selectedStitch)
+    && normalizeCartOption(left.selectedThickness?.label) === normalizeCartOption(right.selectedThickness?.label)
+    && (left.customEmbroideryText || '').trim() === (right.customEmbroideryText || '').trim();
+}
+
+/** Coalesce identical lines already present in persisted or reconciled cart data. */
+function mergeDuplicateCartLines(items: CartItem[]): CartItem[] {
+  const merged: CartItem[] = [];
+  for (const item of items) {
+    const index = merged.findIndex((existing) => isSameCartConfiguration(existing, item));
+    if (index < 0) {
+      merged.push(item);
+      continue;
+    }
+    const existing = merged[index];
+    merged[index] = {
+      ...existing,
+      product: item.product,
+      quantity: Math.min(MAX_ORDER_ITEM_QUANTITY, existing.quantity + item.quantity),
+      selectedColor: item.selectedColor,
+      selectedStitch: item.selectedStitch,
+      selectedThickness: item.selectedThickness,
+      customEmbroideryText: item.customEmbroideryText,
+      unitPrice: item.unitPrice,
+    };
+  }
+  return merged;
+}
+
+/** Add once; quantity changes are made with the cart's quantity controls. */
+export function addOrMergeCartItem(cart: CartItem[], incoming: CartItem): CartItem[] {
+  const incomingQuantity = Math.max(1, Math.min(MAX_ORDER_ITEM_QUANTITY, Math.floor(Number(incoming.quantity) || 1)));
+  const incomingItem = { ...incoming, quantity: incomingQuantity };
+  const existingIndex = cart.findIndex((item) => isSameCartConfiguration(item, incomingItem));
+  if (existingIndex < 0) return [...cart, incomingItem];
+
+  return cart.map((item, index) => index === existingIndex
+    ? {
+      ...item,
+      product: incomingItem.product,
+      selectedColor: incomingItem.selectedColor,
+      selectedStitch: incomingItem.selectedStitch,
+      selectedThickness: incomingItem.selectedThickness,
+      customEmbroideryText: incomingItem.customEmbroideryText,
+      unitPrice: incomingItem.unitPrice,
+    }
+    : item);
+}
+
 export function sanitizePersistedCart(value: unknown): CartItem[] {
   if (!Array.isArray(value)) return [];
-  return value.flatMap((entry): CartItem[] => {
+  const sanitized = value.flatMap((entry): CartItem[] => {
     if (!entry || typeof entry !== 'object') return [];
     const item = entry as Partial<CartItem>;
     const product = item.product as Product | undefined;
@@ -36,6 +91,7 @@ export function sanitizePersistedCart(value: unknown): CartItem[] {
       unitPrice: Number.isFinite(Number(item.unitPrice)) ? Math.max(0, Number(item.unitPrice)) : Number(product.price || 0),
     }];
   });
+  return mergeDuplicateCartLines(sanitized);
 }
 
 /** Only use an authoritative catalog snapshot to reconcile persisted product data. */
@@ -47,7 +103,7 @@ export function canReconcileCartFromCatalog(catalogLoaded: boolean, catalogError
 export function refreshCartFromCatalog(cart: CartItem[], catalogProducts: Product[]): CartItem[] {
   const productsById = new Map(catalogProducts.map((product) => [product.id, product]));
 
-  return cart.flatMap((item) => {
+  return mergeDuplicateCartLines(cart.flatMap((item) => {
     if (item.product?.id?.startsWith('custom-seat-')) return [item];
 
     const currentProduct = productsById.get(item.product?.id);
@@ -71,5 +127,5 @@ export function refreshCartFromCatalog(cart: CartItem[], catalogProducts: Produc
       selectedThickness,
       unitPrice: getCartItemUnitPrice(currentProduct, selectedThickness, item.customEmbroideryText),
     }];
-  });
+  }));
 }

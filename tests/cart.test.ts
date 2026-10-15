@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PRODUCTS } from '../src/data/products';
-import { canReconcileCartFromCatalog, refreshCartFromCatalog, resolveStitchPatternSelection, sanitizePersistedCart } from '../src/lib/cart';
+import { addOrMergeCartItem, canReconcileCartFromCatalog, refreshCartFromCatalog, resolveStitchPatternSelection, sanitizePersistedCart } from '../src/lib/cart';
 import type { CartItem, Product } from '../src/types';
 
 const originalProduct = PRODUCTS[0];
@@ -22,6 +22,27 @@ const customSeatItem: CartItem = {
 };
 
 describe('persisted cart reconciliation', () => {
+  it('keeps an identical product configuration as one cart line without auto-incrementing quantity', () => {
+    const fromHome: CartItem = { ...cartItem, cartItemId: 'home-add', quantity: 1, customEmbroideryText: undefined, selectedStitch: undefined };
+    const fromShop: CartItem = { ...fromHome, cartItemId: 'shop-add', quantity: 2, selectedStitch: '' };
+    const merged = addOrMergeCartItem([fromHome], fromShop);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].cartItemId).toBe('home-add');
+    expect(merged[0].quantity).toBe(1);
+    expect(addOrMergeCartItem([], fromShop)[0].quantity).toBe(2);
+  });
+
+  it('keeps distinct color or embroidery configurations separate and leaves quantity changes to cart controls', () => {
+    const baseLine: CartItem = { ...cartItem, customEmbroideryText: undefined, quantity: 98 };
+    const otherColor: CartItem = { ...baseLine, cartItemId: 'other-color', selectedColor: { ...baseLine.selectedColor, name: 'Different color', hex: '#FFFFFF' }, quantity: 1 };
+    const embroidered: CartItem = { ...baseLine, cartItemId: 'embroidered', customEmbroideryText: 'Rider', quantity: 1 };
+
+    expect(addOrMergeCartItem([baseLine], otherColor)).toHaveLength(2);
+    expect(addOrMergeCartItem([baseLine], embroidered)).toHaveLength(2);
+    expect(addOrMergeCartItem([baseLine], { ...baseLine, cartItemId: 'extra', quantity: 4 })[0].quantity).toBe(98);
+  });
+
   it('never invents a default stitch pattern that is absent from the product catalog', () => {
     expect(resolveStitchPatternSelection([], 'Standard')).toBeUndefined();
     expect(resolveStitchPatternSelection(['Quilted Diamond'])).toBe('Quilted Diamond');
@@ -32,6 +53,16 @@ describe('persisted cart reconciliation', () => {
     const [safe] = sanitizePersistedCart([{ ...cartItem, quantity: 500 }, null, { cartItemId: 'broken' }]);
     expect(safe.quantity).toBe(99);
     expect(sanitizePersistedCart({ not: 'an array' })).toEqual([]);
+  });
+
+  it('coalesces identical duplicate cart lines already saved in local storage', () => {
+    const merged = sanitizePersistedCart([
+      { ...cartItem, cartItemId: 'legacy-one', quantity: 70 },
+      { ...cartItem, cartItemId: 'legacy-two', quantity: 60 },
+    ]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0].cartItemId).toBe('legacy-one');
+    expect(merged[0].quantity).toBe(99);
   });
 
   it('replaces cached product data and recomputes current prices and stock', () => {
