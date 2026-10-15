@@ -11,7 +11,9 @@ import { VEHICLE_BRANDS, WORKSHOP_INFO } from '../data/products';
 import { CartItem, OrderDetails } from '../types';
 import { createSupabaseOrder } from '../lib/supabaseOrders';
 import { supabase } from '../lib/supabase';
-import { validateIndianMobile, validateProfileName } from '../lib/profileValidation';
+import { validateProfileName } from '../lib/profileValidation';
+import { getPhoneCountry, validatePhoneNumber, type CountryCode } from '../utils/phoneValidation';
+import { PhoneNumberField } from './PhoneNumberField';
 
 interface CheckoutModalProps {
   isOpen: boolean; onClose: () => void; items: CartItem[]; discount: number; couponCode: string;
@@ -30,6 +32,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [customerName, setCustomerName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [phoneCountry, setPhoneCountry] = useState<CountryCode>('IN');
+  const [phoneTouched, setPhoneTouched] = useState(false);
   const [savedPhone, setSavedPhone] = useState('');
   const [vehicleType, setVehicleType] = useState<VehicleType>('Bike');
   const [vehicleModel, setVehicleModel] = useState('');
@@ -52,6 +56,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     ? couponSubtotal
     : items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const total = couponCode && couponTotal !== undefined ? couponTotal : Math.max(0, subtotal - discount);
+  const visiblePhoneError = phoneTouched ? validatePhoneNumber(phone, phoneCountry).message : phoneError;
   const upiUri = `upi://pay?pa=rofikgodi@upi&pn=${encodeURIComponent(WORKSHOP_INFO.name)}&am=${total}&cu=INR`;
   const pickupDates = useMemo(() => Array.from({ length: 7 }, (_, index) => {
     const date = new Date(); date.setDate(date.getDate() + index + 1); return date;
@@ -85,7 +90,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       const savedVehicle = String(profile?.vehicle_model || '').trim();
       const matchedType = vehicleTypes.find((type) => savedVehicle.toLowerCase().startsWith(`${type.toLowerCase()} ·`));
       setCustomerName(String(profile?.full_name || metadata.full_name || metadata.name || '').trim());
-      setEmail(authData.user.email || ''); setPhone(savedNumber); setSavedPhone(savedNumber);
+      setEmail(authData.user.email || ''); setPhone(savedNumber); setSavedPhone(savedNumber); setPhoneCountry(getPhoneCountry(savedNumber)); setPhoneTouched(false);
       setVehicleType(matchedType || 'Bike');
       setVehicleModel(matchedType ? savedVehicle.slice(savedVehicle.indexOf('·') + 1).trim() : savedVehicle);
       setHasSavedVehicle(Boolean(savedVehicle)); setEditingPhone(!savedNumber); setEditingVehicle(!savedVehicle); setProfileLoad('ready');
@@ -99,7 +104,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const saveCustomerPreferences = async (verifiedUserId: string) => {
     if (!supabase) throw new Error('Account service is unavailable. Please try again later.');
     const patch: { phone?: string; vehicle_model?: string } = {};
-    if (phone.trim() !== savedPhone) patch.phone = phone.trim();
+    if (phone.trim() !== savedPhone || phoneCountry !== getPhoneCountry(savedPhone)) {
+      patch.phone = validatePhoneNumber(phone, phoneCountry).e164 || phone.trim();
+    }
     const nextVehicle = vehicleModel.trim() ? `${vehicleType} · ${vehicleModel.trim()}` : '';
     if (editingVehicle && nextVehicle) patch.vehicle_model = nextVehicle;
     if (!Object.keys(patch).length) return;
@@ -120,8 +127,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setSubmissionError('');
     if (profileLoad !== 'ready') { setSubmissionError('Your account details are not ready yet. Please retry.'); return; }
     if (validateProfileName(customerName)) { setSubmissionError('Your account does not have a valid name. Update your profile before checkout.'); return; }
-    const invalidPhone = validateIndianMobile(phone);
-    if (invalidPhone || !phone.trim()) { setPhoneError(invalidPhone || 'Mobile number is required.'); setStep(1); return; }
+    const phoneResult = validatePhoneNumber(phone, phoneCountry);
+    setPhoneTouched(true);
+    if (!phoneResult.valid) { setPhoneError(phoneResult.message || 'Enter a valid phone number.'); setStep(1); return; }
     if (!pickupDate || !pickupTime) { setSubmissionError('Choose a pickup date and time to continue.'); setStep(1); return; }
     setPhoneError(''); setIsProcessing(true);
     try {
@@ -131,7 +139,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       const pickupLabel = `${new Date(`${pickupDate}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}, ${pickupTime}`;
       const pickupNote = [`Pickup requested: ${pickupLabel}`, note.trim()].filter(Boolean).join(' · ');
       const order: OrderDetails = {
-        orderId: '', items: [...items], subtotal, discount, total, customerName: customerName.trim(), phone: phone.trim(),
+        orderId: '', items: [...items], subtotal, discount, total, customerName: customerName.trim(), phone: phoneResult.e164!,
         vehicleModel: vehicleModel.trim() ? `${vehicleType} · ${vehicleModel.trim()}` : '', note: pickupNote,
         paymentMethod, paymentStatus: 'pending', fulfillmentMethod: 'STORE_PICKUP', pickupStore: WORKSHOP_INFO.name,
         status: 'NEW', createdAt: new Date().toISOString(),
@@ -147,9 +155,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const continueToPayment = () => {
     setSubmissionError('');
-    const invalidPhone = validateIndianMobile(phone);
+    const phoneResult = validatePhoneNumber(phone, phoneCountry);
+    setPhoneTouched(true);
     if (!customerName.trim() || !email) { setSubmissionError('Your account name or email is missing. Update your account before checkout.'); return; }
-    if (!phone.trim() || invalidPhone) { setPhoneError(invalidPhone || 'Mobile number is required.'); return; }
+    if (!phoneResult.valid) { setPhoneError(phoneResult.message || 'Enter a valid phone number.'); return; }
     if (!pickupDate || !pickupTime) { setSubmissionError('Choose a pickup date and time first.'); return; }
     setPhoneError(''); setStep(2);
   };
@@ -171,7 +180,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           <section className="rounded-2xl border border-slate-200 bg-white p-4"><div className="mb-3 flex items-center justify-between"><h3 className="flex items-center gap-2 text-sm font-black"><UserRound className="h-4 w-4 text-[#D9232D]" />Your details</h3><span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-extrabold text-emerald-700"><ShieldCheck className="h-3 w-3" />Account</span></div>
             <div className="grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-slate-50 px-3 py-2.5"><p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Name</p><p className="mt-1 text-xs font-bold text-slate-800">{customerName || 'Name missing from account'}</p></div><div className="rounded-xl bg-slate-50 px-3 py-2.5"><p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Email</p><p className="mt-1 break-all text-xs font-semibold text-slate-700">{email}</p></div></div>
             <div className="mt-3 rounded-xl border border-slate-200 p-3"><div className="flex items-center justify-between"><div><p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Mobile number</p><p className="mt-1 text-xs font-bold text-slate-800">{phone && !editingPhone ? phone : 'Add a mobile number'}</p></div>{savedPhone && !editingPhone && <button onClick={() => { setPhone(savedPhone); setEditingPhone(true); }} className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-[10px] font-extrabold text-[#D9232D]"><Pencil className="h-3 w-3" />Change</button>}</div>
-              {editingPhone && <div className="mt-2"><div className="flex gap-2"><input inputMode="numeric" autoComplete="tel-national" maxLength={10} value={phone} onChange={(event) => { setPhone(event.target.value.replace(/\D/g, '').slice(0, 10)); setPhoneError(''); }} placeholder="10-digit Indian mobile number" className="min-h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#D9232D]" /><button type="button" onClick={() => { setEditingPhone(false); setPhone(savedPhone); setPhoneError(''); }} className="rounded-lg px-2 text-[10px] font-bold text-slate-500">Cancel</button></div>{phoneError && <p role="alert" className="mt-1 text-[10px] font-semibold text-rose-600">{phoneError}</p>}</div>}
+              {editingPhone && <div className="mt-2 flex items-start gap-2"><PhoneNumberField id="checkout-phone" label="Mobile number" value={phone} country={phoneCountry} onChange={(value) => { setPhone(value); setPhoneError(''); setPhoneTouched(false); }} onCountryChange={(country) => { setPhoneCountry(country); setPhoneError(''); setPhoneTouched(false); }} onBlur={() => { setPhoneTouched(true); setPhoneError(validatePhoneNumber(phone, phoneCountry).message || ''); }} error={visiblePhoneError} placeholder="Enter phone number" className="min-w-0 flex-1 border-slate-200 bg-white" /><button type="button" onClick={() => { setEditingPhone(false); setPhone(savedPhone); setPhoneCountry(getPhoneCountry(savedPhone)); setPhoneTouched(false); setPhoneError(''); }} className="mt-7 rounded-lg px-2 text-[10px] font-bold text-slate-500">Cancel</button></div>}
             </div>
           </section>
           <section className="rounded-2xl border border-slate-200 bg-white p-4"><div className="flex items-center justify-between"><h3 className="flex items-center gap-2 text-sm font-black"><Truck className="h-4 w-4 text-[#D9232D]" />Vehicle for fitment</h3>{hasSavedVehicle && !editingVehicle && <button onClick={() => setEditingVehicle(true)} className="min-h-9 rounded-lg px-2 text-[10px] font-extrabold text-[#D9232D]">Change model</button>}</div>

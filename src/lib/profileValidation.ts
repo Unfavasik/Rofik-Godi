@@ -1,7 +1,10 @@
+import { validatePhoneNumber, type CountryCode } from '../utils/phoneValidation';
+
 export interface ProfileFields {
   full_name: string;
   phone: string;
   vehicle_model: string;
+  phoneCountry?: CountryCode;
 }
 
 export interface ProfileFieldErrors {
@@ -21,8 +24,8 @@ export function validateProfileName(value: string): string | null {
 export function validateIndianMobile(value: string): string | null {
   const phone = value.trim();
   if (!phone) return null;
-  if (!/^[6-9]\d{9}$/.test(phone)) return 'Enter a valid 10-digit Indian mobile number.';
-  return null;
+  const result = validatePhoneNumber(phone, 'IN');
+  return result.valid ? null : 'Enter a valid Indian mobile number, including +91 if needed.';
 }
 
 export function validateVehicleModel(value: string): string | null {
@@ -33,7 +36,9 @@ export function validateVehicleModel(value: string): string | null {
 export function validateProfileFields(fields: ProfileFields): ProfileFieldErrors {
   const errors: ProfileFieldErrors = {};
   const nameError = validateProfileName(fields.full_name);
-  const phoneError = validateIndianMobile(fields.phone);
+  const phoneError = fields.phone.trim()
+    ? validatePhoneNumber(fields.phone, fields.phoneCountry || 'IN').message
+    : null;
   const vehicleError = validateVehicleModel(fields.vehicle_model);
   if (nameError) errors.full_name = nameError;
   if (phoneError) errors.phone = phoneError;

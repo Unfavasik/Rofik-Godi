@@ -16,11 +16,11 @@ describe('profile validation', () => {
     expect(validateProfileName('x'.repeat(51))).toContain('50 characters');
   });
 
-  it('allows an empty phone and validates 10-digit Indian mobiles', () => {
+  it('allows an empty phone and validates Indian mobiles in national or E.164 format', () => {
     expect(validateIndianMobile('')).toBeNull();
     expect(validateIndianMobile('9876543210')).toBeNull();
-    expect(validateIndianMobile('5876543210')).toContain('10-digit Indian');
-    expect(validateIndianMobile('+919876543210')).toContain('10-digit Indian');
+    expect(validateIndianMobile('5876543210')).toContain('Indian mobile');
+    expect(validateIndianMobile('+91 98765 43210')).toBeNull();
   });
 
   it('allows an optional vehicle model up to 60 characters', () => {
@@ -32,9 +32,15 @@ describe('profile validation', () => {
   it('returns inline field errors together', () => {
     expect(validateProfileFields({ full_name: '', phone: '123', vehicle_model: 'x'.repeat(61) })).toEqual({
       full_name: 'Name is required.',
-      phone: 'Enter a valid 10-digit Indian mobile number.',
+      phone: 'Enter a valid phone number for India.',
       vehicle_model: 'Vehicle model must be 60 characters or fewer.',
     });
+  });
+
+  it('validates profile numbers using the selected country', () => {
+    expect(validateProfileFields({ full_name: 'Rider', phone: '202-555-0125', phoneCountry: 'US', vehicle_model: '' })).toEqual({});
+    expect(validateProfileFields({ full_name: 'Rider', phone: '5876543210', phoneCountry: 'IN', vehicle_model: '' }).phone)
+      .toBe('Enter an Indian mobile number, not a landline.');
   });
 });
 

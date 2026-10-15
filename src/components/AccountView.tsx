@@ -29,6 +29,8 @@ import { WORKSHOP_INFO } from '../data/products';
 import { deleteMyAvatar, getMyAuthEmail, getMyProfile, saveMyProfile, uploadMyAvatar } from '../lib/supabaseCustomer';
 import { getInitials, validateProfileFields } from '../lib/profileValidation';
 import { ConfirmDialog } from './ConfirmDialog';
+import { PhoneNumberField } from './PhoneNumberField';
+import { getPhoneCountry, validatePhoneNumber, type CountryCode } from '../utils/phoneValidation';
 
 interface AccountViewProps {
   currentUser?: UserProfile;
@@ -102,11 +104,13 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
   const [profileName, setProfileName] = useState('');
   const [profilePhone, setProfilePhone] = useState('');
+  const [profilePhoneCountry, setProfilePhoneCountry] = useState<CountryCode>('IN');
+  const [profilePhoneTouched, setProfilePhoneTouched] = useState(false);
   const [profileVehicle, setProfileVehicle] = useState('');
   const [profileEmail, setProfileEmail] = useState('');
   const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
   const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null);
-  const [profileSnapshot, setProfileSnapshot] = useState({ name: '', phone: '', vehicle: '', avatar: null as string | null });
+  const [profileSnapshot, setProfileSnapshot] = useState({ name: '', phone: '', phoneCountry: 'IN' as CountryCode, vehicle: '', avatar: null as string | null });
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMetadataSyncFailed, setProfileMetadataSyncFailed] = useState(false);
@@ -116,11 +120,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
   const profileDirty = profileName !== profileSnapshot.name
     || profilePhone !== profileSnapshot.phone
+    || profilePhoneCountry !== profileSnapshot.phoneCountry
     || profileVehicle !== profileSnapshot.vehicle
     || profileAvatarUrl !== profileSnapshot.avatar
     || profileAvatarFile !== null
     || profileMetadataSyncFailed;
-  const profileFieldErrors = validateProfileFields({ full_name: profileName, phone: profilePhone, vehicle_model: profileVehicle });
+  const profileFieldErrors = validateProfileFields({ full_name: profileName, phone: profilePhone, vehicle_model: profileVehicle, phoneCountry: profilePhoneCountry });
+  const profilePhoneChanged = profilePhone.trim() !== profileSnapshot.phone.trim() || profilePhoneCountry !== profileSnapshot.phoneCountry;
+  const profilePhoneError = profilePhoneTouched && profilePhoneChanged ? profileFieldErrors.phone : undefined;
 
   useEffect(() => {
     let active = true;
@@ -129,11 +136,13 @@ export const AccountView: React.FC<AccountViewProps> = ({
     if (!profileUser || profileUser.isGuest) {
       setProfileName('');
       setProfilePhone('');
+      setProfilePhoneCountry('IN');
+      setProfilePhoneTouched(false);
       setProfileVehicle('');
       setProfileEmail('');
       setProfileAvatarUrl(null);
       setProfileAvatarFile(null);
-      setProfileSnapshot({ name: '', phone: '', vehicle: '', avatar: null });
+      setProfileSnapshot({ name: '', phone: '', phoneCountry: 'IN', vehicle: '', avatar: null });
       setProfileMetadataSyncFailed(false);
       setProfileLoading(false);
       return () => { active = false; };
@@ -141,11 +150,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
     const fallback = {
       name: profileUser.name || '',
       phone: profileUser.phone || '',
+      phoneCountry: getPhoneCountry(profileUser.phone || ''),
       vehicle: profileUser.vehicle || '',
       avatar: profileUser.avatar || null,
     };
     setProfileName(fallback.name);
     setProfilePhone(fallback.phone);
+    setProfilePhoneCountry(getPhoneCountry(fallback.phone));
+    setProfilePhoneTouched(false);
     setProfileVehicle(fallback.vehicle);
     setProfileEmail(profileUser.email || '');
     setProfileAvatarUrl(fallback.avatar);
@@ -159,11 +171,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
       const loaded = {
         name: profile?.full_name?.trim() || fallback.name,
         phone: profile?.phone || fallback.phone,
+        phoneCountry: getPhoneCountry(profile?.phone || fallback.phone),
         vehicle: profile?.vehicle_model || fallback.vehicle,
         avatar: profile?.avatar_url || fallback.avatar,
       };
       setProfileName(loaded.name);
       setProfilePhone(loaded.phone);
+      setProfilePhoneCountry(loaded.phoneCountry);
+      setProfilePhoneTouched(false);
       setProfileVehicle(loaded.vehicle);
       setProfileEmail(email || profileUser.email || '');
       setProfileAvatarUrl(loaded.avatar);
@@ -178,7 +193,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
   const handleSaveProfile = async () => {
     if (!currentUser || currentUser.isGuest || profileSavingRef.current) return;
-    const errors = validateProfileFields({ full_name: profileName, phone: profilePhone, vehicle_model: profileVehicle });
+    setProfilePhoneTouched(true);
+    const errors = validateProfileFields({ full_name: profileName, phone: profilePhoneChanged ? profilePhone : '', vehicle_model: profileVehicle, phoneCountry: profilePhoneCountry });
     if (Object.keys(errors).length > 0) return;
     profileSavingRef.current = true;
     setProfileSaving(true);
@@ -193,7 +209,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
         nextAvatarUrl = upload.data.url;
       }
       const cleanName = profileName.trim();
-      const cleanPhone = profilePhone.trim();
+      const phoneChanged = profilePhoneChanged;
+      const cleanPhone = phoneChanged
+        ? (profilePhone.trim() ? validatePhoneNumber(profilePhone, profilePhoneCountry).e164 || profilePhone.trim() : '')
+        : profileSnapshot.phone;
       const cleanVehicle = profileVehicle.trim();
       const { error, metadataError } = await saveMyProfile({
         full_name: cleanName,
@@ -216,9 +235,11 @@ export const AccountView: React.FC<AccountViewProps> = ({
           warning = ' Profile saved, but the previous photo could not be deleted.';
         }
       }
-      const updated = { name: cleanName, phone: cleanPhone, vehicle: cleanVehicle, avatar: nextAvatarUrl };
+      const updated = { name: cleanName, phone: cleanPhone, phoneCountry: getPhoneCountry(cleanPhone), vehicle: cleanVehicle, avatar: nextAvatarUrl };
       setProfileName(updated.name);
       setProfilePhone(updated.phone);
+      setProfilePhoneCountry(updated.phoneCountry);
+      setProfilePhoneTouched(false);
       setProfileVehicle(updated.vehicle);
       setProfileAvatarFile(null);
       setProfileAvatarUrl(updated.avatar);
@@ -898,21 +919,18 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   {profileFieldErrors.full_name && <p id="profile-name-error" role="alert" className="mt-1 text-[10px] font-medium text-red-600">{profileFieldErrors.full_name}</p>}
                 </div>
                 <div>
-                  <label htmlFor="profile-phone" className="text-[11px] font-bold text-gray-700 block mb-1">Phone Number <span className="font-normal text-gray-400">(optional)</span></label>
-                  <input
+                  <PhoneNumberField
                     id="profile-phone"
-                    type="tel"
-                    inputMode="numeric"
-                    autoComplete="tel-national"
-                    maxLength={10}
+                    label="Phone Number (optional)"
                     value={profilePhone}
-                    onChange={(e) => { setProfilePhone(e.target.value); setProfileMessage(''); }}
-                    aria-invalid={Boolean(profileFieldErrors.phone)}
-                    aria-describedby={profileFieldErrors.phone ? 'profile-phone-error' : undefined}
+                    country={profilePhoneCountry}
+                    onChange={(value) => { setProfilePhone(value); setProfileMessage(''); }}
+                    onCountryChange={setProfilePhoneCountry}
+                    onBlur={() => setProfilePhoneTouched(true)}
+                    error={profilePhoneError}
+                    placeholder="Enter phone number"
                     disabled={profileLoading || profileSaving}
-                    className="w-full bg-gray-50 text-[12.5px] rounded-xl px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#D9232D]"
                   />
-                  {profileFieldErrors.phone && <p id="profile-phone-error" role="alert" className="mt-1 text-[10px] font-medium text-red-600">{profileFieldErrors.phone}</p>}
                 </div>
                 <div>
                   <label htmlFor="profile-vehicle" className="text-[11px] font-bold text-gray-700 block mb-1">Vehicle Model <span className="font-normal text-gray-400">(optional)</span></label>
