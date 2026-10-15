@@ -7,6 +7,15 @@ export interface CouponNotificationReference {
   action_url?: string | null;
 }
 
+export function getUnappliedCouponOffers(
+  offers: CustomerCouponOffer[],
+  appliedCode?: string | null,
+): CustomerCouponOffer[] {
+  const normalizedAppliedCode = appliedCode?.trim().toUpperCase();
+  if (!normalizedAppliedCode) return offers;
+  return offers.filter((offer) => offer.code.trim().toUpperCase() !== normalizedAppliedCode);
+}
+
 export function isCouponNotification(notification: CouponNotificationReference): boolean {
   const kind = notification.kind.toLowerCase();
   return kind.includes('coupon') || kind.includes('offer') || kind.includes('promo');

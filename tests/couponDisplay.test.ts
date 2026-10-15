@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getCouponOfferForNotification } from '../src/lib/couponDisplay';
+import { getCouponOfferForNotification, getUnappliedCouponOffers } from '../src/lib/couponDisplay';
 import type { CustomerCouponOffer } from '../src/lib/supabaseCoupons';
 
 const offer: CustomerCouponOffer = {
@@ -37,5 +37,16 @@ describe('coupon notification offer matching', () => {
       title: 'New offer',
       body: 'Save today with a special offer.',
     }, [offer])).toBeNull();
+  });
+});
+
+describe('cart eligible coupon visibility', () => {
+  it('hides the applied coupon from the eligible offers list but leaves other offers visible', () => {
+    const otherOffer = { ...offer, code: 'SAVE15' };
+    expect(getUnappliedCouponOffers([offer, otherOffer], ' welcome20 ')).toEqual([otherOffer]);
+  });
+
+  it('shows the coupon offer again after it is removed', () => {
+    expect(getUnappliedCouponOffers([offer], null)).toEqual([offer]);
   });
 });

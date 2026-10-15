@@ -44,6 +44,15 @@ interface AccountViewProps {
   onOpenStoreInfo?: () => void;
   onOpenCustomBuilder?: () => void;
   onOpenShop?: () => void;
+  onOpenOrdersPage?: () => void;
+  onSelectOrderRoute?: (orderNumber: string) => void;
+  onBackToOrdersRoute?: () => void;
+  onOpenSettingsPage?: () => void;
+  onOpenPrivacyPage?: () => void;
+  onOpenTermsPage?: () => void;
+  onExitRoutedPage?: () => void;
+  routeModal?: 'orders' | 'settings' | null;
+  initialOrderNumber?: string | null;
   onProfileChange?: (profile: Pick<UserProfile, 'name' | 'phone' | 'avatar' | 'vehicle'>) => void;
   products?: Product[];
 }
@@ -58,6 +67,15 @@ export const AccountView: React.FC<AccountViewProps> = ({
   wishlistCount = 0,
   onOpenStoreInfo,
   onOpenShop,
+  onOpenOrdersPage,
+  onSelectOrderRoute,
+  onBackToOrdersRoute,
+  onOpenSettingsPage,
+  onOpenPrivacyPage,
+  onOpenTermsPage,
+  onExitRoutedPage,
+  routeModal = null,
+  initialOrderNumber,
   onProfileChange,
 }) => {
   const handleGoHome = () => {
@@ -65,6 +83,26 @@ export const AccountView: React.FC<AccountViewProps> = ({
     else if (onContinueShopping) onContinueShopping();
   };
   const [activeModal, setActiveModal] = useState<'orders' | 'pickupStore' | 'settings' | 'profile' | 'privacy' | 'terms' | null>(null);
+  const previousRouteModal = useRef<'orders' | 'settings' | null>(null);
+  const [initialOrderNumberForModal, setInitialOrderNumberForModal] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (routeModal) {
+      previousRouteModal.current = routeModal;
+      setActiveModal(routeModal);
+      setInitialOrderNumberForModal(routeModal === 'orders' ? initialOrderNumber ?? null : null);
+    } else if (previousRouteModal.current) {
+      previousRouteModal.current = null;
+      setActiveModal(null);
+      setInitialOrderNumberForModal(null);
+    }
+  }, [initialOrderNumber, routeModal]);
+
+  const closeRoutedPage = () => {
+    setInitialOrderNumberForModal(null);
+    setActiveModal(null);
+    if (routeModal) onExitRoutedPage?.();
+  };
 
   const isGuest = currentUser?.isGuest ?? false;
   const currentUserRef = useRef(currentUser);
@@ -315,6 +353,11 @@ export const AccountView: React.FC<AccountViewProps> = ({
       if (onOpenLogin) onOpenLogin();
       else if (modalType !== 'profile') setActiveModal(modalType);
     } else {
+      if (modalType === 'orders' && onOpenOrdersPage) return onOpenOrdersPage();
+      if (modalType === 'settings' && onOpenSettingsPage) return onOpenSettingsPage();
+      if (modalType === 'privacy' && onOpenPrivacyPage) return onOpenPrivacyPage();
+      if (modalType === 'terms' && onOpenTermsPage) return onOpenTermsPage();
+      if (modalType === 'pickupStore' && onOpenStoreInfo) return onOpenStoreInfo();
       setActiveModal(modalType);
     }
   };
@@ -323,12 +366,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
   if (activeModal === 'settings') {
     return (
       <SettingsView
-        onBack={() => setActiveModal(null)}
+        onBack={closeRoutedPage}
         onLogout={onLogout}
-        onOpenOrders={() => setActiveModal('orders')}
+        onOpenOrders={onOpenOrdersPage ?? (() => setActiveModal('orders'))}
         onOpenWishlist={onOpenWishlist}
         onOpenStoreInfo={onOpenStoreInfo}
         onOpenShop={onOpenShop}
+        onOpenPrivacyPage={onOpenPrivacyPage}
+        onOpenTermsPage={onOpenTermsPage}
       />
     );
   }
@@ -336,7 +381,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
   if (activeModal === 'privacy') {
     return (
       <PrivacyPolicyView
-        onBack={() => setActiveModal(null)}
+        onBack={closeRoutedPage}
         onOpenStoreInfo={onOpenStoreInfo}
       />
     );
@@ -345,7 +390,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
   if (activeModal === 'terms') {
     return (
       <TermsConditionsView
-        onBack={() => setActiveModal(null)}
+        onBack={closeRoutedPage}
         onOpenStoreInfo={onOpenStoreInfo}
       />
     );
@@ -585,7 +630,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
           {/* 4. Settings (Soft Purple) */}
           <button
             type="button"
-            onClick={() => setActiveModal('settings')}
+            onClick={() => handleProtectedAction('settings')}
             className="bg-[#F3EEFD] hover:bg-[#EAE1FB] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
           >
             <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#7C3AED]">
@@ -761,7 +806,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
           {/* Privacy Policy Card */}
           <button
             type="button"
-            onClick={() => setActiveModal('privacy')}
+            onClick={() => handleProtectedAction('privacy')}
             className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left cursor-pointer"
           >
             <div className="flex items-center space-x-3">
@@ -781,7 +826,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
           {/* Terms & Conditions Card */}
           <button
             type="button"
-            onClick={() => setActiveModal('terms')}
+            onClick={() => handleProtectedAction('terms')}
             className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left cursor-pointer"
           >
             <div className="flex items-center space-x-3">
@@ -829,7 +874,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
             loading={ordersLoading}
             error={ordersError}
             customerName={currentUser?.name || ''}
-            onClose={() => setActiveModal(null)}
+            initialOrderNumber={initialOrderNumberForModal}
+            onSelectOrderRoute={onSelectOrderRoute}
+            onBackToOrdersRoute={onBackToOrdersRoute}
+            onClose={closeRoutedPage}
             onRefresh={refreshCustomerOrders}
             onReview={(order, productId, productTitle, review) =>
               setReviewComposer({

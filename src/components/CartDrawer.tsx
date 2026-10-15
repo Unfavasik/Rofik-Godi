@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { CartItem } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { loadCustomerCouponOffers, validateCustomerCoupon, type CustomerCouponOffer } from '../lib/supabaseCoupons';
+import { getUnappliedCouponOffers } from '../lib/couponDisplay';
 import { MAX_ORDER_ITEM_QUANTITY } from '../lib/cart';
 import {
   X,
@@ -78,6 +79,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const displayedSubtotal = appliedCoupon?.subtotal ?? subtotal;
   const discount = appliedCoupon ? appliedCoupon.discount : 0;
   const grandTotal = appliedCoupon?.total ?? Math.max(0, subtotal - discount);
+  const eligibleCouponOffers = getUnappliedCouponOffers(couponOffers, appliedCoupon?.code);
 
   const handleApplyCoupon = async (selectedCode = couponCode) => {
     const code = selectedCode.trim().toUpperCase().replace(/\s+/g, '');
@@ -325,20 +327,20 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <p className="text-[10px] font-semibold text-red-600 mt-1.5">{couponError}</p>
                 )}
 
-                <div className="mt-3 border-t border-gray-200 pt-3">
+                {!(appliedCoupon && !couponOffersLoading && !couponOffersError && eligibleCouponOffers.length === 0) && <div className="mt-3 border-t border-gray-200 pt-3">
                   <div className="mb-2 flex items-center justify-between">
                     <p className="text-[10px] font-black uppercase tracking-[0.12em] text-gray-500">Eligible offers</p>
-                    {couponOffers.length > 0 && <span className="text-[10px] font-semibold text-emerald-600">{couponOffers.length} available</span>}
+                    {eligibleCouponOffers.length > 0 && <span className="text-[10px] font-semibold text-emerald-600">{eligibleCouponOffers.length} available</span>}
                   </div>
                   {couponOffersLoading ? (
                     <p className="rounded-xl bg-white px-3 py-2 text-[10px] font-semibold text-gray-400">Loading eligible coupons…</p>
                   ) : couponOffersError ? (
                     <p className="rounded-xl bg-amber-50 px-3 py-2 text-[10px] font-semibold text-amber-800">{couponOffersError}</p>
-                  ) : couponOffers.length === 0 ? (
+                  ) : eligibleCouponOffers.length === 0 ? (
                     <p className="rounded-xl bg-white px-3 py-2 text-[10px] font-semibold text-gray-400">No eligible coupons right now.</p>
                   ) : (
                     <div className="space-y-2">
-                      {couponOffers.map((offer) => (
+                      {eligibleCouponOffers.map((offer) => (
                         <button
                           key={offer.code}
                           type="button"
@@ -360,7 +362,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       ))}
                     </div>
                   )}
-                </div>
+                </div>}
 
               </div>
             )}

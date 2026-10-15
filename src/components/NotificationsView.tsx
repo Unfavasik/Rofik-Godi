@@ -62,7 +62,7 @@ const toneFor = (kind: string) => {
   return 'bg-blue-50 text-blue-500';
 };
 
-export function NotificationsView({ userId, isGuest, onBack, onNotificationsChanged, onOpenShop }: { userId: string; isGuest: boolean; onBack: () => void; onNotificationsChanged?: () => void; onOpenShop?: () => void }) {
+export function NotificationsView({ userId, isGuest, onBack, onNotificationsChanged, onOpenShop, onOpenMyOrders }: { userId: string; isGuest: boolean; onBack: () => void; onNotificationsChanged?: () => void; onOpenShop?: () => void; onOpenMyOrders?: (orderNumber: string) => void }) {
   const [filter, setFilter] = useState<NotificationFilter>('All');
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [couponOffer, setCouponOffer] = useState<CustomerCouponOffer | null>(null);
@@ -175,7 +175,13 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
       userId={userId}
       orderNumber={selectedNotification.orderNumber}
       initialOrder={selectedNotification.orderRecord}
+      notificationTitle={selectedNotification.title}
+      notificationBody={selectedNotification.body}
       onBack={() => setSelectedNotification(null)}
+      onOpenMyOrders={(orderNumber) => {
+        setSelectedNotification(null);
+        onOpenMyOrders?.(orderNumber);
+      }}
     />;
     if (isCouponNotification(selectedNotification)) {
       if (couponOffer) return <CouponDetailsView

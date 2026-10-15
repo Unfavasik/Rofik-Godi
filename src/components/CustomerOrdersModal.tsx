@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowLeft,
@@ -34,6 +34,10 @@ interface CustomerOrdersModalProps {
   loading: boolean;
   error?: string;
   customerName: string;
+  initialOrderNumber?: string | null;
+  onInitialOrderOpened?: () => void;
+  onSelectOrderRoute?: (orderNumber: string) => void;
+  onBackToOrdersRoute?: () => void;
   onClose: () => void;
   onRefresh?: () => Promise<void> | void;
   onReview: (order: CustomerOrderRecord, productId: string, productTitle: string, review?: ProductReviewRecord) => void;
@@ -123,9 +127,10 @@ const OrderTimeline = ({ status, createdAt }: { status: string; createdAt: strin
   );
 };
 
-export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders, reviews, loading, error, customerName, onClose, onRefresh, onReview }) => {
+export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders, reviews, loading, error, customerName, initialOrderNumber, onInitialOrderOpened, onSelectOrderRoute, onBackToOrdersRoute, onClose, onRefresh, onReview }) => {
   const [filter, setFilter] = useState<OrderFilter>('all');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const initialOrderHandled = useRef<string | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<CustomerOrderRecord | null>(null);
   const selectedOrder = orders.find((order) => order.id === selectedOrderId) || null;
   const completedCount = orders.filter((order) => isOrderComplete(order.status)).length;
@@ -153,6 +158,24 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
     };
   }, [onRefresh]);
 
+  useEffect(() => {
+    if (!initialOrderNumber) {
+      if (initialOrderHandled.current) {
+        initialOrderHandled.current = null;
+        setSelectedOrderId(null);
+      }
+      return;
+    }
+    if (initialOrderHandled.current === initialOrderNumber) return;
+    if (selectedOrderId) setSelectedOrderId(null);
+    if (loading || error) return;
+    const targetOrder = orders.find((order) => order.order_number.toUpperCase() === initialOrderNumber.toUpperCase());
+    if (!targetOrder) return;
+    initialOrderHandled.current = initialOrderNumber;
+    setSelectedOrderId(targetOrder.id);
+    onInitialOrderOpened?.();
+  }, [error, initialOrderNumber, loading, onInitialOrderOpened, orders, selectedOrderId]);
+
   const openInvoice = (order: CustomerOrderRecord) => setInvoiceOrder(order);
 
   return (
@@ -169,7 +192,7 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
         <header className="relative shrink-0 border-b border-slate-100 bg-white px-4 py-4 sm:px-7 sm:py-5">
           <div className="relative flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-start gap-3">
-              {selectedOrder && <button type="button" onClick={() => setSelectedOrderId(null)} aria-label="Back to all orders" className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-50 text-slate-700 transition hover:bg-slate-100"><ArrowLeft className="h-4 w-4" /></button>}
+              {selectedOrder && <button type="button" onClick={() => { setSelectedOrderId(null); onBackToOrdersRoute?.(); }} aria-label="Back to all orders" className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-50 text-slate-700 transition hover:bg-slate-100"><ArrowLeft className="h-4 w-4" /></button>}
               <div>
                 <p className="flex items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-[0.18em] text-[#cf2833]"><Store className="h-3.5 w-3.5" />Rofik Godi Centre · Pickup orders</p>
                 <h2 id="customer-orders-title" className="mt-1 text-[21px] font-black tracking-tight text-slate-900 sm:text-[25px]">{selectedOrder ? 'Order details' : 'Your orders'}</h2>
@@ -222,7 +245,7 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {filteredOrders.map((order, index) => <OrderCard key={order.id} order={order} index={index} onOpen={() => setSelectedOrderId(order.id)} onInvoice={() => openInvoice(order)} />)}
+                  {filteredOrders.map((order, index) => <OrderCard key={order.id} order={order} index={index} onOpen={() => { setSelectedOrderId(order.id); onSelectOrderRoute?.(order.order_number); }} onInvoice={() => openInvoice(order)} />)}
                 </div>
               )}
               <p className="mt-4 flex items-center justify-center gap-1.5 pb-1 text-[10px] font-medium text-slate-400"><ShieldCheck className="h-3.5 w-3.5" />Your order details are visible only to you.</p>

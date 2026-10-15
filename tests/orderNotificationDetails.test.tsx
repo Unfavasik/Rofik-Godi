@@ -27,24 +27,36 @@ const order: CustomerOrderRecord = {
 };
 
 const renderDetails = (record: CustomerOrderRecord) => renderToStaticMarkup(
-  <OrderNotificationDetails userId="customer-id" orderNumber={record.order_number} initialOrder={record} onBack={() => {}} />,
+  <OrderNotificationDetails userId="customer-id" orderNumber={record.order_number} initialOrder={record} notificationTitle="Your order is being prepared" notificationBody="The store has started preparing your order." onBack={() => {}} onOpenMyOrders={() => {}} />,
 );
 
 describe('order notification details screen', () => {
-  it('renders order tracking, store contact, product images, payment and order information', () => {
+  it('matches the order-update mockup while using all live order details', () => {
     const html = renderDetails(order);
     for (const content of [
-      'Order Details', order.order_number, 'Order received', 'Confirmed', 'Ready for pickup', 'Picked up',
-      'Pickup from store', 'ROFIK GODI CENTRE', 'Jalangi Road', '8:00 AM', '+91 98321 45678',
-      'Items (2)', 'Bike Seat Cover', 'Neck Cushion', 'https://example.com/seat.webp', 'Payment details',
-      'UPI online', 'Payment pending', '₹600', '₹25', '₹575', 'Order information', 'Honda Shine',
-      'Track order', 'Need help?', 'Contact store',
+      'Order update', order.order_number, 'Latest order update', 'Your order is being prepared',
+      'The store has started preparing your order.', 'Progress', 'Step 1 of 4', 'Received',
+      'Confirmed', 'Ready', 'Picked up', '2 items', '₹575', 'Order summary', '2 products',
+      'Bike Seat Cover', 'Neck Cushion', '₹450', '₹150', 'Black Red', 'Jalangi Road',
+      'Open My Orders',
     ]) expect(html).toContain(content);
+    expect(html).toContain(`aria-label="Open order ${order.order_number} details in My Orders"`);
+    expect(html).not.toContain('Payment details');
+    expect(html).not.toContain('Order information');
+  });
+
+  it('shows completed status as the final progress step and still opens the selected order', () => {
+    const completedOrder = { ...order, status: 'COMPLETED' };
+    const html = renderDetails(completedOrder);
+    expect(html).toContain('Completed');
+    expect(html).toContain('Step 4 of 4');
+    expect(html).toContain('aria-current="step"');
+    expect(html).toContain(`aria-label="Open order ${order.order_number} details in My Orders"`);
   });
 
   it('uses the live cancellation state instead of showing an active progress path', () => {
     const html = renderDetails({ ...order, status: 'CANCELLED' });
-    expect(html).toContain('Order cancelled');
-    expect(html).not.toContain('grid-cols-4');
+    expect(html).toContain('Cancelled');
+    expect(html).not.toContain('aria-label="Order progress"');
   });
 });

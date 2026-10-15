@@ -49,7 +49,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
-import { getPathForPhase, shouldRedirectAdminToWorkspace } from './lib/appRoutes';
+import { getPathForPhase, getPathForTab, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
 import { signOutCurrentDevice } from './lib/authLogout';
 import { useAuth } from './hooks/useAuth';
 import { useCart } from './hooks/useCart';
@@ -59,6 +59,7 @@ const FilterSortModal = lazy(() => import('./components/FilterSortModal').then((
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
+  const resolvedRoute = resolveAppRoute(location.pathname);
   // Route flow: /Onboarding -> /home, and account creation opens at /signup.
   const phaseFromPath = (
     pathname: string,
@@ -84,6 +85,7 @@ export default function App() {
     checkIsAdmin,
   } = useAuth();
   const adminStorefrontRequested = useRef(false);
+  const protectedRouteAfterAuth = useRef<string | null>(null);
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>(
     'signup',
   );
@@ -129,31 +131,8 @@ export default function App() {
   const [pendingCheckoutAfterLogin, setPendingCheckoutAfterLogin] = useState(false);
 
   // Navigation & View State
-  type RouteTab =
-    'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart' | 'notifications';
-  const routeToTab = useCallback((pathname: string): RouteTab => {
-    const normalizedPath = pathname.replace(/\/$/, '') || '/home';
-    const route =
-      normalizedPath === '/example/shop'
-        ? '/home'
-        : normalizedPath.replace(/^\/example(?=\/|$)/, '') || '/home';
-    if (route === '/notifications' || route === '/notification') return 'notifications';
-    if (route === '/profile' || route === '/account') return 'account';
-    if (
-      route === '/shop' ||
-      route === '/search' ||
-      route === '/custom' ||
-      route === '/wishlist' ||
-      route === '/cart' ||
-      route === '/notifications'
-    )
-      return route.slice(1) as RouteTab;
-    return 'home';
-  }, []);
-  const tabToRoute = useCallback(
-    (tab: RouteTab) => (tab === 'account' ? '/profile' : `/${tab}`),
-    [],
-  );
+  const routeToTab = useCallback((pathname: string): RouteTab => resolveAppRoute(pathname).tab, []);
+  const tabToRoute = useCallback((tab: RouteTab) => getPathForTab(tab), []);
   const [activeTab, setActiveTab] = useState<RouteTab>(() => routeToTab(location.pathname));
   useEffect(() => {
     setAppPhase(phaseFromPath(location.pathname));
@@ -169,6 +148,8 @@ export default function App() {
       '/signup/onboarding',
       '/signup/loading',
     ].includes(route);
+    const routeKind = resolveAppRoute(route).kind;
+    const publicInfoPath = routeKind === 'privacy' || routeKind === 'terms' || routeKind === 'store';
     if (authStatus === 'AUTHENTICATED' && isAdmin !== null) {
       if (isAdmin) {
         // Role resolution can finish after login; enter admin unless the admin
@@ -189,10 +170,11 @@ export default function App() {
     }
     if (
       authStatus === 'UNAUTHENTICATED' &&
-      !publicAuthPath &&
+      !publicAuthPath && !publicInfoPath &&
       route !== '/admin' &&
       appPhase !== 'onboarding'
     ) {
+      protectedRouteAfterAuth.current = location.pathname;
       goToPhase('onboarding');
     }
   }, [authStatus, isAdmin, location.pathname, appPhase, navigate, goToPhase]);
@@ -200,6 +182,7 @@ export default function App() {
   useEffect(() => {
     if ((location.pathname.replace(/\/$/, '') || '/') === '/admin') return;
     if (appPhase !== 'main') return;
+    if (resolveAppRoute(location.pathname).kind !== 'tab') return;
     const nextPath = tabToRoute(activeTab);
     if (location.pathname !== nextPath) navigate(nextPath, { state: { tab: activeTab } });
 
@@ -244,6 +227,60 @@ export default function App() {
     catalogLoaded,
     catalogError,
   );
+
+  useEffect(() => {
+    if (appPhase !== 'main' || authStatus === 'AUTH_LOADING') return;
+    const route = resolveAppRoute(location.pathname);
+    const publicInfoPath = route.kind === 'privacy' || route.kind === 'terms' || route.kind === 'store';
+    if (authStatus === 'UNAUTHENTICATED' && !publicInfoPath) return;
+    if (route.kind === 'not-found') {
+      navigate('/home', { replace: true });
+      return;
+    }
+    if (route.kind !== 'tab' && route.canonicalPath !== location.pathname) {
+      navigate(route.canonicalPath, { replace: true });
+    }
+    setIsCheckoutOpen(route.kind === 'checkout');
+    setIsPrivacyPolicyOpen(route.kind === 'privacy');
+    setIsTermsConditionsOpen(route.kind === 'terms');
+    setIsStoreInfoOpen(route.kind === 'store');
+    if (route.kind !== 'product') {
+      setSelectedProduct(null);
+      return;
+    }
+    if (!catalogLoaded) {
+      setSelectedProduct(null);
+      return;
+    }
+    const product = catalogProducts.find((item) => item.slug === route.slug);
+    if (product) setSelectedProduct(product);
+    else navigate('/shop', { replace: true });
+  }, [appPhase, authStatus, catalogLoaded, catalogProducts, location.pathname, navigate]);
+
+  const openProductRoute = useCallback((product: Product) => {
+    setSelectedProduct(product);
+    navigate(`/products/${encodeURIComponent(product.slug)}`);
+  }, [navigate]);
+  const closeProductRoute = useCallback(() => {
+    setSelectedProduct(null);
+    if (resolveAppRoute(location.pathname).kind === 'product') navigate('/shop');
+  }, [location.pathname, navigate]);
+  const openPageRoute = useCallback((path: string) => {
+    navigate(path, { state: { returnTo: location.pathname } });
+  }, [location.pathname, navigate]);
+  const navigateBackToPage = useCallback((fallback: string) => {
+    const state = location.state as { returnTo?: unknown } | null;
+    const returnTo = typeof state?.returnTo === 'string' && state.returnTo.startsWith('/') ? state.returnTo : fallback;
+    navigate(returnTo);
+  }, [location.state, navigate]);
+  const openWishlistPage = () => {
+    setActiveTab('wishlist');
+    setIsWishlistOpen(true);
+  };
+  const openCustomBuilderPage = () => {
+    setActiveTab('custom');
+    setIsCustomBuilderOpen(true);
+  };
   const [ownedWishlist, setOwnedWishlist] = useState<{ ownerId: string; items: Product[] }>({
     ownerId: 'guest-user',
     items: [],
@@ -513,6 +550,7 @@ export default function App() {
 
     setIsCartOpen(false);
     setIsCheckoutOpen(true);
+    navigate('/checkout');
   };
 
   const handleLoginSuccess = async (user: UserProfile) => {
@@ -524,13 +562,22 @@ export default function App() {
     setIsLoginModalOpen(false);
     if (admin) {
       adminStorefrontRequested.current = false;
+      protectedRouteAfterAuth.current = null;
       navigate('/admin');
       return;
     }
-    goToPhase('main');
+    const returnPath = protectedRouteAfterAuth.current;
+    protectedRouteAfterAuth.current = null;
+    if (returnPath) {
+      setAppPhase('main');
+      navigate(returnPath, { replace: true });
+    } else {
+      goToPhase('main');
+    }
     if (pendingCheckoutAfterLogin) {
       setPendingCheckoutAfterLogin(false);
       setIsCheckoutOpen(true);
+      navigate('/checkout');
     }
   };
 
@@ -650,8 +697,8 @@ export default function App() {
           onBack={() => {
             goToPhase('onboarding');
           }}
-          onOpenTerms={() => setIsTermsConditionsOpen(true)}
-          onOpenPrivacy={() => setIsPrivacyPolicyOpen(true)}
+          onOpenTerms={() => openPageRoute('/terms-and-conditions')}
+          onOpenPrivacy={() => openPageRoute('/privacy-policy')}
         />
       </div>
       </Suspense>
@@ -685,8 +732,8 @@ export default function App() {
                 setActiveTab('cart');
                 setIsCartOpen(true);
               }}
-              onOpenWishlist={() => setIsWishlistOpen(true)}
-              onOpenStoreInfo={() => setIsStoreInfoOpen(true)}
+              onOpenWishlist={openWishlistPage}
+              onOpenStoreInfo={() => openPageRoute('/store')}
               onOpenAccount={() => setActiveTab('account')}
               onOpenNotifications={() => {
                 refreshNotificationCount();
@@ -719,6 +766,9 @@ export default function App() {
             onBack={() => setActiveTab('home')}
             onNotificationsChanged={refreshNotificationCount}
             onOpenShop={() => setActiveTab('shop')}
+            onOpenMyOrders={(orderNumber) => {
+              navigate(`/my-orders/${encodeURIComponent(orderNumber)}`);
+            }}
           />
         ) : activeTab === 'shop' ? (
           <ShopView
@@ -733,7 +783,7 @@ export default function App() {
               setSearchQuery(value);
               setActiveTab('search');
             }}
-            onSelectProduct={setSelectedProduct}
+            onSelectProduct={openProductRoute}
             onQuickAdd={handleQuickAddToCart}
             onToggleWishlist={handleToggleWishlist}
             onOpenCart={() => {
@@ -750,7 +800,7 @@ export default function App() {
               onRetryCatalog={retryCatalog}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
-              onSelectProduct={(p) => setSelectedProduct(p)}
+              onSelectProduct={openProductRoute}
               onQuickAddToCart={(p, e) => handleQuickAddToCart(p, e)}
               wishlist={wishlist}
               onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
@@ -780,9 +830,18 @@ export default function App() {
                 setActiveTab('home');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              onOpenWishlist={() => setIsWishlistOpen(true)}
-              onOpenStoreInfo={() => setIsStoreInfoOpen(true)}
-              onOpenCustomBuilder={() => setIsCustomBuilderOpen(true)}
+              onOpenWishlist={openWishlistPage}
+              routeModal={resolvedRoute.kind === 'orders' ? 'orders' : resolvedRoute.kind === 'settings' ? 'settings' : null}
+              initialOrderNumber={resolvedRoute.kind === 'orders' ? resolvedRoute.orderNumber : null}
+              onOpenOrdersPage={() => navigate('/my-orders')}
+              onSelectOrderRoute={(orderNumber) => navigate(`/my-orders/${encodeURIComponent(orderNumber)}`)}
+              onBackToOrdersRoute={() => navigate('/my-orders')}
+              onOpenSettingsPage={() => navigate('/settings')}
+              onOpenPrivacyPage={() => openPageRoute('/privacy-policy')}
+              onOpenTermsPage={() => openPageRoute('/terms-and-conditions')}
+              onExitRoutedPage={() => navigate('/profile')}
+              onOpenStoreInfo={() => openPageRoute('/store')}
+              onOpenCustomBuilder={openCustomBuilderPage}
               onOpenShop={() => {
                 setActiveTab('shop');
               }}
@@ -795,7 +854,7 @@ export default function App() {
             {/* Hero Section Banner */}
             <HeroBanner
               onExploreClick={scrollToShop}
-              onCustomClick={() => setIsCustomBuilderOpen(true)}
+              onCustomClick={openCustomBuilderPage}
               onBannerClick={handleBannerClick}
             />
 
@@ -855,7 +914,7 @@ export default function App() {
                         key={prod.id}
                         product={prod}
                         layoutMode="shelf"
-                        onSelectProduct={(p) => setSelectedProduct(p)}
+                        onSelectProduct={openProductRoute}
                         onQuickAddToCart={(p, e) => handleQuickAddToCart(p, e)}
                         isWishlisted={wishlist.some((w) => w.id === prod.id)}
                         onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
@@ -883,7 +942,7 @@ export default function App() {
                 </div>
 
                 <button
-                  onClick={() => setIsCustomBuilderOpen(true)}
+                  onClick={openCustomBuilderPage}
                   className="relative z-10 bg-white text-[#D9232D] hover:bg-gray-100 text-[11.5px] font-black px-3.5 py-2 rounded-xl shadow-sm transition-all active:scale-95 flex-shrink-0 cursor-pointer"
                 >
                   Custom Fit
@@ -1131,7 +1190,7 @@ export default function App() {
                       key={prod.id}
                       product={prod}
                       layoutMode="grid"
-                      onSelectProduct={(p) => setSelectedProduct(p)}
+                      onSelectProduct={openProductRoute}
                       onQuickAddToCart={(p, e) => handleQuickAddToCart(p, e)}
                       isWishlisted={wishlist.some((w) => w.id === prod.id)}
                       onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
@@ -1146,7 +1205,7 @@ export default function App() {
                       key={prod.id}
                       product={prod}
                       layoutMode="list"
-                      onSelectProduct={(p) => setSelectedProduct(p)}
+                      onSelectProduct={openProductRoute}
                       onQuickAddToCart={(p, e) => handleQuickAddToCart(p, e)}
                       isWishlisted={wishlist.some((w) => w.id === prod.id)}
                       onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
@@ -1205,7 +1264,7 @@ export default function App() {
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
-                      onClick={() => setIsPrivacyPolicyOpen(true)}
+                      onClick={() => openPageRoute('/privacy-policy')}
                       className="hover:text-white transition-colors underline-offset-2 hover:underline"
                     >
                       Privacy Policy
@@ -1213,7 +1272,7 @@ export default function App() {
                     <span className="text-gray-700">·</span>
                     <button
                       type="button"
-                      onClick={() => setIsTermsConditionsOpen(true)}
+                      onClick={() => openPageRoute('/terms-and-conditions')}
                       className="hover:text-white transition-colors underline-offset-2 hover:underline"
                     >
                       Terms & Conditions
@@ -1241,8 +1300,8 @@ export default function App() {
                 setActiveTab('cart');
                 setIsCartOpen(true);
               }}
-              onOpenWishlist={() => setIsWishlistOpen(true)}
-              onOpenCustomBuilder={() => setIsCustomBuilderOpen(true)}
+              onOpenWishlist={openWishlistPage}
+              onOpenCustomBuilder={openCustomBuilderPage}
               onOpenShop={() => {
                 setActiveTab('shop');
                 scrollToShop();
@@ -1264,7 +1323,7 @@ export default function App() {
         {selectedProduct && <ProductDetailModal
           products={catalogProducts}
           product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
+          onClose={closeProductRoute}
           onAddToCart={handleDetailAddToCart}
           isWishlisted={selectedProduct ? wishlist.some((w) => w.id === selectedProduct.id) : false}
           onToggleWishlist={(p) => handleToggleWishlist(p)}
@@ -1273,17 +1332,21 @@ export default function App() {
             setSelectedProduct(null);
             setActiveTab('cart');
             setIsCartOpen(true);
+            navigate('/cart');
           }}
           onOpenSearch={() => {
             setSelectedProduct(null);
             setActiveTab('search');
+            navigate('/search');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           onBuyNow={() => {
+            setSelectedProduct(null);
             setActiveTab('cart');
             setIsCartOpen(true);
+            navigate('/cart');
           }}
-          onSelectProduct={(p) => setSelectedProduct(p)}
+          onSelectProduct={openProductRoute}
           onQuickAdd={(p) =>
             handleDetailAddToCart(p, p.colors[0], p.stitchPatterns[0] || '', p.thicknessOptions[0])
           }
@@ -1325,7 +1388,7 @@ export default function App() {
           isOpen={isCheckoutOpen}
           userId={currentUser.id}
           onOrderPlaced={refreshNotificationCount}
-          onClose={() => setIsCheckoutOpen(false)}
+          onClose={() => { setIsCheckoutOpen(false); navigate('/cart'); }}
           items={cart}
           discount={checkoutDiscount}
           couponCode={checkoutCoupon}
@@ -1342,23 +1405,20 @@ export default function App() {
           }}
           wishlist={wishlist}
           onRemoveWishlist={(p) => handleToggleWishlist(p)}
-          onSelectProduct={(p) => setSelectedProduct(p)}
+          onSelectProduct={openProductRoute}
           onAddToCart={(p) => {
             handleDetailAddToCart(p, p.colors[0], p.stitchPatterns[0] || '', p.thicknessOptions[0]);
           }}
         />}
 
-        {isStoreInfoOpen && <StoreLocationModal isOpen={isStoreInfoOpen} onClose={() => setIsStoreInfoOpen(false)} />}
+        {isStoreInfoOpen && <StoreLocationModal isOpen={isStoreInfoOpen} onClose={() => navigateBackToPage('/home')} />}
 
         {/* 📜 Privacy Policy Modal / Slide-over */}
         {isPrivacyPolicyOpen && (
           <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
             <PrivacyPolicyView
-              onBack={() => setIsPrivacyPolicyOpen(false)}
-              onOpenStoreInfo={() => {
-                setIsPrivacyPolicyOpen(false);
-                setIsStoreInfoOpen(true);
-              }}
+              onBack={() => navigateBackToPage('/home')}
+              onOpenStoreInfo={() => openPageRoute('/store')}
             />
           </div>
         )}
@@ -1367,11 +1427,8 @@ export default function App() {
         {isTermsConditionsOpen && (
           <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
             <TermsConditionsView
-              onBack={() => setIsTermsConditionsOpen(false)}
-              onOpenStoreInfo={() => {
-                setIsTermsConditionsOpen(false);
-                setIsStoreInfoOpen(true);
-              }}
+              onBack={() => navigateBackToPage('/home')}
+              onOpenStoreInfo={() => openPageRoute('/store')}
             />
           </div>
         )}

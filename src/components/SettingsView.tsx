@@ -14,6 +14,8 @@ interface SettingsViewProps {
   onOpenWishlist?: () => void;
   onOpenStoreInfo?: () => void;
   onOpenShop?: () => void;
+  onOpenPrivacyPage?: () => void;
+  onOpenTermsPage?: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -22,6 +24,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onOpenOrders,
   onOpenStoreInfo,
   onOpenShop,
+  onOpenPrivacyPage,
+  onOpenTermsPage,
 }) => {
   const [activeModal, setActiveModal] = useState<
     | 'notifications'
@@ -221,7 +225,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         {/* Item 5: Privacy Policy */}
         <button
-          onClick={() => setActiveModal('privacy')}
+          onClick={() => onOpenPrivacyPage ? onOpenPrivacyPage() : setActiveModal('privacy')}
           className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left"
           type="button"
         >
@@ -248,7 +252,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         {/* Item 6: Terms & Conditions */}
         <button
-          onClick={() => setActiveModal('terms')}
+          onClick={() => onOpenTermsPage ? onOpenTermsPage() : setActiveModal('terms')}
           className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left"
           type="button"
         >

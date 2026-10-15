@@ -7,10 +7,24 @@
     { "path": "/custom", "title": "Custom Builder" },
     { "path": "/wishlist", "title": "Wishlist" },
     { "path": "/cart", "title": "Cart" },
+    { "path": "/checkout", "title": "Checkout" },
     { "path": "/profile", "title": "Account" },
     { "path": "/account", "title": "Account" },
+    { "path": "/my-orders", "title": "My Orders" },
+    { "path": "/myorder", "title": "My Orders" },
+    { "path": "/my-orders/:orderNumber", "title": "Order Details" },
+    { "path": "/myorder/:orderNumber", "title": "Order Details" },
     { "path": "/notifications", "title": "Notifications" },
     { "path": "/notification", "title": "Notifications" },
+    { "path": "/products/:slug", "title": "Product Details" },
+    { "path": "/product/:slug", "title": "Product Details" },
+    { "path": "/settings", "title": "Settings" },
+    { "path": "/privacy-policy", "title": "Privacy Policy" },
+    { "path": "/privacy", "title": "Privacy Policy" },
+    { "path": "/terms-and-conditions", "title": "Terms & Conditions" },
+    { "path": "/terms", "title": "Terms & Conditions" },
+    { "path": "/store", "title": "Store Location" },
+    { "path": "/store-info", "title": "Store Location" },
     { "path": "/admin", "title": "Admin" },
     { "path": "/Onboarding", "title": "Onboarding" },
     { "path": "/onboarding", "title": "Onboarding" },
@@ -18,6 +32,6 @@
     { "path": "/signup/onboarding", "title": "Account setup" },
     { "path": "/signup/loading", "title": "Loading" },
     { "path": "/auth/callback", "title": "Authentication callback" },
-    { "path": "/example/shop", "title": "Shop" }
+    { "path": "/example/shop", "title": "Home" }
   ]
 }

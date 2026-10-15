@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { APP_ROUTE_PATHS } from './lib/appRoutes';
 
 if ('serviceWorker' in navigator) {
   if (import.meta.env.PROD) {
@@ -16,24 +17,9 @@ if ('serviceWorker' in navigator) {
 
 // Explicit URL table; App remains a single persistent layout so route changes
 // do not reset authentication, cart, wishlist, or modal state.
-const pagePaths = [
-  'home',
-  'shop',
-  'search',
-  'custom',
-  'wishlist',
-  'cart',
-  'profile',
-  'account',
-  'notifications',
-  'notification',
-  'admin',
-  'Onboarding',
-  'signup',
-  'signup/onboarding',
-  'signup/loading',
-  'example/shop',
-];
+const pagePaths = APP_ROUTE_PATHS
+  .filter((path) => path !== '/')
+  .map((path) => path.replace(/^\//, ''));
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
