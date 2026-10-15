@@ -22,13 +22,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Product, VehicleCategory } from '../types';
 import { ProductCard } from './ProductCard';
 import { CatalogStatus } from './CatalogStatus';
-import {
-  FilterSortModal,
-  FilterState,
-  INITIAL_FILTERS,
-  SortOption,
-  SORT_LABELS,
-} from './FilterSortModal';
+import { FilterSortModal } from './FilterSortModal';
+import { INITIAL_FILTERS, SORT_LABELS } from '../data/filterOptions';
+import type { FilterState, SortOption } from '../data/filterOptions';
 
 interface SearchViewProps {
   products: Product[];

@@ -14,8 +14,7 @@ export type InvoiceStore = {
 
 export const DEFAULT_STORE: InvoiceStore = {
   name: WORKSHOP_INFO.name,
-  address:
-    'Main Station Road, Near Central Auto Stand, Kadbeltala, Murshidabad, West Bengal - 742136',
+  address: WORKSHOP_INFO.address,
   phone: WORKSHOP_INFO.phone,
   whatsapp: WORKSHOP_INFO.whatsapp,
   email: WORKSHOP_INFO.email,

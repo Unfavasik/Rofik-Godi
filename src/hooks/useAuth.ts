@@ -88,12 +88,27 @@ export function useAuth() {
       });
     };
 
-    const requestWelcomeEmail = () => {
+    const requestWelcomeEmail = (userId: string) => {
+      const storageKey = `welcome-email-requested:${userId}`;
+      try {
+        if (sessionStorage.getItem(storageKey)) return;
+        sessionStorage.setItem(storageKey, '1');
+      } catch {
+        // Session storage can be disabled; the server-side send ledger remains authoritative.
+      }
       setTimeout(() => {
         if (!active || !supabase) return;
         void supabase.functions.invoke('send-order-confirmation', { body: { type: 'welcome' } })
-          .then(({ error }) => { if (error) console.warn('Welcome email request failed'); })
-          .catch(() => console.warn('Welcome email request failed'));
+          .then(({ error }) => {
+            if (error) {
+              try { sessionStorage.removeItem(storageKey); } catch { /* best effort */ }
+              console.warn('Welcome email request failed');
+            }
+          })
+          .catch(() => {
+            try { sessionStorage.removeItem(storageKey); } catch { /* best effort */ }
+            console.warn('Welcome email request failed');
+          });
       }, 0);
     };
 
@@ -110,7 +125,7 @@ export function useAuth() {
         if (session?.user) queueMicrotask(() => {
           if (!active) return;
           applySession(session.user);
-          requestWelcomeEmail();
+          requestWelcomeEmail(session.user.id);
         });
         else clearSession();
         return;
@@ -125,7 +140,7 @@ export function useAuth() {
         queueMicrotask(() => {
           if (!active) return;
           applySession(session.user);
-          requestWelcomeEmail();
+          requestWelcomeEmail(session.user.id);
         });
         return;
       }
@@ -141,7 +156,7 @@ export function useAuth() {
       if (error || !data.session?.user) clearSession();
       else {
         applySession(data.session.user);
-        requestWelcomeEmail();
+        requestWelcomeEmail(data.session.user.id);
       }
     });
 

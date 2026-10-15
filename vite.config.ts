@@ -1,10 +1,15 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { fileURLToPath } from 'node:url';
 import {defineConfig, loadEnv} from 'vite';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  const allowedHosts = (env.VITE_ALLOWED_HOSTS || 'localhost,127.0.0.1,.manus.computer')
+    .split(',')
+    .map((host) => host.trim())
+    .filter(Boolean);
 
   return {
     define: {
@@ -15,15 +20,30 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+          '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.'),
       },
       // Keep every component on the same React dispatcher instance.
       dedupe: ['react', 'react-dom'],
     },
+    build: {
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            groups: [
+              { name: 'react-vendor', test: /node_modules\/(?:react|react-dom|scheduler)\// },
+              { name: 'supabase-vendor', test: /node_modules\/@supabase\// },
+              { name: 'motion-vendor', test: /node_modules\/(?:motion|framer-motion|@motion)\// },
+              { name: 'icons-vendor', test: /node_modules\/lucide-react\// },
+              { name: 'vendor', test: /node_modules/ },
+            ],
+          },
+        },
+      },
+    },
     server: {
       host: '0.0.0.0',
       port: 3000,
-      allowedHosts: true as const,
+      allowedHosts,
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',

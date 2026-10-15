@@ -1,6 +1,6 @@
 /// <reference lib="deno.ns" />
 
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts';
 import {
   buildOrderConfirmationEmail,
@@ -97,7 +97,7 @@ async function sendMail(
 }
 
 async function setLogStatus(
-  serviceClient: any,
+  serviceClient: SupabaseClient,
   table: string,
   filters: Record<string, string>,
   status: 'sent' | 'failed' | 'skipped',
@@ -117,7 +117,7 @@ async function setLogStatus(
 }
 
 async function claimRetryableLog(
-  serviceClient: any,
+  serviceClient: SupabaseClient,
   table: string,
   filters: Record<string, string>,
   insertValues: Record<string, unknown>,
@@ -155,7 +155,7 @@ async function claimRetryableLog(
 }
 
 async function claimConfirmationLog(
-  serviceClient: any,
+  serviceClient: SupabaseClient,
   orderId: string,
   userId: string,
   hasRecipient: boolean,
@@ -198,11 +198,11 @@ async function createClients(
   serviceRoleKey: string,
   authorization: string,
 ) {
-  const userClient: any = createClient(supabaseUrl, publishableKey, {
+  const userClient: SupabaseClient = createClient(supabaseUrl, publishableKey, {
     global: { headers: { Authorization: authorization } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const serviceClient: any = createClient(supabaseUrl, serviceRoleKey, {
+  const serviceClient: SupabaseClient = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const { data: authData, error: authError } = await userClient.auth.getUser();
@@ -214,7 +214,7 @@ async function handleWelcomeEmail(
   origin: string | null,
   credentials: NonNullable<ReturnType<typeof getEmailConfig>>,
   user: { id: string; email?: string; user_metadata?: Record<string, unknown>; email_confirmed_at?: string | null; confirmed_at?: string | null; created_at?: string },
-  serviceClient: any,
+  serviceClient: SupabaseClient,
 ) {
   const recipient = (user.email || '').trim();
   const createdAt = user.created_at ? Date.parse(user.created_at) : NaN;
@@ -248,7 +248,7 @@ async function handleOrderConfirmation(
   origin: string | null,
   credentials: NonNullable<ReturnType<typeof getEmailConfig>>,
   user: { id: string; email?: string; user_metadata?: Record<string, unknown> },
-  serviceClient: any,
+  serviceClient: SupabaseClient,
   orderNumber: string,
 ) {
   const { data: order, error: orderError } = await serviceClient
@@ -313,8 +313,8 @@ async function handleOrderConfirmation(
 async function handleOrderStatusEmail(
   origin: string | null,
   credentials: NonNullable<ReturnType<typeof getEmailConfig>>,
-  userClient: any,
-  serviceClient: any,
+  userClient: SupabaseClient,
+  serviceClient: SupabaseClient,
   event: OrderEmailEvent,
   orderNumber: string,
 ) {

@@ -79,8 +79,8 @@ describe('InvoiceTemplate', () => {
       <InvoiceTemplate order={toCustomerOrderRecord(adminOrder)} pickupToken="RGCPICKUP123" />,
     );
 
-    expect(DEFAULT_STORE.address).toContain('Murshidabad');
-    expect(html).toContain('Main Station Road');
+    expect(DEFAULT_STORE.address).toContain('Berhampore');
+    expect(html).toContain('Jalangi Road, Raninagar');
     expect(html).toContain('support@rofikgodi.com');
     expect(html).toContain('PENDING');
     expect(html).toContain('Balance due at store');

@@ -4,10 +4,12 @@ import { buildAvatarStoragePath } from './profileValidation';
 
 export async function getMyProfile(expectedUserId?: string) {
   if (!supabase) return null;
-  const { data: authData } = await supabase.auth.getSession();
+  const { data: authData, error: authError } = await supabase.auth.getSession();
+  if (authError) throw authError;
   const user = authData.session?.user;
   if (!user || (expectedUserId && expectedUserId !== user.id)) return null;
-  const { data } = await supabase.from('profiles').select('id,full_name,phone,avatar_url,vehicle_model,marketing_opt_in').eq('id', user.id).maybeSingle();
+  const { data, error } = await supabase.from('profiles').select('id,full_name,phone,avatar_url,vehicle_model,marketing_opt_in').eq('id', user.id).maybeSingle();
+  if (error) throw error;
   return data;
 }
 
@@ -108,11 +110,12 @@ export async function toggleWishlist(productId: string, saved: boolean) {
 
 export async function listMyNotifications(expectedUserId?: string) {
   if (!supabase) return [];
-  const { data: userData } = await supabase.auth.getUser();
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
   if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return [];
   const now = new Date().toISOString();
-  await supabase.from('notifications').delete().eq('user_id', userData.user.id).lte('expires_at', now);
-  const { data } = await supabase.from('notifications').select('id,kind,title,body,action_url,image_url,read_at,created_at,expires_at').eq('user_id', userData.user.id).gt('expires_at', now).order('created_at', { ascending: false }).limit(50);
+  const { data, error } = await supabase.from('notifications').select('id,kind,title,body,action_url,image_url,read_at,created_at,expires_at').eq('user_id', userData.user.id).gt('expires_at', now).order('created_at', { ascending: false }).limit(50);
+  if (error) throw error;
   return data || [];
 }
 
@@ -132,7 +135,11 @@ export async function deleteMyNotification(id: string, expectedUserId?: string) 
 
 export async function listMyOrders() {
   if (!supabase) return [];
-  const { data } = await supabase.from('orders').select('id,order_number,status,total,created_at,order_items(product_name,quantity,unit_price)').order('created_at', { ascending: false }).limit(50);
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
+  if (!userData.user) return [];
+  const { data, error } = await supabase.from('orders').select('id,order_number,status,total,created_at,order_items(product_name,quantity,unit_price)').eq('user_id', userData.user.id).order('created_at', { ascending: false }).limit(50);
+  if (error) throw error;
   return data || [];
 }
 

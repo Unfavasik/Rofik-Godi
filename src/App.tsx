@@ -12,37 +12,33 @@ import { CategorySection } from './components/CategorySection';
 import { CatalogStatus } from './components/CatalogStatus';
 import { VehicleFinder } from './components/VehicleFinder';
 import { ProductCard } from './components/ProductCard';
-import { ProductDetailModal } from './components/ProductDetailModal';
-import { CustomSeatBuilder } from './components/CustomSeatBuilder';
-import { CartDrawer } from './components/CartDrawer';
-import { CheckoutModal } from './components/CheckoutModal';
-import { WishlistModal } from './components/WishlistModal';
-import { StoreLocationModal } from './components/StoreLocationModal';
-import { PrivacyPolicyView } from './components/PrivacyPolicyView';
-import { TermsConditionsView } from './components/TermsConditionsView';
-import { CustomerReviews } from './components/CustomerReviews';
-import { AccountView } from './components/AccountView';
+const ProductDetailModal = lazy(() => import('./components/ProductDetailModal').then((module) => ({ default: module.ProductDetailModal })));
+const CustomSeatBuilder = lazy(() => import('./components/CustomSeatBuilder').then((module) => ({ default: module.CustomSeatBuilder })));
+const CartDrawer = lazy(() => import('./components/CartDrawer').then((module) => ({ default: module.CartDrawer })));
+const CheckoutModal = lazy(() => import('./components/CheckoutModal').then((module) => ({ default: module.CheckoutModal })));
+const WishlistModal = lazy(() => import('./components/WishlistModal').then((module) => ({ default: module.WishlistModal })));
+const StoreLocationModal = lazy(() => import('./components/StoreLocationModal').then((module) => ({ default: module.StoreLocationModal })));
+const PrivacyPolicyView = lazy(() => import('./components/PrivacyPolicyView').then((module) => ({ default: module.PrivacyPolicyView })));
+const TermsConditionsView = lazy(() => import('./components/TermsConditionsView').then((module) => ({ default: module.TermsConditionsView })));
+const AccountView = lazy(() => import('./components/AccountView').then((module) => ({ default: module.AccountView })));
+const CustomerReviews = lazy(() => import('./components/CustomerReviews').then((module) => ({ default: module.CustomerReviews })));
 import { BottomNav } from './components/BottomNav';
 import { SplashScreen } from './components/SplashScreen';
-import Onboarding from './components/Onboarding';
-import RofikOnboarding from './components/RofikOnboarding';
-import { AuthScreen } from './components/AuthScreen';
-import { LoginRequiredModal } from './components/LoginRequiredModal';
-import { SearchView } from './components/SearchView';
-import { NotificationsView } from './components/NotificationsView';
+const Onboarding = lazy(() => import('./components/Onboarding'));
+const RofikOnboarding = lazy(() => import('./components/RofikOnboarding'));
+const AuthScreen = lazy(() => import('./components/AuthScreen').then((module) => ({ default: module.AuthScreen })));
+const LoginRequiredModal = lazy(() => import('./components/LoginRequiredModal').then((module) => ({ default: module.LoginRequiredModal })));
+const SearchView = lazy(() => import('./components/SearchView').then((module) => ({ default: module.SearchView })));
+const NotificationsView = lazy(() => import('./components/NotificationsView').then((module) => ({ default: module.NotificationsView })));
 import { ShopView } from './components/ShopView';
+import { getCartItemUnitPrice, MAX_ORDER_ITEM_QUANTITY } from './lib/cart';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 const AdminPanel = lazy(() =>
   import('./components/AdminPanel').then((module) => ({ default: module.AdminPanel })),
 );
 import { AdminAccessGate } from './components/AdminAccessGate';
-import {
-  FilterSortModal,
-  FilterState,
-  INITIAL_FILTERS,
-  SortOption,
-  SORT_LABELS,
-} from './components/FilterSortModal';
+import { INITIAL_FILTERS, SORT_LABELS } from './data/filterOptions';
+import type { FilterState, SortOption } from './data/filterOptions';
 import {
   SlidersHorizontal,
   LayoutGrid,
@@ -59,6 +55,7 @@ import { useAuth } from './hooks/useAuth';
 import { useCart } from './hooks/useCart';
 import { useCatalog } from './hooks/useCatalog';
 import { listMyNotifications, listMyWishlist, toggleWishlist } from './lib/supabaseCustomer';
+const FilterSortModal = lazy(() => import('./components/FilterSortModal').then((module) => ({ default: module.FilterSortModal })));
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -107,7 +104,7 @@ export default function App() {
     }
     void listMyNotifications(currentUser.id).then((notifications) => {
       setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
-    });
+    }).catch(() => setNotificationCount(0));
   };
   useEffect(() => {
     let active = true;
@@ -120,7 +117,7 @@ export default function App() {
     void listMyNotifications(currentUser.id).then((notifications) => {
       if (active)
         setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
-    });
+    }).catch(() => { if (active) setNotificationCount(0); });
     return () => {
       active = false;
     };
@@ -408,12 +405,19 @@ export default function App() {
   const handleQuickAddToCart = (p: Product, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!p.inStock) return;
-    const existingIndex = cart.findIndex((item) => item.product.id === p.id);
+    const defaultColor = p.colors[0] || { name: 'Standard', hex: '#111827' };
+    const defaultThickness = p.thicknessOptions[0] || { label: 'Standard', extraPrice: 0 };
+    const defaultStitch = p.stitchPatterns[0] || undefined;
+    const existingIndex = cart.findIndex((item) => item.product.id === p.id
+      && item.selectedColor?.name === defaultColor.name
+      && item.selectedThickness?.label === defaultThickness.label
+      && item.selectedStitch === defaultStitch
+      && !item.customEmbroideryText);
 
     if (existingIndex > -1) {
       setCart((current) =>
         current.map((item, index) =>
-          index === existingIndex ? { ...item, quantity: item.quantity + 1 } : item,
+          index === existingIndex ? { ...item, quantity: Math.min(MAX_ORDER_ITEM_QUANTITY, item.quantity + 1) } : item,
         ),
       );
     } else {
@@ -421,10 +425,10 @@ export default function App() {
         cartItemId: `${p.id}-${Date.now()}`,
         product: p,
         quantity: 1,
-        selectedColor: p.colors[0],
-        selectedStitch: p.stitchPatterns[0] || undefined,
-        selectedThickness: p.thicknessOptions[0],
-        unitPrice: p.price,
+        selectedColor: defaultColor,
+        selectedStitch: defaultStitch,
+        selectedThickness: defaultThickness,
+        unitPrice: getCartItemUnitPrice(p, defaultThickness),
       };
       setCart((current) => [...current, newItem]);
     }
@@ -443,8 +447,7 @@ export default function App() {
     quantity = 1,
   ) => {
     if (!product.inStock) return;
-    const unitPrice =
-      product.price + selectedThickness.extraPrice + (customEmbroideryText ? 150 : 0);
+    const unitPrice = getCartItemUnitPrice(product, selectedThickness, customEmbroideryText);
 
     const newItem: CartItem = {
       cartItemId: `${product.id}-${selectedColor.name}-${selectedStitch}-${Date.now()}`,
@@ -481,7 +484,7 @@ export default function App() {
       setCart((current) => current.filter((i) => i.cartItemId !== cartItemId));
     } else {
       setCart((current) =>
-        current.map((i) => (i.cartItemId === cartItemId ? { ...i, quantity: newQty } : i)),
+        current.map((i) => (i.cartItemId === cartItemId ? { ...i, quantity: Math.min(MAX_ORDER_ITEM_QUANTITY, newQty) } : i)),
       );
     }
   };
@@ -639,6 +642,7 @@ export default function App() {
   // Login / Signup Screen
   if (appPhase === 'auth') {
     return (
+      <Suspense fallback={<SplashScreen />}>
       <div className="min-h-screen bg-[#f7d9de] flex justify-center selection:bg-[#e0182d] selection:text-white font-sans antialiased text-[#0f1a3a]">
         <AuthScreen
           initialMode={authInitialMode}
@@ -650,6 +654,7 @@ export default function App() {
           onOpenPrivacy={() => setIsPrivacyPolicyOpen(true)}
         />
       </div>
+      </Suspense>
     );
   }
 
@@ -706,12 +711,14 @@ export default function App() {
           )}
 
         {/* View Switcher: Search View / Account View / Home & Shop Experience */}
+        <Suspense fallback={<main role="status" className="flex min-h-[40vh] flex-1 items-center justify-center text-sm font-semibold text-slate-500">Loading view…</main>}>
         {activeTab === 'notifications' ? (
           <NotificationsView
             userId={currentUser.id}
             isGuest={currentUser.isGuest}
             onBack={() => setActiveTab('home')}
             onNotificationsChanged={refreshNotificationCount}
+            onOpenShop={() => setActiveTab('shop')}
           />
         ) : activeTab === 'shop' ? (
           <ShopView
@@ -1218,6 +1225,7 @@ export default function App() {
             </footer>
           </main>
         )}
+        </Suspense>
 
         {/* Bottom Tab Bar Navigation */}
         {!isNotificationPage &&
@@ -1252,7 +1260,8 @@ export default function App() {
           )}
 
         {/* Modals & Slide-overs */}
-        <ProductDetailModal
+        <Suspense fallback={null}>
+        {selectedProduct && <ProductDetailModal
           products={catalogProducts}
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
@@ -1284,9 +1293,9 @@ export default function App() {
             setLoginModalReason('Sign in to review products you have purchased.');
             setIsLoginModalOpen(true);
           }}
-        />
+        />}
 
-        <CustomSeatBuilder
+        {(isCustomBuilderOpen || activeTab === 'custom') && <CustomSeatBuilder
           isOpen={isCustomBuilderOpen || activeTab === 'custom'}
           onClose={() => {
             setIsCustomBuilderOpen(false);
@@ -1297,9 +1306,9 @@ export default function App() {
             setActiveTab('cart');
             setIsCartOpen(true);
           }}
-        />
+        />}
 
-        <CartDrawer
+        {(isCartOpen || activeTab === 'cart') && <CartDrawer
           isOpen={isCartOpen || activeTab === 'cart'}
           onClose={() => {
             setIsCartOpen(false);
@@ -1310,9 +1319,9 @@ export default function App() {
           onUpdateQuantity={handleUpdateQuantity}
           onRemoveItem={handleRemoveCartItem}
           onProceedToCheckout={handleProceedToCheckout}
-        />
+        />}
 
-        <CheckoutModal
+        {isCheckoutOpen && <CheckoutModal
           isOpen={isCheckoutOpen}
           userId={currentUser.id}
           onOrderPlaced={refreshNotificationCount}
@@ -1323,9 +1332,9 @@ export default function App() {
           couponSubtotal={checkoutQuote?.subtotal}
           couponTotal={checkoutQuote?.total}
           onClearCart={clearCart}
-        />
+        />}
 
-        <WishlistModal
+        {(isWishlistOpen || activeTab === 'wishlist') && <WishlistModal
           isOpen={isWishlistOpen || activeTab === 'wishlist'}
           onClose={() => {
             setIsWishlistOpen(false);
@@ -1337,9 +1346,9 @@ export default function App() {
           onAddToCart={(p) => {
             handleDetailAddToCart(p, p.colors[0], p.stitchPatterns[0] || '', p.thicknessOptions[0]);
           }}
-        />
+        />}
 
-        <StoreLocationModal isOpen={isStoreInfoOpen} onClose={() => setIsStoreInfoOpen(false)} />
+        {isStoreInfoOpen && <StoreLocationModal isOpen={isStoreInfoOpen} onClose={() => setIsStoreInfoOpen(false)} />}
 
         {/* 📜 Privacy Policy Modal / Slide-over */}
         {isPrivacyPolicyOpen && (
@@ -1368,7 +1377,7 @@ export default function App() {
         )}
 
         {/* 🎛️ Filter & Sort Modal for Home Catalog */}
-        <FilterSortModal
+        {(isHomeFilterOpen || isHomeSortOpen) && <FilterSortModal
           isFilterOpen={isHomeFilterOpen}
           isSortOpen={isHomeSortOpen}
           onCloseFilter={() => setIsHomeFilterOpen(false)}
@@ -1388,10 +1397,11 @@ export default function App() {
             setVehicleFilter(null);
           }}
           matchingCount={filteredProducts.length}
-        />
+        />}
+        </Suspense>
 
         {/* 🔐 Login Required Modal (Triggered on Guest Checkout / Account Access) */}
-        <LoginRequiredModal
+        {isLoginModalOpen && <Suspense fallback={null}><LoginRequiredModal
           isOpen={isLoginModalOpen}
           onClose={() => {
             setIsLoginModalOpen(false);
@@ -1402,7 +1412,7 @@ export default function App() {
             setAuthInitialMode(mode || 'signup');
             goToPhase('auth');
           }}
-        />
+        /></Suspense>}
         <Outlet />
       </div>
     </div>

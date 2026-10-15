@@ -46,6 +46,15 @@ const ProductImage: React.FC<{ src: string | null | undefined; alt: string; vari
   );
 };
 
+const ProductCardOpenButton: React.FC<{ product: Product; onSelectProduct: (p: Product) => void }> = ({ product, onSelectProduct }) => (
+  <button
+    type="button"
+    onClick={() => onSelectProduct(product)}
+    aria-label={`View ${product.title}`}
+    className="absolute inset-0 z-0 m-0 appearance-none rounded-2xl border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] focus-visible:ring-offset-2"
+  />
+);
+
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onSelectProduct,
@@ -70,11 +79,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   if (layoutMode === 'list') {
     return (
       <article
-        onClick={() => onSelectProduct(product)}
         className="w-full bg-white rounded-2xl p-3 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.06)] hover:border-gray-200 flex items-center justify-between gap-3 relative group cursor-pointer transition-all duration-200 select-none"
       >
+        <ProductCardOpenButton product={product} onSelectProduct={onSelectProduct} />
         {/* Left: Thumbnail with Badge */}
-        <div className="relative w-20 h-20 sm:w-24 sm:h-24 bg-[#F4F4F6] rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center">
+        <div className="relative z-10 pointer-events-none w-20 h-20 sm:w-24 sm:h-24 bg-[#F4F4F6] rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center">
           <ProductImage src={product.image} alt={product.title} variant="list" />
 
           {badgeLabel && (
@@ -88,7 +97,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* Middle: Title, Subtitle, Rating, Price */}
-        <div className="flex-1 min-w-0 pr-1">
+        <div className="relative z-10 pointer-events-none flex-1 min-w-0 pr-1">
           <h4 className="text-[13.5px] font-bold text-gray-900 group-hover:text-[#D9232D] transition-colors leading-tight break-words">
             {product.title}
           </h4>
@@ -125,12 +134,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* Right: Wishlist Heart & Red Add Button */}
-        <div className="flex flex-col items-center justify-between self-stretch py-0.5 flex-shrink-0">
+        <div className="relative z-10 pointer-events-none flex flex-col items-center justify-between self-stretch py-0.5 flex-shrink-0">
           <button
             type="button"
             onClick={(e) => onToggleWishlist(product, e)}
-            aria-label="Add to Wishlist"
-            className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors active:scale-90"
+            aria-label={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+            aria-pressed={isWishlisted}
+            className="pointer-events-auto w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors active:scale-90"
           >
             <Heart
               className={`w-4 h-4 transition-colors ${
@@ -145,7 +155,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             onClick={(e) => { if (product.inStock) onQuickAddToCart(product, e); }}
             disabled={!product.inStock}
             aria-label={product.inStock ? 'Add to cart' : 'Out of stock'}
-            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all shadow-sm ${
+            className={`pointer-events-auto w-8 h-8 rounded-xl flex items-center justify-center transition-all shadow-sm ${
               isAddedJustNow
                 ? 'bg-emerald-600 text-white'
                 : 'bg-[#D9232D] text-white hover:bg-red-700 active:scale-95'
@@ -168,13 +178,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   // ----------------------------------------------------------------------
   return (
     <article
-      onClick={() => onSelectProduct(product)}
       className={`${
         layoutMode === 'shelf' ? 'flex-shrink-0 w-[148px] sm:w-[160px]' : 'w-full'
       } bg-white rounded-2xl p-2.5 border border-gray-100 shadow-[0_4px_16px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-gray-200 flex flex-col justify-between relative group cursor-pointer transition-all duration-200 select-none`}
     >
+      <ProductCardOpenButton product={product} onSelectProduct={onSelectProduct} />
       {/* Card Image & Badges Container */}
-      <div className="relative w-full h-[124px] sm:h-[145px] bg-[#F4F4F6] rounded-xl overflow-hidden flex items-center justify-center mb-2">
+      <div className="relative z-10 pointer-events-none w-full h-[124px] sm:h-[145px] bg-[#F4F4F6] rounded-xl overflow-hidden flex items-center justify-center mb-2">
         <ProductImage src={product.image} alt={product.title} variant="grid" />
 
         {/* Dynamic Badge (Bestseller, New, Gel, Waterproof, etc.) */}
@@ -190,8 +200,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <button
           type="button"
           onClick={(e) => onToggleWishlist(product, e)}
-          aria-label="Add to Wishlist"
-          className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-gray-600 hover:text-red-500 shadow-xs transition-colors active:scale-90"
+          aria-label={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+          aria-pressed={isWishlisted}
+          className="pointer-events-auto absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-gray-600 hover:text-red-500 shadow-xs transition-colors active:scale-90"
         >
           <Heart
             className={`w-3.5 h-3.5 transition-colors ${
@@ -208,21 +219,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
 
       {/* Product Title */}
-      <h4 className="text-[12.5px] font-bold text-gray-800 leading-tight mb-0.5 break-words group-hover:text-[#D9232D] transition-colors">
+      <h4 className="relative z-10 pointer-events-none text-[12.5px] font-bold text-gray-800 leading-tight mb-0.5 break-words group-hover:text-[#D9232D] transition-colors">
         {product.title}
       </h4>
-      {!product.inStock && <p className="text-[10px] font-black uppercase text-amber-700">Out of stock</p>}
+      {!product.inStock && <p className="relative z-10 pointer-events-none text-[10px] font-black uppercase text-amber-700">Out of stock</p>}
 
       {/* Subtitle / Short Description */}
       {product.subtitle && (
-        <p className="text-[10.5px] text-gray-400 font-medium mb-1.5 break-words">
+        <p className="relative z-10 pointer-events-none text-[10.5px] text-gray-400 font-medium mb-1.5 break-words">
           {product.subtitle}
         </p>
       )}
 
       {/* Price & Action Button */}
-      <div className="flex items-center justify-between mt-auto pt-1 border-t border-gray-50">
-        <div className="flex flex-col">
+      <div className="relative z-10 pointer-events-none flex items-center justify-between mt-auto pt-1 border-t border-gray-50">
+        <div className="pointer-events-none flex flex-col">
           <span className="text-[14.5px] font-black text-[#D9232D] leading-none">
             ₹{product.price}
           </span>
@@ -235,9 +246,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <motion.button
           whileTap={{ scale: 0.88 }}
           type="button"
-          onClick={(e) => onQuickAddToCart(product, e)}
-          aria-label="Add to cart"
-          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all shadow-xs ${
+          onClick={(e) => { if (product.inStock) onQuickAddToCart(product, e); }}
+          disabled={!product.inStock}
+          aria-label={product.inStock ? 'Add to cart' : 'Out of stock'}
+          className={`pointer-events-auto w-7 h-7 rounded-lg flex items-center justify-center transition-all shadow-xs ${
             isAddedJustNow
               ? 'bg-emerald-600 text-white'
               : 'bg-[#D9232D] text-white hover:bg-red-700 active:scale-95'

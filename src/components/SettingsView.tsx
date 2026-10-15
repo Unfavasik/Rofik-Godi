@@ -4,6 +4,8 @@ import { X, Check, Phone, MessageCircle, Star, Globe, Bell } from 'lucide-react'
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
+import { CouponDetailsView } from './CouponDetailsView';
+import { WORKSHOP_INFO } from '../data/products';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -11,6 +13,7 @@ interface SettingsViewProps {
   onOpenOrders?: () => void;
   onOpenWishlist?: () => void;
   onOpenStoreInfo?: () => void;
+  onOpenShop?: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -18,6 +21,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onLogout,
   onOpenOrders,
   onOpenStoreInfo,
+  onOpenShop,
 }) => {
   const [activeModal, setActiveModal] = useState<
     | 'notifications'
@@ -35,6 +39,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   // States for sub-modals
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
+  const [selectedCouponOffer, setSelectedCouponOffer] = useState<CustomerCouponOffer | null>(null);
   const [couponOffers, setCouponOffers] = useState<CustomerCouponOffer[]>([]);
   const [couponOffersLoading, setCouponOffersLoading] = useState(false);
   const [couponOffersError, setCouponOffersError] = useState('');
@@ -140,7 +145,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         {/* Item 2: Coupons & Offers */}
         <button
-          onClick={() => setActiveModal('coupons')}
+          onClick={() => { setSelectedCouponOffer(null); setActiveModal('coupons'); }}
           className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left"
           type="button"
         >
@@ -461,43 +466,55 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* 2. Coupons & Offers Modal */}
       <AnimatePresence>
         {activeModal === 'coupons' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
-            <motion.div initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }} className="relative w-full max-w-[420px] bg-white rounded-[28px] shadow-2xl p-5 z-10 space-y-4">
-              <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                <div>
-                  <h3 className="text-base font-bold text-gray-900">Coupons & Special Offers</h3>
-                  <p className="text-xs text-gray-500">Tap to copy code and use at checkout</p>
+          selectedCouponOffer ? (
+            <CouponDetailsView
+              offer={selectedCouponOffer}
+              onBack={() => setSelectedCouponOffer(null)}
+              onShopNow={() => {
+                setSelectedCouponOffer(null);
+                setActiveModal(null);
+                onOpenShop?.();
+              }}
+            />
+          ) : (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setSelectedCouponOffer(null); setActiveModal(null); }} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
+              <motion.div initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }} className="relative w-full max-w-[420px] bg-white rounded-[28px] shadow-2xl p-5 z-10 space-y-4">
+                <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900">Coupons & Special Offers</h3>
+                    <p className="text-xs text-gray-500">Tap an offer for details or copy its code</p>
+                  </div>
+                  <button onClick={() => { setSelectedCouponOffer(null); setActiveModal(null); }} aria-label="Close coupons" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
 
-              <div className="max-h-[60vh] space-y-2.5 overflow-y-auto">
-                {couponOffersLoading ? <p className="py-8 text-center text-xs font-semibold text-gray-400">Loading active offers…</p>
-                  : couponOffersError ? <p role="status" className="rounded-xl bg-amber-50 p-4 text-center text-xs font-semibold text-amber-800">{couponOffersError}</p>
-                  : couponOffers.length === 0 ? <p className="py-8 text-center text-xs font-semibold text-gray-400">No active coupon offers right now. Please check back later.</p>
-                  : couponOffers.map((offer) => (
-                    <div key={offer.code} className="rounded-2xl border border-red-200/70 bg-gradient-to-r from-red-50 to-orange-50 p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-mono text-sm font-black tracking-wide text-[#D9232D]">{offer.code}</span>
-                            <span className="rounded bg-[#D9232D] px-1.5 py-0.5 text-[9px] font-extrabold text-white">{couponBenefit(offer)}</span>
-                          </div>
-                          <p className="mt-1 text-[11.5px] text-gray-600">{couponDetails(offer)}</p>
-                          <p className="mt-1 text-[10px] font-semibold text-gray-400">Valid until {new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }).format(new Date(offer.expires_at))}</p>
+                <div className="max-h-[60vh] space-y-2.5 overflow-y-auto">
+                  {couponOffersLoading ? <p className="py-8 text-center text-xs font-semibold text-gray-400">Loading active offers…</p>
+                    : couponOffersError ? <p role="status" className="rounded-xl bg-amber-50 p-4 text-center text-xs font-semibold text-amber-800">{couponOffersError}</p>
+                    : couponOffers.length === 0 ? <p className="py-8 text-center text-xs font-semibold text-gray-400">No active coupon offers right now. Please check back later.</p>
+                    : couponOffers.map((offer) => (
+                      <div key={offer.code} className="rounded-2xl border border-red-200/70 bg-gradient-to-r from-red-50 to-orange-50 p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <button type="button" onClick={() => setSelectedCouponOffer(offer)} className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] focus-visible:ring-offset-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-mono text-sm font-black tracking-wide text-[#D9232D]">{offer.code}</span>
+                              <span className="rounded bg-[#D9232D] px-1.5 py-0.5 text-[9px] font-extrabold text-white">{couponBenefit(offer)}</span>
+                            </div>
+                            <p className="mt-1 text-[11.5px] text-gray-600">{couponDetails(offer)}</p>
+                            <p className="mt-1 text-[10px] font-semibold text-gray-400">Valid until {new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }).format(new Date(offer.expires_at))}</p>
+                          </button>
+                          <button type="button" onClick={() => handleCopyCoupon(offer.code)} className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${copiedCoupon === offer.code ? 'bg-emerald-600 text-white' : 'border border-gray-200 bg-white text-gray-900 shadow-xs'}`}>
+                            {copiedCoupon === offer.code ? 'Copied!' : 'Copy'}
+                          </button>
                         </div>
-                        <button onClick={() => handleCopyCoupon(offer.code)} className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${copiedCoupon === offer.code ? 'bg-emerald-600 text-white' : 'border border-gray-200 bg-white text-gray-900 shadow-xs'}`}>
-                          {copiedCoupon === offer.code ? 'Copied!' : 'Copy'}
-                        </button>
                       </div>
-                    </div>
-                  ))}
-              </div>
-            </motion.div>
-          </div>
+                    ))}
+                </div>
+              </motion.div>
+            </div>
+          )
         )}
       </AnimatePresence>
 
@@ -620,8 +637,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   Every seat cover is reinforced with high-tensile Japanese thread, triple-layer rexine, and high-density anti-fatigue memory foam tailored specifically for Indian road conditions.
                 </p>
                 <div className="pt-2 border-t border-gray-100 flex justify-between text-[11px] text-gray-500 font-medium">
-                  <span>📍 Kadbeltala, Murshidabad</span>
-                  <span>⭐ 4.9/5 Rating (1,200+ Seats)</span>
+                  <span>📍 {WORKSHOP_INFO.address}</span>
+                  <span>☎ {WORKSHOP_INFO.phone}</span>
                 </div>
               </div>
             </motion.div>
@@ -700,11 +717,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="overflow-y-auto space-y-2.5 text-xs text-gray-700 flex-1 pr-1">
                 <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
                   <h4 className="font-bold text-gray-900">Q: How does on-spot fitting work?</h4>
-                  <p className="text-gray-500">A: Bring your bike or Toto to our Kadbeltala store. Our masters fit and staple the seat cover within 15 minutes.</p>
+                  <p className="text-gray-500">A: On-site fitting availability and timing can vary. Please contact the workshop before travelling for a specific fitting request.</p>
                 </div>
                 <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
                   <h4 className="font-bold text-gray-900">Q: Are the seat covers water-proof?</h4>
-                  <p className="text-gray-500">A: Yes! All our rexine materials and diamond-quilted padding include water-barrier underlays.</p>
+                  <p className="text-gray-500">A: Water resistance and materials vary by product. Check the product details before ordering or contact the workshop if you need help.</p>
                 </div>
                 <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
                   <h4 className="font-bold text-gray-900">Q: Can I customize piping and stitch patterns?</h4>
@@ -725,7 +742,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                 <div>
                   <h3 className="text-base font-bold text-gray-900">Contact Workshop Team</h3>
-                  <p className="text-xs text-gray-500">We are open daily 9:00 AM – 8:30 PM</p>
+                  <p className="text-xs text-gray-500">{WORKSHOP_INFO.workingHours}</p>
                 </div>
                 <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
                   <X className="w-4 h-4" />
@@ -734,7 +751,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               <div className="space-y-2.5">
                 <a
-                  href="tel:+919832145678"
+                  href={`tel:${WORKSHOP_INFO.phone.replace(/\s/g, '')}`}
                   className="flex items-center justify-between p-3.5 bg-[#EBF5FF] text-[#2563EB] rounded-2xl font-bold text-xs"
                 >
                   <div className="flex items-center gap-2.5">

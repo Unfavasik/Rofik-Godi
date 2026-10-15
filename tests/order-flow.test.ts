@@ -80,8 +80,8 @@ describe('secure order creation flow', () => {
 
     const result = await createSupabaseOrder(order, 'customer-1', ' save10 ');
 
-    expect(supabaseMock.rpc).toHaveBeenCalledWith('create_store_pickup_order', expect.objectContaining({
-      p_items: [{ product_id: productId, quantity: 2, color: 'Black' }],
+    expect(supabaseMock.rpc).toHaveBeenCalledWith('create_store_pickup_order_v2', expect.objectContaining({
+      p_items: [{ product_id: productId, quantity: 2, color: 'Black', thickness_label: 'Standard', stitch: '', embroidery_text: '' }],
       p_coupon_code: 'SAVE10',
       p_payment_method: 'PAY_AT_STORE',
     }));

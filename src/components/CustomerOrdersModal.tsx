@@ -32,6 +32,7 @@ interface CustomerOrdersModalProps {
   orders: CustomerOrderRecord[];
   reviews: ProductReviewRecord[];
   loading: boolean;
+  error?: string;
   customerName: string;
   onClose: () => void;
   onRefresh?: () => Promise<void> | void;
@@ -122,7 +123,7 @@ const OrderTimeline = ({ status, createdAt }: { status: string; createdAt: strin
   );
 };
 
-export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders, reviews, loading, customerName, onClose, onRefresh, onReview }) => {
+export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders, reviews, loading, error, customerName, onClose, onRefresh, onReview }) => {
   const [filter, setFilter] = useState<OrderFilter>('all');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<CustomerOrderRecord | null>(null);
@@ -205,7 +206,13 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
                   </button>
                 ))}
               </div>
-              {loading ? (
+              {error ? (
+                <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-5 text-center">
+                  <p className="text-sm font-bold text-rose-800">Your order history could not be loaded.</p>
+                  <p className="mt-1 text-xs text-rose-700">{error}</p>
+                  <button type="button" onClick={() => void onRefresh?.()} className="mt-3 rounded-full bg-rose-700 px-4 py-2 text-xs font-extrabold text-white">Try again</button>
+                </div>
+              ) : loading ? (
                 <div className="space-y-3" aria-label="Loading orders">
                   {[0, 1, 2].map((item) => <div key={item} className="h-[160px] animate-pulse rounded-[22px] border border-slate-100 bg-white" />)}
                 </div>
@@ -315,7 +322,13 @@ export const OrderDetails = ({ order, customerName, reviews, onRefresh, onInvoic
             const reviewable = complete && Boolean(item.product_id && /^[0-9a-f-]{36}$/i.test(item.product_id));
             return <div key={`${item.product_id || item.product_name}-${index}`} className="flex items-center gap-3 py-3">
               <ProductThumb name={item.product_name} image={item.image_url} className="h-[58px] w-[58px] rounded-2xl" />
-              <div className="min-w-0 flex-1"><p className="line-clamp-2 text-[11px] font-extrabold leading-snug text-slate-900">{item.product_name}</p><p className="mt-1 text-[10px] text-slate-500">{item.color ? `${item.color} · ` : ''}Qty: {item.quantity}</p>{productReview?.is_verified_purchase && <p className="mt-1 text-[9px] font-bold text-emerald-700">Verified purchase · Review saved</p>}{reviewable && <button type="button" onClick={() => onReview(order, item.product_id!, item.product_name, productReview)} className="mt-1.5 text-[9px] font-extrabold text-[#cf4033] underline decoration-[#cf4033]/30 underline-offset-2">{productReview ? 'Edit review' : 'Rate item'}</button>}</div>
+              <div className="min-w-0 flex-1">
+                <p className="line-clamp-2 text-[11px] font-extrabold leading-snug text-slate-900">{item.product_name}</p>
+                <p className="mt-1 text-[10px] text-slate-500">{item.color ? `${item.color} · ` : ''}Qty: {item.quantity}</p>
+                {(item.selected_thickness || item.selected_stitch || item.custom_embroidery_text) && <p className="mt-1 text-[9px] leading-relaxed text-slate-500">{[item.selected_thickness && `Thickness: ${item.selected_thickness}`, item.selected_stitch && `Stitch: ${item.selected_stitch}`, item.custom_embroidery_text && `Embroidery: ${item.custom_embroidery_text}`].filter(Boolean).join(' · ')}</p>}
+                {productReview?.is_verified_purchase && <p className="mt-1 text-[9px] font-bold text-emerald-700">Verified purchase · Review saved</p>}
+                {reviewable && <button type="button" onClick={() => onReview(order, item.product_id!, item.product_name, productReview)} className="mt-1.5 text-[9px] font-extrabold text-[#cf4033] underline decoration-[#cf4033]/30 underline-offset-2">{productReview ? 'Edit review' : 'Rate item'}</button>}
+              </div>
               <div className="shrink-0 text-right"><p className="text-[11px] font-black text-slate-900">{formatMoney(Number(item.unit_price || 0) * Number(item.quantity || 0))}</p><p className="mt-0.5 text-[9px] text-slate-400">Qty: {item.quantity}</p></div>
             </div>;
           })}

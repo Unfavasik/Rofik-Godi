@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { CartItem } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { loadCustomerCouponOffers, validateCustomerCoupon, type CustomerCouponOffer } from '../lib/supabaseCoupons';
+import { MAX_ORDER_ITEM_QUANTITY } from '../lib/cart';
 import {
   X,
   ShoppingBag,
@@ -41,6 +42,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [couponOffers, setCouponOffers] = useState<CustomerCouponOffer[]>([]);
   const [couponOffersLoading, setCouponOffersLoading] = useState(false);
   const [couponOffersError, setCouponOffersError] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (!isOpen || items.length === 0) return;
@@ -118,6 +128,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cart-dialog-title"
+          tabIndex={-1}
           className="relative w-full max-w-[420px] bg-white h-full shadow-2xl flex flex-col z-10 overflow-hidden"
         >
           {/* Header */}
@@ -127,14 +141,16 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <ShoppingBag className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-[15px] font-black text-gray-900 leading-tight">Your Cart</h3>
+                <h3 id="cart-dialog-title" className="text-[15px] font-black text-gray-900 leading-tight">Your Cart</h3>
                 <p className="text-[11px] text-gray-400 font-medium">
                   {items.length} {items.length === 1 ? 'item' : 'items'} selected
                 </p>
               </div>
             </div>
             <button
+              type="button"
               onClick={onClose}
+              aria-label="Close cart"
               className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center transition-colors"
             >
               <X className="w-4 h-4" />
@@ -235,7 +251,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                       <div className="flex items-center border border-gray-200 rounded-lg bg-gray-50 p-0.5">
                         <button
+                          type="button"
                           onClick={() => onUpdateQuantity(item.cartItemId, item.quantity - 1)}
+                          aria-label={`Decrease quantity of ${item.product.title}`}
                           className="w-5 h-5 rounded bg-white shadow-2xs text-gray-700 text-xs font-bold flex items-center justify-center hover:bg-gray-100"
                         >
                           -
@@ -244,7 +262,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => onUpdateQuantity(item.cartItemId, item.quantity + 1)} disabled={!item.product.inStock}
+                          type="button"
+                          onClick={() => onUpdateQuantity(item.cartItemId, item.quantity + 1)} disabled={!item.product.inStock || item.quantity >= MAX_ORDER_ITEM_QUANTITY}
+                          aria-label={item.quantity >= MAX_ORDER_ITEM_QUANTITY ? `Maximum quantity reached for ${item.product.title}` : `Increase quantity of ${item.product.title}`}
                           className="w-5 h-5 rounded bg-white shadow-2xs text-gray-700 text-xs font-bold flex items-center justify-center hover:bg-gray-100"
                         >
                           +

@@ -57,6 +57,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
   onOpenWishlist,
   wishlistCount = 0,
   onOpenStoreInfo,
+  onOpenShop,
   onProfileChange,
 }) => {
   const handleGoHome = () => {
@@ -71,6 +72,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
   const [customerOrders, setCustomerOrders] = useState<CustomerOrderRecord[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState('');
   const [myReviews, setMyReviews] = useState<ProductReviewRecord[]>([]);
   const [reviewComposer, setReviewComposer] = useState<{ productId: string; orderId: string; orderNumber: string; productTitle: string; review?: ProductReviewRecord } | null>(null);
   useEffect(() => {
@@ -80,14 +82,18 @@ export const AccountView: React.FC<AccountViewProps> = ({
     if (!ordersUser || ordersUser.isGuest) {
       setCustomerOrders([]);
       setOrdersLoading(false);
+      setOrdersError('');
       return () => { active = false; };
     }
+    setOrdersError('');
     setOrdersLoading(true);
     void Promise.all([listMyOrders(ordersUser.id), listMyProductReviews(ordersUser.id)]).then(([orders, reviews]) => {
       if (active) {
         setCustomerOrders(orders);
         setMyReviews(reviews);
       }
+    }).catch((error) => {
+      if (active) setOrdersError(error instanceof Error ? error.message : 'Your order history could not be loaded.');
     }).finally(() => {
       if (active) setOrdersLoading(false);
     });
@@ -97,9 +103,17 @@ export const AccountView: React.FC<AccountViewProps> = ({
   const refreshCustomerOrders = useCallback(async () => {
     const ordersUser = currentUserRef.current;
     if (!ordersUser || ordersUser.isGuest) return;
-    const latestOrders = await listMyOrders(ordersUser.id);
-    if (currentUserRef.current?.id !== ordersUser.id) return;
-    setCustomerOrders((current) => latestOrders.length || current.length === 0 ? latestOrders : current);
+    setOrdersLoading(true);
+    setOrdersError('');
+    try {
+      const latestOrders = await listMyOrders(ordersUser.id);
+      if (currentUserRef.current?.id !== ordersUser.id) return;
+      setCustomerOrders(latestOrders);
+    } catch (error) {
+      setOrdersError(error instanceof Error ? error.message : 'Your order history could not be refreshed.');
+    } finally {
+      setOrdersLoading(false);
+    }
   }, []);
 
   const [profileName, setProfileName] = useState('');
@@ -314,6 +328,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
         onOpenOrders={() => setActiveModal('orders')}
         onOpenWishlist={onOpenWishlist}
         onOpenStoreInfo={onOpenStoreInfo}
+        onOpenShop={onOpenShop}
       />
     );
   }
@@ -507,7 +522,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
         {/* END: HeroBanner */}
 
         {/* BEGIN: QuickActionsGrid */}
-        <section className="grid grid-cols-4 gap-2.5 pt-0.5" data-purpose="quick-navigation-grid">
+        <section className="space-y-2.5 pt-0.5" data-purpose="account-categories">
+          <h2 className="px-1 text-base font-bold tracking-tight text-slate-900">Your account</h2>
+          <div className="grid grid-cols-4 gap-2.5" data-purpose="quick-navigation-grid">
           {/* 1. My Orders (Soft Pink) */}
           <button
             type="button"
@@ -546,18 +563,19 @@ export const AccountView: React.FC<AccountViewProps> = ({
             </svg>
           </button>
 
-          {/* 3. Pickup Store (Soft Green) */}
+          {/* 3. Profile details (Soft Rose) */}
           <button
             type="button"
-            onClick={() => handleProtectedAction('pickupStore')}
-            className="bg-[#ECF8F1] hover:bg-[#DCF2E4] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
+            onClick={() => handleProtectedAction('profile')}
+            aria-label="Profile Details"
+            className="bg-[#FDECE9] hover:bg-[#FCD8CF] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
           >
-            <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#16A34A]">
-              <MapPin className="w-4 h-4 text-[#16A34A] fill-[#16A34A]" />
+            <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#E55845]">
+              <User className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">Pickup Store</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">View details</p>
+              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">Profile</h3>
+              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">Personal details</p>
             </div>
             <svg className="w-3 h-3 text-slate-700 absolute bottom-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -581,6 +599,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
+          </div>
         </section>
         {/* END: QuickActionsGrid */}
 
@@ -653,17 +672,17 @@ export const AccountView: React.FC<AccountViewProps> = ({
               <div className="space-y-1 pt-1 text-[11px] text-slate-600 font-medium">
                 <div className="flex items-center space-x-1.5">
                   <Clock className="w-3.5 h-3.5 text-slate-700 flex-shrink-0" />
-                  <span className="truncate">Open daily · 9:00 AM – 8:00 PM</span>
+                  <span className="truncate">{WORKSHOP_INFO.workingHours}</span>
                 </div>
                 <div className="flex items-center space-x-1.5">
                   <MapPin className="w-3.5 h-3.5 text-slate-700 flex-shrink-0" />
-                  <span className="truncate">Kadbeltala, Murshidabad</span>
+                  <span className="truncate">{WORKSHOP_INFO.address}</span>
                 </div>
               </div>
               {/* Get directions pill button */}
-              <div className="pt-2">
+              <div className="pt-2 flex flex-wrap items-center gap-2">
                 <a
-                  href="https://maps.google.com/?q=Kadbeltala,+Murshidabad"
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(WORKSHOP_INFO.address)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center space-x-1.5 bg-[#FEE5DF] hover:bg-[#FCD8CF] text-[#C83F2D] text-xs font-semibold px-4 py-1.5 rounded-full transition-colors"
@@ -673,6 +692,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
                     <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </a>
+                <button
+                  type="button"
+                  onClick={() => handleProtectedAction('pickupStore')}
+                  className="inline-flex items-center space-x-1.5 bg-[#ECF8F1] hover:bg-[#DCF2E4] text-[#15803D] text-xs font-semibold px-4 py-1.5 rounded-full transition-colors"
+                >
+                  <span>Pickup details</span>
+                  <ChevronRight className="h-3 w-3" />
+                </button>
               </div>
             </div>
 
@@ -800,6 +827,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             orders={customerOrders}
             reviews={myReviews}
             loading={ordersLoading}
+            error={ordersError}
             customerName={currentUser?.name || ''}
             onClose={() => setActiveModal(null)}
             onRefresh={refreshCustomerOrders}

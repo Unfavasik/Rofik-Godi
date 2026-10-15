@@ -1137,9 +1137,17 @@ function OrderActionMenu({
   const verifyPayment = async (event: React.MouseEvent<HTMLButtonElement>) => {
     closeMenu(event);
     if (busyAction) return;
+    const isOnlinePayment = order.paymentMethod.toUpperCase() === 'PAY_ONLINE';
+    const reference = isOnlinePayment ? window.prompt('Enter the UPI transaction reference / UTR after checking your payment statement:') : '';
+    if (isOnlinePayment && reference === null) return;
+    const providerReference = reference?.trim().toUpperCase() || '';
+    if (isOnlinePayment && !/^[A-Z0-9/-]{6,64}$/.test(providerReference)) {
+      notify('Enter a valid UPI transaction reference (6–64 letters, digits, / or -).');
+      return;
+    }
     setBusyAction(true);
     try {
-      const result = await verifyPickupPayment(order.orderNumber);
+      const result = await verifyPickupPayment(order.orderNumber, providerReference);
       if (result.error) notify(result.error.message || 'Payment could not be verified.');
       else {
         notify('Payment verified.');

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageCircle } from 'lucide-react';
+import { WORKSHOP_INFO } from '../data/products';
 
 interface TermsConditionsViewProps {
   onBack: () => void;
@@ -26,7 +27,7 @@ export const TermsConditionsView: React.FC<TermsConditionsViewProps> = ({
       iconColor: 'text-[#EF4444]',
       badgeBg: 'bg-[#F5EBE6] text-[#6B2828]',
       details: [
-        'By downloading, accessing, browsing, or placing an order through the Rofik Godi Centre mobile application or visiting our workshop in Kadbeltala, Murshidabad, you agree to be bound by these Terms and Conditions.',
+        `By downloading, accessing, browsing, or placing an order through the Rofik Godi Centre app or visiting our workshop at ${WORKSHOP_INFO.address}, you agree to these Terms and Conditions.`,
         'If you do not agree to any part of these terms, please discontinue using the application and services.',
         'These terms apply to all visitors, registered riders, commercial toto fleet operators, and retail customers.',
       ],
@@ -42,7 +43,7 @@ export const TermsConditionsView: React.FC<TermsConditionsViewProps> = ({
       details: [
         'Rofik Godi Centre specializes in precision-tailored motorcycle, scooter, and electric toto e-rickshaw seat covers, memory foam cushioning pads, waterproof rain guards, and custom embroidery fitments.',
         'All standard seat covers are manufactured with heavy-duty automotive rexine, reinforced Japanese tensile stitching cord, and high-density foam backing.',
-        'On-spot express seat fitting (15-minute express install) is provided complimentary at our workshop located at Kadbeltala, Murshidabad, West Bengal.',
+        'On-site fitting availability and timing may vary. Contact the workshop before travelling if you need a specific service.',
       ],
     },
     {
@@ -54,10 +55,10 @@ export const TermsConditionsView: React.FC<TermsConditionsViewProps> = ({
       iconColor: 'text-[#16A34A]',
       badgeBg: 'bg-[#F5EBE6] text-[#6B2828]',
       details: [
-        'All prices are listed in Indian Rupees (₹ INR) inclusive of applicable local taxes unless explicitly noted.',
-        'Accepted payment methods include UPI (Google Pay, PhonePe, Paytm), NetBanking, Credit/Debit cards, and Cash on Delivery (COD) for eligible domestic postal codes.',
+        'Prices are shown in Indian Rupees (₹ INR). Review the final amount and payment option shown at checkout before placing your order.',
+        'The app currently offers UPI online payment or payment at the workshop on pickup, as displayed at checkout.',
         'For bespoke custom embroidery (custom rider name/phone punch), a nominal non-refundable advance may be requested before fabric cutting commences.',
-        'Orders are verified instantly via automated WhatsApp confirmation slip and SMS.',
+        'Orders placed through the app appear in your account. A confirmation email may be sent when a valid email address is available.',
       ],
     },
     {
@@ -69,9 +70,9 @@ export const TermsConditionsView: React.FC<TermsConditionsViewProps> = ({
       iconColor: 'text-[#EA580C]',
       badgeBg: 'bg-[#F5EBE6] text-[#6B2828]',
       details: [
-        'Orders are prepared for collection from Rofik Godi Centre. We notify you when your order is ready for pickup.',
-        'Same-day local pickup and express workshop fitting are available at Kadbeltala, Murshidabad during operating hours (9:00 AM – 8:00 PM daily).',
-        'Real-time courier dispatch tracking links are dispatched directly to your registered WhatsApp number as soon as the parcel leaves our dispatch unit.',
+        'Orders placed in the app are prepared for collection at Rofik Godi Centre. We update the order status when it is ready for pickup.',
+        `Pickup is from ${WORKSHOP_INFO.address}. Check ${WORKSHOP_INFO.workingHours} before visiting.`,
+        'The app currently supports store pickup; courier delivery and courier-tracking links are not offered through this checkout flow.',
       ],
     },
     {
@@ -112,8 +113,8 @@ export const TermsConditionsView: React.FC<TermsConditionsViewProps> = ({
       iconColor: 'text-[#D97706]',
       badgeBg: 'bg-[#F5EBE6] text-[#6B2828]',
       details: [
-        'Rofik Godi Centre provides a 1-Year stitching replacement guarantee against cord snapping or water leakage under normal commuter usage.',
-        'We are not liable for accidental tears caused by sharp luggage, pet claws, unauthorized external modifications, or harsh chemical bleach cleaning.',
+        'Any return or replacement request is handled under the conditions stated in the Returns & Refunds section above. No additional warranty is implied by these terms.',
+        'Use and care requirements depend on the product; contact the workshop if you need product-specific guidance.',
         'Total liability for any claim arising from a product purchase shall not exceed the amount actually paid by the customer for that item.',
       ],
     },
@@ -341,7 +342,7 @@ export const TermsConditionsView: React.FC<TermsConditionsViewProps> = ({
             <p className="text-[11px] text-slate-500 mt-0.5">Reach out to our local Murshidabad team</p>
           </div>
           <a
-            href="https://wa.me/919832145678?text=Hello%20Rofik%20Godi,%20I%20have%20a%20question%20regarding%20Terms%20%26%20Conditions."
+            href={`https://wa.me/${WORKSHOP_INFO.whatsapp.replace(/\D/g, '')}?text=Hello%20Rofik%20Godi,%20I%20have%20a%20question%20regarding%20Terms%20%26%20Conditions.`}
             target="_blank"
             rel="noreferrer"
             className="bg-[#DC2626] hover:bg-red-700 text-white text-[11.5px] font-bold px-3.5 py-1.5 rounded-xl transition-all shadow-xs flex items-center gap-1 active:scale-95"
@@ -353,7 +354,7 @@ export const TermsConditionsView: React.FC<TermsConditionsViewProps> = ({
 
         {/* Footer info note */}
         <div className="text-center py-2 text-[10.5px] text-slate-400">
-          Rofik Godi Centre · Kadbeltala, Murshidabad · WB 742136
+          {WORKSHOP_INFO.name} · {WORKSHOP_INFO.address}
         </div>
       </main>
       {/* END: MainContentScrollArea */}

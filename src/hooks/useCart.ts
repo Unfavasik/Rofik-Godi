@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { CartItem, Product, UserProfile } from '../types';
-import { canReconcileCartFromCatalog, refreshCartFromCatalog } from '../lib/cart';
+import { canReconcileCartFromCatalog, refreshCartFromCatalog, sanitizePersistedCart } from '../lib/cart';
 
 interface OwnedCart {
   ownerId: string;
@@ -18,7 +18,7 @@ export function useCart(user: Pick<UserProfile, 'id' | 'isGuest'>, catalogProduc
       try {
         const stored = localStorage.getItem(`work-app:${user.id}:cart`);
         const parsed: unknown = stored ? JSON.parse(stored) : [];
-        if (Array.isArray(parsed)) savedCart = parsed as CartItem[];
+        savedCart = sanitizePersistedCart(parsed);
       } catch {
         // Malformed or unavailable storage starts this account with an empty cart.
       }

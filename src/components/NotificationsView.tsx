@@ -5,6 +5,9 @@ import { getNotificationOrderNumber } from '../lib/orderPresentation';
 import { listMyOrders } from '../lib/supabaseOrders';
 import type { CustomerOrderRecord } from '../types';
 import { OrderNotificationDetails } from './OrderNotificationDetails';
+import { CouponDetailsView } from './CouponDetailsView';
+import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
+import { getCouponOfferForNotification, isCouponNotification } from '../lib/couponDisplay';
 
 type NotificationItem = {
   id: string;
@@ -59,14 +62,19 @@ const toneFor = (kind: string) => {
   return 'bg-blue-50 text-blue-500';
 };
 
-export function NotificationsView({ userId, isGuest, onBack, onNotificationsChanged }: { userId: string; isGuest: boolean; onBack: () => void; onNotificationsChanged?: () => void }) {
+export function NotificationsView({ userId, isGuest, onBack, onNotificationsChanged, onOpenShop }: { userId: string; isGuest: boolean; onBack: () => void; onNotificationsChanged?: () => void; onOpenShop?: () => void }) {
   const [filter, setFilter] = useState<NotificationFilter>('All');
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
+  const [couponOffer, setCouponOffer] = useState<CustomerCouponOffer | null>(null);
+  const [couponDetailsLoading, setCouponDetailsLoading] = useState(false);
+  const [couponDetailsError, setCouponDetailsError] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(!isGuest);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState('');
+  const [loadError, setLoadError] = useState('');
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -74,15 +82,14 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
     setFilter('All');
     if (isGuest || !userId) {
       setItems([]);
+      setLoadError('');
       setLoading(false);
       return () => { active = false; };
     }
     setItems([]);
+    setLoadError('');
     setLoading(true);
-    void Promise.all([
-      listMyNotifications(userId).catch(() => []),
-      listMyOrders(userId).catch(() => []),
-    ]).then(([rows, orders]) => {
+    void Promise.all([listMyNotifications(userId), listMyOrders(userId)]).then(([rows, orders]) => {
       if (!active) return;
       const ordersByNumber = new Map(orders.map((order) => [order.order_number.toUpperCase(), order]));
       const enrichedRows = (rows as NotificationItem[]).map((item) => {
@@ -92,11 +99,37 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
         return { ...item, orderNumber, orderRecord, image_url: item.image_url || firstProductImage || null };
       });
       setItems(enrichedRows);
+    }).catch((error) => {
+      if (active) setLoadError(error instanceof Error ? error.message : 'Your notifications could not be loaded.');
     }).finally(() => {
       if (active) setLoading(false);
     });
     return () => { active = false; };
-  }, [userId, isGuest]);
+  }, [userId, isGuest, loadAttempt]);
+
+  useEffect(() => {
+    let active = true;
+    if (!selectedNotification || !isCouponNotification(selectedNotification)) {
+      setCouponOffer(null);
+      setCouponDetailsError('');
+      setCouponDetailsLoading(false);
+      return () => { active = false; };
+    }
+    setCouponOffer(null);
+    setCouponDetailsError('');
+    setCouponDetailsLoading(true);
+    void loadCustomerCouponOffers().then(({ data, error }) => {
+      if (!active) return;
+      const matchedOffer = getCouponOfferForNotification(selectedNotification, data);
+      setCouponOffer(matchedOffer);
+      setCouponDetailsError(error || (matchedOffer ? '' : 'This coupon is no longer active or its details are unavailable.'));
+    }).catch(() => {
+      if (active) setCouponDetailsError('Coupon details could not be loaded. Please try again.');
+    }).finally(() => {
+      if (active) setCouponDetailsLoading(false);
+    });
+    return () => { active = false; };
+  }, [selectedNotification]);
 
   const visible = useMemo(() => items.filter((item) => filterMatches(item, filter)), [items, filter]);
   const counts = useMemo(() => ({
@@ -144,6 +177,29 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
       initialOrder={selectedNotification.orderRecord}
       onBack={() => setSelectedNotification(null)}
     />;
+    if (isCouponNotification(selectedNotification)) {
+      if (couponOffer) return <CouponDetailsView
+        key={couponOffer.code}
+        offer={couponOffer}
+        onBack={() => setSelectedNotification(null)}
+        onShopNow={() => {
+          setSelectedNotification(null);
+          onOpenShop?.();
+        }}
+      />;
+      return <main className="min-h-screen w-full bg-white font-sans text-slate-800">
+        <header className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
+          <button onClick={() => setSelectedNotification(null)} aria-label="Back to notifications" className="rounded-full p-1"><ArrowLeft className="h-6 w-6" /></button>
+          <h1 className="text-[22px] font-extrabold tracking-tight">Coupon Details</h1>
+        </header>
+        <section className="mx-auto max-w-xl px-5 py-12 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-rose-50 text-[#E51E35]"><Tag className="h-7 w-7" /></div>
+          <h2 className="mt-4 text-lg font-extrabold text-slate-900">{couponDetailsLoading ? 'Loading offer details…' : 'Offer details unavailable'}</h2>
+          {!couponDetailsLoading && <p role="status" className="mt-2 text-sm leading-relaxed text-slate-600">{couponDetailsError || 'This coupon is no longer active.'}</p>}
+          {!couponDetailsLoading && <button type="button" onClick={() => onOpenShop?.()} className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#E51E35] px-6 py-3.5 text-sm font-extrabold text-white">Shop Now <ChevronRight className="h-4 w-4" /></button>}
+        </section>
+      </main>;
+    }
     return <main className="min-h-screen w-full bg-white text-slate-800 font-sans">
       <header className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
         <button onClick={() => setSelectedNotification(null)} aria-label="Back to notifications" className="rounded-full p-1"><ArrowLeft className="h-6 w-6" /></button>
@@ -172,7 +228,13 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
       {(['All', 'Orders', 'Offers', 'Updates'] as NotificationFilter[]).map((name) => <button key={name} onClick={() => setFilter(name)} className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold ${filter === name ? 'bg-[#E51E2B] text-white shadow-sm' : 'bg-gray-100 text-slate-700'}`}>{name} ({counts[name]})</button>)}
     </nav>
     {deleteError && <p role="alert" className="mx-5 mt-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">{deleteError}</p>}
-    {loading ? <div className="px-5 py-16 text-center text-sm text-slate-500">Loading your notifications…</div> : visible.length === 0 ? (
+    {loading ? <div className="px-5 py-16 text-center text-sm text-slate-500">Loading your notifications…</div> : loadError ? (
+      <section role="alert" className="mx-5 mt-8 rounded-3xl border border-rose-200 bg-rose-50 px-6 py-10 text-center">
+        <h2 className="text-base font-bold text-rose-800">Notifications could not be loaded</h2>
+        <p className="mt-1 text-sm text-rose-700">{loadError}</p>
+        <button type="button" onClick={() => setLoadAttempt((attempt) => attempt + 1)} className="mt-4 rounded-full bg-rose-700 px-4 py-2 text-xs font-extrabold text-white">Try again</button>
+      </section>
+    ) : visible.length === 0 ? (
       <section className="mx-5 mt-8 rounded-3xl border border-slate-100 bg-slate-50 px-6 py-12 text-center">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm"><Bell className="h-6 w-6" /></div>
         <h2 className="mt-4 text-base font-bold text-slate-800">{isGuest ? 'Sign in to see your notifications' : 'You’re all caught up'}</h2>

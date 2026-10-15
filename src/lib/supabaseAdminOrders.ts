@@ -1,6 +1,8 @@
 import { supabase } from './supabase';
 import type { CustomerOrderRecord } from '../types';
 
+const missingOrderOptionColumns = (error: { message?: string } | null) => Boolean(error && /selected_thickness|selected_stitch|custom_embroidery_text/i.test(error.message || ''));
+
 export type AdminOrderRecord = {
   id: string;
   userId: string;
@@ -36,6 +38,9 @@ export type AdminOrderRecord = {
     color?: string | null;
     quantity?: number;
     unit_price?: number;
+    selected_thickness?: string | null;
+    selected_stitch?: string | null;
+    custom_embroidery_text?: string | null;
   }>;
   createdAt: string;
 };
@@ -114,13 +119,23 @@ export async function loadAdminOrders(): Promise<{
   error: Error | null;
 }> {
   if (!supabase) return { data: [], error: new Error('Supabase is not configured') };
-  const { data, error } = await supabase
+  let response = await supabase
     .from('orders')
     .select(
-      'id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price),order_status_history(id,from_status,to_status,note,created_at)',
+      'id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price,selected_thickness,selected_stitch,custom_embroidery_text),order_status_history(id,from_status,to_status,note,created_at)',
     )
     .order('created_at', { ascending: false })
     .limit(100);
+  if (missingOrderOptionColumns(response.error)) {
+    response = await (supabase
+      .from('orders')
+      .select(
+        'id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price),order_status_history(id,from_status,to_status,note,created_at)',
+      )
+      .order('created_at', { ascending: false })
+      .limit(100) as unknown as typeof response);
+  }
+  const { data, error } = response;
   if (error) return { data: [], error };
   if (!data) return { data: [], error: new Error('No order data returned') };
   return {
@@ -133,6 +148,9 @@ export async function loadAdminOrders(): Promise<{
             color?: string | null;
             quantity?: number;
             unit_price?: number;
+            selected_thickness?: string | null;
+            selected_stitch?: string | null;
+            custom_embroidery_text?: string | null;
           }>)
         : [];
       const normalizedItems = items.map((item) => ({
@@ -217,6 +235,9 @@ export function toCustomerOrderRecord(order: AdminOrderRecord): CustomerOrderRec
       color: item.color || null,
       quantity: Number(item.quantity ?? 1),
       unit_price: Number(item.unit_price ?? 0),
+      ...(item.selected_thickness ? { selected_thickness: item.selected_thickness } : {}),
+      ...(item.selected_stitch ? { selected_stitch: item.selected_stitch } : {}),
+      ...(item.custom_embroidery_text ? { custom_embroidery_text: item.custom_embroidery_text } : {}),
     })),
   };
 }
@@ -284,10 +305,11 @@ export async function completePickupOrderManually(
   }
 }
 
-export async function verifyPickupPayment(orderNumber: string) {
+export async function verifyPickupPayment(orderNumber: string, providerReference = '') {
   if (!supabase) return { error: null };
-  const { error } = await supabase.rpc('admin_verify_pickup_payment', {
+  const { error } = await supabase.rpc('admin_verify_pickup_payment_v2', {
     p_order_number: normalizeOrderNumber(orderNumber),
+    p_provider_reference: providerReference.trim().toUpperCase() || null,
   });
   if (!error) await requestOrderUpdateEmail(orderNumber, 'PAYMENT_PAID');
   return { error };

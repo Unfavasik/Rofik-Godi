@@ -15,6 +15,7 @@ import {
   MessageCircle,
   Sparkles,
 } from 'lucide-react';
+import { WORKSHOP_INFO } from '../data/products';
 
 interface PrivacyPolicyViewProps {
   onBack: () => void;
@@ -43,11 +44,11 @@ export const PrivacyPolicyView: React.FC<PrivacyPolicyViewProps> = ({
       badge: 'Transparent',
       badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       title: '1. Information We Collect',
-      summary: 'Only what is needed to stitch, fit, and deliver your vehicle seat cover.',
+      summary: 'Information needed to manage your account, order and store pickup.',
       details: [
         {
           label: 'Customer Identification & Contact',
-          text: 'Full Name, verified WhatsApp telephone number, mobile number, vehicle model, pickup notes, and optional email address.',
+          text: 'Your name, phone number, vehicle model, pickup notes, and optional email address that you provide to manage your account and orders.',
         },
         {
           label: 'Vehicle & Custom Seat Dimensions',
@@ -55,7 +56,7 @@ export const PrivacyPolicyView: React.FC<PrivacyPolicyViewProps> = ({
         },
         {
           label: 'Order & Transaction History',
-          text: 'Payment status, payment transaction ID, selected payment mode (UPI, Card, NetBanking, COD), and digital receipt records.',
+          text: 'Order totals, payment status, the recorded UPI reference when applicable, and order-item details.',
         },
       ],
     },
@@ -65,41 +66,41 @@ export const PrivacyPolicyView: React.FC<PrivacyPolicyViewProps> = ({
       badge: 'Operational',
       badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
       title: '2. How We Use Your Data',
-      summary: 'Used exclusively for handcrafted seat tailoring, fitting, and order tracking.',
+      summary: 'Used to manage account access, orders, store pickup and customer support.',
       details: [
         {
           label: 'Custom Tailoring & Workshop Queue',
-          text: 'Our master craftsmen in Kadbeltala use your vehicle specifications to laser-cut rexine and stitch heavy-duty memory foam covers.',
+          text: 'We use the vehicle specifications and options you submit to prepare and manage your requested seat-cover order.',
         },
         {
-          label: 'Instant WhatsApp Status & Courier Tracking',
-          text: 'Real-time order confirmation, fitting appointment slips, dispatched parcel tracking numbers, and digital GST invoices sent to your WhatsApp.',
+          label: 'Order confirmations and account updates',
+          text: 'Order details are used to send confirmation emails when an email address is available and to show order status in your account. Store-pickup details are shown in the app.',
         },
         {
-          label: '1-Year Stitching Warranty Protection',
-          text: 'Maintaining a verified record of your purchase to honor our free replacement guarantee against cord snapping or water leakage.',
+          label: 'Order and service records',
+          text: 'We keep the order details needed to prepare pickup, verify payment and respond to questions about your order.',
         },
       ],
     },
     {
       id: 'security',
       icon: Lock,
-      badge: 'Bank-Grade',
+      badge: 'Payment safety',
       badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
-      title: '3. Payment & Security Guarantee',
-      summary: 'Zero card PIN or UPI MPIN storage. Direct RBI-licensed payment gateways.',
+      title: '3. Payment & Security',
+      summary: 'We do not ask for or store your card PIN, UPI MPIN, bank password or OTP.',
       details: [
         {
-          label: 'Direct Banking & Encrypted Gateways',
-          text: 'Payments via PhonePe, Google Pay, Paytm, UPI, Debit/Credit Cards are handled through 256-bit encrypted banking endpoints.',
+          label: 'Payments through your chosen method',
+          text: 'If you choose online UPI, complete the payment in your UPI app and verify the transaction with the store. Do not share private banking credentials.',
         },
         {
-          label: 'Strict Zero-Storage Policy',
-          text: 'We never see, request, or store your UPI MPIN, card CVV, bank passwords, or OTPs. Staff will NEVER call asking for your credentials.',
+          label: 'Private payment credentials',
+          text: 'Do not share your UPI MPIN, card CVV, bank password or OTP with anyone. These credentials are not required by the store to verify an order.',
         },
         {
-          label: 'Cash on Delivery (COD) Assurance',
-          text: 'Pay safely at the store when you collect your inspected seat cover, or use the online UPI option.',
+          label: 'Payment choices',
+          text: 'The app currently offers online UPI payment or payment at the workshop on pickup, as shown at checkout.',
         },
       ],
     },
@@ -112,8 +113,8 @@ export const PrivacyPolicyView: React.FC<PrivacyPolicyViewProps> = ({
       summary: 'We never sell, trade, or rent your personal contact information to any third parties.',
       details: [
         {
-          label: 'Courier & Logistics Dispatch Only',
-          text: 'Only order and pickup information needed by the Rofik Godi Centre team is used to prepare your collection.',
+          label: 'Service providers',
+          text: 'We use service providers for authentication, database hosting and transactional email. We do not sell your personal information.',
         },
         {
           label: 'No Telemarketing or Spam Lists',
@@ -153,19 +154,19 @@ export const PrivacyPolicyView: React.FC<PrivacyPolicyViewProps> = ({
       badge: 'Direct Workshop',
       badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       title: '6. Workshop & Grievance Contact',
-      summary: 'Direct local communication with our management in Kadbeltala, Murshidabad.',
+      summary: 'Contact the workshop using the current store details.',
       details: [
         {
           label: 'Store & Workshop Location',
-          text: 'Rofik Godi Centre, Kadbeltala, Murshidabad, West Bengal - 742149.',
+          text: `${WORKSHOP_INFO.name}, ${WORKSHOP_INFO.address}.`,
         },
         {
           label: 'Support Phone & WhatsApp',
-          text: '+91 98321 45678 / +91 97321 54321 (Daily 9:00 AM – 8:00 PM IST)',
+          text: `${WORKSHOP_INFO.phone} (${WORKSHOP_INFO.workingHours})`,
         },
         {
           label: 'Store Email',
-          text: 'support@rofikgodi.com · rofikgodicentre@gmail.com',
+          text: WORKSHOP_INFO.email,
         },
       ],
     },
@@ -191,7 +192,7 @@ export const PrivacyPolicyView: React.FC<PrivacyPolicyViewProps> = ({
             <h1 className="text-base font-extrabold text-slate-900 leading-tight">Privacy Policy</h1>
             <p className="text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>ROFIK GODI CENTRE · Verified Safe</span>
+              <span>ROFIK GODI CENTRE · Privacy information</span>
             </p>
           </div>
         </div>
@@ -228,7 +229,7 @@ export const PrivacyPolicyView: React.FC<PrivacyPolicyViewProps> = ({
               </span>
               <span className="inline-flex items-center gap-1 text-[11px] text-emerald-100/90 font-medium">
                 <Calendar className="w-3.5 h-3.5" />
-                Updated Sept 2026
+                Updated Oct 2026
               </span>
             </div>
 
@@ -350,11 +351,11 @@ export const PrivacyPolicyView: React.FC<PrivacyPolicyViewProps> = ({
           <div className="p-3 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border border-red-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="space-y-1">
               <p className="text-xs font-bold text-slate-900">ROFIK GODI CENTRE</p>
-              <p className="text-[11px] text-slate-600">Kadbeltala, Murshidabad, West Bengal - 742149</p>
-              <p className="text-[11px] text-slate-500 font-medium">Daily 9:00 AM – 8:00 PM IST · On-Spot Fitting</p>
+              <p className="text-[11px] text-slate-600">{WORKSHOP_INFO.address}</p>
+              <p className="text-[11px] text-slate-500 font-medium">{WORKSHOP_INFO.workingHours}</p>
             </div>
             <a
-              href="https://wa.me/919832145678?text=Hello%20Rofik%20Godi%20Centre,%20I%20have%20a%20question%20regarding%20Privacy%20Policy."
+              href={`https://wa.me/${WORKSHOP_INFO.whatsapp.replace(/\D/g, '')}?text=Hello%20Rofik%20Godi%20Centre,%20I%20have%20a%20question%20regarding%20Privacy%20Policy.`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold rounded-xl shadow-xs transition-colors"

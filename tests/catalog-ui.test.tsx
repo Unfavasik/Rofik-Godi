@@ -27,13 +27,13 @@ const renderShop = (overrides: Partial<React.ComponentProps<typeof ShopView>> = 
   />,
 );
 
-const renderCard = (product: Product, layoutMode: 'grid' | 'list' = 'grid') => renderToStaticMarkup(
+const renderCard = (product: Product, layoutMode: 'grid' | 'list' | 'shelf' = 'grid', isWishlisted = false) => renderToStaticMarkup(
   <ProductCard
     product={product}
     layoutMode={layoutMode}
     onSelectProduct={() => {}}
     onQuickAddToCart={() => {}}
-    isWishlisted={false}
+    isWishlisted={isWishlisted}
     onToggleWishlist={() => {}}
   />,
 );
@@ -82,6 +82,31 @@ describe('catalog feedback', () => {
 
     expect(html).toContain('Image unavailable');
     expect(html).not.toContain('src=""');
+  });
+
+  it.each(['grid', 'list', 'shelf'] as const)('uses a semantic keyboard-operable opener for %s product cards', (layoutMode) => {
+    const html = renderCard(sampleProduct, layoutMode);
+
+    expect(html).toContain(`<button type="button" aria-label="View ${sampleProduct.title}"`);
+    expect(html).not.toContain('<article onClick');
+    expect(html).not.toContain('role="button"');
+  });
+
+  it.each(['grid', 'list', 'shelf'] as const)('announces the wishlist toggle state in %s product cards', (layoutMode) => {
+    const added = renderCard(sampleProduct, layoutMode, true);
+    const notAdded = renderCard(sampleProduct, layoutMode, false);
+
+    expect(added).toContain('aria-label="Remove from Wishlist"');
+    expect(added).toContain('aria-pressed="true"');
+    expect(notAdded).toContain('aria-label="Add to Wishlist"');
+    expect(notAdded).toContain('aria-pressed="false"');
+  });
+
+  it.each(['grid', 'list', 'shelf'] as const)('disables quick-add for out-of-stock %s product cards', (layoutMode) => {
+    const html = renderCard({ ...sampleProduct, inStock: false }, layoutMode);
+
+    expect(html).toContain('aria-label="Out of stock"');
+    expect(html).toContain('disabled=""');
   });
 
   it('shows a loading status while the catalog request is pending', () => {

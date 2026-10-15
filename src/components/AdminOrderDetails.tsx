@@ -145,9 +145,17 @@ export function AdminOrderDetails({
 
   const verifyPayment = async () => {
     if (!pendingPayment || busyAction) return;
+    const isOnlinePayment = order.paymentMethod.toUpperCase() === 'PAY_ONLINE';
+    const reference = isOnlinePayment ? window.prompt('Enter the UPI transaction reference / UTR after checking your payment statement:') : '';
+    if (isOnlinePayment && reference === null) return;
+    const providerReference = reference?.trim().toUpperCase() || '';
+    if (isOnlinePayment && !/^[A-Z0-9/-]{6,64}$/.test(providerReference)) {
+      notify('Enter a valid UPI transaction reference (6–64 letters, digits, / or -).');
+      return;
+    }
     setBusyAction('payment');
     try {
-      const result = await verifyPickupPayment(order.orderNumber);
+      const result = await verifyPickupPayment(order.orderNumber, providerReference);
       if (result.error) {
         notify(result.error.message || 'Payment could not be verified.');
         return;
@@ -460,6 +468,7 @@ function OrderProductRow({ item, product, roomy = false }: { item: AdminOrderRec
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 text-xs font-extrabold leading-snug text-slate-800">{item.product_name || 'Product'}</p>
         <p className="mt-1 text-[10px] text-slate-500">Qty: {quantity}{item.color ? ` · ${item.color}` : ''}{product?.categoryLabel ? ` · ${product.categoryLabel}` : ''}</p>
+        {(item.selected_thickness || item.selected_stitch || item.custom_embroidery_text) && <p className="mt-1 text-[10px] leading-relaxed text-slate-500">{[item.selected_thickness && `Thickness: ${item.selected_thickness}`, item.selected_stitch && `Stitch: ${item.selected_stitch}`, item.custom_embroidery_text && `Embroidery: ${item.custom_embroidery_text}`].filter(Boolean).join(' · ')}</p>}
         <p className="mt-0.5 text-[10px] text-slate-400">{money(unitPrice)} each</p>
       </div>
       <p className="shrink-0 text-right text-xs font-black text-[#0F172A]">{money(unitPrice * quantity)}</p>

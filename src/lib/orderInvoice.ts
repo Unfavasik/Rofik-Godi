@@ -32,7 +32,7 @@ export const downloadOrderInvoice = (
   pdf.setTextColor(100, 105, 114);
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(9);
-  pdf.text(String(WORKSHOP_INFO.address || 'Kadbeltala, Murshidabad'), margin, 26);
+  pdf.text(String(WORKSHOP_INFO.address || 'Murshidabad, West Bengal'), margin, 26);
   pdf.text(`Phone: ${WORKSHOP_INFO.phone || '+91 98321 45678'}`, margin, 31);
 
   pdf.setFillColor(255, 244, 241);

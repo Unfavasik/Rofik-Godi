@@ -104,7 +104,7 @@ export interface CustomerOrderRecord {
   pickup_store: string;
   pickup_note?: string | null;
   created_at: string;
-  order_items: { product_id: string | null; product_name: string; color: string | null; quantity: number; unit_price: number; image_url?: string | null }[];
+  order_items: { product_id: string | null; product_name: string; color: string | null; quantity: number; unit_price: number; selected_thickness?: string | null; selected_stitch?: string | null; custom_embroidery_text?: string | null; image_url?: string | null }[];
 }
 
 export interface CustomerNotificationRecord {

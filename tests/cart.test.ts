@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PRODUCTS } from '../src/data/products';
-import { canReconcileCartFromCatalog, refreshCartFromCatalog } from '../src/lib/cart';
+import { canReconcileCartFromCatalog, refreshCartFromCatalog, sanitizePersistedCart } from '../src/lib/cart';
 import type { CartItem, Product } from '../src/types';
 
 const originalProduct = PRODUCTS[0];
@@ -22,6 +22,12 @@ const customSeatItem: CartItem = {
 };
 
 describe('persisted cart reconciliation', () => {
+  it('sanitizes stored data and clamps quantities to the transaction limit', () => {
+    const [safe] = sanitizePersistedCart([{ ...cartItem, quantity: 500 }, null, { cartItemId: 'broken' }]);
+    expect(safe.quantity).toBe(99);
+    expect(sanitizePersistedCart({ not: 'an array' })).toEqual([]);
+  });
+
   it('replaces cached product data and recomputes current prices and stock', () => {
     const currentProduct: Product = {
       ...originalProduct,
