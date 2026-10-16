@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Copy, ExternalLink, ImagePlus, Pencil, Plus, Search, Trash2, Upload, X } from 'lucide-react';
-import { PRODUCTS } from '../data/products';
 import type { Product, VehicleCategory } from '../types';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { deleteSupabaseProduct, loadAdminProducts, uploadProductImage, upsertSupabaseProduct } from '../lib/supabaseProducts';
@@ -12,7 +11,6 @@ import { isValidProductColorValue } from '../lib/productColors';
 
 type ProductDraft = Omit<Product, 'id' | 'rating' | 'reviewCount'> & { id?: string; rating: number; reviewCount: number };
 
-const STORAGE_KEY = 'rofik-godi-admin-products-v1';
 const categories: VehicleCategory[] = ['bike', 'scooter', 'toto', 'cushion', 'accessory'];
 const categoryLabels: Record<VehicleCategory, string> = { bike: 'Bike', scooter: 'Scooter', toto: 'Toto / E-rickshaw', cushion: 'Cushion', accessory: 'Accessory' };
 const blankDraft = (): ProductDraft => ({
@@ -22,14 +20,6 @@ const blankDraft = (): ProductDraft => ({
   stitchPatterns: [], compatibility: [], thicknessOptions: [{ label: 'Standard', extraPrice: 0 }], rating: 0, reviewCount: 0,
 });
 
-const readProducts = (): Product[] => {
-  try {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (!saved) return PRODUCTS;
-    const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) && parsed.length ? parsed : PRODUCTS;
-  } catch { return PRODUCTS; }
-};
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const listValue = (value: string) => value.split('\n').map((item) => item.trim()).filter(Boolean);
 const listText = (value?: string[]) => (value || []).join('\n');
@@ -40,20 +30,40 @@ const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {..
 const Textarea = (props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => <textarea {...props} className={`w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold outline-none transition focus:border-[#D9232D] focus:bg-white ${props.className || ''}`} />;
 
 export const AdminProductManager: React.FC<{ initialProducts?: Product[]; onProductsChange?: (products: Product[]) => void; notify: (message: string) => void; customers?: AdminCustomer[]; focusProductId?: string | null; onFocusHandled?: () => void }> = ({ initialProducts, onProductsChange, notify, customers = [], focusProductId, onFocusHandled }) => {
-  const [products, setProducts] = useState<Product[]>(() => initialProducts?.length ? initialProducts : readProducts());
+  const [products, setProducts] = useState<Product[]>(() => initialProducts ?? []);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<'all' | VehicleCategory>('all');
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<ProductDraft | null>(null);
   const [saving, setSaving] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const loadRequestRef = useRef(0);
 
-  useEffect(() => {
-    let cancelled = false;
-    loadAdminProducts().then((remote) => { if (!cancelled && remote?.length) setProducts(remote); });
-    return () => { cancelled = true; };
+  const loadProducts = useCallback(async () => {
+    const requestId = ++loadRequestRef.current;
+    setLoadState('loading');
+    try {
+      const remote = await loadAdminProducts();
+      if (requestId !== loadRequestRef.current) return;
+      if (remote == null) {
+        setProducts([]);
+        setLoadState('error');
+        return;
+      }
+      setProducts(remote);
+      setLoadState('ready');
+    } catch {
+      if (requestId !== loadRequestRef.current) return;
+      setProducts([]);
+      setLoadState('error');
+    }
   }, []);
-  useEffect(() => { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(products)); onProductsChange?.(products); }, [products, onProductsChange]);
+  useEffect(() => {
+    void loadProducts();
+    return () => { loadRequestRef.current += 1; };
+  }, [loadProducts]);
+  useEffect(() => { onProductsChange?.(products); }, [products, onProductsChange]);
   const filtered = useMemo(() => products.filter((product) => (category === 'all' || product.category === category) && `${product.title} ${product.categoryLabel} ${product.slug}`.toLowerCase().includes(query.toLowerCase())), [products, category, query]);
   const openNew = () => { setEditing(blankDraft()); setEditorOpen(true); };
   const openEdit = (product: Product) => { setEditing({ ...product, additionalImages: product.additionalImages || [], features: product.features || [], materials: product.materials || [], compatibility: product.compatibility || [], stitchPatterns: product.stitchPatterns || [], colors: product.colors?.length ? product.colors : blankDraft().colors }); setEditorOpen(true); };
@@ -88,6 +98,7 @@ export const AdminProductManager: React.FC<{ initialProducts?: Product[]; onProd
     const synced = await upsertSupabaseProduct(normalized);
     if (synced.error) { notify(`Product was not saved: ${synced.error.message}`); return; }
     setProducts((current) => draft.id ? current.map((item) => item.id === draft.id ? synced.product : item) : [synced.product, ...current]);
+    setLoadState('ready');
     setEditorOpen(false); setEditing(null);
     const savedMessage = uploadedAsWebP ? 'Converted to WebP and saved to Supabase Storage' : (draft.id ? 'Product updated in Supabase' : 'Product added to Supabase');
     if (!draft.id && announcement.audience !== 'NONE') {
@@ -120,6 +131,8 @@ export const AdminProductManager: React.FC<{ initialProducts?: Product[]; onProd
     <AdminConnectionPanel notify={notify} />
     <div className="mb-5 grid gap-3 sm:grid-cols-3"><Summary label="Total products" value={products.length.toString()} tone="text-slate-900" /><Summary label="Visible in store" value={products.filter((product) => product.inStock).length.toString()} tone="text-emerald-600" /><Summary label="Low / out of stock" value={products.filter((product) => !product.inStock).length.toString()} tone="text-red-600" /></div>
     <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:flex-row"><div className="flex flex-1 items-center gap-2 rounded-xl bg-slate-50 px-3 py-2"><Search className="h-4 w-4 text-slate-400" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by product name, category or slug..." className="w-full bg-transparent text-xs font-semibold outline-none" /></div><select value={category} onChange={(event) => setCategory(event.target.value as 'all' | VehicleCategory)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 outline-none"><option value="all">All categories</option>{categories.map((item) => <option key={item} value={item}>{categoryLabels[item]}</option>)}</select></div>
+    {loadState === 'loading' && <p role="status" className="mb-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500">Loading products…</p>}
+    {loadState === 'error' && <div role="alert" className="mb-3 flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 sm:flex-row sm:items-center sm:justify-between"><span>Could not load products from the server. Showing no data.</span><button type="button" onClick={() => void loadProducts()} className="self-start rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-[11px] font-bold text-amber-800 hover:bg-amber-100 sm:self-auto">Retry</button></div>}
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="overflow-x-auto"><table className="w-full min-w-[880px] text-left"><thead><tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-black uppercase tracking-wider text-slate-400"><th className="px-5 py-3">Product</th><th className="py-3">Category</th><th className="py-3">Price</th><th className="py-3">Stock</th><th className="py-3">Status</th><th className="py-3 pr-5 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-100">{filtered.map((product) => <tr id={`admin-product-${product.id}`} key={product.id} className="text-xs hover:bg-slate-50/60"><td className="px-5 py-3"><div className="flex items-center gap-3"><div className="h-12 w-12 overflow-hidden rounded-xl bg-slate-100"><img src={product.image} alt="" className="h-full w-full object-cover" onError={(event) => { event.currentTarget.style.display = 'none'; }} /></div><div><p className="max-w-[240px] truncate font-black text-slate-800">{product.title}</p><p className="mt-1 max-w-[250px] truncate text-[10px] text-slate-400">/{product.slug}</p></div></div></td><td className="py-3 font-semibold text-slate-500">{product.categoryLabel}</td><td className="py-3"><p className="font-black">{money(product.price)}</p><p className="text-[10px] text-slate-400 line-through">{money(product.originalPrice)}</p></td><td className="py-3 font-semibold text-slate-600">{product.inStock ? 'Available' : 'Hidden'}</td><td className="py-3"><button onClick={() => toggleStock(product.id)} className={`rounded-full px-2.5 py-1 text-[10px] font-black ${product.inStock ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>{product.inStock ? 'Published' : 'Unpublished'}</button></td><td className="py-3 pr-5"><div className="flex justify-end gap-1"><button title="Edit product" onClick={() => openEdit(product)} className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-[#D9232D]"><Pencil className="h-4 w-4" /></button><button title="Duplicate product" onClick={() => duplicate(product)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-800"><Copy className="h-4 w-4" /></button><button title="Delete product" onClick={() => remove(product.id)} className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"><Trash2 className="h-4 w-4" /></button></div></td></tr>)}</tbody></table></div>{filtered.length === 0 && <div className="py-14 text-center text-sm font-semibold text-slate-400">No products match your filters.</div>}</div>
     <ConfirmDialog open={Boolean(pendingDeleteId)} title="Delete product?" message="This permanently removes the product from the catalog and database." confirmLabel="Delete product" onCancel={() => setPendingDeleteId(null)} onConfirm={() => void confirmRemove()} />
     {editorOpen && editing && <ProductEditor draft={editing} saving={saving} setSaving={setSaving} onClose={() => { setEditorOpen(false); setEditing(null); }} onSave={save} customers={customers} />}
