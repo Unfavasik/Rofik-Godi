@@ -344,25 +344,41 @@ export default function App() {
     setActiveTab('custom');
     setIsCustomBuilderOpen(true);
   };
-  const [ownedWishlist, setOwnedWishlist] = useState<{ ownerId: string; items: Product[] }>({
+  const [ownedWishlist, setOwnedWishlist] = useState<{ ownerId: string; items: string[] }>({
     ownerId: 'guest-user',
     items: [],
   });
-  const wishlist = ownedWishlist.ownerId === currentUser.id ? ownedWishlist.items : [];
+  const wishlistIds = ownedWishlist.ownerId === currentUser.id ? ownedWishlist.items : [];
+  const wishlist = useMemo(() => {
+    const productsById = new Map<string, Product>();
+    catalogProducts.forEach((product) => productsById.set(product.id, product));
+    return wishlistIds
+      .map((id) => productsById.get(id))
+      .filter((product): product is Product => Boolean(product));
+  }, [catalogProducts, wishlistIds]);
 
   useEffect(() => {
     if (ownedWishlist.ownerId === currentUser.id) return;
-    let savedWishlist: Product[] = [];
+    let savedWishlistIds: string[] = [];
     if (!currentUser.isGuest) {
       try {
         const stored = localStorage.getItem(`work-app:${currentUser.id}:wishlist`);
         const parsed: unknown = stored ? JSON.parse(stored) : [];
-        if (Array.isArray(parsed)) savedWishlist = parsed as Product[];
+        if (Array.isArray(parsed)) {
+          const ids = parsed.flatMap((entry): string[] => {
+            if (typeof entry === 'string' && entry) return [entry];
+            if (entry !== null && typeof entry === 'object' && 'id' in entry && typeof entry.id === 'string' && entry.id) {
+              return [entry.id];
+            }
+            return [];
+          });
+          savedWishlistIds = [...new Set(ids)];
+        }
       } catch {
         // Ignore malformed or unavailable browser storage and start this account empty.
       }
     }
-    setOwnedWishlist({ ownerId: currentUser.id, items: savedWishlist });
+    setOwnedWishlist({ ownerId: currentUser.id, items: savedWishlistIds });
   }, [currentUser.id, currentUser.isGuest, ownedWishlist.ownerId]);
 
   useEffect(() => {
@@ -377,17 +393,41 @@ export default function App() {
     }
   }, [ownedWishlist, currentUser.id, currentUser.isGuest]);
 
+  useEffect(() => {
+    if (
+      ownedWishlist.ownerId !== currentUser.id ||
+      currentUser.isGuest ||
+      !catalogLoaded ||
+      catalogError
+    ) return;
+    const catalogIds = new Set(catalogProducts.map((product) => product.id));
+    setOwnedWishlist((state) => {
+      if (state.ownerId !== currentUser.id) return state;
+      const items = state.items.filter((id) => catalogIds.has(id));
+      return items.length === state.items.length ? state : { ...state, items };
+    });
+  }, [catalogError, catalogLoaded, catalogProducts, currentUser.id, currentUser.isGuest, ownedWishlist.ownerId]);
+
   const setWishlist = useCallback(
     (next: Product[] | ((current: Product[]) => Product[])) => {
       setOwnedWishlist((state) => {
-        const current = state.ownerId === currentUser.id ? state.items : [];
+        const currentIds = state.ownerId === currentUser.id ? state.items : [];
+        const productsById = new Map<string, Product>();
+        catalogProducts.forEach((product) => productsById.set(product.id, product));
+        const current = currentIds
+          .map((id) => productsById.get(id))
+          .filter((product): product is Product => Boolean(product));
+        const updated = typeof next === 'function' ? next(current) : next;
+        const unresolvedIds = !catalogLoaded || catalogError
+          ? currentIds.filter((id) => !productsById.has(id))
+          : [];
         return {
           ownerId: currentUser.id,
-          items: typeof next === 'function' ? next(current) : next,
+          items: [...new Set([...updated.map((product) => product.id), ...unresolvedIds])],
         };
       });
     },
-    [currentUser.id],
+    [catalogError, catalogLoaded, catalogProducts, currentUser.id],
   );
   const [checkoutItems, setCheckoutItems] = useState<CartItem[] | null>(null);
   const [checkoutReturnPath, setCheckoutReturnPath] = useState('/cart');

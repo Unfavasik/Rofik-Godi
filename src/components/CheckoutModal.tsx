@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { QRCodeSVG } from 'qrcode.react';
@@ -51,6 +51,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<'pay_at_store' | 'pay_online'>('pay_at_store');
   const [placedOrder, setPlacedOrder] = useState<OrderDetails | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const submitLockRef = useRef(false);
   const [submissionError, setSubmissionError] = useState('');
   const [phoneError, setPhoneError] = useState('');
 
@@ -125,7 +126,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   };
 
   const handlePlaceOrder = async () => {
-    if (isProcessing) return;
+    if (submitLockRef.current || isProcessing) return;
     setSubmissionError('');
     if (profileLoad !== 'ready') { setSubmissionError('Your account details are not ready yet. Please retry.'); return; }
     if (validateProfileName(customerName)) { setSubmissionError('Your account does not have a valid name. Update your profile before checkout.'); return; }
@@ -133,6 +134,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setPhoneTouched(true);
     if (!phoneResult.valid) { setPhoneError(phoneResult.message || 'Enter a valid phone number.'); setStep(1); return; }
     if (!pickupDate || !pickupTime) { setSubmissionError('Choose a pickup date and time to continue.'); setStep(1); return; }
+    submitLockRef.current = true;
     setPhoneError(''); setIsProcessing(true);
     try {
       const { data: authData, error: authError } = await supabase!.auth.getUser();
@@ -152,7 +154,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       confetti({ particleCount: 70, spread: 58, origin: { y: 0.65 }, colors: ['#D9232D', '#111827', '#EAB308', '#059669'] });
     } catch (error) {
       setSubmissionError(error instanceof Error ? error.message : 'Unable to save your order. Please try again.');
-    } finally { setIsProcessing(false); }
+    } finally { submitLockRef.current = false; setIsProcessing(false); }
   };
 
   const continueToPayment = () => {
