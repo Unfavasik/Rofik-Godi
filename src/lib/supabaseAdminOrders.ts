@@ -114,26 +114,36 @@ export function getAdminOrderTimelineEvents(order: AdminOrderRecord): AdminOrder
   return events.sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt));
 }
 
-export async function loadAdminOrders(): Promise<{
+export async function loadAdminOrders(orderId?: string): Promise<{
   data: AdminOrderRecord[];
   error: Error | null;
 }> {
   if (!supabase) return { data: [], error: new Error('Supabase is not configured') };
-  let response = await supabase
-    .from('orders')
-    .select(
-      'id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price,selected_thickness,selected_stitch,custom_embroidery_text),order_status_history(id,from_status,to_status,note,created_at)',
-    )
-    .order('created_at', { ascending: false })
-    .limit(100);
+  let response = orderId
+    ? await supabase
+        .from('orders')
+        .select('id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price,selected_thickness,selected_stitch,custom_embroidery_text),order_status_history(id,from_status,to_status,note,created_at)')
+        .eq('id', orderId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+    : await supabase
+        .from('orders')
+        .select('id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price,selected_thickness,selected_stitch,custom_embroidery_text),order_status_history(id,from_status,to_status,note,created_at)')
+        .order('created_at', { ascending: false })
+        .limit(100);
   if (missingOrderOptionColumns(response.error)) {
-    response = await (supabase
-      .from('orders')
-      .select(
-        'id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price),order_status_history(id,from_status,to_status,note,created_at)',
-      )
-      .order('created_at', { ascending: false })
-      .limit(100) as unknown as typeof response);
+    response = orderId
+      ? await (supabase
+          .from('orders')
+          .select('id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price),order_status_history(id,from_status,to_status,note,created_at)')
+          .eq('id', orderId)
+          .order('created_at', { ascending: false })
+          .limit(1) as unknown as typeof response)
+      : await (supabase
+          .from('orders')
+          .select('id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price),order_status_history(id,from_status,to_status,note,created_at)')
+          .order('created_at', { ascending: false })
+          .limit(100) as unknown as typeof response);
   }
   const { data, error } = response;
   if (error) return { data: [], error };
@@ -210,6 +220,18 @@ export async function loadAdminOrders(): Promise<{
       };
     }),
     error: null,
+  };
+}
+
+export async function loadAdminOrderById(orderId: string): Promise<{
+  data: AdminOrderRecord | null;
+  error: Error | null;
+}> {
+  const result = await loadAdminOrders(orderId);
+  if (result.error) return { data: null, error: result.error };
+  return {
+    data: result.data[0] || null,
+    error: result.data.length ? null : new Error('Order not found.'),
   };
 }
 

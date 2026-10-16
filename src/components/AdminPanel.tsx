@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
+  Activity,
   ArrowDownRight,
   ArrowUpRight,
   BarChart3,
@@ -24,6 +25,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { AdminActivityView } from './AdminActivityView';
 import { AdminProductManager } from './AdminProductManager';
 import { CouponManagement } from './CouponManagement';
 import { AdminReviewsView } from './AdminReviewsView';
@@ -33,6 +35,7 @@ import { PickupVerification } from './PickupVerification';
 import { BannersView, CategoriesView, NotificationsView, ReportsView } from './AdminSections';
 import { AdminCustomerProfile } from './AdminCustomerProfile';
 import {
+  loadAdminOrderById,
   loadAdminOrders,
   completePickupOrderManually,
   getNextPickupOrderStatus,
@@ -42,6 +45,7 @@ import {
   verifyPickupPayment,
   type AdminOrderRecord,
 } from '../lib/supabaseAdminOrders';
+import { loadAdminActivityUnreadCount, type AdminActivityEvent } from '../lib/supabaseAdminActivity';
 import {
   loadAdminCustomerAvatar,
   loadAdminCustomers,
@@ -73,6 +77,7 @@ const navGroups = [
       { id: 'products' as AdminSection, label: 'Products', icon: Package },
       { id: 'categories' as AdminSection, label: 'Categories', icon: Tag },
       { id: 'customers' as AdminSection, label: 'Customers', icon: Users },
+      { id: 'activity' as AdminSection, label: 'Notifications', icon: Activity },
     ],
   },
   {
@@ -81,7 +86,7 @@ const navGroups = [
       { id: 'reviews' as AdminSection, label: 'Reviews', icon: Star },
       { id: 'marketing' as AdminSection, label: 'Coupons', icon: Tag },
       { id: 'banners' as AdminSection, label: 'Banners', icon: Image },
-      { id: 'notifications' as AdminSection, label: 'Notifications', icon: Bell },
+      { id: 'notifications' as AdminSection, label: 'Campaigns', icon: Bell },
     ],
   },
   {
@@ -202,7 +207,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
   const [customersLoaded, setCustomersLoaded] = useState(false);
   const [metrics, setMetrics] = useState<Record<string, number> | null>(null);
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
-  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [activityUnreadCount, setActivityUnreadCount] = useState(0);
   const [toast, setToast] = useState('');
   const [error, setError] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<AdminOrderRecord | null>(null);
@@ -218,13 +223,14 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
   }, []);
   const refresh = useCallback(async () => {
     setError('');
-    const [orderResult, productResult, customerResult, metricResult, notificationResult] =
+    const [orderResult, productResult, customerResult, metricResult, notificationResult, activityResult] =
       await Promise.all([
         loadAdminOrders(),
         loadAdminProducts(),
         loadAdminCustomers(),
         loadDashboardMetrics(),
         loadAdminNotifications(),
+        loadAdminActivityUnreadCount(),
       ]);
     const errors: string[] = [];
     if (orderResult.error) errors.push(`Orders: ${orderResult.error.message}`);
@@ -235,8 +241,10 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     setCustomersLoaded(true);
     if (metricResult.error) errors.push(`Dashboard: ${metricResult.error.message}`);
     else if (metricResult.data) setMetrics(metricResult.data);
-    if (notificationResult.error) errors.push(`Notifications: ${notificationResult.error.message}`);
+    if (notificationResult.error) errors.push(`Campaigns: ${notificationResult.error.message}`);
     else setNotifications(notificationResult.data);
+    if (activityResult.error) errors.push(`Activity: ${activityResult.error.message}`);
+    else setActivityUnreadCount(activityResult.count);
     setError(errors.join(' · '));
   }, []);
   useEffect(() => {
@@ -244,6 +252,19 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     const refreshTimer = window.setInterval(() => void refresh(), 30_000);
     return () => window.clearInterval(refreshTimer);
   }, [refresh]);
+  useEffect(() => {
+    if (!supabase) return;
+    const client = supabase;
+    const channel = client
+      .channel('admin-activity-unread-count')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_activity_events' }, () => {
+        void loadAdminActivityUnreadCount().then((result) => {
+          if (!result.error) setActivityUnreadCount(result.count);
+        });
+      })
+      .subscribe();
+    return () => { void client.removeChannel(channel); };
+  }, []);
   useEffect(() => {
     const customerId = getAdminCustomerIdFromPath(location.pathname);
     setSelectedCustomerId(customerId);
@@ -295,6 +316,30 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     const path = getPathForAdminSection(next);
     if (location.pathname !== path) navigate(path);
   };
+  const openActivityOrder = async (event: AdminActivityEvent) => {
+    const orderNumber = String(event.details.order_number || '').replace(/^#/, '');
+    let order = orders.find((item) => item.orderNumber === orderNumber) || null;
+    if (!order) {
+      const result = await loadAdminOrderById(event.entity_id);
+      if (result.error || !result.data) {
+        notify(result.error?.message || 'That order could not be loaded.');
+        return;
+      }
+      order = result.data;
+    }
+    goTo('orders');
+    setSelectedOrder(order);
+  };
+  const openActivityReview = (event: AdminActivityEvent) => {
+    goTo('reviews');
+    setQuery(event.entity_id);
+  };
+  const openActivityCustomer = (event: AdminActivityEvent) => {
+    setSelectedCustomerId(event.entity_id);
+    setSidebarOpen(false);
+    setQuery('');
+    navigate(getPathForAdminCustomer(event.entity_id));
+  };
   const title = (
     {
       overview: 'Dashboard',
@@ -305,7 +350,8 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
       reviews: 'Reviews',
       marketing: 'Coupons',
       banners: 'Banners',
-      notifications: 'Notifications',
+      notifications: 'Campaigns',
+      activity: 'Notifications',
       reports: 'Reports',
       settings: 'Settings',
     } as Record<AdminSection, string>
@@ -442,36 +488,17 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
             </div>
             <div className="relative">
               <button
-                onClick={() => setNotificationOpen((open) => !open)}
+                onClick={() => goTo('activity')}
+                aria-label={`Open activity notifications${activityUnreadCount ? `, ${activityUnreadCount} unread` : ''}`}
                 className="relative rounded-xl p-2.5 text-slate-500 hover:bg-slate-100"
               >
                 <Bell className="h-4 w-4" />
-                {notifications.some((item) => !item.read_at) && (
-                  <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#D9232D]" />
+                {activityUnreadCount > 0 && (
+                  <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-[#D9232D] px-1 py-0.5 text-[9px] font-black leading-none text-white">
+                    {activityUnreadCount > 99 ? '99+' : activityUnreadCount}
+                  </span>
                 )}
               </button>
-              {notificationOpen && (
-                <NotificationPanel
-                  notifications={notifications}
-                  onRead={async (id) => {
-                    await markAdminNotificationRead(id);
-                    setNotifications((items) =>
-                      items.map((item) =>
-                        item.id === id ? { ...item, read_at: new Date().toISOString() } : item,
-                      ),
-                    );
-                  }}
-                  onReadAll={async () => {
-                    await markAllAdminNotificationsRead();
-                    setNotifications((items) =>
-                      items.map((item) => ({
-                        ...item,
-                        read_at: item.read_at || new Date().toISOString(),
-                      })),
-                    );
-                  }}
-                />
-              )}
             </div>
             <button
               onClick={() => window.open('/home', '_blank', 'noopener,noreferrer')}
@@ -522,6 +549,14 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
           )}
           {section === 'categories' && (
             <CategoriesView products={products} onManageProducts={() => goTo('products')} />
+          )}
+          {section === 'activity' && (
+            <AdminActivityView
+              onViewOrder={openActivityOrder}
+              onViewReview={openActivityReview}
+              onViewCustomer={openActivityCustomer}
+              notify={notify}
+            />
           )}
           {section === 'customers' && (
             selectedCustomerId ? (
@@ -630,43 +665,6 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
   );
 };
 
-function NotificationPanel({
-  notifications,
-  onRead,
-  onReadAll,
-}: {
-  notifications: AdminNotification[];
-  onRead: (id: string) => void;
-  onReadAll: () => void;
-}) {
-  return (
-    <div className="absolute right-0 top-12 z-50 w-[320px] rounded-2xl border border-slate-200 bg-white p-3 shadow-xl">
-      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-        <b className="text-xs">Notifications</b>
-        <button onClick={onReadAll} className="text-[10px] font-bold text-[#D9232D]">
-          Mark all as read
-        </button>
-      </div>
-      <div className="max-h-80 overflow-y-auto">
-        {notifications.length ? (
-          notifications.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => onRead(item.id)}
-              className={`block w-full border-b border-slate-50 px-2 py-3 text-left ${item.read_at ? 'opacity-60' : ''}`}
-            >
-              <p className="text-xs font-black">{item.title}</p>
-              <p className="mt-1 text-[11px] text-slate-500">{item.body}</p>
-              <p className="mt-1 text-[10px] text-slate-400">{dateLabel(item.created_at)}</p>
-            </button>
-          ))
-        ) : (
-          <p className="p-5 text-center text-xs text-slate-400">No notifications yet</p>
-        )}
-      </div>
-    </div>
-  );
-}
 function Overview({
   metrics,
   orders,

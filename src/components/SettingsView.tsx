@@ -6,6 +6,7 @@ import { TermsConditionsView } from './TermsConditionsView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
 import { CouponDetailsView } from './CouponDetailsView';
 import { WORKSHOP_INFO } from '../data/products';
+import { CustomerSupportRequestForm } from './CustomerSupportRequestForm';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -16,6 +17,8 @@ interface SettingsViewProps {
   onOpenShop?: () => void;
   onOpenPrivacyPage?: () => void;
   onOpenTermsPage?: () => void;
+  isAuthenticated: boolean;
+  onOpenLogin?: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -26,6 +29,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onOpenShop,
   onOpenPrivacyPage,
   onOpenTermsPage,
+  isAuthenticated,
+  onOpenLogin,
 }) => {
   const [activeModal, setActiveModal] = useState<
     | 'notifications'
@@ -742,7 +747,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {activeModal === 'contact' && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
-            <motion.div initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }} className="relative w-full max-w-[420px] bg-white rounded-[28px] shadow-2xl p-5 z-10 space-y-4">
+            <motion.div initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }} className="relative z-10 max-h-[92vh] w-full max-w-[480px] space-y-4 overflow-y-auto rounded-[28px] bg-white p-5 shadow-2xl">
               <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                 <div>
                   <h3 className="text-base font-bold text-gray-900">Contact Workshop Team</h3>
@@ -751,6 +756,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
                   <X className="w-4 h-4" />
                 </button>
+              </div>
+
+              <CustomerSupportRequestForm isAuthenticated={isAuthenticated} onOpenLogin={onOpenLogin} />
+
+              <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                <span className="h-px flex-1 bg-slate-100" />
+                Or contact us directly
+                <span className="h-px flex-1 bg-slate-100" />
               </div>
 
               <div className="space-y-2.5">

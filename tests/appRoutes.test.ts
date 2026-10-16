@@ -70,6 +70,7 @@ describe('admin workspace redirect policy', () => {
     ['/admin/coupons', 'marketing'],
     ['/admin/banners', 'banners'],
     ['/admin/notifications', 'notifications'],
+    ['/admin/activity', 'activity'],
     ['/admin/reports', 'reports'],
     ['/admin/settings', 'settings'],
   ] as const)('resolves admin URL %s to section %s', (path, section) => {

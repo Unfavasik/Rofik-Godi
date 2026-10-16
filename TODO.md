@@ -1,35 +1,23 @@
 # TODO
 
-## Customer profile route and navigation
+## Admin notification and support activity inbox
 
-- [x] `/admin/Customers`-এ customer row-এর Eye action tap করলে selected customer-এর `/admin/customers/:customerId` profile route খুলবে; profile direct route-এও customer id থেকে render হবে; one clear action Customers list-এ ফিরবে।
-- [x] Profile-এ mockup-এর customer identity/contact, summary metrics, এবং Order history / Details / Notes views থাকবে; customer ও order values বিদ্যমান account data থেকে আসবে, hard-coded sample data নয়।
+- [x] Admin bell এবং sidebar-এর **Notifications** link full-page `/admin/activity` feed খোলে; ছোট dropdown নেই; deep link/refresh কাজ করে।
+- [x] Feed database থেকে নতুন ও সাম্প্রতিক order, order status/payment change, customer signup, product review, coupon redemption, support request এবং support-status changes দেখায়।
+- [x] Event cards-এ actor/customer identity, contact, timestamp ও entity-specific details—order number/items/amount/payment/status, review product/rating/text, support category/subject/full message—দেখায়।
+- [x] All/Orders/Support/Reviews/Customers filters, search, unread-only, per-admin read state, Mark all read, realtime refresh এবং latest events feed আছে।
+- [x] Order View exact order details modal খোলে; Review View exact review filter করে; Customer View profile খোলে; Support View full ticket এবং Open/In progress/Resolved status control খোলে।
+- [x] Existing `/admin/notifications` campaign composer/history আলাদা **Campaigns** page হিসেবে অক্ষুণ্ণ আছে।
 
-## Customer profile UI and data
+## In-app customer support requests
 
-- [x] Customer identity-তে actual name, email, phone, avatar/initials ও returning/new status দেখাবে; unavailable field-এ safe empty state দেখাবে।
-- [x] Summary-তে order count, lifetime spending, customer-since date ও status থাকবে; Details view-তে account fields এবং order insights actual loaded orders থেকে হিসাব করে দেখাবে।
-- [x] Order history-তে matching customer-এর actual order number, date, status, amount, saved product thumbnails/items, empty state, এবং existing order-open action থাকবে।
-- [x] Notes view-তে customer অনুযায়ী scoped Important, Delivery, Payment, Call ও General notes যোগ/দেখা/মুছা যায়; existing admin-only storage policy থাকে।
-- [x] Profile page mobile ও desktop-এ readable/responsive এবং user-provided mockups-এর hierarchy অনুসরণ করে।
-- [x] Admin-only data boundary অক্ষুণ্ণ; customer profile email/name/phone update permission বা migration যোগ করা হয় না।
+- [x] Contact modal-এ signed-in customer-এর category/subject/message form, safe content limits, clear success ticket reference ও retryable error আছে; phone/WhatsApp options থাকে; guest-কে sign-in করতে বলা হয়।
+- [x] Authenticated session থেকে server-side request creator `user_id` নেয়; ticket RLS customer/admin-limited; admin-only status/update path narrow RPC দিয়ে সুরক্ষিত।
+- [x] Ticket create/status change admin activity event-এ record হয়; test ticket বা customer notification পাঠানো হয়নি।
 
-## Screenshot-driven header polish
+## Security and delivery
 
-- [x] Customer detail route-এ top bar-এর `Admin / Customers / Profile` breadcrumb সরানো এবং global title `Customers` রাখা; main profile content-এ `Customer profile` একবারই দেখানো।
-- [x] Name-এর পাশে `Returning customer` badge ও avatar-এর decorative green dot সরানো; customer status summary tile-এ থাকে।
-- [x] Customers-এ ফেরার জন্য একটি মাত্র clear back action রাখা।
-
-## Customer notification delivery
-
-- [x] Existing secure admin RPC target customer-এর in-app notification row তৈরি করে; persisted notification expiry সাত দিন এবং row-level security customer-কে শুধু নিজের notification দেখায়। SMS, email ও push বর্তমানে supported নয়।
-- [x] Notifications table Supabase Realtime-এ publish করা; logged-in customer-এর নিজস্ব `user_id` filter-সহ inbox ও unread-count update হয়।
-- [x] User choice 2 অনুযায়ী প্রতিটি **নতুন** profile note save হওয়ার সঙ্গে একই transaction-এ একই customer-এর in-app notification-এ exact note text পাঠানো হয়; note ID retry-safe/idempotent।
-- [x] পুরোনো team-only notes retroactively পাঠানো হয় না; profile UI-তে `Team-only`/`Sent to customer` status, automatic-send disclosure, ও delivery failure message দেখা যায়। Note মুছলে ইতিমধ্যে পাঠানো notification ফেরত নেওয়া হয় না—UI-তে সেটি স্পষ্ট।
-
-## Verification
-
-- [x] `pnpm lint`, full test suite (26 files / 193 tests) এবং `pnpm build` pass করেছে।
-- [x] Live Supabase metadata: atomic RPC exists; authenticated execute=true, anonymous execute=false; notifications Realtime enabled; notifications RLS remains enabled।
-- [x] Local ও public `/admin` preview HTTP 200; no test/customer notification পাঠানো হয়নি।
-- [x] `.env.local` Git ignore-এ; Supabase secret key client bundle বা commit-এ নেই.
+- [x] Activity/read-state tables RLS-enabled; admin feed/read/status RPCs authenticated-only grant සහ server-side admin check রাখে; anonymous execute নেই।
+- [x] Support/activity migration target Supabase project-এ applied; `admin_activity_events` Realtime publication-এ যুক্ত; recent real activity backfilled এবং historical events current admins-এর জন্য read হিসেবে mark করা।
+- [x] `pnpm lint`, `pnpm test` (28 files / 202 tests) এবং `pnpm build` pass করেছে।
+- [x] `.env.local` Git ignore-এ; service secret client bundle বা commit-এ নেই.

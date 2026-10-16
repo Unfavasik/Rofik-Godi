@@ -148,3 +148,29 @@ export async function findActiveCoupon(code: string) {
   const { data } = await supabase.from('coupons').select('code,discount_type,discount_value,minimum_order,maximum_discount,usage_limit,usage_count,starts_at,ends_at').eq('code', code.trim().toUpperCase()).eq('is_active', true).maybeSingle();
   return data;
 }
+
+
+export type SupportRequestCategory =
+  | 'Order issue'
+  | 'Product question'
+  | 'Payment'
+  | 'Pickup / installation'
+  | 'Other';
+
+export async function createCustomerSupportRequest(input: {
+  category: SupportRequestCategory;
+  subject: string;
+  message: string;
+}): Promise<{ id: string | null; error: Error | null }> {
+  if (!supabase) return { id: null, error: new Error('Support service is unavailable.') };
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+  if (authError) return { id: null, error: authError };
+  if (!userData.user) return { id: null, error: new Error('Sign in to submit a support request.') };
+  const { data, error } = await supabase.rpc('create_customer_support_request', {
+    p_category: input.category,
+    p_subject: input.subject.trim(),
+    p_message: input.message.trim(),
+  });
+  if (error) return { id: null, error };
+  return { id: data ? String(data) : null, error: null };
+}

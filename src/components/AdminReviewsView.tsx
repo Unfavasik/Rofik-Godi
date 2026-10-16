@@ -23,10 +23,17 @@ export const AdminReviewsView: React.FC<AdminReviewsViewProps> = ({ notify, quer
     setLoading(false);
   }, []);
   useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    if (!query) return;
+    setProductFilter('all');
+    setRatingFilter('all');
+    setPublicationFilter('all');
+    setVerificationFilter('all');
+  }, [query]);
 
   const products = useMemo(() => Array.from(new Map((reviews || []).map((review) => [review.product_id, review.product_name || review.product_id])).entries()), [reviews]);
   const filtered = useMemo(() => (reviews || []).filter((review) => {
-    const search = `${review.author_name} ${review.product_name || ''} ${review.customer_id || ''} ${review.order_id || ''} ${review.review_text || ''}`.toLowerCase();
+    const search = `${review.id} ${review.author_name} ${review.product_name || ''} ${review.customer_id || ''} ${review.order_id || ''} ${review.review_text || ''}`.toLowerCase();
     return (!query || search.includes(query.toLowerCase()))
       && (productFilter === 'all' || review.product_id === productFilter)
       && (ratingFilter === 'all' || review.rating === Number(ratingFilter))
