@@ -1,7 +1,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { OrderDetails } from '../src/components/CustomerOrdersModal';
+import { CustomerOrdersModal, OrderDetails } from '../src/components/CustomerOrdersModal';
 import type { CustomerOrderRecord } from '../src/types';
 
 const makeOrder = (status: string): CustomerOrderRecord => ({
@@ -29,7 +29,18 @@ const renderOrderDetails = (order: CustomerOrderRecord) => renderToStaticMarkup(
   <OrderDetails order={order} customerName="Test Customer" reviews={[]} onInvoice={() => {}} onReview={() => {}} />,
 );
 
+const renderOrdersModal = () => renderToStaticMarkup(
+  <CustomerOrdersModal orders={[]} reviews={[]} loading={false} customerName="Test Customer" onClose={() => {}} onReview={() => {}} />,
+);
+
 describe('My Orders details', () => {
+  it('keeps the pickup-orders label but removes store branding from the top bar', () => {
+    const html = renderOrdersModal();
+    expect(html).toContain('Pickup orders');
+    expect(html).toContain('Your orders');
+    expect(html).not.toContain('Rofik Godi Centre');
+  });
+
   it('uses the notification-style details layout and shows the pickup QR when ready', () => {
     const html = renderOrderDetails(makeOrder('READY_FOR_PICKUP'));
     for (const text of ['RGC-DFDFC5D323A5', 'Order progress', 'Ready for pickup', 'Pickup QR code', 'Pickup from store', 'ROFIK GODI CENTRE', 'Bike Seat Cover', 'Payment details', 'Order information', 'Track order', 'Need help?', 'Contact store']) {

@@ -194,7 +194,7 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
             <div className="flex min-w-0 items-start gap-3">
               {selectedOrder && <button type="button" onClick={() => { setSelectedOrderId(null); onBackToOrdersRoute?.(); }} aria-label="Back to all orders" className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-50 text-slate-700 transition hover:bg-slate-100"><ArrowLeft className="h-4 w-4" /></button>}
               <div>
-                <p className="flex items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-[0.18em] text-[#cf2833]"><Store className="h-3.5 w-3.5" />Rofik Godi Centre · Pickup orders</p>
+                <p className="flex items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-[0.18em] text-[#cf2833]"><Store className="h-3.5 w-3.5" />Pickup orders</p>
                 <h2 id="customer-orders-title" className="mt-1 text-[21px] font-black tracking-tight text-slate-900 sm:text-[25px]">{selectedOrder ? 'Order details' : 'Your orders'}</h2>
                 <p className="mt-1 text-[11px] font-medium text-slate-500">{selectedOrder ? `Order #${selectedOrder.order_number}` : 'Every order, update and invoice in one place.'}</p>
               </div>
