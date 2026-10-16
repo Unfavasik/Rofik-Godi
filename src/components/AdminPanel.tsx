@@ -310,7 +310,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
       settings: 'Settings',
     } as Record<AdminSection, string>
   )[section];
-  const headerTitle = selectedCustomerId ? 'Customer profile' : title;
+  const headerTitle = title;
   const exportOrders = () => {
     const ok = downloadCsv(
       `rofig-godi-center-orders-${new Date().toISOString().slice(0, 10)}.csv`,
@@ -427,9 +427,6 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
               <Menu className="h-5 w-5" />
             </button>
             <div>
-              <p className="text-[11px] font-bold text-slate-400">
-                Admin / <span className="text-slate-600">{title}</span>{selectedCustomerId && <span className="text-slate-400"> / Profile</span>}
-              </p>
               <h1 className="mt-0.5 text-lg font-black">{headerTitle}</h1>
             </div>
           </div>

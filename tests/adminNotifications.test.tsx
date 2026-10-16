@@ -13,6 +13,7 @@ vi.mock('../src/lib/supabase', () => ({ supabase: supabaseMock }));
 
 import { NotificationAudiencePicker } from '../src/components/NotificationAudiencePicker';
 import {
+  addAdminCustomerNoteAndNotify,
   deleteAdminNotificationCampaign,
   loadAdminNotificationCampaigns,
   sendAdminNotification,
@@ -67,6 +68,39 @@ describe('admin customer notifications', () => {
 
     expect(result.error?.message).toMatch(/administrator sign-in required/i);
     expect(supabaseMock.rpc).not.toHaveBeenCalled();
+  });
+
+  it('atomically saves a note and sends its exact text only to the selected customer', async () => {
+    const note = { id: 'note-1', category: 'Delivery', content: 'Please call before delivery.', createdAt: '2026-10-16T10:00:00.000Z', author: 'Admin', customerNotifiedAt: '2026-10-16T10:00:00.000Z' };
+    supabaseMock.rpc.mockResolvedValue({ data: note, error: null });
+
+    const result = await addAdminCustomerNoteAndNotify({ customerId: 'user-1', noteId: 'note-1', category: 'Delivery', content: 'Please call before delivery.' });
+
+    expect(supabaseMock.rpc).toHaveBeenCalledWith('admin_add_customer_note_and_notify', {
+      p_customer_id: 'user-1',
+      p_note_id: 'note-1',
+      p_category: 'Delivery',
+      p_content: 'Please call before delivery.',
+    });
+    expect(result).toEqual({ data: note, error: null });
+  });
+
+  it('does not call the note RPC without an authenticated admin session', async () => {
+    supabaseMock.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+
+    const result = await addAdminCustomerNoteAndNotify({ customerId: 'user-1', noteId: 'note-1', category: 'Delivery', content: 'Please call before delivery.' });
+
+    expect(result.error?.message).toMatch(/administrator sign-in required/i);
+    expect(supabaseMock.rpc).not.toHaveBeenCalled();
+  });
+
+  it('surfaces note-delivery errors so the draft can be retried', async () => {
+    const error = new Error('Notification insert failed');
+    supabaseMock.rpc.mockResolvedValue({ data: null, error });
+
+    const result = await addAdminCustomerNoteAndNotify({ customerId: 'user-1', noteId: 'note-1', category: 'Delivery', content: 'Please call before delivery.' });
+
+    expect(result.error).toBe(error);
   });
 
   it('loads grouped campaign history with recipient counts', async () => {

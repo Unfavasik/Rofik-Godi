@@ -239,3 +239,26 @@ export async function saveAdminJsonSetting<T>(key: string, value: T) {
   });
   return { error };
 }
+
+export async function addAdminCustomerNoteAndNotify(input: {
+  customerId: string;
+  noteId: string;
+  category: string;
+  content: string;
+}) {
+  if (!supabase) return { data: null, error: new Error('Supabase is not configured') };
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    return {
+      data: null,
+      error: userError || new Error('Administrator sign-in required'),
+    };
+  }
+  const { data, error } = await supabase.rpc('admin_add_customer_note_and_notify', {
+    p_customer_id: input.customerId,
+    p_note_id: input.noteId,
+    p_category: input.category,
+    p_content: input.content,
+  });
+  return { data, error };
+}

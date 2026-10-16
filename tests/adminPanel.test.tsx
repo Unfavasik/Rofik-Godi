@@ -45,8 +45,9 @@ describe('admin workspace', () => {
         <AdminPanel />
       </MemoryRouter>,
     );
-    expect(html).toContain('Customer profile');
+    expect(html).toContain('Customers</h1>');
     expect(html).toContain('Loading customer profile');
+    expect(html).not.toContain(' / Profile');
     expect(html).toContain('Back to customers');
     expect(html).not.toContain('fixed inset-0 z-50 flex justify-end bg-slate-950/40');
   });

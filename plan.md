@@ -2,40 +2,36 @@
 
 ## উদ্দেশ্য
 
-`/admin/customers/:customerId` route-টি অক্ষুণ্ণ রেখে Customers তালিকার eye action থেকে একটি পূর্ণ, responsive Customer Profile খোলা ও ব্যবহারযোগ্য করা। UI-টি ব্যবহারকারীর দেওয়া তিনটি mockup-এর layout ও visual hierarchy অনুসরণ করবে এবং demo data নয়, বিদ্যমান customer, order ও product data ব্যবহার করবে।
+`/admin/customers/:customerId` route অক্ষুণ্ণ রেখে Customers list-এর eye action থেকে responsive Customer Profile দেখানো। UI screenshot/mockup-এর hierarchy বজায় রাখবে, কিন্তু duplicate title/breadcrumb ও decorative status marker ছাড়া; customer/order/product values বাস্তব store data থেকে আসবে।
 
 ## বাস্তবায়ন ও data flow
 
-- `src/lib/appRoutes.ts`-এর customer route এবং `src/components/AdminPanel.tsx`-এর eye-navigation বজায় থাকবে; customer detail page `AdminCustomerProfile` component-এ থাকবে।
-- Customer summary, avatar, recent orders ও product images বিদ্যমান Supabase loaders/state থেকে আসবে। History-তে বর্তমানে লোড হওয়া matching orders দেখানো হবে।
-- Profile-এ summary cards, Order history / Details / Notes tabs থাকবে। Details actual profile ও order figures থেকে হিসাব হবে।
-- Customer-specific admin notes `app_settings`-এর existing admin-only RLS row-তে keyed JSON হিসেবে load/save হবে; নতুন permission বা customer account write path যোগ হবে না। Note category, message, timestamp, author label এবং remove action থাকবে।
-- Account identity field read-only থাকবে; existing policies admin-কে customer profile update দেয় না। Edit affordance থাকলে সেটি existing read-only limitation স্পষ্ট করবে, কোনো hidden write করবে না।
-- `public/manus-routes.json`-এ বিদ্যমান route registry বজায় থাকবে; নতুন route লাগবে না।
+- Customer route এবং eye navigation আগের মতো থাকবে; profile page `AdminCustomerProfile` component-এ render হবে। Summary, avatar, loaded order history ও product images existing Supabase loaders থেকে আসবে।
+- Profile-এ summary cards এবং Order history / Details / Notes tabs থাকবে। Global shell-এ `Customers` context title, profile content-এ মাত্র একবার `Customer profile` heading থাকবে; avatar-এর green dot ও beside-name `Returning customer` badge থাকবে না। Returning/new status metrics/details-এ থাকবে।
+- Existing admin notes `app_settings`-এর admin-only RLS row-তে customer-id অনুযায়ী JSON হিসেবে থাকে। User-এর explicit choice অনুযায়ী **প্রতিটি নতুন note save হওয়ার সময় একই transaction-এ একই customer-এর inbox-এ exact note text in-app notification হিসেবে যাবে**। New note-এ customer notification timestamp থাকবে; পুরোনো notes-কে retroactively পাঠানো হবে না, সেগুলো `Team-only` হিসেবে চিহ্নিত থাকবে।
+- Note+notification write secure admin-only RPC দিয়ে atomic ও note-ID idempotent হবে; failure হলে note success দেখানো হবে না। RPC existing `is_admin()` check করবে, customer ID ও note input validate করবে, এবং notification সাত দিনের expiry পাবে।
+- Notifications table Supabase Realtime publication-এ আছে; client শুধু authenticated user's `user_id` filter-এ insert event নেবে; existing RLS policies অপরিবর্তিত থাকবে। Foreground app-এ inbox ও unread count refresh হবে; app বন্ধ থাকলে notification persisted থাকবে এবং পরে খুললে inbox-এ দেখা যাবে।
+- Delivery channel **in-app only**; এই project-এ SMS, email বা OS/browser push নেই। Admin note remove করলে ইতিমধ্যে পাঠানো customer notification retract হবে না; UI-তে সেটি স্পষ্ট থাকবে। কোনো test/customer notification পাঠানো হবে না।
+- Account name/email/phone read-only; বিদ্যমান admin policy profile update অনুমোদন করে না। নতুন profile permission বা route প্রয়োজন নেই। Supabase secret key client bundle-এ যাবে না।
 
-## Project structure
+## Project files
 
-- `src/components/AdminPanel.tsx`: admin shell, customer route state ও profile props.
-- `src/components/AdminCustomerProfile.tsx`: profile header, KPI cards, tabs, order list, details, notes composition.
-- `src/lib/supabaseAdmin.ts`: existing customer/admin settings API; প্রয়োজনে customer-note persistence helper এখানে বা dedicated adjacent helper-এ.
-- `tests/adminCustomerProfile.test.tsx` এবং `tests/adminPanel.test.tsx`: profile fields/tabs/notes ও route-backed behavior.
-- `public/manus-routes.json`: route declaration; existing customer-profile pattern ইতিমধ্যে আছে.
+- `src/components/AdminPanel.tsx`: admin shell title ও route state.
+- `src/components/AdminCustomerProfile.tsx`: profile, orders, details, notes UI.
+- `src/lib/supabaseAdmin.ts`: secure admin RPC wrappers.
+- `src/App.tsx` এবং `src/components/NotificationsView.tsx`: user-scoped notification realtime subscriptions.
+- `supabase/migrations`: notification publication এবং note+notification atomic RPC.
+- `tests/adminCustomerProfile.test.tsx`, `tests/adminPanel.test.tsx`, `tests/adminNotifications.test.tsx`: profile, route ও RPC behavior.
 
 ## Design
 
-- **Design Movement:** আধুনিক commerce-dashboard interface, clean mobile-first customer CRM.
-- **Core Principles:** দ্রুত scan করা যায়; customer-এর পরিচয় ও lifetime value স্পষ্ট; order activity-তে product imagery; notes এক নজরে শ্রেণিবদ্ধ ও সহজে যোগ করা যায়।
-- **Color Philosophy:** Rofik Godi-এর লাল brand accent; নীলের হালকা tint profile/identity-তে; সবুজ/বেগুনি/কমলা KPI ও category-তে আলাদা semantic signal।
-- **Layout Paradigm:** উপরে prominent profile hero, তার নিচে চারটি compact metric tile, তারপর pill-style tab rail এবং content section; desktop-এ প্রশস্ত workspace, mobile-এ stacked/scroll-safe layout।
-- **Signature Elements:** initials/avatar-সহ profile hero; চার রঙের summary tiles; rounded segmented tabs এবং category-colored note chips.
-- **Interaction Philosophy:** eye action route-backed; tabs keyboard-operable; order row opens existing order details; note entry category-selectable; destructive note removal stays explicit and scoped.
-- **Animation:** subtle hover/focus transitions; reduced-motion preference respect; decorative animation নেই।
-- **Typography System:** existing Tailwind sans stack; bold compact headings, readable body labels, tabular-feeling numeric hierarchy.
-- **Brand Essence:** Rofik Godi admin-দের customer history দ্রুত বুঝতে সাহায্য করা, without hiding source data; practical, clear, trustworthy.
-- **Brand Voice:** short English UI copy matching the application; e.g. “Customer profile” and “Add a note for your team.”
-- **Wordmark & Logo:** existing ROFIK GODI admin identity unchanged.
-- **Signature Brand Color:** existing `#D9232D`.
+- **Design movement:** clean, mobile-first commerce-admin CRM; quick to scan and operationally trustworthy.
+- **Color:** Rofik Godi red accent `#D9232D`; restrained blue profile surfaces; semantic KPI/category colors.
+- **Layout:** prominent profile hero, four compact metric tiles, segmented tabs, and responsive content cards.
+- **Signature elements:** customer avatar/initials, rounded metric tiles, keyboard-operable pill tabs, category chips, visible “sent to customer”/“team-only” note badges.
+- **Interaction:** route-backed back action, existing order-open behavior, explicit customer-visible note disclosure, note auto-send only when the admin adds it, and clear send/save failures.
+- **Typography/brand:** existing Tailwind sans stack and Rofik Godi identity retained; short English UI copy.
 
 ## Scope / constraints
 
-No publishing, credential changes, schema migration, database permission changes, or customer account mutations. If Supabase is not configured in the current preview, live account/order data and saved notes cannot be demonstrated there; production loaders remain the source of truth.
+No customer account changes, broad permission changes, direct notification tests, or SMS/email/push integrations. The only DB changes are user-scoped notification Realtime publication and an admin-checked atomic RPC; existing notification/profile RLS policies remain unchanged. User-authored note content is customer-visible on creation as explicitly requested. Profile edits remain read-only under current policy.

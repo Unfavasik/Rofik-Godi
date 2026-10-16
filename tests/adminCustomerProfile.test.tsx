@@ -112,6 +112,10 @@ describe('admin customer profile', () => {
   it('shows actual customer identity, account metrics, and the three mockup sections', () => {
     const html = renderProfile();
     expect(html).toContain('Customer profile');
+    expect(html.match(/>Customer profile<\/h2>/g) || []).toHaveLength(1);
+    expect(html).not.toContain('Admin / Customers');
+    expect(html).not.toContain('bg-blue-100 text-blue-700');
+    expect(html).not.toContain('aria-label="Customer account"');
     expect(html).toContain('Testbot');
     expect(html).toContain('hello.devasik@gmail.com');
     expect(html).toContain('9434343434');
@@ -146,8 +150,10 @@ describe('admin customer profile', () => {
     for (const category of ['Important', 'Delivery', 'Payment', 'Call', 'General']) {
       expect(html).toContain(category);
     }
-    expect(html).toContain('Write a note about this customer');
-    expect(html).toContain('Add note');
+    expect(html).toContain('Write a note to this customer');
+    expect(html).toContain('Save &amp; notify');
+    expect(html).toContain('New notes are sent to this customer as in-app notifications.');
+    expect(html).toContain('Existing team-only notes are not sent retroactively.');
     expect(html).toContain('Sort notes');
     expect(html).toContain('No notes yet');
   });

@@ -110,18 +110,32 @@ export default function App() {
   };
   useEffect(() => {
     let active = true;
-    if (currentUser.isGuest) {
+    if (currentUser.isGuest || !supabase || !currentUser.id) {
       setNotificationCount(0);
       return () => {
         active = false;
       };
     }
-    void listMyNotifications(currentUser.id).then((notifications) => {
-      if (active)
-        setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
-    }).catch(() => { if (active) setNotificationCount(0); });
+    const notificationClient = supabase;
+    const refreshCount = () => {
+      void listMyNotifications(currentUser.id).then((notifications) => {
+        if (active)
+          setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
+      }).catch(() => { if (active) setNotificationCount(0); });
+    };
+    refreshCount();
+    const channel = notificationClient
+      .channel(`notifications-user-${currentUser.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${currentUser.id}`,
+      }, refreshCount)
+      .subscribe();
     return () => {
       active = false;
+      void notificationClient.removeChannel(channel);
     };
   }, [currentUser.id, currentUser.isGuest]);
 

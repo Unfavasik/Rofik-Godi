@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   ArrowDownUp,
@@ -26,7 +26,7 @@ import {
   X,
 } from 'lucide-react';
 import type { AdminCustomer } from '../lib/supabaseAdmin';
-import { loadAdminJsonSetting, saveAdminJsonSetting } from '../lib/supabaseAdmin';
+import { addAdminCustomerNoteAndNotify, loadAdminJsonSetting, saveAdminJsonSetting } from '../lib/supabaseAdmin';
 import { matchesAdminOrderToCustomer, type AdminOrderRecord } from '../lib/supabaseAdminOrders';
 import { PRODUCTS } from '../data/products';
 import type { Product } from '../types';
@@ -39,6 +39,7 @@ type CustomerNote = {
   content: string;
   createdAt: string;
   author: string;
+  customerNotifiedAt?: string;
 };
 type NotesByCustomer = Record<string, CustomerNote[]>;
 
@@ -84,7 +85,8 @@ function isCustomerNote(value: unknown): value is CustomerNote {
     isNoteCategory(note.category) &&
     typeof note.content === 'string' &&
     typeof note.createdAt === 'string' &&
-    typeof note.author === 'string'
+    typeof note.author === 'string' &&
+    (note.customerNotifiedAt === undefined || typeof note.customerNotifiedAt === 'string')
   );
 }
 
@@ -211,6 +213,12 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
   const [noteCategory, setNoteCategory] = useState<CustomerNoteCategory>('Important');
   const [noteSort, setNoteSort] = useState<'newest' | 'oldest'>('newest');
   const [editNoticeOpen, setEditNoticeOpen] = useState(false);
+  const pendingNoteRef = useRef<{
+    customerId: string;
+    noteId: string;
+    category: CustomerNoteCategory;
+    content: string;
+  } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -280,21 +288,54 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
     event.preventDefault();
     const content = noteText.trim();
     if (!content || !customer) return;
-    const note: CustomerNote = {
-      id:
-        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    const pending = pendingNoteRef.current;
+    const noteId =
+      pending &&
+      pending.customerId === customer.id &&
+      pending.category === noteCategory &&
+      pending.content === content
+        ? pending.noteId
+        : typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
           ? crypto.randomUUID()
-          : `note-${Date.now()}`,
+          : `note-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    pendingNoteRef.current = {
+      customerId: customer.id,
+      noteId,
       category: noteCategory,
       content,
-      createdAt: new Date().toISOString(),
-      author: 'Admin',
     };
-    const next = {
-      ...notesByCustomer,
-      [customer.id]: [note, ...(notesByCustomer[customer.id] || [])],
-    };
-    if (await saveNotes(next)) setNoteText('');
+    setNotesSaving(true);
+    setNotesError('');
+    try {
+      const { data, error } = await addAdminCustomerNoteAndNotify({
+        customerId: customer.id,
+        noteId,
+        category: noteCategory,
+        content,
+      });
+      if (error) {
+        setNotesError(`Note could not be saved and delivered: ${error.message}`);
+        return;
+      }
+      if (!isCustomerNote(data)) {
+        setNotesError('The server did not confirm note delivery. Please retry.');
+        return;
+      }
+      setNotesByCustomer((current) => ({
+        ...current,
+        [customer.id]: [data, ...(current[customer.id] || [])],
+      }));
+      setNoteText('');
+      pendingNoteRef.current = null;
+    } catch (error) {
+      setNotesError(
+        error instanceof Error
+          ? `Note could not be saved and delivered: ${error.message}`
+          : 'Note could not be saved and delivered. Please retry.',
+      );
+    } finally {
+      setNotesSaving(false);
+    }
   };
 
   const removeNote = async (noteId: string) => {
@@ -343,7 +384,6 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
     .map((part) => part[0])
     .join('')
     .toUpperCase();
-  const returning = /return|repeat|loyal/i.test(customer.status);
   const completedOrders = history.filter(
     (order) => order.status === 'COMPLETED' || order.status === 'PICKED_UP',
   ).length;
@@ -358,27 +398,12 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
   return (
     <section className="mx-auto max-w-[1100px] pb-8" aria-labelledby="customer-profile-title">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onBack}
-            aria-label="Back to all customers"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </button>
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#D9232D]">
-              Admin / Customers
-            </p>
-            <h2
-              id="customer-profile-title"
-              className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl"
-            >
-              Customer profile
-            </h2>
-          </div>
-        </div>
+        <h2
+          id="customer-profile-title"
+          className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl"
+        >
+          Customer profile
+        </h2>
         <button
           type="button"
           onClick={onBack}
@@ -404,22 +429,12 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
                 className="absolute inset-0 h-full w-full object-cover"
               />
             )}
-            <span
-              className="absolute bottom-1 right-1 h-5 w-5 rounded-full border-[3px] border-sky-50 bg-emerald-500"
-              aria-label="Customer account"
-            />
           </div>
           <div className="min-w-0 flex-1 text-center sm:text-left">
             <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
               <h3 className="max-w-full truncate text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
                 {customer.name}
               </h3>
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-extrabold ${returning ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}
-              >
-                <Crown className="h-3.5 w-3.5" />
-                {customer.status || 'New'} customer
-              </span>
             </div>
             <div className="mt-3 flex flex-col items-center gap-x-5 gap-y-2 text-xs text-slate-600 sm:flex-row sm:flex-wrap sm:items-start">
               <span className="inline-flex max-w-full min-w-0 items-center gap-2">
@@ -695,12 +710,12 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
             Customer notes
           </h3>
           <p className="mt-1 text-[11px] text-slate-500">
-            Add and review useful context for your team.
+            New notes are sent to this customer as in-app notifications. Existing team-only notes are not sent retroactively.
           </p>
         </div>
         <form onSubmit={(event) => void addNote(event)} className="mt-4">
           <label htmlFor="customer-note-content" className="sr-only">
-            Write a note about this customer
+            Write a note to this customer
           </label>
           <div className="relative">
             <FileText className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
@@ -710,7 +725,7 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
               maxLength={500}
               onChange={(event) => setNoteText(event.target.value)}
               rows={3}
-              placeholder="Write a note about this customer…"
+              placeholder="Write a note to share with this customer…"
               className="w-full resize-y rounded-2xl border border-slate-200 bg-slate-50/40 py-3 pl-10 pr-4 text-xs leading-5 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-50"
             />
             <span className="absolute bottom-3 right-3 text-[10px] text-slate-400">
@@ -738,7 +753,7 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#101f3d] px-4 py-2.5 text-[11px] font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-45"
             >
               <Send className="h-3.5 w-3.5" />
-              {notesSaving ? 'Saving…' : 'Add note'}
+              {notesSaving ? 'Saving & notifying…' : 'Save & notify'}
             </button>
           </div>
         </form>
@@ -747,7 +762,7 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
             className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-[11px] leading-5 text-amber-800"
             role="status"
           >
-            Notes could not be synced: {notesError}
+            Note update was not confirmed: {notesError}
           </div>
         )}
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
@@ -789,11 +804,18 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
                     <Icon className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-1 text-[9px] font-extrabold ${categoryClasses[note.category]}`}
-                    >
-                      {note.category}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-1 text-[9px] font-extrabold ${categoryClasses[note.category]}`}
+                      >
+                        {note.category}
+                      </span>
+                      <span
+                        className={`inline-flex rounded-full px-2 py-1 text-[9px] font-bold ${note.customerNotifiedAt ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}
+                      >
+                        {note.customerNotifiedAt ? 'Sent to customer' : 'Team-only'}
+                      </span>
+                    </div>
                     <p className="mt-2 whitespace-pre-wrap break-words text-[12px] leading-5 text-slate-700">
                       {note.content}
                     </p>
@@ -807,7 +829,7 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
                     onClick={() => void removeNote(note.id)}
                     disabled={notesSaving}
                     aria-label={`Remove ${note.category.toLowerCase()} note`}
-                    title="Remove note"
+                    title={note.customerNotifiedAt ? 'Remove from admin notes only; the customer notification cannot be recalled.' : 'Remove note'}
                     className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
                   >
                     <Trash2 className="h-4 w-4" />

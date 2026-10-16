@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Bell, ChevronRight, Package, Settings, Star, Tag, Truck, Volume2, Moon, Smartphone, Megaphone, TrendingDown, Trash2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import { deleteMyNotification, listMyNotifications, markNotificationRead } from '../lib/supabaseCustomer';
 import { getNotificationOrderNumber } from '../lib/orderPresentation';
 import { listMyOrders } from '../lib/supabaseOrders';
@@ -77,9 +78,12 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
   const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
-    let active = true;
     setSelectedNotification(null);
     setFilter('All');
+  }, [userId, isGuest]);
+
+  useEffect(() => {
+    let active = true;
     if (isGuest || !userId) {
       setItems([]);
       setLoadError('');
@@ -106,6 +110,23 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
     });
     return () => { active = false; };
   }, [userId, isGuest, loadAttempt]);
+
+  useEffect(() => {
+    if (isGuest || !userId || !supabase) return;
+    const notificationClient = supabase;
+    const channel = notificationClient
+      .channel(`notifications-view-${userId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${userId}`,
+      }, () => {
+        setLoadAttempt((attempt) => attempt + 1);
+      })
+      .subscribe();
+    return () => { void notificationClient.removeChannel(channel); };
+  }, [userId, isGuest]);
 
   useEffect(() => {
     let active = true;
