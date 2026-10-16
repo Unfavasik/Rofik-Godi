@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Product } from '../types';
 import { Heart, Plus, Star, ShoppingCart, ImageOff } from 'lucide-react';
 import { motion } from 'motion/react';
+
+const loadedImageSrcs = new Set<string>();
 
 const formatPrice = (value: number) => `₹${value.toLocaleString('en-IN')}`;
 const discountPercent = (product: Product) => product.originalPrice > product.price
@@ -20,9 +22,18 @@ interface ProductCardProps {
 }
 
 const ProductImage: React.FC<{ src: string | null | undefined; alt: string; variant: 'grid' | 'list' }> = ({ src, alt, variant }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [hasFailed, setHasFailed] = useState(false);
   const imageSrc = typeof src === 'string' ? src.trim() : '';
+  const [isLoaded, setIsLoaded] = useState(() => loadedImageSrcs.has(imageSrc));
+  const [hasFailed, setHasFailed] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useLayoutEffect(() => {
+    const image = imgRef.current;
+    if (image?.complete && image.naturalWidth > 0) {
+      loadedImageSrcs.add(imageSrc);
+      setIsLoaded(true);
+    }
+  }, [imageSrc]);
 
   if (!imageSrc || hasFailed) {
     return (
@@ -41,12 +52,17 @@ const ProductImage: React.FC<{ src: string | null | undefined; alt: string; vari
     <>
       {!isLoaded && <div className="skeleton-shimmer absolute inset-0 z-0 bg-gray-200" />}
       <img
+        ref={imgRef}
         src={imageSrc}
         alt={alt}
-        onLoad={() => setIsLoaded(true)}
+        onLoad={() => {
+          loadedImageSrcs.add(imageSrc);
+          setIsLoaded(true);
+        }}
         onError={() => setHasFailed(true)}
         className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
         loading="lazy"
+        decoding="async"
       />
     </>
   );

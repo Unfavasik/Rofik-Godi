@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { lazy, Suspense, useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { lazy, Suspense, useState, useMemo, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { WORKSHOP_INFO } from './data/products';
 import { Product, CartItem, VehicleCategory, UserProfile } from './types';
 import { Header } from './components/Header';
@@ -237,11 +237,14 @@ export default function App() {
     if (resolveAppRoute(location.pathname).kind !== 'tab') return;
     const nextPath = tabToRoute(activeTab);
     if (location.pathname !== nextPath) navigate(nextPath, { state: { tab: activeTab } });
-
-    if (activeTab === 'shop') {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    }
   }, [activeTab, appPhase, location.pathname, navigate, tabToRoute]);
+
+  const previousTabRef = useRef<RouteTab>(activeTab);
+  useLayoutEffect(() => {
+    if (previousTabRef.current === activeTab) return;
+    previousTabRef.current = activeTab;
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [activeTab]);
 
   const [shopLayoutMode, setShopLayoutMode] = useState<'grid' | 'list'>('grid');
   const [isMobileFrameMode, setIsMobileFrameMode] = useState<boolean>(true);
