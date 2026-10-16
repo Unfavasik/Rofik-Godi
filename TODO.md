@@ -17,7 +17,7 @@
 
 ## Security and delivery
 
-- [x] Activity/read-state tables RLS-enabled; admin feed/read/status RPCs authenticated-only grant සහ server-side admin check রাখে; anonymous execute নেই।
+- [x] Activity/read-state tables RLS-enabled; admin feed/read/status RPCs authenticated-only grant এবং server-side admin check রাখে; anonymous execute নেই।
 - [x] Support/activity migration target Supabase project-এ applied; `admin_activity_events` Realtime publication-এ যুক্ত; recent real activity backfilled এবং historical events current admins-এর জন্য read হিসেবে mark করা।
 - [x] `pnpm lint`, `pnpm test` (28 files / 202 tests) এবং `pnpm build` pass করেছে।
 - [x] `.env.local` Git ignore-এ; service secret client bundle বা commit-এ নেই.
