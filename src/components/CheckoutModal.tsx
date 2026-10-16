@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti';
 import { QRCodeSVG } from 'qrcode.react';
 import {
   Banknote, CalendarDays, Check, CheckCircle2, ChevronRight, Clock3, CreditCard,
-  LoaderCircle, MapPin, QrCode, ShieldCheck, ShoppingBag, Store, Truck,
+  LoaderCircle, MapPin, Minus, Plus, QrCode, ShieldCheck, ShoppingBag, Store, Truck,
   UserRound, X,
 } from 'lucide-react';
 import { VEHICLE_BRANDS, WORKSHOP_INFO } from '../data/products';
@@ -14,10 +14,12 @@ import { supabase } from '../lib/supabase';
 import { validateProfileName } from '../lib/profileValidation';
 import { getPhoneCountry, validatePhoneNumber, type CountryCode } from '../utils/phoneValidation';
 import { PhoneNumberField } from './PhoneNumberField';
+import { MAX_ORDER_ITEM_QUANTITY } from '../lib/cart';
 
 interface CheckoutModalProps {
   isOpen: boolean; onClose: () => void; items: CartItem[]; discount: number; couponCode: string;
   couponSubtotal?: number; couponTotal?: number; onClearCart: () => void; userId: string; onOrderPlaced: () => void;
+  onUpdateQuantity: (cartItemId: string, newQuantity: number) => void;
 }
 type VehicleType = 'Bike' | 'Scooter' | 'Car' | 'Toto / E-rickshaw' | 'Other';
 type ProfileLoad = 'loading' | 'ready' | 'error';
@@ -27,7 +29,7 @@ const indianMoney = (amount: number) => `₹${Math.round(amount).toLocaleString(
 const isoDate = (date: Date) => new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({
-  isOpen, onClose, items, discount, couponCode, couponSubtotal, couponTotal, onClearCart, userId, onOrderPlaced,
+  isOpen, onClose, items, discount, couponCode, couponSubtotal, couponTotal, onClearCart, userId, onOrderPlaced, onUpdateQuantity,
 }) => {
   const [customerName, setCustomerName] = useState('');
   const [email, setEmail] = useState('');
@@ -165,7 +167,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const renderSummary = () => <section className="rounded-2xl border border-slate-200 bg-white p-4" aria-label="Order summary">
     <div className="mb-3 flex items-center justify-between"><h3 className="flex items-center gap-2 text-sm font-black text-slate-900"><ShoppingBag className="h-4 w-4 text-[#D9232D]" />Order summary</h3><span className="text-[11px] font-semibold text-slate-400">{items.length} {items.length === 1 ? 'item' : 'items'}</span></div>
-    <div className="max-h-36 space-y-3 overflow-y-auto">{items.map((item) => <div key={item.cartItemId} className="flex items-center gap-3"><img src={item.product.image} alt="" className="h-12 w-12 rounded-xl bg-slate-100 object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-xs font-bold text-slate-800">{item.product.title}</p><p className="mt-0.5 text-[10px] text-slate-500">Qty {item.quantity} · {item.selectedColor?.name}</p></div><b className="text-xs text-slate-800">{indianMoney(item.unitPrice * item.quantity)}</b></div>)}</div>
+    <div className="max-h-36 space-y-3 overflow-y-auto">{items.map((item) => <div key={item.cartItemId} className="flex items-center gap-3"><img src={item.product.image} alt="" className="h-12 w-12 rounded-xl bg-slate-100 object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-xs font-bold text-slate-800">{item.product.title}</p><div className="mt-1 flex items-center justify-between gap-2"><span className="min-w-0 truncate text-[10px] text-slate-500">{item.selectedColor?.name}</span><div role="group" aria-label={`Quantity for ${item.product.title}`} className="flex shrink-0 items-center rounded-lg border border-slate-200 bg-slate-50 p-0.5"><button type="button" onClick={() => onUpdateQuantity(item.cartItemId, item.quantity - 1)} disabled={item.quantity <= 1} aria-label={`Decrease quantity of ${item.product.title}`} className="grid h-6 w-6 place-items-center rounded-md bg-white text-slate-700 shadow-sm disabled:opacity-40"><Minus className="h-3 w-3" /></button><span className="w-7 text-center text-[11px] font-bold text-slate-900">{item.quantity}</span><button type="button" onClick={() => onUpdateQuantity(item.cartItemId, item.quantity + 1)} disabled={!item.product.inStock || item.quantity >= MAX_ORDER_ITEM_QUANTITY} aria-label={item.quantity >= MAX_ORDER_ITEM_QUANTITY ? `Maximum quantity reached for ${item.product.title}` : `Increase quantity of ${item.product.title}`} className="grid h-6 w-6 place-items-center rounded-md bg-white text-slate-700 shadow-sm disabled:opacity-40"><Plus className="h-3 w-3" /></button></div></div></div><b className="shrink-0 text-xs text-slate-800">{indianMoney(item.unitPrice * item.quantity)}</b></div>)}</div>
     <div className="mt-3 space-y-1.5 border-t border-dashed border-slate-200 pt-3 text-xs"><div className="flex justify-between text-slate-500"><span>Subtotal</span><span>{indianMoney(subtotal)}</span></div>{discount > 0 && <div className="flex justify-between font-semibold text-emerald-700"><span>Discount{couponCode ? ` · ${couponCode}` : ''}</span><span>−{indianMoney(discount)}</span></div>}<div className="flex justify-between text-slate-500"><span>Store pickup</span><span className="font-bold text-emerald-700">FREE</span></div><div className="flex justify-between border-t border-slate-100 pt-2 text-sm font-black text-slate-900"><span>Total payable</span><span className="text-[#D9232D]">{indianMoney(total)}</span></div></div>
   </section>;
 

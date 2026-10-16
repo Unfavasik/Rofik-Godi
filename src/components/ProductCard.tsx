@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Product } from '../types';
-import { Heart, Plus, Star, Check, ImageOff } from 'lucide-react';
+import { Heart, Plus, Star, ShoppingCart, ImageOff } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface ProductCardProps {
@@ -9,7 +9,8 @@ interface ProductCardProps {
   onQuickAddToCart: (p: Product, e: React.MouseEvent) => void;
   isWishlisted: boolean;
   onToggleWishlist: (p: Product, e: React.MouseEvent) => void;
-  isAddedJustNow?: boolean;
+  isInCart?: boolean;
+  onOpenCart: () => void;
   layoutMode?: 'shelf' | 'grid' | 'list';
 }
 
@@ -61,7 +62,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onQuickAddToCart,
   isWishlisted,
   onToggleWishlist,
-  isAddedJustNow = false,
+  isInCart = false,
+  onOpenCart,
   layoutMode = 'grid',
 }) => {
   // Determine badge label and color
@@ -152,18 +154,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <motion.button
             whileTap={{ scale: 0.88 }}
             type="button"
-            onClick={(e) => { if (product.inStock) onQuickAddToCart(product, e); }}
-            disabled={!product.inStock}
-            aria-label={product.inStock ? 'Add to cart' : 'Out of stock'}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (isInCart) onOpenCart();
+              else if (product.inStock) onQuickAddToCart(product, event);
+            }}
+            disabled={!product.inStock && !isInCart}
+            aria-label={isInCart ? 'Go to Cart' : product.inStock ? 'Add to cart' : 'Out of stock'}
             className={`pointer-events-auto w-8 h-8 rounded-xl flex items-center justify-center transition-all shadow-sm ${
-              isAddedJustNow
+              isInCart
                 ? 'bg-emerald-600 text-white'
                 : 'bg-[#D9232D] text-white hover:bg-red-700 active:scale-95'
             }`}
-            title="Quick add to cart"
+            title={isInCart ? 'Go to Cart' : 'Add to cart'}
           >
-            {isAddedJustNow ? (
-              <Check className="w-4 h-4" />
+            {isInCart ? (
+              <ShoppingCart className="w-4 h-4" />
             ) : (
               <Plus className="w-4 h-4 stroke-[3]" />
             )}
@@ -246,18 +252,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <motion.button
           whileTap={{ scale: 0.88 }}
           type="button"
-          onClick={(e) => { if (product.inStock) onQuickAddToCart(product, e); }}
-          disabled={!product.inStock}
-          aria-label={product.inStock ? 'Add to cart' : 'Out of stock'}
+          onClick={(event) => {
+            event.stopPropagation();
+            if (isInCart) onOpenCart();
+            else if (product.inStock) onQuickAddToCart(product, event);
+          }}
+          disabled={!product.inStock && !isInCart}
+          aria-label={isInCart ? 'Go to Cart' : product.inStock ? 'Add to cart' : 'Out of stock'}
           className={`pointer-events-auto w-7 h-7 rounded-lg flex items-center justify-center transition-all shadow-xs ${
-            isAddedJustNow
+            isInCart
               ? 'bg-emerald-600 text-white'
               : 'bg-[#D9232D] text-white hover:bg-red-700 active:scale-95'
           }`}
-          title="Quick add to cart"
+          title={isInCart ? 'Go to Cart' : 'Add to cart'}
         >
-          {isAddedJustNow ? (
-            <Check className="w-3.5 h-3.5" />
+          {isInCart ? (
+            <ShoppingCart className="w-3.5 h-3.5" />
           ) : (
             <Plus className="w-4 h-4 stroke-[3]" />
           )}

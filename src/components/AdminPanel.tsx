@@ -31,11 +31,11 @@ import { InvoiceTemplate } from './InvoiceTemplate';
 import { AdminOrderDetails } from './AdminOrderDetails';
 import { PickupVerification } from './PickupVerification';
 import { BannersView, CategoriesView, NotificationsView, ReportsView } from './AdminSections';
+import { AdminCustomerProfile } from './AdminCustomerProfile';
 import {
   loadAdminOrders,
   completePickupOrderManually,
   getNextPickupOrderStatus,
-  matchesAdminOrderToCustomer,
   matchesAdminOrderSearch,
   toCustomerOrderRecord,
   updatePickupOrderStatus,
@@ -43,6 +43,7 @@ import {
   type AdminOrderRecord,
 } from '../lib/supabaseAdminOrders';
 import {
+  loadAdminCustomerAvatar,
   loadAdminCustomers,
   loadAdminNotifications,
   loadAdminSettings,
@@ -58,7 +59,7 @@ import { PRODUCTS } from '../data/products';
 import type { Product } from '../types';
 import { supabase } from '../lib/supabase';
 import { getOrderStatusLabel, isOrderComplete } from '../lib/orderPresentation';
-import { getAdminSectionFromPath, getPathForAdminSection, type AdminSectionRoute } from '../lib/appRoutes';
+import { getAdminCustomerIdFromPath, getAdminSectionFromPath, getPathForAdminCustomer, getPathForAdminSection, type AdminSectionRoute } from '../lib/appRoutes';
 
 type AdminSection = AdminSectionRoute;
 type OrderStatus = AdminOrderRecord['status'];
@@ -198,6 +199,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
   const [orders, setOrders] = useState<AdminOrderRecord[]>([]);
   const [products, setProducts] = useState<Product[]>(PRODUCTS);
   const [customers, setCustomers] = useState<AdminCustomer[]>([]);
+  const [customersLoaded, setCustomersLoaded] = useState(false);
   const [metrics, setMetrics] = useState<Record<string, number> | null>(null);
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -205,7 +207,11 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
   const [error, setError] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<AdminOrderRecord | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<AdminOrderRecord | null>(null);
-  const [selectedCustomer, setSelectedCustomer] = useState<AdminCustomer | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(() => getAdminCustomerIdFromPath(location.pathname));
+  const [customerAvatarUrl, setCustomerAvatarUrl] = useState<string | null>(null);
+  const selectedCustomer = selectedCustomerId
+    ? customers.find((customer) => customer.id === selectedCustomerId) || null
+    : null;
   const notify = useCallback((message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(''), 2600);
@@ -226,6 +232,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     if (productResult) setProducts(productResult);
     if (customerResult.error) errors.push(`Customers: ${customerResult.error.message}`);
     else setCustomers(customerResult.data);
+    setCustomersLoaded(true);
     if (metricResult.error) errors.push(`Dashboard: ${metricResult.error.message}`);
     else if (metricResult.data) setMetrics(metricResult.data);
     if (notificationResult.error) errors.push(`Notifications: ${notificationResult.error.message}`);
@@ -238,12 +245,31 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     return () => window.clearInterval(refreshTimer);
   }, [refresh]);
   useEffect(() => {
+    const customerId = getAdminCustomerIdFromPath(location.pathname);
+    setSelectedCustomerId(customerId);
     const routeSection = getAdminSectionFromPath(location.pathname);
     if (!routeSection) return;
     setSection(routeSection);
+    if (customerId) return;
     const canonicalPath = getPathForAdminSection(routeSection);
     if (location.pathname !== canonicalPath) navigate(canonicalPath, { replace: true });
   }, [location.pathname, navigate]);
+  useEffect(() => {
+    let active = true;
+    if (!selectedCustomerId) {
+      setCustomerAvatarUrl(null);
+      return () => { active = false; };
+    }
+    setCustomerAvatarUrl(null);
+    void loadAdminCustomerAvatar(selectedCustomerId)
+      .then(({ data, error: avatarError }) => {
+        if (active) setCustomerAvatarUrl(avatarError ? null : data);
+      })
+      .catch(() => {
+        if (active) setCustomerAvatarUrl(null);
+      });
+    return () => { active = false; };
+  }, [selectedCustomerId]);
   const filteredOrders = useMemo(
     () =>
       orders.filter(
@@ -284,6 +310,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
       settings: 'Settings',
     } as Record<AdminSection, string>
   )[section];
+  const headerTitle = selectedCustomerId ? 'Customer profile' : title;
   const exportOrders = () => {
     const ok = downloadCsv(
       `rofig-godi-center-orders-${new Date().toISOString().slice(0, 10)}.csv`,
@@ -401,9 +428,9 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
             </button>
             <div>
               <p className="text-[11px] font-bold text-slate-400">
-                Admin / <span className="text-slate-600">{title}</span>
+                Admin / <span className="text-slate-600">{title}</span>{selectedCustomerId && <span className="text-slate-400"> / Profile</span>}
               </p>
-              <h1 className="mt-0.5 text-lg font-black">{title}</h1>
+              <h1 className="mt-0.5 text-lg font-black">{headerTitle}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -500,11 +527,27 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
             <CategoriesView products={products} onManageProducts={() => goTo('products')} />
           )}
           {section === 'customers' && (
-            <CustomersView
-              customers={filteredCustomers}
-              onExport={exportCustomers}
-              onSelect={setSelectedCustomer}
-            />
+            selectedCustomerId ? (
+              <AdminCustomerProfile
+                customer={selectedCustomer}
+                customerId={selectedCustomerId}
+                avatarUrl={customerAvatarUrl}
+                orders={orders}
+                products={products}
+                isLoading={!customersLoaded}
+                onBack={() => navigate(getPathForAdminSection('customers'))}
+                onOpenOrder={setSelectedOrder}
+              />
+            ) : (
+              <CustomersView
+                customers={filteredCustomers}
+                onExport={exportCustomers}
+                onSelect={(customer) => {
+                  setSelectedCustomerId(customer.id);
+                  navigate(getPathForAdminCustomer(customer.id));
+                }}
+              />
+            )
           )}
           {section === 'reviews' && <AdminReviewsView notify={notify} query={query} />}
           {section === 'marketing' && <CouponManagement notify={notify} />}
@@ -579,13 +622,6 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
             onClose={() => setInvoiceOrder(null)}
           />
         </div>
-      )}
-      {selectedCustomer && (
-        <CustomerProfile
-          customer={selectedCustomer}
-          orders={orders}
-          onClose={() => setSelectedCustomer(null)}
-        />
       )}
       {toast && (
         <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-xs font-bold text-white shadow-xl">
@@ -1245,7 +1281,10 @@ function CustomersView({
                 <td className="py-4 text-slate-500">{dateLabel(customer.lastOrder)}</td>
                 <td className="py-4">
                   <button
+                    type="button"
                     onClick={() => onSelect(customer)}
+                    aria-label={`View ${customer.name} profile`}
+                    title={`View ${customer.name} profile`}
                     className="rounded-lg p-2 text-slate-400"
                   >
                     <Eye className="h-4 w-4" />
@@ -1260,76 +1299,6 @@ function CustomersView({
         )}
       </div>
     </>
-  );
-}
-function CustomerProfile({
-  customer,
-  orders,
-  onClose,
-}: {
-  customer: AdminCustomer;
-  orders: AdminOrderRecord[];
-  onClose: () => void;
-}) {
-  const history = orders
-    .filter((order) => matchesAdminOrderToCustomer(order, customer))
-    .slice(0, 10);
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/40">
-      <aside className="h-full w-full max-w-md bg-white p-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-black">Customer profile</h2>
-          <button onClick={onClose}>
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="mt-6 space-y-3 text-sm">
-          <p>
-            <b>Name:</b> {customer.name}
-          </p>
-          <p>
-            <b>Email:</b> {customer.email || 'Not available'}
-          </p>
-          <p>
-            <b>Phone:</b> {customer.phone || 'Not available'}
-          </p>
-          <p>
-            <b>Created:</b> {dateLabel(customer.createdAt)}
-          </p>
-          <p>
-            <b>Total orders:</b> {customer.orderCount}
-          </p>
-          <p>
-            <b>Total spending:</b> {money(customer.totalSpent)}
-          </p>
-          <p>
-            <b>Status:</b> {customer.status}
-          </p>
-        </div>
-        <div className="mt-8 border-t border-slate-100 pt-5">
-          <h3 className="text-sm font-black">Recent order history</h3>
-          <p className="mt-1 text-[10px] text-slate-400">
-            Matched from the latest 100 orders by account, phone or name.
-          </p>
-          <div className="mt-3 divide-y divide-slate-100">
-            {history.map((order) => (
-              <div key={order.id} className="flex items-center justify-between gap-3 py-3 text-xs">
-                <span>
-                  <b className="block">{order.id}</b>
-                  <small className="text-slate-400">
-                    {dateLabel(order.createdAt)} · {order.status}
-                  </small>
-                </span>
-                <b>{money(order.amount)}</b>
-              </div>
-            ))}
-            {!history.length && (
-              <p className="py-5 text-xs text-slate-400">No matching order records found.</p>
-            )}
-          </div>
-        </div>
-      </aside>
-    </div>
   );
 }
 function SettingsAdmin({

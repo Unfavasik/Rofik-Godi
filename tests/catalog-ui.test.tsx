@@ -21,18 +21,21 @@ const renderShop = (overrides: Partial<React.ComponentProps<typeof ShopView>> = 
     onSearch={() => {}}
     onSelectProduct={() => {}}
     onQuickAdd={() => {}}
+    isQuickAddInCart={() => false}
     onToggleWishlist={() => {}}
     onOpenCart={() => {}}
     {...overrides}
   />,
 );
 
-const renderCard = (product: Product, layoutMode: 'grid' | 'list' | 'shelf' = 'grid', isWishlisted = false) => renderToStaticMarkup(
+const renderCard = (product: Product, layoutMode: 'grid' | 'list' | 'shelf' = 'grid', isWishlisted = false, isInCart = false) => renderToStaticMarkup(
   <ProductCard
     product={product}
     layoutMode={layoutMode}
     onSelectProduct={() => {}}
     onQuickAddToCart={() => {}}
+    isInCart={isInCart}
+    onOpenCart={() => {}}
     isWishlisted={isWishlisted}
     onToggleWishlist={() => {}}
   />,
@@ -100,6 +103,16 @@ describe('catalog feedback', () => {
     expect(added).toContain('aria-pressed="true"');
     expect(notAdded).toContain('aria-label="Add to Wishlist"');
     expect(notAdded).toContain('aria-pressed="false"');
+  });
+
+  it.each(['grid', 'list', 'shelf'] as const)('offers Go to Cart for an in-cart product in %s cards', (layoutMode) => {
+    const inCart = renderCard(sampleProduct, layoutMode, false, true);
+    const notInCart = renderCard(sampleProduct, layoutMode, false, false);
+
+    expect(inCart).toContain('aria-label="Go to Cart"');
+    expect(inCart).toContain('title="Go to Cart"');
+    expect(inCart).not.toContain('Remove from cart');
+    expect(notInCart).toContain('aria-label="Add to cart"');
   });
 
   it.each(['grid', 'list', 'shelf'] as const)('disables quick-add for out-of-stock %s product cards', (layoutMode) => {

@@ -10,6 +10,8 @@ interface WishlistModalProps {
   onRemoveWishlist: (p: Product) => void;
   onSelectProduct: (p: Product) => void;
   onAddToCart: (p: Product) => void;
+  isInCart: (p: Product) => boolean;
+  onOpenCart: () => void;
 }
 
 export const WishlistModal: React.FC<WishlistModalProps> = ({
@@ -19,6 +21,8 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
   onRemoveWishlist,
   onSelectProduct,
   onAddToCart,
+  isInCart,
+  onOpenCart,
 }) => {
   if (!isOpen) return null;
 
@@ -123,13 +127,18 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                       <div className="text-[13px] font-black text-[#D9232D]">₹{p.price}</div>
                       <button
                         onClick={() => {
-                          onAddToCart(p);
-                          onRemoveWishlist(p);
+                          const alreadyInCart = isInCart(p);
+                          if (alreadyInCart) onOpenCart();
+                          else {
+                            onAddToCart(p);
+                            onRemoveWishlist(p);
+                          }
                         }}
-                        className="bg-[#D9232D] hover:bg-[#c01d26] text-white text-[11px] font-bold px-3 py-1 rounded-lg flex items-center gap-1 shadow-xs transition-colors"
+                        aria-label={isInCart(p) ? 'Go to Cart' : `Move ${p.title} to cart`}
+                        className={`${isInCart(p) ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-[#D9232D] hover:bg-[#c01d26]'} text-white text-[11px] font-bold px-3 py-1 rounded-lg flex items-center gap-1 shadow-xs transition-colors`}
                       >
                         <ShoppingBag className="w-3 h-3" />
-                        <span>Move to Cart</span>
+                        <span>{isInCart(p) ? 'Go to Cart' : 'Move to Cart'}</span>
                       </button>
                     </div>
                   </div>

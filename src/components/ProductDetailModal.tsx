@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowLeft,
   Bike,
-  Check,
   ChevronDown,
   CircleCheck,
   Clock3,
@@ -21,8 +20,8 @@ import {
   Wrench,
   Zap,
 } from 'lucide-react';
-import { Product } from '../types';
-import { resolveStitchPatternSelection } from '../lib/cart';
+import { CartItem, Product } from '../types';
+import { createDefaultCartItem, hasMatchingCartItem, resolveStitchPatternSelection } from '../lib/cart';
 import { ProductReviews } from './ProductReviews';
 
 interface ProductDetailModalProps {
@@ -37,12 +36,19 @@ interface ProductDetailModalProps {
     customEmbroideryText?: string,
     quantity?: number
   ) => void;
+  cartItems?: CartItem[];
   isWishlisted: boolean;
   onToggleWishlist: (p: Product) => void;
   cartCount?: number;
   onOpenCart?: () => void;
   onOpenSearch?: () => void;
-  onBuyNow?: () => void;
+  onBuyNow?: (
+    product: Product,
+    selectedColor: { name: string; hex: string },
+    selectedStitch: string,
+    selectedThickness: { label: string; extraPrice: number },
+    quantity: number,
+  ) => void;
   onSelectProduct?: (p: Product) => void;
   onQuickAdd?: (p: Product) => void;
   isAuthenticated?: boolean;
@@ -70,6 +76,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   products,
   onClose,
   onAddToCart,
+  cartItems = [],
   isWishlisted,
   onToggleWishlist,
   cartCount = 0,
@@ -110,25 +117,28 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   const [vehicleType, setVehicleType] = useState('Bike');
   const [selectedModel, setSelectedModel] = useState('');
   const [descriptionOpen, setDescriptionOpen] = useState(false);
-  const [added, setAdded] = useState(false);
   const [quantity] = useState(1);
   const totalPrice = (product.price + selectedThickness.extraPrice) * quantity;
+  const isSelectedConfigurationInCart = hasMatchingCartItem(cartItems, {
+    cartItemId: `selected-${product.id}`,
+    product,
+    quantity: 1,
+    selectedColor,
+    selectedStitch,
+    selectedThickness,
+    unitPrice: product.price,
+  });
   const displayOriginalPrice = product.id === 'rg-prod-01' ? 699 : product.originalPrice;
   const savings = Math.max(0, displayOriginalPrice - product.price);
   const discount = Math.round((savings / displayOriginalPrice) * 100);
 
   const addToCart = (buyNow = false) => {
     if (!product.inStock) return;
-    onAddToCart(product, selectedColor, selectedStitch || '', selectedThickness, undefined, quantity);
-    setAdded(true);
     if (buyNow) {
-      window.setTimeout(() => {
-        onClose();
-        onBuyNow?.();
-      }, 250);
-    } else {
-      window.setTimeout(() => setAdded(false), 1300);
+      onBuyNow?.(product, selectedColor, selectedStitch || '', selectedThickness, quantity);
+      return;
     }
+    onAddToCart(product, selectedColor, selectedStitch || '', selectedThickness, undefined, quantity);
   };
 
   const shareProduct = async () => {
@@ -327,14 +337,14 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
             <section className="border-t border-slate-100 px-5 py-5">
               <div className="mb-3 flex items-center justify-between"><h2 className="text-[17px] font-extrabold tracking-tight">You may also like</h2><button type="button" onClick={() => onSelectProduct?.(suggested[0])} className="text-[12px] font-bold text-[#d9232d]">See all</button></div>
               <div className="grid grid-cols-2 gap-2.5">
-                {suggested.slice(0, 2).map((item) => <SuggestionCard key={item.id} product={item} onAdd={() => onQuickAdd?.(item)} onSelect={() => onSelectProduct?.(item)} />)}
+                {suggested.slice(0, 2).map((item) => <SuggestionCard key={item.id} product={item} isInCart={hasMatchingCartItem(cartItems, createDefaultCartItem(item, `${item.id}-suggestion`))} onAdd={() => onQuickAdd?.(item)} onOpenCart={onOpenCart} onSelect={() => onSelectProduct?.(item)} />)}
               </div>
             </section>
 
             <section className="border-t border-slate-100 px-5 py-5">
               <div className="mb-3 flex items-center justify-between"><h2 className="text-[17px] font-extrabold tracking-tight">Recently viewed</h2><button type="button" className="text-[12px] font-bold text-[#d9232d]">See all</button></div>
               <div className="grid grid-cols-2 gap-2.5">
-                {suggested.slice(2, 4).map((item) => <SuggestionCard key={item.id} product={item} onAdd={() => onQuickAdd?.(item)} onSelect={() => onSelectProduct?.(item)} />)}
+                {suggested.slice(2, 4).map((item) => <SuggestionCard key={item.id} product={item} isInCart={hasMatchingCartItem(cartItems, createDefaultCartItem(item, `${item.id}-suggestion`))} onAdd={() => onQuickAdd?.(item)} onOpenCart={onOpenCart} onSelect={() => onSelectProduct?.(item)} />)}
               </div>
             </section>
 
@@ -350,8 +360,8 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
           </main>
 
           <footer className="z-40 grid shrink-0 grid-cols-2 gap-2.5 border-t border-slate-100 bg-white px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgba(15,23,42,.08)]">
-            <button type="button" disabled={!product.inStock} onClick={() => addToCart(false)} className="flex h-[50px] items-center justify-center gap-2 rounded-xl border border-[#d9232d] bg-white text-[13px] font-extrabold text-[#d9232d] active:scale-[.98]">
-              {added ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}{!product.inStock ? 'Out of stock' : added ? 'Added to Cart' : 'Add to Cart'}
+            <button type="button" disabled={!product.inStock && !isSelectedConfigurationInCart} onClick={() => { if (isSelectedConfigurationInCart) onOpenCart?.(); else addToCart(false); }} aria-label={isSelectedConfigurationInCart ? 'Go to Cart' : !product.inStock ? 'Out of stock' : 'Add to cart'} className="flex h-[50px] items-center justify-center gap-2 rounded-xl border border-[#d9232d] bg-white text-[13px] font-extrabold text-[#d9232d] active:scale-[.98]">
+              {isSelectedConfigurationInCart ? <ShoppingCart className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}{!product.inStock && !isSelectedConfigurationInCart ? 'Out of stock' : isSelectedConfigurationInCart ? 'Go to Cart' : 'Add to Cart'}
             </button>
             <button type="button" disabled={!product.inStock} onClick={() => addToCart(true)} className="flex h-[50px] items-center justify-center gap-2 rounded-xl bg-[#d9232d] text-[13px] font-extrabold text-white shadow-sm active:scale-[.98]">
               <Zap className="h-4 w-4 fill-current" />Buy Now
@@ -363,7 +373,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   );
 };
 
-const SuggestionCard: React.FC<{ product: Product; onAdd: () => void; onSelect: () => void }> = ({ product, onAdd, onSelect }) => (
+const SuggestionCard: React.FC<{ product: Product; isInCart: boolean; onAdd: () => void; onOpenCart?: () => void; onSelect: () => void }> = ({ product, isInCart, onAdd, onOpenCart, onSelect }) => (
   <article className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_3px_14px_rgba(15,23,42,.045)]">
     <button type="button" onClick={onSelect} className="block h-[112px] w-full bg-slate-100"><img src={localProductImages[product.id]?.[0] ?? product.image} alt={product.title} className="h-full w-full object-cover" /></button>
     <div className="p-2.5">
@@ -371,7 +381,7 @@ const SuggestionCard: React.FC<{ product: Product; onAdd: () => void; onSelect: 
       <p className="mt-0.5 text-[10px] text-slate-500 break-words">{product.subtitle}</p>
       <div className="mt-2 flex items-center justify-between gap-1">
         <span className="text-[16px] font-extrabold">₹{product.price} <small className="text-[9px] font-normal text-slate-400 line-through">₹{product.originalPrice}</small></span>
-        <button type="button" disabled={!product.inStock} onClick={onAdd} aria-label={`Add ${product.title} to cart`} className="grid h-8 w-8 place-items-center rounded-full bg-[#d9232d] text-white"><Plus className="h-4 w-4" /></button>
+        <button type="button" disabled={!product.inStock && !isInCart} onClick={() => { if (isInCart) onOpenCart?.(); else onAdd(); }} aria-label={isInCart ? 'Go to Cart' : product.inStock ? `Add ${product.title} to cart` : 'Out of stock'} title={isInCart ? 'Go to Cart' : 'Add to cart'} className={`grid h-8 w-8 place-items-center rounded-full text-white ${isInCart ? 'bg-emerald-600' : 'bg-[#d9232d]'}`}>{isInCart ? <ShoppingCart className="h-4 w-4" /> : <Plus className="h-4 w-4" />}</button>
       </div>
       <div className="mt-1 flex items-center gap-1 text-[10px] text-amber-500"><Star className="h-3 w-3 fill-current" />{product.rating} <span className="text-slate-400">({product.reviewCount})</span></div>
     </div>

@@ -35,9 +35,10 @@ interface SearchViewProps {
   setSearchQuery: (q: string) => void;
   onSelectProduct: (p: Product) => void;
   onQuickAddToCart: (p: Product, e: React.MouseEvent) => void;
+  isQuickAddInCart: (p: Product) => boolean;
+  onOpenCart: () => void;
   wishlist: Product[];
   onToggleWishlist: (p: Product, e: React.MouseEvent) => void;
-  justAddedId: string | null;
   onBackToHome: () => void;
 }
 
@@ -67,9 +68,10 @@ export const SearchView: React.FC<SearchViewProps> = ({
   setSearchQuery,
   onSelectProduct,
   onQuickAddToCart,
+  isQuickAddInCart,
+  onOpenCart,
   wishlist,
   onToggleWishlist,
-  justAddedId,
   onBackToHome,
 }) => {
   const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('list');
@@ -787,9 +789,10 @@ export const SearchView: React.FC<SearchViewProps> = ({
               layoutMode="grid"
               onSelectProduct={handleProductSelect}
               onQuickAddToCart={onQuickAddToCart}
+              isInCart={isQuickAddInCart(prod)}
+              onOpenCart={onOpenCart}
               isWishlisted={wishlist.some((w) => w.id === prod.id)}
               onToggleWishlist={onToggleWishlist}
-              isAddedJustNow={justAddedId === prod.id}
             />
           ))}
         </div>
@@ -802,9 +805,10 @@ export const SearchView: React.FC<SearchViewProps> = ({
               layoutMode="list"
               onSelectProduct={handleProductSelect}
               onQuickAddToCart={onQuickAddToCart}
+              isInCart={isQuickAddInCart(prod)}
+              onOpenCart={onOpenCart}
               isWishlisted={wishlist.some((w) => w.id === prod.id)}
               onToggleWishlist={onToggleWishlist}
-              isAddedJustNow={justAddedId === prod.id}
             />
           ))}
         </div>

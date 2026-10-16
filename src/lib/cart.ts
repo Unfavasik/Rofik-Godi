@@ -28,6 +28,32 @@ function isSameCartConfiguration(left: CartItem, right: CartItem): boolean {
     && (left.customEmbroideryText || '').trim() === (right.customEmbroideryText || '').trim();
 }
 
+export function createDefaultCartItem(product: Product, cartItemId = `${product.id}-quick-${Date.now()}`): CartItem {
+  const selectedColor = product.colors[0] || { name: 'Standard', hex: '#111827' };
+  const selectedThickness = product.thicknessOptions[0] || { label: 'Standard', extraPrice: 0 };
+  const selectedStitch = resolveStitchPatternSelection(product.stitchPatterns);
+  return {
+    cartItemId,
+    product,
+    quantity: 1,
+    selectedColor,
+    selectedStitch,
+    selectedThickness,
+    unitPrice: getCartItemUnitPrice(product, selectedThickness),
+  };
+}
+
+export function hasMatchingCartItem(cart: CartItem[], candidate: CartItem): boolean {
+  return cart.some((item) => isSameCartConfiguration(item, candidate));
+}
+
+export function toggleCartItem(cart: CartItem[], candidate: CartItem): CartItem[] {
+  if (hasMatchingCartItem(cart, candidate)) {
+    return cart.filter((item) => !isSameCartConfiguration(item, candidate));
+  }
+  return addOrMergeCartItem(cart, candidate);
+}
+
 /** Coalesce identical lines already present in persisted or reconciled cart data. */
 function mergeDuplicateCartLines(items: CartItem[]): CartItem[] {
   const merged: CartItem[] = [];

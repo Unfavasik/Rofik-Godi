@@ -16,6 +16,7 @@ interface ShopViewProps {
   onSearch: (value: string) => void;
   onSelectProduct: (product: Product) => void;
   onQuickAdd: (product: Product, event: React.MouseEvent) => void;
+  isQuickAddInCart: (product: Product) => boolean;
   onToggleWishlist: (product: Product, event: React.MouseEvent) => void;
   onOpenCart: () => void;
 }
@@ -46,6 +47,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
   onSearch,
   onSelectProduct,
   onQuickAdd,
+  isQuickAddInCart,
   onToggleWishlist,
   onOpenCart,
 }) => {
@@ -95,7 +97,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
           <button onClick={() => onSearch('')} aria-label="Search">
             <Search className="h-5 w-5" />
           </button>
-          <button aria-label="Cart" onClick={onOpenCart} className="relative">
+          <button aria-label="Go to Cart" onClick={onOpenCart} className="relative">
             <ShoppingCart className="h-6 w-6" />
             <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#e61e25] text-[10px] font-bold text-white">
               {cartCount}
@@ -172,6 +174,8 @@ export const ShopView: React.FC<ShopViewProps> = ({
                 layoutMode={layout}
                 onSelectProduct={onSelectProduct}
                 onQuickAddToCart={onQuickAdd}
+                isInCart={isQuickAddInCart(product)}
+                onOpenCart={onOpenCart}
                 isWishlisted={wishlist.some((item) => item.id === product.id)}
                 onToggleWishlist={onToggleWishlist}
               />

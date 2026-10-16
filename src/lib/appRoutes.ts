@@ -8,7 +8,7 @@ export const APP_ROUTE_PATHS = [
   '/notifications', '/notification', '/shop/products/:slug', '/products/:slug', '/product/:slug',
   '/settings', '/privacy-policy', '/privacy', '/terms-and-conditions', '/terms', '/store', '/store-info',
   '/admin', '/admin/dashboard', '/admin/orders', '/admin/products', '/admin/categories', '/admin/customers',
-  '/admin/reviews', '/admin/coupons', '/admin/marketing', '/admin/banners', '/admin/notifications',
+  '/admin/customers/:customerId', '/admin/reviews', '/admin/coupons', '/admin/marketing', '/admin/banners', '/admin/notifications',
   '/admin/reports', '/admin/settings', '/Onboarding', '/onboarding', '/signup', '/signup/onboarding', '/signup/loading',
   '/auth/callback', '/example/shop',
 ] as const;
@@ -16,6 +16,7 @@ export const APP_ROUTE_PATHS = [
 export type ResolvedAppRoute =
   | { kind: 'tab'; tab: RouteTab; canonicalPath: string }
   | { kind: 'admin'; tab: 'home'; section: AdminSectionRoute; canonicalPath: string }
+  | { kind: 'admin-customer'; tab: 'home'; customerId: string; canonicalPath: string }
   | { kind: 'checkout'; tab: 'cart'; canonicalPath: '/checkout' }
   | { kind: 'orders'; tab: 'account'; orderNumber: string | null; canonicalPath: string }
   | { kind: 'product'; tab: 'shop'; slug: string; canonicalPath: string }
@@ -53,9 +54,19 @@ export function getPathForAdminSection(section: AdminSectionRoute): string {
   return adminSectionPaths[section];
 }
 
+export function getPathForAdminCustomer(customerId: string): string {
+  return `/admin/customers/${encodeURIComponent(customerId)}`;
+}
+
+export function getAdminCustomerIdFromPath(pathname: string): string | null {
+  const customerId = trimPath(pathname).match(/^\/admin\/customers\/([^/]+)$/i)?.[1];
+  return customerId ? decodeSegment(customerId) : null;
+}
+
 export function getAdminSectionFromPath(pathname: string): AdminSectionRoute | null {
   const path = trimPath(pathname).toLowerCase();
   if (path === '/admin') return 'overview';
+  if (/^\/admin\/customers\/[^/]+$/i.test(path)) return 'customers';
   const slug = path.match(/^\/admin\/([^/]+)$/)?.[1];
   return slug ? adminSectionsBySlug[slug] || null : null;
 }
@@ -75,6 +86,16 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
   if (path === '/notifications' || path === '/notification') return { kind: 'tab', tab: 'notifications', canonicalPath: '/notifications' };
   if (path === '/profile' || path === '/account') return { kind: 'tab', tab: 'account', canonicalPath: '/profile' };
   if (path === '/auth/callback') return { kind: 'tab', tab: 'home', canonicalPath: path };
+
+  const adminCustomerId = getAdminCustomerIdFromPath(path);
+  if (adminCustomerId) {
+    return {
+      kind: 'admin-customer',
+      tab: 'home',
+      customerId: adminCustomerId,
+      canonicalPath: getPathForAdminCustomer(adminCustomerId),
+    };
+  }
   const adminSection = getAdminSectionFromPath(path);
   if (adminSection) return { kind: 'admin', tab: 'home', section: adminSection, canonicalPath: getPathForAdminSection(adminSection) };
   if (path === '/checkout') return { kind: 'checkout', tab: 'cart', canonicalPath: '/checkout' };

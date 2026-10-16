@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getAdminSectionFromPath, getPathForAdminSection, getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, resolveAppRoute, shouldRedirectAdminToWorkspace } from '../src/lib/appRoutes';
+import { getAdminCustomerIdFromPath, getAdminSectionFromPath, getPathForAdminCustomer, getPathForAdminSection, getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, resolveAppRoute, shouldRedirectAdminToWorkspace } from '../src/lib/appRoutes';
 
 describe('main route preservation', () => {
   it.each([
@@ -76,6 +76,22 @@ describe('admin workspace redirect policy', () => {
     expect(getAdminSectionFromPath(path)).toBe(section);
     expect(resolveAppRoute(path)).toMatchObject({ kind: 'admin', section, canonicalPath: getPathForAdminSection(section) });
     expect(getPathForPhase('main', path)).toBe(getPathForAdminSection(section));
+  });
+
+  it('resolves a customer profile as a direct, canonical admin route', () => {
+    const customerId = '3e467a80-bdb6-421f-8a16-c04d4e0f7a88';
+    const path = getPathForAdminCustomer(customerId);
+    expect(path).toBe(`/admin/customers/${customerId}`);
+    expect(getAdminCustomerIdFromPath(path)).toBe(customerId);
+    expect(getAdminSectionFromPath(path)).toBe('customers');
+    expect(resolveAppRoute(path)).toMatchObject({
+      kind: 'admin-customer',
+      tab: 'home',
+      customerId,
+      canonicalPath: path,
+    });
+    expect(getPathForPhase('main', path)).toBe(path);
+    expect(isAdminPath(path)).toBe(true);
   });
 
   it('canonicalizes admin aliases and identifies nested admin paths', () => {

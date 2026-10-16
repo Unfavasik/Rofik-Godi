@@ -38,4 +38,16 @@ describe('admin workspace', () => {
     expect(html).toContain('aria-current="page"');
     expect(html).toContain('Products</h1>');
   });
+
+  it('opens the customer profile as a route-backed admin page', () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/admin/customers/customer-404']}>
+        <AdminPanel />
+      </MemoryRouter>,
+    );
+    expect(html).toContain('Customer profile');
+    expect(html).toContain('Loading customer profile');
+    expect(html).toContain('Back to customers');
+    expect(html).not.toContain('fixed inset-0 z-50 flex justify-end bg-slate-950/40');
+  });
 });

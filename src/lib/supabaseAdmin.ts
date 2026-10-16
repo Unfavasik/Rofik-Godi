@@ -118,6 +118,21 @@ export async function loadAdminCustomers(): Promise<{
   };
 }
 
+export async function loadAdminCustomerAvatar(customerId: string): Promise<{
+  data: string | null;
+  error: Error | null;
+}> {
+  if (!supabase) return { data: null, error: new Error('Supabase is not configured') };
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('avatar_url')
+    .eq('id', customerId)
+    .maybeSingle();
+  if (error) return { data: null, error };
+  const avatarUrl = typeof data?.avatar_url === 'string' ? data.avatar_url.trim() : '';
+  return { data: avatarUrl || null, error: null };
+}
+
 export async function loadAdminNotifications(): Promise<{
   data: AdminNotification[];
   error: Error | null;

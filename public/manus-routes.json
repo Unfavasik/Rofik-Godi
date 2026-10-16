@@ -32,6 +32,7 @@
     { "path": "/admin/products", "title": "Admin Products" },
     { "path": "/admin/categories", "title": "Admin Categories" },
     { "path": "/admin/customers", "title": "Admin Customers" },
+    { "path": "/admin/customers/:customerId", "title": "Admin Customer Profile" },
     { "path": "/admin/reviews", "title": "Admin Reviews" },
     { "path": "/admin/coupons", "title": "Admin Coupons" },
     { "path": "/admin/marketing", "title": "Admin Coupons" },

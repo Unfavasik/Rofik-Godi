@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PRODUCTS } from '../src/data/products';
-import { addOrMergeCartItem, canReconcileCartFromCatalog, refreshCartFromCatalog, resolveStitchPatternSelection, sanitizePersistedCart } from '../src/lib/cart';
+import { addOrMergeCartItem, canReconcileCartFromCatalog, createDefaultCartItem, hasMatchingCartItem, refreshCartFromCatalog, resolveStitchPatternSelection, sanitizePersistedCart, toggleCartItem } from '../src/lib/cart';
 import type { CartItem, Product } from '../src/types';
 
 const originalProduct = PRODUCTS[0];
@@ -22,6 +22,16 @@ const customSeatItem: CartItem = {
 };
 
 describe('persisted cart reconciliation', () => {
+  it('toggles the same default product configuration into and out of the cart', () => {
+    const defaultItem = createDefaultCartItem(originalProduct, 'home-default');
+    const added = toggleCartItem([], defaultItem);
+    expect(added).toHaveLength(1);
+    expect(hasMatchingCartItem(added, { ...defaultItem, cartItemId: 'shop-default' })).toBe(true);
+
+    const removed = toggleCartItem(added, { ...defaultItem, cartItemId: 'shop-default' });
+    expect(removed).toHaveLength(0);
+  });
+
   it('keeps an identical product configuration as one cart line without auto-incrementing quantity', () => {
     const fromHome: CartItem = { ...cartItem, cartItemId: 'home-add', quantity: 1, customEmbroideryText: undefined, selectedStitch: undefined };
     const fromShop: CartItem = { ...fromHome, cartItemId: 'shop-add', quantity: 2, selectedStitch: '' };

@@ -31,7 +31,7 @@ const LoginRequiredModal = lazy(() => import('./components/LoginRequiredModal').
 const SearchView = lazy(() => import('./components/SearchView').then((module) => ({ default: module.SearchView })));
 const NotificationsView = lazy(() => import('./components/NotificationsView').then((module) => ({ default: module.NotificationsView })));
 import { ShopView } from './components/ShopView';
-import { addOrMergeCartItem, getCartItemUnitPrice, MAX_ORDER_ITEM_QUANTITY } from './lib/cart';
+import { createDefaultCartItem, getCartItemUnitPrice, hasMatchingCartItem, MAX_ORDER_ITEM_QUANTITY, toggleCartItem } from './lib/cart';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 const AdminPanel = lazy(() =>
   import('./components/AdminPanel').then((module) => ({ default: module.AdminPanel })),
@@ -227,6 +227,10 @@ export default function App() {
     catalogLoaded,
     catalogError,
   );
+  const isQuickAddInCart = useCallback(
+    (product: Product) => hasMatchingCartItem(cart, createDefaultCartItem(product, `${product.id}-cart-check`)),
+    [cart],
+  );
 
   useEffect(() => {
     if (appPhase !== 'main' || authStatus === 'AUTH_LOADING') return;
@@ -330,7 +334,9 @@ export default function App() {
     },
     [currentUser.id],
   );
-  const [justAddedId, setJustAddedId] = useState<string | null>(null);
+  const [checkoutItems, setCheckoutItems] = useState<CartItem[] | null>(null);
+  const [checkoutReturnPath, setCheckoutReturnPath] = useState('/cart');
+  const [checkoutReturnState, setCheckoutReturnState] = useState<unknown>(null);
   const [checkoutDiscount, setCheckoutDiscount] = useState(0);
   const [checkoutCoupon, setCheckoutCoupon] = useState('');
   const [checkoutQuote, setCheckoutQuote] = useState<{ subtotal: number; total: number } | null>(
@@ -442,26 +448,15 @@ export default function App() {
       });
   }, [catalogProducts, selectedCategory, vehicleFilter, searchQuery, sortBy, homeFilters]);
 
-  // Quick Cart Add
+  // Quick cart actions toggle the default product configuration.
+  const handleToggleDefaultCartItem = (p: Product) => {
+    if (!p.inStock) return;
+    setCart((current) => toggleCartItem(current, createDefaultCartItem(p)));
+  };
+
   const handleQuickAddToCart = (p: Product, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!p.inStock) return;
-    const defaultColor = p.colors[0] || { name: 'Standard', hex: '#111827' };
-    const defaultThickness = p.thicknessOptions[0] || { label: 'Standard', extraPrice: 0 };
-    const defaultStitch = p.stitchPatterns[0] || undefined;
-    const newItem: CartItem = {
-      cartItemId: `${p.id}-${defaultColor.name}-${Date.now()}`,
-      product: p,
-      quantity: 1,
-      selectedColor: defaultColor,
-      selectedStitch: defaultStitch,
-      selectedThickness: defaultThickness,
-      unitPrice: getCartItemUnitPrice(p, defaultThickness),
-    };
-    setCart((current) => addOrMergeCartItem(current, newItem));
-
-    setJustAddedId(p.id);
-    setTimeout(() => setJustAddedId(null), 1200);
+    handleToggleDefaultCartItem(p);
   };
 
   // Detailed Modal Add To Cart
@@ -487,7 +482,36 @@ export default function App() {
       unitPrice,
     };
 
-    setCart((current) => addOrMergeCartItem(current, newItem));
+    setCart((current) => toggleCartItem(current, newItem));
+  };
+
+  const handleDetailBuyNow = (
+    product: Product,
+    selectedColor: { name: string; hex: string },
+    selectedStitch: string,
+    selectedThickness: { label: string; extraPrice: number },
+    quantity: number,
+  ) => {
+    if (!product.inStock) return;
+    const item: CartItem = {
+      cartItemId: `buy-now-${product.id}-${Date.now()}`,
+      product,
+      quantity: Math.max(1, Math.min(MAX_ORDER_ITEM_QUANTITY, quantity)),
+      selectedColor,
+      selectedStitch,
+      selectedThickness,
+      unitPrice: getCartItemUnitPrice(product, selectedThickness),
+    };
+    setCheckoutItems([item]);
+    setCheckoutReturnPath(location.pathname);
+    setCheckoutReturnState(location.state);
+    setCheckoutDiscount(0);
+    setCheckoutCoupon('');
+    setCheckoutQuote(null);
+    setIsCartOpen(false);
+    setSelectedProduct(null);
+    setIsCheckoutOpen(true);
+    navigate('/checkout');
   };
 
   // Wishlist toggle
@@ -516,8 +540,30 @@ export default function App() {
     }
   };
 
+  const handleCheckoutQuantity = (cartItemId: string, newQty: number) => {
+    const quantity = Math.max(1, Math.min(MAX_ORDER_ITEM_QUANTITY, Math.floor(newQty)));
+    if (checkoutItems === null) {
+      handleUpdateQuantity(cartItemId, quantity);
+    } else {
+      setCheckoutItems((current) => current?.map((item) =>
+        item.cartItemId === cartItemId ? { ...item, quantity } : item,
+      ) ?? null);
+    }
+    setCheckoutDiscount(0);
+    setCheckoutCoupon('');
+    setCheckoutQuote(null);
+  };
+
   const handleRemoveCartItem = (cartItemId: string) => {
     setCart((current) => current.filter((i) => i.cartItemId !== cartItemId));
+  };
+
+  const handleOpenCart = () => {
+    setSelectedProduct(null);
+    setIsWishlistOpen(false);
+    setActiveTab('cart');
+    setIsCartOpen(true);
+    navigate('/cart');
   };
 
   const handleProceedToCheckout = (
@@ -525,6 +571,9 @@ export default function App() {
     coupon: string,
     quote?: { subtotal: number; total: number },
   ) => {
+    setCheckoutItems(null);
+    setCheckoutReturnPath('/cart');
+    setCheckoutReturnState(null);
     setCheckoutDiscount(discount);
     setCheckoutCoupon(coupon);
     setCheckoutQuote(quote || null);
@@ -775,11 +824,9 @@ export default function App() {
             }}
             onSelectProduct={openProductRoute}
             onQuickAdd={handleQuickAddToCart}
+            isQuickAddInCart={isQuickAddInCart}
             onToggleWishlist={handleToggleWishlist}
-            onOpenCart={() => {
-              setActiveTab('cart');
-              setIsCartOpen(true);
-            }}
+            onOpenCart={handleOpenCart}
           />
         ) : activeTab === 'search' ? (
           <main className="flex-1 flex flex-col">
@@ -792,9 +839,10 @@ export default function App() {
               setSearchQuery={setSearchQuery}
               onSelectProduct={openProductRoute}
               onQuickAddToCart={(p, e) => handleQuickAddToCart(p, e)}
+              isQuickAddInCart={isQuickAddInCart}
+              onOpenCart={handleOpenCart}
               wishlist={wishlist}
               onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
-              justAddedId={justAddedId}
               onBackToHome={() => {
                 setActiveTab('home');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -906,9 +954,10 @@ export default function App() {
                         layoutMode="shelf"
                         onSelectProduct={openProductRoute}
                         onQuickAddToCart={(p, e) => handleQuickAddToCart(p, e)}
+                        isInCart={isQuickAddInCart(prod)}
+                        onOpenCart={handleOpenCart}
                         isWishlisted={wishlist.some((w) => w.id === prod.id)}
                         onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
-                        isAddedJustNow={justAddedId === prod.id}
                       />
                     ))}
                   </div>
@@ -1182,9 +1231,10 @@ export default function App() {
                       layoutMode="grid"
                       onSelectProduct={openProductRoute}
                       onQuickAddToCart={(p, e) => handleQuickAddToCart(p, e)}
+                      isInCart={isQuickAddInCart(prod)}
+                      onOpenCart={handleOpenCart}
                       isWishlisted={wishlist.some((w) => w.id === prod.id)}
                       onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
-                      isAddedJustNow={justAddedId === prod.id}
                     />
                   ))}
                 </div>
@@ -1197,9 +1247,10 @@ export default function App() {
                       layoutMode="list"
                       onSelectProduct={openProductRoute}
                       onQuickAddToCart={(p, e) => handleQuickAddToCart(p, e)}
+                      isInCart={isQuickAddInCart(prod)}
+                      onOpenCart={handleOpenCart}
                       isWishlisted={wishlist.some((w) => w.id === prod.id)}
                       onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
-                      isAddedJustNow={justAddedId === prod.id}
                     />
                   ))}
                 </div>
@@ -1315,31 +1366,20 @@ export default function App() {
           product={selectedProduct}
           onClose={closeProductRoute}
           onAddToCart={handleDetailAddToCart}
+          cartItems={cart}
           isWishlisted={selectedProduct ? wishlist.some((w) => w.id === selectedProduct.id) : false}
           onToggleWishlist={(p) => handleToggleWishlist(p)}
           cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
-          onOpenCart={() => {
-            setSelectedProduct(null);
-            setActiveTab('cart');
-            setIsCartOpen(true);
-            navigate('/cart');
-          }}
+          onOpenCart={handleOpenCart}
           onOpenSearch={() => {
             setSelectedProduct(null);
             setActiveTab('search');
             navigate('/search');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          onBuyNow={() => {
-            setSelectedProduct(null);
-            setActiveTab('cart');
-            setIsCartOpen(true);
-            navigate('/cart');
-          }}
+          onBuyNow={handleDetailBuyNow}
           onSelectProduct={openProductRoute}
-          onQuickAdd={(p) =>
-            handleDetailAddToCart(p, p.colors[0], p.stitchPatterns[0] || '', p.thicknessOptions[0])
-          }
+          onQuickAdd={handleToggleDefaultCartItem}
           isAuthenticated={!currentUser.isGuest}
           customerId={currentUser.isGuest ? undefined : currentUser.id}
           onRequestLogin={() => {
@@ -1378,13 +1418,22 @@ export default function App() {
           isOpen={isCheckoutOpen}
           userId={currentUser.id}
           onOrderPlaced={refreshNotificationCount}
-          onClose={() => { setIsCheckoutOpen(false); navigate('/cart'); }}
-          items={cart}
+          onClose={() => {
+            const returnPath = checkoutReturnPath;
+            const returnState = checkoutReturnState;
+            setIsCheckoutOpen(false);
+            setCheckoutItems(null);
+            setCheckoutReturnPath('/cart');
+            setCheckoutReturnState(null);
+            navigate(returnPath, { state: returnState });
+          }}
+          items={checkoutItems ?? cart}
+          onUpdateQuantity={handleCheckoutQuantity}
           discount={checkoutDiscount}
           couponCode={checkoutCoupon}
           couponSubtotal={checkoutQuote?.subtotal}
           couponTotal={checkoutQuote?.total}
-          onClearCart={clearCart}
+          onClearCart={checkoutItems === null ? clearCart : () => undefined}
         />}
 
         {(isWishlistOpen || activeTab === 'wishlist') && <WishlistModal
@@ -1396,9 +1445,9 @@ export default function App() {
           wishlist={wishlist}
           onRemoveWishlist={(p) => handleToggleWishlist(p)}
           onSelectProduct={openProductRoute}
-          onAddToCart={(p) => {
-            handleDetailAddToCart(p, p.colors[0], p.stitchPatterns[0] || '', p.thicknessOptions[0]);
-          }}
+          onAddToCart={handleToggleDefaultCartItem}
+          isInCart={isQuickAddInCart}
+          onOpenCart={handleOpenCart}
         />}
 
         {isStoreInfoOpen && <StoreLocationModal isOpen={isStoreInfoOpen} onClose={() => navigateBackToPage('/home')} />}
