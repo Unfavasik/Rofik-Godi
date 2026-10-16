@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Check, Phone, MessageCircle, Star, Globe, Bell } from 'lucide-react';
+import { X, Phone, MessageCircle, Star, Globe, Bell } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
 import { CouponDetailsView } from './CouponDetailsView';
 import { WORKSHOP_INFO } from '../data/products';
 import { CustomerSupportRequestForm } from './CustomerSupportRequestForm';
+import { readCustomerAppPreferences, saveCustomerAppPreferences, type CustomerNotificationPreferences, type PreferredLanguage } from '../lib/customerPreferences';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -56,18 +57,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [couponOffers, setCouponOffers] = useState<CustomerCouponOffer[]>([]);
   const [couponOffersLoading, setCouponOffersLoading] = useState(false);
   const [couponOffersError, setCouponOffersError] = useState('');
-  const [notificationState, setNotificationState] = useState({
-    offers: true,
-    orderUpdates: true,
-    workshopAlerts: true,
-    whatsappUpdates: true,
-  });
-  const [language, setLanguage] = useState<'en' | 'bn' | 'hi'>('en');
-  const [userRating, setUserRating] = useState(5);
-  const [reviewFeedback, setReviewFeedback] = useState('');
-  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const preferenceOwnerId = currentUserId || 'guest-user';
+  const [notificationState, setNotificationState] = useState<CustomerNotificationPreferences>(() => readCustomerAppPreferences(preferenceOwnerId).notifications);
+  const [language, setLanguage] = useState<PreferredLanguage>(() => readCustomerAppPreferences(preferenceOwnerId).language);
+  const [hapticFeedback, setHapticFeedback] = useState(() => readCustomerAppPreferences(preferenceOwnerId).hapticFeedback);
+  const [settingsNotice, setSettingsNotice] = useState('');
   const [logoutConfirmed, setLogoutConfirmed] = useState(false);
   const [logoutError, setLogoutError] = useState('');
+  const [copyError, setCopyError] = useState('');
+
+  useEffect(() => {
+    const preferences = readCustomerAppPreferences(preferenceOwnerId);
+    setNotificationState(preferences.notifications);
+    setLanguage(preferences.language);
+    setHapticFeedback(preferences.hapticFeedback);
+  }, [preferenceOwnerId]);
 
   useEffect(() => {
     if (activeModal !== 'coupons') return;
@@ -86,10 +90,44 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     return () => { active = false; };
   }, [activeModal]);
 
-  const handleCopyCoupon = (code: string) => {
-    navigator.clipboard?.writeText(code);
-    setCopiedCoupon(code);
-    setTimeout(() => setCopiedCoupon(null), 2000);
+  const handleCopyCoupon = async (code: string) => {
+    setCopyError('');
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(code);
+      } else {
+        const input = document.createElement('textarea');
+        input.value = code;
+        input.setAttribute('readonly', '');
+        input.style.position = 'fixed';
+        input.style.opacity = '0';
+        document.body.appendChild(input);
+        input.select();
+        const copied = document.execCommand('copy');
+        input.remove();
+        if (!copied) throw new Error('Clipboard unavailable');
+      }
+      setCopiedCoupon(code);
+      window.setTimeout(() => setCopiedCoupon((current) => current === code ? null : current), 2000);
+    } catch {
+      setCopiedCoupon(null);
+      setCopyError('Could not copy the coupon code. Select the code and copy it manually.');
+    }
+  };
+
+  const saveNotifications = () => {
+    const saved = saveCustomerAppPreferences(preferenceOwnerId, { notifications: notificationState });
+    setNotificationState(saved.notifications);
+    setSettingsNotice('Notification preferences saved on this device. They control which categories appear in your in-app inbox.');
+    setActiveModal(null);
+  };
+
+  const saveAppPreferences = () => {
+    const saved = saveCustomerAppPreferences(preferenceOwnerId, { language, hapticFeedback });
+    setLanguage(saved.language);
+    setHapticFeedback(saved.hapticFeedback);
+    setSettingsNotice('Preferences saved. The app interface is currently available in English.');
+    setActiveModal(null);
   };
 
   const couponBenefit = (offer: CustomerCouponOffer) => offer.discount_type === 'PERCENTAGE'
@@ -224,7 +262,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
             <div>
               <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">Reviews</h2>
-              <p className="text-[12px] text-gray-500 font-normal">Rate our products</p>
+              <p className="text-[12px] text-gray-500 font-normal">Review completed purchases</p>
             </div>
           </div>
           <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,7 +370,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
             <div>
               <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">App Settings</h2>
-              <p className="text-[12px] text-gray-500 font-normal">Theme, language & preferences</p>
+              <p className="text-[12px] text-gray-500 font-normal">Language, tap feedback & preferences</p>
             </div>
           </div>
           <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -420,6 +458,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </nav>
       {/* END: SettingsMenuList */}
 
+      {settingsNotice && <p role="status" className="mx-5 mb-4 rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-medium leading-relaxed text-emerald-800">{settingsNotice}</p>}
+
       {/* --- SUB MODALS FOR INTERACTION --- */}
 
       {/* 1. Notifications Modal */}
@@ -435,7 +475,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-gray-900">Notification Preferences</h3>
-                    <p className="text-xs text-gray-500">Choose what you want to receive</p>
+                    <p className="text-xs text-gray-500">Choose what appears in your in-app inbox</p>
                   </div>
                 </div>
                 <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
@@ -447,8 +487,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 {[
                   { key: 'offers', label: 'Festival Discounts & Coupons', desc: 'Alerts about seasonal flash sales & discounts' },
                   { key: 'orderUpdates', label: 'Order Status & Tracking', desc: 'Realtime updates when stitching starts or completes' },
-                  { key: 'workshopAlerts', label: 'Local Workshop Queue', desc: 'Live waiting time updates for on-spot fitting' },
-                  { key: 'whatsappUpdates', label: 'WhatsApp Instant Delivery', desc: 'Receive invoice & bill directly on WhatsApp' },
+                  { key: 'workshopAlerts', label: 'Support & Workshop Replies', desc: 'Responses to your support requests' },
+                  { key: 'systemUpdates', label: 'Product & Account Updates', desc: 'New products, profile and service notices' },
                 ].map((item) => (
                   <div key={item.key} className="flex justify-between items-center p-3 bg-gray-50 rounded-2xl">
                     <div className="pr-2">
@@ -457,6 +497,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     </div>
                     <input
                       type="checkbox"
+                      aria-label={item.label}
                       checked={notificationState[item.key as keyof typeof notificationState]}
                       onChange={(e) => setNotificationState({ ...notificationState, [item.key]: e.target.checked })}
                       className="w-5 h-5 rounded text-[#D9232D] focus:ring-[#D9232D] cursor-pointer"
@@ -465,8 +506,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 ))}
               </div>
 
+              <p className="-mt-2 text-[10px] leading-relaxed text-gray-500">These preferences filter your in-app inbox and unread badge. They do not control push or WhatsApp delivery.</p>
+
               <button
-                onClick={() => setActiveModal(null)}
+                onClick={saveNotifications}
                 className="w-full py-3 bg-[#D9232D] text-white text-xs font-bold rounded-2xl shadow-sm hover:bg-red-700 transition-colors"
               >
                 Save Preferences
@@ -525,6 +568,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       </div>
                     ))}
                 </div>
+                {copyError && <p role="alert" className="rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">{copyError}</p>}
               </motion.div>
             </div>
           )
@@ -547,44 +591,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </button>
               </div>
 
-              {reviewSubmitted ? (
-                <div className="py-6 text-center space-y-2">
-                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center">
-                    <Check className="w-6 h-6" />
-                  </div>
-                  <h4 className="text-sm font-bold text-gray-900">Thank you for your review!</h4>
-                  <p className="text-xs text-gray-500">Your feedback helps Rofik Godi Centre improve quality.</p>
+              <div className="space-y-3 py-2 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-500">
+                  <Star className="h-6 w-6 fill-current" />
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex justify-center gap-2 py-2">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => setUserRating(s)}
-                        className="p-1 transition-transform active:scale-125"
-                      >
-                        <Star className={`w-7 h-7 ${s <= userRating ? 'text-[#F59E0B] fill-[#F59E0B]' : 'text-gray-300'}`} />
-                      </button>
-                    ))}
-                  </div>
-
-                  <textarea
-                    value={reviewFeedback}
-                    onChange={(e) => setReviewFeedback(e.target.value)}
-                    rows={3}
-                    placeholder="Tell us about the stitching quality, comfort or on-spot fitting experience..."
-                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-3 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#D9232D]"
-                  />
-
-                  <button
-                    onClick={() => setReviewSubmitted(true)}
-                    className="w-full py-3 bg-[#D9232D] text-white text-xs font-bold rounded-2xl shadow-sm hover:bg-red-700 transition-colors"
-                  >
-                    Submit Review
-                  </button>
-                </div>
-              )}
+                <h4 className="text-sm font-bold text-gray-900">Verified product reviews</h4>
+                <p className="text-xs leading-relaxed text-gray-500">Reviews are tied to products in a completed order. Open your order history to choose a purchased product and submit a verified review.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveModal(null);
+                    onOpenOrders?.();
+                  }}
+                  className="w-full rounded-2xl bg-[#D9232D] py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-700"
+                >
+                  {isAuthenticated ? 'Open order history' : 'Sign in to review a purchase'}
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
@@ -686,7 +709,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     ].map((l) => (
                       <button
                         key={l.id}
-                        onClick={() => setLanguage(l.id as 'en' | 'bn' | 'hi')}
+                        onClick={() => setLanguage(l.id as PreferredLanguage)}
                         className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${
                           language === l.id ? 'border-[#D9232D] bg-[#FEECEC] text-[#D9232D]' : 'border-gray-200 text-gray-700'
                         }`}
@@ -697,17 +720,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </div>
                 </div>
 
-                <div className="p-3 bg-gray-50 rounded-2xl flex justify-between items-center text-xs text-gray-700 font-semibold">
-                  <span>Haptic Tap Feedback</span>
-                  <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded">Enabled</span>
-                </div>
+                <p className="text-[10px] leading-relaxed text-gray-500">Your language choice is saved, but this app’s interface is currently English.</p>
+                <label className="flex items-center justify-between rounded-2xl bg-gray-50 p-3 text-xs font-semibold text-gray-700">
+                  <span>
+                    <span className="block">Haptic Tap Feedback</span>
+                    <span className="mt-0.5 block text-[10px] font-normal text-gray-500">Short vibration on supported devices</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    aria-label="Haptic tap feedback"
+                    checked={hapticFeedback}
+                    onChange={(event) => setHapticFeedback(event.target.checked)}
+                    className="h-5 w-5 cursor-pointer rounded text-[#D9232D] focus:ring-[#D9232D]"
+                  />
+                </label>
               </div>
 
               <button
-                onClick={() => setActiveModal(null)}
+                onClick={saveAppPreferences}
                 className="w-full py-3 bg-[#D9232D] text-white text-xs font-bold rounded-2xl shadow-sm"
               >
-                Done
+                Save Preferences
               </button>
             </motion.div>
           </div>

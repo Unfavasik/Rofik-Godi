@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Check, FileText, LoaderCircle, LockKeyhole, Paperclip, Send, X } from 'lucide-react';
+import { Check, FileText, ImagePlus, LoaderCircle, LockKeyhole, Paperclip, Plus, Send, X } from 'lucide-react';
 import {
   createCustomerSupportRequest,
   listMySupportOrderChoices,
@@ -21,7 +21,8 @@ export const CustomerSupportRequestForm: React.FC<{
   expectedUserId?: string;
   onOpenLogin?: () => void;
   onOpenSupportRequest?: (requestId: string) => void;
-}> = ({ isAuthenticated, expectedUserId, onOpenLogin, onOpenSupportRequest }) => {
+  compact?: boolean;
+}> = ({ isAuthenticated, expectedUserId, onOpenLogin, onOpenSupportRequest, compact = false }) => {
   const [category, setCategory] = useState<SupportRequestCategory>('Order issue');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -33,6 +34,14 @@ export const CustomerSupportRequestForm: React.FC<{
   const [error, setError] = useState('');
   const [attachmentError, setAttachmentError] = useState('');
   const [requestId, setRequestId] = useState('');
+  const messageLimit = compact ? 500 : 2000;
+  const selectedOrder = orders.find((order) => order.id === relatedOrderId);
+  const requestSubject = compact
+    ? `${category === 'Order issue' ? 'Order / Pickup' : category}${selectedOrder ? ` · #${selectedOrder.order_number}` : ''}`
+    : subject.trim();
+  const canSubmit = compact
+    ? message.trim().length >= 10
+    : subject.trim().length >= 3 && message.trim().length >= 10;
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -50,14 +59,14 @@ export const CustomerSupportRequestForm: React.FC<{
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (submitting) return;
+    if (submitting || !canSubmit) return;
     setSubmitting(true);
     setError('');
     setAttachmentError('');
     try {
       const result = await createCustomerSupportRequest({
         category,
-        subject,
+        subject: requestSubject,
         message,
         relatedOrderId: relatedOrderId || null,
         files,
@@ -127,46 +136,81 @@ export const CustomerSupportRequestForm: React.FC<{
   }
 
   return (
-    <form onSubmit={(event) => void handleSubmit(event)} className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <div>
+    <form onSubmit={(event) => void handleSubmit(event)} className={`space-y-3 rounded-2xl border border-slate-200 bg-slate-50 ${compact ? 'p-3.5' : 'p-4'}`}>
+      {!compact && <div>
         <h4 className="text-sm font-bold text-slate-900">Send a support request</h4>
         <p className="mt-1 text-[11px] leading-4 text-slate-500">A private message to the workshop team. Please do not include card or payment details. / আপনার অনুরোধটি শুধু আপনি ও ওয়ার্কশপ টিম দেখতে পারবেন। কার্ড বা পেমেন্টের তথ্য দেবেন না।</p>
-      </div>
+      </div>}
       <label className="block space-y-1.5">
-        <span className="text-[11px] font-bold text-slate-600">Category</span>
-        <select aria-label="Support category" value={category} onChange={(event) => setCategory(event.target.value as SupportRequestCategory)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#D9232D]">
-          {categories.map((item) => <option key={item} value={item}>{item}</option>)}
-        </select>
+        <span className="text-[11px] font-bold text-slate-700">{compact ? 'Subject' : 'Category'}</span>
+        <span className="relative block">
+          {compact && <FileText className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />}
+          <select aria-label={compact ? 'Support subject' : 'Support category'} value={category} onChange={(event) => setCategory(event.target.value as SupportRequestCategory)} className={`w-full appearance-none rounded-xl border border-slate-200 bg-white py-3 text-[13px] text-slate-900 outline-none focus:border-[#D9232D] ${compact ? 'pl-10 pr-9' : 'px-3 text-xs'}`}>
+            {categories.map((item) => <option key={item} value={item}>{compact && item === 'Order issue' ? 'Order / Pickup' : item}</option>)}
+          </select>
+          {compact && <span aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">⌄</span>}
+        </span>
       </label>
       <label className="block space-y-1.5">
-        <span className="text-[11px] font-bold text-slate-600">Link an order <span className="font-normal text-slate-400">(optional)</span></span>
-        <select aria-label="Related order" value={relatedOrderId} onChange={(event) => setRelatedOrderId(event.target.value)} disabled={ordersLoading} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#D9232D] disabled:opacity-60">
-          <option value="">{ordersLoading ? 'Loading your orders…' : 'No order selected'}</option>
-          {orders.map((order) => <option key={order.id} value={order.id}>#{order.order_number} · {order.status.replaceAll('_', ' ')} · ₹{Number(order.total).toLocaleString('en-IN')}</option>)}
-        </select>
+        <span className="text-[11px] font-bold text-slate-700">{compact ? 'Order ID' : 'Link an order'} <span className="font-normal text-slate-400">(optional)</span></span>
+        <span className="relative block">
+          {compact && <FileText className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />}
+          <select aria-label={compact ? 'Order ID' : 'Related order'} value={relatedOrderId} onChange={(event) => setRelatedOrderId(event.target.value)} disabled={ordersLoading} className={`w-full appearance-none rounded-xl border border-slate-200 bg-white py-3 text-[13px] text-slate-900 outline-none focus:border-[#D9232D] disabled:opacity-60 ${compact ? 'pl-10 pr-9' : 'px-3 text-xs'}`}>
+            <option value="">{ordersLoading ? 'Loading your orders…' : compact ? 'Choose an order (optional)' : 'No order selected'}</option>
+            {orders.map((order) => <option key={order.id} value={order.id}>#{order.order_number} · {order.status.replaceAll('_', ' ')} · ₹{Number(order.total).toLocaleString('en-IN')}</option>)}
+          </select>
+          {compact && <span aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">⌄</span>}
+        </span>
       </label>
-      <label className="block space-y-1.5">
+      {!compact && <label className="block space-y-1.5">
         <span className="text-[11px] font-bold text-slate-600">Subject</span>
         <input aria-label="Support subject" value={subject} onChange={(event) => setSubject(event.target.value)} minLength={3} maxLength={120} required placeholder="What do you need help with?" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#D9232D]" />
-      </label>
+      </label>}
       <label className="block space-y-1.5">
-        <span className="text-[11px] font-bold text-slate-600">Message</span>
-        <textarea aria-label="Support message" value={message} onChange={(event) => setMessage(event.target.value)} minLength={10} maxLength={2000} required rows={4} placeholder="Describe the issue and any helpful order details…" className="w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs leading-5 text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#D9232D]" />
-        <span className="block text-right text-[10px] text-slate-400">{message.length}/2000</span>
+        <span className="text-[11px] font-bold text-slate-700">Message</span>
+        <textarea aria-label="Support message" value={message} onChange={(event) => setMessage(event.target.value)} minLength={10} maxLength={messageLimit} required rows={4} placeholder={compact ? 'Tell us how we can help…' : 'Describe the issue and any helpful order details…'} className={`w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-3 text-[13px] leading-5 text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#D9232D] ${compact ? 'min-h-28' : ''}`} />
+        <span className="block text-right text-[10px] text-slate-400">{message.length}/{messageLimit}</span>
       </label>
-      <div className="space-y-2">
+      {compact ? <CompactSupportAttachments files={files} onFiles={handleFiles} onRemove={(index) => setFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))} /> : <div className="space-y-2">
         <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
           <Paperclip className="h-4 w-4" /> Add photos or PDF
           <input type="file" className="sr-only" accept="image/jpeg,image/png,image/webp,application/pdf" multiple onChange={(event) => handleFiles(event.target.files)} aria-label="Attach photos or PDF" />
         </label>
         <p className="text-[10px] text-slate-400">Up to 3 files · 5 MB each · JPEG, PNG, WebP or PDF</p>
         {files.length > 0 && <ul className="space-y-1">{files.map((file, index) => <li key={`${file.name}-${index}`} className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-1.5 text-[10px] text-slate-600"><FileText className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 flex-1 truncate">{file.name}</span><button type="button" aria-label={`Remove ${file.name}`} onClick={() => setFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-800"><X className="h-3.5 w-3.5" /></button></li>)}</ul>}
-      </div>
+      </div>}
+      {compact && <p className="text-[10px] leading-4 text-slate-500">Private message. Please don’t include payment details. / ব্যক্তিগত তথ্য বা কার্ডের বিবরণ দেবেন না।</p>}
       {error && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">{error}</p>}
-      <button type="submit" disabled={submitting || subject.trim().length < 3 || message.trim().length < 10} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#D9232D] px-4 py-3 text-xs font-bold text-white transition hover:bg-[#B91C1C] disabled:cursor-not-allowed disabled:opacity-50">
+      <button type="submit" disabled={submitting || !canSubmit} className={`inline-flex w-full items-center justify-center gap-2 bg-[#D9232D] px-4 text-xs font-bold text-white transition hover:bg-[#B91C1C] disabled:cursor-not-allowed disabled:opacity-50 ${compact ? 'rounded-xl py-3.5 text-[14px]' : 'rounded-xl py-3'}`}>
         {submitting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        {submitting ? 'Sending…' : 'Submit request'}
+        {submitting ? 'Sending…' : compact ? 'Send Message' : 'Submit request'}
       </button>
     </form>
   );
 };
+
+function CompactSupportAttachments({ files, onFiles, onRemove }: { files: File[]; onFiles: (files: FileList | null) => void; onRemove: (index: number) => void }) {
+  return <div className="rounded-xl border border-slate-200 bg-white p-2.5">
+    <div className="flex items-center gap-2 text-slate-700"><FileText className="h-4 w-4" /><div><p className="text-[11px] font-bold">Add photo or screenshot <span className="font-normal text-slate-400">(optional)</span></p><p className="text-[10px] text-slate-400">JPG, PNG, WebP · up to 5 MB each</p></div></div>
+    <div className="mt-2.5 flex gap-2 overflow-x-auto pb-0.5">
+      {files.length < 3 && <label className="flex h-[78px] w-[78px] shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-slate-300 bg-slate-50 text-[#D9232D] hover:bg-rose-50">
+        <Plus className="h-5 w-5" /><span className="text-[9px] font-bold">Add Image</span>
+        <input type="file" className="sr-only" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => { onFiles(event.target.files); event.target.value = ''; }} aria-label="Add support photos" />
+      </label>}
+      {files.map((file, index) => <SupportImagePreview key={`${file.name}-${file.lastModified}-${index}`} file={file} onRemove={() => onRemove(index)} />)}
+    </div>
+  </div>;
+}
+
+function SupportImagePreview({ file, onRemove }: { file: File; onRemove: () => void }) {
+  const [preview, setPreview] = useState('');
+  useEffect(() => {
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+  return <div className="relative h-[78px] w-[78px] shrink-0 overflow-hidden rounded-xl bg-slate-100">
+    {preview ? <img src={preview} alt={file.name} className="h-full w-full object-cover" /> : <ImagePlus className="m-auto h-6 w-6 text-slate-400" />}
+    <button type="button" onClick={onRemove} aria-label={`Remove ${file.name}`} className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow"><X className="h-3 w-3" /></button>
+  </div>;
+}

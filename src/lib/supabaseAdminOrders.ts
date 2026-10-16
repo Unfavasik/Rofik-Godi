@@ -114,7 +114,7 @@ export function getAdminOrderTimelineEvents(order: AdminOrderRecord): AdminOrder
   return events.sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt));
 }
 
-export async function loadAdminOrders(orderId?: string): Promise<{
+export async function loadAdminOrders(orderId?: string, matchOrderNumber = false): Promise<{
   data: AdminOrderRecord[];
   error: Error | null;
 }> {
@@ -123,7 +123,7 @@ export async function loadAdminOrders(orderId?: string): Promise<{
     ? await supabase
         .from('orders')
         .select('id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price,selected_thickness,selected_stitch,custom_embroidery_text),order_status_history(id,from_status,to_status,note,created_at)')
-        .eq('id', orderId)
+        .eq(matchOrderNumber ? 'order_number' : 'id', orderId)
         .order('created_at', { ascending: false })
         .limit(1)
     : await supabase
@@ -136,7 +136,7 @@ export async function loadAdminOrders(orderId?: string): Promise<{
       ? await (supabase
           .from('orders')
           .select('id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price),order_status_history(id,from_status,to_status,note,created_at)')
-          .eq('id', orderId)
+          .eq(matchOrderNumber ? 'order_number' : 'id', orderId)
           .order('created_at', { ascending: false })
           .limit(1) as unknown as typeof response)
       : await (supabase
@@ -229,9 +229,16 @@ export async function loadAdminOrderById(orderId: string): Promise<{
 }> {
   const result = await loadAdminOrders(orderId);
   if (result.error) return { data: null, error: result.error };
+  if (result.data[0]) return { data: result.data[0], error: null };
+
+  // Admin detail URLs use the customer-facing order number; older callers may
+  // still supply the database UUID. Query each identifier exactly.
+  const byOrderNumber = await loadAdminOrders(orderId.replace(/^#/, ''), true);
+  if (byOrderNumber.error) return { data: null, error: byOrderNumber.error };
+  const matchingOrder = byOrderNumber.data[0] || null;
   return {
-    data: result.data[0] || null,
-    error: result.data.length ? null : new Error('Order not found.'),
+    data: matchingOrder || null,
+    error: matchingOrder ? null : new Error('Order not found.'),
   };
 }
 

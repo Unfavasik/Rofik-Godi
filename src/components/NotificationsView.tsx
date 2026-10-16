@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Bell, ChevronRight, Package, Settings, Star, Tag, Truck, Volume2, Moon, Smartphone, Megaphone, TrendingDown, Trash2 } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, Bell, ChevronRight, Package, Settings, Star, Tag, Truck, Volume2, Moon, Smartphone, Megaphone, TrendingDown, Trash2, MessageCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { deleteMyNotification, listMyNotifications, markNotificationRead } from '../lib/supabaseCustomer';
 import { getNotificationOrderNumber } from '../lib/orderPresentation';
@@ -9,6 +9,11 @@ import { OrderNotificationDetails } from './OrderNotificationDetails';
 import { CouponDetailsView } from './CouponDetailsView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
 import { getCouponOfferForNotification, isCouponNotification } from '../lib/couponDisplay';
+import type { Product } from '../types';
+import { NewProductNotificationDetails } from './NewProductNotificationDetails';
+import { SupportNotificationDetails } from './SupportNotificationDetails';
+import { getCustomerNotificationCategory, getSupportRequestIdFromNotification, matchesCustomerNotificationFilter, getNotificationRowSurfaceClass, isSupportNotification, type CustomerNotificationFilter } from '../lib/notificationCategory';
+import { isNotificationEnabledByPreferences, readCustomerAppPreferences } from '../lib/customerPreferences';
 
 type NotificationItem = {
   id: string;
@@ -23,7 +28,15 @@ type NotificationItem = {
   created_at: string;
 };
 
-type NotificationFilter = 'All' | 'Orders' | 'Offers' | 'Updates';
+type NotificationFilter = CustomerNotificationFilter;
+type NotificationPointerGesture = {
+  notificationId: string;
+  pointerId: number;
+  startX: number;
+  startY: number;
+  timerId: number | null;
+  revealed: boolean;
+};
 
 const timeAgo = (value: string) => {
   const timestamp = new Date(value).getTime();
@@ -37,16 +50,9 @@ const timeAgo = (value: string) => {
   return `${days} day${days === 1 ? '' : 's'} ago`;
 };
 
-const filterMatches = (item: NotificationItem, filter: NotificationFilter): boolean => {
-  const kind = item.kind.toLowerCase();
-  if (filter === 'All') return true;
-  if (filter === 'Orders') return kind.includes('order') || kind.includes('pickup') || item.title.toLowerCase().includes('order');
-  if (filter === 'Offers') return kind.includes('offer') || kind.includes('promo') || kind.includes('coupon') || item.title.toLowerCase().includes('offer');
-  return !filterMatches(item, 'Orders') && !filterMatches(item, 'Offers');
-};
-
-const iconFor = (kind: string) => {
-  const value = kind.toLowerCase();
+const iconFor = (item: NotificationItem) => {
+  if (isSupportNotification(item)) return <MessageCircle className="h-5 w-5" />;
+  const value = item.kind.toLowerCase();
   if (value.includes('order') || value.includes('pickup')) return <Truck className="h-6 w-6" />;
   if (value.includes('offer') || value.includes('promo') || value.includes('coupon')) return <Tag className="h-6 w-6" />;
   if (value.includes('review')) return <Star className="h-6 w-6" />;
@@ -54,8 +60,9 @@ const iconFor = (kind: string) => {
   return <Bell className="h-6 w-6" />;
 };
 
-const toneFor = (kind: string) => {
-  const value = kind.toLowerCase();
+const toneFor = (item: NotificationItem) => {
+  if (isSupportNotification(item)) return 'bg-rose-50 text-[#D9232D]';
+  const value = item.kind.toLowerCase();
   if (value.includes('order') || value.includes('pickup')) return 'bg-red-50 text-red-500';
   if (value.includes('offer') || value.includes('promo') || value.includes('coupon')) return 'bg-rose-50 text-rose-500';
   if (value.includes('review')) return 'bg-amber-50 text-amber-500';
@@ -63,24 +70,39 @@ const toneFor = (kind: string) => {
   return 'bg-blue-50 text-blue-500';
 };
 
-export function NotificationsView({ userId, isGuest, onBack, onNotificationsChanged, onOpenShop, onOpenMyOrders }: { userId: string; isGuest: boolean; onBack: () => void; onNotificationsChanged?: () => void; onOpenShop?: () => void; onOpenMyOrders?: (orderNumber: string) => void }) {
+export function NotificationsView({ userId, isGuest, onBack, onNotificationsChanged, onOpenShop, onOpenProduct, products = [], onOpenMyOrders, onOpenSupportRequest, onOpenContactSupport }: { userId: string; isGuest: boolean; onBack: () => void; onNotificationsChanged?: () => void; onOpenShop?: () => void; onOpenProduct?: (product: Product) => void; products?: Product[]; onOpenMyOrders?: (orderNumber: string) => void; onOpenSupportRequest?: (requestId: string) => void; onOpenContactSupport?: () => void }) {
   const [filter, setFilter] = useState<NotificationFilter>('All');
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [couponOffer, setCouponOffer] = useState<CustomerCouponOffer | null>(null);
   const [couponDetailsLoading, setCouponDetailsLoading] = useState(false);
   const [couponDetailsError, setCouponDetailsError] = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [notificationPreferences, setNotificationPreferences] = useState(() => readCustomerAppPreferences(userId).notifications);
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(!isGuest);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [revealedDeleteId, setRevealedDeleteId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState('');
   const [loadError, setLoadError] = useState('');
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const pointerGestureRef = useRef<NotificationPointerGesture | null>(null);
+  const suppressRowClickRef = useRef(false);
 
   useEffect(() => {
     setSelectedNotification(null);
     setFilter('All');
+    setRevealedDeleteId(null);
+    setNotificationPreferences(readCustomerAppPreferences(userId).notifications);
+    const gesture = pointerGestureRef.current;
+    if (gesture?.timerId !== null && gesture?.timerId !== undefined) window.clearTimeout(gesture.timerId);
+    pointerGestureRef.current = null;
+    suppressRowClickRef.current = false;
   }, [userId, isGuest]);
+
+  useEffect(() => () => {
+    const gesture = pointerGestureRef.current;
+    if (gesture?.timerId !== null && gesture?.timerId !== undefined) window.clearTimeout(gesture.timerId);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -152,13 +174,32 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
     return () => { active = false; };
   }, [selectedNotification]);
 
-  const visible = useMemo(() => items.filter((item) => filterMatches(item, filter)), [items, filter]);
+  const enabledItems = useMemo(
+    () => items.filter((item) => isNotificationEnabledByPreferences(notificationPreferences, item)),
+    [items, notificationPreferences],
+  );
+  const visible = useMemo(() => enabledItems.filter((item) => matchesCustomerNotificationFilter(item, filter)), [enabledItems, filter]);
+  const announcedProduct = useMemo(() => {
+    if (!selectedNotification) return null;
+    const kind = selectedNotification.kind.toLowerCase();
+    const isProductArrival = kind.includes('product') || kind.includes('arrival') || /\/product\//i.test(selectedNotification.action_url || '');
+    if (!isProductArrival) return null;
+    const actionPath = selectedNotification.action_url || '';
+    let slug = '';
+    try { slug = new URL(actionPath, window.location.origin).pathname.split('/').filter(Boolean).at(-1) || ''; } catch { /* Ignore malformed action URLs. */ }
+    const byLink = products.find((product) => product.slug === slug || product.id === slug);
+    if (byLink) return byLink;
+    const announcementText = `${selectedNotification.title} ${selectedNotification.body}`.toLowerCase();
+    return products.find((product) => announcementText.includes(product.title.toLowerCase())) || null;
+  }, [selectedNotification, products]);
   const counts = useMemo(() => ({
-    All: items.length,
-    Orders: items.filter((item) => filterMatches(item, 'Orders')).length,
-    Offers: items.filter((item) => filterMatches(item, 'Offers')).length,
-    Updates: items.filter((item) => filterMatches(item, 'Updates')).length,
-  }), [items]);
+    All: enabledItems.length,
+    Orders: enabledItems.filter((item) => getCustomerNotificationCategory(item) === 'Orders').length,
+    Offers: enabledItems.filter((item) => getCustomerNotificationCategory(item) === 'Offers').length,
+    Support: enabledItems.filter((item) => getCustomerNotificationCategory(item) === 'Support').length,
+    System: enabledItems.filter((item) => getCustomerNotificationCategory(item) === 'System').length,
+  }), [enabledItems]);
+  const hasUnreadSupport = enabledItems.some((item) => !item.read_at && getCustomerNotificationCategory(item) === 'Support');
 
   const openNotification = (item: NotificationItem) => {
     setSelectedNotification(item);
@@ -167,6 +208,74 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
       setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, read_at: readAt } : entry));
       void markNotificationRead(item.id, userId).then(() => onNotificationsChanged?.());
     }
+  };
+
+  const handleNotificationRowClick = (item: NotificationItem) => {
+    if (suppressRowClickRef.current) {
+      suppressRowClickRef.current = false;
+      return;
+    }
+    if (revealedDeleteId === item.id) {
+      setRevealedDeleteId(null);
+      return;
+    }
+    setRevealedDeleteId(null);
+    openNotification(item);
+  };
+
+  const startNotificationGesture = (event: React.PointerEvent<HTMLButtonElement>, item: NotificationItem) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    const previous = pointerGestureRef.current;
+    if (previous?.timerId !== null && previous?.timerId !== undefined) window.clearTimeout(previous.timerId);
+    const gesture: NotificationPointerGesture = {
+      notificationId: item.id,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      timerId: null,
+      revealed: false,
+    };
+    gesture.timerId = window.setTimeout(() => {
+      if (pointerGestureRef.current !== gesture) return;
+      gesture.revealed = true;
+      setRevealedDeleteId(item.id);
+    }, 520);
+    pointerGestureRef.current = gesture;
+    try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* Pointer capture may be unavailable in a test or older browser. */ }
+  };
+
+  const moveNotificationGesture = (event: React.PointerEvent<HTMLButtonElement>) => {
+    const gesture = pointerGestureRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    const deltaX = event.clientX - gesture.startX;
+    const deltaY = event.clientY - gesture.startY;
+    if (Math.abs(deltaY) > 12 && Math.abs(deltaY) > Math.abs(deltaX)) {
+      if (gesture.timerId !== null) window.clearTimeout(gesture.timerId);
+      gesture.timerId = null;
+      return;
+    }
+    if (Math.abs(deltaX) > 10 && gesture.timerId !== null) {
+      window.clearTimeout(gesture.timerId);
+      gesture.timerId = null;
+    }
+    if (deltaX < -44) {
+      gesture.revealed = true;
+      setRevealedDeleteId(gesture.notificationId);
+    } else if (deltaX > 44 && revealedDeleteId === gesture.notificationId) {
+      gesture.revealed = true;
+      setRevealedDeleteId(null);
+    }
+  };
+
+  const finishNotificationGesture = (event: React.PointerEvent<HTMLButtonElement>) => {
+    const gesture = pointerGestureRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    if (gesture.timerId !== null) window.clearTimeout(gesture.timerId);
+    if (gesture.revealed) {
+      suppressRowClickRef.current = true;
+      window.setTimeout(() => { suppressRowClickRef.current = false; }, 250);
+    }
+    pointerGestureRef.current = null;
   };
 
   const handleDeleteNotification = async (event: React.MouseEvent, item: NotificationItem) => {
@@ -180,6 +289,7 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
         return;
       }
       setItems((current) => current.filter((entry) => entry.id !== item.id));
+      setRevealedDeleteId(null);
       onNotificationsChanged?.();
     } catch {
       setDeleteError('Could not delete this notification. Please try again.');
@@ -191,6 +301,23 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
   if (showSettings) return <NotificationSettingsView onBack={() => setShowSettings(false)} />;
 
   if (selectedNotification) {
+    if (isSupportNotification(selectedNotification)) return <SupportNotificationDetails
+      requestId={getSupportRequestIdFromNotification(selectedNotification)}
+      userId={userId}
+      isAuthenticated={!isGuest}
+      notificationBody={selectedNotification.body}
+      notificationCreatedAt={selectedNotification.created_at}
+      isUnread={!selectedNotification.read_at}
+      onBack={() => setSelectedNotification(null)}
+      onViewConversation={(requestId) => {
+        setSelectedNotification(null);
+        onOpenSupportRequest?.(requestId);
+      }}
+      onContactSupport={() => {
+        setSelectedNotification(null);
+        onOpenContactSupport?.();
+      }}
+    />;
     if (selectedNotification.orderNumber) return <OrderNotificationDetails
       key={selectedNotification.orderNumber}
       userId={userId}
@@ -227,52 +354,83 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
         </section>
       </main>;
     }
-    return <main className="min-h-screen w-full bg-white text-slate-800 font-sans">
-      <header className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
-        <button onClick={() => setSelectedNotification(null)} aria-label="Back to notifications" className="rounded-full p-1"><ArrowLeft className="h-6 w-6" /></button>
-        <h1 className="text-[22px] font-extrabold tracking-tight">Notification Details</h1>
+    if (announcedProduct) return <NewProductNotificationDetails
+      product={announcedProduct}
+      createdAt={selectedNotification.created_at}
+      onBack={() => setSelectedNotification(null)}
+      onViewProduct={(product) => onOpenProduct?.(product)}
+    />;
+    return <main className="min-h-screen w-full bg-white font-sans text-slate-800">
+      <header className="flex items-center gap-3 border-b border-slate-100 px-4 py-3">
+        <button onClick={() => setSelectedNotification(null)} aria-label="Back to notifications" className="rounded-full p-1"><ArrowLeft className="h-5 w-5" /></button>
+        <h1 className="text-[19px] font-extrabold tracking-tight">Notification Details</h1>
       </header>
-      <div className="px-4 py-4">
-        <section className="rounded-3xl bg-gradient-to-br from-red-50 to-pink-50 p-5">
-          {selectedNotification.image_url && <img src={selectedNotification.image_url} alt="" className="mb-4 max-h-72 w-full rounded-2xl object-cover" />}
-          <div className={`mb-4 flex h-14 w-14 items-center justify-center rounded-full ${toneFor(selectedNotification.kind)}`}>{iconFor(selectedNotification.kind)}</div>
-          <p className="mb-2 text-xs font-bold text-[#E51E2B]">{timeAgo(selectedNotification.created_at)}</p>
-          <h2 className="text-[24px] font-extrabold leading-tight text-slate-900">{selectedNotification.title}</h2>
-          <p className="mt-2 text-[15px] leading-relaxed text-slate-600">{selectedNotification.body}</p>
+      <div className="px-4 py-3">
+        <section className="rounded-2xl bg-gradient-to-br from-red-50 to-pink-50 p-4">
+          {selectedNotification.image_url && <img src={selectedNotification.image_url} alt="" className="mb-3 max-h-[230px] w-full rounded-xl object-cover" />}
+          <div className={`mb-3 flex h-11 w-11 items-center justify-center rounded-full ${toneFor(selectedNotification)}`}>{iconFor(selectedNotification)}</div>
+          <p className="mb-1.5 text-[10px] font-bold text-[#E51E2B]">{timeAgo(selectedNotification.created_at)}</p>
+          <h2 className="text-[20px] font-extrabold leading-tight text-slate-900">{selectedNotification.title}</h2>
+          <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">{selectedNotification.body}</p>
         </section>
-        {selectedNotification.action_url && <a href={selectedNotification.action_url} className="mt-5 block w-full rounded-2xl bg-[#E51E2B] py-4 text-center text-base font-extrabold text-white">View details <ChevronRight className="ml-2 inline h-5 w-5" /></a>}
+        {selectedNotification.action_url && <a href={selectedNotification.action_url} className="mt-3 flex min-h-[50px] w-full items-center justify-center rounded-2xl bg-[#E51E2B] text-sm font-extrabold text-white">View details <ChevronRight className="ml-2 inline h-4 w-4" /></a>}
       </div>
     </main>;
   }
 
-  return <main className="min-h-screen w-full overflow-x-hidden bg-white text-slate-800 font-sans">
-    <header className="px-5 pt-4 pb-3 flex items-start justify-between">
-      <button onClick={onBack} aria-label="Go back" className="p-1 -ml-1 mt-1"><ArrowLeft className="h-6 w-6" /></button>
-      <div className="flex-1 px-4"><h1 className="text-[25px] font-extrabold tracking-tight leading-snug">Notifications</h1><p className="text-xs text-slate-500 font-medium mt-0.5">Stay updated with your orders, offers and more</p></div>
-      <button onClick={() => setShowSettings(true)} aria-label="Notification settings" className="p-1 mt-1"><Settings className="h-6 w-6" /></button>
+  return <main className="min-h-screen w-full overflow-x-hidden bg-[#F5F6F8] text-slate-800 font-sans">
+    <header className="flex min-h-[62px] items-center gap-3 bg-[#D9232D] px-4 py-3 text-white shadow-sm">
+      <button onClick={onBack} aria-label="Go back" className="-ml-1 rounded-full p-1.5 hover:bg-white/10"><ArrowLeft className="h-5 w-5" /></button>
+      <div className="min-w-0 flex-1"><h1 className="text-[20px] font-extrabold tracking-tight leading-snug">Notifications</h1></div>
+      <button onClick={() => setShowSettings(true)} aria-label="Notification settings" className="rounded-full p-1.5 text-white hover:bg-white/10"><Settings className="h-5 w-5" /></button>
     </header>
-    <nav className="flex gap-2.5 px-5 py-2.5 overflow-x-auto no-scrollbar">
-      {(['All', 'Orders', 'Offers', 'Updates'] as NotificationFilter[]).map((name) => <button key={name} onClick={() => setFilter(name)} className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold ${filter === name ? 'bg-[#E51E2B] text-white shadow-sm' : 'bg-gray-100 text-slate-700'}`}>{name} ({counts[name]})</button>)}
+    <nav aria-label="Notification categories" className="no-scrollbar flex gap-2 overflow-x-auto bg-white px-3.5 py-3 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
+      {(['All', 'Orders', 'Offers', 'Support', 'System'] as NotificationFilter[]).map((name) => <button key={name} onClick={() => { setFilter(name); setRevealedDeleteId(null); }} className={`relative flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-[11px] font-bold transition-colors ${filter === name ? 'border-rose-100 bg-rose-100 text-[#D9232D]' : 'border-slate-100 bg-slate-50 text-slate-700 hover:bg-slate-100'}`}>{name}<span className={`text-[9px] ${filter === name ? 'text-[#D9232D]/65' : 'text-slate-400'}`}>{counts[name]}</span>{name === 'Support' && hasUnreadSupport && <span aria-label="Unread support reply" className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[#E51E2B]" />}</button>)}
     </nav>
-    {deleteError && <p role="alert" className="mx-5 mt-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">{deleteError}</p>}
-    {loading ? <div className="px-5 py-16 text-center text-sm text-slate-500">Loading your notifications…</div> : loadError ? (
-      <section role="alert" className="mx-5 mt-8 rounded-3xl border border-rose-200 bg-rose-50 px-6 py-10 text-center">
+    {deleteError && <p role="alert" className="mx-4 mt-2 rounded-xl bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-700">{deleteError}</p>}
+    {loading ? <div className="px-4 py-14 text-center text-[13px] text-slate-500">Loading your notifications…</div> : loadError ? (
+      <section role="alert" className="mx-4 mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-8 text-center">
         <h2 className="text-base font-bold text-rose-800">Notifications could not be loaded</h2>
         <p className="mt-1 text-sm text-rose-700">{loadError}</p>
         <button type="button" onClick={() => setLoadAttempt((attempt) => attempt + 1)} className="mt-4 rounded-full bg-rose-700 px-4 py-2 text-xs font-extrabold text-white">Try again</button>
       </section>
     ) : visible.length === 0 ? (
-      <section className="mx-5 mt-8 rounded-3xl border border-slate-100 bg-slate-50 px-6 py-12 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm"><Bell className="h-6 w-6" /></div>
-        <h2 className="mt-4 text-base font-bold text-slate-800">{isGuest ? 'Sign in to see your notifications' : 'You’re all caught up'}</h2>
-        <p className="mt-1 text-sm text-slate-500">{isGuest ? 'Account notifications will appear here after you sign in.' : 'New updates for your account will appear here.'}</p>
+      <section className="mx-4 mt-6 rounded-2xl border border-slate-100 bg-slate-50 px-5 py-9 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm"><Bell className="h-5 w-5" /></div>
+        <h2 className="mt-3 text-[14px] font-bold text-slate-800">{isGuest ? 'Sign in to see your notifications' : 'You’re all caught up'}</h2>
+        <p className="mt-1 text-[12px] text-slate-500">{isGuest ? 'Account notifications will appear here after you sign in.' : 'New updates for your account will appear here.'}</p>
       </section>
-    ) : <section className="mt-1 divide-y divide-gray-100">
-      {visible.map((item) => <article key={item.id} onClick={() => openNotification(item)} role="button" tabIndex={0} onKeyDown={(event) => { if (event.target !== event.currentTarget) return; if (event.key === 'Enter' || event.key === ' ') openNotification(item); }} className="flex items-start px-5 py-4 hover:bg-slate-50 transition-colors cursor-pointer">
-        <div className={`h-12 w-12 shrink-0 mr-3.5 overflow-hidden rounded-2xl flex items-center justify-center shadow-sm ${toneFor(item.kind)}`}>{item.image_url ? <img src={item.image_url} alt="" className="h-full w-full object-cover" /> : iconFor(item.kind)}</div>
-        <div className="flex-1 pr-2"><div className="flex items-center"><h2 className="text-sm font-bold tracking-tight text-gray-900">{item.title}</h2>{!item.read_at && <span className="ml-2 h-2 w-2 rounded-full bg-[#E51E2B]" />}</div><p className="mt-1 text-xs leading-relaxed text-gray-500">{item.body}</p></div>
-        <div className="self-stretch shrink-0 flex flex-col items-end justify-between pt-0.5"><span className="text-[11px] font-medium text-gray-400">{timeAgo(item.created_at)}</span><button type="button" disabled={deletingId === item.id} aria-label={`Delete notification: ${item.title}`} title="Delete notification" onClick={(event) => void handleDeleteNotification(event, item)} className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"><Trash2 className="h-4 w-4" /></button></div>
-      </article>)}
+    ) : <section className="mx-auto mt-0 w-full max-w-xl space-y-0 bg-white pb-5">
+      {visible.map((item) => {
+        const isDeleteRevealed = revealedDeleteId === item.id;
+        return <article key={item.id} className="relative isolate overflow-hidden border-b border-slate-100">
+          <button
+            type="button"
+            onClick={() => handleNotificationRowClick(item)}
+            onPointerDown={(event) => startNotificationGesture(event, item)}
+            onPointerMove={moveNotificationGesture}
+            onPointerUp={finishNotificationGesture}
+            onPointerCancel={finishNotificationGesture}
+            aria-label={`Open notification: ${item.title}. Press and hold or swipe left to reveal delete.`}
+            aria-expanded={isDeleteRevealed}
+            style={{ transform: isDeleteRevealed ? 'translateX(-76px)' : 'translateX(0)', touchAction: 'pan-y' }}
+            className={`relative z-10 flex w-full items-center gap-3 px-4 py-4 text-left transition-transform duration-200 ${getNotificationRowSurfaceClass(!item.read_at)}`}
+          >
+            <div className={`relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full ${toneFor(item)}`}>{item.image_url ? <img src={item.image_url} alt="" className="h-full w-full object-cover" /> : iconFor(item)}{!item.read_at && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#E51E2B]" />}</div>
+            <div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><h2 className="line-clamp-2 text-[13px] font-extrabold leading-[1.35] tracking-tight text-slate-900">{item.title}</h2>{!item.read_at && <span aria-label="Unread" className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-[#E51E2B]" />}</div><p className="mt-1 line-clamp-2 text-[11px] leading-[1.45] text-slate-600">{item.body}</p><time className="mt-1.5 block text-[10px] text-slate-400" dateTime={item.created_at}>{timeAgo(item.created_at)}</time></div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+          </button>
+          <button
+            type="button"
+            disabled={deletingId === item.id}
+            aria-label={`Delete notification: ${item.title}`}
+            title="Delete notification"
+            onFocus={() => setRevealedDeleteId(item.id)}
+            onClick={(event) => void handleDeleteNotification(event, item)}
+            className={`absolute inset-y-0 right-0 z-0 flex w-[76px] flex-col items-center justify-center gap-1 bg-[#E51E2B] text-white transition-opacity duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white disabled:cursor-wait disabled:opacity-70 ${isDeleteRevealed ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+          ><Trash2 className="h-5 w-5" /><span className="text-[10px] font-extrabold">Delete</span></button>
+        </article>;
+      })}
     </section>}
   </main>;
 }

@@ -50,6 +50,11 @@ describe('admin order details drawer', () => {
   it('shows the terminal completed state and invoice action without another completion action', () => {
     const html = renderDetails({ ...order, status: 'COMPLETED', completedAt: '2026-10-05T10:15:00Z' });
     expect(html).toContain('Order completed');
+    expect(html.match(/Order completed/g)).toHaveLength(1);
+    expect(html).toContain('Invoice ready');
+    expect(html).toContain('Order ID');
+    expect(html).toContain(`#${order.orderNumber}`);
+    expect(html).not.toContain('Rofik Godi Centre · Order');
     expect(html).toContain('Open invoice');
     expect(html).not.toContain('Mark Completed');
   });

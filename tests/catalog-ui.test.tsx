@@ -105,6 +105,18 @@ describe('catalog feedback', () => {
     expect(notAdded).toContain('aria-pressed="false"');
   });
 
+  it('does not invent a zero-star score and formats catalog pricing with a real savings badge', () => {
+    const unrated = renderCard({ ...sampleProduct, rating: 0, reviewCount: 0 });
+    expect(unrated).not.toContain('>0.0</span>');
+    expect(unrated).toContain('₹499');
+    expect(unrated).toContain('₹799');
+    expect(unrated).toContain('Save 38%');
+
+    const reviewed = renderCard({ ...sampleProduct, rating: 4.7, reviewCount: 12 }, 'list');
+    expect(reviewed).toContain('4.7');
+    expect(reviewed).toContain('(12 reviews)');
+  });
+
   it.each(['grid', 'list', 'shelf'] as const)('offers Go to Cart for an in-cart product in %s cards', (layoutMode) => {
     const inCart = renderCard(sampleProduct, layoutMode, false, true);
     const notInCart = renderCard(sampleProduct, layoutMode, false, false);

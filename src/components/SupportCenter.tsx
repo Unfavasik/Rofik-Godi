@@ -175,7 +175,7 @@ export const SupportCenter: React.FC<{
 
   if (!isAuthenticated) {
     return (
-      <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl flex-col justify-center px-4 py-8">
+      <main className="mx-auto flex min-h-dvh w-full max-w-none flex-col justify-center px-4 py-8">
         <button
           type="button"
           onClick={onBack}
@@ -202,7 +202,7 @@ export const SupportCenter: React.FC<{
   }
 
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-80px)] w-full max-w-6xl flex-col px-3 pb-6 pt-3 sm:px-5 sm:pt-5">
+    <main className="mx-auto flex min-h-dvh w-full max-w-none flex-1 flex-col bg-white px-3 pb-6 pt-3 sm:px-5 sm:pt-5">
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
         <div className="flex min-w-0 items-center gap-3">
           <button
@@ -250,7 +250,7 @@ export const SupportCenter: React.FC<{
       )}
 
       <div className="grid min-h-[65vh] flex-1 gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className={`${selectedId || showNewRequest ? 'hidden lg:flex' : 'flex'} min-h-0 flex-col rounded-2xl border border-slate-200 bg-white shadow-sm`}>
+        <aside className={`${selectedId || showNewRequest ? 'hidden lg:flex' : 'flex'} min-h-0 flex-col bg-white lg:rounded-2xl lg:border lg:border-slate-200 lg:shadow-sm`}>
           <div className="border-b border-slate-100 p-3">
             <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
               <Search className="h-4 w-4 text-slate-400" />
@@ -263,7 +263,7 @@ export const SupportCenter: React.FC<{
               />
             </label>
           </div>
-          <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
+          <div className="min-h-0 flex-1 space-y-0 overflow-y-auto p-0 lg:space-y-1 lg:p-2">
             {loading ? (
               <div role="status" className="flex min-h-40 items-center justify-center gap-2 text-xs font-semibold text-slate-500">
                 <LoaderCircle className="h-4 w-4 animate-spin" /> Loading requests…
@@ -274,7 +274,7 @@ export const SupportCenter: React.FC<{
                   key={request.id}
                   type="button"
                   onClick={() => openRequest(request.id)}
-                  className={`w-full rounded-xl p-3 text-left transition ${selectedId === request.id ? 'bg-rose-50 ring-1 ring-rose-200' : 'hover:bg-slate-50'}`}
+                  className={`w-full border-b border-slate-100 px-3.5 py-4 text-left transition hover:bg-slate-50 lg:rounded-xl lg:border-0 lg:p-3 ${selectedId === request.id ? 'bg-rose-50 lg:ring-1 lg:ring-rose-200' : ''}`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="line-clamp-1 text-xs font-bold text-slate-900">{request.subject}</span>

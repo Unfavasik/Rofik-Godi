@@ -49,8 +49,9 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
-import { getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
+import { getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
 import { signOutCurrentDevice } from './lib/authLogout';
+import { CUSTOMER_PREFERENCES_CHANGED_EVENT, isNotificationEnabledByPreferences, prefersHapticFeedback, readCustomerAppPreferences } from './lib/customerPreferences';
 import { useAuth } from './hooks/useAuth';
 import { useCart } from './hooks/useCart';
 import { useCatalog } from './hooks/useCatalog';
@@ -86,6 +87,10 @@ export default function App() {
   } = useAuth();
   const adminStorefrontRequested = useRef(false);
   const protectedRouteAfterAuth = useRef<string | null>(null);
+  const [guestWelcomeComplete, setGuestWelcomeComplete] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [loginModalReason, setLoginModalReason] = useState('Please login to place your order.');
+  const [pendingCheckoutAfterLogin, setPendingCheckoutAfterLogin] = useState(false);
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>(
     'signup',
   );
@@ -98,6 +103,24 @@ export default function App() {
     [location.pathname, navigate],
   );
 
+  const finishWelcomeOnboarding = () => {
+    setGuestWelcomeComplete(true);
+    const pendingPath = protectedRouteAfterAuth.current;
+    goToPhase('main');
+    if (!pendingPath || !requiresCustomerAuthentication(pendingPath)) {
+      protectedRouteAfterAuth.current = null;
+      return;
+    }
+    const kind = resolveAppRoute(pendingPath).kind;
+    setLoginModalReason(kind === 'orders'
+      ? 'Sign in to view your orders.'
+      : kind === 'support' || kind === 'contact-support'
+        ? 'Sign in to continue to customer support.'
+        : 'Please sign in to place your order.');
+    if (kind === 'checkout') setPendingCheckoutAfterLogin(true);
+    setIsLoginModalOpen(true);
+  };
+
   const [notificationCount, setNotificationCount] = useState(0);
   const refreshNotificationCount = () => {
     if (currentUser.isGuest) {
@@ -105,7 +128,10 @@ export default function App() {
       return;
     }
     void listMyNotifications(currentUser.id).then((notifications) => {
-      setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
+      const preferences = readCustomerAppPreferences(currentUser.id).notifications;
+      setNotificationCount(notifications.filter((notification) =>
+        !notification.read_at && isNotificationEnabledByPreferences(preferences, notification),
+      ).length);
     }).catch(() => setNotificationCount(0));
   };
   useEffect(() => {
@@ -119,11 +145,16 @@ export default function App() {
     const notificationClient = supabase;
     const refreshCount = () => {
       void listMyNotifications(currentUser.id).then((notifications) => {
-        if (active)
-          setNotificationCount(notifications.filter((notification) => !notification.read_at).length);
+        if (active) {
+          const preferences = readCustomerAppPreferences(currentUser.id).notifications;
+          setNotificationCount(notifications.filter((notification) =>
+            !notification.read_at && isNotificationEnabledByPreferences(preferences, notification),
+          ).length);
+        }
       }).catch(() => { if (active) setNotificationCount(0); });
     };
     refreshCount();
+    window.addEventListener(CUSTOMER_PREFERENCES_CHANGED_EVENT, refreshCount);
     const channel = notificationClient
       .channel(`notifications-user-${currentUser.id}`)
       .on('postgres_changes', {
@@ -135,14 +166,10 @@ export default function App() {
       .subscribe();
     return () => {
       active = false;
+      window.removeEventListener(CUSTOMER_PREFERENCES_CHANGED_EVENT, refreshCount);
       void notificationClient.removeChannel(channel);
     };
   }, [currentUser.id, currentUser.isGuest]);
-
-  // Login Required Modal State
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [loginModalReason, setLoginModalReason] = useState('Please login to place your order.');
-  const [pendingCheckoutAfterLogin, setPendingCheckoutAfterLogin] = useState(false);
 
   // Navigation & View State
   const routeToTab = useCallback((pathname: string): RouteTab => resolveAppRoute(pathname).tab, []);
@@ -182,16 +209,27 @@ export default function App() {
       goToPhase('onboarding');
       return;
     }
-    if (
-      authStatus === 'UNAUTHENTICATED' &&
-      !publicAuthPath && !publicInfoPath &&
-      route !== '/admin' &&
-      appPhase !== 'onboarding'
-    ) {
-      protectedRouteAfterAuth.current = location.pathname;
-      goToPhase('onboarding');
+    if (authStatus !== 'UNAUTHENTICATED' || publicAuthPath || publicInfoPath || isAdminPath(route)) return;
+
+    if (!guestWelcomeComplete) {
+      if (requiresCustomerAuthentication(route)) protectedRouteAfterAuth.current = location.pathname;
+      if (appPhase !== 'onboarding') goToPhase('onboarding');
+      return;
     }
-  }, [authStatus, isAdmin, location.pathname, appPhase, navigate, goToPhase]);
+
+    if (requiresCustomerAuthentication(route)) {
+      protectedRouteAfterAuth.current = location.pathname;
+      const kind = resolveAppRoute(route).kind;
+      setLoginModalReason(kind === 'orders'
+        ? 'Sign in to view your orders.'
+        : kind === 'support' || kind === 'contact-support'
+          ? 'Sign in to continue to customer support.'
+          : 'Please sign in to place your order.');
+      if (kind === 'checkout') setPendingCheckoutAfterLogin(true);
+      setIsLoginModalOpen(true);
+      navigate('/home', { replace: true });
+    }
+  }, [authStatus, isAdmin, location.pathname, appPhase, navigate, goToPhase, guestWelcomeComplete]);
 
   useEffect(() => {
     if (isAdminPath(location.pathname)) return;
@@ -524,6 +562,12 @@ export default function App() {
     setCheckoutQuote(null);
     setIsCartOpen(false);
     setSelectedProduct(null);
+    if (currentUser.isGuest) {
+      setLoginModalReason('Please sign in to place your order.');
+      setPendingCheckoutAfterLogin(true);
+      setIsLoginModalOpen(true);
+      return;
+    }
     setIsCheckoutOpen(true);
     navigate('/checkout');
   };
@@ -659,6 +703,10 @@ export default function App() {
     setNotificationCount(0);
     setPendingCheckoutAfterLogin(false);
     setIsLoginModalOpen(false);
+    setIsCheckoutOpen(false);
+    setIsCartOpen(false);
+    protectedRouteAfterAuth.current = null;
+    setGuestWelcomeComplete(false);
     setAuthStatus('UNAUTHENTICATED');
     goToPhase('onboarding');
     if (!signOutSucceeded) console.warn('Supabase local sign-out could not be confirmed.');
@@ -686,7 +734,16 @@ export default function App() {
     [navigate],
   );
 
-  // Phase 1: Product introduction. Once completed, open the app directly.
+  // Haptics are an optional progressive enhancement: browsers without Vibration API stay silent.
+  const handleAppHapticTap = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!prefersHapticFeedback(currentUser.id) || typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return;
+    const target = event.target instanceof Element ? event.target : null;
+    const control = target?.closest('button, a[href], [role="button"], [role="switch"], input[type="checkbox"], input[type="radio"]');
+    if (!control || control.matches(':disabled, [aria-disabled="true"]')) return;
+    try { navigator.vibrate(10); } catch { /* Unsupported devices remain usable without haptics. */ }
+  };
+
+  // Phase 1: Product introduction. On each fresh unauthenticated app open, complete this before guest browsing.
   if (isAdminPath(location.pathname)) {
     return (
       <AdminAccessGate
@@ -719,14 +776,14 @@ export default function App() {
   if (authStatus === 'AUTH_LOADING') {
     return <SplashScreen />;
   }
-  if (authStatus === 'UNAUTHENTICATED' && appPhase === 'main') {
-    return <Onboarding onFinish={() => goToPhase('auth')} />;
+  if (authStatus === 'UNAUTHENTICATED' && appPhase === 'main' && !guestWelcomeComplete) {
+    return <Onboarding onFinish={finishWelcomeOnboarding} />;
   }
   if (authStatus === 'AUTHENTICATED' && appPhase !== 'main') {
     return <SplashScreen />;
   }
   if (appPhase === 'onboarding') {
-    return <Onboarding onFinish={() => goToPhase('auth')} />;
+    return <Onboarding onFinish={finishWelcomeOnboarding} />;
   }
 
   // Account creation starts with the dedicated Rofik welcome flow.
@@ -747,9 +804,7 @@ export default function App() {
         <AuthScreen
           initialMode={authInitialMode}
           onSuccess={handleLoginSuccess}
-          onBack={() => {
-            goToPhase('onboarding');
-          }}
+          onBack={() => goToPhase(guestWelcomeComplete ? 'main' : 'onboarding')}
           onOpenTerms={() => openPageRoute('/terms-and-conditions')}
           onOpenPrivacy={() => openPageRoute('/privacy-policy')}
         />
@@ -761,18 +816,20 @@ export default function App() {
   // Phase 4: Main Application (Home / Shop / Account / Cart / Guest Mode)
   const isNotificationPage = activeTab === 'notifications';
   const isShopPage = activeTab === 'shop';
+  const isSupportPage = resolvedRoute.kind === 'support' || resolvedRoute.kind === 'contact-support';
+  const hidesBottomNavigation = isNotificationPage || isShopPage || isSupportPage;
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex justify-center selection:bg-[#D9232D] selection:text-white font-sans antialiased text-[#1E232A]">
       {/* App Container (Mobile Frame or Full Width based on toggle) */}
       <div
+        onClickCapture={handleAppHapticTap}
         className={`w-full bg-[#FDFDFD] min-h-screen flex flex-col relative shadow-2xl transition-all duration-300 ${
-          isNotificationPage || isShopPage ? '' : 'pb-28'
+          hidesBottomNavigation ? '' : 'pb-28'
         } ${isMobileFrameMode ? 'max-w-[440px]' : 'max-w-4xl'}`}
       >
         {/* Main Header */}
-        {!isNotificationPage &&
-          !isShopPage &&
+        {!hidesBottomNavigation &&
           activeTab !== 'search' &&
           activeTab !== 'account' &&
           !['cart', 'wishlist', 'custom'].includes(activeTab) && (
@@ -819,6 +876,10 @@ export default function App() {
             onBack={() => setActiveTab('home')}
             onNotificationsChanged={refreshNotificationCount}
             onOpenShop={() => setActiveTab('shop')}
+            products={catalogProducts}
+            onOpenProduct={openProductRoute}
+            onOpenSupportRequest={(requestId) => navigate(`/support/${encodeURIComponent(requestId)}`)}
+            onOpenContactSupport={() => navigate('/contact-support', { state: { returnTo: '/notifications' } })}
             onOpenMyOrders={(orderNumber) => {
               navigate(`/my-orders/${encodeURIComponent(orderNumber)}`);
             }}
@@ -874,8 +935,9 @@ export default function App() {
                 )
               }
               onOpenLogin={() => {
-                setAuthInitialMode('signup');
-                goToPhase('account-onboarding');
+                protectedRouteAfterAuth.current = location.pathname;
+                setLoginModalReason('Sign in or create an account to continue.');
+                setIsLoginModalOpen(true);
               }}
               onLogout={handleLogout}
               onBackToHome={() => {
@@ -883,7 +945,7 @@ export default function App() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               onOpenWishlist={openWishlistPage}
-              routeModal={resolvedRoute.kind === 'orders' ? 'orders' : resolvedRoute.kind === 'settings' ? 'settings' : resolvedRoute.kind === 'support' ? 'support' : null}
+              routeModal={resolvedRoute.kind === 'orders' ? 'orders' : resolvedRoute.kind === 'settings' ? 'settings' : resolvedRoute.kind === 'support' ? 'support' : resolvedRoute.kind === 'contact-support' ? 'contact-support' : null}
               initialOrderNumber={resolvedRoute.kind === 'orders' ? resolvedRoute.orderNumber : null}
               initialSupportRequestId={resolvedRoute.kind === 'support' ? resolvedRoute.requestId : null}
               onOpenOrdersPage={() => navigate('/my-orders')}
@@ -892,6 +954,10 @@ export default function App() {
               onOpenSettingsPage={() => navigate('/settings')}
               onOpenSupportPage={() => navigate('/support')}
               onSelectSupportRequest={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/support')}
+              onBackFromContactSupport={() => {
+                const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
+                navigate(returnTo === '/notifications' ? returnTo : '/profile');
+              }}
               onOpenPrivacyPage={() => openPageRoute('/privacy-policy')}
               onOpenTermsPage={() => openPageRoute('/terms-and-conditions')}
               onExitRoutedPage={() => navigate('/profile')}
@@ -1345,8 +1411,7 @@ export default function App() {
         </Suspense>
 
         {/* Bottom Tab Bar Navigation */}
-        {!isNotificationPage &&
-          !isShopPage &&
+        {!hidesBottomNavigation &&
           activeTab !== 'search' &&
           !['cart', 'wishlist', 'custom'].includes(activeTab) && (
             <BottomNav
@@ -1519,11 +1584,14 @@ export default function App() {
           onClose={() => {
             setIsLoginModalOpen(false);
             setPendingCheckoutAfterLogin(false);
+            protectedRouteAfterAuth.current = null;
           }}
           reason={loginModalReason}
           onOpenAuth={(mode) => {
-            setAuthInitialMode(mode || 'signup');
-            goToPhase('auth');
+            const nextMode = mode || 'signup';
+            setIsLoginModalOpen(false);
+            setAuthInitialMode(nextMode);
+            goToPhase(nextMode === 'signup' ? 'account-onboarding' : 'auth');
           }}
         /></Suspense>}
         <Outlet />

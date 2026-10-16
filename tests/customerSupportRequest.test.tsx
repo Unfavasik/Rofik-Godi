@@ -80,6 +80,20 @@ describe('customer support request', () => {
     expect(html).toContain('aria-label="Support message"');
   });
 
+  it('renders the compact Contact Support form with optional order, image upload and a 500-character limit', () => {
+    const html = renderToStaticMarkup(
+      <CustomerSupportRequestForm isAuthenticated expectedUserId="customer-1" compact />,
+    );
+    expect(html).toContain('Subject');
+    expect(html).toContain('Order ID');
+    expect(html).toContain('aria-label="Support subject"');
+    expect(html).toContain('aria-label="Order ID"');
+    expect(html).toContain('Add Image');
+    expect(html).toContain('0/500');
+    expect(html).toContain('Send Message');
+    expect(html).not.toContain('aria-label="Support category"');
+  });
+
   it('enforces the private attachment count, MIME type, and file-size limits', () => {
     const png = new File(['image bytes'], 'damage.png', { type: 'image/png' });
     const invalid = new File(['script'], 'script.js', { type: 'application/javascript' });

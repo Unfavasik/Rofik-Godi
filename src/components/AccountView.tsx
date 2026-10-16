@@ -24,6 +24,7 @@ import { ReviewComposer } from './ReviewComposer';
 import { CustomerOrdersModal } from './CustomerOrdersModal';
 import { SettingsView } from './SettingsView';
 import { SupportCenter } from './SupportCenter';
+import { ContactSupportView } from './ContactSupportView';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { WORKSHOP_INFO } from '../data/products';
@@ -51,10 +52,11 @@ interface AccountViewProps {
   onOpenSettingsPage?: () => void;
   onOpenSupportPage?: () => void;
   onSelectSupportRequest?: (requestId: string) => void;
+  onBackFromContactSupport?: () => void;
   onOpenPrivacyPage?: () => void;
   onOpenTermsPage?: () => void;
   onExitRoutedPage?: () => void;
-  routeModal?: 'orders' | 'settings' | 'support' | null;
+  routeModal?: 'orders' | 'settings' | 'support' | 'contact-support' | null;
   initialOrderNumber?: string | null;
   initialSupportRequestId?: string | null;
   onProfileChange?: (profile: Pick<UserProfile, 'name' | 'phone' | 'avatar' | 'vehicle'>) => void;
@@ -77,6 +79,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
   onOpenSettingsPage,
   onOpenSupportPage,
   onSelectSupportRequest,
+  onBackFromContactSupport,
   onOpenPrivacyPage,
   onOpenTermsPage,
   onExitRoutedPage,
@@ -89,8 +92,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
     if (onBackToHome) onBackToHome();
     else if (onContinueShopping) onContinueShopping();
   };
-  const [activeModal, setActiveModal] = useState<'orders' | 'pickupStore' | 'settings' | 'support' | 'profile' | 'privacy' | 'terms' | null>(null);
-  const previousRouteModal = useRef<'orders' | 'settings' | 'support' | null>(null);
+  const [activeModal, setActiveModal] = useState<'orders' | 'pickupStore' | 'settings' | 'support' | 'contact-support' | 'profile' | 'privacy' | 'terms' | null>(null);
+  const previousRouteModal = useRef<'orders' | 'settings' | 'support' | 'contact-support' | null>(null);
   const [initialOrderNumberForModal, setInitialOrderNumberForModal] = useState<string | null>(null);
 
   useEffect(() => {
@@ -357,6 +360,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
   const handleProtectedAction = (modalType: 'orders' | 'pickupStore' | 'settings' | 'profile' | 'privacy' | 'terms') => {
     if (isGuest && (modalType === 'orders' || modalType === 'pickupStore' || modalType === 'profile')) {
+      if (modalType === 'orders' && onOpenOrdersPage) return onOpenOrdersPage();
       if (onOpenLogin) onOpenLogin();
       else if (modalType !== 'profile') setActiveModal(modalType);
     } else {
@@ -381,6 +385,16 @@ export const AccountView: React.FC<AccountViewProps> = ({
         onSelectRequest={onSelectSupportRequest ?? (() => undefined)}
       />
     );
+  }
+
+  if (activeModal === 'contact-support') {
+    return <ContactSupportView
+      currentUserId={currentUser?.id || ''}
+      isAuthenticated={Boolean(currentUser && !currentUser.isGuest)}
+      onBack={onBackFromContactSupport ?? closeRoutedPage}
+      onOpenLogin={onOpenLogin}
+      onOpenSupportRequest={onSelectSupportRequest}
+    />;
   }
 
   if (activeModal === 'settings') {

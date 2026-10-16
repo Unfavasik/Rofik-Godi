@@ -63,7 +63,7 @@ import { PRODUCTS } from '../data/products';
 import type { Product } from '../types';
 import { supabase } from '../lib/supabase';
 import { getOrderStatusLabel, isOrderComplete } from '../lib/orderPresentation';
-import { getAdminCustomerIdFromPath, getAdminSectionFromPath, getPathForAdminCustomer, getPathForAdminSection, type AdminSectionRoute } from '../lib/appRoutes';
+import { getAdminCustomerIdFromPath, getAdminOrderIdFromPath, getAdminSectionFromPath, getPathForAdminCustomer, getPathForAdminOrder, getPathForAdminSection, type AdminSectionRoute } from '../lib/appRoutes';
 
 type AdminSection = AdminSectionRoute;
 type OrderStatus = AdminOrderRecord['status'];
@@ -283,13 +283,38 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
   useEffect(() => {
     const customerId = getAdminCustomerIdFromPath(location.pathname);
     setSelectedCustomerId(customerId);
+    const orderId = getAdminOrderIdFromPath(location.pathname);
     const routeSection = getAdminSectionFromPath(location.pathname);
     if (!routeSection) return;
     setSection(routeSection);
-    if (customerId) return;
+    if (customerId || orderId) return;
     const canonicalPath = getPathForAdminSection(routeSection);
     if (location.pathname !== canonicalPath) navigate(canonicalPath, { replace: true });
   }, [location.pathname, navigate]);
+  useEffect(() => {
+    const orderId = getAdminOrderIdFromPath(location.pathname);
+    if (!orderId) {
+      setSelectedOrder(null);
+      return;
+    }
+    const normalizedId = orderId.replace(/^#/, '').toLowerCase();
+    const loadedOrder = orders.find((order) => order.orderNumber.toLowerCase() === normalizedId);
+    if (loadedOrder) {
+      setSelectedOrder(loadedOrder);
+      return;
+    }
+    let active = true;
+    void loadAdminOrderById(orderId).then(({ data, error: loadError }) => {
+      if (!active) return;
+      if (loadError || !data) {
+        notify(loadError?.message || 'That order could not be loaded.');
+        navigate(getPathForAdminSection('orders'), { replace: true });
+        return;
+      }
+      setSelectedOrder(data);
+    });
+    return () => { active = false; };
+  }, [location.pathname, navigate, notify, orders]);
   useEffect(() => {
     let active = true;
     if (!selectedCustomerId) {
@@ -331,6 +356,13 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     const path = getPathForAdminSection(next);
     if (location.pathname !== path) navigate(path);
   };
+  const openOrder = (order: AdminOrderRecord) => {
+    setSection('orders');
+    setSidebarOpen(false);
+    setQuery('');
+    setSelectedOrder(order);
+    navigate(getPathForAdminOrder(order.orderNumber));
+  };
   const openActivityOrder = async (event: AdminActivityEvent) => {
     const orderNumber = String(event.details.order_number || '').replace(/^#/, '');
     let order = orders.find((item) => item.orderNumber === orderNumber) || null;
@@ -342,8 +374,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
       }
       order = result.data;
     }
-    goTo('orders');
-    setSelectedOrder(order);
+    openOrder(order);
   };
   const openActivityReview = (event: AdminActivityEvent) => {
     goTo('reviews');
@@ -561,7 +592,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
               setFilter={setOrderFilter}
               onExport={exportOrders}
               onRefresh={() => void refresh()}
-              onSelect={setSelectedOrder}
+              onSelect={openOrder}
               onOpenInvoice={setInvoiceOrder}
               notify={notify}
             />
@@ -601,7 +632,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
                 products={products}
                 isLoading={!customersLoaded}
                 onBack={() => navigate(getPathForAdminSection('customers'))}
-                onOpenOrder={setSelectedOrder}
+                onOpenOrder={openOrder}
               />
             ) : (
               <CustomersView
@@ -680,9 +711,11 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
         <OrderDetails
           order={selectedOrder}
           products={products}
-          onClose={() => setSelectedOrder(null)}
-          onChanged={() => {
+          onClose={() => {
             setSelectedOrder(null);
+            navigate(getPathForAdminSection('orders'));
+          }}
+          onChanged={() => {
             void refresh();
           }}
           notify={notify}

@@ -215,7 +215,7 @@ export function AdminOrderDetails({
         <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:p-5">
           <div className="flex min-w-0 items-center gap-3 text-emerald-800">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white"><FileText className="h-5 w-5" /></span>
-            <div><h3 className="text-sm font-black">Order completed</h3><p className="mt-0.5 text-[11px] leading-relaxed">The customer invoice is ready to view or print.</p></div>
+            <div><h3 className="text-sm font-black">Invoice ready</h3><p className="mt-0.5 text-[11px] leading-relaxed">The customer invoice is ready to view or print.</p></div>
           </div>
           <button type="button" onClick={() => setShowInvoice(true)} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-700 px-3.5 text-xs font-black text-white transition hover:bg-emerald-800"><Printer className="h-4 w-4" />Open invoice</button>
         </section>
@@ -356,8 +356,8 @@ export function AdminOrderDetails({
                 <ArrowLeft className="h-4 w-4" />
               </button>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#D9232D]">Rofik Godi Centre · Order</p>
-                <h2 id="admin-order-details-title" className="mt-0.5 truncate text-base font-black tracking-tight text-[#0F172A] sm:text-lg">Order Details <span className="ml-1 font-mono text-xs font-bold text-slate-500 sm:text-sm">{order.id}</span></h2>
+                <h2 id="admin-order-details-title" className="truncate text-base font-black tracking-tight text-[#0F172A] sm:text-lg">Order Details</h2>
+                <p className="mt-0.5 flex min-w-0 items-center gap-1 text-[10px] text-slate-500"><span className="shrink-0 font-semibold">Order ID</span><span className="truncate font-mono font-bold text-slate-700">#{order.orderNumber}</span></p>
               </div>
               <StatusBadge status={order.status} />
               <details className="relative shrink-0">
@@ -392,7 +392,7 @@ export function AdminOrderDetails({
           <footer className="sticky bottom-0 z-20 shrink-0 border-t border-slate-200 bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:px-6">
             <div className="flex items-center justify-between gap-3">
               {order.status === 'COMPLETED' ? (
-                <div className="flex min-h-11 min-w-0 items-center gap-2 text-xs font-extrabold text-emerald-700"><CheckCircle2 className="h-4 w-4 shrink-0" /><span>Order completed</span></div>
+                <div className="flex min-h-11 min-w-0 items-center gap-2 text-xs font-extrabold text-emerald-700"><CheckCircle2 className="h-4 w-4 shrink-0" /><span>Completed</span></div>
               ) : hasInvoice ? (
                 <button type="button" onClick={() => setShowInvoice(true)} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-extrabold text-slate-700 transition hover:bg-slate-50 active:scale-[0.98]"><Printer className="h-4 w-4" />Invoice / Print</button>
               ) : order.status === 'CANCELLED' ? (

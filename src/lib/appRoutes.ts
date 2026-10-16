@@ -6,9 +6,9 @@ export const APP_ROUTE_PATHS = [
   '/', '/home', '/shop', '/search', '/custom', '/wishlist', '/cart', '/checkout',
   '/profile', '/account', '/my-orders', '/myorder', '/my-orders/:orderNumber', '/myorder/:orderNumber',
   '/notifications', '/notification', '/shop/products/:slug', '/products/:slug', '/product/:slug',
-  '/support', '/support/:requestId',
+  '/support', '/support/:requestId', '/contact-support',
   '/settings', '/privacy-policy', '/privacy', '/terms-and-conditions', '/terms', '/store', '/store-info',
-  '/admin', '/admin/dashboard', '/admin/orders', '/admin/products', '/admin/categories', '/admin/customers',
+  '/admin', '/admin/dashboard', '/admin/orders', '/admin/orders/:orderId', '/admin/products', '/admin/categories', '/admin/customers',
   '/admin/customers/:customerId', '/admin/reviews', '/admin/coupons', '/admin/marketing', '/admin/banners', '/admin/notifications', '/admin/activity',
   '/admin/reports', '/admin/settings', '/Onboarding', '/onboarding', '/signup', '/signup/onboarding', '/signup/loading',
   '/auth/callback', '/example/shop',
@@ -18,9 +18,11 @@ export type ResolvedAppRoute =
   | { kind: 'tab'; tab: RouteTab; canonicalPath: string }
   | { kind: 'admin'; tab: 'home'; section: AdminSectionRoute; canonicalPath: string }
   | { kind: 'admin-customer'; tab: 'home'; customerId: string; canonicalPath: string }
+  | { kind: 'admin-order'; tab: 'home'; orderId: string; canonicalPath: string }
   | { kind: 'checkout'; tab: 'cart'; canonicalPath: '/checkout' }
   | { kind: 'orders'; tab: 'account'; orderNumber: string | null; canonicalPath: string }
   | { kind: 'support'; tab: 'account'; requestId: string | null; canonicalPath: string }
+  | { kind: 'contact-support'; tab: 'account'; canonicalPath: '/contact-support' }
   | { kind: 'product'; tab: 'shop'; slug: string; canonicalPath: string }
   | { kind: 'settings'; tab: 'account'; canonicalPath: '/settings' }
   | { kind: 'privacy'; tab: 'home'; canonicalPath: '/privacy-policy' }
@@ -61,6 +63,15 @@ export function getPathForAdminCustomer(customerId: string): string {
   return `/admin/customers/${encodeURIComponent(customerId)}`;
 }
 
+export function getPathForAdminOrder(orderId: string): string {
+  return `/admin/orders/${encodeURIComponent(orderId.replace(/^#/, ''))}`;
+}
+
+export function getAdminOrderIdFromPath(pathname: string): string | null {
+  const orderId = trimPath(pathname).match(/^\/admin\/orders\/([^/]+)$/i)?.[1];
+  return orderId ? decodeSegment(orderId) : null;
+}
+
 export function getAdminCustomerIdFromPath(pathname: string): string | null {
   const customerId = trimPath(pathname).match(/^\/admin\/customers\/([^/]+)$/i)?.[1];
   return customerId ? decodeSegment(customerId) : null;
@@ -69,6 +80,7 @@ export function getAdminCustomerIdFromPath(pathname: string): string | null {
 export function getAdminSectionFromPath(pathname: string): AdminSectionRoute | null {
   const path = trimPath(pathname).toLowerCase();
   if (path === '/admin') return 'overview';
+  if (/^\/admin\/orders\/[^/]+$/i.test(path)) return 'orders';
   if (/^\/admin\/customers\/[^/]+$/i.test(path)) return 'customers';
   const slug = path.match(/^\/admin\/([^/]+)$/)?.[1];
   return slug ? adminSectionsBySlug[slug] || null : null;
@@ -100,6 +112,15 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
   }
   if (path === '/auth/callback') return { kind: 'tab', tab: 'home', canonicalPath: path };
 
+  const adminOrderId = getAdminOrderIdFromPath(path);
+  if (adminOrderId) {
+    return {
+      kind: 'admin-order',
+      tab: 'home',
+      orderId: adminOrderId,
+      canonicalPath: getPathForAdminOrder(adminOrderId),
+    };
+  }
   const adminCustomerId = getAdminCustomerIdFromPath(path);
   if (adminCustomerId) {
     return {
@@ -113,6 +134,7 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
   if (adminSection) return { kind: 'admin', tab: 'home', section: adminSection, canonicalPath: getPathForAdminSection(adminSection) };
   if (path === '/checkout') return { kind: 'checkout', tab: 'cart', canonicalPath: '/checkout' };
   if (path === '/settings') return { kind: 'settings', tab: 'account', canonicalPath: '/settings' };
+  if (path.toLowerCase() === '/contact-support') return { kind: 'contact-support', tab: 'account', canonicalPath: '/contact-support' };
   if (path === '/privacy-policy' || path === '/privacy') return { kind: 'privacy', tab: 'home', canonicalPath: '/privacy-policy' };
   if (path === '/terms-and-conditions' || path === '/terms') return { kind: 'terms', tab: 'home', canonicalPath: '/terms-and-conditions' };
   if (path === '/store' || path === '/store-info') return { kind: 'store', tab: 'home', canonicalPath: '/store' };
@@ -135,6 +157,11 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
   }
 
   return { kind: 'not-found', tab: 'home', canonicalPath: '/home' };
+}
+
+export function requiresCustomerAuthentication(pathname: string): boolean {
+  const kind = resolveAppRoute(pathname).kind;
+  return kind === 'checkout' || kind === 'orders' || kind === 'support' || kind === 'contact-support';
 }
 
 export function getPathForProduct(slug: string): string {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getAdminCustomerIdFromPath, getAdminSectionFromPath, getPathForAdminCustomer, getPathForAdminSection, getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, resolveAppRoute, shouldRedirectAdminToWorkspace } from '../src/lib/appRoutes';
+import { getAdminCustomerIdFromPath, getAdminOrderIdFromPath, getAdminSectionFromPath, getPathForAdminCustomer, getPathForAdminOrder, getPathForAdminSection, getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace } from '../src/lib/appRoutes';
 
 describe('main route preservation', () => {
   it.each([
@@ -41,6 +41,11 @@ describe('main route preservation', () => {
     expect(resolveAppRoute('/support')).toMatchObject({ kind: 'support', tab: 'account', requestId: null, canonicalPath: '/support' });
     expect(resolveAppRoute('/support/request-123')).toMatchObject({ kind: 'support', tab: 'account', requestId: 'request-123', canonicalPath: '/support/request-123' });
     expect(getPathForPhase('main', '/support/request-123')).toBe('/support/request-123');
+  });
+
+  it('resolves the dedicated Contact Support page to the customer account', () => {
+    expect(resolveAppRoute('/contact-support')).toMatchObject({ kind: 'contact-support', tab: 'account', canonicalPath: '/contact-support' });
+    expect(getPathForPhase('main', '/contact-support')).toBe('/contact-support');
   });
 
   it('uses /shop/products/:slug as the canonical product route and normalizes legacy paths', () => {
@@ -101,6 +106,23 @@ describe('admin workspace redirect policy', () => {
     expect(isAdminPath(path)).toBe(true);
   });
 
+  it('resolves an admin order detail as a direct route and preserves its order number', () => {
+    const orderNumber = 'RGC-ABC123';
+    const path = getPathForAdminOrder(orderNumber);
+    expect(path).toBe(`/admin/orders/${orderNumber}`);
+    expect(getAdminOrderIdFromPath(path)).toBe(orderNumber);
+    expect(getAdminSectionFromPath(path)).toBe('orders');
+    expect(resolveAppRoute(path)).toMatchObject({
+      kind: 'admin-order',
+      tab: 'home',
+      orderId: orderNumber,
+      canonicalPath: path,
+    });
+    expect(getPathForPhase('main', path)).toBe(path);
+    expect(isAdminPath(path)).toBe(true);
+    expect(getPathForAdminOrder(`#${orderNumber}`)).toBe(path);
+  });
+
   it('canonicalizes admin aliases and identifies nested admin paths', () => {
     expect(resolveAppRoute('/admin/dashboard').canonicalPath).toBe('/admin');
     expect(resolveAppRoute('/admin/marketing').canonicalPath).toBe('/admin/coupons');
@@ -118,4 +140,16 @@ describe('admin workspace redirect policy', () => {
     expect(shouldRedirectAdminToWorkspace('/home', false)).toBe(true);
     expect(shouldRedirectAdminToWorkspace('/admin', false)).toBe(false);
   });
+});
+
+describe('guest access policy', () => {
+  it.each(['/checkout', '/my-orders', '/my-orders/RGC-ABC123', '/support', '/support/ticket-123', '/contact-support'])(
+    'requires customer authentication for %s',
+    (path) => expect(requiresCustomerAuthentication(path)).toBe(true),
+  );
+
+  it.each(['/home', '/shop', '/search', '/custom', '/wishlist', '/cart', '/notifications', '/profile', '/settings', '/store', '/product/seat-cover'])(
+    'allows guests to open %s',
+    (path) => expect(requiresCustomerAuthentication(path)).toBe(false),
+  );
 });

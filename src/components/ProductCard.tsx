@@ -3,6 +3,11 @@ import { Product } from '../types';
 import { Heart, Plus, Star, ShoppingCart, ImageOff } from 'lucide-react';
 import { motion } from 'motion/react';
 
+const formatPrice = (value: number) => `₹${value.toLocaleString('en-IN')}`;
+const discountPercent = (product: Product) => product.originalPrice > product.price
+  ? Math.round((1 - product.price / product.originalPrice) * 100)
+  : 0;
+
 interface ProductCardProps {
   product: Product;
   onSelectProduct: (p: Product) => void;
@@ -81,11 +86,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   if (layoutMode === 'list') {
     return (
       <article
-        className="w-full bg-white rounded-2xl p-3 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.06)] hover:border-gray-200 flex items-center justify-between gap-3 relative group cursor-pointer transition-all duration-200 select-none"
+        className="w-full bg-white rounded-2xl p-2.5 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.06)] hover:border-gray-200 flex items-center justify-between gap-2.5 relative group cursor-pointer transition-all duration-200 select-none"
       >
         <ProductCardOpenButton product={product} onSelectProduct={onSelectProduct} />
         {/* Left: Thumbnail with Badge */}
-        <div className="relative z-10 pointer-events-none w-20 h-20 sm:w-24 sm:h-24 bg-[#F4F4F6] rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center">
+        <div className="relative z-10 pointer-events-none w-[72px] h-[72px] sm:w-20 sm:h-20 bg-[#F4F4F6] rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center">
           <ProductImage src={product.image} alt={product.title} variant="list" />
 
           {badgeLabel && (
@@ -100,19 +105,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Middle: Title, Subtitle, Rating, Price */}
         <div className="relative z-10 pointer-events-none flex-1 min-w-0 pr-1">
-          <h4 className="text-[13.5px] font-bold text-gray-900 group-hover:text-[#D9232D] transition-colors leading-tight break-words">
+          <h4 className="line-clamp-2 text-[12px] font-bold text-gray-900 group-hover:text-[#D9232D] transition-colors leading-tight break-words">
             {product.title}
           </h4>
           {!product.inStock && <p className="mt-1 text-[10px] font-black uppercase text-amber-700">Out of stock</p>}
 
           {product.subtitle && (
-            <p className="text-[11px] text-gray-400 font-medium mt-0.5 break-words">
+            <p className="line-clamp-1 text-[10px] text-gray-500 font-medium mt-0.5 break-words">
               {product.subtitle}
             </p>
           )}
 
           {/* Rating */}
-          <div className="flex items-center gap-1.5 mt-1">
+          {product.reviewCount > 0 && <div className="flex items-center gap-1.5 mt-1">
             <div className="flex items-center text-amber-500 text-[11px] font-bold">
               <Star className="w-3 h-3 fill-amber-400 text-amber-400 mr-0.5" />
               <span>{product.rating.toFixed(1)}</span>
@@ -120,16 +125,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <span className="text-[10px] text-gray-400 font-medium">
               ({product.reviewCount} reviews)
             </span>
-          </div>
+          </div>}
 
           {/* Price */}
           <div className="flex items-baseline gap-1.5 mt-1.5">
             <span className="text-[15px] font-black text-[#D9232D] leading-none">
-              ₹{product.price}
+              {formatPrice(product.price)}
             </span>
             {product.originalPrice && (
               <span className="text-[11px] text-gray-400 line-through leading-none">
-                ₹{product.originalPrice}
+                {formatPrice(product.originalPrice)}
               </span>
             )}
           </div>
@@ -186,11 +191,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <article
       className={`${
         layoutMode === 'shelf' ? 'flex-shrink-0 w-[148px] sm:w-[160px]' : 'w-full'
-      } bg-white rounded-2xl p-2.5 border border-gray-100 shadow-[0_4px_16px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-gray-200 flex flex-col justify-between relative group cursor-pointer transition-all duration-200 select-none`}
+      } bg-white rounded-2xl p-2 border border-gray-100 shadow-[0_3px_12px_rgba(0,0,0,0.035)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-gray-200 flex flex-col justify-between relative group cursor-pointer transition-all duration-200 select-none`}
     >
       <ProductCardOpenButton product={product} onSelectProduct={onSelectProduct} />
       {/* Card Image & Badges Container */}
-      <div className="relative z-10 pointer-events-none w-full h-[124px] sm:h-[145px] bg-[#F4F4F6] rounded-xl overflow-hidden flex items-center justify-center mb-2">
+      <div className="relative z-10 pointer-events-none w-full h-[112px] sm:h-[132px] bg-[#F4F4F6] rounded-xl overflow-hidden flex items-center justify-center mb-1.5">
         <ProductImage src={product.image} alt={product.title} variant="grid" />
 
         {/* Dynamic Badge (Bestseller, New, Gel, Waterproof, etc.) */}
@@ -218,21 +223,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </button>
 
         {/* Rating overlay pill */}
-        <div className="absolute bottom-1.5 left-2 bg-black/60 backdrop-blur-xs text-white text-[9.5px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+        {product.reviewCount > 0 && <div className="absolute bottom-1.5 left-2 bg-black/60 backdrop-blur-xs text-white text-[9.5px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
           <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
           <span>{product.rating.toFixed(1)}</span>
-        </div>
+        </div>}
       </div>
 
       {/* Product Title */}
-      <h4 className="relative z-10 pointer-events-none text-[12.5px] font-bold text-gray-800 leading-tight mb-0.5 break-words group-hover:text-[#D9232D] transition-colors">
+      <h4 className="relative z-10 pointer-events-none line-clamp-2 min-h-[29px] text-[12px] font-bold text-gray-800 leading-[1.2] mb-0.5 break-words group-hover:text-[#D9232D] transition-colors">
         {product.title}
       </h4>
       {!product.inStock && <p className="relative z-10 pointer-events-none text-[10px] font-black uppercase text-amber-700">Out of stock</p>}
 
       {/* Subtitle / Short Description */}
       {product.subtitle && (
-        <p className="relative z-10 pointer-events-none text-[10.5px] text-gray-400 font-medium mb-1.5 break-words">
+        <p className="relative z-10 pointer-events-none line-clamp-1 text-[10px] text-gray-500 font-medium mb-1 break-words">
           {product.subtitle}
         </p>
       )}
@@ -240,11 +245,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* Price & Action Button */}
       <div className="relative z-10 pointer-events-none flex items-center justify-between mt-auto pt-1 border-t border-gray-50">
         <div className="pointer-events-none flex flex-col">
-          <span className="text-[14.5px] font-black text-[#D9232D] leading-none">
-            ₹{product.price}
+          <span className="text-[14px] font-black text-[#D9232D] leading-none">
+            {formatPrice(product.price)}
           </span>
-          <span className="text-[10px] text-gray-400 line-through leading-none mt-0.5">
-            ₹{product.originalPrice}
+          <span className="mt-1 flex items-center gap-1.5">
+            <span className="text-[9px] text-gray-400 line-through leading-none">{formatPrice(product.originalPrice)}</span>
+            {discountPercent(product) > 0 && <span className="text-[9px] font-bold leading-none text-emerald-700">Save {discountPercent(product)}%</span>}
           </span>
         </div>
 
