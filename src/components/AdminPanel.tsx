@@ -208,6 +208,10 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
   const [metrics, setMetrics] = useState<Record<string, number> | null>(null);
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [activityUnreadCount, setActivityUnreadCount] = useState(0);
+  const [adminUserId, setAdminUserId] = useState('');
+  const [focusProductId, setFocusProductId] = useState<string | null>(null);
+  const [focusCouponId, setFocusCouponId] = useState<string | null>(null);
+  const [focusCampaignId, setFocusCampaignId] = useState<string | null>(null);
   const [toast, setToast] = useState('');
   const [error, setError] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<AdminOrderRecord | null>(null);
@@ -255,6 +259,13 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
   useEffect(() => {
     if (!supabase) return;
     const client = supabase;
+    let active = true;
+    void client.auth.getUser().then(({ data }) => {
+      if (active) setAdminUserId(data.user?.id || '');
+    });
+    const { data: authListener } = client.auth.onAuthStateChange((_event, session) => {
+      if (active) setAdminUserId(session?.user.id || '');
+    });
     const channel = client
       .channel('admin-activity-unread-count')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_activity_events' }, () => {
@@ -263,7 +274,11 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
         });
       })
       .subscribe();
-    return () => { void client.removeChannel(channel); };
+    return () => {
+      active = false;
+      void client.removeChannel(channel);
+      authListener.subscription.unsubscribe();
+    };
   }, []);
   useEffect(() => {
     const customerId = getAdminCustomerIdFromPath(location.pathname);
@@ -339,6 +354,18 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     setSidebarOpen(false);
     setQuery('');
     navigate(getPathForAdminCustomer(event.entity_id));
+  };
+  const openActivityProduct = (event: AdminActivityEvent) => {
+    setFocusProductId(event.entity_id);
+    goTo('products');
+  };
+  const openActivityCoupon = (event: AdminActivityEvent) => {
+    setFocusCouponId(event.entity_id);
+    goTo('marketing');
+  };
+  const openActivityCampaign = (event: AdminActivityEvent) => {
+    setFocusCampaignId(event.entity_id);
+    goTo('notifications');
   };
   const title = (
     {
@@ -545,6 +572,8 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
               onProductsChange={setProducts}
               notify={notify}
               customers={customers}
+              focusProductId={focusProductId}
+              onFocusHandled={() => setFocusProductId(null)}
             />
           )}
           {section === 'categories' && (
@@ -555,6 +584,10 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
               onViewOrder={openActivityOrder}
               onViewReview={openActivityReview}
               onViewCustomer={openActivityCustomer}
+              onViewProduct={openActivityProduct}
+              onViewCoupon={openActivityCoupon}
+              onViewCampaign={openActivityCampaign}
+              adminUserId={adminUserId}
               notify={notify}
             />
           )}
@@ -582,7 +615,13 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
             )
           )}
           {section === 'reviews' && <AdminReviewsView notify={notify} query={query} />}
-          {section === 'marketing' && <CouponManagement notify={notify} />}
+          {section === 'marketing' && (
+            <CouponManagement
+              notify={notify}
+              focusCouponId={focusCouponId}
+              onFocusHandled={() => setFocusCouponId(null)}
+            />
+          )}
           {section === 'banners' && <BannersView notify={notify} />}
           {section === 'notifications' && (
             <NotificationsView
@@ -613,6 +652,8 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
                     })),
                   );
               }}
+              focusCampaignId={focusCampaignId}
+              onFocusHandled={() => setFocusCampaignId(null)}
             />
           )}
           {section === 'reports' && (

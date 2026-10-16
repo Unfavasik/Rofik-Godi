@@ -23,6 +23,7 @@ import { listMyProductReviews, type ProductReviewRecord } from '../lib/supabaseR
 import { ReviewComposer } from './ReviewComposer';
 import { CustomerOrdersModal } from './CustomerOrdersModal';
 import { SettingsView } from './SettingsView';
+import { SupportCenter } from './SupportCenter';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { WORKSHOP_INFO } from '../data/products';
@@ -48,11 +49,14 @@ interface AccountViewProps {
   onSelectOrderRoute?: (orderNumber: string) => void;
   onBackToOrdersRoute?: () => void;
   onOpenSettingsPage?: () => void;
+  onOpenSupportPage?: () => void;
+  onSelectSupportRequest?: (requestId: string) => void;
   onOpenPrivacyPage?: () => void;
   onOpenTermsPage?: () => void;
   onExitRoutedPage?: () => void;
-  routeModal?: 'orders' | 'settings' | null;
+  routeModal?: 'orders' | 'settings' | 'support' | null;
   initialOrderNumber?: string | null;
+  initialSupportRequestId?: string | null;
   onProfileChange?: (profile: Pick<UserProfile, 'name' | 'phone' | 'avatar' | 'vehicle'>) => void;
   products?: Product[];
 }
@@ -71,19 +75,22 @@ export const AccountView: React.FC<AccountViewProps> = ({
   onSelectOrderRoute,
   onBackToOrdersRoute,
   onOpenSettingsPage,
+  onOpenSupportPage,
+  onSelectSupportRequest,
   onOpenPrivacyPage,
   onOpenTermsPage,
   onExitRoutedPage,
   routeModal = null,
   initialOrderNumber,
+  initialSupportRequestId,
   onProfileChange,
 }) => {
   const handleGoHome = () => {
     if (onBackToHome) onBackToHome();
     else if (onContinueShopping) onContinueShopping();
   };
-  const [activeModal, setActiveModal] = useState<'orders' | 'pickupStore' | 'settings' | 'profile' | 'privacy' | 'terms' | null>(null);
-  const previousRouteModal = useRef<'orders' | 'settings' | null>(null);
+  const [activeModal, setActiveModal] = useState<'orders' | 'pickupStore' | 'settings' | 'support' | 'profile' | 'privacy' | 'terms' | null>(null);
+  const previousRouteModal = useRef<'orders' | 'settings' | 'support' | null>(null);
   const [initialOrderNumberForModal, setInitialOrderNumberForModal] = useState<string | null>(null);
 
   useEffect(() => {
@@ -363,6 +370,19 @@ export const AccountView: React.FC<AccountViewProps> = ({
   };
 
 
+  if (activeModal === 'support') {
+    return (
+      <SupportCenter
+        currentUserId={currentUser?.id || ''}
+        isAuthenticated={Boolean(currentUser && !currentUser.isGuest)}
+        initialRequestId={initialSupportRequestId}
+        onBack={closeRoutedPage}
+        onOpenLogin={onOpenLogin}
+        onSelectRequest={onSelectSupportRequest ?? (() => undefined)}
+      />
+    );
+  }
+
   if (activeModal === 'settings') {
     return (
       <SettingsView
@@ -371,6 +391,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
         isAuthenticated={Boolean(currentUser && !currentUser.isGuest)}
         onOpenLogin={onOpenLogin}
         onOpenOrders={onOpenOrdersPage ?? (() => setActiveModal('orders'))}
+        currentUserId={currentUser?.id}
+        onOpenSupportRequests={onOpenSupportPage}
         onOpenWishlist={onOpenWishlist}
         onOpenStoreInfo={onOpenStoreInfo}
         onOpenShop={onOpenShop}

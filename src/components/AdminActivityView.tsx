@@ -9,16 +9,19 @@ import {
   CircleHelp,
   Clock3,
   LoaderCircle,
+  Megaphone,
   MessageSquareText,
   Package,
   RefreshCw,
   Search,
   ShoppingBag,
   Star,
+  Tag,
   UserRoundPlus,
   X,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { SupportConversation } from './SupportConversation';
 import {
   loadAdminActivityEvents,
   markAdminActivityRead,
@@ -28,7 +31,7 @@ import {
   type SupportRequestStatus,
 } from '../lib/supabaseAdminActivity';
 
-type FeedFilter = 'all' | 'orders' | 'support' | 'reviews' | 'customers';
+type FeedFilter = 'all' | 'orders' | 'support' | 'reviews' | 'customers' | 'products' | 'coupons' | 'campaigns';
 type FeedCategory = Exclude<FeedFilter, 'all'>;
 
 const filterOptions: Array<{ id: FeedFilter; label: string }> = [
@@ -37,9 +40,16 @@ const filterOptions: Array<{ id: FeedFilter; label: string }> = [
   { id: 'support', label: 'Support' },
   { id: 'reviews', label: 'Reviews' },
   { id: 'customers', label: 'Customers' },
+  { id: 'products', label: 'Products' },
+  { id: 'coupons', label: 'Coupons' },
+  { id: 'campaigns', label: 'Campaigns' },
 ];
 
 const eventCategory = (event: AdminActivityEvent): FeedCategory => {
+  if (event.event_type.startsWith('coupon_')) return 'coupons';
+  if (event.entity_type === 'coupon') return 'coupons';
+  if (event.entity_type === 'product') return 'products';
+  if (event.entity_type === 'campaign') return 'campaigns';
   if (event.entity_type === 'support_request') return 'support';
   if (event.entity_type === 'review') return 'reviews';
   if (event.entity_type === 'customer') return 'customers';
@@ -62,6 +72,9 @@ const categoryPresentation: Record<
     color: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
     icon: UserRoundPlus,
   },
+  products: { label: 'Product', color: 'bg-indigo-50 text-indigo-700 ring-indigo-100', icon: Package },
+  coupons: { label: 'Coupon', color: 'bg-fuchsia-50 text-fuchsia-700 ring-fuchsia-100', icon: Tag },
+  campaigns: { label: 'Campaign', color: 'bg-cyan-50 text-cyan-700 ring-cyan-100', icon: Megaphone },
 };
 
 const formatDate = (value: string) => {
@@ -110,6 +123,22 @@ const eventDescription = (event: AdminActivityEvent) => {
       return `${event.customer_name} sent a ${textValue(details.category, 'support')} request`;
     case 'support_request_status_changed':
       return `Support request status changed to ${statusLabel(details.status)}`;
+    case 'support_request_message_received':
+      return `${event.customer_name} replied to “${textValue(details.subject, 'a support request')}”`;
+    case 'support_reply_sent':
+      return `The workshop team replied to “${textValue(details.subject, 'a support request')}”`;
+    case 'customer_profile_updated':
+      return `${event.customer_name} updated account details`;
+    case 'product_created':
+    case 'product_updated':
+    case 'product_deleted':
+      return `Product “${textValue(details.name, 'Catalog item')}” ${event.event_type.replace('product_', '')}`;
+    case 'coupon_created':
+    case 'coupon_updated':
+    case 'coupon_deleted':
+      return `Coupon “${textValue(details.code, 'Offer')}” ${event.event_type.replace('coupon_', '')}`;
+    case 'notification_campaign_sent':
+      return `“${textValue(details.campaign_title, event.title)}” sent to ${textValue(details.recipient_count, '0')} customers`;
     default:
       return event.body || event.title;
   }
@@ -132,18 +161,32 @@ const searchText = (event: AdminActivityEvent) =>
     .join(' ')
     .toLowerCase();
 
+const mergeEventRows = (current: AdminActivityEvent[], incoming: AdminActivityEvent[]) => {
+  const byId = new Map(current.map((event) => [event.id, event]));
+  incoming.forEach((event) => byId.set(event.id, event));
+  return [...byId.values()].sort((left, right) =>
+    right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id),
+  );
+};
+
 export const AdminActivityView: React.FC<{
   onViewOrder: (event: AdminActivityEvent) => void | Promise<void>;
   onViewReview: (event: AdminActivityEvent) => void;
   onViewCustomer: (event: AdminActivityEvent) => void;
+  onViewProduct: (event: AdminActivityEvent) => void;
+  onViewCoupon: (event: AdminActivityEvent) => void;
+  onViewCampaign: (event: AdminActivityEvent) => void;
+  adminUserId: string;
   notify: (message: string) => void;
-}> = ({ onViewOrder, onViewReview, onViewCustomer, notify }) => {
+}> = ({ onViewOrder, onViewReview, onViewCustomer, onViewProduct, onViewCoupon, onViewCampaign, adminUserId, notify }) => {
   const [events, setEvents] = useState<AdminActivityEvent[]>([]);
   const [filter, setFilter] = useState<FeedFilter>('all');
   const [query, setQuery] = useState('');
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState('');
   const [selectedSupport, setSelectedSupport] = useState<AdminActivityEvent | null>(null);
 
@@ -153,13 +196,35 @@ export const AdminActivityView: React.FC<{
     try {
       const result = await loadAdminActivityEvents(200);
       if (result.error) setError(result.error.message);
-      else setEvents(result.data);
+      else {
+        setEvents((current) => mergeEventRows(current, result.data));
+        setHasMore(result.data.length === 200);
+      }
     } catch {
       setError('Activity could not be loaded. Check your connection and try again.');
     } finally {
       if (!silent) setLoading(false);
     }
   }, []);
+
+  const loadOlder = async () => {
+    const oldest = events[events.length - 1];
+    if (!oldest || loadingOlder) return;
+    setLoadingOlder(true);
+    setError('');
+    try {
+      const result = await loadAdminActivityEvents(200, { createdAt: oldest.created_at, id: oldest.id });
+      if (result.error) setError(result.error.message);
+      else {
+        setEvents((current) => mergeEventRows(current, result.data));
+        setHasMore(result.data.length === 200);
+      }
+    } catch {
+      setError('Older activity could not be loaded. Please try again.');
+    } finally {
+      setLoadingOlder(false);
+    }
+  };
 
   useEffect(() => {
     void refresh();
@@ -203,6 +268,9 @@ export const AdminActivityView: React.FC<{
       support: events.filter((event) => eventCategory(event) === 'support').length,
       reviews: events.filter((event) => eventCategory(event) === 'reviews').length,
       customers: events.filter((event) => eventCategory(event) === 'customers').length,
+      products: events.filter((event) => eventCategory(event) === 'products').length,
+      coupons: events.filter((event) => eventCategory(event) === 'coupons').length,
+      campaigns: events.filter((event) => eventCategory(event) === 'campaigns').length,
     }),
     [events],
   );
@@ -246,7 +314,13 @@ export const AdminActivityView: React.FC<{
       onViewReview(event);
     } else if (event.entity_type === 'customer') {
       onViewCustomer(event);
-    } else {
+    } else if (event.entity_type === 'product') {
+      onViewProduct(event);
+    } else if (event.entity_type === 'coupon') {
+      onViewCoupon(event);
+    } else if (event.entity_type === 'campaign') {
+      onViewCampaign(event);
+    } else if (event.entity_type === 'support_request') {
       setSelectedSupport(event);
     }
   };
@@ -279,7 +353,7 @@ export const AdminActivityView: React.FC<{
             All notifications
           </h2>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-            Live orders, customer support, reviews and account activity in one place.
+            Orders, product and coupon changes, customer support, reviews and campaigns in one place.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -379,6 +453,9 @@ export const AdminActivityView: React.FC<{
             const isOrder = event.entity_type === 'order';
             const isReview = event.entity_type === 'review';
             const isCustomer = event.entity_type === 'customer';
+            const isProduct = event.entity_type === 'product';
+            const isCoupon = event.entity_type === 'coupon';
+            const isCampaign = event.entity_type === 'campaign';
             return (
               <article
                 key={event.id}
@@ -520,6 +597,30 @@ export const AdminActivityView: React.FC<{
                       </p>
                     )}
 
+                    {isProduct && (
+                      <p className="mt-3 rounded-xl bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-900">
+                        {textValue(event.details.name, 'Product')}
+                        {event.details.price !== undefined && ` · ${formatMoney(event.details.price)}`}
+                        {textValue(event.details.category) && ` · ${textValue(event.details.category)}`}
+                        {Array.isArray(event.details.changed_fields) && event.details.changed_fields.length > 0 && ` · Updated: ${(event.details.changed_fields as string[]).join(', ')}`}
+                      </p>
+                    )}
+
+                    {isCoupon && (
+                      <p className="mt-3 rounded-xl bg-fuchsia-50 px-3 py-2 text-xs font-semibold text-fuchsia-900">
+                        {textValue(event.details.code, 'Coupon')}
+                        {event.details.discount_value !== undefined && ` · ${textValue(event.details.discount_value)} ${textValue(event.details.discount_type)}`}
+                        {event.details.is_enabled !== undefined && ` · ${event.details.is_enabled ? 'Enabled' : 'Disabled'}`}
+                        {Array.isArray(event.details.changed_fields) && event.details.changed_fields.length > 0 && ` · Updated: ${(event.details.changed_fields as string[]).join(', ')}`}
+                      </p>
+                    )}
+
+                    {isCampaign && (
+                      <p className="mt-3 rounded-xl bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-900">
+                        {textValue(event.details.campaign_title, event.title)} · {textValue(event.details.recipient_count, '0')} recipients
+                      </p>
+                    )}
+
                     <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
                       <button
                         type="button"
@@ -532,7 +633,13 @@ export const AdminActivityView: React.FC<{
                             ? 'View review'
                             : isSupport
                               ? 'View request'
-                              : 'View customer'}
+                              : isProduct
+                                ? 'View product'
+                                : isCoupon
+                                  ? 'View coupon'
+                                  : isCampaign
+                                    ? 'View campaign'
+                                    : 'View customer'}
                         <ArrowUpRight className="h-3.5 w-3.5" />
                       </button>
                       {!event.read_at && (
@@ -564,6 +671,20 @@ export const AdminActivityView: React.FC<{
         </div>
       )}
 
+      {!loading && events.length > 0 && (
+        <div className="mt-5 flex flex-col items-center gap-2">
+          {hasMore ? (
+            <button type="button" onClick={() => void loadOlder()} disabled={loadingOlder} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50">
+              {loadingOlder && <LoaderCircle className="h-4 w-4 animate-spin" />}
+              {loadingOlder ? 'Loading older activity…' : 'Load older activity'}
+            </button>
+          ) : (
+            <p className="text-[11px] text-slate-400">All available activity loaded · {events.length} events</p>
+          )}
+          {query.trim() && <p className="text-[10px] text-slate-400">Search covers the activity currently loaded. Load older activity to search further back.</p>}
+        </div>
+      )}
+
       {selectedSupport && (
         <div
           className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/45 p-0 backdrop-blur-sm sm:items-center sm:p-4"
@@ -576,7 +697,7 @@ export const AdminActivityView: React.FC<{
             role="dialog"
             aria-modal="true"
             aria-labelledby="support-detail-title"
-            className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"
+            className="max-h-[94vh] w-full max-w-4xl overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"
           >
             <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 p-5 backdrop-blur sm:p-6">
               <div className="min-w-0">
@@ -631,13 +752,13 @@ export const AdminActivityView: React.FC<{
                   </p>
                 </div>
               </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">
-                  Message
-                </p>
-                <p className="mt-2 whitespace-pre-wrap break-words rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700">
-                  {textValue(selectedSupport.details.message, selectedSupport.body)}
-                </p>
+              <div className="min-h-[360px]">
+                <SupportConversation
+                  requestId={selectedSupport.entity_id}
+                  currentUserId={adminUserId}
+                  isAdmin
+                  onChanged={() => void refresh(true)}
+                />
               </div>
               <label className="block max-w-sm space-y-2">
                 <span className="text-xs font-bold text-slate-700">Request status</span>
@@ -658,8 +779,7 @@ export const AdminActivityView: React.FC<{
                 </span>
               </label>
               <p className="text-[11px] leading-5 text-slate-400">
-                Changing status is recorded in the activity feed. Contact the customer using the
-                account details above to follow up.
+                Replies appear in the customer’s private support thread and inbox. Status changes also send an in-app update and are recorded in this activity feed.
               </p>
             </div>
           </section>

@@ -8,7 +8,7 @@ const { supabaseMock } = vi.hoisted(() => ({
 vi.mock('../src/lib/supabase', () => ({ supabase: supabaseMock }));
 
 import { CustomerSupportRequestForm } from '../src/components/CustomerSupportRequestForm';
-import { createCustomerSupportRequest } from '../src/lib/supabaseCustomer';
+import { createCustomerSupportRequest, validateSupportFiles } from '../src/lib/supabaseSupport';
 
 describe('customer support request', () => {
   beforeEach(() => {
@@ -25,14 +25,16 @@ describe('customer support request', () => {
       category: 'Order issue',
       subject: '  Where is my order? ',
       message: '  Please check the latest delivery update.  ',
+      relatedOrderId: 'order-1',
     });
 
     expect(supabaseMock.rpc).toHaveBeenCalledWith('create_customer_support_request', {
       p_category: 'Order issue',
       p_subject: 'Where is my order?',
       p_message: 'Please check the latest delivery update.',
+      p_related_order_id: 'order-1',
     });
-    expect(result).toEqual({ id: 'ticket-1', error: null });
+    expect(result).toEqual({ id: 'ticket-1', error: null, attachmentError: null });
   });
 
   it('requires an authenticated customer before calling the ticket RPC', async () => {
@@ -72,8 +74,20 @@ describe('customer support request', () => {
     const html = renderToStaticMarkup(
       <CustomerSupportRequestForm isAuthenticated onOpenLogin={() => undefined} />,
     );
-    expect(html).toContain('Please do not include card details');
+    expect(html).toContain('Please do not include card or payment details');
+    expect(html).toContain('কার্ড বা পেমেন্টের তথ্য দেবেন না');
     expect(html).toContain('aria-label="Support category"');
     expect(html).toContain('aria-label="Support message"');
+  });
+
+  it('enforces the private attachment count, MIME type, and file-size limits', () => {
+    const png = new File(['image bytes'], 'damage.png', { type: 'image/png' });
+    const invalid = new File(['script'], 'script.js', { type: 'application/javascript' });
+    const large = new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'large.pdf', { type: 'application/pdf' });
+
+    expect(validateSupportFiles([png])).toBeNull();
+    expect(validateSupportFiles([png], 3)).toMatch(/up to 3 attachments/i);
+    expect(validateSupportFiles([invalid])).toMatch(/JPEG, PNG, WebP or PDF/i);
+    expect(validateSupportFiles([large])).toMatch(/5 MB or smaller/i);
   });
 });

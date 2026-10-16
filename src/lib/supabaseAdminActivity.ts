@@ -1,7 +1,8 @@
 import { supabase } from './supabase';
 
-export type ActivityEntityType = 'order' | 'review' | 'customer' | 'support_request';
+export type ActivityEntityType = 'order' | 'review' | 'customer' | 'support_request' | 'product' | 'coupon' | 'campaign';
 export type SupportRequestStatus = 'open' | 'in_progress' | 'resolved';
+export type AdminActivityCursor = { createdAt: string; id: string };
 
 export type AdminActivityEvent = {
   id: string;
@@ -49,12 +50,16 @@ const toEvent = (value: unknown): AdminActivityEvent => {
   };
 };
 
-export async function loadAdminActivityEvents(limit = 200): Promise<{
+export async function loadAdminActivityEvents(limit = 200, before?: AdminActivityCursor): Promise<{
   data: AdminActivityEvent[];
   error: Error | null;
 }> {
   if (!supabase) return { data: [], error: new Error('Supabase is not configured.') };
-  const { data, error } = await supabase.rpc('admin_list_activity_feed', { p_limit: limit });
+  const { data, error } = await supabase.rpc('admin_list_activity_feed', {
+    p_limit: limit,
+    p_before_created_at: before?.createdAt ?? null,
+    p_before_id: before?.id ?? null,
+  });
   if (error) return { data: [], error: toError(error) };
   return { data: Array.isArray(data) ? data.map(toEvent) : [], error: null };
 }

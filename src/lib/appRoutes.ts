@@ -6,6 +6,7 @@ export const APP_ROUTE_PATHS = [
   '/', '/home', '/shop', '/search', '/custom', '/wishlist', '/cart', '/checkout',
   '/profile', '/account', '/my-orders', '/myorder', '/my-orders/:orderNumber', '/myorder/:orderNumber',
   '/notifications', '/notification', '/shop/products/:slug', '/products/:slug', '/product/:slug',
+  '/support', '/support/:requestId',
   '/settings', '/privacy-policy', '/privacy', '/terms-and-conditions', '/terms', '/store', '/store-info',
   '/admin', '/admin/dashboard', '/admin/orders', '/admin/products', '/admin/categories', '/admin/customers',
   '/admin/customers/:customerId', '/admin/reviews', '/admin/coupons', '/admin/marketing', '/admin/banners', '/admin/notifications', '/admin/activity',
@@ -19,6 +20,7 @@ export type ResolvedAppRoute =
   | { kind: 'admin-customer'; tab: 'home'; customerId: string; canonicalPath: string }
   | { kind: 'checkout'; tab: 'cart'; canonicalPath: '/checkout' }
   | { kind: 'orders'; tab: 'account'; orderNumber: string | null; canonicalPath: string }
+  | { kind: 'support'; tab: 'account'; requestId: string | null; canonicalPath: string }
   | { kind: 'product'; tab: 'shop'; slug: string; canonicalPath: string }
   | { kind: 'settings'; tab: 'account'; canonicalPath: '/settings' }
   | { kind: 'privacy'; tab: 'home'; canonicalPath: '/privacy-policy' }
@@ -86,6 +88,16 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
   if (path === '/cart') return { kind: 'tab', tab: 'cart', canonicalPath: '/cart' };
   if (path === '/notifications' || path === '/notification') return { kind: 'tab', tab: 'notifications', canonicalPath: '/notifications' };
   if (path === '/profile' || path === '/account') return { kind: 'tab', tab: 'account', canonicalPath: '/profile' };
+  const supportMatch = path.match(/^\/support(?:\/([^/]+))?$/i);
+  if (supportMatch) {
+    const requestId = supportMatch[1] ? decodeSegment(supportMatch[1]) : null;
+    return {
+      kind: 'support',
+      tab: 'account',
+      requestId,
+      canonicalPath: requestId ? `/support/${encodeURIComponent(requestId)}` : '/support',
+    };
+  }
   if (path === '/auth/callback') return { kind: 'tab', tab: 'home', canonicalPath: path };
 
   const adminCustomerId = getAdminCustomerIdFromPath(path);

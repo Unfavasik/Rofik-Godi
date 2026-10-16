@@ -5,7 +5,7 @@ describe('main route preservation', () => {
   it.each([
     '/home', '/shop', '/profile', '/account', '/search', '/wishlist', '/cart',
     '/notifications', '/notification', '/custom', '/checkout', '/my-orders',
-    '/my-orders/RGC-ABC123', '/shop/products/premium-bike-seat-cover', '/settings',
+    '/my-orders/RGC-ABC123', '/shop/products/premium-bike-seat-cover', '/settings', '/support',
     '/privacy-policy', '/terms-and-conditions', '/store',
   ])('keeps %s when entering the main phase', (path) => {
     expect(getPathForPhase('main', path)).toBe(path === '/account' ? '/profile' : path === '/notification' ? '/notifications' : path);
@@ -35,6 +35,12 @@ describe('main route preservation', () => {
     expect(resolveAppRoute('/my-orders')).toMatchObject({ kind: 'orders', tab: 'account', orderNumber: null });
     expect(resolveAppRoute('/myorder').canonicalPath).toBe('/my-orders');
     expect(resolveAppRoute('/myorder/RGC-ABC123')).toMatchObject({ kind: 'orders', orderNumber: 'RGC-ABC123', canonicalPath: '/my-orders/RGC-ABC123' });
+  });
+
+  it('resolves support requests to the customer account with a canonical request deep link', () => {
+    expect(resolveAppRoute('/support')).toMatchObject({ kind: 'support', tab: 'account', requestId: null, canonicalPath: '/support' });
+    expect(resolveAppRoute('/support/request-123')).toMatchObject({ kind: 'support', tab: 'account', requestId: 'request-123', canonicalPath: '/support/request-123' });
+    expect(getPathForPhase('main', '/support/request-123')).toBe('/support/request-123');
   });
 
   it('uses /shop/products/:slug as the canonical product route and normalizes legacy paths', () => {

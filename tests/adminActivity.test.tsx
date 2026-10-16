@@ -47,7 +47,11 @@ describe('admin activity feed', () => {
 
     const result = await loadAdminActivityEvents(150);
 
-    expect(supabaseMock.rpc).toHaveBeenCalledWith('admin_list_activity_feed', { p_limit: 150 });
+    expect(supabaseMock.rpc).toHaveBeenCalledWith('admin_list_activity_feed', {
+      p_limit: 150,
+      p_before_created_at: null,
+      p_before_id: null,
+    });
     expect(result.error).toBeNull();
     expect(result.data[0]).toMatchObject({
       id: 'event-1',
@@ -55,6 +59,20 @@ describe('admin activity feed', () => {
       customer_name: 'Amina Rider',
       details: eventRow.details,
     });
+  });
+
+  it('passes both keyset cursor values when loading older activity', async () => {
+    supabaseMock.rpc.mockResolvedValue({ data: [eventRow], error: null });
+    const cursor = { createdAt: '2026-10-15T09:00:00Z', id: 'event-cursor' };
+
+    const result = await loadAdminActivityEvents(200, cursor);
+
+    expect(supabaseMock.rpc).toHaveBeenCalledWith('admin_list_activity_feed', {
+      p_limit: 200,
+      p_before_created_at: cursor.createdAt,
+      p_before_id: cursor.id,
+    });
+    expect(result.error).toBeNull();
   });
 
   it('loads unread count and records per-admin read state through narrow RPCs', async () => {
@@ -85,6 +103,10 @@ describe('admin activity feed', () => {
         onViewOrder={() => undefined}
         onViewReview={() => undefined}
         onViewCustomer={() => undefined}
+        onViewProduct={() => undefined}
+        onViewCoupon={() => undefined}
+        onViewCampaign={() => undefined}
+        adminUserId="admin-1"
         notify={() => undefined}
       />,
     );
@@ -93,5 +115,8 @@ describe('admin activity feed', () => {
     expect(html).toContain('Search activity');
     expect(html).toContain('All activity');
     expect(html).toContain('Support');
+    expect(html).toContain('Products');
+    expect(html).toContain('Coupons');
+    expect(html).toContain('Campaigns');
   });
 });

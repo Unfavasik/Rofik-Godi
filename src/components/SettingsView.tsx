@@ -12,6 +12,8 @@ interface SettingsViewProps {
   onBack: () => void;
   onLogout?: () => void | Promise<void>;
   onOpenOrders?: () => void;
+  onOpenSupportRequests?: (requestId?: string) => void;
+  currentUserId?: string;
   onOpenWishlist?: () => void;
   onOpenStoreInfo?: () => void;
   onOpenShop?: () => void;
@@ -25,6 +27,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onBack,
   onLogout,
   onOpenOrders,
+  onOpenSupportRequests,
+  currentUserId,
   onOpenStoreInfo,
   onOpenShop,
   onOpenPrivacyPage,
@@ -758,7 +762,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </button>
               </div>
 
-              <CustomerSupportRequestForm isAuthenticated={isAuthenticated} onOpenLogin={onOpenLogin} />
+              <CustomerSupportRequestForm
+                isAuthenticated={isAuthenticated}
+                expectedUserId={currentUserId}
+                onOpenLogin={onOpenLogin}
+                onOpenSupportRequest={(requestId) => onOpenSupportRequests?.(requestId)}
+              />
+              {onOpenSupportRequests && (
+                <button
+                  type="button"
+                  onClick={() => onOpenSupportRequests()}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                >
+                  View my support requests
+                </button>
+              )}
 
               <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
                 <span className="h-px flex-1 bg-slate-100" />

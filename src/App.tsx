@@ -883,12 +883,15 @@ export default function App() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               onOpenWishlist={openWishlistPage}
-              routeModal={resolvedRoute.kind === 'orders' ? 'orders' : resolvedRoute.kind === 'settings' ? 'settings' : null}
+              routeModal={resolvedRoute.kind === 'orders' ? 'orders' : resolvedRoute.kind === 'settings' ? 'settings' : resolvedRoute.kind === 'support' ? 'support' : null}
               initialOrderNumber={resolvedRoute.kind === 'orders' ? resolvedRoute.orderNumber : null}
+              initialSupportRequestId={resolvedRoute.kind === 'support' ? resolvedRoute.requestId : null}
               onOpenOrdersPage={() => navigate('/my-orders')}
               onSelectOrderRoute={(orderNumber) => navigate(`/my-orders/${encodeURIComponent(orderNumber)}`)}
               onBackToOrdersRoute={() => navigate('/my-orders')}
               onOpenSettingsPage={() => navigate('/settings')}
+              onOpenSupportPage={() => navigate('/support')}
+              onSelectSupportRequest={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/support')}
               onOpenPrivacyPage={() => openPageRoute('/privacy-policy')}
               onOpenTermsPage={() => openPageRoute('/terms-and-conditions')}
               onExitRoutedPage={() => navigate('/profile')}

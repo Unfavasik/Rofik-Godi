@@ -399,6 +399,8 @@ export function NotificationsView({
   onReadAll,
   onCampaignDeleted,
   notify,
+  focusCampaignId,
+  onFocusHandled,
 }: {
   notifications: AdminNotification[];
   customers: AdminCustomer[];
@@ -406,6 +408,8 @@ export function NotificationsView({
   onReadAll: () => void;
   onCampaignDeleted: (campaignId: string) => void;
   notify: (message: string) => void;
+  focusCampaignId?: string | null;
+  onFocusHandled?: () => void;
 }) {
   const [campaigns, setCampaigns] = useState<AdminNotificationCampaign[]>([]);
   const [campaignsLoading, setCampaignsLoading] = useState(true);
@@ -429,6 +433,16 @@ export function NotificationsView({
   useEffect(() => {
     void refreshCampaigns();
   }, [refreshCampaigns]);
+
+  const handledFocusId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!focusCampaignId || campaignsLoading || handledFocusId.current === focusCampaignId) return;
+    handledFocusId.current = focusCampaignId;
+    const campaignRow = document.getElementById(`admin-campaign-${focusCampaignId}`);
+    if (campaignRow) campaignRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    else notify('This campaign is no longer in the recipient history; its activity record is still available.');
+    onFocusHandled?.();
+  }, [campaigns, campaignsLoading, focusCampaignId, notify, onFocusHandled]);
 
   const confirmDeleteCampaign = async () => {
     if (!pendingCampaign || deletingCampaign) return;
@@ -496,7 +510,7 @@ export function NotificationsView({
           ) : campaigns.length ? (
             <div className="divide-y divide-slate-100">
               {campaigns.map((campaign) => (
-                <article key={campaign.campaign_id} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
+                <article id={`admin-campaign-${campaign.campaign_id}`} key={campaign.campaign_id} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
                   {campaign.image_url ? (
                     <img src={campaign.image_url} alt="" className="h-16 w-20 shrink-0 rounded-xl object-cover" />
                   ) : (

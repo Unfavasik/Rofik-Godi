@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle,
   BarChart3,
@@ -120,7 +120,11 @@ const freshForm = (): CouponFormState => {
 const inputClass = 'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-[#D9232D] focus:ring-4 focus:ring-red-50';
 const labelClass = 'block text-xs font-bold text-slate-600';
 
-export const CouponManagement: React.FC<{ notify: (message: string) => void }> = ({ notify }) => {
+export const CouponManagement: React.FC<{
+  notify: (message: string) => void;
+  focusCouponId?: string | null;
+  onFocusHandled?: () => void;
+}> = ({ notify, focusCouponId, onFocusHandled }) => {
   const [coupons, setCoupons] = useState<CouponRecord[]>([]);
   const [products, setProducts] = useState<CouponProductChoice[]>([]);
   const [customers, setCustomers] = useState<AdminCustomer[]>([]);
@@ -170,7 +174,7 @@ export const CouponManagement: React.FC<{ notify: (message: string) => void }> =
   }), [coupons, filter, query]);
 
   const openCreate = () => { setForm(freshForm()); setProductSearch(''); };
-  const openEdit = (coupon: CouponRecord) => {
+  const openEdit = useCallback((coupon: CouponRecord) => {
     setForm({
       id: coupon.id,
       code: coupon.code,
@@ -192,7 +196,29 @@ export const CouponManagement: React.FC<{ notify: (message: string) => void }> =
       notification_user_ids: [],
     });
     setProductSearch('');
-  };
+  }, []);
+
+  const handledFocusId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!focusCouponId || loading || handledFocusId.current === focusCouponId) return;
+    handledFocusId.current = focusCouponId;
+    if (error) {
+      notify(`Could not open the selected coupon: ${error}`);
+      onFocusHandled?.();
+      return;
+    }
+    const coupon = coupons.find((item) => item.id === focusCouponId);
+    if (!coupon) {
+      notify('This coupon was removed; its audit details remain in Activity.');
+      onFocusHandled?.();
+      return;
+    }
+    setFilter('All');
+    setQuery(coupon.code);
+    openEdit(coupon);
+    window.setTimeout(() => document.getElementById(`admin-coupon-${focusCouponId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+    onFocusHandled?.();
+  }, [coupons, error, focusCouponId, loading, notify, onFocusHandled, openEdit]);
 
   const showDetails = async (coupon: CouponRecord) => {
     setDetails(coupon);
@@ -302,7 +328,7 @@ const Metric: React.FC<{ label: string; value: string; icon: React.ReactNode; to
 const CouponRow: React.FC<{ coupon: CouponRecord; onEdit: () => void; onDetails: () => void; onDisable: () => void; onDelete: () => void; notify: (message: string) => void }> = ({ coupon, onEdit, onDetails, onDisable, onDelete }) => {
   const status = getCouponStatus(coupon);
   const description = coupon.discount_type === 'PERCENTAGE' ? `${Number(coupon.discount_value)}% OFF${coupon.max_discount ? ` · max ${money(coupon.max_discount)}` : ''}` : `${money(coupon.discount_value)} OFF`;
-  return <div className="grid gap-4 px-4 py-5 md:grid-cols-[minmax(230px,1.4fr)_minmax(190px,1fr)_minmax(180px,1fr)_auto] md:items-center md:px-5">
+  return <div id={`admin-coupon-${coupon.id}`} className="grid gap-4 px-4 py-5 md:grid-cols-[minmax(230px,1.4fr)_minmax(190px,1fr)_minmax(180px,1fr)_auto] md:items-center md:px-5">
     <div className="flex min-w-0 items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-[#D9232D]"><Tag className="h-5 w-5" /></span><div className="min-w-0"><p className="truncate font-mono text-sm font-black tracking-wide text-slate-900">{coupon.code}</p><p className="mt-0.5 text-[11px] font-semibold text-slate-500">{description}</p><p className="mt-1 text-[10px] text-slate-400">Min order: {money(coupon.minimum_order_value)}</p></div></div>
     <div><p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Validity · IST</p><p className="mt-1 text-[11px] font-bold text-slate-700">{formatIST(coupon.starts_at)}</p><p className="mt-0.5 text-[11px] text-slate-500">until {formatIST(coupon.expires_at)}</p></div>
     <div className="flex items-center gap-5"><div><p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Usage</p><p className="mt-1 text-xs font-black text-slate-800">{coupon.used_count} / {coupon.usage_limit ?? '∞'}</p></div><div><p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Per customer</p><p className="mt-1 text-xs font-black text-slate-800">{coupon.per_customer_limit ?? '∞'}</p></div><span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[10px] font-black ring-1 ${badgeClass[status]}`}><span className="h-1.5 w-1.5 rounded-full bg-current" />{statusLabels[status]}</span></div>
