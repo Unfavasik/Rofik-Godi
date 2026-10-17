@@ -161,7 +161,7 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
 
 export function requiresCustomerAuthentication(pathname: string): boolean {
   const kind = resolveAppRoute(pathname).kind;
-  return kind === 'checkout' || kind === 'orders' || kind === 'support';
+  return kind === 'checkout' || kind === 'orders' || kind === 'support' || kind === 'contact-support';
 }
 
 export function getPathForProduct(slug: string): string {

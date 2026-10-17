@@ -143,12 +143,12 @@ describe('admin workspace redirect policy', () => {
 });
 
 describe('guest access policy', () => {
-  it.each(['/checkout', '/my-orders', '/my-orders/RGC-ABC123', '/support', '/support/ticket-123'])(
+  it.each(['/checkout', '/my-orders', '/my-orders/RGC-ABC123', '/support', '/support/ticket-123', '/contact-support'])(
     'requires customer authentication for %s',
     (path) => expect(requiresCustomerAuthentication(path)).toBe(true),
   );
 
-  it.each(['/home', '/shop', '/search', '/custom', '/wishlist', '/cart', '/notifications', '/profile', '/settings', '/store', '/contact-support', '/product/seat-cover'])(
+  it.each(['/home', '/shop', '/search', '/custom', '/wishlist', '/cart', '/notifications', '/profile', '/settings', '/store', '/product/seat-cover'])(
     'allows guests to open %s',
     (path) => expect(requiresCustomerAuthentication(path)).toBe(false),
   );

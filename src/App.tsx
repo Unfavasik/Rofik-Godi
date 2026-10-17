@@ -209,7 +209,7 @@ export default function App() {
       '/signup/loading',
     ].includes(route);
     const routeKind = resolveAppRoute(route).kind;
-    const publicInfoPath = routeKind === 'privacy' || routeKind === 'terms' || routeKind === 'store' || routeKind === 'contact-support';
+    const publicInfoPath = routeKind === 'privacy' || routeKind === 'terms' || routeKind === 'store';
     if (authStatus === 'AUTHENTICATED' && isAdmin !== null) {
       if (isAdmin) {
         // Role resolution can finish after login; enter admin unless the admin
@@ -241,7 +241,7 @@ export default function App() {
       const kind = resolveAppRoute(route).kind;
       setLoginModalReason(kind === 'orders'
         ? 'Sign in to view your orders.'
-        : kind === 'support'
+        : kind === 'support' || kind === 'contact-support'
           ? 'Sign in to continue to customer support.'
           : 'Please sign in to place your order.');
       if (kind === 'checkout') setPendingCheckoutAfterLogin(true);
@@ -935,7 +935,7 @@ export default function App() {
   if (authStatus === 'AUTH_LOADING') {
     return <SplashScreen />;
   }
-  if (authStatus === 'UNAUTHENTICATED' && appPhase === 'main' && !guestWelcomeComplete && resolvedRoute.kind !== 'contact-support') {
+  if (authStatus === 'UNAUTHENTICATED' && appPhase === 'main' && !guestWelcomeComplete) {
     return <Onboarding onFinish={finishWelcomeOnboarding} />;
   }
   if (authStatus === 'AUTHENTICATED' && appPhase !== 'main') {
