@@ -24,6 +24,12 @@ Apply migrations in `supabase/migrations/` in order. Use 14-digit timestamps (`Y
 
 Customer email is read from Supabase Auth and is not stored in `public.profiles` or editable in the app. In **Supabase Dashboard → Authentication → Settings**, keep **Secure email change** enabled. Email changes, if ever needed, must go through Supabase Auth rather than profile updates.
 
+## Razorpay online payments
+
+Online checkout creates Razorpay Orders from the server-verified `public.orders.total`; the browser never supplies the payable amount. A customer order remains unpaid until the authenticated verification function checks Razorpay's payment signature and captured-payment status, or the signed webhook records the capture. Payment IDs and provider order IDs are stored in `public.payments`; card details are never stored by this app.
+
+Apply `supabase/migrations/20261017232800_razorpay_payments.sql`, then deploy the `create-razorpay-order` and `verify-razorpay-payment` Edge Functions with JWT verification enabled. Deploy `razorpay-webhook` with JWT verification disabled; it verifies the raw request body with Razorpay's webhook signature before accepting `payment.captured` events. In Supabase Dashboard → Edge Functions → Secrets, set `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `RAZORPAY_WEBHOOK_SECRET`. Use Razorpay test-mode credentials first. In Razorpay's Webhooks settings, register `https://cyijfvylyhhusackvcuj.supabase.co/functions/v1/razorpay-webhook`, subscribe to `payment.captured`, and use the same webhook secret as `RAZORPAY_WEBHOOK_SECRET`.
+
 ## Admin login flow
 
 Admin access is verified server-side through `public.admin_users` and the `is_admin()` RPC. The login page uses the same Supabase Auth email/password login for everyone: after login, an authorized admin is redirected to `/admin` and can return to the storefront; a normal customer is redirected to the storefront/user panel. Use a unique, organization-controlled email address for each administrator; do not use a shared example or generic mailbox. Require email confirmation and enable/require multi-factor authentication (MFA) for administrator accounts in Supabase Auth settings.

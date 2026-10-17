@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { QRCodeSVG } from 'qrcode.react';
 import {
   Banknote, CalendarDays, Check, CheckCircle2, ChevronRight, Clock3, CreditCard,
   LoaderCircle, MapPin, Minus, Plus, QrCode, ShieldCheck, ShoppingBag, Store, Truck,
@@ -10,6 +9,7 @@ import {
 import { VEHICLE_BRANDS, WORKSHOP_INFO } from '../data/products';
 import { CartItem, OrderDetails } from '../types';
 import { createSupabaseOrder } from '../lib/supabaseOrders';
+import { openRazorpayCheckout } from '../lib/razorpay';
 import { supabase } from '../lib/supabase';
 import { validateProfileName } from '../lib/profileValidation';
 import { getPhoneCountry, validatePhoneNumber, type CountryCode } from '../utils/phoneValidation';
@@ -52,6 +52,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [pickupTime, setPickupTime] = useState('');
   const [note, setNote] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'pay_at_store' | 'pay_online'>('pay_at_store');
+  const [pendingOnlineOrder, setPendingOnlineOrder] = useState<OrderDetails | null>(null);
   const [placedOrder, setPlacedOrder] = useState<OrderDetails | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const submitLockRef = useRef(false);
@@ -63,7 +64,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     : items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const total = couponCode && couponTotal !== undefined ? couponTotal : Math.max(0, subtotal - discount);
   const visiblePhoneError = phoneTouched ? validatePhoneNumber(phone, phoneCountry).message : phoneError;
-  const upiUri = `upi://pay?pa=rofikgodi@upi&pn=${encodeURIComponent(WORKSHOP_INFO.name)}&am=${total}&cu=INR`;
   const pickupDates = useMemo(() => Array.from({ length: 7 }, (_, index) => {
     const date = new Date(); date.setDate(date.getDate() + index + 1); return date;
   }), []);
@@ -80,7 +80,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   useEffect(() => {
     if (!isOpen || !userId) return;
     let active = true;
-    setProfileLoad('loading'); setProfileError(''); setSubmissionError(''); setStep(1); setPlacedOrder(null);
+    setProfileLoad('loading'); setProfileError(''); setSubmissionError(''); setStep(1); setPendingOnlineOrder(null); setPlacedOrder(null);
     setEditingPhone(false); setEditingVehicle(false); setPhoneError('');
     const loadProfile = async () => {
       if (!supabase) {
@@ -155,9 +155,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         paymentMethod, paymentStatus: 'pending', fulfillmentMethod: 'STORE_PICKUP', pickupStore: WORKSHOP_INFO.name,
         status: 'NEW', createdAt: new Date().toISOString(),
       };
-      const persisted = await createSupabaseOrder(order, userId, couponCode);
-      if (persisted.error || !persisted.order) throw new Error(persisted.error?.message || 'Unable to save your order. Please try again.');
-      setPlacedOrder(persisted.order); setStep(3); onClearCart(); onOrderPlaced();
+      let savedOrder = pendingOnlineOrder;
+      if (!savedOrder) {
+        const persisted = await createSupabaseOrder(order, userId, couponCode);
+        if (persisted.error || !persisted.order) throw new Error(persisted.error?.message || 'Unable to save your order. Please try again.');
+        savedOrder = persisted.order;
+        if (paymentMethod === 'pay_online') setPendingOnlineOrder(savedOrder);
+      }
+      if (paymentMethod === 'pay_online') {
+        await openRazorpayCheckout(savedOrder.orderId);
+        savedOrder = { ...savedOrder, paymentStatus: 'paid' };
+        setPendingOnlineOrder(null);
+      }
+      setPlacedOrder(savedOrder); setStep(3); onClearCart(); onOrderPlaced();
       confetti({ particleCount: 70, spread: 58, origin: { y: 0.65 }, colors: ['#D9232D', '#111827', '#EAB308', '#059669'] });
     } catch (error) {
       setSubmissionError(error instanceof Error ? error.message : 'Unable to save your order. Please try again.');
@@ -202,12 +212,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           <label className="block rounded-2xl border border-slate-200 bg-white p-4 text-[10px] font-bold text-slate-500">{t('checkout.note')} <span className="font-normal">{t('checkout.optional')}</span><textarea value={note} onChange={(event) => setNote(event.target.value)} maxLength={240} rows={2} placeholder={t('checkout.noteHint')} className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-medium text-slate-800 outline-none focus:border-[#D9232D]" /></label>
           {renderSummary()}
         </>}
-        {step === 2 && <><section className="rounded-2xl border border-slate-200 bg-white p-4"><h3 className="mb-3 flex items-center gap-2 text-sm font-black"><CreditCard className="h-4 w-4 text-[#D9232D]" />{t('checkout.paymentMethod')}</h3><div className="space-y-2"><button onClick={() => setPaymentMethod('pay_at_store')} aria-pressed={paymentMethod === 'pay_at_store'} className={`flex min-h-[68px] w-full items-center gap-3 rounded-xl border p-3 text-left ${paymentMethod === 'pay_at_store' ? 'border-[#D9232D] bg-red-50/70' : 'border-slate-200'}`}><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Banknote className="h-5 w-5" /></span><span className="flex-1"><b className="block text-xs">{t('checkout.payAtWorkshop')}</b><small className="mt-1 block text-[10px] text-slate-500">{t('checkout.cashOrUpi')}</small></span>{paymentMethod === 'pay_at_store' && <CheckCircle2 className="h-4 w-4 text-[#D9232D]" />}</button><button onClick={() => setPaymentMethod('pay_online')} aria-pressed={paymentMethod === 'pay_online'} className={`flex min-h-[68px] w-full items-center gap-3 rounded-xl border p-3 text-left ${paymentMethod === 'pay_online' ? 'border-[#D9232D] bg-red-50/70' : 'border-slate-200'}`}><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><QrCode className="h-5 w-5" /></span><span className="flex-1"><b className="block text-xs">{t('checkout.upiOnline')}</b><small className="mt-1 block text-[10px] text-slate-500">{t('checkout.payWithUpi')}</small></span>{paymentMethod === 'pay_online' && <CheckCircle2 className="h-4 w-4 text-[#D9232D]" />}</button></div>{paymentMethod === 'pay_online' && <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3 text-center text-xs text-blue-900"><p className="font-bold">{t('checkout.scanToPay', { amount: indianMoney(total) })}</p><QRCodeSVG value={upiUri} size={152} level="M" title="UPI payment QR code" className="mx-auto mt-3 rounded-lg bg-white p-2" /><p className="mt-2 text-[10px]">{t('checkout.upiId')} <b>rofikgodi@upi</b></p><p className="mt-2 text-left text-[10px] leading-relaxed">{t('checkout.paymentPending')}</p></div>}</section><div className="rounded-2xl border border-slate-200 bg-white p-4"><h3 className="mb-2 text-xs font-black">{t('checkout.pickupDetails')}</h3><p className="text-[11px] text-slate-600">{pickupDate && new Date(`${pickupDate}T00:00:00`).toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })} · {pickupTime}</p><p className="mt-1 text-[11px] text-slate-500">{customerName} · {phone} · {vehicleType}{vehicleModel ? ` · ${vehicleModel}` : ''}</p></div>{renderSummary()}</>}
-        {step === 3 && placedOrder && <div className="space-y-4 py-4 text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><CheckCircle2 className="h-9 w-9" /></div><div><h3 className="text-xl font-black">{t('checkout.orderReceived')}</h3><p className="mt-1 text-xs text-slate-500">{t('checkout.orderSaved')}</p></div><div className="rounded-2xl border border-slate-200 bg-white p-4 text-left"><div className="flex justify-between border-b border-slate-100 pb-3"><span className="text-xs text-slate-500">{t('checkout.orderId')}</span><b className="font-mono text-base">#{placedOrder.orderId}</b></div><div className="mt-3 flex justify-between text-xs"><span>{t('checkout.pickup')}</span><b>{pickupDate} · {pickupTime}</b></div><div className="mt-2 flex justify-between text-xs"><span>{t('checkout.payment')}</span><b>{placedOrder.paymentMethod === 'pay_at_store' ? t('checkout.payOnPickup') : t('checkout.upiPending')}</b></div><div className="mt-2 flex justify-between text-xs"><span>{t('orders.total')}</span><b className="text-[#D9232D]">{indianMoney(placedOrder.total)}</b></div></div><p className="text-[10px] text-slate-500">{t('checkout.trackOrder')}</p></div>}
+        {step === 2 && <><section className="rounded-2xl border border-slate-200 bg-white p-4"><h3 className="mb-3 flex items-center gap-2 text-sm font-black"><CreditCard className="h-4 w-4 text-[#D9232D]" />{t('checkout.paymentMethod')}</h3><div className="space-y-2"><button onClick={() => { setPendingOnlineOrder(null); setPaymentMethod('pay_at_store'); }} aria-pressed={paymentMethod === 'pay_at_store'} className={`flex min-h-[68px] w-full items-center gap-3 rounded-xl border p-3 text-left ${paymentMethod === 'pay_at_store' ? 'border-[#D9232D] bg-red-50/70' : 'border-slate-200'}`}><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Banknote className="h-5 w-5" /></span><span className="flex-1"><b className="block text-xs">{t('checkout.payAtWorkshop')}</b><small className="mt-1 block text-[10px] text-slate-500">{t('checkout.cashOrUpi')}</small></span>{paymentMethod === 'pay_at_store' && <CheckCircle2 className="h-4 w-4 text-[#D9232D]" />}</button><button onClick={() => { setPendingOnlineOrder(null); setPaymentMethod('pay_online'); }} aria-pressed={paymentMethod === 'pay_online'} className={`flex min-h-[68px] w-full items-center gap-3 rounded-xl border p-3 text-left ${paymentMethod === 'pay_online' ? 'border-[#D9232D] bg-red-50/70' : 'border-slate-200'}`}><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><QrCode className="h-5 w-5" /></span><span className="flex-1"><b className="block text-xs">{t('checkout.upiOnline')}</b><small className="mt-1 block text-[10px] text-slate-500">{t('checkout.payWithUpi')}</small></span>{paymentMethod === 'pay_online' && <CheckCircle2 className="h-4 w-4 text-[#D9232D]" />}</button></div>{paymentMethod === 'pay_online' && <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3 text-center text-xs text-blue-900"><p className="font-bold">{t('checkout.scanToPay', { amount: indianMoney(total) })}</p><p className="mt-2 text-[10px]">{t('checkout.upiId')}</p><p className="mt-2 text-left text-[10px] leading-relaxed">{t('checkout.paymentPending')}</p></div>}</section><div className="rounded-2xl border border-slate-200 bg-white p-4"><h3 className="mb-2 text-xs font-black">{t('checkout.pickupDetails')}</h3><p className="text-[11px] text-slate-600">{pickupDate && new Date(`${pickupDate}T00:00:00`).toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })} · {pickupTime}</p><p className="mt-1 text-[11px] text-slate-500">{customerName} · {phone} · {vehicleType}{vehicleModel ? ` · ${vehicleModel}` : ''}</p></div>{renderSummary()}</>}
+        {step === 3 && placedOrder && <div className="space-y-4 py-4 text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><CheckCircle2 className="h-9 w-9" /></div><div><h3 className="text-xl font-black">{t('checkout.orderReceived')}</h3><p className="mt-1 text-xs text-slate-500">{t('checkout.orderSaved')}</p></div><div className="rounded-2xl border border-slate-200 bg-white p-4 text-left"><div className="flex justify-between border-b border-slate-100 pb-3"><span className="text-xs text-slate-500">{t('checkout.orderId')}</span><b className="font-mono text-base">#{placedOrder.orderId}</b></div><div className="mt-3 flex justify-between text-xs"><span>{t('checkout.pickup')}</span><b>{pickupDate} · {pickupTime}</b></div><div className="mt-2 flex justify-between text-xs"><span>{t('checkout.payment')}</span><b>{placedOrder.paymentMethod === 'pay_at_store' ? t('checkout.payOnPickup') : placedOrder.paymentStatus === 'paid' ? t('checkout.paymentPaid') : t('checkout.upiPending')}</b></div><div className="mt-2 flex justify-between text-xs"><span>{t('orders.total')}</span><b className="text-[#D9232D]">{indianMoney(placedOrder.total)}</b></div></div><p className="text-[10px] text-slate-500">{t('checkout.trackOrder')}</p></div>}
         {submissionError && step < 3 && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs font-semibold text-rose-700">{submissionError}</p>}
       </main>
       <footer className="border-t border-slate-100 bg-white px-4 pt-3 sm:px-6" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
-        {step === 3 ? <button onClick={() => { setStep(1); setPlacedOrder(null); onClose(); }} className="min-h-12 w-full rounded-xl bg-slate-900 text-sm font-black text-white">{t('checkout.continueShopping')}</button> : <div className="flex items-center gap-3"><div className="min-w-0 flex-1"><span className="block text-[9px] font-semibold uppercase tracking-wider text-slate-400">{t('checkout.payable')}</span><b className="text-lg font-black text-slate-900">{indianMoney(total)}</b></div>{step === 2 && <button onClick={() => { setStep(1); setSubmissionError(''); }} className="min-h-12 rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-700">{t('checkout.back')}</button>}<button disabled={isProcessing || profileLoad !== 'ready'} onClick={() => step === 1 ? continueToPayment() : void handlePlaceOrder()} className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#D9232D] px-4 text-xs font-black text-white shadow-[0_6px_18px_rgba(217,35,45,.2)] disabled:cursor-not-allowed disabled:opacity-50">{isProcessing ? <><LoaderCircle className="h-4 w-4 animate-spin" />{t('checkout.saving')}</> : step === 1 ? <>{t('checkout.continueToPayment')}<ChevronRight className="h-4 w-4" /></> : <>{t('checkout.confirmPickup')}<ChevronRight className="h-4 w-4" /></>}</button></div>}
+        {step === 3 ? <button onClick={() => { setStep(1); setPlacedOrder(null); onClose(); }} className="min-h-12 w-full rounded-xl bg-slate-900 text-sm font-black text-white">{t('checkout.continueShopping')}</button> : <div className="flex items-center gap-3"><div className="min-w-0 flex-1"><span className="block text-[9px] font-semibold uppercase tracking-wider text-slate-400">{t('checkout.payable')}</span><b className="text-lg font-black text-slate-900">{indianMoney(total)}</b></div>{step === 2 && <button onClick={() => { setPendingOnlineOrder(null); setStep(1); setSubmissionError(''); }} className="min-h-12 rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-700">{t('checkout.back')}</button>}<button disabled={isProcessing || profileLoad !== 'ready'} onClick={() => step === 1 ? continueToPayment() : void handlePlaceOrder()} className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#D9232D] px-4 text-xs font-black text-white shadow-[0_6px_18px_rgba(217,35,45,.2)] disabled:cursor-not-allowed disabled:opacity-50">{isProcessing ? <><LoaderCircle className="h-4 w-4 animate-spin" />{paymentMethod === 'pay_online' ? t('checkout.preparingPayment') : t('checkout.saving')}</> : step === 1 ? <>{t('checkout.continueToPayment')}<ChevronRight className="h-4 w-4" /></> : paymentMethod === 'pay_online' ? <>{t('checkout.payWithRazorpay')}<ChevronRight className="h-4 w-4" /></> : <>{t('checkout.confirmPickup')}<ChevronRight className="h-4 w-4" /></>}</button></div>}
       </footer>
     </motion.div>
   </div></AnimatePresence>;
