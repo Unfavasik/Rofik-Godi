@@ -209,7 +209,7 @@ export default function App() {
       '/signup/loading',
     ].includes(route);
     const routeKind = resolveAppRoute(route).kind;
-    const publicInfoPath = routeKind === 'privacy' || routeKind === 'terms' || routeKind === 'store';
+    const publicInfoPath = routeKind === 'privacy' || routeKind === 'terms' || routeKind === 'store' || routeKind === 'contact-support';
     if (authStatus === 'AUTHENTICATED' && isAdmin !== null) {
       if (isAdmin) {
         // Role resolution can finish after login; enter admin unless the admin
@@ -241,7 +241,7 @@ export default function App() {
       const kind = resolveAppRoute(route).kind;
       setLoginModalReason(kind === 'orders'
         ? 'Sign in to view your orders.'
-        : kind === 'support' || kind === 'contact-support'
+        : kind === 'support'
           ? 'Sign in to continue to customer support.'
           : 'Please sign in to place your order.');
       if (kind === 'checkout') setPendingCheckoutAfterLogin(true);
@@ -935,7 +935,7 @@ export default function App() {
   if (authStatus === 'AUTH_LOADING') {
     return <SplashScreen />;
   }
-  if (authStatus === 'UNAUTHENTICATED' && appPhase === 'main' && !guestWelcomeComplete) {
+  if (authStatus === 'UNAUTHENTICATED' && appPhase === 'main' && !guestWelcomeComplete && resolvedRoute.kind !== 'contact-support') {
     return <Onboarding onFinish={finishWelcomeOnboarding} />;
   }
   if (authStatus === 'AUTHENTICATED' && appPhase !== 'main') {
@@ -986,7 +986,7 @@ export default function App() {
         onClickCapture={handleAppHapticTap}
         className={`w-full bg-[#FDFDFD] min-h-screen flex flex-col relative shadow-2xl transition-all duration-300 ${
           hidesBottomNavigation ? '' : 'pb-28'
-        } ${isMobileFrameMode ? 'max-w-[440px]' : 'max-w-4xl'}`}
+        } ${isSupportPage ? 'max-w-none' : isMobileFrameMode ? 'max-w-[440px]' : 'max-w-4xl'}`}
       >
         {/* Main Header */}
         {!hidesBottomNavigation &&
@@ -1117,6 +1117,7 @@ export default function App() {
               onBackToOrdersRoute={() => navigate('/my-orders')}
               onOpenSettingsPage={() => navigate('/settings')}
               onOpenSupportPage={() => navigate('/support')}
+              onOpenContactSupport={() => navigate('/contact-support', { state: { returnTo: '/profile' } })}
               onSelectSupportRequest={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/support')}
               onBackFromContactSupport={() => {
                 const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;

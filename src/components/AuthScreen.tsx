@@ -90,18 +90,25 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         setError('Enter a valid email');
         return;
       }
-      if (password.length < 8) {
-        setError('Password must be at least 8 characters');
+      if (!password) {
+        setError('Enter your password');
         return;
       }
 
-      const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (authError || !data.user) {
-        setError('Invalid email or password');
-        return;
+      try {
+        const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (authError || !data.user) {
+          const message = authError?.message.toLowerCase() || '';
+          setError(message.includes('email not confirmed')
+            ? 'Please confirm your email address before signing in.'
+            : 'Invalid email or password');
+          return;
+        }
+        showToast('Signed in');
+        onSuccess({ id: data.user.id, name: String(data.user.user_metadata?.full_name || 'Rider'), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) }, false);
+      } catch {
+        setError('Could not reach the sign-in service. Check your connection and try again.');
       }
-      showToast('Signed in');
-      onSuccess({ id: data.user.id, name: String(data.user.user_metadata?.full_name || 'Rider'), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) }, false);
     }
   };
 

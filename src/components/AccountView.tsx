@@ -52,6 +52,7 @@ interface AccountViewProps {
   onBackToOrdersRoute?: () => void;
   onOpenSettingsPage?: () => void;
   onOpenSupportPage?: () => void;
+  onOpenContactSupport?: () => void;
   onSelectSupportRequest?: (requestId: string) => void;
   onBackFromContactSupport?: () => void;
   onOpenPrivacyPage?: () => void;
@@ -81,6 +82,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
   onBackToOrdersRoute,
   onOpenSettingsPage,
   onOpenSupportPage,
+  onOpenContactSupport,
   onSelectSupportRequest,
   onBackFromContactSupport,
   onOpenPrivacyPage,
@@ -364,7 +366,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
     else closeProfileModal();
   };
 
-  const handleProtectedAction = (modalType: 'orders' | 'pickupStore' | 'settings' | 'profile' | 'privacy' | 'terms') => {
+  const handleProtectedAction = (modalType: 'orders' | 'pickupStore' | 'settings' | 'profile' | 'privacy' | 'terms' | 'contact-support') => {
     if (isGuest && (modalType === 'orders' || modalType === 'pickupStore' || modalType === 'profile')) {
       if (modalType === 'orders' && onOpenOrdersPage) return onOpenOrdersPage();
       if (onOpenLogin) onOpenLogin();
@@ -374,6 +376,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
       if (modalType === 'settings' && onOpenSettingsPage) return onOpenSettingsPage();
       if (modalType === 'privacy' && onOpenPrivacyPage) return onOpenPrivacyPage();
       if (modalType === 'terms' && onOpenTermsPage) return onOpenTermsPage();
+      if (modalType === 'contact-support' && onOpenContactSupport) return onOpenContactSupport();
       if (modalType === 'pickupStore' && onOpenStoreInfo) return onOpenStoreInfo();
       setActiveModal(modalType);
     }
@@ -886,6 +889,24 @@ export const AccountView: React.FC<AccountViewProps> = ({
             <svg className="w-4 h-4 text-slate-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
+          </button>
+
+          {/* Contact Support Card */}
+          <button
+            type="button"
+            onClick={() => handleProtectedAction('contact-support')}
+            className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left cursor-pointer"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#E8F8F0] flex items-center justify-center text-[#15803D] flex-shrink-0">
+                <MessageCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 leading-tight">Contact Support</h3>
+                <p className="text-[11px] text-slate-500 font-normal mt-0.5">Message us, call, or chat on WhatsApp</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400" aria-hidden="true" />
           </button>
 
           {/* Call us Card */}
