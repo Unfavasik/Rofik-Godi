@@ -8,6 +8,9 @@ interface ConfirmDialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   danger?: boolean;
+  children?: React.ReactNode;
+  confirmDisabled?: boolean;
+  cancelDisabled?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -19,6 +22,9 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
   danger = true,
+  children,
+  confirmDisabled = false,
+  cancelDisabled = false,
   onConfirm,
   onCancel,
 }) => {
@@ -40,9 +46,10 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         <div className="flex items-start gap-3">
           <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${danger ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}><AlertTriangle className="h-5 w-5" /></span>
           <div className="min-w-0 flex-1"><h2 id="confirm-dialog-title" className="text-base font-black text-slate-900">{title}</h2><p className="mt-1 text-sm leading-relaxed text-slate-500">{message}</p></div>
-          <button type="button" onClick={onCancel} aria-label="Close confirmation" className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"><X className="h-4 w-4" /></button>
+          <button type="button" onClick={onCancel} disabled={cancelDisabled} aria-label="Close confirmation" className="grid min-h-11 min-w-11 place-items-center rounded-lg p-1 text-slate-400 hover:bg-slate-100 disabled:opacity-50"><X className="h-4 w-4" /></button>
         </div>
-        <div className="mt-6 flex justify-end gap-2"><button ref={cancelRef} type="button" onClick={onCancel} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50">{cancelLabel}</button><button type="button" onClick={onConfirm} className={`rounded-xl px-4 py-2.5 text-xs font-black text-white ${danger ? 'bg-red-600 hover:bg-red-700' : 'bg-slate-900 hover:bg-slate-800'}`}>{confirmLabel}</button></div>
+        {children}
+        <div className="mt-6 flex justify-end gap-2"><button ref={cancelRef} type="button" onClick={onCancel} disabled={cancelDisabled} className="min-h-11 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50">{cancelLabel}</button><button type="button" onClick={onConfirm} disabled={confirmDisabled} className={`min-h-11 rounded-xl px-4 py-2.5 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-60 ${danger ? 'bg-red-600 hover:bg-red-700' : 'bg-slate-900 hover:bg-slate-800'}`}>{confirmLabel}</button></div>
       </div>
     </div>
   );

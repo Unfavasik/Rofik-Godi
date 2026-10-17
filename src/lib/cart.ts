@@ -1,4 +1,4 @@
-import type { CartItem, Product } from '../types';
+import type { CartItem, CustomerOrderRecord, Product } from '../types';
 
 export const MAX_ORDER_ITEM_QUANTITY = 99;
 export const MAX_ORDER_LINE_ITEMS = 50;
@@ -154,4 +154,47 @@ export function refreshCartFromCatalog(cart: CartItem[], catalogProducts: Produc
       unitPrice: getCartItemUnitPrice(currentProduct, selectedThickness, item.customEmbroideryText),
     }];
   }));
+}
+
+/** Rebuild a completed order from the current public catalog, never historical prices. */
+export function buildReorderCartItems(
+  orderItems: CustomerOrderRecord['order_items'],
+  catalogProducts: Product[],
+): { items: CartItem[]; skippedItems: string[] } {
+  const productsById = new Map(catalogProducts.map((product) => [product.id, product]));
+  const skippedItems: string[] = [];
+  const rebuiltItems = orderItems.flatMap((orderItem, index): CartItem[] => {
+    const product = orderItem.product_id ? productsById.get(orderItem.product_id) : undefined;
+    if (!product || !product.inStock) {
+      skippedItems.push(orderItem.product_name || 'Unavailable product');
+      return [];
+    }
+
+    const colorName = (orderItem.color || '').trim().toLowerCase();
+    const selectedColor = product.colors.find((color) => color.name.trim().toLowerCase() === colorName)
+      || (orderItem.color
+        ? { name: orderItem.color, hex: product.colors[0]?.hex || '#111827' }
+        : product.colors[0] || { name: 'Standard', hex: '#111827' });
+    const thicknessLabel = (orderItem.selected_thickness || '').trim();
+    const selectedThickness = product.thicknessOptions.find((option) => option.label.trim().toLowerCase() === thicknessLabel.toLowerCase())
+      || product.thicknessOptions[0]
+      || { label: 'Standard', extraPrice: 0 };
+    const selectedStitch = resolveStitchPatternSelection(product.stitchPatterns, orderItem.selected_stitch);
+    const customEmbroideryText = orderItem.custom_embroidery_text?.trim() || undefined;
+    return [{
+      cartItemId: `buy-again-${product.id}-${Date.now()}-${index}`,
+      product,
+      quantity: Math.max(1, Math.min(MAX_ORDER_ITEM_QUANTITY, Math.floor(Number(orderItem.quantity) || 1))),
+      selectedColor,
+      selectedStitch,
+      selectedThickness,
+      customEmbroideryText,
+      unitPrice: getCartItemUnitPrice(product, selectedThickness, customEmbroideryText),
+    }];
+  });
+
+  return {
+    items: refreshCartFromCatalog(rebuiltItems, catalogProducts),
+    skippedItems: [...new Set(skippedItems)],
+  };
 }

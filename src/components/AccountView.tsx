@@ -21,7 +21,7 @@ import { CustomerOrderRecord, Product, UserProfile } from '../types';
 import { listMyOrders } from '../lib/supabaseOrders';
 import { listMyProductReviews, type ProductReviewRecord } from '../lib/supabaseReviews';
 import { ReviewComposer } from './ReviewComposer';
-import { CustomerOrdersModal } from './CustomerOrdersModal';
+import { CustomerOrdersModal, type BuyAgainResult } from './CustomerOrdersModal';
 import { SettingsView } from './SettingsView';
 import { SupportCenter } from './SupportCenter';
 import { ContactSupportView } from './ContactSupportView';
@@ -33,6 +33,7 @@ import { getInitials, validateProfileFields } from '../lib/profileValidation';
 import { ConfirmDialog } from './ConfirmDialog';
 import { PhoneNumberField } from './PhoneNumberField';
 import { getPhoneCountry, validatePhoneNumber, type CountryCode } from '../utils/phoneValidation';
+import { useI18n } from '../lib/i18n';
 
 interface AccountViewProps {
   currentUser?: UserProfile;
@@ -60,7 +61,9 @@ interface AccountViewProps {
   initialOrderNumber?: string | null;
   initialSupportRequestId?: string | null;
   onProfileChange?: (profile: Pick<UserProfile, 'name' | 'phone' | 'avatar' | 'vehicle'>) => void;
+  onBuyAgain?: (order: CustomerOrderRecord) => Promise<BuyAgainResult>;
   products?: Product[];
+  pwaInstallCard?: React.ReactNode;
 }
 
 export const AccountView: React.FC<AccountViewProps> = ({
@@ -87,7 +90,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
   initialOrderNumber,
   initialSupportRequestId,
   onProfileChange,
+  onBuyAgain,
+  pwaInstallCard,
 }) => {
+  const { t } = useI18n();
   const handleGoHome = () => {
     if (onBackToHome) onBackToHome();
     else if (onContinueShopping) onContinueShopping();
@@ -412,6 +418,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
         onOpenShop={onOpenShop}
         onOpenPrivacyPage={onOpenPrivacyPage}
         onOpenTermsPage={onOpenTermsPage}
+        pwaInstallCard={pwaInstallCard}
       />
     );
   }
@@ -439,17 +446,17 @@ export const AccountView: React.FC<AccountViewProps> = ({
       {/* Account Page Title & Avatar */}
       <section className="px-5 pt-3 pb-2 flex justify-between items-start" data-purpose="account-header">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 leading-tight">Account</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 leading-tight">{t('account.title')}</h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5 tracking-tight">
-            {isGuest ? 'Guest User · Sign in for pickup orders' : 'Pickup orders, help and store information'}
+            {isGuest ? t('account.guestSubtitle') : t('account.subtitle')}
           </p>
         </div>
         {/* User Avatar / Profile Icon Button */}
         <button
           type="button"
           onClick={() => handleProtectedAction('profile')}
-          aria-label="Profile Details"
-          className="w-10 h-10 rounded-full bg-[#FCE6E1] flex items-center justify-center transition-transform active:scale-95 text-slate-700 shadow-xs hover:bg-[#FCD8CF]"
+          aria-label={t('account.profile')}
+          className="min-h-11 min-w-11 h-11 w-11 rounded-full bg-[#FCE6E1] flex items-center justify-center transition-transform active:scale-95 text-slate-700 shadow-xs hover:bg-[#FCD8CF]"
         >
           {currentUser?.avatar
             ? <img src={currentUser.avatar} alt={`${currentUser.name || 'Rider'} avatar`} className="h-full w-full rounded-full object-cover" />
@@ -466,18 +473,18 @@ export const AccountView: React.FC<AccountViewProps> = ({
             </div>
             <div>
               <h4 className="text-[14px] font-extrabold text-gray-950 leading-tight">
-                Unlock Account Features
+                {t('account.unlock')}
               </h4>
               <p className="text-[11.5px] text-gray-600 font-medium mt-0.5">
-                Login to track orders, save your profile, wishlist &amp; earn rewards.
+                {t('account.loginHint')}
               </p>
             </div>
           </div>
           <button
             onClick={onOpenLogin}
-            className="w-full sm:w-auto px-4 py-2 bg-[#D9232D] hover:bg-[#C01B24] active:scale-95 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center justify-center space-x-1.5 flex-shrink-0"
+            className="min-h-11 w-full sm:w-auto px-4 py-2 bg-[#D9232D] hover:bg-[#C01B24] active:scale-95 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center justify-center space-x-1.5 flex-shrink-0"
           >
-            <span>Login / Signup</span>
+            <span>{t('account.login')}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -521,9 +528,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 <button
                   type="button"
                   onClick={handleGoHome}
-                  className="inline-flex items-center justify-between bg-[#FEE5DF] hover:bg-[#FCD7CE] text-zinc-900 rounded-full pl-3.5 pr-1.5 py-1.5 transition-all shadow-sm group active:scale-95"
+                  className="min-h-11 inline-flex items-center justify-between bg-[#FEE5DF] hover:bg-[#FCD7CE] text-zinc-900 rounded-full pl-3.5 pr-1.5 py-1.5 transition-all shadow-sm group active:scale-95"
                 >
-                  <span className="text-xs font-semibold text-slate-900 tracking-tight mr-2">Continue shopping</span>
+                  <span className="text-xs font-semibold text-slate-900 tracking-tight mr-2">{t('account.continueShopping')}</span>
                   <span className="w-6 h-6 rounded-full bg-[#E55845] flex items-center justify-center text-white transition-transform group-hover:translate-x-0.5">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                       <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -618,8 +625,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
               <Package className="w-4 h-4 stroke-[2]" />
             </div>
             <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">My Orders</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">View &amp; track</p>
+              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">{t('account.myOrders')}</h3>
+              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">{t('account.ordersHint')}</p>
             </div>
             <svg className="w-3 h-3 text-slate-700 absolute bottom-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -636,9 +643,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
               <Heart className="w-4 h-4 fill-[#2E7CF6] text-[#2E7CF6]" />
             </div>
             <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">Wishlist</h3>
+              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">{t('account.wishlist')}</h3>
               <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">
-                {wishlistCount > 0 ? `${wishlistCount} saved` : 'Saved items'}
+                {wishlistCount > 0 ? t('account.savedCount', { count: wishlistCount }) : t('account.savedItems')}
               </p>
             </div>
             <svg className="w-3 h-3 text-slate-700 absolute bottom-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -650,15 +657,15 @@ export const AccountView: React.FC<AccountViewProps> = ({
           <button
             type="button"
             onClick={() => handleProtectedAction('profile')}
-            aria-label="Profile Details"
+            aria-label={t('account.profile')}
             className="bg-[#FDECE9] hover:bg-[#FCD8CF] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
           >
             <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#E55845]">
               <User className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">Profile</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">Personal details</p>
+              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">{t('account.profile')}</h3>
+              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">{t('account.personalDetails')}</p>
             </div>
             <svg className="w-3 h-3 text-slate-700 absolute bottom-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -675,8 +682,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
               <Settings className="w-4 h-4 text-[#7C3AED] fill-[#7C3AED]" />
             </div>
             <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">Settings</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">Preferences</p>
+              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">{t('account.settings')}</h3>
+              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">{t('account.preferences')}</p>
             </div>
             <svg className="w-3 h-3 text-slate-700 absolute bottom-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -689,14 +696,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
         {/* BEGIN: NeedHelpSection */}
         <section className="pt-2" data-purpose="help-section">
           <div className="flex justify-between items-center px-1 mb-2.5">
-            <h2 className="text-base font-bold text-slate-900 tracking-tight">Need help?</h2>
+            <h2 className="text-base font-bold text-slate-900 tracking-tight">{t('account.needHelp')}</h2>
             <a
               href="https://wa.me/919832145678?text=Hello%20Rofik%20Godi%20Support,%20I%20need%20help%20with%20my%20seat%20cover."
               target="_blank"
               rel="noreferrer"
               className="text-xs font-semibold text-slate-500 hover:text-slate-700 flex items-center"
             >
-              Get support
+              {t('account.getSupport')}
               <svg className="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -710,17 +717,17 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 <MessageCircle className="w-6 h-6 fill-white text-[#25D366]" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 leading-tight">Chat on WhatsApp</h3>
-                <p className="text-[11px] text-slate-500 font-normal mt-0.5">Quick answers from our local team</p>
+                <h3 className="text-sm font-bold text-slate-900 leading-tight">{t('account.chatWhatsApp')}</h3>
+                <p className="text-[11px] text-slate-500 font-normal mt-0.5">{t('account.quickAnswers')}</p>
               </div>
             </div>
             <a
               href="https://wa.me/919832145678?text=Hello%20Rofik%20Godi,%20I%20have%20a%20question%20about%20seat%20covers."
               target="_blank"
               rel="noreferrer"
-              className="bg-[#1EB754] hover:bg-[#16A34A] text-white text-xs font-semibold px-3 py-1.5 rounded-full flex items-center space-x-1 transition-colors flex-shrink-0"
+              className="min-h-11 bg-[#1EB754] hover:bg-[#16A34A] text-white text-xs font-semibold px-3 py-1.5 rounded-full flex items-center space-x-1 transition-colors flex-shrink-0"
             >
-              <span>Chat now</span>
+              <span>{t('account.chatNow')}</span>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -917,6 +924,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             onBackToOrdersRoute={onBackToOrdersRoute}
             onClose={closeRoutedPage}
             onRefresh={refreshCustomerOrders}
+            onBuyAgain={onBuyAgain}
             onReview={(order, productId, productTitle, review) =>
               setReviewComposer({
                 productId,

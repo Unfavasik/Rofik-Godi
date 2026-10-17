@@ -19,7 +19,7 @@ export const LoginRequiredModal: React.FC<LoginRequiredModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-4">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -40,7 +40,8 @@ export const LoginRequiredModal: React.FC<LoginRequiredModalProps> = ({
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-900 active:scale-95 transition-all"
+            aria-label="Close sign-in prompt"
+            className="absolute top-5 right-5 grid min-h-11 min-w-11 place-items-center rounded-full bg-gray-100 text-gray-500 hover:text-gray-900 active:scale-95 transition-all"
           >
             <X className="w-4 h-4" />
           </button>
@@ -95,7 +96,7 @@ export const LoginRequiredModal: React.FC<LoginRequiredModalProps> = ({
             {/* Continue browsing as Guest */}
             <button
               onClick={onClose}
-              className="w-full py-2 text-center text-xs font-semibold text-gray-400 hover:text-gray-700 transition-colors"
+              className="min-h-11 w-full py-2 text-center text-xs font-semibold text-gray-400 hover:text-gray-700 transition-colors"
             >
               Continue browsing as Guest
             </button>

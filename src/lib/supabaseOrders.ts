@@ -2,6 +2,7 @@ import type { CustomerOrderRecord, OrderDetails } from '../types';
 import { supabase } from './supabase';
 import { normalizeCouponFailureMessage } from './couponErrors';
 import { getCartItemUnitPrice, MAX_ORDER_ITEM_QUANTITY, MAX_ORDER_LINE_ITEMS } from './cart';
+import type { CustomerOrderStatusEvent } from './orderPresentation';
 
 const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 const missingOrderOptionColumns = (error: { message?: string } | null) => Boolean(error && /selected_thickness|selected_stitch|custom_embroidery_text/i.test(error.message || ''));
@@ -97,6 +98,32 @@ export async function issueMyStorePickupToken(orderNumber: string) {
   return { data: data as string | null, error };
 }
 
+export async function cancelMyOrder(orderNumber: string, reason = '') {
+  if (!supabase) return { data: null, error: new Error('Service configuration unavailable. Please try again.') };
+  const normalizedOrderNumber = orderNumber.trim();
+  if (!normalizedOrderNumber) return { data: null, error: new Error('A valid order number is required.') };
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+  if (authError || !userData.user) return { data: null, error: new Error('Sign in to cancel this order.') };
+
+  const { data, error } = await supabase.rpc('cancel_my_order', {
+    p_order_number: normalizedOrderNumber,
+    p_reason: reason.trim() || null,
+  });
+  if (error) return { data: null, error: new Error(error.message || 'This order could not be cancelled.') };
+  const result = (Array.isArray(data) ? data[0] : data) as { order_number?: unknown; status?: unknown; cancelled_at?: unknown } | null;
+  if (!result || result.status !== 'CANCELLED' || result.order_number !== normalizedOrderNumber) {
+    return { data: null, error: new Error('The cancellation service did not confirm this order.') };
+  }
+  return {
+    data: {
+      order_number: String(result.order_number),
+      status: 'CANCELLED' as const,
+      cancelled_at: typeof result.cancelled_at === 'string' ? result.cancelled_at : null,
+    },
+    error: null,
+  };
+}
+
 export async function listMyOrders(expectedUserId: string): Promise<CustomerOrderRecord[]> {
   if (!supabase) return [];
   const { data: userData, error: authError } = await supabase.auth.getUser();
@@ -181,4 +208,20 @@ export async function getMyOrderByNumber(expectedUserId: string, orderNumber: st
       image_url: item.product_id ? productImages.get(item.product_id) || null : null,
     })),
   };
+}
+
+/** Read only the authenticated customer's permitted status history for an order. */
+export async function listMyOrderStatusHistory(orderId: string): Promise<CustomerOrderStatusEvent[]> {
+  if (!supabase) throw new Error('Service configuration unavailable.');
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
+  if (!userData.user) throw new Error('Sign in to view order updates.');
+  const { data, error } = await supabase
+    .from('order_status_history')
+    .select('to_status,created_at')
+    .eq('order_id', orderId)
+    .order('created_at', { ascending: true })
+    .limit(50);
+  if (error) throw error;
+  return (data || []) as CustomerOrderStatusEvent[];
 }

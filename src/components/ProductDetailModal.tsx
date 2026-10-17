@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { CartItem, Product } from '../types';
 import { createDefaultCartItem, hasMatchingCartItem, resolveStitchPatternSelection } from '../lib/cart';
+import { getProductAvailability } from '../lib/productAvailability';
 import { ProductReviews } from './ProductReviews';
 
 interface ProductDetailModalProps {
@@ -51,6 +52,7 @@ interface ProductDetailModalProps {
   ) => void;
   onSelectProduct?: (p: Product) => void;
   onQuickAdd?: (p: Product) => void;
+  onNotifyMe?: (p: Product) => void | Promise<void>;
   isAuthenticated?: boolean;
   customerId?: string;
   onRequestLogin?: () => void;
@@ -85,6 +87,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   onBuyNow,
   onSelectProduct,
   onQuickAdd,
+  onNotifyMe,
   isAuthenticated = false,
   customerId,
   onRequestLogin,
@@ -118,7 +121,23 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   const [selectedModel, setSelectedModel] = useState('');
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [quantity] = useState(1);
+  const [notifySubmitting, setNotifySubmitting] = useState(false);
+  const notifyRequestLock = useRef(false);
   const totalPrice = (product.price + selectedThickness.extraPrice) * quantity;
+  const availability = getProductAvailability(product);
+  const handleNotifyMe = async (target: Product) => {
+    if (notifyRequestLock.current || !onNotifyMe) return;
+    notifyRequestLock.current = true;
+    setNotifySubmitting(true);
+    try {
+      await onNotifyMe(target);
+    } catch (error) {
+      console.error('Could not set up the stock alert.', error);
+    } finally {
+      notifyRequestLock.current = false;
+      setNotifySubmitting(false);
+    }
+  };
   const isSelectedConfigurationInCart = hasMatchingCartItem(cartItems, {
     cartItemId: `selected-${product.id}`,
     product,
@@ -230,6 +249,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 <span className="text-[15px] text-slate-400 line-through">₹{displayOriginalPrice}</span>
                 <span className="rounded-md bg-rose-50 px-2 py-1 text-[10px] font-extrabold text-[#d9232d]">{discount}% OFF</span>
               </div>
+              <p role="status" className={`mt-2 text-[11px] font-bold ${availability.state === 'out-of-stock' ? 'text-amber-700' : availability.state === 'low-stock' ? 'text-orange-700' : 'text-emerald-700'}`}>{availability.label}</p>
               <div className="mt-4 grid grid-cols-3 gap-2">
                 {[['Premium Quality', ShieldCheck], ['Waterproof', Droplets], ['Long Lasting', Clock3]].map(([label, Icon]) => (
                   <div key={label as string} className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-100 bg-white px-2 py-2 text-center text-[10px] font-semibold text-slate-700 shadow-[0_2px_8px_rgba(15,23,42,.03)]">
@@ -337,14 +357,14 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
             <section className="border-t border-slate-100 px-5 py-5">
               <div className="mb-3 flex items-center justify-between"><h2 className="text-[17px] font-extrabold tracking-tight">You may also like</h2><button type="button" onClick={() => onSelectProduct?.(suggested[0])} className="text-[12px] font-bold text-[#d9232d]">See all</button></div>
               <div className="grid grid-cols-2 gap-2.5">
-                {suggested.slice(0, 2).map((item) => <SuggestionCard key={item.id} product={item} isInCart={hasMatchingCartItem(cartItems, createDefaultCartItem(item, `${item.id}-suggestion`))} onAdd={() => onQuickAdd?.(item)} onOpenCart={onOpenCart} onSelect={() => onSelectProduct?.(item)} />)}
+                {suggested.slice(0, 2).map((item) => <SuggestionCard key={item.id} product={item} isInCart={hasMatchingCartItem(cartItems, createDefaultCartItem(item, `${item.id}-suggestion`))} onAdd={() => onQuickAdd?.(item)} onNotifyMe={() => onNotifyMe?.(item)} onOpenCart={onOpenCart} onSelect={() => onSelectProduct?.(item)} />)}
               </div>
             </section>
 
             <section className="border-t border-slate-100 px-5 py-5">
               <div className="mb-3 flex items-center justify-between"><h2 className="text-[17px] font-extrabold tracking-tight">Recently viewed</h2><button type="button" className="text-[12px] font-bold text-[#d9232d]">See all</button></div>
               <div className="grid grid-cols-2 gap-2.5">
-                {suggested.slice(2, 4).map((item) => <SuggestionCard key={item.id} product={item} isInCart={hasMatchingCartItem(cartItems, createDefaultCartItem(item, `${item.id}-suggestion`))} onAdd={() => onQuickAdd?.(item)} onOpenCart={onOpenCart} onSelect={() => onSelectProduct?.(item)} />)}
+                {suggested.slice(2, 4).map((item) => <SuggestionCard key={item.id} product={item} isInCart={hasMatchingCartItem(cartItems, createDefaultCartItem(item, `${item.id}-suggestion`))} onAdd={() => onQuickAdd?.(item)} onNotifyMe={() => onNotifyMe?.(item)} onOpenCart={onOpenCart} onSelect={() => onSelectProduct?.(item)} />)}
               </div>
             </section>
 
@@ -359,13 +379,17 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
             </section>
           </main>
 
-          <footer className="z-40 grid shrink-0 grid-cols-2 gap-2.5 border-t border-slate-100 bg-white px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgba(15,23,42,.08)]">
-            <button type="button" disabled={!product.inStock && !isSelectedConfigurationInCart} onClick={() => { if (isSelectedConfigurationInCart) onOpenCart?.(); else addToCart(false); }} aria-label={isSelectedConfigurationInCart ? 'Go to Cart' : !product.inStock ? 'Out of stock' : 'Add to cart'} className="flex h-[50px] items-center justify-center gap-2 rounded-xl border border-[#d9232d] bg-white text-[13px] font-extrabold text-[#d9232d] active:scale-[.98]">
-              {isSelectedConfigurationInCart ? <ShoppingCart className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}{!product.inStock && !isSelectedConfigurationInCart ? 'Out of stock' : isSelectedConfigurationInCart ? 'Go to Cart' : 'Add to Cart'}
-            </button>
-            <button type="button" disabled={!product.inStock} onClick={() => addToCart(true)} className="flex h-[50px] items-center justify-center gap-2 rounded-xl bg-[#d9232d] text-[13px] font-extrabold text-white shadow-sm active:scale-[.98]">
-              <Zap className="h-4 w-4 fill-current" />Buy Now
-            </button>
+          <footer className={`z-40 grid shrink-0 ${product.inStock ? 'grid-cols-2' : 'grid-cols-1'} gap-2.5 border-t border-slate-100 bg-white px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgba(15,23,42,.08)]`}>
+            {product.inStock ? <>
+              <button type="button" onClick={() => { if (isSelectedConfigurationInCart) onOpenCart?.(); else addToCart(false); }} aria-label={isSelectedConfigurationInCart ? 'Go to Cart' : 'Add to cart'} className="flex h-[50px] items-center justify-center gap-2 rounded-xl border border-[#d9232d] bg-white text-[13px] font-extrabold text-[#d9232d] active:scale-[.98]">
+                <ShoppingCart className="h-4 w-4" />{isSelectedConfigurationInCart ? 'Go to Cart' : 'Add to Cart'}
+              </button>
+              <button type="button" onClick={() => addToCart(true)} className="flex h-[50px] items-center justify-center gap-2 rounded-xl bg-[#d9232d] text-[13px] font-extrabold text-white shadow-sm active:scale-[.98]">
+                <Zap className="h-4 w-4 fill-current" />Buy Now
+              </button>
+            </> : <button type="button" disabled={!onNotifyMe || notifySubmitting} onClick={() => void handleNotifyMe(product)} aria-label="Notify me when this product is back in stock" className="flex h-[50px] items-center justify-center gap-2 rounded-xl bg-[#d9232d] text-[13px] font-extrabold text-white shadow-sm disabled:opacity-50">
+              <Clock3 className={`h-4 w-4 ${notifySubmitting ? 'animate-spin' : ''}`} />{notifySubmitting ? 'Setting up…' : 'Notify me'}
+            </button>}
           </footer>
         </motion.section>
       </div>
@@ -373,17 +397,36 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   );
 };
 
-const SuggestionCard: React.FC<{ product: Product; isInCart: boolean; onAdd: () => void; onOpenCart?: () => void; onSelect: () => void }> = ({ product, isInCart, onAdd, onOpenCart, onSelect }) => (
-  <article className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_3px_14px_rgba(15,23,42,.045)]">
-    <button type="button" onClick={onSelect} className="block h-[112px] w-full bg-slate-100"><img src={localProductImages[product.id]?.[0] ?? product.image} alt={product.title} className="h-full w-full object-cover" /></button>
-    <div className="p-2.5">
-      <button type="button" onClick={onSelect} className="block text-left text-[12px] font-bold break-words">{product.title}</button>
-      <p className="mt-0.5 text-[10px] text-slate-500 break-words">{product.subtitle}</p>
-      <div className="mt-2 flex items-center justify-between gap-1">
-        <span className="text-[16px] font-extrabold">₹{product.price} <small className="text-[9px] font-normal text-slate-400 line-through">₹{product.originalPrice}</small></span>
-        <button type="button" disabled={!product.inStock && !isInCart} onClick={() => { if (isInCart) onOpenCart?.(); else onAdd(); }} aria-label={isInCart ? 'Go to Cart' : product.inStock ? `Add ${product.title} to cart` : 'Out of stock'} title={isInCart ? 'Go to Cart' : 'Add to cart'} className={`grid h-8 w-8 place-items-center rounded-full text-white ${isInCart ? 'bg-emerald-600' : 'bg-[#d9232d]'}`}>{isInCart ? <ShoppingCart className="h-4 w-4" /> : <Plus className="h-4 w-4" />}</button>
+const SuggestionCard: React.FC<{ product: Product; isInCart: boolean; onAdd: () => void; onNotifyMe?: () => void | Promise<void>; onOpenCart?: () => void; onSelect: () => void }> = ({ product, isInCart, onAdd, onNotifyMe, onOpenCart, onSelect }) => {
+  const [notifySubmitting, setNotifySubmitting] = useState(false);
+  const notifyRequestLock = useRef(false);
+  const availability = getProductAvailability(product);
+  const handleNotifyMe = async () => {
+    if (notifyRequestLock.current || !onNotifyMe) return;
+    notifyRequestLock.current = true;
+    setNotifySubmitting(true);
+    try {
+      await onNotifyMe();
+    } catch (error) {
+      console.error('Could not set up the stock alert.', error);
+    } finally {
+      notifyRequestLock.current = false;
+      setNotifySubmitting(false);
+    }
+  };
+  return (
+    <article className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_3px_14px_rgba(15,23,42,.045)]">
+      <button type="button" onClick={onSelect} className="block h-[112px] w-full bg-slate-100"><img src={localProductImages[product.id]?.[0] ?? product.image} alt={product.title} className="h-full w-full object-cover" /></button>
+      <div className="p-2.5">
+        <button type="button" onClick={onSelect} className="block text-left text-[12px] font-bold break-words">{product.title}</button>
+        <p className="mt-0.5 text-[10px] text-slate-500 break-words">{product.subtitle}</p>
+        <p className={`mt-1 text-[10px] font-bold ${availability.state === 'out-of-stock' ? 'text-amber-700' : availability.state === 'low-stock' ? 'text-orange-700' : 'text-emerald-700'}`}>{availability.label}</p>
+        <div className="mt-2 flex items-center justify-between gap-1">
+          <span className="text-[16px] font-extrabold">₹{product.price} <small className="text-[9px] font-normal text-slate-400 line-through">₹{product.originalPrice}</small></span>
+          <button type="button" disabled={!product.inStock && !isInCart && (!onNotifyMe || notifySubmitting)} onClick={() => { if (isInCart) onOpenCart?.(); else if (product.inStock) onAdd(); else void handleNotifyMe(); }} aria-label={isInCart ? 'Go to Cart' : product.inStock ? `Add ${product.title} to cart` : 'Notify me when in stock'} title={isInCart ? 'Go to Cart' : product.inStock ? 'Add to cart' : 'Notify me'} className={`grid min-h-11 ${!product.inStock && !isInCart ? 'min-w-[74px] px-2 text-[9px] font-extrabold' : 'min-w-11'} place-items-center rounded-xl text-white ${isInCart ? 'bg-emerald-600' : 'bg-[#d9232d]'}`}>{isInCart ? <ShoppingCart className="h-4 w-4" /> : product.inStock ? <Plus className="h-4 w-4" /> : notifySubmitting ? 'Wait…' : 'Notify me'}</button>
+        </div>
+        <div className="mt-1 flex items-center gap-1 text-[10px] text-amber-500"><Star className="h-3 w-3 fill-current" />{product.rating} <span className="text-slate-400">({product.reviewCount})</span></div>
       </div>
-      <div className="mt-1 flex items-center gap-1 text-[10px] text-amber-500"><Star className="h-3 w-3 fill-current" />{product.rating} <span className="text-slate-400">({product.reviewCount})</span></div>
-    </div>
-  </article>
-);
+    </article>
+  );
+};

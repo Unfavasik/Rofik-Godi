@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PRODUCTS } from '../src/data/products';
-import { addOrMergeCartItem, canReconcileCartFromCatalog, createDefaultCartItem, hasMatchingCartItem, refreshCartFromCatalog, resolveStitchPatternSelection, sanitizePersistedCart, toggleCartItem } from '../src/lib/cart';
+import { addOrMergeCartItem, buildReorderCartItems, canReconcileCartFromCatalog, createDefaultCartItem, hasMatchingCartItem, refreshCartFromCatalog, resolveStitchPatternSelection, sanitizePersistedCart, toggleCartItem } from '../src/lib/cart';
 import type { CartItem, Product } from '../src/types';
 
 const originalProduct = PRODUCTS[0];
@@ -114,5 +114,50 @@ describe('persisted cart reconciliation', () => {
 
   it('preserves custom-seat products and their already-calculated price unchanged', () => {
     expect(refreshCartFromCatalog([customSeatItem], PRODUCTS)).toEqual([customSeatItem]);
+  });
+
+  it('rebuilds a completed order with current prices and the same supported selections', () => {
+    const currentProduct: Product = {
+      ...originalProduct,
+      price: 700,
+      inStock: true,
+      colors: [{ name: 'Blue', hex: '#2563EB', bgClass: 'bg-blue-600' }],
+      thicknessOptions: [{ label: 'Premium', extraPrice: 35 }],
+      stitchPatterns: ['Diamond'],
+      isCustomizable: true,
+    };
+    const result = buildReorderCartItems([{
+      product_id: currentProduct.id,
+      product_name: currentProduct.title,
+      color: 'Blue',
+      quantity: 2,
+      unit_price: 1,
+      selected_thickness: 'Premium',
+      selected_stitch: 'Diamond',
+      custom_embroidery_text: '  Rider  ',
+    }], [currentProduct]);
+
+    expect(result.skippedItems).toEqual([]);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]).toMatchObject({
+      quantity: 2,
+      selectedColor: { name: 'Blue', hex: '#2563EB' },
+      selectedThickness: { label: 'Premium', extraPrice: 35 },
+      selectedStitch: 'Diamond',
+      customEmbroideryText: 'Rider',
+      unitPrice: 885,
+    });
+    expect(result.items[0].product.price).toBe(700);
+  });
+
+  it('skips products no longer in the live catalog or currently out of stock', () => {
+    const outOfStock = { ...originalProduct, id: 'out-of-stock', inStock: false };
+    const result = buildReorderCartItems([
+      { product_id: 'removed-product', product_name: 'Removed item', color: null, quantity: 1, unit_price: 100 },
+      { product_id: outOfStock.id, product_name: 'Sold out item', color: null, quantity: 1, unit_price: 100 },
+    ], [outOfStock]);
+
+    expect(result.items).toEqual([]);
+    expect(result.skippedItems).toEqual(['Removed item', 'Sold out item']);
   });
 });

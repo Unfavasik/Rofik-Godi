@@ -4,13 +4,14 @@ const { supabaseMock } = vi.hoisted(() => ({
   supabaseMock: {
     auth: { getUser: vi.fn() },
     rpc: vi.fn(),
+    from: vi.fn(),
     functions: { invoke: vi.fn() },
   },
 }));
 
 vi.mock('../src/lib/supabase', () => ({ supabase: supabaseMock }));
 
-import { createSupabaseOrder, issueMyStorePickupToken } from '../src/lib/supabaseOrders';
+import { cancelMyOrder, createSupabaseOrder, issueMyStorePickupToken, listMyOrderStatusHistory } from '../src/lib/supabaseOrders';
 import type { CartItem, OrderDetails } from '../src/types';
 
 const productId = '123e4567-e89b-42d3-a456-426614174000';
@@ -127,5 +128,55 @@ describe('secure order creation flow', () => {
     expect(result.data).toBeNull();
     expect(result.error?.message).toMatch(/sign in/i);
     expect(supabaseMock.rpc).not.toHaveBeenCalled();
+  });
+
+  it('cancels by public order number only after the server confirms the transition', async () => {
+    supabaseMock.auth.getUser.mockResolvedValue({ data: { user: { id: 'customer-1' } }, error: null });
+    supabaseMock.rpc.mockResolvedValue({
+      data: { order_number: 'RGC-1001', status: 'CANCELLED', cancelled_at: '2026-10-16T10:00:00.000Z' },
+      error: null,
+    });
+
+    const result = await cancelMyOrder(' RGC-1001 ', 'Changed my mind');
+
+    expect(supabaseMock.rpc).toHaveBeenCalledWith('cancel_my_order', {
+      p_order_number: 'RGC-1001',
+      p_reason: 'Changed my mind',
+    });
+    expect(result).toEqual({
+      data: { order_number: 'RGC-1001', status: 'CANCELLED', cancelled_at: '2026-10-16T10:00:00.000Z' },
+      error: null,
+    });
+  });
+
+  it('surfaces server-side cancellation blocks without reporting success', async () => {
+    supabaseMock.auth.getUser.mockResolvedValue({ data: { user: { id: 'customer-1' } }, error: null });
+    supabaseMock.rpc.mockResolvedValue({ data: null, error: { message: 'Only a new, unconfirmed order can be cancelled' } });
+
+    const result = await cancelMyOrder('RGC-1001');
+
+    expect(supabaseMock.rpc).toHaveBeenCalledWith('cancel_my_order', {
+      p_order_number: 'RGC-1001',
+      p_reason: null,
+    });
+    expect(result.data).toBeNull();
+    expect(result.error?.message).toMatch(/unconfirmed order/i);
+  });
+
+  it('loads status timestamps from the owner-readable order history table', async () => {
+    supabaseMock.auth.getUser.mockResolvedValue({ data: { user: { id: 'customer-1' } }, error: null });
+    const query = { select: vi.fn(), eq: vi.fn(), order: vi.fn(), limit: vi.fn() };
+    query.select.mockReturnValue(query);
+    query.eq.mockReturnValue(query);
+    query.order.mockReturnValue(query);
+    query.limit.mockResolvedValue({ data: [{ to_status: 'READY_FOR_PICKUP', created_at: '2026-10-16T10:00:00.000Z' }], error: null });
+    supabaseMock.from.mockReturnValue(query);
+
+    const result = await listMyOrderStatusHistory('order-id-1');
+
+    expect(supabaseMock.from).toHaveBeenCalledWith('order_status_history');
+    expect(query.select).toHaveBeenCalledWith('to_status,created_at');
+    expect(query.eq).toHaveBeenCalledWith('order_id', 'order-id-1');
+    expect(result).toEqual([{ to_status: 'READY_FOR_PICKUP', created_at: '2026-10-16T10:00:00.000Z' }]);
   });
 });

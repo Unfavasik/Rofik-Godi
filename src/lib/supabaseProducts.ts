@@ -24,6 +24,8 @@ export const mapSupabaseProduct = (row: ProductRow): Product => {
     rating: Number(row.rating || 0), reviewCount: Number(row.review_count || 0), image: String(row.image_url || ''), additionalImages: asStrings(row.additional_images),
     description: String(row.description || ''), features: asStrings(row.features), isBestseller: Boolean(row.is_bestseller), isNew: Boolean(row.is_new),
     isWaterproof: Boolean(row.is_waterproof), isCustomizable: Boolean(row.is_customizable), inStock: row.in_stock === undefined ? true : Boolean(row.in_stock),
+    stockQuantity: row.stock_quantity == null ? undefined : Number(row.stock_quantity),
+    lowStockThreshold: row.low_stock_threshold == null ? undefined : Number(row.low_stock_threshold),
     materials: asStrings(row.materials), colors: asColors(row.colors_json, row.colors), stitchPatterns: asStrings(row.stitch_patterns),
     compatibility: asStrings(row.compatibility_list).length ? asStrings(row.compatibility_list) : String(row.compatibility || '').split(',').map((item) => item.trim()).filter(Boolean),
     thicknessOptions: asThickness(row.thickness_options), badge: row.badge ? String(row.badge) : undefined, badgeColor: row.badge_color as Product['badgeColor'] | undefined,

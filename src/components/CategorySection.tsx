@@ -1,5 +1,6 @@
 import React from 'react';
 import { VehicleCategory } from '../types';
+import { useI18n, type TranslationKey } from '../lib/i18n';
 
 interface CategorySectionProps {
   selectedCategory: VehicleCategory | 'all';
@@ -10,11 +11,12 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
   selectedCategory,
   onSelectCategory,
 }) => {
+  const { t } = useI18n();
   const categories = [
     {
       id: 'bike' as VehicleCategory,
-      title: 'Bike Covers',
-      count: '30+ Models',
+      titleKey: 'home.bikeCovers' as TranslationKey,
+      countKey: 'home.bikeModels' as TranslationKey,
       bgClass: 'bg-[#FFF1F1]/80 hover:bg-[#FFE8E8]',
       activeBgClass: 'ring-2 ring-[#D9232D] bg-[#FFE8E8]',
       buttonBg: 'bg-[#FEE2E2]',
@@ -23,8 +25,8 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
     },
     {
       id: 'toto' as VehicleCategory,
-      title: 'Toto Covers',
-      count: 'Commercial Sets',
+      titleKey: 'home.totoCovers' as TranslationKey,
+      countKey: 'home.commercialSets' as TranslationKey,
       bgClass: 'bg-[#EBFBF3]/90 hover:bg-[#E2F7EC]',
       activeBgClass: 'ring-2 ring-[#059669] bg-[#E2F7EC]',
       buttonBg: 'bg-[#D1FAE5]',
@@ -34,8 +36,8 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
     },
     {
       id: 'cushion' as VehicleCategory,
-      title: 'Cushions',
-      count: 'Gel & Air Mesh',
+      titleKey: 'home.cushions' as TranslationKey,
+      countKey: 'home.gelAirMesh' as TranslationKey,
       bgClass: 'bg-[#EEF6FF]/90 hover:bg-[#E3EFFF]',
       activeBgClass: 'ring-2 ring-[#2563EB] bg-[#E3EFFF]',
       buttonBg: 'bg-[#DBEAFE]',
@@ -44,8 +46,8 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
     },
     {
       id: 'accessory' as VehicleCategory,
-      title: 'Accessories',
-      count: 'Rain & Care',
+      titleKey: 'home.accessories' as TranslationKey,
+      countKey: 'home.rainCare' as TranslationKey,
       bgClass: 'bg-[#FFF8E7]/90 hover:bg-[#FEF1D4]',
       activeBgClass: 'ring-2 ring-[#D97706] bg-[#FEF1D4]',
       buttonBg: 'bg-[#FEF3C7]',
@@ -58,8 +60,8 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
     <section className="px-5 mb-6" data-purpose="category-list">
       <div className="flex justify-between items-baseline mb-3">
         <div>
-          <h3 className="text-[17px] font-black text-gray-900 tracking-tight">Shop by category</h3>
-          <p className="text-[11.5px] text-gray-400 font-medium">Find the right fit for your ride</p>
+          <h3 className="text-[17px] font-black text-gray-900 tracking-tight">{t('home.shopByCategory')}</h3>
+          <p className="text-[11.5px] text-gray-400 font-medium">{t('home.categoryHint')}</p>
         </div>
         <button
           onClick={() => onSelectCategory('all')}
@@ -67,7 +69,7 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
             selectedCategory === 'all' ? 'text-[#D9232D]' : 'text-gray-500 hover:text-[#D9232D]'
           }`}
         >
-          <span>{selectedCategory === 'all' ? 'Showing all' : 'View all'}</span>
+          <span>{selectedCategory === 'all' ? t('home.showingAll') : t('home.viewAll')}</span>
           <span className="text-xs">→</span>
         </button>
       </div>
@@ -94,7 +96,7 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
                 ) : (
                   <img
                     src={cat.image}
-                    alt={cat.title}
+                    alt={t(cat.titleKey)}
                     className="h-8 w-8 sm:h-10 sm:w-10 object-contain rounded-lg drop-shadow-xs group-hover:scale-105 transition-transform"
                     loading="lazy"
                   />
@@ -102,7 +104,7 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
               </div>
 
               <span className="text-[10px] sm:text-[11px] font-bold text-gray-900 leading-tight mb-1.5 text-center break-words w-full px-0.5">
-                {cat.title}
+                {t(cat.titleKey)}
               </span>
 
               <div

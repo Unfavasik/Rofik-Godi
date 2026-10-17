@@ -5,13 +5,14 @@
 
 import React, { lazy, Suspense, useState, useMemo, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { WORKSHOP_INFO } from './data/products';
-import { Product, CartItem, VehicleCategory, UserProfile } from './types';
+import { Product, CartItem, CustomerOrderRecord, VehicleCategory, UserProfile } from './types';
 import { Header } from './components/Header';
 import { HeroBanner } from './components/HeroBanner';
 import { CategorySection } from './components/CategorySection';
 import { CatalogStatus } from './components/CatalogStatus';
 import { VehicleFinder } from './components/VehicleFinder';
 import { ProductCard } from './components/ProductCard';
+import { PwaInstallCard } from './components/PwaInstallCard';
 const ProductDetailModal = lazy(() => import('./components/ProductDetailModal').then((module) => ({ default: module.ProductDetailModal })));
 const CustomSeatBuilder = lazy(() => import('./components/CustomSeatBuilder').then((module) => ({ default: module.CustomSeatBuilder })));
 const CartDrawer = lazy(() => import('./components/CartDrawer').then((module) => ({ default: module.CartDrawer })));
@@ -31,7 +32,9 @@ const LoginRequiredModal = lazy(() => import('./components/LoginRequiredModal').
 const SearchView = lazy(() => import('./components/SearchView').then((module) => ({ default: module.SearchView })));
 const NotificationsView = lazy(() => import('./components/NotificationsView').then((module) => ({ default: module.NotificationsView })));
 import { ShopView } from './components/ShopView';
-import { createDefaultCartItem, getCartItemUnitPrice, hasMatchingCartItem, MAX_ORDER_ITEM_QUANTITY, toggleCartItem } from './lib/cart';
+import { buildReorderCartItems, createDefaultCartItem, getCartItemUnitPrice, hasMatchingCartItem, MAX_ORDER_ITEM_QUANTITY, refreshCartFromCatalog, toggleCartItem } from './lib/cart';
+import { isOrderComplete } from './lib/orderPresentation';
+import { createMyStockAlert } from './lib/supabaseStockAlerts';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 const AdminPanel = lazy(() =>
   import('./components/AdminPanel').then((module) => ({ default: module.AdminPanel })),
@@ -52,9 +55,12 @@ import { supabase } from './lib/supabase';
 import { getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
 import { signOutCurrentDevice } from './lib/authLogout';
 import { CUSTOMER_PREFERENCES_CHANGED_EVENT, isNotificationEnabledByPreferences, prefersHapticFeedback, readCustomerAppPreferences } from './lib/customerPreferences';
+import type { PreferredLanguage } from './lib/customerPreferences';
+import { I18nProvider, translate } from './lib/i18n';
 import { useAuth } from './hooks/useAuth';
 import { useCart } from './hooks/useCart';
 import { useCatalog } from './hooks/useCatalog';
+import { usePwaInstallPrompt } from './hooks/usePwaInstallPrompt';
 import { listMyNotifications, listMyWishlist, toggleWishlist } from './lib/supabaseCustomer';
 const FilterSortModal = lazy(() => import('./components/FilterSortModal').then((module) => ({ default: module.FilterSortModal })));
 export default function App() {
@@ -85,6 +91,19 @@ export default function App() {
     setIsAdmin,
     checkIsAdmin,
   } = useAuth();
+  const [uiLanguage, setUiLanguage] = useState<PreferredLanguage>(() => readCustomerAppPreferences(currentUser.id).language);
+  useEffect(() => {
+    const ownerId = currentUser.id || 'guest-user';
+    const syncLanguage = (event?: Event) => {
+      const changedOwner = (event as CustomEvent<{ userId?: string }> | undefined)?.detail?.userId;
+      if (changedOwner && changedOwner !== ownerId) return;
+      setUiLanguage(readCustomerAppPreferences(currentUser.id).language);
+    };
+    syncLanguage();
+    window.addEventListener(CUSTOMER_PREFERENCES_CHANGED_EVENT, syncLanguage);
+    return () => window.removeEventListener(CUSTOMER_PREFERENCES_CHANGED_EVENT, syncLanguage);
+  }, [currentUser.id]);
+  const pwaInstall = usePwaInstallPrompt();
   const adminStorefrontRequested = useRef(false);
   const protectedRouteAfterAuth = useRef<string | null>(null);
   const [guestWelcomeComplete, setGuestWelcomeComplete] = useState(false);
@@ -261,6 +280,11 @@ export default function App() {
   // Modals & Drawers
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cartReorderNotice, setCartReorderNotice] = useState<string | null>(null);
+  const [stockAlertFeedback, setStockAlertFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
+  const pendingStockAlertProductRef = useRef<string | null>(null);
+  const stockAlertRequestLockRef = useRef(false);
+  const stockAlertFeedbackTimerRef = useRef<number | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isCustomBuilderOpen, setIsCustomBuilderOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
@@ -667,6 +691,71 @@ export default function App() {
     navigate('/cart');
   };
 
+  const showStockAlertFeedback = useCallback((tone: 'success' | 'error', message: string) => {
+    if (stockAlertFeedbackTimerRef.current !== null) window.clearTimeout(stockAlertFeedbackTimerRef.current);
+    setStockAlertFeedback({ tone, message });
+    stockAlertFeedbackTimerRef.current = window.setTimeout(() => {
+      setStockAlertFeedback(null);
+      stockAlertFeedbackTimerRef.current = null;
+    }, 6500);
+  }, []);
+
+  const submitStockAlert = useCallback(async (productId: string, userId: string, productTitle: string) => {
+    if (stockAlertRequestLockRef.current) {
+      showStockAlertFeedback('error', 'A restock alert is still being created. Please wait.');
+      return;
+    }
+    stockAlertRequestLockRef.current = true;
+    try {
+      const result = await createMyStockAlert(productId, userId);
+      if (result.error) {
+        const alreadyAvailable = result.error.message.toLowerCase().includes('already in stock');
+        showStockAlertFeedback(alreadyAvailable ? 'success' : 'error', alreadyAvailable
+          ? `${productTitle} is back in stock now. Refresh the product page to shop.`
+          : result.error.message);
+      } else if (result.data) {
+        showStockAlertFeedback('success', `You’ll be notified when ${productTitle} is back in stock.`);
+      } else {
+        showStockAlertFeedback('success', `You’re already signed up for a ${productTitle} restock alert.`);
+      }
+    } finally {
+      stockAlertRequestLockRef.current = false;
+    }
+  }, [showStockAlertFeedback]);
+
+  const handleNotifyMe = useCallback(async (product: Product) => {
+    if (currentUser.isGuest) {
+      pendingStockAlertProductRef.current = product.id;
+      setLoginModalReason('Sign in to get a back-in-stock alert.');
+      setIsLoginModalOpen(true);
+      return;
+    }
+    await submitStockAlert(product.id, currentUser.id, product.title);
+  }, [currentUser.id, currentUser.isGuest, submitStockAlert]);
+
+  const handleBuyAgain = async (order: CustomerOrderRecord) => {
+    if (!isOrderComplete(order.status)) {
+      return { addedCount: 0, skippedItems: [], error: 'Only completed orders can be reordered.' };
+    }
+    if (!catalogLoaded || catalogError) {
+      return { addedCount: 0, skippedItems: [], error: 'The current catalog could not be loaded. Please try again.' };
+    }
+
+    const { items, skippedItems } = buildReorderCartItems(order.order_items || [], catalogProducts);
+    if (items.length) {
+      setCart((current) => refreshCartFromCatalog([...current, ...items], catalogProducts));
+    }
+    const baseMessage = items.length
+      ? `${translate(uiLanguage, 'reorder.added', { count: items.length, unit: items.length === 1 ? 'item' : 'items' })} ${translate(uiLanguage, 'orders.buyAgainHint')}`
+      : skippedItems.length
+        ? translate(uiLanguage, 'reorder.noneAvailable')
+        : translate(uiLanguage, 'reorder.empty');
+    const skippedMessage = skippedItems.length ? translate(uiLanguage, 'reorder.skipped', { items: skippedItems.join(', ') }) : '';
+    setCartReorderNotice([baseMessage, skippedMessage].filter(Boolean).join(' '));
+    handleOpenCart();
+    return { addedCount: items.length, skippedItems };
+  };
+
   const handleProceedToCheckout = (
     discount: number,
     coupon: string,
@@ -701,6 +790,7 @@ export default function App() {
     setIsAdmin(admin);
     setIsLoginModalOpen(false);
     if (admin) {
+      pendingStockAlertProductRef.current = null;
       adminStorefrontRequested.current = false;
       protectedRouteAfterAuth.current = null;
       navigate('/admin');
@@ -720,6 +810,31 @@ export default function App() {
       navigate('/checkout');
     }
   };
+
+  useEffect(() => {
+    const productId = pendingStockAlertProductRef.current;
+    if (!productId || authStatus !== 'AUTHENTICATED' || currentUser.isGuest) return;
+    if (isAdmin) {
+      pendingStockAlertProductRef.current = null;
+      return;
+    }
+    if (!catalogLoaded && !catalogError) return;
+    pendingStockAlertProductRef.current = null;
+    if (catalogError) {
+      showStockAlertFeedback('error', 'The product catalog could not be checked. Please try again.');
+      return;
+    }
+    const product = catalogProducts.find((item) => item.id === productId);
+    if (!product) {
+      showStockAlertFeedback('error', 'This product is no longer available for restock alerts.');
+      return;
+    }
+    void submitStockAlert(product.id, currentUser.id, product.title);
+  }, [authStatus, currentUser.id, currentUser.isGuest, isAdmin, catalogLoaded, catalogError, catalogProducts, showStockAlertFeedback, submitStockAlert]);
+
+  useEffect(() => () => {
+    if (stockAlertFeedbackTimerRef.current !== null) window.clearTimeout(stockAlertFeedbackTimerRef.current);
+  }, []);
 
   const handleLogout = async () => {
     const previousUserId = currentUser.id;
@@ -745,6 +860,7 @@ export default function App() {
     setCurrentUser({ id: 'guest-user', name: 'Guest Rider', email: '', phone: '', isGuest: true });
     setNotificationCount(0);
     setPendingCheckoutAfterLogin(false);
+    pendingStockAlertProductRef.current = null;
     setIsLoginModalOpen(false);
     setIsCheckoutOpen(false);
     setIsCartOpen(false);
@@ -863,6 +979,7 @@ export default function App() {
   const hidesBottomNavigation = isNotificationPage || isShopPage || isSupportPage;
 
   return (
+    <I18nProvider language={uiLanguage}>
     <div className="min-h-screen bg-[#F0F2F5] flex justify-center selection:bg-[#D9232D] selection:text-white font-sans antialiased text-[#1E232A]">
       {/* App Container (Mobile Frame or Full Width based on toggle) */}
       <div
@@ -942,6 +1059,7 @@ export default function App() {
             }}
             onSelectProduct={openProductRoute}
             onQuickAdd={handleQuickAddToCart}
+            onNotifyMe={handleNotifyMe}
             isQuickAddInCart={isQuickAddInCart}
             onToggleWishlist={handleToggleWishlist}
             onOpenCart={handleOpenCart}
@@ -957,6 +1075,7 @@ export default function App() {
               setSearchQuery={setSearchQuery}
               onSelectProduct={openProductRoute}
               onQuickAddToCart={(p, e) => handleQuickAddToCart(p, e)}
+              onNotifyMe={handleNotifyMe}
               isQuickAddInCart={isQuickAddInCart}
               onOpenCart={handleOpenCart}
               wishlist={wishlist}
@@ -969,9 +1088,10 @@ export default function App() {
           </main>
         ) : activeTab === 'account' ? (
           <main className="flex-1 flex flex-col">
-            <AccountView
+          <AccountView
               currentUser={currentUser}
               products={catalogProducts}
+              pwaInstallCard={pwaInstall.visible ? <PwaInstallCard visible={pwaInstall.visible} canInstall={pwaInstall.canInstall} isIOSSafari={pwaInstall.isIOSSafari} isInstalling={pwaInstall.isInstalling} installError={pwaInstall.installError} onInstall={pwaInstall.install} onDismiss={pwaInstall.dismiss} /> : null}
               onProfileChange={(profile) =>
                 setCurrentUser((user) =>
                   user.id === currentUser.id ? { ...user, ...profile } : user,
@@ -992,6 +1112,7 @@ export default function App() {
               initialOrderNumber={resolvedRoute.kind === 'orders' ? resolvedRoute.orderNumber : null}
               initialSupportRequestId={resolvedRoute.kind === 'support' ? resolvedRoute.requestId : null}
               onOpenOrdersPage={() => navigate('/my-orders')}
+              onBuyAgain={handleBuyAgain}
               onSelectOrderRoute={(orderNumber) => navigate(`/my-orders/${encodeURIComponent(orderNumber)}`)}
               onBackToOrdersRoute={() => navigate('/my-orders')}
               onOpenSettingsPage={() => navigate('/settings')}
@@ -1022,6 +1143,8 @@ export default function App() {
               onBannerClick={handleBannerClick}
             />
 
+            {pwaInstall.visible && <div className="mb-4 px-5"><PwaInstallCard visible={pwaInstall.visible} canInstall={pwaInstall.canInstall} isIOSSafari={pwaInstall.isIOSSafari} isInstalling={pwaInstall.isInstalling} installError={pwaInstall.installError} onInstall={pwaInstall.install} onDismiss={pwaInstall.dismiss} /></div>}
+
             {/* Categories Section */}
             <CategorySection
               selectedCategory={selectedCategory}
@@ -1048,10 +1171,10 @@ export default function App() {
                     <Flame className="w-4 h-4 text-[#D9232D]" />
                     <div>
                       <h3 className="text-[17px] font-black text-gray-900 tracking-tight">
-                        Popular picks
+                        {translate(uiLanguage, 'home.popularPicks')}
                       </h3>
                       <p className="text-[11.5px] text-gray-400 font-medium">
-                        Customer favourites this week
+                        {translate(uiLanguage, 'home.favourites')}
                       </p>
                     </div>
                   </div>
@@ -1059,7 +1182,7 @@ export default function App() {
                     onClick={scrollToShop}
                     className="text-[12px] font-bold text-[#D9232D] hover:text-red-700 flex items-center space-x-1 cursor-pointer"
                   >
-                    <span>See all</span>
+                    <span>{translate(uiLanguage, 'home.seeAll')}</span>
                     <span className="text-xs">→</span>
                   </button>
                 </div>
@@ -1080,6 +1203,7 @@ export default function App() {
                         layoutMode="shelf"
                         onSelectProduct={openProductRoute}
                         onQuickAddToCart={(p, e) => handleQuickAddToCart(p, e)}
+                        onNotifyMe={handleNotifyMe}
                         isInCart={isQuickAddInCart(prod)}
                         onOpenCart={handleOpenCart}
                         isWishlisted={wishlist.some((w) => w.id === prod.id)}
@@ -1357,6 +1481,7 @@ export default function App() {
                       layoutMode="grid"
                       onSelectProduct={openProductRoute}
                       onQuickAddToCart={(p, e) => handleQuickAddToCart(p, e)}
+                      onNotifyMe={handleNotifyMe}
                       isInCart={isQuickAddInCart(prod)}
                       onOpenCart={handleOpenCart}
                       isWishlisted={wishlist.some((w) => w.id === prod.id)}
@@ -1373,6 +1498,7 @@ export default function App() {
                       layoutMode="list"
                       onSelectProduct={openProductRoute}
                       onQuickAddToCart={(p, e) => handleQuickAddToCart(p, e)}
+                      onNotifyMe={handleNotifyMe}
                       isInCart={isQuickAddInCart(prod)}
                       onOpenCart={handleOpenCart}
                       isWishlisted={wishlist.some((w) => w.id === prod.id)}
@@ -1505,6 +1631,7 @@ export default function App() {
           onBuyNow={handleDetailBuyNow}
           onSelectProduct={openProductRoute}
           onQuickAdd={handleToggleDefaultCartItem}
+          onNotifyMe={handleNotifyMe}
           isAuthenticated={!currentUser.isGuest}
           customerId={currentUser.isGuest ? undefined : currentUser.id}
           onRequestLogin={() => {
@@ -1531,12 +1658,15 @@ export default function App() {
           onClose={() => {
             setIsCartOpen(false);
             setActiveTab('home');
+            setCartReorderNotice(null);
           }}
           items={cart}
           userId={currentUser.id}
           onUpdateQuantity={handleUpdateQuantity}
           onRemoveItem={handleRemoveCartItem}
           onProceedToCheckout={handleProceedToCheckout}
+          reorderNotice={cartReorderNotice}
+          onDismissReorderNotice={() => setCartReorderNotice(null)}
         />}
 
         {isCheckoutOpen && <CheckoutModal
@@ -1627,6 +1757,7 @@ export default function App() {
           onClose={() => {
             setIsLoginModalOpen(false);
             setPendingCheckoutAfterLogin(false);
+            pendingStockAlertProductRef.current = null;
             protectedRouteAfterAuth.current = null;
           }}
           reason={loginModalReason}
@@ -1637,8 +1768,19 @@ export default function App() {
             goToPhase(nextMode === 'signup' ? 'account-onboarding' : 'auth');
           }}
         /></Suspense>}
+        {stockAlertFeedback && <div className="pointer-events-none fixed inset-x-3 top-3 z-[90] flex justify-center pt-[env(safe-area-inset-top)]">
+          <div role={stockAlertFeedback.tone === 'error' ? 'alert' : 'status'} aria-live={stockAlertFeedback.tone === 'error' ? 'assertive' : 'polite'} className={`pointer-events-auto flex w-full max-w-[440px] items-center gap-3 rounded-2xl border px-4 py-3 text-xs font-bold shadow-xl ${stockAlertFeedback.tone === 'error' ? 'border-rose-200 bg-rose-50 text-rose-950' : 'border-emerald-200 bg-emerald-50 text-emerald-950'}`}>
+            <p className="min-w-0 flex-1 leading-relaxed">{stockAlertFeedback.message}</p>
+            <button type="button" aria-label="Dismiss restock alert message" onClick={() => {
+              if (stockAlertFeedbackTimerRef.current !== null) window.clearTimeout(stockAlertFeedbackTimerRef.current);
+              stockAlertFeedbackTimerRef.current = null;
+              setStockAlertFeedback(null);
+            }} className="min-h-11 shrink-0 rounded-xl px-3 text-[11px] font-extrabold hover:bg-black/5">Dismiss</button>
+          </div>
+        </div>}
         <Outlet />
       </div>
     </div>
+    </I18nProvider>
   );
 }

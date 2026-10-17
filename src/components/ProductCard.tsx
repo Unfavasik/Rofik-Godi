@@ -2,10 +2,12 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Product } from '../types';
 import { Heart, Plus, Star, ShoppingCart, ImageOff } from 'lucide-react';
 import { motion } from 'motion/react';
+import { getProductAvailability } from '../lib/productAvailability';
+import { formatInr, useI18n } from '../lib/i18n';
 
 const loadedImageSrcs = new Set<string>();
+const formatPrice = formatInr;
 
-const formatPrice = (value: number) => `₹${value.toLocaleString('en-IN')}`;
 const discountPercent = (product: Product) => product.originalPrice > product.price
   ? Math.round((1 - product.price / product.originalPrice) * 100)
   : 0;
@@ -16,6 +18,7 @@ interface ProductCardProps {
   onQuickAddToCart: (p: Product, e: React.MouseEvent) => void;
   isWishlisted: boolean;
   onToggleWishlist: (p: Product, e: React.MouseEvent) => void;
+  onNotifyMe?: (p: Product) => void | Promise<void>;
   isInCart?: boolean;
   onOpenCart: () => void;
   layoutMode?: 'shelf' | 'grid' | 'list';
@@ -68,14 +71,15 @@ const ProductImage: React.FC<{ src: string | null | undefined; alt: string; vari
   );
 };
 
-const ProductCardOpenButton: React.FC<{ product: Product; onSelectProduct: (p: Product) => void }> = ({ product, onSelectProduct }) => (
-  <button
+const ProductCardOpenButton: React.FC<{ product: Product; onSelectProduct: (p: Product) => void }> = ({ product, onSelectProduct }) => {
+  const { t } = useI18n();
+  return <button
     type="button"
     onClick={() => onSelectProduct(product)}
-    aria-label={`View ${product.title}`}
+    aria-label={t('product.view', { title: product.title })}
     className="absolute inset-0 z-0 m-0 appearance-none rounded-2xl border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] focus-visible:ring-offset-2"
-  />
-);
+  />;
+};
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
@@ -85,10 +89,34 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onToggleWishlist,
   isInCart = false,
   onOpenCart,
+  onNotifyMe,
   layoutMode = 'grid',
 }) => {
+  const { t } = useI18n();
+  const availability = getProductAvailability(product);
+  const availabilityLabel = availability.state === 'low-stock'
+    ? t('product.onlyLeft', { count: product.stockQuantity ?? 0 })
+    : availability.state === 'out-of-stock' ? t('product.outOfStock') : t('product.inStock');
+  const availabilityClass = availability.state === 'out-of-stock' ? 'text-amber-700' : availability.state === 'low-stock' ? 'text-orange-700' : 'text-emerald-700';
+  const [notifySubmitting, setNotifySubmitting] = useState(false);
+  const notifyRequestLock = useRef(false);
+  const handleNotifyMe = async (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (notifyRequestLock.current || !onNotifyMe) return;
+    notifyRequestLock.current = true;
+    setNotifySubmitting(true);
+    try {
+      await onNotifyMe(product);
+    } catch (error) {
+      console.error('Could not set up the stock alert.', error);
+    } finally {
+      notifyRequestLock.current = false;
+      setNotifySubmitting(false);
+    }
+  };
   // Determine badge label and color
-  const badgeLabel = product.badge || (product.isBestseller ? 'Bestseller' : product.isNew ? 'New' : null);
+  const rawBadgeLabel = product.badge || (product.isBestseller ? 'Bestseller' : product.isNew ? 'New' : null);
+  const badgeLabel = rawBadgeLabel === 'Bestseller' ? t('product.bestseller') : rawBadgeLabel === 'New' ? t('product.new') : rawBadgeLabel;
   const badgeColorClass = (() => {
     if (product.badgeColor === 'green' || (!product.badge && product.isNew)) return 'bg-emerald-600 text-white';
     if (product.badgeColor === 'blue') return 'bg-blue-600 text-white';
@@ -124,7 +152,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <h4 className="line-clamp-2 text-[12px] font-bold text-gray-900 group-hover:text-[#D9232D] transition-colors leading-tight break-words">
             {product.title}
           </h4>
-          {!product.inStock && <p className="mt-1 text-[10px] font-black uppercase text-amber-700">Out of stock</p>}
+          <p className={`mt-1 text-[10px] font-bold ${availabilityClass}`}>{availabilityLabel}</p>
 
           {product.subtitle && (
             <p className="line-clamp-1 text-[10px] text-gray-500 font-medium mt-0.5 break-words">
@@ -139,7 +167,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               <span>{product.rating.toFixed(1)}</span>
             </div>
             <span className="text-[10px] text-gray-400 font-medium">
-              ({product.reviewCount} reviews)
+              ({t('product.reviews', { count: product.reviewCount })})
             </span>
           </div>}
 
@@ -161,9 +189,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <button
             type="button"
             onClick={(e) => onToggleWishlist(product, e)}
-            aria-label={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+            aria-label={isWishlisted ? t('product.removeFromWishlist') : t('product.addToWishlist')}
             aria-pressed={isWishlisted}
-            className="pointer-events-auto w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors active:scale-90"
+            className="pointer-events-auto grid min-h-11 min-w-11 place-items-center rounded-full text-gray-400 hover:text-red-500 transition-colors active:scale-90"
           >
             <Heart
               className={`w-4 h-4 transition-colors ${
@@ -179,21 +207,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               event.stopPropagation();
               if (isInCart) onOpenCart();
               else if (product.inStock) onQuickAddToCart(product, event);
+              else void handleNotifyMe(event);
             }}
-            disabled={!product.inStock && !isInCart}
-            aria-label={isInCart ? 'Go to Cart' : product.inStock ? 'Add to cart' : 'Out of stock'}
-            className={`pointer-events-auto w-8 h-8 rounded-xl flex items-center justify-center transition-all shadow-sm ${
+            disabled={!product.inStock && !isInCart && (!onNotifyMe || notifySubmitting)}
+            aria-label={isInCart ? t('product.goToCart') : product.inStock ? t('product.addToCart') : t('product.notifyMe')}
+            title={isInCart ? t('product.goToCart') : product.inStock ? t('product.addToCart') : t('product.notifyMe')}
+            className={`pointer-events-auto ${!product.inStock && !isInCart ? 'min-h-11 min-w-[78px] px-2 text-[9px] font-extrabold' : 'h-11 w-11'} rounded-xl flex items-center justify-center transition-all shadow-sm ${
               isInCart
                 ? 'bg-emerald-600 text-white'
                 : 'bg-[#D9232D] text-white hover:bg-red-700 active:scale-95'
             }`}
-            title={isInCart ? 'Go to Cart' : 'Add to cart'}
           >
             {isInCart ? (
               <ShoppingCart className="w-4 h-4" />
-            ) : (
+            ) : product.inStock ? (
               <Plus className="w-4 h-4 stroke-[3]" />
-            )}
+            ) : t('product.notifyShort')}
           </motion.button>
         </div>
       </article>
@@ -227,9 +256,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <button
           type="button"
           onClick={(e) => onToggleWishlist(product, e)}
-          aria-label={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+          aria-label={isWishlisted ? t('product.removeFromWishlist') : t('product.addToWishlist')}
           aria-pressed={isWishlisted}
-          className="pointer-events-auto absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-gray-600 hover:text-red-500 shadow-xs transition-colors active:scale-90"
+          className="pointer-events-auto absolute top-1 right-1 z-10 grid min-h-11 min-w-11 place-items-center rounded-full bg-white/90 backdrop-blur-xs text-gray-600 hover:text-red-500 shadow-xs transition-colors active:scale-90"
         >
           <Heart
             className={`w-3.5 h-3.5 transition-colors ${
@@ -249,7 +278,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <h4 className="relative z-10 pointer-events-none line-clamp-2 min-h-[29px] text-[12px] font-bold text-gray-800 leading-[1.2] mb-0.5 break-words group-hover:text-[#D9232D] transition-colors">
         {product.title}
       </h4>
-      {!product.inStock && <p className="relative z-10 pointer-events-none text-[10px] font-black uppercase text-amber-700">Out of stock</p>}
+      <p className={`relative z-10 pointer-events-none text-[10px] font-bold ${availabilityClass}`}>{availabilityLabel}</p>
 
       {/* Subtitle / Short Description */}
       {product.subtitle && (
@@ -266,7 +295,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </span>
           <span className="mt-1 flex items-center gap-1.5">
             <span className="text-[9px] text-gray-400 line-through leading-none">{formatPrice(product.originalPrice)}</span>
-            {discountPercent(product) > 0 && <span className="text-[9px] font-bold leading-none text-emerald-700">Save {discountPercent(product)}%</span>}
+            {discountPercent(product) > 0 && <span className="text-[9px] font-bold leading-none text-emerald-700">{t('product.savePercent', { percent: discountPercent(product) })}</span>}
           </span>
         </div>
 
@@ -274,25 +303,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <motion.button
           whileTap={{ scale: 0.88 }}
           type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            if (isInCart) onOpenCart();
-            else if (product.inStock) onQuickAddToCart(product, event);
-          }}
-          disabled={!product.inStock && !isInCart}
-          aria-label={isInCart ? 'Go to Cart' : product.inStock ? 'Add to cart' : 'Out of stock'}
-          className={`pointer-events-auto w-7 h-7 rounded-lg flex items-center justify-center transition-all shadow-xs ${
+            onClick={(event) => {
+              event.stopPropagation();
+              if (isInCart) onOpenCart();
+              else if (product.inStock) onQuickAddToCart(product, event);
+              else void handleNotifyMe(event);
+            }}
+          disabled={!product.inStock && !isInCart && (!onNotifyMe || notifySubmitting)}
+          aria-label={isInCart ? t('product.goToCart') : product.inStock ? t('product.addToCart') : t('product.notifyMe')}
+          title={isInCart ? t('product.goToCart') : product.inStock ? t('product.addToCart') : t('product.notifyMe')}
+          className={`pointer-events-auto ${!product.inStock && !isInCart ? 'min-h-11 min-w-[82px] px-1.5 text-[9px] font-extrabold' : 'h-11 w-11'} rounded-lg flex items-center justify-center transition-all shadow-xs ${
             isInCart
               ? 'bg-emerald-600 text-white'
               : 'bg-[#D9232D] text-white hover:bg-red-700 active:scale-95'
           }`}
-          title={isInCart ? 'Go to Cart' : 'Add to cart'}
         >
           {isInCart ? (
             <ShoppingCart className="w-3.5 h-3.5" />
-          ) : (
+          ) : product.inStock ? (
             <Plus className="w-4 h-4 stroke-[3]" />
-          )}
+          ) : t('product.notifyShort')}
         </motion.button>
       </div>
     </article>

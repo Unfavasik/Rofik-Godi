@@ -8,6 +8,7 @@ import { CouponDetailsView } from './CouponDetailsView';
 import { WORKSHOP_INFO } from '../data/products';
 import { CustomerSupportRequestForm } from './CustomerSupportRequestForm';
 import { readCustomerAppPreferences, saveCustomerAppPreferences, type CustomerNotificationPreferences, type PreferredLanguage } from '../lib/customerPreferences';
+import { translate, useI18n } from '../lib/i18n';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -22,6 +23,7 @@ interface SettingsViewProps {
   onOpenTermsPage?: () => void;
   isAuthenticated: boolean;
   onOpenLogin?: () => void;
+  pwaInstallCard?: React.ReactNode;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -36,7 +38,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onOpenTermsPage,
   isAuthenticated,
   onOpenLogin,
+  pwaInstallCard,
 }) => {
+  const { t } = useI18n();
   const [activeModal, setActiveModal] = useState<
     | 'notifications'
     | 'coupons'
@@ -126,7 +130,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     const saved = saveCustomerAppPreferences(preferenceOwnerId, { language, hapticFeedback });
     setLanguage(saved.language);
     setHapticFeedback(saved.hapticFeedback);
-    setSettingsNotice('Preferences saved. The app interface is currently available in English.');
+    setSettingsNotice(translate(saved.language, saved.language === 'hi' ? 'settings.hindiHint' : 'settings.banglaHint'));
     setActiveModal(null);
   };
 
@@ -152,7 +156,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="flex items-center space-x-3 mb-1">
           <button
             onClick={onBack}
-            aria-label="Go Back"
+            aria-label={t('common.back')}
             className="p-1 -ml-1 text-gray-900 hover:opacity-75 transition-opacity active:scale-95"
             type="button"
           >
@@ -160,17 +164,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <path d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-          <h1 className="text-[25px] font-bold text-gray-900 tracking-tight">Settings</h1>
+          <h1 className="text-[25px] font-bold text-gray-900 tracking-tight">{t('settings.title')}</h1>
         </div>
         <p className="text-[13.5px] text-[#64748B] font-normal pl-0.5">
-          Manage your account and app preferences
+          {t('settings.subtitle')}
         </p>
       </section>
       {/* END: NavigationHeader */}
 
+      {pwaInstallCard && <div className="px-4 pt-1">{pwaInstallCard}</div>}
+
       {/* BEGIN: SettingsMenuList */}
       {/* Vertical list of setting option cards matching exact colors and contents from screenshot */}
-      <nav aria-label="Settings navigation" className="flex-1 px-4 space-y-2.5 mt-1 pb-10">
+        <nav aria-label={t('settings.title')} className="flex-1 px-4 space-y-2.5 mt-1 pb-10">
         {/* Item 1: Notifications */}
         <button
           onClick={() => setActiveModal('notifications')}
@@ -185,8 +191,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </svg>
             </div>
             <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">Notifications</h2>
-              <p className="text-[12px] text-gray-500 font-normal">Offers & updates</p>
+              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.notifications')}</h2>
+              <p className="text-[12px] text-gray-500 font-normal">{t('settings.offersUpdates')}</p>
             </div>
           </div>
           <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,8 +218,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </svg>
             </div>
             <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">Coupons & Offers</h2>
-              <p className="text-[12px] text-gray-500 font-normal">Save more</p>
+              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.coupons')}</h2>
+              <p className="text-[12px] text-gray-500 font-normal">{t('settings.saveMore')}</p>
             </div>
           </div>
           <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,8 +244,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </svg>
             </div>
             <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">Order History</h2>
-              <p className="text-[12px] text-gray-500 font-normal">Past purchases</p>
+              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.orderHistory')}</h2>
+              <p className="text-[12px] text-gray-500 font-normal">{t('settings.pastPurchases')}</p>
             </div>
           </div>
           <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -261,8 +267,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </svg>
             </div>
             <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">Reviews</h2>
-              <p className="text-[12px] text-gray-500 font-normal">Review completed purchases</p>
+              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.reviews')}</h2>
+              <p className="text-[12px] text-gray-500 font-normal">{t('settings.reviewPurchases')}</p>
             </div>
           </div>
           <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -288,8 +294,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </svg>
             </div>
             <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">Privacy Policy</h2>
-              <p className="text-[12px] text-gray-500 font-normal">Your data & security</p>
+              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.privacy')}</h2>
+              <p className="text-[12px] text-gray-500 font-normal">{t('settings.dataSecurity')}</p>
             </div>
           </div>
           <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -315,8 +321,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </svg>
             </div>
             <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">Terms & Conditions</h2>
-              <p className="text-[12px] text-gray-500 font-normal">App usage rules</p>
+              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.terms')}</h2>
+              <p className="text-[12px] text-gray-500 font-normal">{t('settings.appRules')}</p>
             </div>
           </div>
           <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -342,8 +348,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </svg>
             </div>
             <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">About Us</h2>
-              <p className="text-[12px] text-gray-500 font-normal">Our story</p>
+              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.about')}</h2>
+              <p className="text-[12px] text-gray-500 font-normal">{t('settings.ourStory')}</p>
             </div>
           </div>
           <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -369,8 +375,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </svg>
             </div>
             <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">App Settings</h2>
-              <p className="text-[12px] text-gray-500 font-normal">Language, tap feedback & preferences</p>
+              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.appSettings')}</h2>
+              <p className="text-[12px] text-gray-500 font-normal">{t('settings.appSettingsHint')}</p>
             </div>
           </div>
           <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -393,7 +399,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </svg>
             </div>
             <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">Help & FAQ</h2>
+              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.help')}</h2>
               <p className="text-[12px] text-gray-500 font-normal">Common questions</p>
             </div>
           </div>
@@ -689,7 +695,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
             <motion.div initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }} className="relative w-full max-w-[420px] bg-white rounded-[28px] shadow-2xl p-5 z-10 space-y-4">
               <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                <h3 className="text-base font-bold text-gray-900">App Preferences</h3>
+                <h3 className="text-base font-bold text-gray-900">{t('settings.appPreferences')}</h3>
                 <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
                   <X className="w-4 h-4" />
                 </button>
@@ -699,7 +705,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <div>
                   <label className="text-xs font-bold text-gray-700 block mb-1.5 flex items-center gap-1.5">
                     <Globe className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Language / ভাষা</span>
+                    <span>{t('settings.language')}</span>
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
@@ -720,16 +726,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </div>
                 </div>
 
-                <p className="text-[10px] leading-relaxed text-gray-500">Your language choice is saved, but this app’s interface is currently English.</p>
+                <p className="text-[10px] leading-relaxed text-gray-500">{language === 'hi' ? t('settings.hindiHint') : t('settings.banglaHint')}</p>
                 <label className="flex items-center justify-between rounded-2xl bg-gray-50 p-3 text-xs font-semibold text-gray-700">
                   <span>
-                    <span className="block">Haptic Tap Feedback</span>
-                    <span className="mt-0.5 block text-[10px] font-normal text-gray-500">Short vibration on supported devices</span>
+                    <span className="block">{t('settings.haptic')}</span>
+                    <span className="mt-0.5 block text-[10px] font-normal text-gray-500">{t('settings.hapticHint')}</span>
                   </span>
                   <input
                     type="checkbox"
                     role="switch"
-                    aria-label="Haptic tap feedback"
+                    aria-label={t('settings.haptic')}
                     checked={hapticFeedback}
                     onChange={(event) => setHapticFeedback(event.target.checked)}
                     className="h-5 w-5 cursor-pointer rounded text-[#D9232D] focus:ring-[#D9232D]"
@@ -741,7 +747,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 onClick={saveAppPreferences}
                 className="w-full py-3 bg-[#D9232D] text-white text-xs font-bold rounded-2xl shadow-sm"
               >
-                Save Preferences
+                {t('settings.savePreferences')}
               </button>
             </motion.div>
           </div>

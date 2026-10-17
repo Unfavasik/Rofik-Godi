@@ -28,7 +28,7 @@ const renderShop = (overrides: Partial<React.ComponentProps<typeof ShopView>> = 
   />,
 );
 
-const renderCard = (product: Product, layoutMode: 'grid' | 'list' | 'shelf' = 'grid', isWishlisted = false, isInCart = false) => renderToStaticMarkup(
+const renderCard = (product: Product, layoutMode: 'grid' | 'list' | 'shelf' = 'grid', isWishlisted = false, isInCart = false, onNotifyMe?: React.ComponentProps<typeof ProductCard>['onNotifyMe']) => renderToStaticMarkup(
   <ProductCard
     product={product}
     layoutMode={layoutMode}
@@ -38,6 +38,7 @@ const renderCard = (product: Product, layoutMode: 'grid' | 'list' | 'shelf' = 'g
     onOpenCart={() => {}}
     isWishlisted={isWishlisted}
     onToggleWishlist={() => {}}
+    onNotifyMe={onNotifyMe}
   />,
 );
 
@@ -127,11 +128,18 @@ describe('catalog feedback', () => {
     expect(notInCart).toContain('aria-label="Add to cart"');
   });
 
-  it.each(['grid', 'list', 'shelf'] as const)('disables quick-add for out-of-stock %s product cards', (layoutMode) => {
-    const html = renderCard({ ...sampleProduct, inStock: false }, layoutMode);
+  it.each(['grid', 'list', 'shelf'] as const)('offers Notify me for out-of-stock %s product cards', (layoutMode) => {
+    const html = renderCard({ ...sampleProduct, inStock: false }, layoutMode, false, false, () => {});
 
-    expect(html).toContain('aria-label="Out of stock"');
-    expect(html).toContain('disabled=""');
+    expect(html).toContain('aria-label="Notify me when in stock"');
+    expect(html).toContain('>Notify me</button>');
+    expect(html).toContain('Out of stock');
+    expect(html).not.toContain('disabled=""');
+  });
+
+  it('shows a low-stock count from the live inventory fields', () => {
+    const html = renderCard({ ...sampleProduct, stockQuantity: 3, lowStockThreshold: 5 });
+    expect(html).toContain('Only 3 left');
   });
 
   it('shows a loading status while the catalog request is pending', () => {

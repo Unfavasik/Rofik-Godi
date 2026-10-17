@@ -16,6 +16,15 @@ describe('Supabase catalog mapping', () => {
     expect(product.image).toContain('cover.webp');
   });
 
+  it('maps existing stock quantity and low-stock threshold fields', () => {
+    const product = mapSupabaseProduct({
+      id: 'product-4', name: 'Low stock cover', category: 'Bike Covers', price: 500,
+      in_stock: true, stock_quantity: 3, low_stock_threshold: 5,
+    });
+    expect(product.stockQuantity).toBe(3);
+    expect(product.lowStockThreshold).toBe(5);
+  });
+
   it('maps safe defaults for legacy product rows', () => {
     const product = mapSupabaseProduct({ id: 'product-2', name: 'Legacy cover', category: 'Bike Covers', price: 100 });
     expect(product.category).toBe('bike');

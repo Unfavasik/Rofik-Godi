@@ -4,13 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { CustomerOrdersModal, OrderDetails } from '../src/components/CustomerOrdersModal';
 import type { CustomerOrderRecord } from '../src/types';
 
-const makeOrder = (status: string): CustomerOrderRecord => ({
+const makeOrder = (status: string, paymentStatus = 'PENDING'): CustomerOrderRecord => ({
   id: 'order-1',
   order_number: 'RGC-DFDFC5D323A5',
   customer_name: 'Test Customer',
   customer_phone: '+919876543210',
   payment_method: 'PAY_ONLINE',
-  payment_status: 'PENDING',
+  payment_status: paymentStatus,
   status,
   subtotal: 600,
   discount: 25,
@@ -25,8 +25,8 @@ const makeOrder = (status: string): CustomerOrderRecord => ({
   ],
 });
 
-const renderOrderDetails = (order: CustomerOrderRecord) => renderToStaticMarkup(
-  <OrderDetails order={order} customerName="Test Customer" reviews={[]} onInvoice={() => {}} onReview={() => {}} />,
+const renderOrderDetails = (order: CustomerOrderRecord, onBuyAgain?: (order: CustomerOrderRecord) => Promise<{ addedCount: number; skippedItems: string[]; error?: string }>) => renderToStaticMarkup(
+  <OrderDetails order={order} customerName="Test Customer" reviews={[]} onInvoice={() => {}} onReview={() => {}} onBuyAgain={onBuyAgain} />,
 );
 
 const renderOrdersModal = () => renderToStaticMarkup(
@@ -51,5 +51,42 @@ describe('My Orders details', () => {
 
   it.each(['NEW', 'CONFIRMED', 'PREPARING', 'PICKED_UP', 'COMPLETED', 'CANCELLED'])('does not show the pickup QR before the order is ready (%s)', (status) => {
     expect(renderOrderDetails(makeOrder(status))).not.toContain('Pickup QR code');
+  });
+
+  it('offers cancellation for a new unpaid order', () => {
+    expect(renderOrderDetails(makeOrder('NEW'))).toContain('Cancel order');
+  });
+
+  it('does not offer cancellation for a paid new order', () => {
+    expect(renderOrderDetails(makeOrder('NEW', 'PAID'))).not.toContain('Cancel order');
+  });
+
+  it('does not show pending or due payment for a cancelled unpaid order', () => {
+    const html = renderOrderDetails(makeOrder('CANCELLED', 'PENDING'));
+    expect(html).toContain('Not paid — order cancelled');
+    expect(html).toContain('Not applicable — order cancelled');
+    expect(html).toContain('Cancelled order total');
+    expect(html).not.toContain('Payment pending');
+    expect(html).not.toContain('Due at pickup');
+    expect(html).not.toContain('Total due');
+  });
+
+  it('keeps actual confirmed payment visible if a paid order is cancelled', () => {
+    const html = renderOrderDetails(makeOrder('CANCELLED', 'PAID'));
+    expect(html).toContain('Payment confirmed');
+    expect(html).toContain('Paid');
+    expect(html).toContain('Total paid');
+  });
+
+  it.each(['CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP', 'PICKED_UP', 'COMPLETED', 'CANCELLED'])('does not offer cancellation once an order is %s', (status) => {
+    expect(renderOrderDetails(makeOrder(status))).not.toContain('Cancel order');
+  });
+
+  it('offers Buy again only for completed orders when the reorder handler is available', () => {
+    const onBuyAgain = async () => ({ addedCount: 1, skippedItems: [] });
+    expect(renderOrderDetails(makeOrder('COMPLETED'), onBuyAgain)).toContain('Buy again');
+    expect(renderOrderDetails(makeOrder('NEW'), onBuyAgain)).not.toContain('Buy again');
+    expect(renderOrderDetails(makeOrder('CANCELLED'), onBuyAgain)).not.toContain('Buy again');
+    expect(renderOrderDetails(makeOrder('COMPLETED'))).not.toContain('Buy again');
   });
 });

@@ -16,6 +16,7 @@ interface ShopViewProps {
   onSearch: (value: string) => void;
   onSelectProduct: (product: Product) => void;
   onQuickAdd: (product: Product, event: React.MouseEvent) => void;
+  onNotifyMe?: (product: Product) => void | Promise<void>;
   isQuickAddInCart: (product: Product) => boolean;
   onToggleWishlist: (product: Product, event: React.MouseEvent) => void;
   onOpenCart: () => void;
@@ -47,6 +48,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
   onSearch,
   onSelectProduct,
   onQuickAdd,
+  onNotifyMe,
   isQuickAddInCart,
   onToggleWishlist,
   onOpenCart,
@@ -174,6 +176,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
                 layoutMode={layout}
                 onSelectProduct={onSelectProduct}
                 onQuickAddToCart={onQuickAdd}
+                onNotifyMe={onNotifyMe}
                 isInCart={isQuickAddInCart(product)}
                 onOpenCart={onOpenCart}
                 isWishlisted={wishlist.some((item) => item.id === product.id)}

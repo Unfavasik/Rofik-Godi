@@ -19,9 +19,47 @@
 
 ## Functional settings
 - [x] Notification preferences persist per account/guest device and filter the actual in-app All/Orders/Offers/Support/System feed and unread badge. UI does not claim unimplemented push or WhatsApp delivery.
-- [x] English/Bangla/Hindi preference and haptic switch persist. UI remains English with that limitation stated; the haptic switch vibrates briefly on supported browsers and is silent when unsupported.
+- [x] English/Bangla/Hindi preference and haptic switch persist. English remains primary; the UI switches to Bangla on the supported customer surfaces, Hindi falls back to English with a clear note, and haptics work where supported.
 - [x] Settings Reviews opens the existing verified-purchase order flow instead of fake success. Other settings actions remain connected to real routes/actions, and coupon-copy failures are reported truthfully.
 
 ## Validation and limitation
 - [x] `pnpm lint`, `pnpm test` (237 tests), `pnpm build`, `git diff --check`, local/public preview HTTP checks and the route-manifest check pass; unauthenticated preview visually opens the welcome carousel.
 - [ ] A real signup/sign-in plus resumed checkout/order route needs an authorized customer test session; it was not submitted or simulated in the isolated preview.
+
+
+## Phase 1 — Customer order cancellation
+- [x] In My Orders/order details, show **Cancel order** only while status is `NEW` (or the earliest unconfirmed state) and payment is not paid. Use `ConfirmDialog` with an optional reason.
+- [x] Call a new `SECURITY DEFINER` RPC `cancel_my_order(p_order_number, p_reason)` that checks `auth.uid()` owns the order and server-side status/payment permit cancellation; set `CANCELLED`, invalidate pickup QR token using the existing terminal-status logic, create an admin notification, and return clear errors. Update the UI only after RPC success; test allowed and blocked cases.
+
+## Phase 2 — Order timeline and ready notification
+- [x] Order details show a vertical real-status timeline: Placed, Confirmed, Ready for pickup, Completed; show timestamps only where available, and show Cancelled as its own state.
+- [x] When an admin transitions an order into ready-for-pickup, create a customer notification in the existing notifications table/realtime flow that opens that order.
+
+## Phase 3 — Reorder / Buy again
+- [x] Completed orders offer **Buy again**; add order items with the same available color, thickness, stitch and embroidery text, but use current catalog prices and stock through `refreshCartFromCatalog`. Skip inactive/out-of-stock items, tell the customer which were skipped, then open the cart.
+
+## Phase 4 — Stock awareness and alerts
+- [x] The existing schema contains `stock_quantity` and `low_stock_threshold`; map them to catalog products and show **Only N left** at/below the threshold. Out-of-stock products offer **Notify me** instead of Add to cart, including from product details.
+- [x] Guests who select Notify me are asked to sign in through `LoginRequiredModal` and the alert resumes after customer auth. A new migration adds unique owner-scoped `stock_alerts` with RLS, an auth/product/status-checked RPC, and a server trigger that notifies customers when a product becomes active and in stock, then deletes fulfilled alert rows.
+- [x] Phase 4 validation: `pnpm exec tsc --noEmit`, `pnpm test` (273 tests), `pnpm build`, and `git diff --check` pass.
+
+Do not start a later phase until the current phase's implementation, TypeScript check and existing tests have completed.
+
+## Phase 5 — PWA install prompt
+- [x] Capture and share `beforeinstallprompt`; show a small dismissible Install app card on Home and Account > Settings, with iOS Safari Share → Add to Home Screen guidance when needed.
+- [x] Hide when installed or in standalone mode; persist dismissals for 14 days using guarded localStorage; cover install-state and card behavior with tests.
+- [x] Phase 5 validation: `pnpm exec tsc --noEmit`, `pnpm test` (279 tests), `pnpm build` (including manifest/service worker), and `git diff --check` pass.
+
+## Phase 6 — Bangla language support
+- [x] Add typed English/Bangla dictionaries and fallback-to-English behavior; Hindi preference remains English with the existing untranslated note.
+- [x] Translate bottom navigation, Home headings, product-card labels, cart, checkout, order statuses/timelines, Account menu, Settings, PWA install hints and order notifications using simple West Bengal Bengali.
+- [x] Format ₹ values with Indian digit grouping and cover interpolation/fallback with tests; at 360px in Bangla, the storefront has no horizontal overflow and the install controls remain 44px high.
+- [x] Phase 6 validation: `pnpm exec tsc --noEmit`, `pnpm test` (283 tests), `pnpm build`, `git diff --check`, and local/public production-preview HTTP checks pass. The unauthenticated preview opens onboarding and proceeds into the guest storefront.
+
+## Phase 7 — Compare products and admin CSV export
+- [ ] Deferred at the user's request: product cards support a maximum of 3 comparisons; sticky count bar opens a side-by-side sheet with price, material, waterproofing, compatibility, thickness options and live stock.
+- [ ] Admin Reports exports orders for the selected date range through the existing admin-only data source; CSV escapes delimiters/quotes/newlines and neutralizes `=`, `+`, `-`, `@` formula prefixes.
+
+## Cross-phase quality
+- [ ] Preserve red (#D9232D), rounded cards and bottom navigation; keep targets ≥44px, dark-text contrast AA and accessible labels on icon buttons.
+- [ ] Add loading, empty and error states; disable in-flight actions and use ref locks for double taps; add or update regression tests in `tests/`.

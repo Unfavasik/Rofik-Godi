@@ -35,6 +35,7 @@ interface SearchViewProps {
   setSearchQuery: (q: string) => void;
   onSelectProduct: (p: Product) => void;
   onQuickAddToCart: (p: Product, e: React.MouseEvent) => void;
+  onNotifyMe?: (p: Product) => void | Promise<void>;
   isQuickAddInCart: (p: Product) => boolean;
   onOpenCart: () => void;
   wishlist: Product[];
@@ -68,6 +69,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
   setSearchQuery,
   onSelectProduct,
   onQuickAddToCart,
+  onNotifyMe,
   isQuickAddInCart,
   onOpenCart,
   wishlist,
@@ -789,6 +791,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
               layoutMode="grid"
               onSelectProduct={handleProductSelect}
               onQuickAddToCart={onQuickAddToCart}
+              onNotifyMe={onNotifyMe}
               isInCart={isQuickAddInCart(prod)}
               onOpenCart={onOpenCart}
               isWishlisted={wishlist.some((w) => w.id === prod.id)}
@@ -805,6 +808,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
               layoutMode="list"
               onSelectProduct={handleProductSelect}
               onQuickAddToCart={onQuickAddToCart}
+              onNotifyMe={onNotifyMe}
               isInCart={isQuickAddInCart(prod)}
               onOpenCart={onOpenCart}
               isWishlisted={wishlist.some((w) => w.id === prod.id)}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Home, ShoppingBag, Heart, User } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useI18n } from '../lib/i18n';
 
 interface BottomNavProps {
   activeTab: 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart';
@@ -25,6 +26,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onOpenAccount,
   onScrollToTop,
 }) => {
+  const { t } = useI18n();
   return (
     <nav
       className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] bg-white/95 backdrop-blur-md border-t border-gray-100/90 shadow-[0_-4px_25px_rgba(0,0,0,0.06)] px-3 pt-2 pb-5 z-40"
@@ -41,7 +43,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         >
           <Home className={`w-5 h-5 transition-colors ${activeTab === 'home' ? 'text-[#D9232D]' : 'text-gray-400 group-hover:text-gray-600'}`} />
           <span className={`text-[10.5px] mt-1 ${activeTab === 'home' ? 'font-bold text-[#D9232D]' : 'font-semibold text-gray-500'}`}>
-            Home
+            {t('nav.home')}
           </span>
         </button>
 
@@ -55,7 +57,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         >
           <ShoppingBag className={`w-5 h-5 transition-colors ${activeTab === 'shop' ? 'text-[#D9232D]' : 'text-gray-400 group-hover:text-gray-600'}`} />
           <span className={`text-[10.5px] mt-1 ${activeTab === 'shop' ? 'font-bold text-[#D9232D]' : 'font-semibold text-gray-500'}`}>
-            Shop
+            {t('nav.shop')}
           </span>
         </button>
 
@@ -80,7 +82,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             )}
           </div>
           <span className={`text-[10.5px] mt-1 ${activeTab === 'wishlist' ? 'font-bold text-[#D9232D]' : 'font-semibold text-gray-500'}`}>
-            Saved
+            {t('nav.saved')}
           </span>
         </button>
 
@@ -94,7 +96,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         >
           <User className={`w-5 h-5 transition-colors ${activeTab === 'account' ? 'text-[#D9232D]' : 'text-gray-400 group-hover:text-gray-600'}`} />
           <span className={`text-[10.5px] mt-1 ${activeTab === 'account' ? 'font-bold text-[#D9232D]' : 'font-semibold text-gray-500'}`}>
-            Account
+            {t('nav.account')}
           </span>
         </button>
       </div>
