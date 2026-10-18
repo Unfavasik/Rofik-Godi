@@ -251,7 +251,11 @@ export default function App() {
     }
   }, [authStatus, isAdmin, location.pathname, appPhase, navigate, goToPhase, guestWelcomeComplete]);
 
+  const lastSyncedTabRef = useRef<RouteTab>(activeTab);
   useEffect(() => {
+    const tabChanged = lastSyncedTabRef.current !== activeTab;
+    lastSyncedTabRef.current = activeTab;
+    if (!tabChanged) return;
     if (isAdminPath(location.pathname)) return;
     if (appPhase !== 'main') return;
     // Supabase needs the callback URL (including its code/hash) to finish
