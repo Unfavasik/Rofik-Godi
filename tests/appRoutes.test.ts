@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { getAdminCustomerIdFromPath, getAdminOrderIdFromPath, getAdminSectionFromPath, getPathForAdminCustomer, getPathForAdminOrder, getPathForAdminSection, getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace } from '../src/lib/appRoutes';
+import { getAdminCustomerIdFromPath, getAdminOrderIdFromPath, getAdminSectionFromPath, getPathForAdminCustomer, getPathForAdminOrder, getPathForAdminSection, getPathForCustomerOrder, getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace } from '../src/lib/appRoutes';
 
 describe('main route preservation', () => {
   it.each([
     '/home', '/shop', '/profile', '/account', '/search', '/wishlist', '/cart',
     '/notifications', '/notification', '/custom', '/checkout', '/my-orders',
-    '/my-orders/RGC-ABC123', '/shop/products/premium-bike-seat-cover', '/settings', '/support',
+    '/my-order/order/0123456789abcdef0123456789abcdef', '/shop/products/premium-bike-seat-cover', '/settings', '/support',
     '/privacy-policy', '/terms-and-conditions', '/store',
   ])('keeps %s when entering the main phase', (path) => {
     expect(getPathForPhase('main', path)).toBe(path === '/account' ? '/profile' : path === '/notification' ? '/notifications' : path);
@@ -31,10 +31,17 @@ describe('main route preservation', () => {
     expect(resolveAppRoute('/checkout')).toMatchObject({ kind: 'checkout', tab: 'cart' });
   });
 
-  it('supports the canonical My Orders route and older spellings', () => {
-    expect(resolveAppRoute('/my-orders')).toMatchObject({ kind: 'orders', tab: 'account', orderNumber: null });
+  it('supports slug-based order details and normalizes old order-number URLs to the list', () => {
+    const slug = '0123456789abcdef0123456789abcdef';
+    expect(resolveAppRoute('/my-orders')).toMatchObject({ kind: 'orders', tab: 'account', orderSlug: null });
     expect(resolveAppRoute('/myorder').canonicalPath).toBe('/my-orders');
-    expect(resolveAppRoute('/myorder/RGC-ABC123')).toMatchObject({ kind: 'orders', orderNumber: 'RGC-ABC123', canonicalPath: '/my-orders/RGC-ABC123' });
+    expect(resolveAppRoute('/my-order').canonicalPath).toBe('/my-orders');
+    expect(resolveAppRoute(`/my-order/order/${slug}`)).toMatchObject({ kind: 'orders', orderSlug: slug, canonicalPath: `/my-order/order/${slug}` });
+    expect(resolveAppRoute(`/myorder/order/${slug}`).canonicalPath).toBe(`/my-order/order/${slug}`);
+    expect(getPathForCustomerOrder(slug)).toBe(`/my-order/order/${slug}`);
+    expect(requiresCustomerAuthentication(`/my-order/order/${slug}`)).toBe(true);
+    expect(resolveAppRoute('/my-orders/RGC-ABC123')).toMatchObject({ kind: 'orders', orderSlug: null, canonicalPath: '/my-orders' });
+    expect(resolveAppRoute('/my-order/order/RGC-ABC123')).toMatchObject({ kind: 'orders', orderSlug: null, canonicalPath: '/my-orders' });
   });
 
   it('resolves support requests to the customer account with a canonical request deep link', () => {
@@ -56,8 +63,9 @@ describe('main route preservation', () => {
     expect(getPathForProduct('Premium Bike Cover')).toBe('/shop/products/Premium%20Bike%20Cover');
   });
 
-  it('preserves an order-specific route when entering the main phase', () => {
-    expect(getPathForPhase('main', '/my-orders/RGC-ABC123')).toBe('/my-orders/RGC-ABC123');
+  it('preserves a valid slug-specific order route when entering the main phase', () => {
+    const path = '/my-order/order/0123456789abcdef0123456789abcdef';
+    expect(getPathForPhase('main', path)).toBe(path);
   });
 
   it.each([
@@ -143,7 +151,7 @@ describe('admin workspace redirect policy', () => {
 });
 
 describe('guest access policy', () => {
-  it.each(['/checkout', '/my-orders', '/my-orders/RGC-ABC123', '/support', '/support/ticket-123', '/contact-support'])(
+  it.each(['/checkout', '/my-orders', '/my-orders/RGC-ABC123', '/my-order', '/my-order/order/RGC-ABC123', '/support', '/support/ticket-123', '/contact-support'])(
     'requires customer authentication for %s',
     (path) => expect(requiresCustomerAuthentication(path)).toBe(true),
   );

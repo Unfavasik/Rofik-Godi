@@ -93,6 +93,7 @@ export interface OrderDetails {
 export interface CustomerOrderRecord {
   id: string;
   order_number: string;
+  order_slug: string;
   customer_name: string;
   customer_phone: string;
   payment_method: string;

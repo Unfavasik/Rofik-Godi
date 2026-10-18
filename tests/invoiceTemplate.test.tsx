@@ -50,6 +50,7 @@ describe('InvoiceTemplate', () => {
     expect(toCustomerOrderRecord(adminOrder)).toEqual({
       id: 'RGC-TEST123',
       order_number: 'RGC-TEST123',
+      order_slug: '',
       customer_name: 'Test Customer',
       customer_phone: '9876543210',
       payment_method: 'PAY_AT_STORE',

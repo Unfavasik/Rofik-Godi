@@ -7,6 +7,7 @@ import type { CustomerOrderRecord } from '../src/types';
 const order: CustomerOrderRecord = {
   id: 'order-id-1',
   order_number: 'RGC-DFDFC5D323A5',
+  order_slug: '0123456789abcdef0123456789abcdef',
   customer_name: 'Test Customer',
   customer_phone: '+919876543210',
   payment_method: 'PAY_ONLINE',

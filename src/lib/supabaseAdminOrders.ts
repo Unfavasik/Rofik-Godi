@@ -246,6 +246,7 @@ export function toCustomerOrderRecord(order: AdminOrderRecord): CustomerOrderRec
   return {
     id: order.orderNumber,
     order_number: order.orderNumber,
+    order_slug: '',
     customer_name: order.customer,
     customer_phone: order.phone,
     payment_method: order.paymentMethod,

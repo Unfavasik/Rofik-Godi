@@ -131,13 +131,13 @@ export async function listMyOrders(expectedUserId: string): Promise<CustomerOrde
   if (!userData.user || userData.user.id !== expectedUserId) return [];
   let response = await supabase
     .from('orders')
-    .select('id,order_number,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,vehicle_model,fulfillment_method,pickup_store,pickup_note,created_at,order_items(product_id,product_name,color,quantity,unit_price,selected_thickness,selected_stitch,custom_embroidery_text)')
+    .select('id,order_number,order_slug,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,vehicle_model,fulfillment_method,pickup_store,pickup_note,created_at,order_items(product_id,product_name,color,quantity,unit_price,selected_thickness,selected_stitch,custom_embroidery_text)')
     .eq('user_id', userData.user.id)
     .order('created_at', { ascending: false })
     .limit(50);
   if (missingOrderOptionColumns(response.error)) {
     response = await (supabase.from('orders')
-      .select('id,order_number,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,vehicle_model,fulfillment_method,pickup_store,pickup_note,created_at,order_items(product_id,product_name,color,quantity,unit_price)')
+      .select('id,order_number,order_slug,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,vehicle_model,fulfillment_method,pickup_store,pickup_note,created_at,order_items(product_id,product_name,color,quantity,unit_price)')
       .eq('user_id', userData.user.id)
       .order('created_at', { ascending: false })
       .limit(50) as unknown as typeof response);
@@ -166,7 +166,11 @@ export async function listMyOrders(expectedUserId: string): Promise<CustomerOrde
   }));
 }
 
-export async function getMyOrderByNumber(expectedUserId: string, orderNumber: string): Promise<CustomerOrderRecord | null> {
+async function getMyOrderByOwnerReference(
+  expectedUserId: string,
+  referenceColumn: 'order_number' | 'order_slug',
+  referenceValue: string,
+): Promise<CustomerOrderRecord | null> {
   if (!supabase) return null;
   const { data: userData, error: authError } = await supabase.auth.getUser();
   if (authError) throw authError;
@@ -174,15 +178,15 @@ export async function getMyOrderByNumber(expectedUserId: string, orderNumber: st
 
   let response = await supabase
     .from('orders')
-    .select('id,order_number,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,vehicle_model,fulfillment_method,pickup_store,pickup_note,created_at,order_items(product_id,product_name,color,quantity,unit_price,selected_thickness,selected_stitch,custom_embroidery_text)')
+    .select('id,order_number,order_slug,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,vehicle_model,fulfillment_method,pickup_store,pickup_note,created_at,order_items(product_id,product_name,color,quantity,unit_price,selected_thickness,selected_stitch,custom_embroidery_text)')
     .eq('user_id', userData.user.id)
-    .eq('order_number', orderNumber)
+    .eq(referenceColumn, referenceValue)
     .maybeSingle();
   if (missingOrderOptionColumns(response.error)) {
     response = await (supabase.from('orders')
-      .select('id,order_number,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,vehicle_model,fulfillment_method,pickup_store,pickup_note,created_at,order_items(product_id,product_name,color,quantity,unit_price)')
+      .select('id,order_number,order_slug,customer_name,customer_phone,payment_method,payment_status,status,subtotal,discount,total,vehicle_model,fulfillment_method,pickup_store,pickup_note,created_at,order_items(product_id,product_name,color,quantity,unit_price)')
       .eq('user_id', userData.user.id)
-      .eq('order_number', orderNumber)
+      .eq(referenceColumn, referenceValue)
       .maybeSingle() as unknown as typeof response);
   }
   const { data, error } = response;
@@ -208,6 +212,18 @@ export async function getMyOrderByNumber(expectedUserId: string, orderNumber: st
       image_url: item.product_id ? productImages.get(item.product_id) || null : null,
     })),
   };
+}
+
+/** Legacy notification lookup only; it is still restricted to the signed-in owner. */
+export function getMyOrderByNumber(expectedUserId: string, orderNumber: string): Promise<CustomerOrderRecord | null> {
+  return getMyOrderByOwnerReference(expectedUserId, 'order_number', orderNumber);
+}
+
+/** Customer deep links use opaque slugs, and the database query is owner-scoped as defense in depth. */
+export function getMyOrderBySlug(expectedUserId: string, orderSlug: string): Promise<CustomerOrderRecord | null> {
+  const normalizedOrderSlug = orderSlug.trim().toLowerCase();
+  if (!/^[0-9a-f]{32}$/.test(normalizedOrderSlug)) return Promise.resolve(null);
+  return getMyOrderByOwnerReference(expectedUserId, 'order_slug', normalizedOrderSlug);
 }
 
 /** Read only the authenticated customer's permitted status history for an order. */

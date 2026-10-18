@@ -52,7 +52,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
-import { getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
+import { getPathForCustomerOrder, getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
 import { signOutCurrentDevice } from './lib/authLogout';
 import { CUSTOMER_PREFERENCES_CHANGED_EVENT, isNotificationEnabledByPreferences, prefersHapticFeedback, readCustomerAppPreferences } from './lib/customerPreferences';
 import type { PreferredLanguage } from './lib/customerPreferences';
@@ -1040,8 +1040,8 @@ export default function App() {
             onOpenProduct={openProductRoute}
             onOpenSupportRequest={(requestId) => navigate(`/support/${encodeURIComponent(requestId)}`)}
             onOpenContactSupport={() => navigate('/contact-support', { state: { returnTo: '/notifications' } })}
-            onOpenMyOrders={(orderNumber) => {
-              navigate(`/my-orders/${encodeURIComponent(orderNumber)}`);
+            onOpenMyOrders={(orderSlug) => {
+              navigate(orderSlug ? getPathForCustomerOrder(orderSlug) : '/my-orders');
             }}
           />
         ) : activeTab === 'shop' ? (
@@ -1109,11 +1109,11 @@ export default function App() {
               }}
               onOpenWishlist={openWishlistPage}
               routeModal={resolvedRoute.kind === 'orders' ? 'orders' : resolvedRoute.kind === 'settings' ? 'settings' : resolvedRoute.kind === 'support' ? 'support' : resolvedRoute.kind === 'contact-support' ? 'contact-support' : null}
-              initialOrderNumber={resolvedRoute.kind === 'orders' ? resolvedRoute.orderNumber : null}
+              initialOrderSlug={resolvedRoute.kind === 'orders' ? resolvedRoute.orderSlug : null}
               initialSupportRequestId={resolvedRoute.kind === 'support' ? resolvedRoute.requestId : null}
               onOpenOrdersPage={() => navigate('/my-orders')}
               onBuyAgain={handleBuyAgain}
-              onSelectOrderRoute={(orderNumber) => navigate(`/my-orders/${encodeURIComponent(orderNumber)}`)}
+              onSelectOrderRoute={(orderSlug) => navigate(getPathForCustomerOrder(orderSlug))}
               onBackToOrdersRoute={() => navigate('/my-orders')}
               onOpenSettingsPage={() => navigate('/settings')}
               onOpenSupportPage={() => navigate('/support')}

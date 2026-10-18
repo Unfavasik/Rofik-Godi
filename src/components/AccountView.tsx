@@ -48,7 +48,7 @@ interface AccountViewProps {
   onOpenCustomBuilder?: () => void;
   onOpenShop?: () => void;
   onOpenOrdersPage?: () => void;
-  onSelectOrderRoute?: (orderNumber: string) => void;
+  onSelectOrderRoute?: (orderSlug: string) => void;
   onBackToOrdersRoute?: () => void;
   onOpenSettingsPage?: () => void;
   onOpenSupportPage?: () => void;
@@ -58,7 +58,7 @@ interface AccountViewProps {
   onOpenTermsPage?: () => void;
   onExitRoutedPage?: () => void;
   routeModal?: 'orders' | 'settings' | 'support' | 'contact-support' | null;
-  initialOrderNumber?: string | null;
+  initialOrderSlug?: string | null;
   initialSupportRequestId?: string | null;
   onProfileChange?: (profile: Pick<UserProfile, 'name' | 'phone' | 'avatar' | 'vehicle'>) => void;
   onBuyAgain?: (order: CustomerOrderRecord) => Promise<BuyAgainResult>;
@@ -87,7 +87,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
   onOpenTermsPage,
   onExitRoutedPage,
   routeModal = null,
-  initialOrderNumber,
+  initialOrderSlug,
   initialSupportRequestId,
   onProfileChange,
   onBuyAgain,
@@ -100,22 +100,22 @@ export const AccountView: React.FC<AccountViewProps> = ({
   };
   const [activeModal, setActiveModal] = useState<'orders' | 'pickupStore' | 'settings' | 'support' | 'contact-support' | 'profile' | 'privacy' | 'terms' | null>(null);
   const previousRouteModal = useRef<'orders' | 'settings' | 'support' | 'contact-support' | null>(null);
-  const [initialOrderNumberForModal, setInitialOrderNumberForModal] = useState<string | null>(null);
+  const [initialOrderSlugForModal, setInitialOrderSlugForModal] = useState<string | null>(null);
 
   useEffect(() => {
     if (routeModal) {
       previousRouteModal.current = routeModal;
       setActiveModal(routeModal);
-      setInitialOrderNumberForModal(routeModal === 'orders' ? initialOrderNumber ?? null : null);
+      setInitialOrderSlugForModal(routeModal === 'orders' ? initialOrderSlug ?? null : null);
     } else if (previousRouteModal.current) {
       previousRouteModal.current = null;
       setActiveModal(null);
-      setInitialOrderNumberForModal(null);
+      setInitialOrderSlugForModal(null);
     }
-  }, [initialOrderNumber, routeModal]);
+  }, [initialOrderSlug, routeModal]);
 
   const closeRoutedPage = () => {
-    setInitialOrderNumberForModal(null);
+    setInitialOrderSlugForModal(null);
     setActiveModal(null);
     if (routeModal) onExitRoutedPage?.();
   };
@@ -919,7 +919,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
             loading={ordersLoading}
             error={ordersError}
             customerName={currentUser?.name || ''}
-            initialOrderNumber={initialOrderNumberForModal}
+            currentUserId={currentUser?.id || ''}
+            initialOrderSlug={initialOrderSlugForModal}
             onSelectOrderRoute={onSelectOrderRoute}
             onBackToOrdersRoute={onBackToOrdersRoute}
             onClose={closeRoutedPage}

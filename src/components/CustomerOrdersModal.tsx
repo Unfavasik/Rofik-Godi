@@ -25,7 +25,7 @@ import type { CustomerOrderRecord } from '../types';
 import { WORKSHOP_INFO } from '../data/products';
 import type { ProductReviewRecord } from '../lib/supabaseReviews';
 import { canCancelCustomerOrder, getCustomerOrderTimeline, getOrderPreviewItems, isOrderComplete } from '../lib/orderPresentation';
-import { cancelMyOrder, listMyOrderStatusHistory } from '../lib/supabaseOrders';
+import { cancelMyOrder, getMyOrderBySlug, listMyOrderStatusHistory } from '../lib/supabaseOrders';
 import { InvoiceTemplate } from './InvoiceTemplate';
 import { PickupQrCard } from './PickupQrCard';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -38,9 +38,10 @@ interface CustomerOrdersModalProps {
   loading: boolean;
   error?: string;
   customerName: string;
-  initialOrderNumber?: string | null;
+  currentUserId: string;
+  initialOrderSlug?: string | null;
   onInitialOrderOpened?: () => void;
-  onSelectOrderRoute?: (orderNumber: string) => void;
+  onSelectOrderRoute?: (orderSlug: string) => void;
   onBackToOrdersRoute?: () => void;
   onClose: () => void;
   onRefresh?: () => Promise<void> | void;
@@ -150,13 +151,17 @@ const OrderTimeline = ({ orderId, status, createdAt }: { orderId: string; status
   );
 };
 
-export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders, reviews, loading, error, customerName, initialOrderNumber, onInitialOrderOpened, onSelectOrderRoute, onBackToOrdersRoute, onClose, onRefresh, onReview, onBuyAgain }) => {
+export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders, reviews, loading, error, customerName, currentUserId, initialOrderSlug, onInitialOrderOpened, onSelectOrderRoute, onBackToOrdersRoute, onClose, onRefresh, onReview, onBuyAgain }) => {
   const { t } = useI18n();
   const [filter, setFilter] = useState<OrderFilter>('all');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const initialOrderHandled = useRef<string | null>(null);
+  const [directOrder, setDirectOrder] = useState<CustomerOrderRecord | null>(null);
+  const [directOrderLoading, setDirectOrderLoading] = useState(false);
+  const [directOrderNotFound, setDirectOrderNotFound] = useState(false);
   const [invoiceOrder, setInvoiceOrder] = useState<CustomerOrderRecord | null>(null);
-  const selectedOrder = orders.find((order) => order.id === selectedOrderId) || null;
+  const selectedOrder = orders.find((order) => order.id === selectedOrderId)
+    || (directOrder?.id === selectedOrderId ? directOrder : null);
   const completedCount = orders.filter((order) => isOrderComplete(order.status)).length;
   const activeCount = orders.filter((order) => !isOrderComplete(order.status) && order.status !== 'CANCELLED').length;
   const filteredOrders = useMemo(() => orders.filter((order) => {
@@ -183,22 +188,46 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
   }, [onRefresh]);
 
   useEffect(() => {
-    if (!initialOrderNumber) {
+    if (!initialOrderSlug) {
       if (initialOrderHandled.current) {
         initialOrderHandled.current = null;
         setSelectedOrderId(null);
+        setDirectOrder(null);
+        setDirectOrderNotFound(false);
+        setDirectOrderLoading(false);
       }
       return;
     }
-    if (initialOrderHandled.current === initialOrderNumber) return;
+    if (initialOrderHandled.current === initialOrderSlug) return;
     if (selectedOrderId) setSelectedOrderId(null);
-    if (loading || error) return;
-    const targetOrder = orders.find((order) => order.order_number.toUpperCase() === initialOrderNumber.toUpperCase());
-    if (!targetOrder) return;
-    initialOrderHandled.current = initialOrderNumber;
-    setSelectedOrderId(targetOrder.id);
-    onInitialOrderOpened?.();
-  }, [error, initialOrderNumber, loading, onInitialOrderOpened, orders, selectedOrderId]);
+    setDirectOrder(null);
+    setDirectOrderNotFound(false);
+    if (loading || !currentUserId) return;
+    const targetOrder = orders.find((order) => order.order_slug.toLowerCase() === initialOrderSlug.toLowerCase());
+    if (targetOrder) {
+      initialOrderHandled.current = initialOrderSlug;
+      setSelectedOrderId(targetOrder.id);
+      onInitialOrderOpened?.();
+      return;
+    }
+    let active = true;
+    initialOrderHandled.current = initialOrderSlug;
+    setDirectOrderLoading(true);
+    void getMyOrderBySlug(currentUserId, initialOrderSlug)
+      .then((result) => {
+        if (!active) return;
+        if (!result) {
+          setDirectOrderNotFound(true);
+          return;
+        }
+        setDirectOrder(result);
+        setSelectedOrderId(result.id);
+        onInitialOrderOpened?.();
+      })
+      .catch(() => { if (active) setDirectOrderNotFound(true); })
+      .finally(() => { if (active) setDirectOrderLoading(false); });
+    return () => { active = false; };
+  }, [currentUserId, initialOrderSlug, loading, onInitialOrderOpened, orders, selectedOrderId]);
 
   const openInvoice = (order: CustomerOrderRecord) => setInvoiceOrder(order);
 
@@ -241,6 +270,8 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
             </motion.div>
           ) : (
             <motion.div key="list" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} transition={{ duration: 0.16 }} className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-7 sm:py-5">
+              {directOrderLoading && <p role="status" className="mb-3 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600">{t('common.loading')}</p>}
+              {directOrderNotFound && <p role="alert" className="mb-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">{t('orders.notFound')}</p>}
               <div className="mb-4 flex gap-2 overflow-x-auto pb-1 no-scrollbar" role="tablist" aria-label={t('orders.filterOrders')}>
                 {([
                   ['all', 'orders.all', orders.length],
@@ -269,7 +300,7 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {filteredOrders.map((order, index) => <OrderCard key={order.id} order={order} index={index} onOpen={() => { setSelectedOrderId(order.id); onSelectOrderRoute?.(order.order_number); }} onInvoice={() => openInvoice(order)} />)}
+                  {filteredOrders.map((order, index) => <OrderCard key={order.id} order={order} index={index} onOpen={() => { setSelectedOrderId(order.id); onSelectOrderRoute?.(order.order_slug); }} onInvoice={() => openInvoice(order)} />)}
                 </div>
               )}
               <p className="mt-4 flex items-center justify-center gap-1.5 pb-1 text-[10px] font-medium text-slate-400"><ShieldCheck className="h-3.5 w-3.5" />{t('orders.private')}</p>

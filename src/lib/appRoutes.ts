@@ -4,7 +4,8 @@ export type AdminSectionRoute = 'overview' | 'orders' | 'products' | 'categories
 
 export const APP_ROUTE_PATHS = [
   '/', '/home', '/shop', '/search', '/custom', '/wishlist', '/cart', '/checkout',
-  '/profile', '/account', '/my-orders', '/myorder', '/my-orders/:orderNumber', '/myorder/:orderNumber',
+  '/profile', '/account', '/my-orders', '/myorder', '/my-order',
+  '/my-orders/order/:orderSlug', '/myorder/order/:orderSlug', '/my-order/order/:orderSlug',
   '/notifications', '/notification', '/shop/products/:slug', '/products/:slug', '/product/:slug',
   '/support', '/support/:requestId', '/contact-support',
   '/settings', '/privacy-policy', '/privacy', '/terms-and-conditions', '/terms', '/store', '/store-info',
@@ -20,7 +21,7 @@ export type ResolvedAppRoute =
   | { kind: 'admin-customer'; tab: 'home'; customerId: string; canonicalPath: string }
   | { kind: 'admin-order'; tab: 'home'; orderId: string; canonicalPath: string }
   | { kind: 'checkout'; tab: 'cart'; canonicalPath: '/checkout' }
-  | { kind: 'orders'; tab: 'account'; orderNumber: string | null; canonicalPath: string }
+  | { kind: 'orders'; tab: 'account'; orderSlug: string | null; canonicalPath: string }
   | { kind: 'support'; tab: 'account'; requestId: string | null; canonicalPath: string }
   | { kind: 'contact-support'; tab: 'account'; canonicalPath: '/contact-support' }
   | { kind: 'product'; tab: 'shop'; slug: string; canonicalPath: string }
@@ -65,6 +66,10 @@ export function getPathForAdminCustomer(customerId: string): string {
 
 export function getPathForAdminOrder(orderId: string): string {
   return `/admin/orders/${encodeURIComponent(orderId.replace(/^#/, ''))}`;
+}
+
+export function getPathForCustomerOrder(orderSlug: string): string {
+  return `/my-order/order/${encodeURIComponent(orderSlug)}`;
 }
 
 export function getAdminOrderIdFromPath(pathname: string): string | null {
@@ -139,15 +144,20 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
   if (path === '/terms-and-conditions' || path === '/terms') return { kind: 'terms', tab: 'home', canonicalPath: '/terms-and-conditions' };
   if (path === '/store' || path === '/store-info') return { kind: 'store', tab: 'home', canonicalPath: '/store' };
 
-  const orderMatch = path.match(/^\/(my-orders|myorder)(?:\/([^/]+))?$/i);
+  const orderMatch = path.match(/^\/(my-orders|myorder|my-order)(?:\/order\/([^/]+))?$/i);
   if (orderMatch) {
-    const orderNumber = orderMatch[2] ? decodeSegment(orderMatch[2]) : null;
+    const requestedSlug = orderMatch[2] ? decodeSegment(orderMatch[2]) : null;
+    const orderSlug = requestedSlug && /^[0-9a-f]{32}$/i.test(requestedSlug) ? requestedSlug.toLowerCase() : null;
     return {
       kind: 'orders',
       tab: 'account',
-      orderNumber,
-      canonicalPath: orderNumber ? `/my-orders/${encodeURIComponent(orderNumber)}` : '/my-orders',
+      orderSlug,
+      canonicalPath: orderSlug ? getPathForCustomerOrder(orderSlug) : '/my-orders',
     };
+  }
+  // Old order-number URLs only open the signed-in customer's list; they never resolve an order.
+  if (/^\/(?:my-orders|myorder|my-order)\/[^/]+(?:\/[^/]+)?$/i.test(path)) {
+    return { kind: 'orders', tab: 'account', orderSlug: null, canonicalPath: '/my-orders' };
   }
 
   const productMatch = path.match(/^\/(?:shop\/products|products|product)\/([^/]+)$/i);

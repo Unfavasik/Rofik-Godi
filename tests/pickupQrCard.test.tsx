@@ -7,6 +7,7 @@ import { PickupQrCard } from '../src/components/PickupQrCard';
 const makeOrder = (status: string) => ({
   id: 'order-1',
   order_number: 'RGC-1001',
+  order_slug: '0123456789abcdef0123456789abcdef',
   customer_name: 'Rofik Godi Centre',
   customer_phone: '9876543210',
   payment_method: 'cash',

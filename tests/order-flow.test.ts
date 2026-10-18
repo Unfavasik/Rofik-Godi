@@ -11,7 +11,7 @@ const { supabaseMock } = vi.hoisted(() => ({
 
 vi.mock('../src/lib/supabase', () => ({ supabase: supabaseMock }));
 
-import { cancelMyOrder, createSupabaseOrder, issueMyStorePickupToken, listMyOrderStatusHistory } from '../src/lib/supabaseOrders';
+import { cancelMyOrder, createSupabaseOrder, getMyOrderBySlug, issueMyStorePickupToken, listMyOrderStatusHistory } from '../src/lib/supabaseOrders';
 import type { CartItem, OrderDetails } from '../src/types';
 
 const productId = '123e4567-e89b-42d3-a456-426614174000';
@@ -161,6 +161,33 @@ describe('secure order creation flow', () => {
     });
     expect(result.data).toBeNull();
     expect(result.error?.message).toMatch(/unconfirmed order/i);
+  });
+
+  it('looks up an order deep link by opaque slug and the authenticated owner, never by order number', async () => {
+    const slug = '0123456789abcdef0123456789abcdef';
+    supabaseMock.auth.getUser.mockResolvedValue({ data: { user: { id: 'customer-1' } }, error: null });
+    const query = { select: vi.fn(), eq: vi.fn(), maybeSingle: vi.fn() };
+    query.select.mockReturnValue(query);
+    query.eq.mockReturnValue(query);
+    query.maybeSingle.mockResolvedValue({ data: { id: 'order-id', order_slug: slug, order_number: 'RGC-1001', order_items: [] }, error: null });
+    supabaseMock.from.mockReturnValue(query);
+
+    const result = await getMyOrderBySlug('customer-1', slug);
+
+    expect(result).toMatchObject({ id: 'order-id', order_slug: slug, order_number: 'RGC-1001' });
+    expect(supabaseMock.from).toHaveBeenCalledWith('orders');
+    expect(query.eq).toHaveBeenNthCalledWith(1, 'user_id', 'customer-1');
+    expect(query.eq).toHaveBeenNthCalledWith(2, 'order_slug', slug);
+    expect(query.eq).not.toHaveBeenCalledWith('order_number', expect.anything());
+  });
+
+  it('rejects malformed slugs and mismatched sessions before querying orders', async () => {
+    supabaseMock.auth.getUser.mockResolvedValue({ data: { user: { id: 'another-customer' } }, error: null });
+
+    expect(await getMyOrderBySlug('customer-1', 'RGC-1001')).toBeNull();
+    expect(supabaseMock.auth.getUser).not.toHaveBeenCalled();
+    expect(await getMyOrderBySlug('customer-1', '0123456789abcdef0123456789abcdef')).toBeNull();
+    expect(supabaseMock.from).not.toHaveBeenCalled();
   });
 
   it('loads status timestamps from the owner-readable order history table', async () => {

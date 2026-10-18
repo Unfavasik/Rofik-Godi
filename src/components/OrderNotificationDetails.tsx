@@ -75,7 +75,7 @@ export function OrderNotificationDetails({
   notificationTitle?: string;
   notificationBody?: string;
   onBack: () => void;
-  onOpenMyOrders: (orderNumber: string) => void;
+  onOpenMyOrders: (orderSlug?: string) => void;
 }) {
   const { t, language } = useI18n();
   const locale = language === 'bn' ? 'bn-IN' : 'en-IN';
@@ -138,7 +138,7 @@ export function OrderNotificationDetails({
     <OrderHeader orderNumber={orderNumber} onBack={onBack} />
     <div className="mx-auto w-full max-w-xl flex-1 p-4">
       <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{t('notification.orderLoadFailed')}</div>
-      <button type="button" onClick={() => onOpenMyOrders(orderNumber)} className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#d9232d] px-4 text-sm font-extrabold text-white">{t('notification.openMyOrders')} <ArrowRight className="h-4 w-4" /></button>
+      <button type="button" onClick={() => onOpenMyOrders()} className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#d9232d] px-4 text-sm font-extrabold text-white">{t('notification.openMyOrders')} <ArrowRight className="h-4 w-4" /></button>
     </div>
   </main>;
 
@@ -248,7 +248,7 @@ export function OrderNotificationDetails({
 
     <footer className="shrink-0 border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-5px_20px_rgba(15,23,42,0.07)] backdrop-blur">
       <div className="mx-auto grid max-w-xl grid-cols-[1fr_auto] gap-2.5">
-        <button type="button" aria-label={t('notification.openOrderAria', { orderNumber: order.order_number })} onClick={() => onOpenMyOrders(order.order_number)} className="flex min-h-[56px] items-center justify-center gap-2 rounded-[18px] bg-[#d9232d] px-4 text-[14px] font-extrabold text-white shadow-[0_5px_14px_rgba(217,35,45,0.18)] transition hover:bg-[#c91d2a] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-200 active:scale-[0.99]"><Store className="h-5 w-5" />{t('notification.openOrder')} <span className="sr-only">{t('notification.openOrderSr')}</span><ArrowRight className="h-5 w-5" /></button>
+        <button type="button" aria-label={t('notification.openOrderAria', { orderNumber: order.order_number })} onClick={() => onOpenMyOrders(order.order_slug)} className="flex min-h-[56px] items-center justify-center gap-2 rounded-[18px] bg-[#d9232d] px-4 text-[14px] font-extrabold text-white shadow-[0_5px_14px_rgba(217,35,45,0.18)] transition hover:bg-[#c91d2a] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-200 active:scale-[0.99]"><Store className="h-5 w-5" />{t('notification.openOrder')} <span className="sr-only">{t('notification.openOrderSr')}</span><ArrowRight className="h-5 w-5" /></button>
         <a href={phoneHref} aria-label={t('notification.callStore')} className="grid min-h-[56px] min-w-[56px] place-items-center rounded-[18px] border border-slate-200 bg-white text-slate-800 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d9232d]"><Phone className="h-5 w-5" /></a>
       </div>
     </footer>

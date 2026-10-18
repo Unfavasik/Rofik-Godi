@@ -70,7 +70,7 @@ const toneFor = (item: NotificationItem) => {
   return 'bg-blue-50 text-blue-500';
 };
 
-export function NotificationsView({ userId, isGuest, onBack, onNotificationsChanged, onOpenShop, onOpenProduct, products = [], onOpenMyOrders, onOpenSupportRequest, onOpenContactSupport }: { userId: string; isGuest: boolean; onBack: () => void; onNotificationsChanged?: () => void; onOpenShop?: () => void; onOpenProduct?: (product: Product) => void; products?: Product[]; onOpenMyOrders?: (orderNumber: string) => void; onOpenSupportRequest?: (requestId: string) => void; onOpenContactSupport?: () => void }) {
+export function NotificationsView({ userId, isGuest, onBack, onNotificationsChanged, onOpenShop, onOpenProduct, products = [], onOpenMyOrders, onOpenSupportRequest, onOpenContactSupport }: { userId: string; isGuest: boolean; onBack: () => void; onNotificationsChanged?: () => void; onOpenShop?: () => void; onOpenProduct?: (product: Product) => void; products?: Product[]; onOpenMyOrders?: (orderSlug?: string) => void; onOpenSupportRequest?: (requestId: string) => void; onOpenContactSupport?: () => void }) {
   const [filter, setFilter] = useState<NotificationFilter>('All');
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [couponOffer, setCouponOffer] = useState<CustomerCouponOffer | null>(null);
@@ -326,9 +326,9 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
       notificationTitle={selectedNotification.title}
       notificationBody={selectedNotification.body}
       onBack={() => setSelectedNotification(null)}
-      onOpenMyOrders={(orderNumber) => {
+      onOpenMyOrders={(orderSlug) => {
         setSelectedNotification(null);
-        onOpenMyOrders?.(orderNumber);
+        onOpenMyOrders?.(orderSlug);
       }}
     />;
     if (isCouponNotification(selectedNotification)) {
