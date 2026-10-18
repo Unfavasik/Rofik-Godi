@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertCircle, PackageSearch, RotateCw } from 'lucide-react';
-import { CloudLoader } from './CloudLoader';
+import { Skeleton } from './Skeleton';
 
 export type CatalogStatusKind = 'loading' | 'error' | 'empty';
 
@@ -17,7 +17,9 @@ export const CatalogStatus: React.FC<CatalogStatusProps> = ({ state, onRetry, co
   if (state === 'loading') {
     return (
       <div className={baseClass} role="status" aria-live="polite">
-        <CloudLoader label="Loading products…" />
+        <div className="grid gap-3 sm:grid-cols-2" aria-label="Loading products">
+          {[0, 1, 2, 3].map((item) => <Skeleton key={item} kind="card" />)}
+        </div>
       </div>
     );
   }

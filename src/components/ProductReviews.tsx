@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { BadgeCheck, Star } from 'lucide-react';
 import { getMyReviewContext, getProductRatingSummary, listPublishedReviews, type ProductRatingSummary, type ProductReviewRecord, type ReviewEligibleOrder } from '../lib/supabaseReviews';
 import { ReviewComposer } from './ReviewComposer';
+import { Skeleton } from './Skeleton';
 
 interface ProductReviewsProps {
   productId: string;
@@ -55,7 +56,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, produ
     </div>
 
     <div className="mt-3 space-y-2.5">
-      {loading ? <p className="py-5 text-center text-xs text-slate-500">Loading reviews…</p> : reviews.length ? reviews.map((review) => <article key={review.id} className="rounded-2xl border border-slate-100 bg-white p-3.5 shadow-[0_2px_10px_rgba(15,23,42,.025)]">
+      {loading ? <Skeleton kind="list" count={3} /> : reviews.length ? reviews.map((review) => <article key={review.id} className="rounded-2xl border border-slate-100 bg-white p-3.5 shadow-[0_2px_10px_rgba(15,23,42,.025)]">
         <div className="flex items-start justify-between gap-3"><div><b className="text-[12px]">{review.author_name || 'Customer'}</b>{review.is_verified_purchase && <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-semibold text-emerald-700"><BadgeCheck className="h-3 w-3" />Verified Purchase</span>}<p className="mt-1 text-[10px] text-slate-400">{new Date(review.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p></div><div className="flex shrink-0">{[1,2,3,4,5].map((value) => <Star key={value} className={`h-3.5 w-3.5 ${value <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} />)}</div></div>
         {review.review_text && <p className="mt-2.5 whitespace-pre-wrap text-[11px] leading-relaxed text-slate-600">{review.review_text}</p>}
       </article>) : <p className="rounded-xl border border-dashed border-slate-200 px-3 py-5 text-center text-xs text-slate-500">No published reviews yet. Be the first verified customer to share your experience.</p>}

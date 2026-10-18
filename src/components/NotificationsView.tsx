@@ -14,6 +14,7 @@ import { NewProductNotificationDetails } from './NewProductNotificationDetails';
 import { SupportNotificationDetails } from './SupportNotificationDetails';
 import { getCustomerNotificationCategory, getSupportRequestIdFromNotification, matchesCustomerNotificationFilter, getNotificationRowSurfaceClass, isSupportNotification, type CustomerNotificationFilter } from '../lib/notificationCategory';
 import { isNotificationEnabledByPreferences, readCustomerAppPreferences } from '../lib/customerPreferences';
+import { Skeleton } from './Skeleton';
 
 type NotificationItem = {
   id: string;
@@ -388,7 +389,7 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
       {(['All', 'Orders', 'Offers', 'Support', 'System'] as NotificationFilter[]).map((name) => <button key={name} onClick={() => { setFilter(name); setRevealedDeleteId(null); }} className={`relative flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-[11px] font-bold transition-colors ${filter === name ? 'border-rose-100 bg-rose-100 text-[#D9232D]' : 'border-slate-100 bg-slate-50 text-slate-700 hover:bg-slate-100'}`}>{name}<span className={`text-[9px] ${filter === name ? 'text-[#D9232D]/65' : 'text-slate-400'}`}>{counts[name]}</span>{name === 'Support' && hasUnreadSupport && <span aria-label="Unread support reply" className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[#E51E2B]" />}</button>)}
     </nav>
     {deleteError && <p role="alert" className="mx-4 mt-2 rounded-xl bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-700">{deleteError}</p>}
-    {loading ? <div className="px-4 py-14 text-center text-[13px] text-slate-500">Loading your notifications…</div> : loadError ? (
+    {loading ? <div className="px-4 py-5"><Skeleton kind="list" count={5} /></div> : loadError ? (
       <section role="alert" className="mx-4 mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-8 text-center">
         <h2 className="text-base font-bold text-rose-800">Notifications could not be loaded</h2>
         <p className="mt-1 text-sm text-rose-700">{loadError}</p>

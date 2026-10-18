@@ -10,6 +10,7 @@ import {
   type SupportMessageRecord,
   type SupportRequestRecord,
 } from '../lib/supabaseSupport';
+import { Skeleton } from './Skeleton';
 
 const formatDate = (value: string) => {
   const date = new Date(value);
@@ -179,7 +180,7 @@ export const SupportConversation: React.FC<{
   };
 
   if (loading) {
-    return <div role="status" className="flex min-h-52 items-center justify-center gap-2 text-sm font-semibold text-slate-500"><LoaderCircle className="h-5 w-5 animate-spin" /> Loading conversation…</div>;
+    return <div role="status" aria-label="Loading conversation" className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4"><Skeleton kind="text" lines={4} /><Skeleton kind="text" lines={3} className="ml-auto max-w-[80%]" /><Skeleton kind="text" lines={4} /></div>;
   }
   if (!request) {
     return <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-800">{error || 'Support request not found.'}</div>;
