@@ -34,6 +34,7 @@ import { ConfirmDialog } from './ConfirmDialog';
 import { PhoneNumberField } from './PhoneNumberField';
 import { getPhoneCountry, validatePhoneNumber, type CountryCode } from '../utils/phoneValidation';
 import { useI18n } from '../lib/i18n';
+import { CloudLoader } from './CloudLoader';
 
 interface AccountViewProps {
   currentUser?: UserProfile;
@@ -1003,6 +1004,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
               </div>
 
               <div className="overflow-y-auto px-5 py-4 space-y-3 flex-1 no-scrollbar text-gray-800">
+                {profileLoading && <CloudLoader label="Loading profile…" className="rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-3" />}
                 <div className="flex items-center gap-4 rounded-2xl border border-rose-100 bg-rose-50/60 p-3">
                   <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-white bg-[#FCE6E1] text-lg font-black text-[#D9232D] shadow-sm">
                     {profileAvatarUrl

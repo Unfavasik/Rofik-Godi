@@ -1,5 +1,6 @@
 import React from 'react';
-import { AlertCircle, LoaderCircle, PackageSearch, RotateCw } from 'lucide-react';
+import { AlertCircle, PackageSearch, RotateCw } from 'lucide-react';
+import { CloudLoader } from './CloudLoader';
 
 export type CatalogStatusKind = 'loading' | 'error' | 'empty';
 
@@ -16,8 +17,7 @@ export const CatalogStatus: React.FC<CatalogStatusProps> = ({ state, onRetry, co
   if (state === 'loading') {
     return (
       <div className={baseClass} role="status" aria-live="polite">
-        <LoaderCircle className="mx-auto h-6 w-6 animate-spin text-[#D9232D]" aria-hidden="true" />
-        <p className="mt-3 text-sm font-semibold text-slate-700">Loading products…</p>
+        <CloudLoader label="Loading products…" />
       </div>
     );
   }

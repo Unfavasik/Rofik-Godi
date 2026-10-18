@@ -62,6 +62,7 @@ import { useCart } from './hooks/useCart';
 import { useCatalog } from './hooks/useCatalog';
 import { usePwaInstallPrompt } from './hooks/usePwaInstallPrompt';
 import { listMyNotifications, listMyWishlist, toggleWishlist } from './lib/supabaseCustomer';
+import { CloudLoader } from './components/CloudLoader';
 const FilterSortModal = lazy(() => import('./components/FilterSortModal').then((module) => ({ default: module.FilterSortModal })));
 export default function App() {
   const location = useLocation();
@@ -1028,7 +1029,7 @@ export default function App() {
           )}
 
         {/* View Switcher: Search View / Account View / Home & Shop Experience */}
-        <Suspense fallback={<main role="status" className="flex min-h-[40vh] flex-1 items-center justify-center text-sm font-semibold text-slate-500">Loading view…</main>}>
+        <Suspense fallback={<main className="flex min-h-[40vh] flex-1 items-center justify-center"><CloudLoader label="Loading view…" /></main>}>
         {activeTab === 'notifications' ? (
           <NotificationsView
             userId={currentUser.id}
