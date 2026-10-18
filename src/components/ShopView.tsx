@@ -20,6 +20,10 @@ interface ShopViewProps {
   isQuickAddInCart: (product: Product) => boolean;
   onToggleWishlist: (product: Product, event: React.MouseEvent) => void;
   onOpenCart: () => void;
+  sortLabel: string;
+  activeFilterCount: number;
+  onOpenSort: () => void;
+  onOpenFilter: () => void;
 }
 
 const isRenderableProduct = (value: unknown): value is Product => {
@@ -52,10 +56,13 @@ export const ShopView: React.FC<ShopViewProps> = ({
   isQuickAddInCart,
   onToggleWishlist,
   onOpenCart,
+  sortLabel,
+  activeFilterCount,
+  onOpenSort,
+  onOpenFilter,
 }) => {
   const [category, setCategory] = useState('All');
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
-  const [sort, setSort] = useState<'featured' | 'price-low' | 'price-high'>('featured');
 
   const renderableProducts = useMemo(
     () => (Array.isArray(products) ? products : []).filter(isRenderableProduct),
@@ -72,16 +79,8 @@ export const ShopView: React.FC<ShopViewProps> = ({
     const filtered = activeCategory === 'All'
       ? [...renderableProducts]
       : renderableProducts.filter((product) => getProductCategory(product) === activeCategory);
-    if (sort === 'price-low') return filtered.sort((a, b) => a.price - b.price);
-    if (sort === 'price-high') return filtered.sort((a, b) => b.price - a.price);
     return filtered;
-  }, [activeCategory, renderableProducts, sort]);
-
-  const cycleSort = () => setSort((current) => current === 'featured' ? 'price-low' : current === 'price-low' ? 'price-high' : 'featured');
-  const cycleFilter = () => {
-    const currentIndex = categories.indexOf(activeCategory);
-    setCategory(categories[(currentIndex + 1) % categories.length] ?? 'All');
-  };
+  }, [activeCategory, renderableProducts]);
 
   return (
     <main className="min-h-screen bg-[#f8f9fc] text-slate-800">
@@ -135,11 +134,12 @@ export const ShopView: React.FC<ShopViewProps> = ({
 
       <div className="mt-4 flex items-center justify-between px-5">
         <div className="flex gap-2">
-          <button onClick={cycleSort} className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold">
-            <ArrowUpDown className="h-3.5 w-3.5" /> {sort === 'featured' ? 'Sort' : sort === 'price-low' ? 'Price: Low' : 'Price: High'}
+          <button type="button" onClick={onOpenSort} aria-label="Sort products" className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold">
+            <ArrowUpDown className="h-3.5 w-3.5" /> {sortLabel}
           </button>
-          <button onClick={cycleFilter} className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold">
-            <SlidersHorizontal className="h-3.5 w-3.5" /> {activeCategory === 'All' ? 'Filter' : activeCategory}
+          <button type="button" onClick={onOpenFilter} aria-label="Filter products" className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold">
+            <SlidersHorizontal className="h-3.5 w-3.5" /> Filter
+            {activeFilterCount > 0 && <span className="grid h-4 min-w-4 place-items-center rounded-full bg-[#e61e25] px-1 text-[9px] font-extrabold text-white">{activeFilterCount}</span>}
           </button>
         </div>
         <div className="flex gap-1">

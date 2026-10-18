@@ -254,10 +254,13 @@ export default function App() {
   useEffect(() => {
     if (isAdminPath(location.pathname)) return;
     if (appPhase !== 'main') return;
+    // Supabase needs the callback URL (including its code/hash) to finish
+    // exchanging an OAuth response for a session before tab routing can run.
+    if (location.pathname === '/auth/callback' && authStatus === 'AUTH_LOADING') return;
     if (resolveAppRoute(location.pathname).kind !== 'tab') return;
     const nextPath = tabToRoute(activeTab);
     if (location.pathname !== nextPath) navigate(nextPath, { state: { tab: activeTab } });
-  }, [activeTab, appPhase, location.pathname, navigate, tabToRoute]);
+  }, [activeTab, appPhase, authStatus, location.pathname, navigate, tabToRoute]);
 
   const previousTabRef = useRef<RouteTab>(activeTab);
   useLayoutEffect(() => {
@@ -1064,6 +1067,10 @@ export default function App() {
             isQuickAddInCart={isQuickAddInCart}
             onToggleWishlist={handleToggleWishlist}
             onOpenCart={handleOpenCart}
+            sortLabel={SORT_LABELS[sortBy]?.label || 'Sort'}
+            activeFilterCount={activeHomeFiltersCount}
+            onOpenSort={() => setIsHomeSortOpen(true)}
+            onOpenFilter={() => setIsHomeFilterOpen(true)}
           />
         ) : activeTab === 'search' ? (
           <main className="flex-1 flex flex-col">
@@ -1597,7 +1604,6 @@ export default function App() {
               onOpenCustomBuilder={openCustomBuilderPage}
               onOpenShop={() => {
                 setActiveTab('shop');
-                scrollToShop();
               }}
               onOpenSearch={() => {
                 setActiveTab('search');

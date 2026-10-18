@@ -24,6 +24,10 @@ const renderShop = (overrides: Partial<React.ComponentProps<typeof ShopView>> = 
     isQuickAddInCart={() => false}
     onToggleWishlist={() => {}}
     onOpenCart={() => {}}
+    sortLabel="Popular & Recommended"
+    activeFilterCount={0}
+    onOpenSort={() => {}}
+    onOpenFilter={() => {}}
     {...overrides}
   />,
 );
@@ -47,6 +51,8 @@ describe('catalog feedback', () => {
     const html = renderShop();
     expect(html).toContain('0 products found');
     expect(html).toContain('No products found');
+    expect(html).toContain('aria-label="Sort products"');
+    expect(html).toContain('aria-label="Filter products"');
     expect(html).not.toContain('128 products found');
   });
 

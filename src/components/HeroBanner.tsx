@@ -121,21 +121,21 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
         <AnimatePresence mode="wait">
           <motion.div
             key={slide.id}
-            initial={{ opacity: 0, scale: 0.95, x: 20 }}
-            animate={{ opacity: 1, scale: 1.1, x: 0 }}
-            exit={{ opacity: 0, scale: 0.95, x: -20 }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="absolute right-[-14px] -top-2 bottom-[-8px] w-1/2 flex items-center justify-end pointer-events-none z-0"
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -12 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="absolute right-0 top-0 bottom-7 w-[48%] flex items-center justify-center pointer-events-none z-0"
           >
             {slide.image && (
               <img
                 src={slide.image}
                 alt={slide.badge}
-                className="object-cover h-[115%] w-full rotate-[14deg] drop-shadow-[0_12px_24px_rgba(0,0,0,0.85)] filter contrast-125 brightness-105"
+                className="h-full w-full object-contain object-center drop-shadow-[0_12px_24px_rgba(0,0,0,0.65)]"
               />
             )}
             {/* Dark gradient overlay for seamless blending */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0E0F12] via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0E0F12] via-[#0E0F12]/20 to-transparent" />
           </motion.div>
         </AnimatePresence>
 
