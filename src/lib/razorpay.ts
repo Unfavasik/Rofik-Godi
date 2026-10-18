@@ -25,7 +25,6 @@ type RazorpayOptions = {
   order_id: string;
   prefill: { name: string; email: string; contact: string };
   theme: { color: string };
-  config: { display: { hide: Array<{ method: string }> } };
   handler: (response: RazorpaySuccess) => void | Promise<void>;
   modal: { ondismiss: () => void };
 };
@@ -111,7 +110,6 @@ export async function openRazorpayCheckout(orderNumber: string): Promise<VerifyR
       order_id: createData.razorpayOrderId,
       prefill: createData.prefill,
       theme: { color: '#D9232D' },
-      config: { display: { hide: [{ method: 'upi' }] } },
       handler: async (response) => {
         const { data, error } = await client.functions.invoke<VerifyResponse>(
           'verify-razorpay-payment',
