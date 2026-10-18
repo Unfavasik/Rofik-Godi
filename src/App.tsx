@@ -62,7 +62,7 @@ import { useCart } from './hooks/useCart';
 import { useCatalog } from './hooks/useCatalog';
 import { usePwaInstallPrompt } from './hooks/usePwaInstallPrompt';
 import { listMyNotifications, listMyWishlist, toggleWishlist } from './lib/supabaseCustomer';
-import { Skeleton } from './components/Skeleton';
+import { CloudLoader } from './components/CloudLoader';
 const FilterSortModal = lazy(() => import('./components/FilterSortModal').then((module) => ({ default: module.FilterSortModal })));
 export default function App() {
   const location = useLocation();
@@ -918,7 +918,7 @@ export default function App() {
       >
         <Suspense
           fallback={
-            <div className="min-h-screen space-y-4 p-8" role="status" aria-label="Loading admin workspace"><Skeleton kind="text" lines={2} /><div className="grid gap-4 sm:grid-cols-3"><Skeleton kind="card" /><Skeleton kind="card" /><Skeleton kind="card" /></div><Skeleton kind="table" count={5} /></div>
+            <div className="min-h-screen p-8 text-sm font-bold">Loading admin workspace…</div>
           }
         >
           <AdminPanel
@@ -1029,7 +1029,7 @@ export default function App() {
           )}
 
         {/* View Switcher: Search View / Account View / Home & Shop Experience */}
-        <Suspense fallback={<main className="flex min-h-[40vh] flex-1 flex-col gap-3 p-4"><Skeleton kind="card" /><Skeleton kind="text" lines={4} /><Skeleton kind="button" /></main>}>
+        <Suspense fallback={<main className="flex min-h-[40vh] flex-1 items-center justify-center"><CloudLoader label="Loading view…" /></main>}>
         {activeTab === 'notifications' ? (
           <NotificationsView
             userId={currentUser.id}

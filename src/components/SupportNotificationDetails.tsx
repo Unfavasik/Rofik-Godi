@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Bell, CalendarDays, CheckCircle2, ChevronRight, CircleHelp, FileText, Headphones, MessageCircle, Package } from 'lucide-react';
-import { Skeleton } from './Skeleton';
+import { ArrowLeft, Bell, CalendarDays, CheckCircle2, ChevronRight, CircleHelp, FileText, Headphones, LoaderCircle, MessageCircle, Package } from 'lucide-react';
 import { getSupportRequest, listSupportMessages, type SupportMessageRecord, type SupportRequestRecord } from '../lib/supabaseSupport';
 
 type SupportNotificationDetailsProps = {
@@ -93,7 +92,7 @@ export function SupportNotificationDetails({ requestId, userId, isAuthenticated,
 
       <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] sm:p-4">
         <div className="flex items-center gap-2 text-[#D9232D]"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-50"><FileText className="h-4 w-4" /></span><h3 className="text-[13px] font-extrabold text-slate-900">Support request information</h3></div>
-        {loading ? <div role="status" aria-label="Loading ticket details" className="space-y-3 px-2 py-5"><Skeleton kind="text" lines={4} /><Skeleton kind="button" /></div> : !isAuthenticated ? (
+        {loading ? <div role="status" className="flex items-center gap-2 px-2 py-5 text-xs text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" />Loading ticket details…</div> : !isAuthenticated ? (
           <div className="mt-3 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-600">Sign in to view your private support request details.</div>
         ) : request ? <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-4 rounded-xl border border-slate-200 p-3">
           <div className="flex items-start gap-2"><FileText className="mt-0.5 h-4 w-4 shrink-0 text-slate-700" /><div className="min-w-0"><p className="text-[10px] text-slate-500">Ticket ID</p><p className="truncate text-[12px] font-bold">#{request.id.slice(0, 8).toUpperCase()}</p></div></div>

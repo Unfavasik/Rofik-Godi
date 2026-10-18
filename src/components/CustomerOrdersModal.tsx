@@ -22,7 +22,6 @@ import {
   X,
 } from 'lucide-react';
 import type { CustomerOrderRecord } from '../types';
-import { Skeleton } from './Skeleton';
 import { WORKSHOP_INFO } from '../data/products';
 import type { ProductReviewRecord } from '../lib/supabaseReviews';
 import { canCancelCustomerOrder, getCustomerOrderTimeline, getOrderPreviewItems, isOrderComplete } from '../lib/orderPresentation';
@@ -292,7 +291,9 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
                   <button type="button" onClick={() => void onRefresh?.()} className="mt-3 min-h-11 rounded-full bg-rose-700 px-4 py-2 text-xs font-extrabold text-white">{t('orders.tryAgain')}</button>
                 </div>
               ) : loading ? (
-                <div aria-label={t('common.loading')}><Skeleton kind="card" count={3} /></div>
+                <div className="space-y-3" aria-label={t('common.loading')}>
+                  {[0, 1, 2].map((item) => <div key={item} className="h-[160px] animate-pulse rounded-[22px] border border-slate-100 bg-white" />)}
+                </div>
               ) : filteredOrders.length === 0 ? (
                 <div className="grid min-h-[280px] place-items-center rounded-[24px] border border-dashed border-slate-300 bg-white px-7 py-10 text-center">
                   <div><span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#fff0ec] text-[#d94335]"><Package className="h-6 w-6" /></span><h3 className="mt-4 text-base font-black text-slate-900">{orders.length ? t('orders.emptyFilter') : t('orders.emptyTitle')}</h3><p className="mx-auto mt-1.5 max-w-[270px] text-xs leading-relaxed text-slate-500">{orders.length ? t('orders.tryFilter') : t('orders.emptyBody')}</p></div>

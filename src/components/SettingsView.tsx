@@ -9,7 +9,6 @@ import { WORKSHOP_INFO } from '../data/products';
 import { CustomerSupportRequestForm } from './CustomerSupportRequestForm';
 import { readCustomerAppPreferences, saveCustomerAppPreferences, type CustomerNotificationPreferences, type PreferredLanguage } from '../lib/customerPreferences';
 import { translate, useI18n } from '../lib/i18n';
-import { Skeleton } from './Skeleton';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -554,7 +553,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
 
                 <div className="max-h-[60vh] space-y-2.5 overflow-y-auto">
-                  {couponOffersLoading ? <div role="status" aria-label="Loading active offers" className="py-3"><Skeleton kind="list" count={3} /></div>
+                  {couponOffersLoading ? <p className="py-8 text-center text-xs font-semibold text-gray-400">Loading active offers…</p>
                     : couponOffersError ? <p role="status" className="rounded-xl bg-amber-50 p-4 text-center text-xs font-semibold text-amber-800">{couponOffersError}</p>
                     : couponOffers.length === 0 ? <p className="py-8 text-center text-xs font-semibold text-gray-400">No active coupon offers right now. Please check back later.</p>
                     : couponOffers.map((offer) => (

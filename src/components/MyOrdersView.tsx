@@ -23,7 +23,6 @@ import type { CustomerOrderRecord, Product } from '../types';
 import type { ProductReviewRecord } from '../lib/supabaseReviews';
 import { downloadOrderInvoice } from '../lib/orderInvoice';
 import { getOrderStatusLabel, isOrderComplete } from '../lib/orderPresentation';
-import { Skeleton } from './Skeleton';
 
 interface MyOrdersViewProps {
   orders: CustomerOrderRecord[];
@@ -271,7 +270,7 @@ function InfoCard({ icon, label, title, detail }: { icon: ReactNode; label: stri
 }
 
 function LoadingOrders() {
-  return <div className="space-y-3" aria-label="Loading orders"><Skeleton kind="card" count={3} /></div>;
+  return <div className="space-y-3" aria-label="Loading orders">{[0, 1, 2].map((key) => <div key={key} className="skeleton-shimmer h-[125px] rounded-[18px] bg-[#eceae7]" />)}</div>;
 }
 
 function EmptyOrders({ hasOrders, onShop }: { hasOrders: boolean; onShop: () => void }) {

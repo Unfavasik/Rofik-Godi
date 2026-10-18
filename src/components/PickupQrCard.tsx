@@ -4,7 +4,6 @@ import { QrCode } from 'lucide-react';
 import type { CustomerOrderRecord } from '../types';
 import { canShowPickupQr } from '../lib/orderPresentation';
 import { issueMyStorePickupToken } from '../lib/supabaseOrders';
-import { Skeleton } from './Skeleton';
 
 interface PickupQrCardProps {
   order: CustomerOrderRecord;
@@ -63,7 +62,7 @@ export function PickupQrCard({ order, onRefresh }: PickupQrCardProps) {
         </div>
       </div>
       {loading ? (
-        <div role="status" aria-label="Loading secure QR" className="rounded-xl bg-slate-50 p-4"><Skeleton kind="image" className="mx-auto aspect-square max-w-[160px] rounded-xl" /></div>
+        <div className="grid min-h-36 place-items-center rounded-xl bg-slate-50 text-[11px] font-semibold text-slate-500">Loading your secure QR…</div>
       ) : token ? (
         <div className="flex flex-col items-center gap-3 rounded-xl bg-emerald-50/60 p-4">
           <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, CircleHelp, Plus, RefreshCw, Search } from 'lucide-react';
+import { ArrowLeft, CircleHelp, LoaderCircle, Plus, RefreshCw, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import {
   getSupportRequest,
@@ -9,7 +9,6 @@ import {
 } from '../lib/supabaseSupport';
 import { CustomerSupportRequestForm } from './CustomerSupportRequestForm';
 import { SupportConversation } from './SupportConversation';
-import { Skeleton } from './Skeleton';
 
 const statusLabel = (status: string) =>
   status.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -266,7 +265,9 @@ export const SupportCenter: React.FC<{
           </div>
           <div className="min-h-0 flex-1 space-y-0 overflow-y-auto p-0 lg:space-y-1 lg:p-2">
             {loading ? (
-              <div className="p-2" role="status" aria-label="Loading requests"><Skeleton kind="list" count={4} /></div>
+              <div role="status" className="flex min-h-40 items-center justify-center gap-2 text-xs font-semibold text-slate-500">
+                <LoaderCircle className="h-4 w-4 animate-spin" /> Loading requests…
+              </div>
             ) : visibleRequests.length ? (
               visibleRequests.map((request) => (
                 <button
@@ -328,7 +329,7 @@ export const SupportCenter: React.FC<{
               {selectedRequest ? (
                 <SupportConversation requestId={selectedRequest.id} currentUserId={currentUserId} onChanged={() => void refresh(true)} />
               ) : loading ? (
-                <div role="status" aria-label="Loading request" className="rounded-2xl border border-slate-200 bg-white p-4"><Skeleton kind="card" /><Skeleton kind="text" lines={5} className="mt-4" /></div>
+                <div role="status" className="flex min-h-40 items-center justify-center text-xs text-slate-500">Loading request…</div>
               ) : (
                 <div role="alert" className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600">This support request is not in your account.</div>
               )}
