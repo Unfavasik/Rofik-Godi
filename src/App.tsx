@@ -118,7 +118,7 @@ export default function App() {
     (phase: 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth') => {
       setAppPhase(phase);
       const nextPath = getPathForPhase(phase, location.pathname);
-      if (location.pathname !== nextPath) navigate(nextPath, { state: { phase } });
+      if (location.pathname !== nextPath) navigate(nextPath, { replace: true, state: { phase } });
     },
     [location.pathname, navigate],
   );
@@ -944,18 +944,18 @@ export default function App() {
     return <SplashScreen />;
   }
   if (authStatus === 'UNAUTHENTICATED' && appPhase === 'main' && !guestWelcomeComplete) {
-    return <Onboarding onFinish={finishWelcomeOnboarding} />;
+    return <Suspense fallback={<SplashScreen />}><Onboarding onFinish={finishWelcomeOnboarding} /></Suspense>;
   }
   if (authStatus === 'AUTHENTICATED' && appPhase !== 'main') {
     return <SplashScreen />;
   }
   if (appPhase === 'onboarding') {
-    return <Onboarding onFinish={finishWelcomeOnboarding} />;
+    return <Suspense fallback={<SplashScreen />}><Onboarding onFinish={finishWelcomeOnboarding} /></Suspense>;
   }
 
   // Account creation starts with the dedicated Rofik welcome flow.
   if (appPhase === 'account-onboarding') {
-    return <RofikOnboarding onFinish={() => goToPhase('auth')} />;
+    return <Suspense fallback={<SplashScreen />}><RofikOnboarding onFinish={() => goToPhase('auth')} /></Suspense>;
   }
 
   // Keep the legacy loading phase available for existing links, but the signup onboarding now opens /signup directly.
