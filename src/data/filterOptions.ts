@@ -1,6 +1,7 @@
 import type { VehicleCategory } from '../types';
 
 export type SortOption =
+  | 'manual'
   | 'popular'
   | 'price_asc'
   | 'price_desc'
@@ -33,6 +34,7 @@ export const INITIAL_FILTERS: FilterState = {
 };
 
 export const SORT_LABELS: Record<SortOption, { label: string; desc: string }> = {
+  manual: { label: 'Storefront Order', desc: 'Order arranged by the store administrator' },
   popular: { label: 'Popular & Recommended', desc: 'Best selling items & top recommendations' },
   price_asc: { label: 'Price: Low to High', desc: 'Affordable budget-friendly options first' },
   price_desc: { label: 'Price: High to Low', desc: 'Premium, heavy-duty & deluxe sets first' },

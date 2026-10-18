@@ -41,6 +41,7 @@ const AdminPanel = lazy(() =>
 );
 import { AdminAccessGate } from './components/AdminAccessGate';
 import { INITIAL_FILTERS, SORT_LABELS } from './data/filterOptions';
+import { compareProductsByDisplayOrder } from './lib/productOrdering';
 import type { FilterState, SortOption } from './data/filterOptions';
 import {
   SlidersHorizontal,
@@ -280,7 +281,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<VehicleCategory | 'all'>('all');
   const [vehicleFilter, setVehicleFilter] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<SortOption>('popular');
+  const [sortBy, setSortBy] = useState<SortOption>('manual');
   const [homeFilters, setHomeFilters] = useState<FilterState>(INITIAL_FILTERS);
   const [isHomeSortOpen, setIsHomeSortOpen] = useState(false);
   const [isHomeFilterOpen, setIsHomeFilterOpen] = useState(false);
@@ -555,6 +556,8 @@ export default function App() {
       })
       .sort((a, b) => {
         switch (sortBy) {
+          case 'manual':
+            return compareProductsByDisplayOrder(a, b);
           case 'price_asc':
             return a.price - b.price;
           case 'price_desc':

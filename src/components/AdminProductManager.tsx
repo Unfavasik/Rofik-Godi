@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Copy, ExternalLink, ImagePlus, Pencil, Plus, Search, Trash2, Upload, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, Copy, ExternalLink, GripVertical, ImagePlus, Pencil, Plus, Search, Trash2, Upload, X } from 'lucide-react';
 import type { Product, VehicleCategory } from '../types';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
-import { deleteSupabaseProduct, loadAdminProducts, uploadProductImage, upsertSupabaseProduct } from '../lib/supabaseProducts';
+import { deleteSupabaseProduct, loadAdminProducts, reorderSupabaseProducts, uploadProductImage, upsertSupabaseProduct } from '../lib/supabaseProducts';
 import { ConfirmDialog } from './ConfirmDialog';
 import { sendAdminNotification, type AdminCustomer } from '../lib/supabaseAdmin';
 import { NotificationAudiencePicker, type NotificationAudience } from './NotificationAudiencePicker';
@@ -37,6 +37,7 @@ export const AdminProductManager: React.FC<{ initialProducts?: Product[]; onProd
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<ProductDraft | null>(null);
   const [saving, setSaving] = useState(false);
+  const [savingOrder, setSavingOrder] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const loadRequestRef = useRef(0);
 
@@ -65,6 +66,34 @@ export const AdminProductManager: React.FC<{ initialProducts?: Product[]; onProd
   }, [loadProducts]);
   useEffect(() => { onProductsChange?.(products); }, [products, onProductsChange]);
   const filtered = useMemo(() => products.filter((product) => (category === 'all' || product.category === category) && `${product.title} ${product.categoryLabel} ${product.slug}`.toLowerCase().includes(query.toLowerCase())), [products, category, query]);
+  const moveProduct = async (sourceId: string, targetId: string) => {
+    if (savingOrder || sourceId === targetId) return;
+    const fromIndex = products.findIndex((product) => product.id === sourceId);
+    const toIndex = products.findIndex((product) => product.id === targetId);
+    if (fromIndex < 0 || toIndex < 0) return;
+    const previous = products;
+    const reordered = [...products];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    const next = reordered.map((product, index) => ({ ...product, displayOrder: index }));
+    setProducts(next);
+    setSavingOrder(true);
+    let orderError: { message: string } | null;
+    try {
+      const result = await reorderSupabaseProducts(next.map((product) => product.id));
+      orderError = result.error;
+    } catch (cause) {
+      orderError = { message: cause instanceof Error ? cause.message : 'Unexpected network error' };
+    } finally {
+      setSavingOrder(false);
+    }
+    if (orderError) {
+      setProducts(previous);
+      notify(`Product order was not saved: ${orderError.message}`);
+      return;
+    }
+    notify('Storefront product order saved');
+  };
   const openNew = () => { setEditing(blankDraft()); setEditorOpen(true); };
   const openEdit = (product: Product) => { setEditing({ ...product, additionalImages: product.additionalImages || [], features: product.features || [], materials: product.materials || [], compatibility: product.compatibility || [], stitchPatterns: product.stitchPatterns || [], colors: product.colors?.length ? product.colors : blankDraft().colors }); setEditorOpen(true); };
   const handledFocusId = useRef<string | null>(null);
@@ -94,7 +123,7 @@ export const AdminProductManager: React.FC<{ initialProducts?: Product[]; onProd
         return;
       }
     }
-    const normalized: Product = { ...draft, image, id: draft.id || `rg-prod-${Date.now()}`, slug: slugify(draft.slug || draft.title), categoryLabel: draft.categoryLabel || categoryLabels[draft.category], colors: (draft.colors || []).map((color) => ({ ...color, name: color.name.trim() || color.hex.trim(), hex: color.hex.trim(), bgClass: color.bgClass || 'bg-slate-900' })), additionalImages: (draft.additionalImages || []).filter(Boolean) };
+    const normalized: Product = { ...draft, image, id: draft.id || `rg-prod-${Date.now()}`, displayOrder: draft.id ? draft.displayOrder ?? 0 : products.reduce((max, product) => Math.max(max, product.displayOrder ?? -1), -1) + 1, slug: slugify(draft.slug || draft.title), categoryLabel: draft.categoryLabel || categoryLabels[draft.category], colors: (draft.colors || []).map((color) => ({ ...color, name: color.name.trim() || color.hex.trim(), hex: color.hex.trim(), bgClass: color.bgClass || 'bg-slate-900' })), additionalImages: (draft.additionalImages || []).filter(Boolean) };
     const synced = await upsertSupabaseProduct(normalized);
     if (synced.error) { notify(`Product was not saved: ${synced.error.message}`); return; }
     setProducts((current) => draft.id ? current.map((item) => item.id === draft.id ? synced.product : item) : [synced.product, ...current]);
@@ -129,6 +158,7 @@ export const AdminProductManager: React.FC<{ initialProducts?: Product[]; onProd
   return <section>
     <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#D9232D]">Catalog control</p><h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 md:text-3xl">Products</h2><p className="mt-1 text-xs text-slate-500">Manage product details, image galleries, price, stock and storefront visibility.</p></div><button onClick={openNew} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#D9232D] px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-red-700"><Plus className="h-4 w-4" />Add product</button></div>
     <AdminConnectionPanel notify={notify} />
+    {loadState === 'ready' && products.length > 1 && <ProductOrderList products={filtered} saving={savingOrder} onMove={moveProduct} />}
     <div className="mb-5 grid gap-3 sm:grid-cols-3"><Summary label="Total products" value={products.length.toString()} tone="text-slate-900" /><Summary label="Visible in store" value={products.filter((product) => product.inStock).length.toString()} tone="text-emerald-600" /><Summary label="Low / out of stock" value={products.filter((product) => !product.inStock).length.toString()} tone="text-red-600" /></div>
     <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:flex-row"><div className="flex flex-1 items-center gap-2 rounded-xl bg-slate-50 px-3 py-2"><Search className="h-4 w-4 text-slate-400" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by product name, category or slug..." className="w-full bg-transparent text-xs font-semibold outline-none" /></div><select value={category} onChange={(event) => setCategory(event.target.value as 'all' | VehicleCategory)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 outline-none"><option value="all">All categories</option>{categories.map((item) => <option key={item} value={item}>{categoryLabels[item]}</option>)}</select></div>
     {loadState === 'loading' && <p role="status" className="mb-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500">Loading products…</p>}
@@ -137,6 +167,24 @@ export const AdminProductManager: React.FC<{ initialProducts?: Product[]; onProd
     <ConfirmDialog open={Boolean(pendingDeleteId)} title="Delete product?" message="This permanently removes the product from the catalog and database." confirmLabel="Delete product" onCancel={() => setPendingDeleteId(null)} onConfirm={() => void confirmRemove()} />
     {editorOpen && editing && <ProductEditor draft={editing} saving={saving} setSaving={setSaving} onClose={() => { setEditorOpen(false); setEditing(null); }} onSave={save} customers={customers} />}
   </section>;
+};
+
+const ProductOrderList: React.FC<{ products: Product[]; saving: boolean; onMove: (sourceId: string, targetId: string) => Promise<void> }> = ({ products, saving, onMove }) => {
+  const draggedProductId = useRef<string | null>(null);
+  if (!products.length) return null;
+  return <details open className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <summary className="cursor-pointer list-none text-sm font-black text-slate-900">Arrange storefront order <span className="ml-2 text-[10px] font-semibold text-slate-400">Drag products or use the arrows</span></summary>
+    <p className="mt-1 text-[11px] text-slate-500">This sequence is the default order customers see in Home, Shop and Search.{saving && <span role="status" className="ml-2 font-bold text-[#D9232D]">Saving…</span>}</p>
+    <div role="list" aria-label="Storefront product order" className="mt-3 max-h-80 divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-100">
+      {products.map((product, index) => <div key={product.id} role="listitem" draggable={!saving} onDragStart={(event) => { draggedProductId.current = product.id; event.dataTransfer.setData('text/plain', product.id); event.dataTransfer.effectAllowed = 'move'; }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; }} onDrop={(event) => { event.preventDefault(); const sourceId = draggedProductId.current || event.dataTransfer.getData('text/plain'); draggedProductId.current = null; if (sourceId) void onMove(sourceId, product.id); }} onDragEnd={() => { draggedProductId.current = null; }} className="flex items-center gap-2 px-3 py-2.5 text-xs hover:bg-slate-50">
+        <GripVertical aria-hidden="true" className="h-4 w-4 shrink-0 cursor-grab text-slate-300" />
+        <span className="w-6 shrink-0 text-center font-black text-slate-400">{index + 1}</span>
+        <span className="min-w-0 flex-1 truncate font-bold text-slate-800">{product.title}<span className="ml-2 font-medium text-slate-400">{product.categoryLabel}</span></span>
+        <button type="button" aria-label={`Move ${product.title} up`} title="Move up" disabled={saving || index === 0} onClick={() => void onMove(product.id, products[index - 1].id)} className="rounded-lg p-2 text-slate-500 hover:bg-red-50 hover:text-[#D9232D] disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button>
+        <button type="button" aria-label={`Move ${product.title} down`} title="Move down" disabled={saving || index === products.length - 1} onClick={() => void onMove(product.id, products[index + 1].id)} className="rounded-lg p-2 text-slate-500 hover:bg-red-50 hover:text-[#D9232D] disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button>
+      </div>)}
+    </div>
+  </details>;
 };
 
 const Summary: React.FC<{ label: string; value: string; tone: string }> = ({ label, value, tone }) => <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p className="text-[11px] font-bold text-slate-400">{label}</p><p className={`mt-1 text-2xl font-black ${tone}`}>{value}</p></div>;

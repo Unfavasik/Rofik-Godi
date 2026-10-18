@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { mapSupabaseProduct } from '../src/lib/supabaseProducts';
+import { compareProductsByDisplayOrder } from '../src/lib/productOrdering';
 
 describe('Supabase catalog mapping', () => {
   it('preserves a separate out-of-stock state for public catalog cards', () => {
@@ -23,6 +24,17 @@ describe('Supabase catalog mapping', () => {
     });
     expect(product.stockQuantity).toBe(3);
     expect(product.lowStockThreshold).toBe(5);
+  });
+
+  it('maps the administrator-defined storefront order', () => {
+    const product = mapSupabaseProduct({ id: 'product-5', name: 'Ordered cover', category: 'Bike Covers', price: 500, display_order: 7 });
+    expect(product.displayOrder).toBe(7);
+  });
+
+  it('sorts products in the administrator-defined storefront order', () => {
+    const later = mapSupabaseProduct({ id: 'product-6', name: 'Later cover', category: 'Bike Covers', price: 500, display_order: 4 });
+    const first = mapSupabaseProduct({ id: 'product-7', name: 'First cover', category: 'Bike Covers', price: 500, display_order: 0 });
+    expect([later, first].sort(compareProductsByDisplayOrder)).toEqual([first, later]);
   });
 
   it('maps safe defaults for legacy product rows', () => {

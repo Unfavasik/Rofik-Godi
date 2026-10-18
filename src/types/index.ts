@@ -13,6 +13,7 @@ export interface Product {
   badge?: string;
   badgeColor?: 'red' | 'green' | 'blue' | 'orange';
   slug: string;
+  displayOrder?: number;
   category: VehicleCategory;
   categoryLabel: string;
   price: number;

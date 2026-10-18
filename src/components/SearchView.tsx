@@ -25,6 +25,7 @@ import { CatalogStatus } from './CatalogStatus';
 import { FilterSortModal } from './FilterSortModal';
 import { INITIAL_FILTERS, SORT_LABELS } from '../data/filterOptions';
 import type { FilterState, SortOption } from '../data/filterOptions';
+import { compareProductsByDisplayOrder } from '../lib/productOrdering';
 
 interface SearchViewProps {
   products: Product[];
@@ -80,7 +81,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Sorting & Filtering State
-  const [sortBy, setSortBy] = useState<SortOption>('popular');
+  const [sortBy, setSortBy] = useState<SortOption>('manual');
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
   const [isSortModalOpen, setIsSortModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -279,6 +280,8 @@ export const SearchView: React.FC<SearchViewProps> = ({
     // 2. Sort
     return [...list].sort((a, b) => {
       switch (sortBy) {
+        case 'manual':
+          return compareProductsByDisplayOrder(a, b);
         case 'price_asc':
           return a.price - b.price;
         case 'price_desc':
@@ -499,15 +502,17 @@ export const SearchView: React.FC<SearchViewProps> = ({
               type="button"
               onClick={() => setIsSortModalOpen(true)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all cursor-pointer border ${
-                sortBy !== 'popular'
+                sortBy !== 'manual'
                   ? 'bg-red-50 border-red-300 text-[#D9232D]'
                   : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
               }`}
             >
               <ArrowUpDown className="w-3.5 h-3.5" />
               <span className="truncate max-w-[110px] sm:max-w-[160px]">
-                {sortBy === 'popular'
-                  ? 'Sort'
+                {sortBy === 'manual'
+                  ? 'Store order'
+                  : sortBy === 'popular'
+                  ? 'Popular'
                   : sortBy === 'price_asc'
                   ? 'Price: Low'
                   : sortBy === 'price_desc'
@@ -747,7 +752,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
           </span>
         </div>
 
-        {sortBy !== 'popular' && (
+        {sortBy !== 'manual' && (
           <span className="text-[10.5px] font-bold text-[#D9232D] bg-red-50 px-2 py-0.5 rounded-md border border-red-200/60">
             Sorted by: {SORT_LABELS[sortBy]?.label.split(' ')[0]}
           </span>

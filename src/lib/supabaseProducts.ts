@@ -20,6 +20,7 @@ export const mapSupabaseProduct = (row: ProductRow): Product => {
   const name = String(row.name || 'Untitled product');
   return {
     id: String(row.id), title: name, subtitle: String(row.subtitle || ''), slug: String(row.slug || name.toLowerCase().replace(/\s+/g, '-')),
+    displayOrder: Number(row.display_order ?? 0),
     category, categoryLabel: String(row.category || categoryLabels[category]), price: Number(row.price || 0), originalPrice: Number(row.original_price || row.price || 0),
     rating: Number(row.rating || 0), reviewCount: Number(row.review_count || 0), image: String(row.image_url || ''), additionalImages: asStrings(row.additional_images),
     description: String(row.description || ''), features: asStrings(row.features), isBestseller: Boolean(row.is_bestseller), isNew: Boolean(row.is_new),
@@ -52,14 +53,14 @@ const mapProductsWithReviewSummaries = async (rows: ProductRow[]): Promise<Produ
 
 export const loadPublicProducts = async (): Promise<Product[]> => {
   if (!supabase) return PRODUCTS;
-  const { data, error } = await supabase.from('products').select('*').eq('is_active', true).order('updated_at', { ascending: false });
+  const { data, error } = await supabase.from('products').select('*').eq('is_active', true).order('display_order', { ascending: true }).order('updated_at', { ascending: false });
   if (error) throw error;
   return mapProductsWithReviewSummaries((data || []) as ProductRow[]);
 };
 
 export const loadAdminProducts = async (): Promise<Product[] | null> => {
   if (!supabase) return null;
-  const { data, error } = await supabase.from('products').select('*').order('updated_at', { ascending: false });
+  const { data, error } = await supabase.from('products').select('*').order('display_order', { ascending: true }).order('updated_at', { ascending: false });
   if (error || !data) return null;
   return mapProductsWithReviewSummaries(data as ProductRow[]);
 };
@@ -73,8 +74,17 @@ const toRow = (product: Product) => ({
   features: product.features || [], materials: product.materials || [], stitch_patterns: product.stitchPatterns || [], thickness_options: product.thicknessOptions || [], colors_json: product.colors || [],
   colors: (product.colors || []).map((color) => color.name), compatibility_list: product.compatibility || [], compatibility: (product.compatibility || []).join(', '), badge: product.badge || null,
   badge_color: product.badgeColor || null, is_bestseller: Boolean(product.isBestseller), is_new: Boolean(product.isNew), is_waterproof: Boolean(product.isWaterproof),
-  is_customizable: Boolean(product.isCustomizable), in_stock: Boolean(product.inStock), is_active: true,
+  is_customizable: Boolean(product.isCustomizable), in_stock: Boolean(product.inStock), is_active: true, display_order: product.displayOrder ?? 0,
 });
+
+export const reorderSupabaseProducts = async (productIds: string[]) => {
+  if (!supabase) return { error: new Error('Supabase is not configured') };
+  if (productIds.some((id) => !/^[0-9a-f-]{36}$/i.test(id))) {
+    return { error: new Error('Save or reload all products before changing their order') };
+  }
+  const { error } = await supabase.rpc('reorder_products', { p_product_ids: productIds });
+  return { error };
+};
 
 export const upsertSupabaseProduct = async (product: Product) => {
   if (!supabase) return { product, synced: false, error: null };
