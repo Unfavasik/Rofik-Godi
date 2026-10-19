@@ -6,7 +6,7 @@ interface CloudLoaderProps {
 }
 
 export const CloudLoader: React.FC<CloudLoaderProps> = ({ label = 'Loading…', className = '' }) => (
-  <div className={`cloud-loader ${className}`} role="status" aria-live="polite">
+  <div className={`cloud-loader ${className}`} role="status" aria-live="polite" aria-label={label || 'Loading'}>
     <div className="loader loader--inline" aria-hidden="true">
       <svg id="cloud" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
         <defs>
@@ -44,6 +44,6 @@ export const CloudLoader: React.FC<CloudLoaderProps> = ({ label = 'Loading…', 
         </g>
       </svg>
     </div>
-    <p className="mt-1 text-sm font-semibold text-slate-700">{label}</p>
+    {label && <p className="mt-1 text-sm font-semibold text-slate-700">{label}</p>}
   </div>
 );

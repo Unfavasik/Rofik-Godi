@@ -58,6 +58,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const submitLockRef = useRef(false);
   const [submissionError, setSubmissionError] = useState('');
   const [phoneError, setPhoneError] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
+  const toastTimerRef = useRef<number | null>(null);
 
   const subtotal = couponCode && couponSubtotal !== undefined
     ? couponSubtotal
@@ -80,7 +82,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   useEffect(() => {
     if (!isOpen || !userId) return;
     let active = true;
-    setProfileLoad('loading'); setProfileError(''); setSubmissionError(''); setStep(1); setPendingOnlineOrder(null); setPlacedOrder(null);
+    setProfileLoad('loading'); setProfileError(''); setSubmissionError(''); setToastMessage(''); setStep(1); setPendingOnlineOrder(null); setPlacedOrder(null);
     setEditingPhone(false); setEditingVehicle(false); setPhoneError('');
     const loadProfile = async () => {
       if (!supabase) {
@@ -109,7 +111,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     return () => { active = false; };
   }, [isOpen, t, userId]);
 
+  useEffect(() => () => {
+    if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
+  }, []);
+
   if (!isOpen) return null;
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => {
+      setToastMessage('');
+      toastTimerRef.current = null;
+    }, 3500);
+  };
 
   const saveCustomerPreferences = async (verifiedUserId: string) => {
     if (!supabase) throw new Error(t('checkout.errorUnavailable'));
@@ -140,7 +155,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const phoneResult = validatePhoneNumber(phone, phoneCountry);
     setPhoneTouched(true);
     if (!phoneResult.valid) { setPhoneError(t('checkout.errorPhone')); setStep(1); return; }
-    if (!pickupDate || !pickupTime) { setSubmissionError(t('checkout.errorPickup')); setStep(1); return; }
+    if (!pickupDate || !pickupTime) { setSubmissionError(''); showToast(t('checkout.errorPickup')); setStep(1); return; }
     submitLockRef.current = true;
     setPhoneError(''); setIsProcessing(true);
     try {
@@ -180,7 +195,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setPhoneTouched(true);
     if (!customerName.trim() || !email) { setSubmissionError(t('checkout.errorMissingNameEmail')); return; }
     if (!phoneResult.valid) { setPhoneError(t('checkout.errorPhone')); return; }
-    if (!pickupDate || !pickupTime) { setSubmissionError(t('checkout.errorPickupFirst')); return; }
+    if (!pickupDate || !pickupTime) { showToast(t('checkout.errorPickupFirst')); return; }
     setPhoneError(''); setStep(2);
   };
 
@@ -220,5 +235,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         {step === 3 ? <button onClick={() => { setStep(1); setPlacedOrder(null); onClose(); }} className="min-h-12 w-full rounded-xl bg-slate-900 text-sm font-black text-white">{t('checkout.continueShopping')}</button> : <div className="flex items-center gap-3"><div className="min-w-0 flex-1"><span className="block text-[9px] font-semibold uppercase tracking-wider text-slate-400">{t('checkout.payable')}</span><b className="text-lg font-black text-slate-900">{indianMoney(total)}</b></div>{step === 2 && <button onClick={() => { setPendingOnlineOrder(null); setStep(1); setSubmissionError(''); }} className="min-h-12 rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-700">{t('checkout.back')}</button>}<button disabled={isProcessing || profileLoad !== 'ready'} onClick={() => step === 1 ? continueToPayment() : void handlePlaceOrder()} className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#D9232D] px-4 text-xs font-black text-white shadow-[0_6px_18px_rgba(217,35,45,.2)] disabled:cursor-not-allowed disabled:opacity-50">{isProcessing ? <><LoaderCircle className="h-4 w-4 animate-spin" />{paymentMethod === 'pay_online' ? t('checkout.preparingPayment') : t('checkout.saving')}</> : step === 1 ? <>{t('checkout.continueToPayment')}<ChevronRight className="h-4 w-4" /></> : paymentMethod === 'pay_online' ? <>{t('checkout.payWithRazorpay')}<ChevronRight className="h-4 w-4" /></> : <>{t('checkout.confirmPickup')}<ChevronRight className="h-4 w-4" /></>}</button></div>}
       </footer>
     </motion.div>
+    {toastMessage && <div role="alert" className="fixed left-1/2 top-[max(1rem,env(safe-area-inset-top))] z-[100] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-2xl bg-slate-900 px-4 py-3 text-center text-sm font-bold text-white shadow-2xl ring-1 ring-white/20">{toastMessage}</div>}
   </div></AnimatePresence>;
 };
