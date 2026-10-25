@@ -1308,15 +1308,27 @@ export default function App() {
               onBackToOrdersRoute={() => navigate('/my-orders')}
               onOpenSettingsPage={() => navigate('/settings')}
               onOpenSupportPage={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/contact-support/my-support-requests')}
-              onOpenContactSupport={() => navigate('/contact-support', { state: { returnTo: '/profile' } })}
+              onOpenContactSupport={() => navigate('/contact-support', { state: { returnTo: resolvedRoute.kind === 'settings' ? '/settings' : '/profile' } })}
               onSelectSupportRequest={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/support')}
               onBackFromContactSupport={() => {
                 const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
-                navigate(returnTo === '/notifications' ? returnTo : '/profile');
+                navigate(returnTo === '/notifications' || returnTo === '/settings' ? returnTo : '/profile');
               }}
               onOpenPrivacyPage={() => openPageRoute('/privacy-policy')}
               onOpenTermsPage={() => openPageRoute('/terms-and-conditions')}
-              onExitRoutedPage={() => navigate('/profile')}
+              onExitRoutedPage={() => {
+                if (resolvedRoute.kind === 'support') {
+                  if (location.pathname.toLowerCase() === '/contact-support/my-support-requests') {
+                    navigate('/contact-support');
+                  } else if (resolvedRoute.requestId) {
+                    navigate('/contact-support/my-support-requests');
+                  } else {
+                    navigate('/profile');
+                  }
+                  return;
+                }
+                navigate('/profile');
+              }}
               onOpenStoreInfo={() => openPageRoute('/store')}
               onOpenCustomBuilder={openCustomBuilderPage}
               onOpenShop={() => {
