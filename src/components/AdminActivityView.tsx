@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { SupportConversation } from './SupportConversation';
+import { AdminSupportReplyPreview } from './AdminSupportReplyPreview';
 import {
   loadAdminActivityEvents,
   markAdminActivityRead,
@@ -500,6 +501,7 @@ export const AdminActivityView: React.FC<{
                         <span> · for {event.customer_name}</span>
                       )}
                     </p>
+                    {isSupport && event.event_type === 'support_request_message_received' && <AdminSupportReplyPreview details={event.details} />}
 
                     {isOrder && (
                       <div className="mt-3 rounded-xl bg-slate-50 p-3">
