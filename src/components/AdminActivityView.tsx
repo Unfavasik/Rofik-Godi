@@ -756,6 +756,7 @@ export const AdminActivityView: React.FC<{
                 <SupportConversation
                   requestId={selectedSupport.entity_id}
                   currentUserId={adminUserId}
+                  customerName={selectedSupport.customer_name}
                   isAdmin
                   onChanged={() => void refresh(true)}
                 />

@@ -30,6 +30,7 @@ const mergeRequests = (current: SupportRequestRecord[], incoming: SupportRequest
 
 export const SupportCenter: React.FC<{
   currentUserId: string;
+  customerName?: string;
   isAuthenticated: boolean;
   initialRequestId?: string | null;
   onBack: () => void;
@@ -37,6 +38,7 @@ export const SupportCenter: React.FC<{
   onSelectRequest: (requestId: string) => void;
 }> = ({
   currentUserId,
+  customerName,
   isAuthenticated,
   initialRequestId = null,
   onBack,
@@ -327,7 +329,7 @@ export const SupportCenter: React.FC<{
                 <ArrowLeft className="h-4 w-4" /> All requests
               </button>
               {selectedRequest ? (
-                <SupportConversation requestId={selectedRequest.id} currentUserId={currentUserId} onChanged={() => void refresh(true)} />
+                <SupportConversation requestId={selectedRequest.id} currentUserId={currentUserId} customerName={customerName} onChanged={() => void refresh(true)} />
               ) : loading ? (
                 <div role="status" className="flex min-h-40 items-center justify-center text-xs text-slate-500">Loading request…</div>
               ) : (

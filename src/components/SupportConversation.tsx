@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { FileText, LoaderCircle, MessageCircle, Paperclip, Send, X } from 'lucide-react';
+import { Download, FileText, Image as ImageIcon, LoaderCircle, MessageCircle, Paperclip, Send, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import {
   getSupportRequest,
@@ -32,9 +32,10 @@ const mergeMessages = (current: SupportMessageRecord[], incoming: SupportMessage
 export const SupportConversation: React.FC<{
   requestId: string;
   currentUserId: string;
+  customerName?: string;
   isAdmin?: boolean;
   onChanged?: () => void;
-}> = ({ requestId, currentUserId, isAdmin = false, onChanged }) => {
+}> = ({ requestId, currentUserId, customerName, isAdmin = false, onChanged }) => {
   const [request, setRequest] = useState<SupportRequestRecord | null>(null);
   const [messages, setMessages] = useState<SupportMessageRecord[]>([]);
   const [draft, setDraft] = useState('');
@@ -44,6 +45,7 @@ export const SupportConversation: React.FC<{
   const [hasOlder, setHasOlder] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [previewAttachment, setPreviewAttachment] = useState<SupportMessageRecord['attachments'][number] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageScrollRef = useRef<HTMLDivElement>(null);
   const pendingScrollRef = useRef<{ height: number; top: number } | null>(null);
@@ -54,6 +56,7 @@ export const SupportConversation: React.FC<{
   useEffect(() => {
     setRequest(null);
     setMessages([]);
+    setPreviewAttachment(null);
     setHasOlder(false);
     pendingScrollRef.current = null;
     previousMessageCountRef.current = 0;
@@ -215,18 +218,29 @@ export const SupportConversation: React.FC<{
             <article key={message.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[92%] rounded-2xl px-3.5 py-3 shadow-sm sm:max-w-[82%] ${mine ? 'rounded-br-md bg-[#D9232D] text-white' : 'rounded-bl-md border border-slate-200 bg-white text-slate-800'}`}>
                 <div className="mb-1 flex items-center justify-between gap-4 text-[10px] font-bold opacity-75">
-                  <span>{message.sender_role === 'admin' ? 'Workshop team' : 'Customer'}</span>
+                  <span>{message.sender_role === 'admin' ? 'Workshop team' : customerName?.trim() || 'Customer'}</span>
                   <time dateTime={message.created_at}>{formatDate(message.created_at)}</time>
                 </div>
                 {message.message && <p className="whitespace-pre-wrap break-words text-xs leading-5">{message.message}</p>}
                 {message.attachments.length > 0 && (
                   <div className={`${message.message ? 'mt-2' : ''} space-y-1.5`}>
                     {message.attachments.map((attachment) => (
-                      <a key={attachment.path} href={attachment.signed_url || undefined} target="_blank" rel="noreferrer" className={`flex items-center gap-2 rounded-xl px-2.5 py-2 text-[11px] font-semibold ${mine ? 'bg-white/15 text-white' : 'bg-slate-50 text-slate-700'} ${attachment.signed_url ? 'hover:underline' : 'pointer-events-none opacity-60'}`}>
-                        <FileText className="h-4 w-4 shrink-0" />
-                        <span className="min-w-0 flex-1 truncate">{attachment.name}</span>
-                        <span className="shrink-0 opacity-70">{(attachment.size / (1024 * 1024)).toFixed(1)} MB</span>
-                      </a>
+                      attachment.mime_type.startsWith('image/') ? (
+                        <div key={attachment.path} className={`overflow-hidden rounded-xl ${mine ? 'bg-white/15' : 'bg-slate-50'}`}>
+                          {attachment.signed_url ? (
+                            <button type="button" onClick={() => isAdmin && setPreviewAttachment(attachment)} disabled={!isAdmin} className={`block w-full text-left ${isAdmin ? 'cursor-zoom-in' : 'cursor-default'}`} aria-label={isAdmin ? `Open ${attachment.name} full screen` : attachment.name}>
+                              <img src={attachment.signed_url} alt={attachment.name} className="max-h-56 w-full object-contain bg-black/5" loading="lazy" />
+                              <span className={`flex items-center gap-2 px-2.5 py-2 text-[11px] font-semibold ${mine ? 'text-white' : 'text-slate-700'}`}><ImageIcon className="h-4 w-4 shrink-0" /><span className="min-w-0 flex-1 truncate">{attachment.name}</span><span className="shrink-0 opacity-70">{isAdmin ? 'Tap to view' : 'Image'}</span></span>
+                            </button>
+                          ) : <span className="flex items-center gap-2 px-2.5 py-2 text-[11px] font-semibold opacity-60"><ImageIcon className="h-4 w-4 shrink-0" />Image unavailable</span>}
+                        </div>
+                      ) : (
+                        <a key={attachment.path} href={attachment.signed_url || undefined} target="_blank" rel="noreferrer" className={`flex items-center gap-2 rounded-xl px-2.5 py-2 text-[11px] font-semibold ${mine ? 'bg-white/15 text-white' : 'bg-slate-50 text-slate-700'} ${attachment.signed_url ? 'hover:underline' : 'pointer-events-none opacity-60'}`}>
+                          <FileText className="h-4 w-4 shrink-0" />
+                          <span className="min-w-0 flex-1 truncate">{attachment.name}</span>
+                          <span className="shrink-0 opacity-70">{(attachment.size / (1024 * 1024)).toFixed(1)} MB</span>
+                        </a>
+                      )
                     ))}
                   </div>
                 )}
@@ -251,6 +265,20 @@ export const SupportConversation: React.FC<{
         </div>
         <p className="mt-2 flex items-center gap-1 text-[10px] text-slate-400"><MessageCircle className="h-3 w-3" /> Private conversation · up to 3 files total, 5 MB each</p>
       </form>
+      {isAdmin && previewAttachment?.signed_url && (
+        <div role="dialog" aria-modal="true" aria-label={`Preview ${previewAttachment.name}`} className="fixed inset-0 z-[100] flex flex-col bg-slate-950/95 p-3 text-white sm:p-6" onClick={() => setPreviewAttachment(null)}>
+          <div className="flex items-center justify-between gap-3 pb-3" onClick={(event) => event.stopPropagation()}>
+            <p className="min-w-0 truncate text-xs font-bold">{previewAttachment.name}</p>
+            <div className="flex shrink-0 items-center gap-2">
+              <a href={previewAttachment.signed_url} download={previewAttachment.name} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-white px-3 text-xs font-bold text-slate-900"><Download className="h-4 w-4" />Download</a>
+              <button type="button" onClick={() => setPreviewAttachment(null)} aria-label="Close image preview" className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-white hover:bg-white/20"><X className="h-5 w-5" /></button>
+            </div>
+          </div>
+          <div className="flex min-h-0 flex-1 items-center justify-center" onClick={(event) => event.stopPropagation()}>
+            <img src={previewAttachment.signed_url} alt={previewAttachment.name} className="max-h-full max-w-full rounded-xl object-contain" />
+          </div>
+        </div>
+      )}
     </section>
   );
 };

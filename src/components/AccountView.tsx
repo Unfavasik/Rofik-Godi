@@ -387,6 +387,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
     return (
       <SupportCenter
         currentUserId={currentUser?.id || ''}
+        customerName={currentUser?.name}
         isAuthenticated={Boolean(currentUser && !currentUser.isGuest)}
         initialRequestId={initialSupportRequestId}
         onBack={closeRoutedPage}

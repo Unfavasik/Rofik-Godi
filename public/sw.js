@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'rofik-godi-shell-v7';
-const RUNTIME_CACHE = 'rofik-godi-runtime-v7';
+const SHELL_CACHE = 'rofik-godi-shell-v8';
+const RUNTIME_CACHE = 'rofik-godi-runtime-v8';
 const APP_SHELL = [
   '/',
   '/index.html',
