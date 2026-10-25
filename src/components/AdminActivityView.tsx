@@ -604,7 +604,10 @@ export const AdminActivityView: React.FC<{
                           </span>
                         </div>
                         <p className="mt-2 line-clamp-2 whitespace-pre-wrap text-xs leading-5 text-slate-600">
-                          {textValue(event.details.message, event.body)}
+                          {textValue(
+                            event.event_type === 'support_request_message_received' ? event.body : event.details.message,
+                            event.body,
+                          )}
                         </p>
                         <p className="mt-2 break-all text-[10px] text-slate-500">
                           {event.customer_email}
