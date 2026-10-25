@@ -1308,6 +1308,7 @@ export default function App() {
               onBackToOrdersRoute={() => navigate('/my-orders')}
               onOpenSettingsPage={() => navigate('/settings')}
               onOpenSupportPage={() => navigate('/support')}
+              onOpenContactSupport={() => navigate('/contact-support', { state: { returnTo: '/profile' } })}
               onSelectSupportRequest={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/support')}
               onBackFromContactSupport={() => {
                 const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;

@@ -53,6 +53,7 @@ interface AccountViewProps {
   onBackToOrdersRoute?: () => void;
   onOpenSettingsPage?: () => void;
   onOpenSupportPage?: () => void;
+  onOpenContactSupport?: () => void;
   onSelectSupportRequest?: (requestId: string) => void;
   onBackFromContactSupport?: () => void;
   onOpenPrivacyPage?: () => void;
@@ -82,6 +83,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
   onBackToOrdersRoute,
   onOpenSettingsPage,
   onOpenSupportPage,
+  onOpenContactSupport,
   onSelectSupportRequest,
   onBackFromContactSupport,
   onOpenPrivacyPage,
@@ -698,17 +700,16 @@ export const AccountView: React.FC<AccountViewProps> = ({
         <section className="pt-2" data-purpose="help-section">
           <div className="flex justify-between items-center px-1 mb-2.5">
             <h2 className="text-base font-bold text-slate-900 tracking-tight">{t('account.needHelp')}</h2>
-            <a
-              href="https://wa.me/919832145678?text=Hello%20Rofik%20Godi%20Support,%20I%20need%20help%20with%20my%20seat%20cover."
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
+              onClick={onOpenContactSupport}
               className="text-xs font-semibold text-slate-500 hover:text-slate-700 flex items-center"
             >
               {t('account.getSupport')}
               <svg className="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </a>
+            </button>
           </div>
 
           {/* WhatsApp Support Card */}
@@ -722,17 +723,16 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 <p className="text-[11px] text-slate-500 font-normal mt-0.5">{t('account.quickAnswers')}</p>
               </div>
             </div>
-            <a
-              href="https://wa.me/919832145678?text=Hello%20Rofik%20Godi,%20I%20have%20a%20question%20about%20seat%20covers."
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
+              onClick={onOpenContactSupport}
               className="min-h-11 bg-[#1EB754] hover:bg-[#16A34A] text-white text-xs font-semibold px-3 py-1.5 rounded-full flex items-center space-x-1 transition-colors flex-shrink-0"
             >
               <span>{t('account.chatNow')}</span>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </a>
+            </button>
           </div>
         </section>
         {/* END: NeedHelpSection */}

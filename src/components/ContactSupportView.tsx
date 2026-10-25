@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, Bell, Headphones } from 'lucide-react';
 import { CustomerSupportRequestForm } from './CustomerSupportRequestForm';
+import { WORKSHOP_INFO } from '../data/products';
 
 export function ContactSupportView({ currentUserId, isAuthenticated, onBack, onOpenLogin, onOpenSupportRequest }: {
   currentUserId: string;
@@ -14,7 +15,10 @@ export function ContactSupportView({ currentUserId, isAuthenticated, onBack, onO
       <header className="flex min-h-[60px] items-center gap-3 bg-[#E51E2B] px-4 py-3 text-white">
         <button type="button" onClick={onBack} aria-label="Back" className="-ml-1 rounded-full p-1.5 hover:bg-white/10"><ArrowLeft className="h-5 w-5" /></button>
         <Headphones className="h-5 w-5" />
-        <h1 className="text-[18px] font-extrabold tracking-tight">Contact Support</h1>
+        <div className="min-w-0">
+          <h1 className="text-[18px] font-extrabold tracking-tight">Contact Workshop Team</h1>
+          <p className="text-[10px] font-medium text-white/80">{WORKSHOP_INFO.workingHours}</p>
+        </div>
       </header>
 
       <div className="space-y-3 px-3 pb-5 pt-3 sm:px-4">
