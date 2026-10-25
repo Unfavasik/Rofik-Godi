@@ -179,7 +179,9 @@ export const AdminActivityView: React.FC<{
   onViewCampaign: (event: AdminActivityEvent) => void;
   adminUserId: string;
   notify: (message: string) => void;
-}> = ({ onViewOrder, onViewReview, onViewCustomer, onViewProduct, onViewCoupon, onViewCampaign, adminUserId, notify }) => {
+  supportOnly?: boolean;
+  initialSupportRequestId?: string | null;
+}> = ({ onViewOrder, onViewReview, onViewCustomer, onViewProduct, onViewCoupon, onViewCampaign, adminUserId, notify, supportOnly = false, initialSupportRequestId = null }) => {
   const [events, setEvents] = useState<AdminActivityEvent[]>([]);
   const [filter, setFilter] = useState<FeedFilter>('all');
   const [query, setQuery] = useState('');
@@ -232,6 +234,18 @@ export const AdminActivityView: React.FC<{
   }, [refresh]);
 
   useEffect(() => {
+    if (!initialSupportRequestId || selectedSupport || !events.length) return;
+    const matchingEvent = events.find(
+      (event) => event.entity_type === 'support_request' && event.entity_id === initialSupportRequestId,
+    );
+    if (matchingEvent) {
+      setFilter('support');
+      setSelectedSupport(matchingEvent);
+      void markAdminActivityRead(matchingEvent.id);
+    }
+  }, [events, initialSupportRequestId, selectedSupport]);
+
+  useEffect(() => {
     if (!supabase) return;
     const client = supabase;
     const channel = client
@@ -256,11 +270,12 @@ export const AdminActivityView: React.FC<{
   const visibleEvents = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return events.filter((event) => {
-      if (filter !== 'all' && eventCategory(event) !== filter) return false;
+      if (supportOnly && eventCategory(event) !== 'support') return false;
+      if (!supportOnly && filter !== 'all' && eventCategory(event) !== filter) return false;
       if (unreadOnly && event.read_at) return false;
       return !normalizedQuery || searchText(event).includes(normalizedQuery);
     });
-  }, [events, filter, query, unreadOnly]);
+  }, [events, filter, query, unreadOnly, supportOnly]);
   const unreadCount = events.filter((event) => !event.read_at).length;
   const counts = useMemo(
     () => ({
@@ -348,13 +363,13 @@ export const AdminActivityView: React.FC<{
       <header className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#D9232D]">
-            <Activity className="h-4 w-4" /> Admin activity
+            <Activity className="h-4 w-4" /> {supportOnly ? 'Admin support' : 'Admin activity'}
           </div>
           <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900 md:text-3xl">
-            All notifications
+            {supportOnly ? 'Support conversations' : 'All notifications'}
           </h2>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-            Orders, product and coupon changes, customer support, reviews and campaigns in one place.
+            {supportOnly ? 'Open a customer conversation, reply, attach images and update its status.' : 'Orders, product and coupon changes, customer support, reviews and campaigns in one place.'}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -383,7 +398,7 @@ export const AdminActivityView: React.FC<{
       <section className="mb-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter activity type">
-            {filterOptions.map((option) => (
+            {!supportOnly && filterOptions.map((option) => (
               <button
                 key={option.id}
                 type="button"

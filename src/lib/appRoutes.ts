@@ -1,6 +1,6 @@
 export type AppPhase = 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth';
 export type RouteTab = 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart' | 'notifications';
-export type AdminSectionRoute = 'overview' | 'orders' | 'products' | 'categories' | 'customers' | 'reviews' | 'marketing' | 'banners' | 'notifications' | 'activity' | 'reports' | 'settings';
+export type AdminSectionRoute = 'overview' | 'orders' | 'products' | 'categories' | 'customers' | 'reviews' | 'marketing' | 'banners' | 'notifications' | 'activity' | 'support' | 'reports' | 'settings';
 
 export const APP_ROUTE_PATHS = [
   '/', '/home', '/shop', '/search', '/custom', '/wishlist', '/cart', '/checkout',
@@ -10,7 +10,7 @@ export const APP_ROUTE_PATHS = [
   '/support', '/support/:requestId', '/contact-support', '/contact-support/my-support-requests', '/contact-us', '/contact-workshop',
   '/settings', '/privacy-policy', '/privacy', '/terms-and-conditions', '/terms', '/store', '/store-info',
   '/admin', '/admin/dashboard', '/admin/orders', '/admin/orders/:orderId', '/admin/products', '/admin/categories', '/admin/customers',
-  '/admin/customers/:customerId', '/admin/reviews', '/admin/coupons', '/admin/marketing', '/admin/banners', '/admin/notifications', '/admin/activity',
+  '/admin/customers/:customerId', '/admin/reviews', '/admin/coupons', '/admin/marketing', '/admin/banners', '/admin/notifications', '/admin/activity', '/admin/support', '/admin/support/:requestId',
   '/admin/reports', '/admin/settings', '/Onboarding', '/onboarding', '/signup', '/signup/onboarding', '/signup/loading',
   '/auth/callback', '/example/shop',
 ] as const;
@@ -47,13 +47,14 @@ const adminSectionPaths: Record<AdminSectionRoute, string> = {
   banners: '/admin/banners',
   notifications: '/admin/notifications',
   activity: '/admin/activity',
+  support: '/admin/support',
   reports: '/admin/reports',
   settings: '/admin/settings',
 };
 const adminSectionsBySlug: Record<string, AdminSectionRoute> = {
   dashboard: 'overview', orders: 'orders', products: 'products', categories: 'categories',
   customers: 'customers', reviews: 'reviews', coupons: 'marketing', marketing: 'marketing',
-  banners: 'banners', notifications: 'notifications', activity: 'activity', reports: 'reports', settings: 'settings',
+  banners: 'banners', notifications: 'notifications', activity: 'activity', support: 'support', reports: 'reports', settings: 'settings',
 };
 
 export function getPathForAdminSection(section: AdminSectionRoute): string {
@@ -82,11 +83,17 @@ export function getAdminCustomerIdFromPath(pathname: string): string | null {
   return customerId ? decodeSegment(customerId) : null;
 }
 
+export function getAdminSupportRequestIdFromPath(pathname: string): string | null {
+  const requestId = trimPath(pathname).match(/^\/admin\/support\/([^/]+)$/i)?.[1];
+  return requestId ? decodeSegment(requestId) : null;
+}
+
 export function getAdminSectionFromPath(pathname: string): AdminSectionRoute | null {
   const path = trimPath(pathname).toLowerCase();
   if (path === '/admin') return 'overview';
   if (/^\/admin\/orders\/[^/]+$/i.test(path)) return 'orders';
   if (/^\/admin\/customers\/[^/]+$/i.test(path)) return 'customers';
+  if (/^\/admin\/support(?:\/[^/]+)?$/i.test(path)) return 'support';
   const slug = path.match(/^\/admin\/([^/]+)$/)?.[1];
   return slug ? adminSectionsBySlug[slug] || null : null;
 }

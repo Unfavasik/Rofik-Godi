@@ -137,6 +137,39 @@ function parseFirebaseServiceAccount(raw: string): FirebaseServiceAccount {
   throw new Error('Firebase service-account JSON could not be parsed');
 }
 
+async function resolveNotificationImageUrl(
+  supabase: ReturnType<typeof createClient>,
+  notification: NotificationRow,
+) {
+  if (notification.image_url) return notification.image_url;
+  if (!notification.action_url?.startsWith('/admin/activity')) return null;
+  let requestId: string;
+  try {
+    requestId = new URL(notification.action_url, 'https://rofik-godi.invalid').searchParams.get('support_request') || '';
+  } catch {
+    return null;
+  }
+  if (!requestId) return null;
+  const { data: events } = await supabase
+    .from('admin_activity_events')
+    .select('details,created_at')
+    .eq('entity_type', 'support_request')
+    .eq('entity_id', requestId)
+    .eq('event_type', 'support_request_message_received')
+    .order('created_at', { ascending: false })
+    .limit(1);
+  const details = events?.[0]?.details;
+  const attachments = details && typeof details === 'object' && Array.isArray((details as Record<string, unknown>).attachments)
+    ? (details as Record<string, unknown>).attachments as Array<Record<string, unknown>>
+    : [];
+  const image = attachments.find((attachment) =>
+    typeof attachment.path === 'string' && typeof attachment.mime_type === 'string' && attachment.mime_type.startsWith('image/'),
+  );
+  if (!image || typeof image.path !== 'string') return null;
+  const { data: signed } = await supabase.storage.from('support-attachments').createSignedUrl(image.path, 3600);
+  return signed?.signedUrl || null;
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405);
@@ -204,6 +237,7 @@ Deno.serve(async (request) => {
 
   let sent = 0;
   let failed = 0;
+  const notificationImageUrl = await resolveNotificationImageUrl(supabase, notification);
   for (const device of devices) {
     const { data: previous } = await supabase
       .from('push_delivery_logs')
@@ -232,12 +266,13 @@ Deno.serve(async (request) => {
       notification: {
         title: notification.title,
         body: notification.body,
-        ...(notification.image_url ? { image: notification.image_url } : {}),
+        ...(notificationImageUrl ? { image: notificationImageUrl } : {}),
       },
       data: {
         notification_id: notification.id,
         kind: notification.kind || 'general',
         action_url: notification.action_url || '',
+        image_url: notificationImageUrl || '',
       },
       android: {
         priority: notification.kind === 'order' ? 'HIGH' : 'NORMAL',

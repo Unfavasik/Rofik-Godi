@@ -23,7 +23,11 @@ begin
   else
     v_event_type := 'support_request_message_received';
     v_title := 'Customer replied to support request';
-    v_body := coalesce((select full_name from public.profiles where id = new.sender_user_id),'A customer') || ' replied to ' || v_request.subject || '.';
+    v_body := format('%s (ID %s) replied to %s%s',
+      coalesce((select nullif(full_name, '') from public.profiles where id = new.sender_user_id), 'A customer'),
+      right(new.sender_user_id::text, 8),
+      v_request.subject,
+      case when jsonb_array_length(coalesce(new.attachments, '[]'::jsonb)) > 0 then ' with an attachment.' else '.' end);
   end if;
 
   insert into public.admin_activity_events(event_key,event_type,entity_type,entity_id,actor_user_id,subject_user_id,title,body,details)

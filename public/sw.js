@@ -70,19 +70,14 @@ self.addEventListener('fetch', (event) => {
       return response;
     });
     event.waitUntil(update.then(() => undefined).catch(() => {}));
-    event.respondWith((async () => {
+    event.respondWith(update.catch(async () => {
       const cached = await caches.match(request) || await caches.match('/index.html') || await caches.match('/');
-      if (cached) return cached;
-      try {
-        return await update;
-      } catch {
-        return new Response('Offline', {
-          status: 503,
-          statusText: 'Offline',
-          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-        });
-      }
-    })());
+      return cached || new Response('Offline', {
+        status: 503,
+        statusText: 'Offline',
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      });
+    }));
     return;
   }
 

@@ -14,6 +14,7 @@ import {
   Image,
   LayoutDashboard,
   Menu,
+  MessageSquareText,
   MoreHorizontal,
   Package,
   Printer,
@@ -63,7 +64,7 @@ import { PRODUCTS } from '../data/products';
 import type { Product } from '../types';
 import { supabase } from '../lib/supabase';
 import { getOrderStatusLabel, isOrderComplete } from '../lib/orderPresentation';
-import { getAdminCustomerIdFromPath, getAdminOrderIdFromPath, getAdminSectionFromPath, getPathForAdminCustomer, getPathForAdminOrder, getPathForAdminSection, type AdminSectionRoute } from '../lib/appRoutes';
+import { getAdminCustomerIdFromPath, getAdminOrderIdFromPath, getAdminSectionFromPath, getAdminSupportRequestIdFromPath, getPathForAdminCustomer, getPathForAdminOrder, getPathForAdminSection, type AdminSectionRoute } from '../lib/appRoutes';
 
 type AdminSection = AdminSectionRoute;
 type OrderStatus = AdminOrderRecord['status'];
@@ -78,6 +79,7 @@ const navGroups = [
       { id: 'categories' as AdminSection, label: 'Categories', icon: Tag },
       { id: 'customers' as AdminSection, label: 'Customers', icon: Users },
       { id: 'activity' as AdminSection, label: 'Notifications', icon: Activity },
+      { id: 'support' as AdminSection, label: 'Support', icon: MessageSquareText },
     ],
   },
   {
@@ -305,7 +307,10 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     if (!routeSection) return;
     setSection(routeSection);
     if (customerId || orderId) return;
-    const canonicalPath = getPathForAdminSection(routeSection);
+    const requestId = getAdminSupportRequestIdFromPath(location.pathname);
+    const canonicalPath = requestId
+      ? `${getPathForAdminSection('support')}/${encodeURIComponent(requestId)}`
+      : getPathForAdminSection(routeSection);
     if (location.pathname !== canonicalPath) navigate(canonicalPath, { replace: true });
   }, [location.pathname, navigate]);
   useEffect(() => {
@@ -427,6 +432,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
       banners: 'Banners',
       notifications: 'Campaigns',
       activity: 'Notifications',
+      support: 'Support',
       reports: 'Reports',
       settings: 'Settings',
     } as Record<AdminSection, string>
@@ -637,6 +643,20 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
               onViewCampaign={openActivityCampaign}
               adminUserId={adminUserId}
               notify={notify}
+            />
+          )}
+          {section === 'support' && (
+            <AdminActivityView
+              onViewOrder={openActivityOrder}
+              onViewReview={openActivityReview}
+              onViewCustomer={openActivityCustomer}
+              onViewProduct={openActivityProduct}
+              onViewCoupon={openActivityCoupon}
+              onViewCampaign={openActivityCampaign}
+              adminUserId={adminUserId}
+              notify={notify}
+              supportOnly
+              initialSupportRequestId={getAdminSupportRequestIdFromPath(location.pathname)}
             />
           )}
           {section === 'customers' && (

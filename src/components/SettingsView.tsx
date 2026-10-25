@@ -29,7 +29,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onBack,
   onLogout,
   onOpenOrders,
-  onOpenSupportRequests,
   onOpenContactSupport,
   currentUserId,
   onOpenStoreInfo,

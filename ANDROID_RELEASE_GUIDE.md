@@ -6,7 +6,7 @@
 - Android application ID / package name: `com.rofikgodi.centre`
 - Native source: `android/`
 - Capacitor configuration: `capacitor.config.ts`
-- Current release line: version name `1.1.6`, version code `8` (`android/app/build.gradle`)
+- Current release line: version name `1.1.7`, version code `9` (`android/app/build.gradle`)
 - Supabase native OAuth callback: `com.rofikgodi.centre://auth/callback`
 
 ## What this app build contains

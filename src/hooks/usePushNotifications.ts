@@ -16,6 +16,13 @@ function openNotificationTarget(navigate: (path: string) => void, actionUrl: unk
   try {
     const target = new URL(actionUrl, SITE_ORIGIN);
     if (target.origin === SITE_ORIGIN) {
+      const legacySupportRequestId = target.pathname === '/admin/activity'
+        ? target.searchParams.get('support_request')
+        : null;
+      if (legacySupportRequestId) {
+        navigate(`/admin/support/${encodeURIComponent(legacySupportRequestId)}`);
+        return;
+      }
       navigate(`${target.pathname}${target.search}${target.hash}`);
       return;
     }

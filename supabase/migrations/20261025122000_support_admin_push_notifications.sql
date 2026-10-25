@@ -56,7 +56,11 @@ begin
   select coalesce(nullif(full_name, ''), 'A customer') into v_customer_name
   from public.profiles
   where id = new.sender_user_id;
-  v_body := left(format('%s replied to %s.', v_customer_name, v_request.subject), 180);
+  v_body := left(format('%s (ID %s) replied to %s%s',
+    v_customer_name,
+    right(new.sender_user_id::text, 8),
+    v_request.subject,
+    case when jsonb_array_length(coalesce(new.attachments, '[]'::jsonb)) > 0 then ' with an attachment.' else '.' end), 180);
 
   insert into public.notifications (user_id, kind, title, body, action_url, expires_at)
   select
@@ -64,7 +68,7 @@ begin
     'support',
     'Customer replied to support request',
     v_body,
-    '/admin/activity',
+    '/admin/activity?support_request=' || new.request_id::text,
     now() + interval '30 days'
   from public.admin_users admins;
   return new;
