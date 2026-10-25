@@ -403,6 +403,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
       onBack={onBackFromContactSupport ?? closeRoutedPage}
       onOpenLogin={onOpenLogin}
       onOpenSupportRequest={onSelectSupportRequest}
+      onOpenSupportRequests={() => onOpenSupportPage?.()}
     />;
   }
 
