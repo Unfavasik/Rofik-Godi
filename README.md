@@ -30,7 +30,7 @@ Online checkout creates Razorpay Orders from the server-verified `public.orders.
 
 Apply `supabase/migrations/20261017232800_razorpay_payments.sql`, then deploy the `create-razorpay-order` and `verify-razorpay-payment` Edge Functions with JWT verification enabled. Deploy `razorpay-webhook` with JWT verification disabled; it verifies the raw request body with Razorpay's webhook signature before accepting `payment.captured` events. In Supabase Dashboard → Edge Functions → Secrets, set `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `RAZORPAY_WEBHOOK_SECRET`. Use Razorpay test-mode credentials first. In Razorpay's Webhooks settings, register `https://cyijfvylyhhusackvcuj.supabase.co/functions/v1/razorpay-webhook`, subscribe to `payment.captured`, and use the same webhook secret as `RAZORPAY_WEBHOOK_SECRET`.
 
-The authenticated checkout and verification functions allow the production browser origin `https://rofik-godi.pages.dev`. Razorpay sends webhook events server-to-server to the Supabase function URL above; the webhook URL does not change to the storefront domain.
+The authenticated checkout and verification functions allow the production browser origin `https://rofik-godi.pages.dev` and the exact Capacitor localhost origins used by native apps (`https://localhost`, `http://localhost`, and `capacitor://localhost`). They do not use a wildcard origin. Razorpay sends webhook events server-to-server to the Supabase function URL above; the webhook URL does not change to the storefront domain.
 
 ## Admin login flow
 

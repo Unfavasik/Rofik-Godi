@@ -1,18 +1,20 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://rofik-godi.pages.dev",
-  "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Vary": "Origin",
-};
+const allowedOrigins = new Set([
+  "https://rofik-godi.pages.dev",
+  "https://localhost",
+  "http://localhost",
+  "capacitor://localhost",
+]);
 
-function json(body: Record<string, unknown>, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8" },
-  });
+function corsHeaders(origin: string | null) {
+  return {
+    ...(origin && allowedOrigins.has(origin) ? { "Access-Control-Allow-Origin": origin } : {}),
+    "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
 }
 
 function hexToBytes(hex: string): Uint8Array | null {
@@ -36,7 +38,13 @@ async function verifyCheckoutSignature(message: string, signatureHex: string, se
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const headers = corsHeaders(req.headers.get("Origin"));
+  const json = (body: Record<string, unknown>, status = 200) => new Response(JSON.stringify(body), {
+    status,
+    headers: { ...headers, "Content-Type": "application/json; charset=utf-8" },
+  });
+
+  if (req.method === "OPTIONS") return new Response("ok", { headers });
   if (req.method !== "POST") return json({ error: "Method not allowed." }, 405);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
