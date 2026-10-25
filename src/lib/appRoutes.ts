@@ -7,7 +7,7 @@ export const APP_ROUTE_PATHS = [
   '/profile', '/account', '/my-orders', '/myorder', '/my-order',
   '/my-orders/order/:orderSlug', '/myorder/order/:orderSlug', '/my-order/order/:orderSlug',
   '/notifications', '/notification', '/shop/products/:slug', '/products/:slug', '/product/:slug',
-  '/support', '/support/:requestId', '/contact-support', '/contact-us', '/contact-workshop',
+  '/support', '/support/:requestId', '/contact-support', '/contact-support/my-support-requests', '/contact-us', '/contact-workshop',
   '/settings', '/privacy-policy', '/privacy', '/terms-and-conditions', '/terms', '/store', '/store-info',
   '/admin', '/admin/dashboard', '/admin/orders', '/admin/orders/:orderId', '/admin/products', '/admin/categories', '/admin/customers',
   '/admin/customers/:customerId', '/admin/reviews', '/admin/coupons', '/admin/marketing', '/admin/banners', '/admin/notifications', '/admin/activity',
@@ -105,6 +105,9 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
   if (path === '/cart') return { kind: 'tab', tab: 'cart', canonicalPath: '/cart' };
   if (path === '/notifications' || path === '/notification') return { kind: 'tab', tab: 'notifications', canonicalPath: '/notifications' };
   if (path === '/profile' || path === '/account') return { kind: 'tab', tab: 'account', canonicalPath: '/profile' };
+  if (path.toLowerCase() === '/contact-support/my-support-requests') {
+    return { kind: 'support', tab: 'account', requestId: null, canonicalPath: '/contact-support/my-support-requests' };
+  }
   const supportMatch = path.match(/^\/support(?:\/([^/]+))?$/i);
   if (supportMatch) {
     const requestId = supportMatch[1] ? decodeSegment(supportMatch[1]) : null;
