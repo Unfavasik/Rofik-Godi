@@ -381,6 +381,14 @@ export default function App() {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [activeTab]);
 
+  useLayoutEffect(() => {
+    const routeKind = resolveAppRoute(location.pathname).kind;
+    if (routeKind !== 'contact-support' && routeKind !== 'support') return;
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [location.pathname, location.search]);
+
   const [shopLayoutMode, setShopLayoutMode] = useState<'grid' | 'list'>('grid');
   // Use the full responsive shell by default. The old 440px phone frame made
   // the website look squeezed on tablets and desktop browsers.
