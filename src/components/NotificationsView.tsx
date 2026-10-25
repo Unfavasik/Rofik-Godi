@@ -15,19 +15,19 @@ import { SupportNotificationDetails } from './SupportNotificationDetails';
 import { CloudLoader } from './CloudLoader';
 import { getCustomerNotificationCategory, getSupportRequestIdFromNotification, matchesCustomerNotificationFilter, getNotificationRowSurfaceClass, isSupportNotification, type CustomerNotificationFilter } from '../lib/notificationCategory';
 import { isNotificationEnabledByPreferences, readCustomerAppPreferences } from '../lib/customerPreferences';
+import { readCustomerNotificationCache, writeCustomerNotificationCache, type CachedCustomerNotification } from '../lib/localCache';
 
-type NotificationItem = {
-  id: string;
-  kind: string;
-  title: string;
-  body: string;
-  action_url: string | null;
-  image_url?: string | null;
+type NotificationItem = CachedCustomerNotification & {
   orderNumber?: string | null;
   orderRecord?: CustomerOrderRecord | null;
-  read_at: string | null;
-  created_at: string;
 };
+
+const readCachedNotificationItems = (userId: string): NotificationItem[] =>
+  readCustomerNotificationCache(userId).map((item) => ({
+    ...item,
+    orderNumber: getNotificationOrderNumber(`${item.title} ${item.body} ${item.action_url || ''}`),
+    orderRecord: null,
+  }));
 
 type NotificationFilter = CustomerNotificationFilter;
 type NotificationPointerGesture = {
@@ -79,13 +79,15 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
   const [couponDetailsError, setCouponDetailsError] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [notificationPreferences, setNotificationPreferences] = useState(() => readCustomerAppPreferences(userId).notifications);
-  const [items, setItems] = useState<NotificationItem[]>([]);
-  const [loading, setLoading] = useState(!isGuest);
+  const [items, setItems] = useState<NotificationItem[]>(() => isGuest ? [] : readCachedNotificationItems(userId));
+  const [itemsOwnerId, setItemsOwnerId] = useState(userId);
+  const [loading, setLoading] = useState(() => !isGuest && readCustomerNotificationCache(userId).length === 0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [revealedDeleteId, setRevealedDeleteId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState('');
   const [loadError, setLoadError] = useState('');
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const liveNotificationIdsRef = useRef(new Set<string>());
   const pointerGestureRef = useRef<NotificationPointerGesture | null>(null);
   const suppressRowClickRef = useRef(false);
 
@@ -109,17 +111,23 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
     let active = true;
     if (isGuest || !userId) {
       setItems([]);
+      setItemsOwnerId(userId);
       setLoadError('');
       setLoading(false);
       return () => { active = false; };
     }
-    setItems([]);
+    liveNotificationIdsRef.current.clear();
+    const cachedRows = readCachedNotificationItems(userId);
+    setItemsOwnerId(userId);
+    setItems(cachedRows);
     setLoadError('');
-    setLoading(true);
+    setLoading(cachedRows.length === 0);
     const timeoutId = window.setTimeout(() => {
       if (!active) return;
-      setLoadError('The request is taking too long. Check your connection and try again.');
-      setLoading(false);
+      if (cachedRows.length === 0) {
+        setLoadError('The request is taking too long. Check your connection and try again.');
+        setLoading(false);
+      }
     }, 15000);
     void Promise.all([listMyNotifications(userId), listMyOrders(userId)]).then(([rows, orders]) => {
       if (!active) return;
@@ -131,10 +139,16 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
         const firstProductImage = orderRecord?.order_items.find((orderItem) => orderItem.image_url)?.image_url;
         return { ...item, orderNumber, orderRecord, image_url: item.image_url || firstProductImage || null };
       });
-      setItems(enrichedRows);
+      setItems((current) => {
+        const byId = new Map<string, NotificationItem>(enrichedRows.map((item) => [item.id, item] as const));
+        for (const item of current) {
+          if (liveNotificationIdsRef.current.has(item.id) && !byId.has(item.id)) byId.set(item.id, item);
+        }
+        return [...byId.values()].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, 50);
+      });
     }).catch((error) => {
       window.clearTimeout(timeoutId);
-      if (active) setLoadError(error instanceof Error ? error.message : 'Your notifications could not be loaded.');
+      if (active && cachedRows.length === 0) setLoadError(error instanceof Error ? error.message : 'Your notifications could not be loaded.');
     }).finally(() => {
       window.clearTimeout(timeoutId);
       if (active) setLoading(false);
@@ -152,12 +166,34 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
         schema: 'public',
         table: 'notifications',
         filter: `user_id=eq.${userId}`,
-      }, () => {
-        setLoadAttempt((attempt) => attempt + 1);
+      }, (payload) => {
+        const row = payload.new as CachedCustomerNotification;
+        if (!row?.id || typeof row.title !== 'string' || typeof row.body !== 'string' || typeof row.created_at !== 'string') return;
+        liveNotificationIdsRef.current.add(row.id);
+        const orderNumber = getNotificationOrderNumber(`${row.title} ${row.body} ${row.action_url || ''}`);
+        const incoming: NotificationItem = { ...row, orderNumber, orderRecord: null };
+        setItems((current) => {
+          if (current.some((item) => item.id === incoming.id)) return current;
+          return [incoming, ...current].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, 50);
+        });
       })
       .subscribe();
-    return () => { void notificationClient.removeChannel(channel); };
+    const syncWhenVisible = () => {
+      if (document.visibilityState === 'visible') setLoadAttempt((attempt) => attempt + 1);
+    };
+    window.addEventListener('focus', syncWhenVisible);
+    document.addEventListener('visibilitychange', syncWhenVisible);
+    return () => {
+      window.removeEventListener('focus', syncWhenVisible);
+      document.removeEventListener('visibilitychange', syncWhenVisible);
+      void notificationClient.removeChannel(channel);
+    };
   }, [userId, isGuest]);
+
+  useEffect(() => {
+    if (isGuest || !userId || itemsOwnerId !== userId) return;
+    writeCustomerNotificationCache(userId, items);
+  }, [items, itemsOwnerId, isGuest, userId]);
 
   useEffect(() => {
     let active = true;

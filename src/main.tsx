@@ -1,4 +1,5 @@
 import { StrictMode } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
@@ -6,7 +7,7 @@ import { AppErrorBoundary } from './components/AppErrorBoundary';
 import './index.css';
 import { APP_ROUTE_PATHS } from './lib/appRoutes';
 
-if ('serviceWorker' in navigator) {
+if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
   if (import.meta.env.PROD) {
     window.addEventListener('load', () => { void navigator.serviceWorker.register('/sw.js'); });
   } else {

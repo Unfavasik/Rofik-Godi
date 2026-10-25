@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'rofik-godi-shell-v4';
-const RUNTIME_CACHE = 'rofik-godi-runtime-v4';
+const SHELL_CACHE = 'rofik-godi-shell-v5';
+const RUNTIME_CACHE = 'rofik-godi-runtime-v5';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -16,7 +16,8 @@ const isSupabaseRequest = (url) =>
   url.pathname.startsWith('/auth/') ||
   url.pathname.startsWith('/rest/') ||
   url.pathname.startsWith('/storage/') ||
-  url.pathname.startsWith('/functions/');
+  url.pathname.startsWith('/functions/') ||
+  url.pathname.startsWith('/api/');
 
 const isViteDevelopmentRequest = (url) =>
   url.pathname.startsWith('/src/') ||
@@ -33,6 +34,9 @@ const isCacheableSameOrigin = (request) => {
     !isSupabaseRequest(url) &&
     !isViteDevelopmentRequest(url);
 };
+
+const isVersionedAsset = (url) =>
+  /\/assets\/[^/]+-[\w-]{8,}\.(?:js|mjs|css|woff2?|png|svg|webp|jpe?g|avif)$/i.test(url.pathname);
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -56,45 +60,65 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-
-  // Never intercept cross-origin services, Supabase Auth/API/storage, or non-GET requests.
   if (!isCacheableSameOrigin(request)) return;
 
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          void caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
-          return response;
-        })
-        .catch(async () => {
-          const cached = await caches.match(request);
-          return cached || caches.match('/index.html') || new Response('Offline', {
-            status: 503,
-            statusText: 'Offline',
-            headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-          });
-        }),
-    );
+    const update = fetch(request).then((response) => {
+      if (response.ok && response.type === 'basic') {
+        void caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, response.clone())).catch(() => {});
+      }
+      return response;
+    });
+    event.waitUntil(update.then(() => undefined).catch(() => {}));
+    event.respondWith((async () => {
+      const cached = await caches.match(request) || await caches.match('/index.html') || await caches.match('/');
+      if (cached) return cached;
+      try {
+        return await update;
+      } catch {
+        return new Response('Offline', {
+          status: 503,
+          statusText: 'Offline',
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        });
+      }
+    })());
     return;
   }
 
-  // Cache same-origin hashed JS/CSS/images after a successful network response.
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      const cacheResponse = (response) => {
-        if (response.ok) {
-          const copy = response.clone();
-          void caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
+  const url = new URL(request.url);
+  const versioned = isVersionedAsset(url);
+  if (versioned) {
+    event.respondWith((async () => {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+      try {
+        const response = await fetch(request);
+        if (response.ok && response.type === 'basic') {
+          void caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, response.clone())).catch(() => {});
         }
         return response;
-      };
-      if (cached) {
-        void fetch(request).then(cacheResponse).catch(() => {});
-        return cached;
+      } catch {
+        return new Response('', { status: 504, statusText: 'Offline' });
       }
-      return fetch(request).then(cacheResponse).catch(() => new Response('', { status: 504, statusText: 'Offline' }));
-    }).catch(() => new Response('', { status: 504, statusText: 'Offline' })),
-  );
+    })());
+    return;
+  }
+
+  const update = fetch(request).then((response) => {
+    if (response.ok && response.type === 'basic') {
+      void caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, response.clone())).catch(() => {});
+    }
+    return response;
+  });
+  event.waitUntil(update.then(() => undefined).catch(() => {}));
+  event.respondWith((async () => {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    try {
+      return await update;
+    } catch {
+      return new Response('', { status: 504, statusText: 'Offline' });
+    }
+  })());
 });

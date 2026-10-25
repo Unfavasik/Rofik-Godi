@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "958833607592",
+    "project_id": "rofik-godi-centre",
+    "storage_bucket": "rofik-godi-centre.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:958833607592:android:631a0b3b974d89966f939d",
+        "android_client_info": {
+          "package_name": "com.rofikgodi.centre"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "958833607592-ej1i0sptlh57epmn7dgnl0re3pg4lms8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOOR9uH6-4q4J-E_pyDXHTmRUEFvUekds"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "958833607592-ej1i0sptlh57epmn7dgnl0re3pg4lms8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

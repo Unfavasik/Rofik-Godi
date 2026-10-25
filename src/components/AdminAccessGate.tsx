@@ -9,35 +9,72 @@ export const AdminAccessGate: React.FC<{ children: React.ReactNode; onBackToStor
 
   useEffect(() => {
     let active = true;
+    let verificationId = 0;
+
+    const denyForSignIn = (text: string) => {
+      setState('denied');
+      setNeedsSignIn(true);
+      setMessage(text);
+    };
+
     const verify = async () => {
+      const currentVerification = ++verificationId;
+      const isCurrent = () => active && currentVerification === verificationId;
+      setState('checking');
+      setNeedsSignIn(false);
+      setMessage('Verifying administrator access…');
+
       if (!supabase) {
-        if (active) {
+        if (isCurrent()) {
           setState('denied');
           setMessage('The Supabase client is not configured for this preview. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY, then reload.');
         }
         return;
       }
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError || !authData.user) {
-        if (active) {
-          setState('denied');
-          setNeedsSignIn(true);
-          setMessage('Sign in with an authorized administrator account to open this workspace.');
-        }
+
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (!isCurrent()) return;
+      if (sessionError || !sessionData.session) {
+        denyForSignIn('Your administrator session is missing or expired. Sign in again to open this workspace.');
         return;
       }
+
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (!isCurrent()) return;
+      if (authError || !authData.user) {
+        denyForSignIn('Sign in with an authorized administrator account to open this workspace.');
+        return;
+      }
+
       const { data, error } = await supabase.rpc('is_admin');
-      if (active) {
-        if (!error && data === true) {
-          setState('allowed');
-        } else {
-          setState('denied');
-          setMessage(error ? 'The server could not verify admin permissions. Confirm the secure coupon migration is installed.' : 'This account does not have administrator access.');
-        }
+      if (!isCurrent()) return;
+      if (!error && data === true) {
+        setState('allowed');
+      } else {
+        setState('denied');
+        setNeedsSignIn(false);
+        setMessage(error ? 'The server could not verify admin permissions. Confirm the secure coupon migration is installed.' : 'This account does not have administrator access.');
       }
     };
+
+    const authSubscription = supabase?.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') return;
+      if (event === 'SIGNED_OUT' || !session?.user) {
+        verificationId += 1;
+        denyForSignIn('Your administrator session is missing or expired. Sign in again to open this workspace.');
+        return;
+      }
+      if (event === 'SIGNED_IN') {
+        window.setTimeout(() => { if (active) void verify(); }, 0);
+      }
+    });
+
     void verify();
-    return () => { active = false; };
+    return () => {
+      active = false;
+      verificationId += 1;
+      authSubscription?.data.subscription.unsubscribe();
+    };
   }, []);
 
   if (state === 'allowed') return <>{children}</>;

@@ -226,6 +226,16 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     window.setTimeout(() => setToast(''), 2600);
   }, []);
   const refresh = useCallback(async () => {
+    if (!supabase) {
+      setError('Supabase is not configured.');
+      return;
+    }
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) {
+      setAdminUserId('');
+      setError('Administrator session is missing or expired. Sign in again to load this workspace.');
+      return;
+    }
     setError('');
     const [orderResult, productResult, customerResult, metricResult, notificationResult, activityResult] =
       await Promise.all([
@@ -252,10 +262,11 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     setError(errors.join(' · '));
   }, []);
   useEffect(() => {
+    if (!adminUserId) return;
     void refresh();
     const refreshTimer = window.setInterval(() => void refresh(), 30_000);
     return () => window.clearInterval(refreshTimer);
-  }, [refresh]);
+  }, [adminUserId, refresh]);
   useEffect(() => {
     if (!supabase) return;
     const client = supabase;
@@ -266,6 +277,14 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     const { data: authListener } = client.auth.onAuthStateChange((_event, session) => {
       if (active) setAdminUserId(session?.user.id || '');
     });
+    return () => {
+      active = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+  useEffect(() => {
+    if (!supabase || !adminUserId) return;
+    const client = supabase;
     const channel = client
       .channel('admin-activity-unread-count')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_activity_events' }, () => {
@@ -275,11 +294,9 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
       })
       .subscribe();
     return () => {
-      active = false;
       void client.removeChannel(channel);
-      authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [adminUserId]);
   useEffect(() => {
     const customerId = getAdminCustomerIdFromPath(location.pathname);
     setSelectedCustomerId(customerId);

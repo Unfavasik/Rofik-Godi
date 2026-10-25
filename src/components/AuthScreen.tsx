@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 import { UserProfile } from '../types';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { getAuthCallbackUrl } from '../lib/oauthRedirect';
 import signupAvatar from '../assets/onboarding/signup.webp';
 import loginAvatar from '../assets/onboarding/singing.webp';
 
@@ -70,7 +73,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: import.meta.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`,
+          emailRedirectTo: getAuthCallbackUrl(),
           data: { full_name: name.trim() },
         },
       });
@@ -114,11 +117,29 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       setError(`${provider} sign-in is not configured yet. Use email sign-in.`);
       return;
     }
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (authError) setError('Unable to start Google sign-in. Please try email sign-in.');
+    const isNative = Capacitor.isNativePlatform();
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: getAuthCallbackUrl(),
+          skipBrowserRedirect: isNative,
+        },
+      });
+      if (authError) {
+        setError('Unable to start Google sign-in. Please try email sign-in.');
+        return;
+      }
+      if (isNative) {
+        if (!data.url) {
+          setError('Google sign-in could not open. Please try again.');
+          return;
+        }
+        await Browser.open({ url: data.url });
+      }
+    } catch {
+      setError('Google sign-in could not open. Please try again.');
+    }
   };
 
 

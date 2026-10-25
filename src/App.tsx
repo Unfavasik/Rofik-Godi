@@ -4,6 +4,9 @@
  */
 
 import React, { lazy, Suspense, useState, useMemo, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 import { WORKSHOP_INFO } from './data/products';
 import { Product, CartItem, CustomerOrderRecord, VehicleCategory, UserProfile } from './types';
 import { Header } from './components/Header';
@@ -53,6 +56,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
+import { NATIVE_AUTH_CALLBACK_URL } from './lib/oauthRedirect';
 import { getPathForCustomerOrder, getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
 import { signOutCurrentDevice } from './lib/authLogout';
 import { CUSTOMER_PREFERENCES_CHANGED_EVENT, isNotificationEnabledByPreferences, prefersHapticFeedback, readCustomerAppPreferences } from './lib/customerPreferences';
@@ -62,9 +66,15 @@ import { useAuth } from './hooks/useAuth';
 import { useCart } from './hooks/useCart';
 import { useCatalog } from './hooks/useCatalog';
 import { usePwaInstallPrompt } from './hooks/usePwaInstallPrompt';
+import { usePushNotifications } from './hooks/usePushNotifications';
 import { listMyNotifications, listMyWishlist, toggleWishlist } from './lib/supabaseCustomer';
+import { readCustomerNotificationCountCache, writeCustomerNotificationCountCache } from './lib/localCache';
 import { CloudLoader } from './components/CloudLoader';
 const FilterSortModal = lazy(() => import('./components/FilterSortModal').then((module) => ({ default: module.FilterSortModal })));
+const GUEST_WELCOME_KEY = 'rofik-godi:guest-welcome-complete:v1';
+const readGuestWelcomeComplete = () => {
+  try { return localStorage.getItem(GUEST_WELCOME_KEY) === '1'; } catch { return false; }
+};
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -93,6 +103,7 @@ export default function App() {
     setIsAdmin,
     checkIsAdmin,
   } = useAuth();
+  usePushNotifications(currentUser.isGuest ? null : currentUser.id, navigate);
   const [uiLanguage, setUiLanguage] = useState<PreferredLanguage>(() => readCustomerAppPreferences(currentUser.id).language);
   useEffect(() => {
     const ownerId = currentUser.id || 'guest-user';
@@ -108,7 +119,8 @@ export default function App() {
   const pwaInstall = usePwaInstallPrompt();
   const adminStorefrontRequested = useRef(false);
   const protectedRouteAfterAuth = useRef<string | null>(null);
-  const [guestWelcomeComplete, setGuestWelcomeComplete] = useState(false);
+  const handledNativeOAuthCallbacksRef = useRef(new Set<string>());
+  const [guestWelcomeComplete, setGuestWelcomeComplete] = useState(readGuestWelcomeComplete);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginModalReason, setLoginModalReason] = useState('Please login to place your order.');
   const [pendingCheckoutAfterLogin, setPendingCheckoutAfterLogin] = useState(false);
@@ -124,8 +136,60 @@ export default function App() {
     [location.pathname, navigate],
   );
 
+  const handleNativeOAuthCallback = useCallback(async (callbackUrl: string) => {
+    if (!Capacitor.isNativePlatform() || !supabase) return;
+    let callback: URL;
+    try {
+      callback = new URL(callbackUrl);
+    } catch {
+      return;
+    }
+    const expectedCallback = new URL(NATIVE_AUTH_CALLBACK_URL);
+    if (callback.protocol !== expectedCallback.protocol || callback.hostname !== expectedCallback.hostname || callback.pathname !== expectedCallback.pathname) return;
+    if (handledNativeOAuthCallbacksRef.current.has(callbackUrl)) return;
+    handledNativeOAuthCallbacksRef.current.add(callbackUrl);
+    try { await Browser.close(); } catch { /* Browser may already have closed itself. */ }
+
+    const code = callback.searchParams.get('code');
+    let completed = false;
+    if (code) {
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+      completed = !exchangeError;
+    } else {
+      const callbackParams = new URLSearchParams(callback.hash.replace(/^#/, ''));
+      const accessToken = callbackParams.get('access_token');
+      const refreshToken = callbackParams.get('refresh_token');
+      if (accessToken && refreshToken) {
+        const { error: sessionError } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        completed = !sessionError;
+      }
+    }
+    if (completed) navigate('/home', { replace: true });
+    else if (callback.searchParams.has('error') || callback.hash.includes('error=')) navigate('/signup', { replace: true });
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !supabase) return;
+    let active = true;
+    let removeListener: (() => void) | null = null;
+    void CapacitorApp.addListener('appUrlOpen', ({ url }) => {
+      if (active) void handleNativeOAuthCallback(url);
+    }).then((listener) => {
+      if (active) removeListener = () => { void listener.remove(); };
+      else void listener.remove();
+    }).catch(() => {});
+    void CapacitorApp.getLaunchUrl().then((launch) => {
+      if (active && launch?.url) void handleNativeOAuthCallback(launch.url);
+    }).catch(() => {});
+    return () => {
+      active = false;
+      removeListener?.();
+    };
+  }, [handleNativeOAuthCallback]);
+
   const finishWelcomeOnboarding = () => {
     setGuestWelcomeComplete(true);
+    try { localStorage.setItem(GUEST_WELCOME_KEY, '1'); } catch { /* App navigation still works without local storage. */ }
     const pendingPath = protectedRouteAfterAuth.current;
     goToPhase('main');
     if (!pendingPath || !requiresCustomerAuthentication(pendingPath)) {
@@ -142,7 +206,7 @@ export default function App() {
     setIsLoginModalOpen(true);
   };
 
-  const [notificationCount, setNotificationCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(() => currentUser.isGuest ? 0 : readCustomerNotificationCountCache(currentUser.id) ?? 0);
   const refreshNotificationCount = () => {
     if (currentUser.isGuest) {
       setNotificationCount(0);
@@ -150,10 +214,12 @@ export default function App() {
     }
     void listMyNotifications(currentUser.id).then((notifications) => {
       const preferences = readCustomerAppPreferences(currentUser.id).notifications;
-      setNotificationCount(notifications.filter((notification) =>
+      const count = notifications.filter((notification) =>
         !notification.read_at && isNotificationEnabledByPreferences(preferences, notification),
-      ).length);
-    }).catch(() => setNotificationCount(0));
+      ).length;
+      setNotificationCount(count);
+      writeCustomerNotificationCountCache(currentUser.id, count);
+    }).catch(() => {});
   };
   useEffect(() => {
     let active = true;
@@ -163,19 +229,34 @@ export default function App() {
         active = false;
       };
     }
+    const cachedCount = readCustomerNotificationCountCache(currentUser.id);
+    if (cachedCount !== null) setNotificationCount(cachedCount);
     const notificationClient = supabase;
+    const seenInsertIds = new Set<string>();
+    let pendingCountRefresh: number | null = null;
     const refreshCount = () => {
       void listMyNotifications(currentUser.id).then((notifications) => {
         if (active) {
           const preferences = readCustomerAppPreferences(currentUser.id).notifications;
-          setNotificationCount(notifications.filter((notification) =>
+          const count = notifications.filter((notification) =>
             !notification.read_at && isNotificationEnabledByPreferences(preferences, notification),
-          ).length);
+          ).length;
+          setNotificationCount(count);
+          writeCustomerNotificationCountCache(currentUser.id, count);
         }
-      }).catch(() => { if (active) setNotificationCount(0); });
+      }).catch(() => { if (active && cachedCount === null) setNotificationCount(0); });
+    };
+    const scheduleCountRefresh = () => {
+      if (pendingCountRefresh !== null) window.clearTimeout(pendingCountRefresh);
+      pendingCountRefresh = window.setTimeout(refreshCount, 300);
+    };
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') refreshCount();
     };
     refreshCount();
     window.addEventListener(CUSTOMER_PREFERENCES_CHANGED_EVENT, refreshCount);
+    window.addEventListener('focus', refreshWhenVisible);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
     const channel = notificationClient
       .channel(`notifications-user-${currentUser.id}`)
       .on('postgres_changes', {
@@ -183,11 +264,33 @@ export default function App() {
         schema: 'public',
         table: 'notifications',
         filter: `user_id=eq.${currentUser.id}`,
-      }, refreshCount)
+      }, (payload) => {
+        const row = payload.new as { id?: unknown; kind?: unknown; title?: unknown; body?: unknown; read_at?: unknown };
+        if (typeof row.id !== 'string' || seenInsertIds.has(row.id)) return;
+        seenInsertIds.add(row.id);
+        if (!row.read_at && typeof row.kind === 'string' && typeof row.title === 'string' && typeof row.body === 'string' && isNotificationEnabledByPreferences(
+          readCustomerAppPreferences(currentUser.id).notifications,
+          {
+            kind: row.kind,
+            title: row.title,
+            body: row.body,
+          },
+        )) {
+          setNotificationCount((current) => {
+            const count = current + 1;
+            writeCustomerNotificationCountCache(currentUser.id, count);
+            return count;
+          });
+        }
+        scheduleCountRefresh();
+      })
       .subscribe();
     return () => {
       active = false;
+      if (pendingCountRefresh !== null) window.clearTimeout(pendingCountRefresh);
       window.removeEventListener(CUSTOMER_PREFERENCES_CHANGED_EVENT, refreshCount);
+      window.removeEventListener('focus', refreshWhenVisible);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
       void notificationClient.removeChannel(channel);
     };
   }, [currentUser.id, currentUser.isGuest]);
@@ -212,6 +315,10 @@ export default function App() {
     ].includes(route);
     const routeKind = resolveAppRoute(route).kind;
     const publicInfoPath = routeKind === 'privacy' || routeKind === 'terms' || routeKind === 'store';
+    if (authStatus === 'AUTHENTICATED' && isAdmin === null) {
+      if (appPhase === 'splash') goToPhase('main');
+      return;
+    }
     if (authStatus === 'AUTHENTICATED' && isAdmin !== null) {
       if (isAdmin) {
         // Role resolution can finish after login; enter admin unless the admin
@@ -227,7 +334,7 @@ export default function App() {
     }
     // Legacy splash URLs have no timer now; route them as soon as auth has resolved.
     if (authStatus === 'UNAUTHENTICATED' && appPhase === 'splash') {
-      goToPhase('onboarding');
+      goToPhase(guestWelcomeComplete ? 'main' : 'onboarding');
       return;
     }
     if (authStatus !== 'UNAUTHENTICATED' || publicAuthPath || publicInfoPath || isAdminPath(route)) return;
@@ -300,6 +407,73 @@ export default function App() {
   const [isStoreInfoOpen, setIsStoreInfoOpen] = useState(false);
   const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
   const [isTermsConditionsOpen, setIsTermsConditionsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const listener = CapacitorApp.addListener('backButton', () => {
+      if (isLoginModalOpen) {
+        setIsLoginModalOpen(false);
+        return;
+      }
+      if (isHomeSortOpen) {
+        setIsHomeSortOpen(false);
+        return;
+      }
+      if (isHomeFilterOpen) {
+        setIsHomeFilterOpen(false);
+        return;
+      }
+
+      const currentPath = location.pathname.replace(/\/+$/, '') || '/';
+      const isRouteOverlay = ['/cart', '/wishlist', '/custom'].includes(currentPath);
+      const hasOverlay = isCartOpen || isWishlistOpen || isCustomBuilderOpen;
+      if (hasOverlay) {
+        setIsCartOpen(false);
+        setIsWishlistOpen(false);
+        setIsCustomBuilderOpen(false);
+        if (!isRouteOverlay) return;
+      }
+
+      const routerState = window.history.state as { idx?: unknown } | null;
+      if (typeof routerState?.idx === 'number' && routerState.idx > 0) {
+        navigate(-1);
+        return;
+      }
+
+      if (currentPath !== '/' && currentPath !== '/home') {
+        const route = resolveAppRoute(currentPath);
+        const fallback = route.kind === 'product'
+          ? '/shop'
+          : route.kind === 'orders' || route.kind === 'support' || route.kind === 'contact-support' || route.kind === 'settings'
+            ? '/profile'
+            : route.kind === 'checkout'
+              ? '/cart'
+              : route.kind === 'admin-order'
+                ? '/admin/orders'
+                : route.kind === 'admin-customer'
+                  ? '/admin/customers'
+                  : route.kind === 'admin'
+                    ? '/admin'
+                    : '/home';
+        navigate(fallback, { replace: true });
+        return;
+      }
+
+      void CapacitorApp.exitApp();
+    });
+    return () => {
+      void listener.then((handle) => handle.remove());
+    };
+  }, [
+    isCartOpen,
+    isCustomBuilderOpen,
+    isHomeFilterOpen,
+    isHomeSortOpen,
+    isLoginModalOpen,
+    isWishlistOpen,
+    location.pathname,
+    navigate,
+  ]);
 
   // Cart and catalog behavior are isolated so the storefront shell stays focused on presentation.
   const {
