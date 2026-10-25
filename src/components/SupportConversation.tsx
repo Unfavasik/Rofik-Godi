@@ -52,6 +52,7 @@ export const SupportConversation: React.FC<{
   const previousMessageCountRef = useRef(0);
   const wasNearBottomRef = useRef(true);
   const attachmentCount = request?.attachment_count ?? 0;
+  const customerReplyLocked = !isAdmin && request?.status === 'resolved';
 
   useEffect(() => {
     setRequest(null);
@@ -168,6 +169,7 @@ export const SupportConversation: React.FC<{
 
   const handleSend = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (customerReplyLocked) return;
     if (sending || (!draft.trim() && files.length === 0)) return;
     setSending(true);
     setError('');
@@ -261,16 +263,16 @@ export const SupportConversation: React.FC<{
       <form onSubmit={(event) => void handleSend(event)} className="border-t border-slate-100 bg-white p-3 sm:p-4">
         {files.length > 0 && <div className="mb-2 flex flex-wrap gap-2">{files.map((file, index) => <span key={`${file.name}-${index}`} className="inline-flex max-w-full items-center gap-1 rounded-full bg-slate-100 py-1 pl-2.5 pr-1 text-[10px] font-semibold text-slate-600"><span className="max-w-48 truncate">{file.name}</span><button type="button" aria-label={`Remove ${file.name}`} onClick={() => setFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="rounded-full p-1 text-slate-400 hover:bg-white hover:text-slate-800"><X className="h-3 w-3" /></button></span>)}</div>}
         <div className="flex items-end gap-2">
-          <label className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 ${attachmentCount + files.length >= 3 ? 'pointer-events-none opacity-40' : ''}`} title="Attach a file">
+          <label className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 ${customerReplyLocked || attachmentCount + files.length >= 3 ? 'pointer-events-none opacity-40' : ''}`} title={customerReplyLocked ? 'This request is resolved' : 'Attach a file'}>
             <Paperclip className="h-4 w-4" />
-            <input ref={fileInputRef} type="file" className="sr-only" accept="image/jpeg,image/png,image/webp,application/pdf" multiple disabled={attachmentCount + files.length >= 3} onChange={(event) => handleFiles(event.target.files)} aria-label="Attach files" />
+            <input ref={fileInputRef} type="file" className="sr-only" accept="image/jpeg,image/png,image/webp,application/pdf" multiple disabled={customerReplyLocked || attachmentCount + files.length >= 3} onChange={(event) => handleFiles(event.target.files)} aria-label="Attach a file" />
           </label>
-          <textarea value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={2000} rows={2} placeholder={isAdmin ? 'Write a reply to the customer…' : 'Write a reply…'} className="min-h-10 max-h-28 min-w-0 flex-1 resize-y rounded-xl border border-slate-200 px-3 py-2.5 text-xs leading-5 outline-none focus:border-[#D9232D]" aria-label="Reply message" />
-          <button type="submit" disabled={sending || (!draft.trim() && files.length === 0) || attachmentCount + files.length > 3} className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#D9232D] px-3 text-xs font-bold text-white hover:bg-[#B91C1C] disabled:cursor-not-allowed disabled:opacity-50" aria-label="Send reply">
-            {sending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}<span className="hidden sm:inline">{sending ? 'Sending' : 'Send'}</span>
+          <textarea value={draft} onChange={(event) => setDraft(event.target.value)} disabled={customerReplyLocked} maxLength={2000} rows={2} placeholder={customerReplyLocked ? 'This request is resolved. You cannot reply.' : isAdmin ? 'Write a reply to the customer…' : 'Write a reply…'} className="min-h-10 max-h-28 min-w-0 flex-1 resize-y rounded-xl border border-slate-200 px-3 py-2.5 text-xs leading-5 outline-none focus:border-[#D9232D] disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500" aria-label="Reply message" />
+          <button type="submit" disabled={customerReplyLocked || sending || (!draft.trim() && files.length === 0) || attachmentCount + files.length > 3} className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#D9232D] px-3 text-xs font-bold text-white hover:bg-[#B91C1C] disabled:cursor-not-allowed disabled:opacity-50" aria-label="Send reply">
+            {sending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}<span className="hidden sm:inline">{customerReplyLocked ? 'Resolved' : sending ? 'Sending' : 'Send'}</span>
           </button>
         </div>
-        <p className="mt-2 flex items-center gap-1 text-[10px] text-slate-400"><MessageCircle className="h-3 w-3" /> Private conversation · up to 3 files total, 5 MB each</p>
+        <p className="mt-2 flex items-center gap-1 text-[10px] text-slate-400"><MessageCircle className="h-3 w-3" /> {customerReplyLocked ? 'This conversation is closed by the workshop.' : 'Private conversation · up to 3 files total, 5 MB each'}</p>
       </form>
       {isAdmin && previewAttachment?.signed_url && (
         <div role="dialog" aria-modal="true" aria-label={`Preview ${previewAttachment.name}`} className="fixed inset-0 z-[100] flex flex-col bg-slate-950/95 p-3 text-white sm:p-6" onClick={() => setPreviewAttachment(null)}>
