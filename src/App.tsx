@@ -1226,7 +1226,7 @@ export default function App() {
             products={catalogProducts}
             onOpenProduct={openProductRoute}
             onOpenSupportRequest={(requestId) => navigate(`/support/${encodeURIComponent(requestId)}`)}
-            onOpenContactSupport={() => navigate('/contact-support', { state: { returnTo: '/notifications' } })}
+            onOpenContactSupport={() => navigate('/contact-support?from=notifications', { state: { returnTo: '/notifications' } })}
             onOpenMyOrders={(orderSlug) => {
               navigate(orderSlug ? getPathForCustomerOrder(orderSlug) : '/my-orders');
             }}
@@ -1308,11 +1308,19 @@ export default function App() {
               onBackToOrdersRoute={() => navigate('/my-orders')}
               onOpenSettingsPage={() => navigate('/settings')}
               onOpenSupportPage={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/contact-support/my-support-requests')}
-              onOpenContactSupport={() => navigate('/contact-support', { state: { returnTo: resolvedRoute.kind === 'settings' ? '/settings' : '/profile' } })}
+              onOpenContactSupport={() => {
+                const from = resolvedRoute.kind === 'settings' ? 'settings' : 'profile';
+                navigate(`/contact-support?from=${from}`, { state: { returnTo: from === 'settings' ? '/settings' : '/profile' } });
+              }}
               onSelectSupportRequest={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/support')}
               onBackFromContactSupport={() => {
                 const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
-                navigate(returnTo === '/notifications' || returnTo === '/settings' ? returnTo : '/profile');
+                const from = new URLSearchParams(location.search).get('from');
+                navigate(from === 'notifications' || returnTo === '/notifications'
+                  ? '/notifications'
+                  : from === 'settings' || returnTo === '/settings'
+                    ? '/settings'
+                    : '/profile');
               }}
               onOpenPrivacyPage={() => openPageRoute('/privacy-policy')}
               onOpenTermsPage={() => openPageRoute('/terms-and-conditions')}
