@@ -52,7 +52,7 @@ interface AccountViewProps {
   onSelectOrderRoute?: (orderSlug: string) => void;
   onBackToOrdersRoute?: () => void;
   onOpenSettingsPage?: () => void;
-  onOpenSupportPage?: () => void;
+  onOpenSupportPage?: (requestId?: string) => void;
   onOpenContactSupport?: () => void;
   onSelectSupportRequest?: (requestId: string) => void;
   onBackFromContactSupport?: () => void;

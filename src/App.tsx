@@ -1307,7 +1307,7 @@ export default function App() {
               onSelectOrderRoute={(orderSlug) => navigate(getPathForCustomerOrder(orderSlug))}
               onBackToOrdersRoute={() => navigate('/my-orders')}
               onOpenSettingsPage={() => navigate('/settings')}
-              onOpenSupportPage={() => navigate('/support')}
+              onOpenSupportPage={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/support')}
               onOpenContactSupport={() => navigate('/contact-support', { state: { returnTo: '/profile' } })}
               onSelectSupportRequest={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/support')}
               onBackFromContactSupport={() => {
