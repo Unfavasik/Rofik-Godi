@@ -234,6 +234,13 @@ export const AdminActivityView: React.FC<{
   }, [refresh]);
 
   useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void refresh(true);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [refresh]);
+
+  useEffect(() => {
     if (!initialSupportRequestId || selectedSupport || !events.length) return;
     const matchingEvent = events.find(
       (event) => event.entity_type === 'support_request' && event.entity_id === initialSupportRequestId,

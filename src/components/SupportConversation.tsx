@@ -122,6 +122,13 @@ export const SupportConversation: React.FC<{
     return () => { void client.removeChannel(channel); };
   }, [refresh, requestId]);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void refresh(true);
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [refresh]);
+
   const loadOlder = async () => {
     const oldest = messages[0];
     const cursor: SupportMessageCursor | null = oldest
