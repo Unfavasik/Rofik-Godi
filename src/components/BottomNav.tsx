@@ -29,7 +29,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   const { t } = useI18n();
   return (
     <nav
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] bg-white/95 backdrop-blur-md border-t border-gray-100/90 shadow-[0_-4px_25px_rgba(0,0,0,0.06)] px-3 pt-2 pb-5 z-40"
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-7xl bg-white/95 px-3 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur-md border-t border-gray-100/90 shadow-[0_-4px_25px_rgba(0,0,0,0.06)] sm:px-6"
       data-purpose="mobile-navbar"
     >
       <div className="flex justify-around items-center">

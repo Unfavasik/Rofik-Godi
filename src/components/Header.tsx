@@ -41,13 +41,13 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="w-full flex flex-col bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-[0_1px_6px_rgba(0,0,0,0.03)] sticky top-0 z-40 transition-all">
       {/* Top Main Bar */}
-      <div className="px-4 pt-3 pb-2 flex justify-between items-center bg-white min-h-[52px]">
+      <div className="flex min-w-0 items-center justify-between gap-2 bg-white px-3 pt-3 pb-2 sm:px-4">
         {/* Left: User Avatar & Welcome greeting */}
         <button
           type="button"
           onClick={onOpenAccount}
           aria-label={`Open account profile for ${currentUser?.name || 'Rider'}`}
-          className="flex items-center gap-2.5 cursor-pointer group select-none"
+          className="flex min-w-0 max-w-[calc(100%-5.5rem)] items-center gap-2.5 cursor-pointer group select-none"
         >
           <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 shadow-2xs group-hover:border-[#D9232D]/40 transition-all overflow-hidden relative">
             {currentUser?.avatar ? (
@@ -59,19 +59,19 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-amber-400 border border-white rounded-full" title="Guest Mode" />
             )}
           </div>
-          <div className="flex flex-col">
+          <div className="min-w-0 flex flex-col">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-none flex items-center gap-1">
               {greeting}
               <Sparkles className="w-2.5 h-2.5 text-amber-500" />
             </span>
-            <h1 className="text-[15px] font-black tracking-tight flex items-center leading-tight mt-0.5 text-slate-900 group-hover:text-[#D9232D] transition-colors">
+            <h1 className="truncate text-[15px] font-black tracking-tight flex items-center leading-tight mt-0.5 text-slate-900 group-hover:text-[#D9232D] transition-colors">
               {currentUser?.isGuest ? 'Guest' : currentUser?.name?.trim() || 'Rider'}
             </h1>
           </div>
         </button>
 
         {/* Right: Actions (Search & Cart) - Location removed as requested */}
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {/* Notification Button */}
           <div className="relative">
             <button

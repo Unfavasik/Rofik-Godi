@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { PRODUCTS } from '../data/products';
-import { isSupabaseConfigured } from '../lib/supabase';
 import { loadPublicProducts } from '../lib/supabaseProducts';
 import { readPublicCatalogCache, writePublicCatalogCache } from '../lib/localCache';
 import type { Product } from '../types';
 
 export function useCatalog() {
-  const [products, setProducts] = useState<Product[]>(() => readPublicCatalogCache() ?? (isSupabaseConfigured ? [] : PRODUCTS));
-  const [isLoaded, setIsLoaded] = useState(() => readPublicCatalogCache() !== null || !isSupabaseConfigured);
-  const [isLoading, setIsLoading] = useState(() => readPublicCatalogCache() === null && isSupabaseConfigured);
+  // Always render a local catalog immediately. A cached server catalog wins when
+  // available; otherwise the bundled catalog keeps the app usable on first launch,
+  // slow connections, and offline opens while the remote refresh runs in the background.
+  const [products, setProducts] = useState<Product[]>(() => readPublicCatalogCache() ?? PRODUCTS);
+  const [isLoaded, setIsLoaded] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [reloadVersion, setReloadVersion] = useState(0);
 
@@ -20,6 +22,9 @@ export function useCatalog() {
 
   useEffect(() => {
     let active = true;
+    // Cached/bundled products are already visible, so never replace the screen
+    // with a spinner during this background refresh.
+    setIsLoading(false);
 
     void loadPublicProducts()
       .then((loadedProducts) => {

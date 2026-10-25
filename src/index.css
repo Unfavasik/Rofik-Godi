@@ -16,17 +16,33 @@
   html,
   body,
   #root {
+    width: 100%;
     min-height: 100%;
     background-color: #D9232D;
   }
 
   body {
     min-height: 100vh;
+    overflow-x: hidden;
     font-family: var(--font-sans);
     background-color: #D9232D;
     color: #13161B;
     -webkit-tap-highlight-color: transparent;
   }
+}
+
+/* Keep every route inside the viewport on narrow phones and embedded WebViews. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
 }
 
 /* Custom Utilities */

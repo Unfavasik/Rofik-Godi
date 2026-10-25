@@ -382,7 +382,9 @@ export default function App() {
   }, [activeTab]);
 
   const [shopLayoutMode, setShopLayoutMode] = useState<'grid' | 'list'>('grid');
-  const [isMobileFrameMode, setIsMobileFrameMode] = useState<boolean>(true);
+  // Use the full responsive shell by default. The old 440px phone frame made
+  // the website look squeezed on tablets and desktop browsers.
+  const [isMobileFrameMode, setIsMobileFrameMode] = useState<boolean>(false);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -1165,13 +1167,13 @@ export default function App() {
 
   return (
     <I18nProvider language={uiLanguage}>
-    <div className="min-h-screen bg-[#F0F2F5] flex justify-center selection:bg-[#D9232D] selection:text-white font-sans antialiased text-[#1E232A]">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[#F0F2F5] flex justify-center selection:bg-[#D9232D] selection:text-white font-sans antialiased text-[#1E232A]">
       {/* App Container (Mobile Frame or Full Width based on toggle) */}
       <div
         onClickCapture={handleAppHapticTap}
-        className={`w-full bg-[#FDFDFD] min-h-screen flex flex-col relative shadow-2xl transition-all duration-300 ${
+        className={`w-full min-w-0 overflow-x-hidden bg-[#FDFDFD] min-h-screen flex flex-col relative shadow-2xl transition-all duration-300 ${
           hidesBottomNavigation ? '' : 'pb-28'
-        } ${isMobileFrameMode ? 'max-w-[440px]' : 'max-w-4xl'}`}
+        } ${isMobileFrameMode ? 'max-w-[440px]' : 'max-w-7xl'}`}
       >
         {/* Main Header */}
         {!hidesBottomNavigation &&
