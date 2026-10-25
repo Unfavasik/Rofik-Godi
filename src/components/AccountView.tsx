@@ -417,6 +417,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
         onOpenOrders={onOpenOrdersPage ?? (() => setActiveModal('orders'))}
         currentUserId={currentUser?.id}
         onOpenSupportRequests={onOpenSupportPage}
+        onOpenContactSupport={onOpenContactSupport}
         onOpenWishlist={onOpenWishlist}
         onOpenStoreInfo={onOpenStoreInfo}
         onOpenShop={onOpenShop}

@@ -15,6 +15,7 @@ interface SettingsViewProps {
   onLogout?: () => void | Promise<void>;
   onOpenOrders?: () => void;
   onOpenSupportRequests?: (requestId?: string) => void;
+  onOpenContactSupport?: () => void;
   currentUserId?: string;
   onOpenWishlist?: () => void;
   onOpenStoreInfo?: () => void;
@@ -31,6 +32,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onLogout,
   onOpenOrders,
   onOpenSupportRequests,
+  onOpenContactSupport,
   currentUserId,
   onOpenStoreInfo,
   onOpenShop,
@@ -410,7 +412,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         {/* Item 10: Contact Us */}
         <button
-          onClick={() => setActiveModal('contact')}
+          onClick={() => onOpenContactSupport?.()}
           className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left"
           type="button"
         >
