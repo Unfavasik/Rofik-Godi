@@ -413,7 +413,6 @@ export const AccountView: React.FC<AccountViewProps> = ({
         onBack={closeRoutedPage}
         onLogout={onLogout}
         isAuthenticated={Boolean(currentUser && !currentUser.isGuest)}
-        onOpenLogin={onOpenLogin}
         onOpenOrders={onOpenOrdersPage ?? (() => setActiveModal('orders'))}
         currentUserId={currentUser?.id}
         onOpenSupportRequests={() => onOpenSupportPage?.()}

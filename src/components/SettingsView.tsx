@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Phone, MessageCircle, Star, Globe, Bell } from 'lucide-react';
+import { X, Star, Globe, Bell } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
 import { CouponDetailsView } from './CouponDetailsView';
 import { WORKSHOP_INFO } from '../data/products';
-import { CustomerSupportRequestForm } from './CustomerSupportRequestForm';
 import { readCustomerAppPreferences, saveCustomerAppPreferences, type CustomerNotificationPreferences, type PreferredLanguage } from '../lib/customerPreferences';
 import { translate, useI18n } from '../lib/i18n';
 
@@ -23,7 +22,6 @@ interface SettingsViewProps {
   onOpenPrivacyPage?: () => void;
   onOpenTermsPage?: () => void;
   isAuthenticated: boolean;
-  onOpenLogin?: () => void;
   pwaInstallCard?: React.ReactNode;
 }
 
@@ -39,7 +37,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onOpenPrivacyPage,
   onOpenTermsPage,
   isAuthenticated,
-  onOpenLogin,
   pwaInstallCard,
 }) => {
   const { t } = useI18n();
@@ -52,7 +49,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     | 'about'
     | 'app-settings'
     | 'help'
-    | 'contact'
     | 'logout'
     | null
   >(null);
@@ -410,7 +406,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </svg>
         </button>
 
-        {/* Item 10: Contact Us */}
+        {/* Item 10: Contact Support */}
         <button
           onClick={() => onOpenContactSupport?.()}
           className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left"
@@ -428,8 +424,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </svg>
             </div>
             <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">Contact Us</h2>
-              <p className="text-[12px] text-gray-500 font-normal">Get in touch</p>
+              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">Contact Support</h2>
+              <p className="text-[12px] text-gray-500 font-normal">Message the workshop team</p>
             </div>
           </div>
           <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -782,74 +778,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <h4 className="font-bold text-gray-900">Q: Can I customize piping and stitch patterns?</h4>
                   <p className="text-gray-500">A: Yes, use the "Custom Fit" 3D studio in the app to pick your exact colors and foam cushion thickness.</p>
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* 9. Contact Us Modal */}
-      <AnimatePresence>
-        {activeModal === 'contact' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
-            <motion.div initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }} className="relative z-10 max-h-[92vh] w-full max-w-[480px] space-y-4 overflow-y-auto rounded-[28px] bg-white p-5 shadow-2xl">
-              <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                <div>
-                  <h3 className="text-base font-bold text-gray-900">Contact Workshop Team</h3>
-                  <p className="text-xs text-gray-500">{WORKSHOP_INFO.workingHours}</p>
-                </div>
-                <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <CustomerSupportRequestForm
-                isAuthenticated={isAuthenticated}
-                expectedUserId={currentUserId}
-                onOpenLogin={onOpenLogin}
-                onOpenSupportRequest={(requestId) => onOpenSupportRequests?.(requestId)}
-              />
-              {onOpenSupportRequests && (
-                <button
-                  type="button"
-                  onClick={() => onOpenSupportRequests()}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50"
-                >
-                  View my support requests
-                </button>
-              )}
-
-              <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-                <span className="h-px flex-1 bg-slate-100" />
-                Or contact us directly
-                <span className="h-px flex-1 bg-slate-100" />
-              </div>
-
-              <div className="space-y-2.5">
-                <a
-                  href={`tel:${WORKSHOP_INFO.phone.replace(/\s/g, '')}`}
-                  className="flex items-center justify-between p-3.5 bg-[#EBF5FF] text-[#2563EB] rounded-2xl font-bold text-xs"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Phone className="w-5 h-5" />
-                    <span>Call +91 98321 45678</span>
-                  </div>
-                  <span>Dial →</span>
-                </a>
-
-                <a
-                  href="https://wa.me/919832145678"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between p-3.5 bg-[#E8F8F0] text-[#10B981] rounded-2xl font-bold text-xs"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <MessageCircle className="w-5 h-5" />
-                    <span>WhatsApp Direct Support</span>
-                  </div>
-                  <span>Chat →</span>
-                </a>
               </div>
             </motion.div>
           </div>
