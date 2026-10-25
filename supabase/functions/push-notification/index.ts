@@ -142,7 +142,7 @@ async function resolveNotificationImageUrl(
   notification: NotificationRow,
 ) {
   if (notification.image_url) return notification.image_url;
-  if (!notification.action_url?.startsWith('/admin/activity')) return null;
+  if (!notification.action_url?.startsWith('/admin/activity') && !notification.action_url?.startsWith('/admin/support')) return null;
   let requestId: string;
   try {
     requestId = new URL(notification.action_url, 'https://rofik-godi.invalid').searchParams.get('support_request') || '';
@@ -276,7 +276,11 @@ Deno.serve(async (request) => {
       },
       android: {
         priority: notification.kind === 'order' ? 'HIGH' : 'NORMAL',
-        notification: { channel_id: 'rofik-godi-updates', sound: 'default' },
+        notification: {
+          channel_id: 'rofik-godi-updates',
+          sound: 'default',
+          ...(notificationImageUrl ? { image: notificationImageUrl } : {}),
+        },
       },
     };
     const response = await fetch(`https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`, {
