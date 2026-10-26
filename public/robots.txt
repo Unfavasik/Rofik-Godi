@@ -14,4 +14,4 @@ Disallow: /signup/onboarding
 Disallow: /signup/loading
 Disallow: /auth/
 
-Sitemap: https://work-app-dun.vercel.app/sitemap.xml
+Sitemap: https://rofik-godi.pages.dev/sitemap.xml
