@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { Capacitor } from '@capacitor/core';
 
 type CreateOrderResponse = {
   razorpayOrderId: string;
@@ -25,6 +26,7 @@ type RazorpayOptions = {
   order_id: string;
   prefill: { name: string; email: string; contact: string };
   theme: { color: string };
+  webview_intent?: boolean;
   handler: (response: RazorpaySuccess) => void | Promise<void>;
   modal: { ondismiss: () => void };
 };
@@ -110,6 +112,7 @@ export async function openRazorpayCheckout(orderNumber: string): Promise<VerifyR
       order_id: createData.razorpayOrderId,
       prefill: createData.prefill,
       theme: { color: '#D9232D' },
+      ...(Capacitor.isNativePlatform() ? { webview_intent: true } : {}),
       handler: async (response) => {
         const { data, error } = await client.functions.invoke<VerifyResponse>(
           'verify-razorpay-payment',
