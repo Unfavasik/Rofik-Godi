@@ -5,14 +5,17 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import com.getcapacitor.BridgeActivity;
+import com.razorpay.PaymentData;
+import com.razorpay.PaymentResultWithDataListener;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
-public class MainActivity extends BridgeActivity {
+public class MainActivity extends BridgeActivity implements PaymentResultWithDataListener {
     private static final String HOME_URL = "https://rofik-godi.pages.dev/";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(NativeRazorpayPlugin.class);
         // Do not restore a WebView snapshot that may contain an abandoned bank/Razorpay page.
         super.onCreate(null);
         getBridge().getWebView().clearHistory();
@@ -38,5 +41,15 @@ public class MainActivity extends BridgeActivity {
             getBridge().getWebView().clearHistory();
             getBridge().getWebView().loadUrl(HOME_URL);
         }
+    }
+
+    @Override
+    public void onPaymentSuccess(String paymentId, PaymentData paymentData) {
+        NativeRazorpayPlugin.onNativePaymentSuccess(paymentId, paymentData);
+    }
+
+    @Override
+    public void onPaymentError(int code, String description, PaymentData paymentData) {
+        NativeRazorpayPlugin.onNativePaymentError(code, description, paymentData);
     }
 }

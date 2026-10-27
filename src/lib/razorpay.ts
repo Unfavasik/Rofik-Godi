@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 
 type CreateOrderResponse = {
   razorpayOrderId: string;
@@ -35,6 +35,26 @@ type RazorpayInstance = {
   open: () => void;
   on: (event: 'payment.failed', callback: (response: { error?: { description?: string } }) => void) => void;
 };
+
+type NativeRazorpayPlugin = {
+  openCheckout: (options: {
+    key: string;
+    amount: number;
+    currency: string;
+    name: string;
+    description: string;
+    orderId: string;
+    email: string;
+    contact: string;
+    themeColor: string;
+  }) => Promise<{
+    razorpay_payment_id: string;
+    razorpay_order_id: string;
+    razorpay_signature: string;
+  }>;
+};
+
+const NativeRazorpay = registerPlugin<NativeRazorpayPlugin>('NativeRazorpay');
 
 declare global {
   interface Window {
@@ -89,6 +109,29 @@ export async function openRazorpayCheckout(orderNumber: string): Promise<VerifyR
   if (createError) throw new Error(await edgeErrorMessage(createError));
   if (!createData?.razorpayOrderId || !createData.keyId || !createData.amount) {
     throw new Error('Razorpay did not return a valid checkout order.');
+  }
+
+  if (Capacitor.isNativePlatform()) {
+    const nativeResponse = await NativeRazorpay.openCheckout({
+      key: createData.keyId,
+      amount: createData.amount,
+      currency: createData.currency,
+      name: 'Rofik Godi Centre',
+      description: `Pickup order #${createData.orderNumber}`,
+      orderId: createData.razorpayOrderId,
+      email: createData.prefill.email,
+      contact: createData.prefill.contact,
+      themeColor: '#D9232D',
+    });
+    const { data, error } = await client.functions.invoke<VerifyResponse>(
+      'verify-razorpay-payment',
+      { body: { ...nativeResponse, orderNumber: createData.orderNumber } },
+    );
+    if (error) throw new Error(await edgeErrorMessage(error));
+    if (!data?.verified || data.paymentStatus !== 'paid') {
+      throw new Error('Payment could not be confirmed yet. Check My Orders before retrying.');
+    }
+    return data;
   }
 
   await loadCheckoutScript();
