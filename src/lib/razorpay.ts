@@ -25,6 +25,18 @@ type RazorpayOptions = {
   order_id: string;
   prefill: { name: string; email: string; contact: string };
   theme: { color: string };
+  config: {
+    display: {
+      blocks: {
+        all_methods: {
+          name: string;
+          instruments: Array<{ method: 'upi' | 'card' | 'netbanking' | 'wallet' }>;
+        };
+      };
+      sequence: string[];
+      preferences: { show_default_blocks: boolean };
+    };
+  };
   handler: (response: RazorpaySuccess) => void | Promise<void>;
   modal: { ondismiss: () => void };
 };
@@ -110,6 +122,23 @@ export async function openRazorpayCheckout(orderNumber: string): Promise<VerifyR
       order_id: createData.razorpayOrderId,
       prefill: createData.prefill,
       theme: { color: '#D9232D' },
+      config: {
+        display: {
+          blocks: {
+            all_methods: {
+              name: 'All payment options',
+              instruments: [
+                { method: 'upi' },
+                { method: 'card' },
+                { method: 'netbanking' },
+                { method: 'wallet' },
+              ],
+            },
+          },
+          sequence: ['block.all_methods'],
+          preferences: { show_default_blocks: false },
+        },
+      },
       handler: async (response) => {
         const { data, error } = await client.functions.invoke<VerifyResponse>(
           'verify-razorpay-payment',
