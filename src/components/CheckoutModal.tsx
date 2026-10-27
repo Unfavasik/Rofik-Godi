@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { VEHICLE_BRANDS, WORKSHOP_INFO } from '../data/products';
 import { CartItem, OrderDetails } from '../types';
-import { createSupabaseOrder } from '../lib/supabaseOrders';
+import { cancelUnpaidOnlineOrder, createSupabaseOrder } from '../lib/supabaseOrders';
 import { openRazorpayCheckout } from '../lib/razorpay';
 import { supabase } from '../lib/supabase';
 import { validateProfileName } from '../lib/profileValidation';
@@ -158,6 +158,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     if (!pickupDate || !pickupTime) { setSubmissionError(''); showToast(t('checkout.errorPickup')); setStep(1); return; }
     submitLockRef.current = true;
     setPhoneError(''); setIsProcessing(true);
+    let savedOrder: OrderDetails | null = pendingOnlineOrder;
     try {
       const { data: authData, error: authError } = await supabase!.auth.getUser();
       if (authError || !authData.user || authData.user.id !== userId) throw new Error(t('checkout.errorSessionChanged'));
@@ -170,7 +171,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         paymentMethod, paymentStatus: 'pending', fulfillmentMethod: 'STORE_PICKUP', pickupStore: WORKSHOP_INFO.name,
         status: 'NEW', createdAt: new Date().toISOString(),
       };
-      let savedOrder = pendingOnlineOrder;
       if (!savedOrder) {
         const persisted = await createSupabaseOrder(order, userId, couponCode);
         if (persisted.error || !persisted.order) throw new Error(persisted.error?.message || 'Unable to save your order. Please try again.');
@@ -185,6 +185,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setPlacedOrder(savedOrder); setStep(3); onClearCart(); onOrderPlaced();
       confetti({ particleCount: 70, spread: 58, origin: { y: 0.65 }, colors: ['#D9232D', '#111827', '#EAB308', '#059669'] });
     } catch (error) {
+      if (paymentMethod === 'pay_online' && savedOrder?.orderId && savedOrder.paymentStatus !== 'paid') {
+        await cancelUnpaidOnlineOrder(savedOrder.orderId).catch(() => undefined);
+        setPendingOnlineOrder(null);
+      }
       setSubmissionError(error instanceof Error ? error.message : 'Unable to save your order. Please try again.');
     } finally { submitLockRef.current = false; setIsProcessing(false); }
   };

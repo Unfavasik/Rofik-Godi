@@ -124,6 +124,22 @@ export async function cancelMyOrder(orderNumber: string, reason = '') {
   };
 }
 
+/** Close an order created only to start an online payment when that payment is dismissed or fails. */
+export async function cancelUnpaidOnlineOrder(orderNumber: string) {
+  if (!supabase) return { data: null, error: new Error('Service configuration unavailable. Please try again.') };
+  const normalizedOrderNumber = orderNumber.trim();
+  if (!normalizedOrderNumber) return { data: null, error: new Error('A valid order number is required.') };
+  const { data, error } = await supabase.rpc('cancel_unpaid_online_order', {
+    p_order_number: normalizedOrderNumber,
+  });
+  if (error) return { data: null, error: new Error(error.message || 'This payment attempt could not be closed.') };
+  const result = (Array.isArray(data) ? data[0] : data) as { order_number?: unknown; status?: unknown } | null;
+  if (!result || result.order_number !== normalizedOrderNumber || result.status !== 'CANCELLED') {
+    return { data: null, error: new Error('The payment cancellation service did not confirm this order.') };
+  }
+  return { data: { order_number: normalizedOrderNumber, status: 'CANCELLED' as const }, error: null };
+}
+
 export async function listMyOrders(expectedUserId: string): Promise<CustomerOrderRecord[]> {
   if (!supabase) return [];
   const { data: userData, error: authError } = await supabase.auth.getUser();
