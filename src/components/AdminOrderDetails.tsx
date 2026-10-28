@@ -223,7 +223,7 @@ export function AdminOrderDetails({
       <section aria-label="Order information" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <InformationCard icon={UserRound} label="Customer" value={order.customer || '—'} />
         <InformationCard icon={Phone} label="Phone" value={order.phone || '—'} />
-        <InformationCard icon={CarFront} label="Vehicle" value={order.vehicleModel || '—'} />
+        <VehicleInformationCard order={order} />
         <InformationCard icon={Store} label="Pickup store" value={order.pickupStore || '—'} />
         <InformationCard icon={IndianRupee} label="Total amount" value={money(order.amount)} strong />
         <InformationCard icon={CreditCard} label="Payment status" value={order.paymentStatus || 'PENDING'} />
@@ -452,6 +452,27 @@ function InformationCard({ icon: Icon, label, value, strong = false }: { icon: R
     <article className="min-w-0 rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4">
       <div className="flex items-center gap-2 text-slate-400"><Icon className="h-3.5 w-3.5 shrink-0" /><p className="text-[10px] font-bold uppercase tracking-[0.08em]">{label}</p></div>
       <p className={`mt-2 break-words text-xs leading-snug ${strong ? 'text-base font-black text-[#0F172A]' : 'font-bold text-slate-800'}`}>{value}</p>
+    </article>
+  );
+}
+
+function VehicleInformationCard({ order }: { order: AdminOrderRecord }) {
+  const vehicleLabel = order.vehicleModel || 'Vehicle not specified';
+  return (
+    <article aria-label="Vehicle" className="min-w-0 rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4">
+      <div className="flex items-center gap-2 text-slate-400"><CarFront className="h-3.5 w-3.5 shrink-0" /><p className="text-[10px] font-bold uppercase tracking-[0.08em]">Vehicle</p></div>
+      <div className="mt-2 flex items-center gap-3">
+        {order.vehicleImage ? (
+          <img src={order.vehicleImage} alt={`${order.vehicleCompany || 'Vehicle'} ${vehicleLabel}`} className="h-14 w-20 shrink-0 rounded-lg bg-slate-50 object-contain p-1" />
+        ) : (
+          <span className="grid h-14 w-20 shrink-0 place-items-center rounded-lg bg-slate-50 text-slate-300"><CarFront className="h-6 w-6" /></span>
+        )}
+        <div className="min-w-0">
+          <p className="truncate text-[10px] font-bold uppercase tracking-wide text-slate-400">{order.vehicleType || 'Vehicle'}</p>
+          {order.vehicleCompany && <p className="truncate text-xs font-extrabold text-slate-600">{order.vehicleCompany}</p>}
+          <p className="break-words text-sm font-black leading-snug text-slate-900">{vehicleLabel}</p>
+        </div>
+      </div>
     </article>
   );
 }

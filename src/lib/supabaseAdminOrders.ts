@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 import type { CustomerOrderRecord } from '../types';
 
 const missingOrderOptionColumns = (error: { message?: string } | null) => Boolean(error && /selected_thickness|selected_stitch|custom_embroidery_text/i.test(error.message || ''));
+const missingVehicleSnapshotColumns = (error: { message?: string } | null) => Boolean(error && /vehicle_type|vehicle_company|vehicle_image_url/i.test(error.message || ''));
 
 export type AdminOrderRecord = {
   id: string;
@@ -26,7 +27,10 @@ export type AdminOrderRecord = {
     | 'CANCELLED';
   date: string;
   channel: string;
+  vehicleType?: string;
+  vehicleCompany?: string;
   vehicleModel: string;
+  vehicleImage?: string;
   pickupStore: string;
   pickupNote: string;
   pickedUpAt: string | null;
@@ -122,16 +126,16 @@ export async function loadAdminOrders(orderId?: string, matchOrderNumber = false
   let response = orderId
     ? await supabase
         .from('orders')
-        .select('id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price,selected_thickness,selected_stitch,custom_embroidery_text),order_status_history(id,from_status,to_status,note,created_at)')
+        .select('id,user_id,order_number,customer_name,customer_phone,vehicle_type,vehicle_company,vehicle_model,vehicle_image_url,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price,selected_thickness,selected_stitch,custom_embroidery_text),order_status_history(id,from_status,to_status,note,created_at)')
         .eq(matchOrderNumber ? 'order_number' : 'id', orderId)
         .order('created_at', { ascending: false })
         .limit(1)
     : await supabase
         .from('orders')
-        .select('id,user_id,order_number,customer_name,customer_phone,vehicle_model,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price,selected_thickness,selected_stitch,custom_embroidery_text),order_status_history(id,from_status,to_status,note,created_at)')
+        .select('id,user_id,order_number,customer_name,customer_phone,vehicle_type,vehicle_company,vehicle_model,vehicle_image_url,subtotal,discount,total,payment_method,payment_status,fulfillment_method,pickup_store,pickup_note,picked_up_at,completed_at,status,created_at,order_items(product_id,product_name,color,quantity,unit_price,selected_thickness,selected_stitch,custom_embroidery_text),order_status_history(id,from_status,to_status,note,created_at)')
         .order('created_at', { ascending: false })
         .limit(100);
-  if (missingOrderOptionColumns(response.error)) {
+  if (missingOrderOptionColumns(response.error) || missingVehicleSnapshotColumns(response.error)) {
     response = orderId
       ? await (supabase
           .from('orders')
@@ -209,7 +213,10 @@ export async function loadAdminOrders(orderId?: string, matchOrderNumber = false
           minute: '2-digit',
         }),
         channel: String(row.fulfillment_method || 'STORE_PICKUP'),
+        vehicleType: String(row.vehicle_type || ''),
+        vehicleCompany: String(row.vehicle_company || ''),
         vehicleModel: String(row.vehicle_model || ''),
+        vehicleImage: String(row.vehicle_image_url || ''),
         pickupStore: String(row.pickup_store || ''),
         pickupNote: String(row.pickup_note || ''),
         pickedUpAt: row.picked_up_at ? String(row.picked_up_at) : null,
@@ -256,6 +263,9 @@ export function toCustomerOrderRecord(order: AdminOrderRecord): CustomerOrderRec
     discount: order.discount,
     total: order.amount,
     vehicle_model: order.vehicleModel || null,
+    ...(order.vehicleType ? { vehicle_type: order.vehicleType } : {}),
+    ...(order.vehicleCompany ? { vehicle_company: order.vehicleCompany } : {}),
+    ...(order.vehicleImage ? { vehicle_image_url: order.vehicleImage } : {}),
     fulfillment_method: order.channel,
     pickup_store: order.pickupStore,
     created_at: order.createdAt,

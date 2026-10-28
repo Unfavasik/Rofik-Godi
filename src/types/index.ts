@@ -78,7 +78,10 @@ export interface OrderDetails {
   total: number;
   customerName: string;
   phone: string;
+  vehicleType?: string;
+  vehicleCompany?: string;
   vehicleModel: string;
+  vehicleImage?: string;
   note?: string;
   paymentMethod: 'pay_at_store' | 'pay_online';
   paymentStatus: 'pending' | 'paid' | 'failed';
@@ -101,7 +104,10 @@ export interface CustomerOrderRecord {
   subtotal: number;
   discount: number;
   total: number;
+  vehicle_type?: string | null;
+  vehicle_company?: string | null;
   vehicle_model: string | null;
+  vehicle_image_url?: string | null;
   fulfillment_method: string;
   pickup_store: string;
   pickup_note?: string | null;

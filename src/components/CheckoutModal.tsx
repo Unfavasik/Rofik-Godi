@@ -201,7 +201,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       const pickupNote = [`Pickup requested: ${pickupLabel}`, note.trim()].filter(Boolean).join(' · ');
       const order: OrderDetails = {
         orderId: '', items: [...items], subtotal, discount, total, customerName: customerName.trim(), phone: phoneResult.e164!,
-        vehicleModel: vehicleValue, note: pickupNote,
+        vehicleType, vehicleCompany: vehicleCompany.trim(), vehicleModel: vehicleValue, vehicleImage: selectedFitment?.image || '', note: pickupNote,
         paymentMethod, paymentStatus: 'pending', fulfillmentMethod: 'STORE_PICKUP', pickupStore: WORKSHOP_INFO.name,
         status: 'NEW', createdAt: new Date().toISOString(),
       };

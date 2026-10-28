@@ -20,7 +20,10 @@ const order: AdminOrderRecord = {
   status: 'PICKED_UP',
   date: '5 Oct 2026, 3:30 pm',
   channel: 'STORE_PICKUP',
+  vehicleType: 'Bike',
+  vehicleCompany: 'Hero MotoCorp',
   vehicleModel: '8eiu3u3u3u3u',
+  vehicleImage: '/vehicle-models/hero-hf-deluxe.webp',
   pickupStore: 'ROFIK GODI CENTRE',
   pickupNote: 'Call before arrival.',
   pickedUpAt: '2026-10-05T10:00:00Z',
@@ -39,7 +42,7 @@ const renderDetails = (record: AdminOrderRecord) => renderToStaticMarkup(
 describe('admin order details drawer', () => {
   it('renders the responsive detail navigation, real order data, product and payment summary', () => {
     const html = renderDetails(order);
-    for (const label of ['Order Details', order.id, 'Overview', 'Products', 'Timeline', 'Notes', 'Customer', order.customer, order.phone, order.vehicleModel, order.pickupStore, '₹597', 'Seat cover', 'Payment summary']) {
+    for (const label of ['Order Details', order.id, 'Overview', 'Products', 'Timeline', 'Notes', 'Customer', order.customer, order.phone, order.vehicleCompany, order.vehicleModel, order.vehicleImage, order.pickupStore, '₹597', 'Seat cover', 'Payment summary']) {
       expect(html).toContain(label);
     }
     expect(html).toContain('Order has been picked up');
