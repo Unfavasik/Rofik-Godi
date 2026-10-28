@@ -154,16 +154,6 @@ begin
       'selected_thickness', v_thickness_label, 'selected_stitch', v_stitch,
       'custom_embroidery_text', nullif(v_embroidery_text, ''), 'unit_price', v_item_unit_price
     ));
-    if v_product.stock_quantity > 0 then
-      if v_product.stock_quantity - v_product.reserved_quantity < v_quantity then
-        raise exception 'Insufficient stock for %', v_product.name;
-      end if;
-      update public.products p
-         set stock_quantity = p.stock_quantity - v_quantity,
-             in_stock = (p.stock_quantity - v_quantity) > 0,
-             updated_at = now()
-       where p.id = v_product.id;
-    end if;
   end loop;
 
   if p_coupon_code is not null and length(trim(p_coupon_code)) > 0 then

@@ -41,11 +41,6 @@ alter table public.payments enable row level security;
 create policy "payments_customer_read" on public.payments for select to authenticated using (exists (select 1 from public.orders o where o.id = order_id and o.user_id = auth.uid()));
 create policy "payments_admin_all" on public.payments for all to authenticated using (public.is_admin()) with check (public.is_admin());
 
-alter table public.products add column if not exists stock_quantity integer not null default 0 check (stock_quantity >= 0);
-alter table public.products add column if not exists reserved_quantity integer not null default 0 check (reserved_quantity >= 0);
-alter table public.products add column if not exists low_stock_threshold integer not null default 5 check (low_stock_threshold >= 0);
-create index if not exists products_inventory_idx on public.products (stock_quantity, low_stock_threshold);
-
 create table if not exists public.reviews (id uuid primary key default gen_random_uuid(), product_id uuid not null references public.products(id) on delete cascade, user_id uuid references auth.users(id) on delete set null, author_name text not null, rating integer not null check (rating between 1 and 5), body text not null, status text not null default 'pending' check (status in ('pending','published','rejected')), verified_purchase boolean not null default false, admin_reply text, created_at timestamptz not null default now(), updated_at timestamptz not null default now());
 alter table public.reviews enable row level security;
 create index if not exists reviews_product_status_idx on public.reviews (product_id, status, created_at desc);

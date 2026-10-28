@@ -17,14 +17,9 @@ const renderDetails = (product: Product) => renderToStaticMarkup(
   />,
 );
 
-describe('product-detail stock awareness', () => {
-  it('shows the existing low-stock count and threshold result', () => {
-    const html = renderDetails({ ...PRODUCTS[0]!, stockQuantity: 2, lowStockThreshold: 5 });
-    expect(html).toContain('Only 2 left');
-  });
-
+describe('product availability awareness', () => {
   it('replaces purchase actions with Notify me when out of stock', () => {
-    const html = renderDetails({ ...PRODUCTS[0]!, inStock: false, stockQuantity: 0 });
+    const html = renderDetails({ ...PRODUCTS[0]!, inStock: false });
     expect(html).toContain('Out of stock');
     expect(html).toContain('Notify me when this product is back in stock');
     expect(html).toContain('>Notify me</button>');

@@ -249,7 +249,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 <span className="text-[15px] text-slate-400 line-through">₹{displayOriginalPrice}</span>
                 <span className="rounded-md bg-rose-50 px-2 py-1 text-[10px] font-extrabold text-[#d9232d]">{discount}% OFF</span>
               </div>
-              <p role="status" className={`mt-2 text-[11px] font-bold ${availability.state === 'out-of-stock' ? 'text-amber-700' : availability.state === 'low-stock' ? 'text-orange-700' : 'text-emerald-700'}`}>{availability.label}</p>
+              <p role="status" className={`mt-2 text-[11px] font-bold ${availability.state === 'out-of-stock' ? 'text-amber-700' : 'text-emerald-700'}`}>{availability.label}</p>
               <div className="mt-4 grid grid-cols-3 gap-2">
                 {[['Premium Quality', ShieldCheck], ['Waterproof', Droplets], ['Long Lasting', Clock3]].map(([label, Icon]) => (
                   <div key={label as string} className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-100 bg-white px-2 py-2 text-center text-[10px] font-semibold text-slate-700 shadow-[0_2px_8px_rgba(15,23,42,.03)]">
@@ -420,7 +420,7 @@ const SuggestionCard: React.FC<{ product: Product; isInCart: boolean; onAdd: () 
       <div className="p-2.5">
         <button type="button" onClick={onSelect} className="block text-left text-[12px] font-bold break-words">{product.title}</button>
         <p className="mt-0.5 text-[10px] text-slate-500 break-words">{product.subtitle}</p>
-        <p className={`mt-1 text-[10px] font-bold ${availability.state === 'out-of-stock' ? 'text-amber-700' : availability.state === 'low-stock' ? 'text-orange-700' : 'text-emerald-700'}`}>{availability.label}</p>
+        <p className={`mt-1 text-[10px] font-bold ${availability.state === 'out-of-stock' ? 'text-amber-700' : 'text-emerald-700'}`}>{availability.label}</p>
         <div className="mt-2 flex items-center justify-between gap-1">
           <span className="text-[16px] font-extrabold">₹{product.price} <small className="text-[9px] font-normal text-slate-400 line-through">₹{product.originalPrice}</small></span>
           <button type="button" disabled={!product.inStock && !isInCart && (!onNotifyMe || notifySubmitting)} onClick={() => { if (isInCart) onOpenCart?.(); else if (product.inStock) onAdd(); else void handleNotifyMe(); }} aria-label={isInCart ? 'Go to Cart' : product.inStock ? `Add ${product.title} to cart` : 'Notify me when in stock'} title={isInCart ? 'Go to Cart' : product.inStock ? 'Add to cart' : 'Notify me'} className={`grid min-h-11 ${!product.inStock && !isInCart ? 'min-w-[74px] px-2 text-[9px] font-extrabold' : 'min-w-11'} place-items-center rounded-xl text-white ${isInCart ? 'bg-emerald-600' : 'bg-[#d9232d]'}`}>{isInCart ? <ShoppingCart className="h-4 w-4" /> : product.inStock ? <Plus className="h-4 w-4" /> : notifySubmitting ? 'Wait…' : 'Notify me'}</button>

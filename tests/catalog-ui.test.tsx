@@ -143,11 +143,6 @@ describe('catalog feedback', () => {
     expect(html).not.toContain('disabled=""');
   });
 
-  it('shows a low-stock count from the live inventory fields', () => {
-    const html = renderCard({ ...sampleProduct, stockQuantity: 3, lowStockThreshold: 5 });
-    expect(html).toContain('Only 3 left');
-  });
-
   it('shows a loading status while the catalog request is pending', () => {
     const html = renderShop({ isLoading: true });
     expect(html).toContain('Loading products…');

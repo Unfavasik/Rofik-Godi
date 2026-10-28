@@ -17,13 +17,12 @@ describe('Supabase catalog mapping', () => {
     expect(product.image).toContain('cover.webp');
   });
 
-  it('maps existing stock quantity and low-stock threshold fields', () => {
+  it('maps a normal product row without inventory metadata', () => {
     const product = mapSupabaseProduct({
-      id: 'product-4', name: 'Low stock cover', category: 'Bike Covers', price: 500,
-      in_stock: true, stock_quantity: 3, low_stock_threshold: 5,
+      id: 'product-4', name: 'Seat cover', category: 'Bike Covers', price: 500,
+      in_stock: true,
     });
-    expect(product.stockQuantity).toBe(3);
-    expect(product.lowStockThreshold).toBe(5);
+    expect(product.inStock).toBe(true);
   });
 
   it('maps the administrator-defined storefront order', () => {

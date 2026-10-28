@@ -4,7 +4,6 @@ import { formatInr, translate } from '../src/lib/i18n';
 describe('lightweight customer i18n', () => {
   it('translates supported customer text into natural Bangla', () => {
     expect(translate('bn', 'nav.home')).toBe('হোম');
-    expect(translate('bn', 'product.onlyLeft', { count: 3 })).toBe('মাত্র 3টি বাকি');
   });
 
   it('uses English as the Hindi and unknown-language fallback', () => {

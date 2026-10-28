@@ -29,8 +29,6 @@ export interface Product {
   isWaterproof?: boolean;
   isCustomizable?: boolean;
   inStock: boolean;
-  stockQuantity?: number;
-  lowStockThreshold?: number;
   materials: string[];
   colors: { name: string; hex: string; bgClass: string }[];
   stitchPatterns: string[];

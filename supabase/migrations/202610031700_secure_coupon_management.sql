@@ -717,14 +717,6 @@ begin
     if v_quantity > 99 then raise exception 'Item quantity exceeds the allowed limit'; end if;
     select * into v_product from public.products p where p.id = v_product_id and p.is_active = true for update;
     if not found or not v_product.in_stock then raise exception 'A selected product is no longer available'; end if;
-    if v_product.stock_quantity > 0 then
-      if v_product.stock_quantity - v_product.reserved_quantity < v_quantity then raise exception 'Insufficient stock for %', v_product.name; end if;
-      update public.products p
-         set stock_quantity = p.stock_quantity - v_quantity,
-             in_stock = (p.stock_quantity - v_quantity) > 0,
-             updated_at = now()
-       where p.id = v_product.id;
-    end if;
     v_subtotal := v_subtotal + (v_product.price * v_quantity);
   end loop;
 

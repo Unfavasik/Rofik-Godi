@@ -94,10 +94,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const { t } = useI18n();
   const availability = getProductAvailability(product);
-  const availabilityLabel = availability.state === 'low-stock'
-    ? t('product.onlyLeft', { count: product.stockQuantity ?? 0 })
-    : availability.state === 'out-of-stock' ? t('product.outOfStock') : t('product.inStock');
-  const availabilityClass = availability.state === 'out-of-stock' ? 'text-amber-700' : availability.state === 'low-stock' ? 'text-orange-700' : 'text-emerald-700';
+  const availabilityLabel = availability.state === 'out-of-stock' ? t('product.outOfStock') : t('product.inStock');
+  const availabilityClass = availability.state === 'out-of-stock' ? 'text-amber-700' : 'text-emerald-700';
   const [notifySubmitting, setNotifySubmitting] = useState(false);
   const notifyRequestLock = useRef(false);
   const handleNotifyMe = async (event: React.MouseEvent) => {

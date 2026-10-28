@@ -1,6 +1,4 @@
 -- Secure, account-scoped store-pickup order creation.
--- Existing catalog rows with stock_quantity = 0 and in_stock = true are treated as
--- legacy/untracked stock; positive quantities are checked and decremented atomically.
 
 alter table public.orders alter column status set default 'NEW';
 
@@ -170,9 +168,7 @@ begin
     raise exception 'An order must contain between 1 and 50 items';
   end if;
 
-  -- Prices and product names come only from the locked database rows. Positive
-  -- stock counts are decremented atomically; zero is the existing legacy
-  -- untracked-inventory sentinel, governed by products.in_stock.
+  -- Prices and product names come only from the locked database rows.
   for v_item in select value from jsonb_array_elements(p_items) as input_items(value)
   loop
     v_item_count := v_item_count + 1;
@@ -194,16 +190,6 @@ begin
       for update;
     if not found or not v_product.in_stock then
       raise exception 'A selected product is no longer available';
-    end if;
-    if v_product.stock_quantity > 0 then
-      if v_product.stock_quantity - v_product.reserved_quantity < v_quantity then
-        raise exception 'Insufficient stock for %', v_product.name;
-      end if;
-      update public.products p
-         set stock_quantity = p.stock_quantity - v_quantity,
-             in_stock = (p.stock_quantity - v_quantity) > 0,
-             updated_at = now()
-       where p.id = v_product.id;
     end if;
     v_subtotal := v_subtotal + (v_product.price * v_quantity);
   end loop;
