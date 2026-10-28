@@ -112,7 +112,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
   return (
     <section className="px-5 mb-6" data-purpose="promotional-banner">
-      <div className="relative overflow-hidden rounded-[26px] bg-gradient-to-br from-[#121213] via-[#0E0F12] to-[#08080A] text-white p-5 pt-6 shadow-xl border border-neutral-800/60 min-h-[220px]">
+      <div className="relative min-h-[260px] overflow-hidden rounded-[26px] bg-gradient-to-br from-[#121213] via-[#0E0F12] to-[#08080A] p-5 pt-6 text-white shadow-xl border border-neutral-800/60">
         {/* Ambient red glow background effect */}
         <div className="absolute -right-8 -top-10 w-56 h-56 bg-[#D9232D]/25 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute right-10 bottom-0 w-44 h-44 bg-[#D9232D]/35 rounded-full blur-2xl pointer-events-none" />
@@ -125,7 +125,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -12 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="absolute right-0 top-0 bottom-7 w-[48%] flex items-center justify-center pointer-events-none z-0"
+            className="absolute right-0 top-16 bottom-10 w-[40%] flex items-center justify-center pointer-events-none z-0"
           >
             {slide.image && (
               <img
@@ -140,7 +140,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
         </AnimatePresence>
 
         {/* Banner Content */}
-        <div className="relative z-10 w-2/3 pr-2 flex flex-col justify-between h-full">
+        <div className="relative z-10 flex min-h-[204px] w-[58%] flex-col justify-between pr-1">
           <div>
             {/* Overline Tag */}
             <div className="flex items-center space-x-1.5 mb-1.5">
@@ -154,12 +154,12 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
             </div>
 
             {/* Headline */}
-            <h2 className="text-[25px] font-black leading-[1.08] tracking-tight mb-2 text-white">
+            <h2 className="mb-2 text-[clamp(22px,7vw,28px)] font-black leading-[1.08] tracking-tight text-white">
               {slide.headline}
             </h2>
 
             {/* Subtext description */}
-            <p className="text-[11.5px] leading-relaxed text-gray-300 font-normal mb-4 max-w-[200px]">
+            <p className="mb-4 max-w-full text-[11.5px] font-normal leading-relaxed text-gray-300">
               {slide.subtext}
             </p>
           </div>
@@ -169,7 +169,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
             <motion.button
               whileTap={{ scale: 0.96 }}
               onClick={slide.ctaAction}
-              className="inline-flex items-center space-x-1.5 bg-[#D9232D] hover:bg-[#BF1B24] text-white text-[12px] font-bold px-4 py-2 rounded-full shadow-md transition-all active:scale-95"
+              className="inline-flex max-w-full items-center space-x-1.5 whitespace-nowrap rounded-full bg-[#D9232D] px-3 py-2 text-[11px] font-bold text-white shadow-md transition-all hover:bg-[#BF1B24] active:scale-95 sm:px-4 sm:text-[12px]"
             >
               <span>{slide.ctaText}</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -178,7 +178,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
         </div>
 
         {/* Carousel Indicators Dots */}
-        <div className="relative z-10 flex items-center justify-center space-x-1.5 mt-5">
+        <div className="relative z-10 mt-5 flex items-center justify-center space-x-1.5">
           {slides.map((s, idx) => (
             <button
               key={s.id}

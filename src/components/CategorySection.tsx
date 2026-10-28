@@ -86,10 +86,10 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
                 isActive ? cat.activeBgClass : cat.bgClass
               }`}
             >
-              <div className="h-10 sm:h-12 w-full flex items-center justify-center mb-1">
+              <div className="mb-1 flex h-14 w-full items-center justify-center sm:h-16">
                 {cat.isEmoji ? (
-                  <div className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center">
-                    <span className="text-xl sm:text-2xl filter drop-shadow-xs group-hover:scale-110 transition-transform">
+                  <div className="relative flex h-12 w-12 items-center justify-center sm:h-14 sm:w-14">
+                    <span className="text-3xl transition-transform filter drop-shadow-xs group-hover:scale-110 sm:text-4xl">
                       {cat.emoji}
                     </span>
                   </div>
@@ -97,7 +97,7 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
                   <img
                     src={cat.image}
                     alt={t(cat.titleKey)}
-                    className="h-8 w-8 sm:h-10 sm:w-10 object-contain rounded-lg drop-shadow-xs group-hover:scale-105 transition-transform"
+                    className="h-12 w-12 object-contain rounded-lg drop-shadow-xs transition-transform group-hover:scale-105 sm:h-14 sm:w-14"
                     loading="lazy"
                   />
                 )}
