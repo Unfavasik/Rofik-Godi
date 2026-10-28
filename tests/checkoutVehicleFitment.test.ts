@@ -3,6 +3,7 @@ import {
   getCheckoutVehicleCompanies,
   getCheckoutVehicleModels,
   parseVehicleFitmentValue,
+  resolveVehicleFitment,
 } from '../src/lib/checkoutVehicleFitment';
 
 describe('checkout vehicle fitment options', () => {
@@ -58,6 +59,14 @@ describe('checkout vehicle fitment options', () => {
     expect(parseVehicleFitmentValue('My custom ride')).toMatchObject({
       type: 'Other',
       manualValue: 'My custom ride',
+    });
+  });
+
+  it('resolves the existing catalog image without creating a new image copy', () => {
+    expect(resolveVehicleFitment('Bike · Bajaj Platina 100')).toMatchObject({
+      company: 'Bajaj Auto',
+      model: 'Bajaj Platina 100',
+      image: '/vehicle-models/bajaj-platina-100.webp',
     });
   });
 });

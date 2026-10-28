@@ -12,6 +12,10 @@ export interface ParsedVehicleFitment {
   manualValue: string;
 }
 
+export interface ResolvedVehicleFitment extends ParsedVehicleFitment {
+  image: string;
+}
+
 const checkoutVehicleTypes: CheckoutVehicleType[] = ['Bike', 'Scooter', 'Car', 'Toto / E-rickshaw', 'Other'];
 
 export function getCheckoutVehicleCompanies(type: CheckoutVehicleType): string[] {
@@ -98,4 +102,13 @@ export function parseVehicleFitmentValue(value: string): ParsedVehicleFitment {
   }
 
   return { type: 'Other', company: '', model: '', manualValue: original };
+}
+
+/** Resolve the existing catalog asset; this returns a path reference, not a new upload. */
+export function resolveVehicleFitment(value: string): ResolvedVehicleFitment {
+  const parsed = parseVehicleFitmentValue(value);
+  const catalogModel = VEHICLE_MODELS.find(
+    (model) => model.brand.toLowerCase() === parsed.company.toLowerCase() && model.name.toLowerCase() === parsed.model.toLowerCase(),
+  );
+  return { ...parsed, image: catalogModel?.image || '' };
 }

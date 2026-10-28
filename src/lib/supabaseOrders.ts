@@ -51,7 +51,6 @@ export async function createSupabaseOrder(order: OrderDetails, expectedUserId: s
     p_vehicle_type: order.vehicleType || null,
     p_vehicle_company: order.vehicleCompany || null,
     p_vehicle_model: order.vehicleModel,
-    p_vehicle_image_url: order.vehicleImage || null,
     p_note: order.note || null,
     p_payment_method: order.paymentMethod === 'pay_at_store' ? 'PAY_AT_STORE' : 'PAY_ONLINE',
     p_coupon_code: couponCode.trim().toUpperCase() || null,

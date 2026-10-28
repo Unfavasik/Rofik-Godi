@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import type { CustomerOrderRecord } from '../types';
+import { resolveVehicleFitment } from './checkoutVehicleFitment';
 
 const missingOrderOptionColumns = (error: { message?: string } | null) => Boolean(error && /selected_thickness|selected_stitch|custom_embroidery_text/i.test(error.message || ''));
 const missingVehicleSnapshotColumns = (error: { message?: string } | null) => Boolean(error && /vehicle_type|vehicle_company|vehicle_image_url/i.test(error.message || ''));
@@ -187,6 +188,7 @@ export async function loadAdminOrders(orderId?: string, matchOrderNumber = false
             created_at: String(event.created_at || ''),
           }))
         : [];
+      const vehicleFitment = resolveVehicleFitment(String(row.vehicle_model || ''));
       return {
         id: `#${row.order_number}`,
         userId: String(row.user_id || ''),
@@ -213,10 +215,10 @@ export async function loadAdminOrders(orderId?: string, matchOrderNumber = false
           minute: '2-digit',
         }),
         channel: String(row.fulfillment_method || 'STORE_PICKUP'),
-        vehicleType: String(row.vehicle_type || ''),
-        vehicleCompany: String(row.vehicle_company || ''),
+        vehicleType: String(row.vehicle_type || vehicleFitment.type || ''),
+        vehicleCompany: String(row.vehicle_company || vehicleFitment.company || ''),
         vehicleModel: String(row.vehicle_model || ''),
-        vehicleImage: String(row.vehicle_image_url || ''),
+        vehicleImage: String(row.vehicle_image_url || vehicleFitment.image || ''),
         pickupStore: String(row.pickup_store || ''),
         pickupNote: String(row.pickup_note || ''),
         pickedUpAt: row.picked_up_at ? String(row.picked_up_at) : null,
