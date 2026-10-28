@@ -288,6 +288,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <span>{t('checkout.vehicleModel')}</span>
                       {!vehicleCompany ? (
                         <p className="mt-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3.5 py-4 text-xs font-medium text-slate-400">{t('checkout.chooseCompany')}</p>
+                      ) : selectedFitment ? (
+                        <div className="mt-1.5 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-2.5">
+                          <span className="h-[76px] w-[38%] shrink-0 overflow-hidden rounded-xl bg-white">{selectedFitment.image ? <img src={selectedFitment.image} alt="" className="h-full w-full object-contain" /> : <span className="grid h-full place-items-center text-slate-300"><Truck className="h-8 w-8" /></span>}</span>
+                          <span className="min-w-0 flex-1"><span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-[9px] font-extrabold uppercase tracking-wide text-emerald-800"><Check className="h-3 w-3" />{t('checkout.selectedVehicle')}</span><span className="mt-1 block truncate text-[10px] font-semibold text-slate-500">{selectedFitment.brand}</span><span className="mt-0.5 block break-words text-sm font-black leading-snug text-slate-900">{selectedFitment.name}</span></span>
+                          <button type="button" onClick={() => setVehicleModel('')} className="min-h-11 shrink-0 rounded-xl bg-white px-3 text-[10px] font-extrabold text-[#D9232D] shadow-sm ring-1 ring-emerald-100">{t('checkout.changeModel')}</button>
+                        </div>
                       ) : (
                         <div role="radiogroup" aria-label={t('checkout.vehicleModel')} className="no-scrollbar mt-1.5 max-h-[min(42vh,360px)] space-y-2 overflow-y-auto rounded-2xl">
                           {vehicleModelOptions.map((model) => {
@@ -310,12 +316,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     <label className="block text-[11px] font-bold text-slate-600">{t('checkout.vehicleModel')}
                       <input value={vehicleModel} onChange={(event) => setVehicleModel(event.target.value)} maxLength={60} placeholder={t('checkout.exampleModel')} className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#D9232D] focus:ring-4 focus:ring-red-100" />
                     </label>
-                  </div>
-                )}
-                {selectedFitment?.image && (
-                  <div className="flex items-center gap-3 overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/70 p-2.5">
-                    <div className="h-[72px] w-32 shrink-0 overflow-hidden rounded-xl bg-white"><img src={selectedFitment.image} alt={selectedFitment.name} className="h-full w-full scale-110 object-contain" /></div>
-                    <div className="min-w-0 flex-1"><span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-emerald-800"><Check className="h-3 w-3" />{t('checkout.selectedVehicle')}</span><p className="mt-1 truncate text-[10px] font-semibold text-slate-500">{selectedFitment.brand}</p><p className="break-words text-xs font-black leading-snug text-slate-900">{selectedFitment.name}</p></div>
                   </div>
                 )}
                 {hasSavedVehicle && <button type="button" onClick={() => setEditingVehicle(false)} className="min-h-9 text-[10px] font-bold text-slate-500 underline decoration-slate-300 underline-offset-4">{t('checkout.keepVehicle')}</button>}
