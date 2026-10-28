@@ -7,6 +7,12 @@ import {
   UserRound, X,
 } from 'lucide-react';
 import { VEHICLE_BRANDS, WORKSHOP_INFO } from '../data/products';
+import { VEHICLE_MODELS } from '../data/vehicleModels';
+import {
+  getCheckoutVehicleCompanies,
+  getCheckoutVehicleModels,
+  type CheckoutVehicleType,
+} from '../lib/checkoutVehicleFitment';
 import { CartItem, OrderDetails } from '../types';
 import { cancelUnpaidOnlineOrder, createSupabaseOrder } from '../lib/supabaseOrders';
 import { openRazorpayCheckout } from '../lib/razorpay';
@@ -22,7 +28,7 @@ interface CheckoutModalProps {
   couponSubtotal?: number; couponTotal?: number; onClearCart: () => void; userId: string; onOrderPlaced: () => void;
   onUpdateQuantity: (cartItemId: string, newQuantity: number) => void;
 }
-type VehicleType = 'Bike' | 'Scooter' | 'Car' | 'Toto / E-rickshaw' | 'Other';
+type VehicleType = CheckoutVehicleType;
 type ProfileLoad = 'loading' | 'ready' | 'error';
 const vehicleTypes: VehicleType[] = ['Bike', 'Scooter', 'Car', 'Toto / E-rickshaw', 'Other'];
 const timeSlots = ['10:00 AM – 12:00 PM', '12:00 PM – 2:00 PM', '2:00 PM – 4:00 PM', '4:00 PM – 6:00 PM'];
@@ -41,6 +47,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [savedPhone, setSavedPhone] = useState('');
   const [vehicleType, setVehicleType] = useState<VehicleType>('Bike');
+  const [vehicleCompany, setVehicleCompany] = useState('');
   const [vehicleModel, setVehicleModel] = useState('');
   const [hasSavedVehicle, setHasSavedVehicle] = useState(false);
   const [editingPhone, setEditingPhone] = useState(false);
@@ -69,11 +76,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const pickupDates = useMemo(() => Array.from({ length: 7 }, (_, index) => {
     const date = new Date(); date.setDate(date.getDate() + index + 1); return date;
   }), []);
-  const vehicleSuggestions = useMemo(() => {
-    const catalogType = vehicleType === 'Bike' ? 'bike' : vehicleType === 'Scooter' ? 'scooter' : vehicleType === 'Toto / E-rickshaw' ? 'toto' : null;
-    if (!catalogType) return [];
-    return VEHICLE_BRANDS[catalogType].flatMap(({ brand, models }) => models.map((model) => `${brand} ${model}`));
-  }, [vehicleType]);
+  const vehicleCompanies = useMemo(() => getCheckoutVehicleCompanies(vehicleType), [vehicleType]);
+  const vehicleModelOptions = useMemo(
+    () => getCheckoutVehicleModels(vehicleType, vehicleCompany),
+    [vehicleType, vehicleCompany],
+  );
+  const selectedFitment = vehicleModelOptions.find((model) => model.name === vehicleModel);
+  const vehicleValue = vehicleModel.trim()
+    ? `${vehicleType} · ${vehicleCompany ? `${vehicleCompany} · ` : ''}${vehicleModel.trim()}`
+    : '';
   const vehicleTypeLabel = (type: VehicleType) => type === 'Bike' ? t('checkout.vehicleBike')
     : type === 'Scooter' ? t('checkout.vehicleScooter')
       : type === 'Car' ? t('checkout.vehicleCar')
@@ -101,10 +112,32 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       const savedNumber = String(profile?.phone || '').trim();
       const savedVehicle = String(profile?.vehicle_model || '').trim();
       const matchedType = vehicleTypes.find((type) => savedVehicle.toLowerCase().startsWith(`${type.toLowerCase()} ·`));
+      const savedType = matchedType || 'Bike';
+      const vehicleDetails = matchedType ? savedVehicle.slice(savedVehicle.indexOf('·') + 1).trim() : savedVehicle;
+      const vehicleParts = vehicleDetails.split('·').map((part) => part.trim()).filter(Boolean);
+      const savedCompany = vehicleParts.length > 1 ? vehicleParts[0] : '';
+      const savedModel = vehicleParts.length > 1 ? vehicleParts.slice(1).join(' · ') : vehicleParts[0] || '';
+      const savedCatalogType = savedType === 'Bike' ? 'bike' : savedType === 'Scooter' ? 'scooter' : null;
+      const savedCatalogVehicle = savedCatalogType
+        ? VEHICLE_MODELS.find((model) => model.type === savedCatalogType && model.name.toLowerCase() === savedModel.toLowerCase()) ||
+          VEHICLE_MODELS.find(
+            (model) =>
+              model.type === savedCatalogType &&
+              (model.name.toLowerCase().endsWith(` ${savedModel.toLowerCase()}`) ||
+                model.name.toLowerCase().startsWith(`${savedModel.toLowerCase()} `)),
+          )
+        : undefined;
+      const savedTotoGroup = matchedType === 'Toto / E-rickshaw'
+        ? VEHICLE_BRANDS.toto.find(
+            (group) => group.brand === savedCompany || group.models.some((model) => savedModel.toLowerCase().endsWith(model.toLowerCase())),
+          )
+        : undefined;
+      const savedTotoModel = savedTotoGroup?.models.find((model) => savedModel.toLowerCase().endsWith(model.toLowerCase()));
       setCustomerName(String(profile?.full_name || metadata.full_name || metadata.name || '').trim());
       setEmail(authData.user.email || ''); setPhone(savedNumber); setSavedPhone(savedNumber); setPhoneCountry(getPhoneCountry(savedNumber)); setPhoneTouched(false);
-      setVehicleType(matchedType || 'Bike');
-      setVehicleModel(matchedType ? savedVehicle.slice(savedVehicle.indexOf('·') + 1).trim() : savedVehicle);
+      setVehicleType(savedType);
+      setVehicleCompany(savedCatalogVehicle?.brand || savedTotoGroup?.brand || savedCompany);
+      setVehicleModel(savedCatalogVehicle?.name || savedTotoModel || savedModel);
       setHasSavedVehicle(Boolean(savedVehicle)); setEditingPhone(!savedNumber); setEditingVehicle(!savedVehicle); setProfileLoad('ready');
     };
     void loadProfile();
@@ -132,7 +165,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     if (phone.trim() !== savedPhone || phoneCountry !== getPhoneCountry(savedPhone)) {
       patch.phone = validatePhoneNumber(phone, phoneCountry).e164 || phone.trim();
     }
-    const nextVehicle = vehicleModel.trim() ? `${vehicleType} · ${vehicleModel.trim()}` : '';
+    const nextVehicle = vehicleValue;
     if (editingVehicle && nextVehicle) patch.vehicle_model = nextVehicle;
     if (!Object.keys(patch).length) return;
     const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -167,7 +200,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       const pickupNote = [`Pickup requested: ${pickupLabel}`, note.trim()].filter(Boolean).join(' · ');
       const order: OrderDetails = {
         orderId: '', items: [...items], subtotal, discount, total, customerName: customerName.trim(), phone: phoneResult.e164!,
-        vehicleModel: vehicleModel.trim() ? `${vehicleType} · ${vehicleModel.trim()}` : '', note: pickupNote,
+        vehicleModel: vehicleValue, note: pickupNote,
         paymentMethod, paymentStatus: 'pending', fulfillmentMethod: 'STORE_PICKUP', pickupStore: WORKSHOP_INFO.name,
         status: 'NEW', createdAt: new Date().toISOString(),
       };
@@ -223,15 +256,67 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               {editingPhone && <div className="mt-2"><PhoneNumberField id="checkout-phone" label={t('checkout.mobile')} value={phone} country={phoneCountry} onChange={(value) => { setPhone(value); setPhoneError(''); setPhoneTouched(false); }} onCountryChange={(country) => { setPhoneCountry(country); setPhoneError(''); setPhoneTouched(false); }} onBlur={() => { setPhoneTouched(true); setPhoneError(validatePhoneNumber(phone, phoneCountry).message || ''); }} error={visiblePhoneError} placeholder={t('checkout.mobile')} className="border-slate-200 bg-white" /></div>}
             </div>
           </section>
-          <section className="rounded-2xl border border-slate-200 bg-white p-4"><div className="flex items-center justify-between"><h3 className="flex items-center gap-2 text-sm font-black"><Truck className="h-4 w-4 text-[#D9232D]" />{t('checkout.vehicle')}</h3>{hasSavedVehicle && !editingVehicle && <button onClick={() => setEditingVehicle(true)} className="min-h-9 rounded-lg px-2 text-[10px] font-extrabold text-[#D9232D]">{t('checkout.changeModel')}</button>}</div>
-            {!editingVehicle && hasSavedVehicle ? <div className="mt-3 rounded-xl bg-slate-50 p-3"><p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{t('checkout.savedVehicle')}</p><p className="mt-1 text-xs font-bold text-slate-800">{vehicleType} · {vehicleModel}</p></div> : <div className="mt-3 grid gap-2 sm:grid-cols-2"><label className="text-[10px] font-bold text-slate-500">{t('checkout.vehicleType')}<select value={vehicleType} onChange={(event) => setVehicleType(event.target.value as VehicleType)} className="mt-1 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-[#D9232D]">{vehicleTypes.map((type) => <option key={type}>{vehicleTypeLabel(type)}</option>)}</select></label><label className="text-[10px] font-bold text-slate-500">{t('checkout.makeModel')}<input list="vehicle-model-options" value={vehicleModel} maxLength={60} onChange={(event) => setVehicleModel(event.target.value)} placeholder={vehicleSuggestions.length ? t('checkout.chooseModel') : t('checkout.exampleVehicle')} className="mt-1 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-[#D9232D]" /><datalist id="vehicle-model-options">{vehicleSuggestions.map((model) => <option key={model} value={model} />)}</datalist></label>{hasSavedVehicle && <button onClick={() => setEditingVehicle(false)} className="justify-self-start text-[10px] font-bold text-slate-500">{t('checkout.keepVehicle')}</button>}</div>}
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_2px_12px_rgba(15,23,42,.03)]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="flex items-center gap-2 text-sm font-black"><Truck className="h-4 w-4 text-[#D9232D]" />{t('checkout.vehicle')}</h3>
+                <p className="mt-1 pl-6 text-[10px] text-slate-500">{t('checkout.vehicleCompany')} → {t('checkout.vehicleModel')}</p>
+              </div>
+              {hasSavedVehicle && !editingVehicle && <button type="button" onClick={() => setEditingVehicle(true)} className="min-h-10 shrink-0 rounded-xl bg-red-50 px-3 text-[10px] font-extrabold text-[#D9232D]">{t('checkout.changeModel')}</button>}
+            </div>
+            {!editingVehicle && hasSavedVehicle ? (
+              <div className="mt-4 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                {selectedFitment?.image ? <img src={selectedFitment.image} alt={selectedFitment.name} className="h-16 w-24 shrink-0 rounded-xl bg-white object-contain p-1" /> : <div className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-white text-[#D9232D]"><Truck className="h-6 w-6" /></div>}
+                <div className="min-w-0"><p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{t('checkout.savedVehicle')}</p><p className="mt-1 truncate text-[11px] font-semibold text-slate-500">{vehicleCompany || vehicleType}</p><p className="mt-0.5 break-words text-sm font-black text-slate-900">{vehicleModel || t('checkout.exampleVehicle')}</p></div>
+              </div>
+            ) : (
+              <div className="mt-4 space-y-3">
+                <label className="block text-[11px] font-bold text-slate-600">{t('checkout.vehicleType')}
+                  <select value={vehicleType} onChange={(event) => { setVehicleType(event.target.value as VehicleType); setVehicleCompany(''); setVehicleModel(''); }} className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#D9232D] focus:ring-4 focus:ring-red-100">
+                    {vehicleTypes.map((type) => <option key={type} value={type}>{vehicleTypeLabel(type)}</option>)}
+                  </select>
+                </label>
+                {vehicleCompanies.length > 0 ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block text-[11px] font-bold text-slate-600">{t('checkout.vehicleCompany')}
+                      <select value={vehicleCompany} onChange={(event) => { setVehicleCompany(event.target.value); setVehicleModel(''); }} className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#D9232D] focus:ring-4 focus:ring-red-100">
+                        <option value="">{t('checkout.chooseCompany')}</option>
+                        {vehicleCompanies.map((company) => <option key={company} value={company}>{company}</option>)}
+                      </select>
+                    </label>
+                    <label className="block text-[11px] font-bold text-slate-600">{t('checkout.vehicleModel')}
+                      <select value={vehicleModel} onChange={(event) => setVehicleModel(event.target.value)} disabled={!vehicleCompany} className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#D9232D] focus:ring-4 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400">
+                        <option value="">{vehicleCompany ? t('checkout.chooseVehicleModel') : t('checkout.chooseCompany')}</option>
+                        {vehicleModelOptions.map((model) => <option key={model.name} value={model.name}>{model.name}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block text-[11px] font-bold text-slate-600">{t('checkout.vehicleCompany')}
+                      <input value={vehicleCompany} onChange={(event) => setVehicleCompany(event.target.value)} maxLength={40} placeholder={t('checkout.exampleCompany')} className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#D9232D] focus:ring-4 focus:ring-red-100" />
+                    </label>
+                    <label className="block text-[11px] font-bold text-slate-600">{t('checkout.vehicleModel')}
+                      <input value={vehicleModel} onChange={(event) => setVehicleModel(event.target.value)} maxLength={60} placeholder={t('checkout.exampleModel')} className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#D9232D] focus:ring-4 focus:ring-red-100" />
+                    </label>
+                  </div>
+                )}
+                {selectedFitment?.image && (
+                  <div className="flex items-center gap-3 overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/70 p-2.5">
+                    <img src={selectedFitment.image} alt={selectedFitment.name} className="h-16 w-24 shrink-0 rounded-xl bg-white object-contain p-1" />
+                    <div className="min-w-0 flex-1"><span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-emerald-800"><Check className="h-3 w-3" />{t('checkout.selectedVehicle')}</span><p className="mt-1 truncate text-[10px] font-semibold text-slate-500">{selectedFitment.brand}</p><p className="break-words text-xs font-black leading-snug text-slate-900">{selectedFitment.name}</p></div>
+                  </div>
+                )}
+                {hasSavedVehicle && <button type="button" onClick={() => setEditingVehicle(false)} className="min-h-9 text-[10px] font-bold text-slate-500 underline decoration-slate-300 underline-offset-4">{t('checkout.keepVehicle')}</button>}
+              </div>
+            )}
           </section>
           <section className="rounded-2xl border border-slate-200 bg-white p-4"><h3 className="flex items-center gap-2 text-sm font-black"><CalendarDays className="h-4 w-4 text-[#D9232D]" />{t('checkout.chooseTime')}</h3><p className="mt-1 text-[10px] text-slate-500">{t('checkout.slotHint')}</p><div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">{pickupDates.map((date) => { const value = isoDate(date); const selected = pickupDate === value; return <button key={value} onClick={() => setPickupDate(value)} aria-pressed={selected} className={`min-h-11 min-w-[82px] rounded-xl border px-3 py-2.5 text-left ${selected ? 'border-[#D9232D] bg-red-50 text-[#D9232D]' : 'border-slate-200 bg-white text-slate-600'}`}><span className="block text-[9px] font-bold uppercase">{date.toLocaleDateString(locale, { weekday: 'short' })}</span><span className="mt-0.5 block text-xs font-black">{date.getDate()} {date.toLocaleDateString(locale, { month: 'short' })}</span></button>; })}</div><div className="mt-3 grid grid-cols-2 gap-2">{timeSlots.map((slot) => <button key={slot} onClick={() => setPickupTime(slot)} aria-pressed={pickupTime === slot} className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 text-left text-[10px] font-bold ${pickupTime === slot ? 'border-[#D9232D] bg-red-50 text-[#D9232D]' : 'border-slate-200 text-slate-600'}`}><Clock3 className="h-3.5 w-3.5" />{slot}{pickupTime === slot && <Check className="ml-auto h-3.5 w-3.5" />}</button>)}</div></section>
           <section className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50/70 p-4"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#D9232D]"><MapPin className="h-4 w-4" /></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="text-xs font-black">{t('checkout.pickupAt', { store: WORKSHOP_INFO.name })}</h3><span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-extrabold text-emerald-800">{t('checkout.freePickup')}</span></div><p className="mt-1 text-[10px] leading-relaxed text-slate-600">{WORKSHOP_INFO.address}</p><p className="mt-1 text-[10px] text-slate-500">{WORKSHOP_INFO.workingHours}</p><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${WORKSHOP_INFO.name}, ${WORKSHOP_INFO.address}`)}`} target="_blank" rel="noreferrer" className="mt-2 inline-block text-[10px] font-extrabold text-[#D9232D]">{t('checkout.openMaps')}</a></div></section>
           <label className="block rounded-2xl border border-slate-200 bg-white p-4 text-[10px] font-bold text-slate-500">{t('checkout.note')} <span className="font-normal">{t('checkout.optional')}</span><textarea value={note} onChange={(event) => setNote(event.target.value)} maxLength={240} rows={2} placeholder={t('checkout.noteHint')} className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-medium text-slate-800 outline-none focus:border-[#D9232D]" /></label>
           {renderSummary()}
         </>}
-        {step === 2 && <><section className="rounded-2xl border border-slate-200 bg-white p-4"><h3 className="mb-3 flex items-center gap-2 text-sm font-black"><CreditCard className="h-4 w-4 text-[#D9232D]" />{t('checkout.paymentMethod')}</h3><div className="space-y-2"><button onClick={() => { setPendingOnlineOrder(null); setPaymentMethod('pay_at_store'); }} aria-pressed={paymentMethod === 'pay_at_store'} className={`flex min-h-[68px] w-full items-center gap-3 rounded-xl border p-3 text-left ${paymentMethod === 'pay_at_store' ? 'border-[#D9232D] bg-red-50/70' : 'border-slate-200'}`}><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Banknote className="h-5 w-5" /></span><span className="flex-1"><b className="block text-xs">{t('checkout.payAtWorkshop')}</b><small className="mt-1 block text-[10px] text-slate-500">{t('checkout.cashOrUpi')}</small></span>{paymentMethod === 'pay_at_store' && <CheckCircle2 className="h-4 w-4 text-[#D9232D]" />}</button><button onClick={() => { setPendingOnlineOrder(null); setPaymentMethod('pay_online'); }} aria-pressed={paymentMethod === 'pay_online'} className={`flex min-h-[68px] w-full items-center gap-3 rounded-xl border p-3 text-left ${paymentMethod === 'pay_online' ? 'border-[#D9232D] bg-red-50/70' : 'border-slate-200'}`}><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><CreditCard className="h-5 w-5" /></span><span className="flex-1"><b className="block text-xs">{t('checkout.onlinePayment')}</b><small className="mt-1 block text-[10px] text-slate-500">{t('checkout.onlinePaymentMethods')}</small></span>{paymentMethod === 'pay_online' && <CheckCircle2 className="h-4 w-4 text-[#D9232D]" />}</button></div>{paymentMethod === 'pay_online' && <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3 text-center text-xs text-blue-900"><p className="font-bold">{t('checkout.razorpayPaymentInfo')}</p><p className="mt-2 text-left text-[10px] leading-relaxed">{t('checkout.paymentPending')}</p></div>}</section><div className="rounded-2xl border border-slate-200 bg-white p-4"><h3 className="mb-2 text-xs font-black">{t('checkout.pickupDetails')}</h3><p className="text-[11px] text-slate-600">{pickupDate && new Date(`${pickupDate}T00:00:00`).toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })} · {pickupTime}</p><p className="mt-1 text-[11px] text-slate-500">{customerName} · {phone} · {vehicleType}{vehicleModel ? ` · ${vehicleModel}` : ''}</p></div>{renderSummary()}</>}
+        {step === 2 && <><section className="rounded-2xl border border-slate-200 bg-white p-4"><h3 className="mb-3 flex items-center gap-2 text-sm font-black"><CreditCard className="h-4 w-4 text-[#D9232D]" />{t('checkout.paymentMethod')}</h3><div className="space-y-2"><button onClick={() => { setPendingOnlineOrder(null); setPaymentMethod('pay_at_store'); }} aria-pressed={paymentMethod === 'pay_at_store'} className={`flex min-h-[68px] w-full items-center gap-3 rounded-xl border p-3 text-left ${paymentMethod === 'pay_at_store' ? 'border-[#D9232D] bg-red-50/70' : 'border-slate-200'}`}><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Banknote className="h-5 w-5" /></span><span className="flex-1"><b className="block text-xs">{t('checkout.payAtWorkshop')}</b><small className="mt-1 block text-[10px] text-slate-500">{t('checkout.cashOrUpi')}</small></span>{paymentMethod === 'pay_at_store' && <CheckCircle2 className="h-4 w-4 text-[#D9232D]" />}</button><button onClick={() => { setPendingOnlineOrder(null); setPaymentMethod('pay_online'); }} aria-pressed={paymentMethod === 'pay_online'} className={`flex min-h-[68px] w-full items-center gap-3 rounded-xl border p-3 text-left ${paymentMethod === 'pay_online' ? 'border-[#D9232D] bg-red-50/70' : 'border-slate-200'}`}><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><CreditCard className="h-5 w-5" /></span><span className="flex-1"><b className="block text-xs">{t('checkout.onlinePayment')}</b><small className="mt-1 block text-[10px] text-slate-500">{t('checkout.onlinePaymentMethods')}</small></span>{paymentMethod === 'pay_online' && <CheckCircle2 className="h-4 w-4 text-[#D9232D]" />}</button></div>{paymentMethod === 'pay_online' && <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3 text-center text-xs text-blue-900"><p className="font-bold">{t('checkout.razorpayPaymentInfo')}</p><p className="mt-2 text-left text-[10px] leading-relaxed">{t('checkout.paymentPending')}</p></div>}</section><div className="rounded-2xl border border-slate-200 bg-white p-4"><h3 className="mb-2 text-xs font-black">{t('checkout.pickupDetails')}</h3><p className="text-[11px] text-slate-600">{pickupDate && new Date(`${pickupDate}T00:00:00`).toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })} · {pickupTime}</p><p className="mt-1 text-[11px] text-slate-500">{customerName} · {phone} · {vehicleValue || vehicleType}</p></div>{renderSummary()}</>}
         {step === 3 && placedOrder && <div className="space-y-4 py-4 text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><CheckCircle2 className="h-9 w-9" /></div><div><h3 className="text-xl font-black">{t('checkout.orderReceived')}</h3><p className="mt-1 text-xs text-slate-500">{t('checkout.orderSaved')}</p></div><div className="rounded-2xl border border-slate-200 bg-white p-4 text-left"><div className="flex justify-between border-b border-slate-100 pb-3"><span className="text-xs text-slate-500">{t('checkout.orderId')}</span><b className="font-mono text-base">#{placedOrder.orderId}</b></div><div className="mt-3 flex justify-between text-xs"><span>{t('checkout.pickup')}</span><b>{pickupDate} · {pickupTime}</b></div><div className="mt-2 flex justify-between text-xs"><span>{t('checkout.payment')}</span><b>{placedOrder.paymentMethod === 'pay_at_store' ? t('checkout.payOnPickup') : placedOrder.paymentStatus === 'paid' ? t('checkout.paymentPaid') : t('checkout.upiPending')}</b></div><div className="mt-2 flex justify-between text-xs"><span>{t('orders.total')}</span><b className="text-[#D9232D]">{indianMoney(placedOrder.total)}</b></div></div><p className="text-[10px] text-slate-500">{t('checkout.trackOrder')}</p></div>}
         {submissionError && step < 3 && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs font-semibold text-rose-700">{submissionError}</p>}
       </main>
