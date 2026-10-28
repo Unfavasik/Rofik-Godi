@@ -15,12 +15,20 @@ public class MainActivity extends BridgeActivity implements PaymentResultWithDat
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Intent launchIntent = getIntent();
+        boolean isOAuthCallback = launchIntent != null
+            && launchIntent.getData() != null
+            && "com.rofikgodi.centre".equals(launchIntent.getData().getScheme())
+            && "auth".equals(launchIntent.getData().getHost())
+            && "/callback".equals(launchIntent.getData().getPath());
         registerPlugin(NativeRazorpayPlugin.class);
         // Do not restore a WebView snapshot that may contain an abandoned bank/Razorpay page.
         super.onCreate(null);
-        getBridge().getWebView().clearHistory();
-        getBridge().getWebView().clearCache(false);
-        getBridge().getWebView().loadUrl(HOME_URL);
+        if (!isOAuthCallback) {
+            getBridge().getWebView().clearHistory();
+            getBridge().getWebView().clearCache(false);
+            getBridge().getWebView().loadUrl(HOME_URL);
+        }
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
         getWindow().setNavigationBarColor(Color.TRANSPARENT);
@@ -37,7 +45,11 @@ public class MainActivity extends BridgeActivity implements PaymentResultWithDat
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        if (Intent.ACTION_MAIN.equals(intent.getAction())) {
+        boolean isOAuthCallback = intent.getData() != null
+            && "com.rofikgodi.centre".equals(intent.getData().getScheme())
+            && "auth".equals(intent.getData().getHost())
+            && "/callback".equals(intent.getData().getPath());
+        if (Intent.ACTION_MAIN.equals(intent.getAction()) && !isOAuthCallback) {
             getBridge().getWebView().clearHistory();
             getBridge().getWebView().loadUrl(HOME_URL);
         }
