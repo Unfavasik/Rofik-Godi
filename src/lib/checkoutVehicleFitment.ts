@@ -26,15 +26,18 @@ export function getCheckoutVehicleCompanies(type: CheckoutVehicleType): string[]
 }
 
 export function getCheckoutVehicleModels(type: CheckoutVehicleType, company: string): CheckoutFitmentModel[] {
+  const selectedCompany = company.trim().toLocaleLowerCase();
+  if (!selectedCompany) return [];
   const catalogType = type === 'Bike' ? 'bike' : type === 'Scooter' ? 'scooter' : null;
   if (catalogType) {
-    return VEHICLE_MODELS.filter((model) => model.type === catalogType && model.brand === company).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
+    return VEHICLE_MODELS.filter(
+      (model) => model.type === catalogType && model.brand.trim().toLocaleLowerCase() === selectedCompany,
+    ).sort((a, b) => a.name.localeCompare(b.name));
   }
   if (type === 'Toto / E-rickshaw') {
-    return (VEHICLE_BRANDS.toto.find((group) => group.brand === company)?.models || []).map((name) => ({
-      brand: company,
+    const group = VEHICLE_BRANDS.toto.find((item) => item.brand.trim().toLocaleLowerCase() === selectedCompany);
+    return (group?.models || []).map((name) => ({
+      brand: group?.brand || company.trim(),
       name,
       image: '',
     }));

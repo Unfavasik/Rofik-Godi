@@ -20,6 +20,19 @@ describe('checkout vehicle fitment options', () => {
     expect(getCheckoutVehicleModels('Bike', 'Honda').every((model) => model.brand === 'Honda')).toBe(true);
   });
 
+  it('keeps model options scoped to the selected company and vehicle type', () => {
+    const heroBikes = getCheckoutVehicleModels('Bike', ' hero motocorp ');
+    const heroScooters = getCheckoutVehicleModels('Scooter', 'Hero MotoCorp');
+
+    expect(heroBikes.length).toBeGreaterThan(0);
+    expect(heroBikes.every((model) => model.brand === 'Hero MotoCorp')).toBe(true);
+    expect(heroScooters.length).toBeGreaterThan(0);
+    expect(heroScooters.every((model) => model.brand === 'Hero MotoCorp')).toBe(true);
+    expect(heroBikes.some((bike) => heroScooters.some((scooter) => scooter.name === bike.name))).toBe(false);
+    expect(getCheckoutVehicleModels('Bike', '')).toEqual([]);
+    expect(getCheckoutVehicleModels('Bike', 'unknown company')).toEqual([]);
+  });
+
   it('shows scooter previews and preserves Toto model options', () => {
     const scooters = getCheckoutVehicleModels('Scooter', 'Honda');
     expect(scooters.length).toBeGreaterThan(0);

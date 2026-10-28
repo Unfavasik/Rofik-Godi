@@ -284,12 +284,23 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         {vehicleCompanies.map((company) => <option key={company} value={company}>{company}</option>)}
                       </select>
                     </label>
-                    <label className="block text-[11px] font-bold text-slate-600">{t('checkout.vehicleModel')}
-                      <select value={vehicleModel} onChange={(event) => setVehicleModel(event.target.value)} disabled={!vehicleCompany} className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#D9232D] focus:ring-4 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400">
-                        <option value="">{vehicleCompany ? t('checkout.chooseVehicleModel') : t('checkout.chooseCompany')}</option>
-                        {vehicleModelOptions.map((model) => <option key={model.name} value={model.name}>{model.name}</option>)}
-                      </select>
-                    </label>
+                    <div className="block min-w-0 text-[11px] font-bold text-slate-600">
+                      <span>{t('checkout.vehicleModel')}</span>
+                      {!vehicleCompany ? (
+                        <p className="mt-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3.5 py-4 text-xs font-medium text-slate-400">{t('checkout.chooseCompany')}</p>
+                      ) : (
+                        <div role="radiogroup" aria-label={t('checkout.vehicleModel')} className="no-scrollbar mt-1.5 max-h-[min(42vh,360px)] space-y-2 overflow-y-auto rounded-2xl">
+                          {vehicleModelOptions.map((model) => {
+                            const selected = vehicleModel === model.name;
+                            return <button key={model.name} type="button" role="radio" aria-checked={selected} onClick={() => setVehicleModel(model.name)} className={`flex min-h-[104px] w-full items-center gap-3 rounded-2xl border p-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${selected ? 'border-[#D9232D] bg-red-50/70 shadow-sm' : 'border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white'}`}>
+                              {model.image ? <span className="h-[86px] w-[42%] shrink-0 overflow-hidden rounded-xl bg-white"><img src={model.image} alt="" loading="lazy" className="h-full w-full object-contain" /></span> : <span className="grid h-[86px] w-[42%] shrink-0 place-items-center rounded-xl bg-white text-slate-300"><Truck className="h-8 w-8" /></span>}
+                              <span className="min-w-0 flex-1"><span className="block text-sm font-black leading-snug text-slate-900">{model.name}</span><span className="mt-1 block text-xs font-medium leading-snug text-slate-500">{model.brand}</span></span>
+                              <span aria-hidden="true" className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 ${selected ? 'border-[#D9232D]' : 'border-slate-400'}`}>{selected && <span className="h-3 w-3 rounded-full bg-[#D9232D]" />}</span>
+                            </button>;
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div className="grid gap-3 sm:grid-cols-2">
