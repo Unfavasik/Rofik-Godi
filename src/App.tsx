@@ -1021,9 +1021,10 @@ export default function App() {
     setIsLoginModalOpen(false);
     if (admin) {
       pendingStockAlertProductRef.current = null;
-      adminStorefrontRequested.current = false;
+      adminStorefrontRequested.current = true;
       protectedRouteAfterAuth.current = null;
-      navigate('/admin');
+      setAppPhase('main');
+      navigate('/profile', { replace: true });
       return;
     }
     const returnPath = protectedRouteAfterAuth.current;
@@ -1136,6 +1137,8 @@ export default function App() {
   if (isAdminPath(location.pathname)) {
     return (
       <AdminAccessGate
+        authStatus={authStatus}
+        isAdmin={isAdmin}
         onBackToStore={() => {
           adminStorefrontRequested.current = true;
           navigate('/home', { replace: true });
@@ -1324,6 +1327,11 @@ export default function App() {
           <main className="flex-1 flex flex-col">
           <AccountView
               currentUser={currentUser}
+              isAdmin={isAdmin === true}
+              onOpenAdminPanel={() => {
+                adminStorefrontRequested.current = false;
+                navigate('/admin');
+              }}
               products={catalogProducts}
               pwaInstallCard={pwaInstall.visible ? <PwaInstallCard visible={pwaInstall.visible} canInstall={pwaInstall.canInstall} isIOSSafari={pwaInstall.isIOSSafari} isInstalling={pwaInstall.isInstalling} installError={pwaInstall.installError} onInstall={pwaInstall.install} onDismiss={pwaInstall.dismiss} /> : null}
               onProfileChange={(profile) =>

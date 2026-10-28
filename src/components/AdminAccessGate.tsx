@@ -1,81 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { AlertCircle, ArrowLeft, Loader2, LogIn, ShieldCheck } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import type { AuthStatus } from '../hooks/useAuth';
 
-export const AdminAccessGate: React.FC<{ children: React.ReactNode; onBackToStore: () => void; onSignIn: () => void }> = ({ children, onBackToStore, onSignIn }) => {
+export const AdminAccessGate: React.FC<{
+  children: React.ReactNode;
+  onBackToStore: () => void;
+  onSignIn: () => void;
+  authStatus: AuthStatus;
+  isAdmin: boolean | null;
+}> = ({ children, onBackToStore, onSignIn, authStatus, isAdmin }) => {
   const [state, setState] = useState<'checking' | 'allowed' | 'denied'>('checking');
   const [message, setMessage] = useState('Verifying administrator access…');
   const [needsSignIn, setNeedsSignIn] = useState(false);
 
   useEffect(() => {
-    let active = true;
-    let verificationId = 0;
-
-    const denyForSignIn = (text: string) => {
-      setState('denied');
-      setNeedsSignIn(true);
-      setMessage(text);
-    };
-
-    const verify = async () => {
-      const currentVerification = ++verificationId;
-      const isCurrent = () => active && currentVerification === verificationId;
+    if (authStatus === 'AUTH_LOADING' || isAdmin === null) {
       setState('checking');
       setNeedsSignIn(false);
       setMessage('Verifying administrator access…');
-
-      if (!supabase) {
-        if (isCurrent()) {
-          setState('denied');
-          setMessage('The Supabase client is not configured for this preview. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY, then reload.');
-        }
-        return;
-      }
-
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (!isCurrent()) return;
-      if (sessionError || !sessionData.session) {
-        denyForSignIn('Your administrator session is missing or expired. Sign in again to open this workspace.');
-        return;
-      }
-
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (!isCurrent()) return;
-      if (authError || !authData.user) {
-        denyForSignIn('Sign in with an authorized administrator account to open this workspace.');
-        return;
-      }
-
-      const { data, error } = await supabase.rpc('is_admin');
-      if (!isCurrent()) return;
-      if (!error && data === true) {
-        setState('allowed');
-      } else {
-        setState('denied');
-        setNeedsSignIn(false);
-        setMessage(error ? 'The server could not verify admin permissions. Confirm the secure coupon migration is installed.' : 'This account does not have administrator access.');
-      }
-    };
-
-    const authSubscription = supabase?.auth.onAuthStateChange((event, session) => {
-      if (event === 'INITIAL_SESSION') return;
-      if (event === 'SIGNED_OUT' || !session?.user) {
-        verificationId += 1;
-        denyForSignIn('Your administrator session is missing or expired. Sign in again to open this workspace.');
-        return;
-      }
-      if (event === 'SIGNED_IN') {
-        window.setTimeout(() => { if (active) void verify(); }, 0);
-      }
-    });
-
-    void verify();
-    return () => {
-      active = false;
-      verificationId += 1;
-      authSubscription?.data.subscription.unsubscribe();
-    };
-  }, []);
+      return;
+    }
+    if (authStatus === 'AUTHENTICATED' && isAdmin) {
+      setState('allowed');
+      setNeedsSignIn(false);
+      return;
+    }
+    setState('denied');
+    setNeedsSignIn(authStatus === 'UNAUTHENTICATED');
+    setMessage(authStatus === 'UNAUTHENTICATED'
+      ? 'Your administrator session is missing or expired. Sign in again to open this workspace.'
+      : 'This account does not have administrator access.');
+  }, [authStatus, isAdmin]);
 
   if (state === 'allowed') return <>{children}</>;
   return <div className="flex min-h-screen items-center justify-center bg-slate-50 p-5">

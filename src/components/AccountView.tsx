@@ -38,6 +38,8 @@ import { CloudLoader } from './CloudLoader';
 
 interface AccountViewProps {
   currentUser?: UserProfile;
+  isAdmin?: boolean;
+  onOpenAdminPanel?: () => void;
   onOpenLogin?: () => void;
   onLogout?: () => void;
   onContinueShopping?: () => void;
@@ -70,6 +72,8 @@ interface AccountViewProps {
 
 export const AccountView: React.FC<AccountViewProps> = ({
   currentUser,
+  isAdmin = false,
+  onOpenAdminPanel,
   onOpenLogin,
   onLogout,
   onContinueShopping,
@@ -850,6 +854,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
         {/* BEGIN: MoreOptionsSection */}
         <section className="pt-1 space-y-2.5" data-purpose="more-options-section">
           <h2 className="text-base font-bold text-slate-900 tracking-tight px-1 mb-1">More options</h2>
+          {isAdmin && onOpenAdminPanel && <button type="button" onClick={onOpenAdminPanel} className="w-full bg-[#FFF3E8] rounded-2xl p-3.5 flex items-center justify-between border border-orange-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-orange-50 transition-colors text-left cursor-pointer"><div className="flex items-center space-x-3"><div className="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center text-orange-700 flex-shrink-0"><ShieldCheck className="w-5 h-5" /></div><div><h3 className="text-sm font-bold text-slate-900 leading-tight">Go to admin panel</h3><p className="text-[11px] text-slate-500 font-normal mt-0.5">Manage products, orders and support</p></div></div><ChevronRight className="w-4 h-4 text-slate-400" /></button>}
 
           {/* Privacy Policy Card */}
           <button
