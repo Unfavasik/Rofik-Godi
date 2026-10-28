@@ -71,12 +71,8 @@ import { listMyNotifications, listMyWishlist, toggleWishlist } from './lib/supab
 import { readCustomerNotificationCountCache, writeCustomerNotificationCountCache } from './lib/localCache';
 import { CloudLoader } from './components/CloudLoader';
 const FilterSortModal = lazy(() => import('./components/FilterSortModal').then((module) => ({ default: module.FilterSortModal })));
-const GUEST_WELCOME_KEY = 'rofik-godi:guest-welcome-complete:v1';
 const LAST_ROUTE_KEY = 'rofik-godi:last-route:v1';
 const SCROLL_KEY = 'rofik-godi:scroll:v1';
-const readGuestWelcomeComplete = () => {
-  try { return localStorage.getItem(GUEST_WELCOME_KEY) === '1'; } catch { return false; }
-};
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -155,7 +151,10 @@ export default function App() {
   const adminStorefrontRequested = useRef(false);
   const protectedRouteAfterAuth = useRef<string | null>(null);
   const handledNativeOAuthCallbacksRef = useRef(new Set<string>());
-  const [guestWelcomeComplete, setGuestWelcomeComplete] = useState(readGuestWelcomeComplete);
+  // Keep this flag in React memory only. A website reload/new app launch must show
+  // the guest welcome flow again, while completing it still unlocks guest browsing
+  // for the rest of the current app session.
+  const [guestWelcomeComplete, setGuestWelcomeComplete] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginModalReason, setLoginModalReason] = useState('Please login to place your order.');
   const [pendingCheckoutAfterLogin, setPendingCheckoutAfterLogin] = useState(false);
@@ -224,7 +223,6 @@ export default function App() {
 
   const finishWelcomeOnboarding = () => {
     setGuestWelcomeComplete(true);
-    try { localStorage.setItem(GUEST_WELCOME_KEY, '1'); } catch { /* App navigation still works without local storage. */ }
     const pendingPath = protectedRouteAfterAuth.current;
     goToPhase('main');
     if (!pendingPath || !requiresCustomerAuthentication(pendingPath)) {
