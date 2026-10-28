@@ -162,16 +162,16 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
         {selectedVehicle && (
           <div className="relative z-10 mb-2.5 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-2.5">
             {selectedVehicle.image ? (
-              <div className="flex h-[68px] w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white p-1">
+              <div className="flex h-[76px] w-32 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white">
                 <img
                   src={selectedVehicle.image}
                   alt={`${selectedVehicle.name} vehicle`}
-                  className="h-full w-full object-contain"
+                  className="h-full w-full scale-110 object-contain"
                   loading="lazy"
                 />
               </div>
             ) : (
-              <div className="flex h-[68px] w-24 shrink-0 items-center justify-center rounded-lg bg-gray-800 text-3xl">
+              <div className="flex h-[76px] w-32 shrink-0 items-center justify-center rounded-lg bg-gray-800 text-3xl">
                 {selectedType === 'toto' ? '🛺' : '🏍️'}
               </div>
             )}

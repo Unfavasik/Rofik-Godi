@@ -266,7 +266,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             </div>
             {!editingVehicle && hasSavedVehicle ? (
               <div className="mt-4 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                {selectedFitment?.image ? <img src={selectedFitment.image} alt={selectedFitment.name} className="h-16 w-24 shrink-0 rounded-xl bg-white object-contain p-1" /> : <div className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-white text-[#D9232D]"><Truck className="h-6 w-6" /></div>}
+                {selectedFitment?.image ? <div className="h-[72px] w-32 shrink-0 overflow-hidden rounded-xl bg-white"><img src={selectedFitment.image} alt={selectedFitment.name} className="h-full w-full scale-110 object-contain" /></div> : <div className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-white text-[#D9232D]"><Truck className="h-6 w-6" /></div>}
                 <div className="min-w-0"><p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{t('checkout.savedVehicle')}</p><p className="mt-1 truncate text-[11px] font-semibold text-slate-500">{vehicleCompany || vehicleType}</p><p className="mt-0.5 break-words text-sm font-black text-slate-900">{vehicleModel || t('checkout.exampleVehicle')}</p></div>
               </div>
             ) : (
@@ -303,7 +303,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 )}
                 {selectedFitment?.image && (
                   <div className="flex items-center gap-3 overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/70 p-2.5">
-                    <img src={selectedFitment.image} alt={selectedFitment.name} className="h-16 w-24 shrink-0 rounded-xl bg-white object-contain p-1" />
+                    <div className="h-[72px] w-32 shrink-0 overflow-hidden rounded-xl bg-white"><img src={selectedFitment.image} alt={selectedFitment.name} className="h-full w-full scale-110 object-contain" /></div>
                     <div className="min-w-0 flex-1"><span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-emerald-800"><Check className="h-3 w-3" />{t('checkout.selectedVehicle')}</span><p className="mt-1 truncate text-[10px] font-semibold text-slate-500">{selectedFitment.brand}</p><p className="break-words text-xs font-black leading-snug text-slate-900">{selectedFitment.name}</p></div>
                   </div>
                 )}
