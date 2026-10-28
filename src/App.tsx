@@ -109,7 +109,7 @@ export default function App() {
   const launchPathRef = useRef(location.pathname);
   const restoredRouteRef = useRef(false);
   useEffect(() => {
-    if (appPhase === 'main' && !isAdminPath(location.pathname) && !['/auth/callback', '/signup', '/signup/onboarding', '/Onboarding', '/onboarding', '/checkout'].includes(location.pathname)) {
+    if (appPhase === 'main' && !['/auth/callback', '/signup', '/signup/onboarding', '/Onboarding', '/onboarding', '/checkout'].includes(location.pathname)) {
       try { localStorage.setItem(LAST_ROUTE_KEY, JSON.stringify({ path: `${location.pathname}${location.search}`, at: Date.now() })); } catch { /* optional persistence */ }
     }
   }, [appPhase, location.pathname, location.search]);

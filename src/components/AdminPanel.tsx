@@ -242,7 +242,9 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     const [orderResult, productResult, customerResult, metricResult, notificationResult, activityResult] =
       await Promise.all([
         loadAdminOrders(),
-        loadAdminProducts(),
+        loadAdminProducts()
+          .then((data) => ({ data, error: null as { message: string } | null }))
+          .catch((cause: unknown) => ({ data: null, error: { message: cause instanceof Error ? cause.message : 'Unexpected product catalog error.' } })),
         loadAdminCustomers(),
         loadDashboardMetrics(),
         loadAdminNotifications(),
@@ -251,7 +253,8 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     const errors: string[] = [];
     if (orderResult.error) errors.push(`Orders: ${orderResult.error.message}`);
     else setOrders(orderResult.data);
-    if (productResult) setProducts(productResult);
+    if (productResult.error) errors.push(`Products: ${productResult.error.message}`);
+    else if (productResult.data) setProducts(productResult.data);
     if (customerResult.error) errors.push(`Customers: ${customerResult.error.message}`);
     else setCustomers(customerResult.data);
     setCustomersLoaded(true);
