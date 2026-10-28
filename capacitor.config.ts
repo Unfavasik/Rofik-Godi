@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.rofikgodi.centre',
-  appName: 'Rofik Godi',
+  appName: 'Rofik Godi Center',
   webDir: 'dist',
   // Keep the native shell connected to the deployed web app so website-only
   // UI, modes and copy updates arrive without rebuilding the APK.
