@@ -72,6 +72,8 @@ import { readCustomerNotificationCountCache, writeCustomerNotificationCountCache
 import { CloudLoader } from './components/CloudLoader';
 const FilterSortModal = lazy(() => import('./components/FilterSortModal').then((module) => ({ default: module.FilterSortModal })));
 const GUEST_WELCOME_KEY = 'rofik-godi:guest-welcome-complete:v1';
+const LAST_ROUTE_KEY = 'rofik-godi:last-route:v1';
+const SCROLL_KEY = 'rofik-godi:scroll:v1';
 const readGuestWelcomeComplete = () => {
   try { return localStorage.getItem(GUEST_WELCOME_KEY) === '1'; } catch { return false; }
 };
@@ -104,6 +106,39 @@ export default function App() {
     checkIsAdmin,
   } = useAuth();
   usePushNotifications(currentUser.isGuest ? null : currentUser.id, navigate);
+  const launchPathRef = useRef(location.pathname);
+  const restoredRouteRef = useRef(false);
+  useEffect(() => {
+    if (appPhase === 'main' && !isAdminPath(location.pathname) && !['/auth/callback', '/signup', '/signup/onboarding', '/Onboarding', '/onboarding', '/checkout'].includes(location.pathname)) {
+      try { localStorage.setItem(LAST_ROUTE_KEY, JSON.stringify({ path: `${location.pathname}${location.search}`, at: Date.now() })); } catch { /* optional persistence */ }
+    }
+  }, [appPhase, location.pathname, location.search]);
+  useEffect(() => {
+    if (restoredRouteRef.current || authStatus === 'AUTH_LOADING' || !['/', '/home'].includes(launchPathRef.current)) return;
+    restoredRouteRef.current = true;
+    try {
+      const saved = JSON.parse(localStorage.getItem(LAST_ROUTE_KEY) || 'null') as { path?: string; at?: number } | null;
+      if (saved?.path && saved.at && Date.now() - saved.at < 24 * 60 * 60 * 1000 && saved.path !== '/home') navigate(saved.path, { replace: true });
+    } catch { /* malformed storage is ignored */ }
+  }, [authStatus, navigate]);
+  useEffect(() => {
+    const key = `${SCROLL_KEY}:${location.pathname}${location.search}`;
+    const restore = () => { try { const value = Number(sessionStorage.getItem(key) || localStorage.getItem(key)); if (Number.isFinite(value)) window.scrollTo(0, value); } catch { /* optional persistence */ } };
+    const save = () => { try { const value = String(window.scrollY); sessionStorage.setItem(key, value); localStorage.setItem(key, value); } catch { /* optional persistence */ } };
+    window.setTimeout(restore, 0);
+    const hidden = () => { if (document.visibilityState === 'hidden') save(); };
+    window.addEventListener('pagehide', save); document.addEventListener('visibilitychange', hidden);
+    return () => { window.removeEventListener('pagehide', save); document.removeEventListener('visibilitychange', hidden); };
+  }, [location.pathname, location.search]);
+  useEffect(() => {
+    if (!supabase) return;
+    const refreshSession = () => { void supabase?.auth.startAutoRefresh(); void supabase?.auth.getSession(); };
+    const visible = () => { if (document.visibilityState === 'visible') refreshSession(); };
+    document.addEventListener('visibilitychange', visible);
+    let removeResume: (() => void) | null = null;
+    void CapacitorApp.addListener('appStateChange', ({ isActive }) => { if (isActive) refreshSession(); }).then((listener) => { removeResume = () => { void listener.remove(); }; }).catch(() => {});
+    return () => { document.removeEventListener('visibilitychange', visible); removeResume?.(); };
+  }, []);
   const [uiLanguage, setUiLanguage] = useState<PreferredLanguage>(() => readCustomerAppPreferences(currentUser.id).language);
   useEffect(() => {
     const ownerId = currentUser.id || 'guest-user';
@@ -492,7 +527,7 @@ export default function App() {
     isLoading: catalogLoading,
     error: catalogError,
     retry: retryCatalog,
-  } = useCatalog();
+  } = useCatalog(location.pathname);
   const { cart, setCart, clearCart } = useCart(
     currentUser,
     catalogProducts,

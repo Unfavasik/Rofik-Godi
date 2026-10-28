@@ -13,26 +13,29 @@ const asColors = (value: unknown, legacy: unknown): Product['colors'] => {
   if (Array.isArray(value) && value.length) return value as Product['colors'];
   return asStrings(legacy).map((name, index) => ({ name, hex: ['#111827', '#D9232D', '#8C5A3C', '#2563EB'][index % 4], bgClass: 'bg-slate-900' }));
 };
-const asThickness = (value: unknown): Product['thicknessOptions'] => Array.isArray(value) ? value as Product['thicknessOptions'] : [{ label: 'Standard', extraPrice: 0 }];
 
 export const mapSupabaseProduct = (row: ProductRow): Product => {
-  const category = (row.category_key as VehicleCategory | null) || categoryKeys[String(row.category || '')] || 'accessory';
-  const name = String(row.name || 'Untitled product');
+  const bundled = PRODUCTS.find((item) => item.slug === String(row.slug || ''));
+  const value = (key: string, fallback: unknown) => {
+    const candidate = row[key];
+    if (candidate === null || candidate === undefined || candidate === '' || (Array.isArray(candidate) && candidate.length === 0)) return fallback;
+    return candidate;
+  };
+  const category = (row.category_key as VehicleCategory | null) || categoryKeys[String(row.category || '')] || bundled?.category || 'accessory';
+  const name = String(value('name', bundled?.title || 'Untitled product'));
+  const slug = String(value('slug', bundled?.slug || name.toLowerCase().replace(/\s+/g, '-')));
   return {
-    id: String(row.id), title: name, subtitle: String(row.subtitle || ''), slug: String(row.slug || name.toLowerCase().replace(/\s+/g, '-')),
-    displayOrder: Number(row.display_order ?? 0),
-    category, categoryLabel: String(row.category || categoryLabels[category]), price: Number(row.price || 0), originalPrice: Number(row.original_price || row.price || 0),
-    rating: Number(row.rating || 0), reviewCount: Number(row.review_count || 0), image: String(row.image_url || ''), additionalImages: asStrings(row.additional_images),
-    description: String(row.description || ''), features: asStrings(row.features), isBestseller: Boolean(row.is_bestseller), isNew: Boolean(row.is_new),
-    isWaterproof: Boolean(row.is_waterproof), isCustomizable: Boolean(row.is_customizable), inStock: row.in_stock === undefined ? true : Boolean(row.in_stock),
-    stockQuantity: row.stock_quantity == null ? undefined : Number(row.stock_quantity),
-    lowStockThreshold: row.low_stock_threshold == null ? undefined : Number(row.low_stock_threshold),
-    materials: asStrings(row.materials), colors: asColors(row.colors_json, row.colors), stitchPatterns: asStrings(row.stitch_patterns),
-    compatibility: asStrings(row.compatibility_list).length ? asStrings(row.compatibility_list) : String(row.compatibility || '').split(',').map((item) => item.trim()).filter(Boolean),
-    thicknessOptions: asThickness(row.thickness_options), badge: row.badge ? String(row.badge) : undefined, badgeColor: row.badge_color as Product['badgeColor'] | undefined,
+    id: String(row.id || bundled?.id || `rg-prod-${slug}`), title: name, subtitle: String(value('subtitle', bundled?.subtitle || '')), slug,
+    displayOrder: Number(row.display_order ?? bundled?.displayOrder ?? 0), category, categoryLabel: String(value('category', bundled?.categoryLabel || categoryLabels[category])), price: Number(row.price ?? bundled?.price ?? 0), originalPrice: Number(row.original_price ?? bundled?.originalPrice ?? row.price ?? 0),
+    rating: Number(row.rating ?? bundled?.rating ?? 0), reviewCount: Number(row.review_count ?? bundled?.reviewCount ?? 0), image: String(value('image_url', bundled?.image || '')), additionalImages: asStrings(value('additional_images', bundled?.additionalImages || [])),
+    description: String(value('description', bundled?.description || '')), features: asStrings(value('features', bundled?.features || [])), isBestseller: row.is_bestseller === undefined ? Boolean(bundled?.isBestseller) : Boolean(row.is_bestseller), isNew: row.is_new === undefined ? Boolean(bundled?.isNew) : Boolean(row.is_new),
+    isWaterproof: row.is_waterproof === undefined ? Boolean(bundled?.isWaterproof) : Boolean(row.is_waterproof), isCustomizable: row.is_customizable === undefined ? Boolean(bundled?.isCustomizable) : Boolean(row.is_customizable), inStock: row.in_stock === undefined ? (bundled?.inStock ?? true) : Boolean(row.in_stock),
+    stockQuantity: row.stock_quantity == null ? bundled?.stockQuantity : Number(row.stock_quantity), lowStockThreshold: row.low_stock_threshold == null ? bundled?.lowStockThreshold : Number(row.low_stock_threshold),
+    materials: asStrings(value('materials', bundled?.materials || [])), colors: asColors(value('colors_json', bundled?.colors || []), value('colors', bundled?.colors?.map((color) => color.name) || [])), stitchPatterns: asStrings(value('stitch_patterns', bundled?.stitchPatterns || [])),
+    compatibility: asStrings(value('compatibility_list', bundled?.compatibility || [])).length ? asStrings(value('compatibility_list', bundled?.compatibility || [])) : String(value('compatibility', bundled?.compatibility?.join(', ') || '')).split(',').map((item) => item.trim()).filter(Boolean),
+    thicknessOptions: Array.isArray(value('thickness_options', bundled?.thicknessOptions || [])) && (value('thickness_options', bundled?.thicknessOptions || []) as unknown[]).length ? value('thickness_options', bundled?.thicknessOptions || []) as Product['thicknessOptions'] : [{ label: 'Standard', extraPrice: 0 }], badge: row.badge ? String(row.badge) : bundled?.badge, badgeColor: (row.badge_color || bundled?.badgeColor) as Product['badgeColor'] | undefined,
   };
 };
-
 const mapProductsWithReviewSummaries = async (rows: ProductRow[]): Promise<Product[]> => {
   if (!supabase || !rows.length) return rows.map(mapSupabaseProduct);
   const ids = rows.map((row) => String(row.id)).filter((id) => /^[0-9a-f-]{36}$/i.test(id));
@@ -58,10 +61,11 @@ export const loadPublicProducts = async (): Promise<Product[]> => {
   return mapProductsWithReviewSummaries((data || []) as ProductRow[]);
 };
 
-export const loadAdminProducts = async (): Promise<Product[] | null> => {
-  if (!supabase) return null;
+export const loadAdminProducts = async (): Promise<Product[]> => {
+  if (!supabase) throw new Error('Supabase is not configured.');
   const { data, error } = await supabase.from('products').select('*').order('display_order', { ascending: true }).order('updated_at', { ascending: false });
-  if (error || !data) return null;
+  if (error) throw error;
+  if (!data) throw new Error('No product data was returned.');
   return mapProductsWithReviewSummaries(data as ProductRow[]);
 };
 
@@ -73,7 +77,7 @@ const toRow = (product: Product) => ({
   image_url: product.image, additional_images: product.additionalImages || [], description: product.description,
   features: product.features || [], materials: product.materials || [], stitch_patterns: product.stitchPatterns || [], thickness_options: product.thicknessOptions || [], colors_json: product.colors || [],
   colors: (product.colors || []).map((color) => color.name), compatibility_list: product.compatibility || [], compatibility: (product.compatibility || []).join(', '), badge: product.badge || null,
-  badge_color: product.badgeColor || null, is_bestseller: Boolean(product.isBestseller), is_new: Boolean(product.isNew), is_waterproof: Boolean(product.isWaterproof),
+  badge_color: product.badgeColor || null, stock_quantity: product.stockQuantity ?? null, low_stock_threshold: product.lowStockThreshold ?? null, updated_at: new Date().toISOString(), is_bestseller: Boolean(product.isBestseller), is_new: Boolean(product.isNew), is_waterproof: Boolean(product.isWaterproof),
   is_customizable: Boolean(product.isCustomizable), in_stock: Boolean(product.inStock), is_active: true, display_order: product.displayOrder ?? 0,
 });
 
