@@ -57,6 +57,7 @@ interface AccountViewProps {
   onOpenCustomBuilder?: () => void;
   onOpenShop?: () => void;
   onOpenOrdersPage?: () => void;
+  onOpenProfileEditPage?: () => void;
   onSelectOrderRoute?: (orderSlug: string) => void;
   onBackToOrdersRoute?: () => void;
   onOpenSettingsPage?: () => void;
@@ -67,7 +68,7 @@ interface AccountViewProps {
   onOpenPrivacyPage?: () => void;
   onOpenTermsPage?: () => void;
   onExitRoutedPage?: () => void;
-  routeModal?: 'orders' | 'settings' | 'support' | 'contact-support' | null;
+  routeModal?: 'orders' | 'settings' | 'support' | 'contact-support' | 'profile' | null;
   initialOrderSlug?: string | null;
   initialSupportRequestId?: string | null;
   onProfileChange?: (profile: Pick<UserProfile, 'name' | 'phone' | 'avatar' | 'vehicle'>) => void;
@@ -89,6 +90,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
   onOpenStoreInfo,
   onOpenShop,
   onOpenOrdersPage,
+  onOpenProfileEditPage,
   onSelectOrderRoute,
   onBackToOrdersRoute,
   onOpenSettingsPage,
@@ -112,7 +114,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
     else if (onContinueShopping) onContinueShopping();
   };
   const [activeModal, setActiveModal] = useState<'orders' | 'pickupStore' | 'settings' | 'support' | 'contact-support' | 'profile' | 'privacy' | 'terms' | null>(null);
-  const previousRouteModal = useRef<'orders' | 'settings' | 'support' | 'contact-support' | null>(null);
+  const previousRouteModal = useRef<'orders' | 'settings' | 'support' | 'contact-support' | 'profile' | null>(null);
   const [initialOrderSlugForModal, setInitialOrderSlugForModal] = useState<string | null>(null);
 
   useEffect(() => {
@@ -387,7 +389,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
     setConfirmProfileClose(false);
     setProfileAvatarFile(null);
     setProfileAvatarUrl(profileSnapshot.avatar);
-    setActiveModal(null);
+    if (routeModal === 'profile') closeRoutedPage();
+    else setActiveModal(null);
   };
 
   const requestCloseProfile = () => {
@@ -397,6 +400,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
   };
 
   const handleProtectedAction = (modalType: 'orders' | 'pickupStore' | 'settings' | 'profile' | 'privacy' | 'terms') => {
+    if (modalType === 'profile' && onOpenProfileEditPage) return onOpenProfileEditPage();
     if (isGuest && (modalType === 'orders' || modalType === 'pickupStore' || modalType === 'profile')) {
       if (modalType === 'orders' && onOpenOrdersPage) return onOpenOrdersPage();
       if (onOpenLogin) onOpenLogin();

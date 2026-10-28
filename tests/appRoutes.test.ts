@@ -3,7 +3,7 @@ import { getAdminCustomerIdFromPath, getAdminOrderIdFromPath, getAdminSectionFro
 
 describe('main route preservation', () => {
   it.each([
-    '/home', '/shop', '/profile', '/account', '/search', '/wishlist', '/cart',
+    '/home', '/shop', '/profile', '/profile/edit', '/account', '/search', '/wishlist', '/cart',
     '/notifications', '/notification', '/custom', '/checkout', '/my-orders',
     '/my-order/order/0123456789abcdef0123456789abcdef', '/shop/products/premium-bike-seat-cover', '/settings', '/support',
     '/privacy-policy', '/terms-and-conditions', '/store',
@@ -29,6 +29,16 @@ describe('main route preservation', () => {
 
   it('uses a real checkout page route', () => {
     expect(resolveAppRoute('/checkout')).toMatchObject({ kind: 'checkout', tab: 'cart' });
+  });
+
+  it('resolves /profile/edit as the authenticated account profile editor route', () => {
+    expect(resolveAppRoute('/profile/edit')).toMatchObject({
+      kind: 'profile-edit',
+      tab: 'account',
+      canonicalPath: '/profile/edit',
+    });
+    expect(getPathForPhase('main', '/profile/edit')).toBe('/profile/edit');
+    expect(requiresCustomerAuthentication('/profile/edit')).toBe(true);
   });
 
   it('supports slug-based order details and normalizes old order-number URLs to the list', () => {
@@ -151,7 +161,7 @@ describe('admin workspace redirect policy', () => {
 });
 
 describe('guest access policy', () => {
-  it.each(['/checkout', '/my-orders', '/my-orders/RGC-ABC123', '/my-order', '/my-order/order/RGC-ABC123', '/support', '/support/ticket-123', '/contact-support'])(
+  it.each(['/checkout', '/profile/edit', '/my-orders', '/my-orders/RGC-ABC123', '/my-order', '/my-order/order/RGC-ABC123', '/support', '/support/ticket-123', '/contact-support'])(
     'requires customer authentication for %s',
     (path) => expect(requiresCustomerAuthentication(path)).toBe(true),
   );

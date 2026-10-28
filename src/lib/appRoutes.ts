@@ -4,7 +4,7 @@ export type AdminSectionRoute = 'overview' | 'orders' | 'products' | 'categories
 
 export const APP_ROUTE_PATHS = [
   '/', '/home', '/shop', '/search', '/custom', '/wishlist', '/cart', '/checkout',
-  '/profile', '/account', '/my-orders', '/myorder', '/my-order',
+  '/profile', '/profile/edit', '/account', '/my-orders', '/myorder', '/my-order',
   '/my-orders/order/:orderSlug', '/myorder/order/:orderSlug', '/my-order/order/:orderSlug',
   '/notifications', '/notification', '/shop/products/:slug', '/products/:slug', '/product/:slug',
   '/support', '/support/:requestId', '/contact-support', '/contact-support/my-support-requests', '/contact-us', '/contact-workshop',
@@ -22,6 +22,7 @@ export type ResolvedAppRoute =
   | { kind: 'admin-order'; tab: 'home'; orderId: string; canonicalPath: string }
   | { kind: 'checkout'; tab: 'cart'; canonicalPath: '/checkout' }
   | { kind: 'orders'; tab: 'account'; orderSlug: string | null; canonicalPath: string }
+  | { kind: 'profile-edit'; tab: 'account'; canonicalPath: '/profile/edit' }
   | { kind: 'support'; tab: 'account'; requestId: string | null; canonicalPath: string }
   | { kind: 'contact-support'; tab: 'account'; canonicalPath: '/contact-support' }
   | { kind: 'product'; tab: 'shop'; slug: string; canonicalPath: string }
@@ -111,6 +112,7 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
   if (path === '/wishlist') return { kind: 'tab', tab: 'wishlist', canonicalPath: '/wishlist' };
   if (path === '/cart') return { kind: 'tab', tab: 'cart', canonicalPath: '/cart' };
   if (path === '/notifications' || path === '/notification') return { kind: 'tab', tab: 'notifications', canonicalPath: '/notifications' };
+  if (path === '/profile/edit') return { kind: 'profile-edit', tab: 'account', canonicalPath: '/profile/edit' };
   if (path === '/profile' || path === '/account') return { kind: 'tab', tab: 'account', canonicalPath: '/profile' };
   if (path.toLowerCase() === '/contact-support/my-support-requests') {
     return { kind: 'support', tab: 'account', requestId: null, canonicalPath: '/contact-support/my-support-requests' };
@@ -183,7 +185,7 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
 
 export function requiresCustomerAuthentication(pathname: string): boolean {
   const kind = resolveAppRoute(pathname).kind;
-  return kind === 'checkout' || kind === 'orders' || kind === 'support' || kind === 'contact-support';
+  return kind === 'checkout' || kind === 'orders' || kind === 'support' || kind === 'contact-support' || kind === 'profile-edit';
 }
 
 export function getPathForProduct(slug: string): string {

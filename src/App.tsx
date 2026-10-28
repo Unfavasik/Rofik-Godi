@@ -1350,10 +1350,11 @@ export default function App() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               onOpenWishlist={openWishlistPage}
-              routeModal={resolvedRoute.kind === 'orders' ? 'orders' : resolvedRoute.kind === 'settings' ? 'settings' : resolvedRoute.kind === 'support' ? 'support' : resolvedRoute.kind === 'contact-support' ? 'contact-support' : null}
+              routeModal={resolvedRoute.kind === 'profile-edit' ? 'profile' : resolvedRoute.kind === 'orders' ? 'orders' : resolvedRoute.kind === 'settings' ? 'settings' : resolvedRoute.kind === 'support' ? 'support' : resolvedRoute.kind === 'contact-support' ? 'contact-support' : null}
               initialOrderSlug={resolvedRoute.kind === 'orders' ? resolvedRoute.orderSlug : null}
               initialSupportRequestId={resolvedRoute.kind === 'support' ? resolvedRoute.requestId : null}
               onOpenOrdersPage={() => navigate('/my-orders')}
+              onOpenProfileEditPage={() => navigate('/profile/edit')}
               onBuyAgain={handleBuyAgain}
               onSelectOrderRoute={(orderSlug) => navigate(getPathForCustomerOrder(orderSlug))}
               onBackToOrdersRoute={() => navigate('/my-orders')}
