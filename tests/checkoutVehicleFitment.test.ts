@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   getCheckoutVehicleCompanies,
   getCheckoutVehicleModels,
+  parseVehicleFitmentValue,
 } from '../src/lib/checkoutVehicleFitment';
 
 describe('checkout vehicle fitment options', () => {
@@ -27,5 +28,23 @@ describe('checkout vehicle fitment options', () => {
     const totoCompany = getCheckoutVehicleCompanies('Toto / E-rickshaw')[0];
     expect(getCheckoutVehicleModels('Toto / E-rickshaw', totoCompany).length).toBeGreaterThan(0);
     expect(getCheckoutVehicleModels('Car', 'Toyota')).toEqual([]);
+  });
+
+  it('restores new and legacy saved profile vehicle strings into company/model fields', () => {
+    expect(parseVehicleFitmentValue('Bike · Hero MotoCorp · Hero HF Deluxe')).toMatchObject({
+      type: 'Bike',
+      company: 'Hero MotoCorp',
+      model: 'Hero HF Deluxe',
+      manualValue: '',
+    });
+    expect(parseVehicleFitmentValue('Hero HF Deluxe')).toMatchObject({
+      type: 'Bike',
+      company: 'Hero MotoCorp',
+      model: 'Hero HF Deluxe',
+    });
+    expect(parseVehicleFitmentValue('My custom ride')).toMatchObject({
+      type: 'Other',
+      manualValue: 'My custom ride',
+    });
   });
 });

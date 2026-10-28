@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Package,
@@ -28,6 +28,12 @@ import { ContactSupportView } from './ContactSupportView';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { WORKSHOP_INFO } from '../data/products';
+import {
+  getCheckoutVehicleCompanies,
+  getCheckoutVehicleModels,
+  parseVehicleFitmentValue,
+  type CheckoutVehicleType,
+} from '../lib/checkoutVehicleFitment';
 import { deleteMyAvatar, getMyAuthEmail, getMyProfile, saveMyProfile, uploadMyAvatar } from '../lib/supabaseCustomer';
 import { getInitials, validateProfileFields } from '../lib/profileValidation';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -182,6 +188,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
   const [profilePhoneCountry, setProfilePhoneCountry] = useState<CountryCode>('IN');
   const [profilePhoneTouched, setProfilePhoneTouched] = useState(false);
   const [profileVehicle, setProfileVehicle] = useState('');
+  const [profileVehicleType, setProfileVehicleType] = useState<CheckoutVehicleType>('Bike');
+  const [profileVehicleCompany, setProfileVehicleCompany] = useState('');
+  const [profileVehicleModel, setProfileVehicleModel] = useState('');
   const [profileEmail, setProfileEmail] = useState('');
   const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
   const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null);
@@ -193,6 +202,22 @@ export const AccountView: React.FC<AccountViewProps> = ({
   const [confirmProfileClose, setConfirmProfileClose] = useState(false);
   const profileSavingRef = useRef(false);
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
+  const profileVehicleCompanies = useMemo(
+    () => getCheckoutVehicleCompanies(profileVehicleType),
+    [profileVehicleType],
+  );
+  const profileVehicleModels = useMemo(
+    () => getCheckoutVehicleModels(profileVehicleType, profileVehicleCompany),
+    [profileVehicleType, profileVehicleCompany],
+  );
+  const selectedProfileVehicle = profileVehicleModels.find((model) => model.name === profileVehicleModel);
+  const hydrateProfileVehicle = useCallback((value: string) => {
+    const parsed = parseVehicleFitmentValue(value);
+    setProfileVehicle(value);
+    setProfileVehicleType(parsed.type);
+    setProfileVehicleCompany(parsed.company);
+    setProfileVehicleModel(parsed.model);
+  }, []);
   const profileDirty = profileName !== profileSnapshot.name
     || profilePhone !== profileSnapshot.phone
     || profilePhoneCountry !== profileSnapshot.phoneCountry
@@ -213,7 +238,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
       setProfilePhone('');
       setProfilePhoneCountry('IN');
       setProfilePhoneTouched(false);
-      setProfileVehicle('');
+      hydrateProfileVehicle('');
       setProfileEmail('');
       setProfileAvatarUrl(null);
       setProfileAvatarFile(null);
@@ -233,7 +258,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
     setProfilePhone(fallback.phone);
     setProfilePhoneCountry(getPhoneCountry(fallback.phone));
     setProfilePhoneTouched(false);
-    setProfileVehicle(fallback.vehicle);
+    hydrateProfileVehicle(fallback.vehicle);
     setProfileEmail(profileUser.email || '');
     setProfileAvatarUrl(fallback.avatar);
     setProfileAvatarFile(null);
@@ -254,7 +279,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
       setProfilePhone(loaded.phone);
       setProfilePhoneCountry(loaded.phoneCountry);
       setProfilePhoneTouched(false);
-      setProfileVehicle(loaded.vehicle);
+      hydrateProfileVehicle(loaded.vehicle);
       setProfileEmail(email || profileUser.email || '');
       setProfileAvatarUrl(loaded.avatar);
       setProfileSnapshot(loaded);
@@ -264,7 +289,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
       if (active) setProfileLoading(false);
     });
     return () => { active = false; };
-  }, [activeModal, currentUser?.id, currentUser?.isGuest]);
+  }, [activeModal, currentUser?.id, currentUser?.isGuest, hydrateProfileVehicle]);
 
   const handleSaveProfile = async () => {
     if (!currentUser || currentUser.isGuest || profileSavingRef.current) return;
@@ -1064,21 +1089,98 @@ export const AccountView: React.FC<AccountViewProps> = ({
                     disabled={profileLoading || profileSaving}
                   />
                 </div>
-                <div>
-                  <label htmlFor="profile-vehicle" className="text-[11px] font-bold text-gray-700 block mb-1">Vehicle Model <span className="font-normal text-gray-400">(optional)</span></label>
-                  <input
-                    id="profile-vehicle"
-                    type="text"
-                    maxLength={60}
-                    value={profileVehicle}
-                    onChange={(e) => { setProfileVehicle(e.target.value); setProfileMessage(''); }}
-                    aria-invalid={Boolean(profileFieldErrors.vehicle_model)}
-                    aria-describedby={profileFieldErrors.vehicle_model ? 'profile-vehicle-error' : undefined}
-                    disabled={profileLoading || profileSaving}
-                    className="w-full bg-gray-50 text-[12.5px] rounded-xl px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#D9232D]"
-                  />
-                  {profileFieldErrors.vehicle_model && <p id="profile-vehicle-error" role="alert" className="mt-1 text-[10px] font-medium text-red-600">{profileFieldErrors.vehicle_model}</p>}
-                </div>
+                <section className="space-y-3 rounded-2xl border border-gray-200 bg-white p-3" aria-label="Vehicle fitment">
+                  <div>
+                    <p className="text-[11px] font-bold text-gray-700">Vehicle for fitment <span className="font-normal text-gray-400">(optional)</span></p>
+                    <p className="mt-1 text-[10px] leading-relaxed text-gray-500">Choose a company first to see its models and photo.</p>
+                  </div>
+                  <label htmlFor="profile-vehicle-type" className="block text-[10px] font-semibold text-gray-600">{t('checkout.vehicleType')}
+                    <select
+                      id="profile-vehicle-type"
+                      value={profileVehicleType}
+                      onChange={(event) => {
+                        setProfileVehicleType(event.target.value as CheckoutVehicleType);
+                        setProfileVehicleCompany('');
+                        setProfileVehicleModel('');
+                        setProfileVehicle('');
+                        setProfileMessage('');
+                      }}
+                      disabled={profileLoading || profileSaving}
+                      className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-[12px] font-semibold text-gray-900 outline-none focus:border-[#D9232D]"
+                    >
+                      {(['Bike', 'Scooter', 'Toto / E-rickshaw', 'Car', 'Other'] as CheckoutVehicleType[]).map((type) => (
+                        <option key={type} value={type}>{type === 'Bike' ? t('checkout.vehicleBike') : type === 'Scooter' ? t('checkout.vehicleScooter') : type === 'Toto / E-rickshaw' ? t('checkout.vehicleToto') : type === 'Car' ? t('checkout.vehicleCar') : t('checkout.vehicleOther')}</option>
+                      ))}
+                    </select>
+                  </label>
+                  {profileVehicleCompanies.length > 0 ? (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label htmlFor="profile-vehicle-company" className="block text-[10px] font-semibold text-gray-600">{t('checkout.vehicleCompany')}
+                        <select
+                          id="profile-vehicle-company"
+                          value={profileVehicleCompany}
+                          onChange={(event) => {
+                            setProfileVehicleCompany(event.target.value);
+                            setProfileVehicleModel('');
+                            setProfileVehicle('');
+                            setProfileMessage('');
+                          }}
+                          disabled={profileLoading || profileSaving}
+                          className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-[12px] font-semibold text-gray-900 outline-none focus:border-[#D9232D]"
+                        >
+                          <option value="">{t('checkout.chooseCompany')}</option>
+                          {profileVehicleCompanies.map((company) => <option key={company} value={company}>{company}</option>)}
+                        </select>
+                      </label>
+                      <label htmlFor="profile-vehicle-model" className="block text-[10px] font-semibold text-gray-600">{t('checkout.vehicleModel')} <span className="font-normal text-gray-400">(optional)</span>
+                        <select
+                          id="profile-vehicle-model"
+                          value={profileVehicleModel}
+                          onChange={(event) => {
+                            const model = event.target.value;
+                            setProfileVehicleModel(model);
+                            setProfileVehicle(model ? `${profileVehicleType} · ${profileVehicleCompany} · ${model}` : '');
+                            setProfileMessage('');
+                          }}
+                          disabled={profileLoading || profileSaving || !profileVehicleCompany}
+                          aria-invalid={Boolean(profileFieldErrors.vehicle_model)}
+                          aria-describedby={profileFieldErrors.vehicle_model ? 'profile-vehicle-error' : undefined}
+                          className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-[12px] font-semibold text-gray-900 outline-none focus:border-[#D9232D] disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <option value="">{profileVehicleCompany ? t('checkout.chooseVehicleModel') : t('checkout.chooseCompany')}</option>
+                          {profileVehicleModels.map((model) => <option key={model.name} value={model.name}>{model.name}</option>)}
+                        </select>
+                      </label>
+                    </div>
+                  ) : (
+                    <div>
+                      <label htmlFor="profile-vehicle" className="mb-1 block text-[10px] font-semibold text-gray-600">Vehicle Model <span className="font-normal text-gray-400">(optional)</span></label>
+                      <input
+                        id="profile-vehicle"
+                        type="text"
+                        maxLength={60}
+                        value={profileVehicle}
+                        onChange={(event) => { setProfileVehicle(event.target.value); setProfileMessage(''); }}
+                        aria-invalid={Boolean(profileFieldErrors.vehicle_model)}
+                        aria-describedby={profileFieldErrors.vehicle_model ? 'profile-vehicle-error' : undefined}
+                        disabled={profileLoading || profileSaving}
+                        placeholder={t('checkout.exampleVehicle')}
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-[12px] text-gray-900 outline-none focus:border-[#D9232D]"
+                      />
+                    </div>
+                  )}
+                  {selectedProfileVehicle && (
+                    <div className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50/70 p-2.5">
+                      {selectedProfileVehicle.image ? (
+                        <div className="h-[72px] w-32 shrink-0 overflow-hidden rounded-lg bg-white"><img src={selectedProfileVehicle.image} alt={selectedProfileVehicle.name} className="h-full w-full scale-110 object-contain" /></div>
+                      ) : (
+                        <div className="grid h-16 w-16 shrink-0 place-items-center rounded-lg bg-white text-2xl">🛺</div>
+                      )}
+                      <div className="min-w-0"><p className="text-[9px] font-extrabold uppercase tracking-wide text-emerald-800">{t('checkout.selectedVehicle')}</p><p className="mt-1 truncate text-[10px] font-semibold text-gray-500">{selectedProfileVehicle.brand}</p><p className="break-words text-xs font-black leading-snug text-gray-900">{selectedProfileVehicle.name}</p></div>
+                    </div>
+                  )}
+                  {profileFieldErrors.vehicle_model && <p id="profile-vehicle-error" role="alert" className="text-[10px] font-medium text-red-600">{profileFieldErrors.vehicle_model}</p>}
+                </section>
                 <div>
                   <label htmlFor="profile-email" className="text-[11px] font-bold text-gray-700 block mb-1">Email</label>
                   <div className="relative">
