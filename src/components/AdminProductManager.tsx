@@ -22,7 +22,7 @@ const blankDraft = (): ProductDraft => ({
   title: '', subtitle: '', slug: '', category: 'bike', categoryLabel: 'Bike Covers', price: 0, originalPrice: 0,
   image: '', additionalImages: [], description: '', features: [], isBestseller: false, isNew: true,
   isWaterproof: false, isCustomizable: false, inStock: true, materials: [], colors: [{ name: 'Black', hex: '#111827', bgClass: 'bg-[#111827]' }],
-  stitchPatterns: [], compatibility: [], thicknessOptions: [{ label: 'Standard', extraPrice: 0 }], rating: 0, reviewCount: 0,
+  stitchPatterns: [], compatibility: [], thicknessOptions: [{ label: 'Standard', extraPrice: 0 }], stockQuantity: 0, lowStockThreshold: 5, rating: 0, reviewCount: 0,
 });
 
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -129,7 +129,7 @@ export const AdminProductManager: React.FC<{ initialProducts?: Product[]; onProd
         return;
       }
     }
-    const normalized: Product = { ...draft, image, id: draft.id || `rg-prod-${Date.now()}`, displayOrder: draft.id ? draft.displayOrder ?? 0 : products.reduce((max, product) => Math.max(max, product.displayOrder ?? -1), -1) + 1, slug: slugify(draft.slug || draft.title), categoryLabel: draft.categoryLabel || categoryLabels[draft.category], colors: (draft.colors || []).map((color) => ({ ...color, name: color.name.trim() || color.hex.trim(), hex: color.hex.trim(), bgClass: color.bgClass || 'bg-slate-900' })), additionalImages: (draft.additionalImages || []).filter(Boolean) };
+    const normalized: Product = { ...draft, image, id: draft.id || `rg-prod-${Date.now()}`, displayOrder: draft.id ? draft.displayOrder ?? 0 : products.reduce((max, product) => Math.max(max, product.displayOrder ?? -1), -1) + 1, slug: slugify(draft.slug || draft.title), categoryLabel: draft.categoryLabel || categoryLabels[draft.category], stockQuantity: draft.stockQuantity ?? 0, lowStockThreshold: draft.lowStockThreshold ?? 5, colors: (draft.colors || []).map((color) => ({ ...color, name: color.name.trim() || color.hex.trim(), hex: color.hex.trim(), bgClass: color.bgClass || 'bg-slate-900' })), additionalImages: (draft.additionalImages || []).filter(Boolean) };
     const synced = await upsertSupabaseProduct(normalized);
     if (synced.error) { notify(`Product was not saved: ${synced.error.message}`); return; }
     setProducts((current) => draft.id ? current.map((item) => item.id === draft.id ? synced.product : item) : [synced.product, ...current]);
