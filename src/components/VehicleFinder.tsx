@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { VEHICLE_BRANDS } from '../data/products';
+import { VEHICLE_MODELS, type VehicleCatalogModel } from '../data/vehicleModels';
 import { CheckCircle2, ChevronDown, RotateCcw, Shield } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -8,18 +9,39 @@ interface VehicleFinderProps {
   activeVehicleFilter: string | null;
 }
 
+type FinderType = 'bike' | 'scooter' | 'toto';
+interface FinderModel {
+  brand: string;
+  name: string;
+  image?: string;
+}
+
 export const VehicleFinder: React.FC<VehicleFinderProps> = ({
   onFilterVehicle,
   activeVehicleFilter,
 }) => {
-  const [selectedType, setSelectedType] = useState<'bike' | 'scooter' | 'toto'>('bike');
-  const [selectedBrand, setSelectedBrand] = useState<string>('');
-  const [selectedModel, setSelectedModel] = useState<string>('');
+  const [selectedType, setSelectedType] = useState<FinderType>('bike');
+  const [selectedBrand, setSelectedBrand] = useState('');
+  const [selectedModel, setSelectedModel] = useState('');
 
-  const currentBrands = VEHICLE_BRANDS[selectedType] || [];
-  const currentModels = currentBrands.find((b) => b.brand === selectedBrand)?.models || [];
+  const currentBrands =
+    selectedType === 'toto'
+      ? VEHICLE_BRANDS.toto.map(({ brand }) => brand)
+      : Array.from(new Set(VEHICLE_MODELS.filter((model) => model.type === selectedType).map((model) => model.brand))).sort(
+          (a, b) => a.localeCompare(b),
+        );
+  const currentModels: FinderModel[] =
+    selectedType === 'toto'
+      ? (VEHICLE_BRANDS.toto.find((group) => group.brand === selectedBrand)?.models || []).map((name) => ({
+          brand: selectedBrand,
+          name,
+        }))
+      : VEHICLE_MODELS.filter(
+          (model: VehicleCatalogModel) => model.type === selectedType && model.brand === selectedBrand,
+        );
+  const selectedVehicle = currentModels.find((model) => model.name === selectedModel);
 
-  const handleTypeChange = (type: 'bike' | 'scooter' | 'toto') => {
+  const handleTypeChange = (type: FinderType) => {
     setSelectedType(type);
     setSelectedBrand('');
     setSelectedModel('');
@@ -41,19 +63,18 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
 
   return (
     <section className="px-5 mb-6" data-purpose="vehicle-fitment-finder">
-      <div className="bg-gradient-to-r from-gray-900 via-gray-900 to-[#1e232a] rounded-[24px] p-4 text-white shadow-lg border border-gray-800 relative overflow-hidden">
-        {/* Subtle accent glow */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-[#D9232D]/15 rounded-full blur-2xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-[24px] border border-gray-800 bg-gradient-to-r from-gray-900 via-gray-900 to-[#1e232a] p-4 text-white shadow-lg">
+        <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-[#D9232D]/15 blur-2xl" />
 
-        <div className="flex items-center justify-between mb-3 relative z-10">
+        <div className="relative z-10 mb-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-[#D9232D] flex items-center justify-center text-white">
-              <Shield className="w-3.5 h-3.5" />
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#D9232D] text-white">
+              <Shield className="h-3.5 w-3.5" />
             </div>
             <div>
-              <h3 className="text-[13.5px] font-black tracking-tight text-white flex items-center gap-1.5">
+              <h3 className="flex items-center gap-1.5 text-[13.5px] font-black tracking-tight text-white">
                 <span>Vehicle Fitment Finder</span>
-                <span className="bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.2 rounded border border-emerald-500/30">
+                <span className="rounded border border-emerald-500/30 bg-emerald-500/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-400">
                   100% Fit Guarantee
                 </span>
               </h3>
@@ -63,95 +84,110 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
 
           {activeVehicleFilter && (
             <button
+              type="button"
               onClick={handleClear}
-              className="text-[11px] text-gray-400 hover:text-white flex items-center gap-1 bg-gray-800/80 px-2 py-1 rounded-full"
+              className="flex items-center gap-1 rounded-full bg-gray-800/80 px-2 py-1 text-[11px] text-gray-400 hover:text-white"
             >
-              <RotateCcw className="w-3 h-3" />
+              <RotateCcw className="h-3 w-3" />
               <span>Reset</span>
             </button>
           )}
         </div>
 
-        {/* Vehicle Type Switcher Tabs */}
-        <div className="grid grid-cols-3 gap-1.5 bg-gray-800/70 p-1 rounded-xl mb-3 relative z-10">
-          <button
-            onClick={() => handleTypeChange('bike')}
-            className={`py-1.5 text-[11.5px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
-              selectedType === 'bike' ? 'bg-[#D9232D] text-white shadow-sm' : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <span>🏍️</span>
-            <span>Bike</span>
-          </button>
-          <button
-            onClick={() => handleTypeChange('scooter')}
-            className={`py-1.5 text-[11.5px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
-              selectedType === 'scooter' ? 'bg-[#D9232D] text-white shadow-sm' : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <span>🛵</span>
-            <span>Scooty</span>
-          </button>
-          <button
-            onClick={() => handleTypeChange('toto')}
-            className={`py-1.5 text-[11.5px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
-              selectedType === 'toto' ? 'bg-[#D9232D] text-white shadow-sm' : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <span>🛺</span>
-            <span>Toto / Cab</span>
-          </button>
-        </div>
-
-        {/* Selection Dropdowns & Apply Button */}
-        <div className="grid grid-cols-2 gap-2 mb-2.5 relative z-10">
-          {/* Brand Select */}
-          <div className="relative">
-            <select
-              value={selectedBrand}
-              onChange={(e) => {
-                setSelectedBrand(e.target.value);
-                setSelectedModel('');
-              }}
-              className="w-full bg-gray-800/90 text-white text-[12px] font-semibold rounded-xl px-3 py-2 border border-gray-700/80 focus:border-[#D9232D] focus:outline-none appearance-none cursor-pointer pr-8"
-            >
-              <option value="">Select Brand</option>
-              {currentBrands.map((b) => (
-                <option key={b.brand} value={b.brand}>
-                  {b.brand}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-
-          {/* Model Select */}
-          <div className="relative">
-            <select
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-              disabled={!selectedBrand}
-              className={`w-full bg-gray-800/90 text-white text-[12px] font-semibold rounded-xl px-3 py-2 border border-gray-700/80 focus:border-[#D9232D] focus:outline-none appearance-none cursor-pointer pr-8 ${
-                !selectedBrand ? 'opacity-50 cursor-not-allowed' : ''
+        <div className="relative z-10 mb-3 grid grid-cols-3 gap-1.5 rounded-xl bg-gray-800/70 p-1">
+          {([
+            { id: 'bike' as const, icon: '🏍️', label: 'Bike' },
+            { id: 'scooter' as const, icon: '🛵', label: 'Scooty' },
+            { id: 'toto' as const, icon: '🛺', label: 'Toto / Cab' },
+          ]).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              aria-pressed={selectedType === tab.id}
+              onClick={() => handleTypeChange(tab.id)}
+              className={`flex items-center justify-center gap-1 rounded-lg py-1.5 text-[11.5px] font-bold transition-all ${
+                selectedType === tab.id ? 'bg-[#D9232D] text-white shadow-sm' : 'text-gray-400 hover:text-white'
               }`}
             >
-              <option value="">{selectedBrand ? 'Select Model' : 'Pick Brand First'}</option>
-              {currentModels.map((m) => (
-                <option key={m} value={m}>
-                  {m}
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="relative z-10 mb-2.5 grid grid-cols-2 gap-2">
+          <label className="relative block min-w-0">
+            <span className="sr-only">Select company</span>
+            <select
+              aria-label="Select company"
+              value={selectedBrand}
+              onChange={(event) => {
+                setSelectedBrand(event.target.value);
+                setSelectedModel('');
+              }}
+              className="w-full cursor-pointer appearance-none rounded-xl border border-gray-700/80 bg-gray-800/90 py-2 pl-3 pr-8 text-[12px] font-semibold text-white focus:border-[#D9232D] focus:outline-none"
+            >
+              <option value="">Select Company</option>
+              {currentBrands.map((brand) => (
+                <option key={brand} value={brand}>
+                  {brand}
                 </option>
               ))}
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+          </label>
+
+          <label className="relative block min-w-0">
+            <span className="sr-only">Select model</span>
+            <select
+              aria-label="Select model"
+              value={selectedModel}
+              onChange={(event) => setSelectedModel(event.target.value)}
+              disabled={!selectedBrand}
+              className={`w-full appearance-none rounded-xl border border-gray-700/80 bg-gray-800/90 py-2 pl-3 pr-8 text-[12px] font-semibold text-white focus:border-[#D9232D] focus:outline-none ${
+                !selectedBrand ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+              }`}
+            >
+              <option value="">{selectedBrand ? 'Select Model' : 'Pick Company First'}</option>
+              {currentModels.map((model, index) => (
+                <option key={`${model.name}-${index}`} value={model.name}>
+                  {model.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+          </label>
         </div>
 
-        {/* Apply button & Active fitment badge */}
-        <div className="flex items-center justify-between gap-2 relative z-10">
+        {selectedVehicle && (
+          <div className="relative z-10 mb-2.5 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-2.5">
+            {selectedVehicle.image ? (
+              <div className="flex h-[68px] w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white p-1">
+                <img
+                  src={selectedVehicle.image}
+                  alt={`${selectedVehicle.name} vehicle`}
+                  className="h-full w-full object-contain"
+                  loading="lazy"
+                />
+              </div>
+            ) : (
+              <div className="flex h-[68px] w-24 shrink-0 items-center justify-center rounded-lg bg-gray-800 text-3xl">
+                {selectedType === 'toto' ? '🛺' : '🏍️'}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">{selectedVehicle.brand}</p>
+              <p className="mt-1 line-clamp-2 text-[12px] font-extrabold leading-snug text-white">{selectedVehicle.name}</p>
+              <p className="mt-1 text-[9px] font-semibold text-emerald-400">Model selected</p>
+            </div>
+          </div>
+        )}
+
+        <div className="relative z-10 flex items-center justify-between gap-2">
           {activeVehicleFilter ? (
-            <div className="flex items-center gap-1.5 text-emerald-400 text-[11px] font-semibold">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Fitted for: <strong>{activeVehicleFilter}</strong></span>
+            <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Fitted for: <strong>{activeVehicleFilter}</strong></span>
             </div>
           ) : (
             <span className="text-[10px] text-gray-400">
@@ -160,13 +196,14 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
           )}
 
           <motion.button
+            type="button"
             whileTap={{ scale: 0.95 }}
             disabled={!selectedBrand}
             onClick={handleApplyFilter}
-            className={`px-4 py-1.5 rounded-xl text-[11.5px] font-bold transition-all shadow-sm ${
+            className={`shrink-0 rounded-xl px-4 py-1.5 text-[11.5px] font-bold shadow-sm transition-all ${
               selectedBrand
-                ? 'bg-[#D9232D] hover:bg-[#c01d26] text-white cursor-pointer'
-                : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                ? 'cursor-pointer bg-[#D9232D] text-white hover:bg-[#c01d26]'
+                : 'cursor-not-allowed bg-gray-800 text-gray-500'
             }`}
           >
             Find Covers
