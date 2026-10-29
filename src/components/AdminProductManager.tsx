@@ -4,14 +4,12 @@ import {
   ArrowUp,
   Check,
   Copy,
-  ExternalLink,
   GripVertical,
   ImagePlus,
   Pencil,
   Plus,
   Search,
   Trash2,
-  Upload,
   X,
 } from 'lucide-react';
 import type { Product, VehicleCategory } from '../types';
@@ -36,6 +34,7 @@ import {
   isValidProductColorValue,
 } from '../lib/productColors';
 import { convertImageToWebP } from '../lib/imagePipeline';
+import { deriveProductImages, seedLegacyColorImages } from '../lib/productImages';
 import { notifyCatalogChanged } from '../lib/localCache';
 import { BottomSheet } from './BottomSheet';
 const clearCatalogCache = () => {
@@ -212,7 +211,14 @@ export const AdminProductManager: React.FC<{
         saved.savedAt &&
         Date.now() - saved.savedAt < 48 * 60 * 60 * 1000
       ) {
-        setEditing(saved.draft);
+        setEditing({
+          ...saved.draft,
+          colors: seedLegacyColorImages(
+            saved.draft.colors?.length ? saved.draft.colors : blankDraft().colors,
+            saved.draft.image,
+            saved.draft.additionalImages || [],
+          ),
+        });
         setEditorOpen(true);
         notify('Draft restored');
       }
@@ -273,7 +279,11 @@ export const AdminProductManager: React.FC<{
       materials: product.materials || [],
       compatibility: product.compatibility || [],
       stitchPatterns: product.stitchPatterns || [],
-      colors: product.colors?.length ? product.colors : blankDraft().colors,
+      colors: seedLegacyColorImages(
+        product.colors?.length ? product.colors : blankDraft().colors,
+        product.image,
+        product.additionalImages || [],
+      ),
     });
     setEditorOpen(true);
   };
@@ -322,7 +332,7 @@ export const AdminProductManager: React.FC<{
       }
     }
     if (!image.trim()) {
-      notify('Upload the primary product image first');
+      notify('Add at least one colour image first');
       return;
     }
     const colorsWithImages = (draft.colors || []).map((color) => {
@@ -852,7 +862,7 @@ const ProductEditor: React.FC<{
   customers: AdminCustomer[];
 }> = ({ draft, saving, setSaving, onClose, onSave, customers }) => {
   const [form, setForm] = useState<ProductDraft>(draft);
-  const [urlInput, setUrlInput] = useState('');
+  const derived = useMemo(() => deriveProductImages(form.colors || []), [form.colors]);
   const [validationError, setValidationError] = useState('');
   const [announcementAudience, setAnnouncementAudience] = useState<NotificationAudience>('NONE');
   const [announcementUserIds, setAnnouncementUserIds] = useState<string[]>([]);
@@ -869,8 +879,6 @@ const ProductEditor: React.FC<{
     materials: [...(draft.materials || [])],
     stitchPatterns: [...(draft.stitchPatterns || [])],
   });
-  const fileRef = useRef<HTMLInputElement>(null);
-  const galleryFileRef = useRef<HTMLInputElement>(null);
   const persistDraft = useCallback(() => {
     try {
       localStorage.setItem(
@@ -907,87 +915,6 @@ const ProductEditor: React.FC<{
     isSupabaseConfigured
       ? uploadProductImage(file)
       : { url: URL.createObjectURL(await convertImageToWebP(file)) };
-  const makePrimaryImage = (index: number) => {
-    setForm((current) => {
-      const gallery = (current.additionalImages || []).filter(Boolean);
-      const nextPrimary = gallery[index];
-      if (!nextPrimary) return current;
-      return {
-        ...current,
-        image: nextPrimary,
-        additionalImages: [current.image, ...gallery.filter((_, itemIndex) => itemIndex !== index)]
-          .filter(Boolean)
-          .filter((url, itemIndex, items) => items.indexOf(url) === itemIndex),
-      };
-    });
-    setValidationError('');
-  };
-  const removeGalleryImage = (index: number) =>
-    setForm((current) => ({
-      ...current,
-      additionalImages: (current.additionalImages || []).filter(
-        (_, itemIndex) => itemIndex !== index,
-      ),
-    }));
-  const upload = async (file?: File) => {
-    if (!file) return;
-    setValidationError('');
-    if (!file.type.startsWith('image/')) {
-      setValidationError('Please choose an image file.');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setValidationError('Image must be 5MB or smaller.');
-      return;
-    }
-    if (isSupabaseConfigured) {
-      try {
-        setSaving(true);
-        const uploaded = await uploadEditorImage(file);
-        set('image', uploaded.url);
-      } catch (error) {
-        setValidationError(
-          error instanceof Error
-            ? error.message
-            : 'Image upload failed. Check your admin session and try again.',
-        );
-        return;
-      } finally {
-        setSaving(false);
-      }
-    } else set('image', URL.createObjectURL(file));
-  };
-  const uploadGalleryFiles = async (files: FileList | null) => {
-    if (!files?.length) return;
-    setValidationError('');
-    const selected = Array.from(files);
-    const invalid = selected.find(
-      (file) => !file.type.startsWith('image/') || file.size > 5 * 1024 * 1024,
-    );
-    if (invalid) {
-      setValidationError(`${invalid.name}: choose an image file up to 5MB.`);
-      return;
-    }
-    try {
-      setSaving(true);
-      const uploaded = isSupabaseConfigured
-        ? await Promise.all(selected.map((file) => uploadEditorImage(file)))
-        : await Promise.all(selected.map((file) => uploadEditorImage(file)));
-      set('additionalImages', [
-        ...(form.additionalImages || []),
-        ...uploaded.map((item) => item.url),
-      ]);
-    } catch (error) {
-      setValidationError(
-        error instanceof Error
-          ? error.message
-          : 'Gallery upload failed. Check your admin session and try again.',
-      );
-    } finally {
-      setSaving(false);
-      if (galleryFileRef.current) galleryFileRef.current.value = '';
-    }
-  };
   const uploadColorFiles = async (files: File[]) => {
     const invalid = files.find(
       (file) =>
@@ -1013,26 +940,15 @@ const ProductEditor: React.FC<{
       setSaving(false);
     }
   };
-  const addGalleryUrl = () => {
-    const value = urlInput.trim();
-    if (!value) return;
-    try {
-      new URL(value);
-    } catch {
-      setValidationError('Please enter a valid image URL.');
-      return;
-    }
-    set('additionalImages', [...(form.additionalImages || []), value]);
-    setUrlInput('');
-    setValidationError('');
-  };
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!form.title.trim() || !form.image.trim() || form.price <= 0) {
-      setValidationError('Product name, primary image and a positive price are required.');
+    const colorOptions = form.colors || [];
+    if (!form.title.trim() || !derived.image || form.price <= 0) {
+      setValidationError(
+        'Add at least one image to a colour. The first one becomes the product cover.',
+      );
       return;
     }
-    const colorOptions = form.colors || [];
     if (
       !colorOptions.length ||
       colorOptions.some((color) => !color.name.trim() || !isValidProductColorValue(color.hex))
@@ -1049,6 +965,8 @@ const ProductEditor: React.FC<{
     await onSave(
       {
         ...form,
+        image: derived.image,
+        additionalImages: derived.additionalImages,
         title: form.title.trim(),
         slug: slugify(form.slug || form.title),
         originalPrice: form.originalPrice || form.price,
@@ -1194,7 +1112,6 @@ const ProductEditor: React.FC<{
               colors={form.colors || []}
               onChange={(colors) => set('colors', colors)}
               onUploadFiles={uploadColorFiles}
-              mainImage={form.image}
             />
             <div className="flex flex-wrap gap-x-5 gap-y-3 rounded-xl bg-slate-50 p-4">
               {[
@@ -1222,162 +1139,46 @@ const ProductEditor: React.FC<{
             </div>
           </div>
           <div className="space-y-5">
-            <div>
-              <div className="mb-1.5 flex items-center justify-between gap-2">
-                <p className="text-[11px] font-bold text-slate-600">Primary product image *</p>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-[11px] font-black text-slate-800">Storefront cover</p>
+                  <p className="mt-0.5 text-[10px] text-slate-500">
+                    Automatically derived from colour photos
+                  </p>
+                </div>
                 <span className="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black text-emerald-700">
-                  Shown first to customers
+                  Auto from colours
                 </span>
               </div>
-              <div className="overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-slate-50">
-                {form.image ? (
-                  <div className="relative aspect-[4/3] bg-slate-100">
+              {derived.image ? (
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                  <div className="relative aspect-[4/3]">
                     <img
-                      src={form.image}
-                      alt="Product preview"
+                      src={derived.image}
+                      alt="Storefront cover preview"
                       className="h-full w-full object-cover"
                     />
-                    <button
-                      type="button"
-                      onClick={() => set('image', '')}
-                      className="absolute right-2 top-2 rounded-full bg-slate-900/70 p-2 text-white"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                    <span className="absolute left-2 top-2 rounded-full bg-slate-900/80 px-2 py-1 text-[9px] font-bold text-white">
+                      From {derived.coverColorName}
+                    </span>
                   </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileRef.current?.click()}
-                    className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 text-slate-400 hover:bg-white"
-                  >
-                    <ImagePlus className="h-8 w-8" />
-                    <span className="text-xs font-bold">Upload primary image</span>
-                    <span className="text-[10px]">JPG, PNG, WEBP · max 5MB</span>
-                  </button>
-                )}
-              </div>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
-                className="hidden"
-                onChange={(event) => {
-                  void upload(event.target.files?.[0]);
-                  event.currentTarget.value = '';
-                }}
-              />
-              <div className="mt-2 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50"
-                >
-                  <Upload className="h-4 w-4" />
-                  Upload file
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const value = urlInput.trim();
-                    if (value) {
-                      set('image', value);
-                      setUrlInput('');
-                      setValidationError('');
-                    } else setValidationError('Type an image URL in the gallery URL field first.');
-                  }}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Use image URL
-                </button>
-              </div>
-            </div>
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <p className="text-[11px] font-bold text-slate-600">Additional gallery images</p>
-                <span className="text-[10px] text-slate-400">
-                  {form.additionalImages?.length || 0} added
-                </span>
-              </div>
-              <input
-                ref={galleryFileRef}
-                type="file"
-                multiple
-                accept="image/png,image/jpeg,image/webp,image/gif"
-                className="hidden"
-                onChange={(event) => {
-                  void uploadGalleryFiles(event.target.files);
-                }}
-              />
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => galleryFileRef.current?.click()}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50"
-                >
-                  <ImagePlus className="h-4 w-4" />
-                  Upload multiple
-                </button>
-                <Input
-                  value={urlInput}
-                  onChange={(event) => setUrlInput(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault();
-                      addGalleryUrl();
-                    }
-                  }}
-                  placeholder="Paste image URL"
-                />
-                <button
-                  type="button"
-                  onClick={addGalleryUrl}
-                  className="rounded-xl bg-slate-900 px-3 text-white"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-              <p className="mt-1 text-[10px] text-slate-400">
-                Select multiple JPG, PNG or WEBP files at once · max 5MB each. The first large card
-                above is always the storefront main image.
+                </div>
+              ) : (
+                <div className="grid aspect-[4/3] place-items-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+                  <div>
+                    <ImagePlus className="mx-auto h-8 w-8 text-slate-300" />
+                    <p className="mt-2 text-xs font-bold text-slate-500">
+                      Upload at least one image inside a colour above.
+                    </p>
+                  </div>
+                </div>
+              )}
+              <p className="mt-2 text-[10px] text-slate-500">
+                {derived.additionalImages.length} additional image
+                {derived.additionalImages.length === 1 ? '' : 's'} in the derived storefront
+                gallery.
               </p>
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {(form.additionalImages || []).map((url, index) => (
-                  <div
-                    key={`${url}-${index}`}
-                    className="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => makePrimaryImage(index)}
-                      className="relative block aspect-square w-full"
-                      aria-label={`Make gallery image ${index + 2} the main image`}
-                    >
-                      <img
-                        src={url}
-                        alt={`Gallery image ${index + 2}`}
-                        className="h-full w-full object-cover"
-                      />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => makePrimaryImage(index)}
-                      className="w-full border-t border-slate-200 bg-white px-2 py-2 text-[10px] font-bold text-[#D9232D]"
-                    >
-                      Set as main
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeGalleryImage(index)}
-                      aria-label={`Remove gallery image ${index + 2}`}
-                      className="absolute right-1 top-1 rounded-full bg-slate-900/75 p-1.5 text-white opacity-0 transition group-hover:opacity-100 focus:opacity-100"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
             </div>
             <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-[11px] leading-relaxed text-amber-800">
               <p className="font-black">Product rating</p>

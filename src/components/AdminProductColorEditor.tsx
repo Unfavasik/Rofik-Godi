@@ -15,7 +15,6 @@ type Props = {
   colors: Product['colors'];
   onChange: (colors: Product['colors']) => void;
   onUploadFiles?: (files: File[]) => Promise<string[]>;
-  mainImage?: string;
 };
 const listValue = (value: string) =>
   value
@@ -24,17 +23,13 @@ const listValue = (value: string) =>
     .filter(Boolean);
 const listText = (value?: string[]) => (value || []).join('\n');
 
-export const AdminProductColorEditor: React.FC<Props> = ({
-  colors,
-  onChange,
-  onUploadFiles,
-  mainImage,
-}) => {
+export const AdminProductColorEditor: React.FC<Props> = ({ colors, onChange, onUploadFiles }) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const [urlDrafts, setUrlDrafts] = useState<Record<number, string>>({});
   const [detailsIndex, setDetailsIndex] = useState<number | null>(null);
   const [copyFrom, setCopyFrom] = useState('');
+  const coverColorIndex = colors.findIndex((color) => (color.images || []).some(Boolean));
   const getLocal = (color: ProductColor): LocalColor => {
     const local = color as LocalColor;
     if (local.nameTouched !== undefined) return local;
@@ -88,7 +83,6 @@ export const AdminProductColorEditor: React.FC<Props> = ({
       new URL(value);
     } catch {
       return;
-      return;
     }
     updateImages(index, [...(colors[index]?.images || []), value]);
     setUrlDrafts((current) => ({ ...current, [index]: '' }));
@@ -122,8 +116,9 @@ export const AdminProductColorEditor: React.FC<Props> = ({
         <div>
           <h3 className="text-xs font-black text-slate-800">Product color options</h3>
           <p className="mt-1 max-w-xl text-[10px] leading-relaxed text-slate-500">
-            Choose a colour swatch for the product. Upload optional variant images when a colour
-            looks different. The first image in each colour is its colour main image.
+            Each colour holds its own photos. The first image of a colour is its main image, and the
+            first colour with photos also becomes the product cover. Colours without photos reuse
+            that default gallery.
           </p>
         </div>
         <button
@@ -278,63 +273,65 @@ export const AdminProductColorEditor: React.FC<Props> = ({
                   </button>
                 </div>
               </div>
-              {mainImage && (
-                <div className="mt-2 flex items-center gap-2 rounded-lg bg-slate-50 p-2">
-                  <img
-                    src={mainImage}
-                    alt={`${color.name} uses the main product image`}
-                    className="h-14 w-14 rounded-md object-cover"
-                  />
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-700">
-                      {images.length ? 'Colour variant gallery' : 'Colour swatch only'}
-                    </p>
-                    <p className="text-[9px] leading-relaxed text-slate-500">
-                      {images.length
-                        ? 'The first uploaded image is shown first for this colour. Reorder it below when needed.'
-                        : 'Customers see this colour on the selector and use the default main product image.'}
-                    </p>
-                  </div>
+              <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                <div className="flex items-center gap-2">
+                  <p className="text-[10px] font-black text-slate-700">Photos · {images.length}</p>
+                  {coverColorIndex === index && (
+                    <span className="rounded-full bg-emerald-50 px-2 py-1 text-[8px] font-black text-emerald-700">
+                      Product cover
+                    </span>
+                  )}
                 </div>
+                {images.length > 0 && (
+                  <span className="text-[9px] text-slate-400">First image = main</span>
+                )}
+              </div>
+              {images.length === 0 && (
+                <p className="mt-2 rounded-lg bg-slate-50 px-2.5 py-2 text-[9px] leading-relaxed text-slate-500">
+                  {coverColorIndex === index
+                    ? 'No photos yet. Upload one to make this the product cover.'
+                    : `Customers see the default gallery from ${coverColorIndex >= 0 ? colors[coverColorIndex]?.name : 'the first colour with photos'}.`}
+                </p>
               )}
-              <div className="mt-2 grid grid-cols-4 gap-2">
+              <div className="mt-2 grid grid-cols-3 gap-2">
                 {images.map((image, imageIndex) => (
                   <div
                     key={`${image}-${imageIndex}`}
-                    className="group relative aspect-square overflow-hidden rounded-lg bg-slate-100"
+                    className="overflow-hidden rounded-lg border border-slate-200 bg-slate-100"
                   >
-                    <img
-                      src={image}
-                      alt={`${color.name} ${imageIndex + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-                    {imageIndex === 0 && (
-                      <span className="absolute bottom-1 left-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[8px] font-black text-slate-700 shadow-sm">
+                    <div className="relative aspect-square">
+                      <img
+                        src={image}
+                        alt={`${color.name} ${imageIndex + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateImages(
+                            index,
+                            images.filter((_, itemIndex) => itemIndex !== imageIndex),
+                          )
+                        }
+                        aria-label={`Remove ${color.name} image ${imageIndex + 1}`}
+                        className="absolute right-1 top-1 rounded-full bg-slate-900/80 p-1.5 text-white"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                    {imageIndex === 0 ? (
+                      <div className="bg-slate-900 px-1 py-1.5 text-center text-[8px] font-black text-white">
                         Colour main
-                      </span>
-                    )}
-                    {imageIndex > 0 && (
+                      </div>
+                    ) : (
                       <button
                         type="button"
                         onClick={() => setColorPrimary(index, imageIndex)}
-                        className="absolute inset-x-1 bottom-1 rounded-md bg-slate-900/80 px-1 py-1 text-[8px] font-bold text-white opacity-0 transition group-hover:opacity-100 focus:opacity-100"
+                        className="w-full bg-white px-1 py-1.5 text-[8px] font-black text-[#D9232D]"
                       >
-                        Set as colour main
+                        Set as main
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateImages(
-                          index,
-                          images.filter((_, itemIndex) => itemIndex !== imageIndex),
-                        )
-                      }
-                      aria-label={`Remove ${color.name} image ${imageIndex + 1}`}
-                      className="absolute right-1 top-1 rounded-full bg-slate-900/80 p-1 text-white"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
                   </div>
                 ))}
               </div>
