@@ -49,6 +49,14 @@ export const AdminProductColorEditor: React.FC<Props> = ({
     );
   const updateImages = (index: number, images: string[]) =>
     updateColor(index, { images: images.filter(Boolean) });
+  const setColorPrimary = (colorIndex: number, imageIndex: number) => {
+    const images = colors[colorIndex]?.images || [];
+    if (imageIndex <= 0 || imageIndex >= images.length) return;
+    updateImages(colorIndex, [
+      images[imageIndex],
+      ...images.filter((_, index) => index !== imageIndex),
+    ]);
+  };
   const changeHex = (index: number, hex: string) => {
     const color = getLocal(colors[index]);
     updateColor(index, {
@@ -114,8 +122,8 @@ export const AdminProductColorEditor: React.FC<Props> = ({
         <div>
           <h3 className="text-xs font-black text-slate-800">Product color options</h3>
           <p className="mt-1 max-w-xl text-[10px] leading-relaxed text-slate-500">
-            Choose a colour swatch for the product. The main product image stays unchanged unless
-            you upload an optional variant image.
+            Choose a colour swatch for the product. Upload optional variant images when a colour
+            looks different. The first image in each colour is its colour main image.
           </p>
         </div>
         <button
@@ -278,10 +286,13 @@ export const AdminProductColorEditor: React.FC<Props> = ({
                     className="h-14 w-14 rounded-md object-cover"
                   />
                   <div>
-                    <p className="text-[10px] font-bold text-slate-700">Colour swatch only</p>
+                    <p className="text-[10px] font-bold text-slate-700">
+                      {images.length ? 'Colour variant gallery' : 'Colour swatch only'}
+                    </p>
                     <p className="text-[9px] leading-relaxed text-slate-500">
-                      Customers see this colour on the selector. Upload a separate image only when
-                      the product photo is different.
+                      {images.length
+                        ? 'The first uploaded image is shown first for this colour. Reorder it below when needed.'
+                        : 'Customers see this colour on the selector and use the default main product image.'}
                     </p>
                   </div>
                 </div>
@@ -297,6 +308,20 @@ export const AdminProductColorEditor: React.FC<Props> = ({
                       alt={`${color.name} ${imageIndex + 1}`}
                       className="h-full w-full object-cover"
                     />
+                    {imageIndex === 0 && (
+                      <span className="absolute bottom-1 left-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[8px] font-black text-slate-700 shadow-sm">
+                        Colour main
+                      </span>
+                    )}
+                    {imageIndex > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setColorPrimary(index, imageIndex)}
+                        className="absolute inset-x-1 bottom-1 rounded-md bg-slate-900/80 px-1 py-1 text-[8px] font-bold text-white opacity-0 transition group-hover:opacity-100 focus:opacity-100"
+                      >
+                        Set as colour main
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() =>
