@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { deleteProductImageIfUnreferenced } from './supabaseBanners';
 
 export type AdminCustomer = {
   id: string;
@@ -84,7 +85,7 @@ export async function loadAdminNotificationCampaigns(): Promise<{
   };
 }
 
-export async function deleteAdminNotificationCampaign(campaignId: string) {
+export async function deleteAdminNotificationCampaign(campaignId: string, imageUrl?: string | null) {
   if (!supabase) return { count: 0, error: new Error('Supabase is not configured') };
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData.user)
@@ -92,7 +93,12 @@ export async function deleteAdminNotificationCampaign(campaignId: string) {
   const { data, error } = await supabase.rpc('admin_delete_notification_campaign', {
     p_campaign_id: campaignId,
   });
-  return { count: Number(data || 0), error };
+  if (error) return { count: Number(data || 0), error };
+  if (!imageUrl) return { count: Number(data || 0), error: null };
+  const storageResult = imageUrl
+    ? await deleteProductImageIfUnreferenced(imageUrl)
+    : { error: null };
+  return { count: Number(data || 0), error: null, storageError: storageResult.error };
 }
 
 export async function loadAdminCustomers(): Promise<{

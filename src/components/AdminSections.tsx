@@ -4,7 +4,10 @@ import type { Product, VehicleCategory } from '../types';
 import type { AdminNotification } from '../lib/supabaseAdmin';
 import { loadAdminJsonSetting, saveAdminJsonSetting } from '../lib/supabaseAdmin';
 import type { AdminOrderRecord } from '../lib/supabaseAdminOrders';
-import { uploadStorefrontBannerImage } from '../lib/supabaseBanners';
+import {
+  deleteProductImageIfUnreferenced,
+  uploadStorefrontBannerImage,
+} from '../lib/supabaseBanners';
 import { AdminNotificationComposer } from './AdminNotificationComposer';
 import { ConfirmDialog } from './ConfirmDialog';
 import {
@@ -115,6 +118,8 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<StoreBanner | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     let active = true;
@@ -171,7 +176,23 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
     void persist(
       banners.map((item) => (item.id === banner.id ? { ...item, active: !item.active } : item)),
     );
-  const remove = (id: string) => void persist(banners.filter((item) => item.id !== id));
+  const remove = (banner: StoreBanner) => setPendingDelete(banner);
+  const confirmRemove = async () => {
+    if (!pendingDelete || deleting) return;
+    setDeleting(true);
+    const deleted = pendingDelete;
+    const saved = await persist(banners.filter((item) => item.id !== deleted.id));
+    if (saved && deleted.imageUrl) {
+      const storageResult = await deleteProductImageIfUnreferenced(deleted.imageUrl);
+      if (storageResult.error) {
+        notify(`Banner deleted, but its Storage image could not be removed: ${storageResult.error.message}`);
+      } else {
+        notify('Banner and its Supabase Storage image deleted');
+      }
+    }
+    if (saved) setPendingDelete(null);
+    setDeleting(false);
+  };
   return (
     <section>
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -245,7 +266,7 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                       {banner.active ? 'Pause' : 'Activate'}
                     </button>
                     <button
-                      onClick={() => remove(banner.id)}
+                      onClick={() => remove(banner)}
                       className="inline-flex items-center gap-1 text-[11px] font-bold text-red-600"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -388,6 +409,14 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
           </form>
         </div>
       )}
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title="Delete this banner?"
+        message={`This will remove “${pendingDelete?.title || 'this banner'}” and its uploaded image from Supabase Storage when it is not used elsewhere.`}
+        confirmLabel={deleting ? 'Deleting…' : 'Delete banner'}
+        onConfirm={() => void confirmRemove()}
+        onCancel={() => { if (!deleting) setPendingDelete(null); }}
+      />
     </section>
   );
 }
@@ -449,7 +478,10 @@ export function NotificationsView({
     setDeletingCampaign(true);
     setCampaignsError('');
     try {
-      const result = await deleteAdminNotificationCampaign(pendingCampaign.campaign_id);
+      const result = await deleteAdminNotificationCampaign(
+        pendingCampaign.campaign_id,
+        pendingCampaign.image_url,
+      );
       if (result.error) {
         setCampaignsError(result.error.message);
         return;
@@ -457,6 +489,11 @@ export function NotificationsView({
       setCampaigns((current) => current.filter((item) => item.campaign_id !== pendingCampaign.campaign_id));
       onCampaignDeleted(pendingCampaign.campaign_id);
       notify(`Notification removed from ${result.count} recipient inbox${result.count === 1 ? '' : 'es'}.`);
+      if (result.storageError) {
+        notify(`Notification removed, but its Storage image could not be deleted: ${result.storageError.message}`);
+      } else if (pendingCampaign.image_url) {
+        notify('Notification and its Supabase Storage image deleted');
+      }
       setPendingCampaign(null);
     } catch (error) {
       setCampaignsError(error instanceof Error ? error.message : 'Could not delete this notification.');
