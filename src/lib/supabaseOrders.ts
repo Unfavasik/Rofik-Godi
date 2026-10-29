@@ -6,6 +6,12 @@ import type { CustomerOrderStatusEvent } from './orderPresentation';
 
 const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 const missingOrderOptionColumns = (error: { message?: string } | null) => Boolean(error && /selected_thickness|selected_stitch|custom_embroidery_text/i.test(error.message || ''));
+const imageForOrderColor = (row: { image_url?: unknown; colors_json?: unknown }, colorName?: string | null) => {
+  const colors = Array.isArray(row.colors_json) ? row.colors_json : [];
+  const selected = colors.find((entry) => entry && typeof entry === 'object' && String((entry as Record<string, unknown>).name || '').trim().toLowerCase() === String(colorName || '').trim().toLowerCase()) as Record<string, unknown> | undefined;
+  const images = Array.isArray(selected?.images) ? selected.images : [];
+  return (images.find((image): image is string => typeof image === 'string' && Boolean(image.trim())) || String(row.image_url || '')) || null;
+};
 
 type SecureOrderResponse = {
   id: string;
@@ -176,11 +182,11 @@ export async function listMyOrders(expectedUserId: string): Promise<CustomerOrde
   }));
   const productIds = [...new Set(orders.flatMap((order) => order.order_items || []).map((item) => item.product_id).filter((id): id is string => Boolean(id)))];
   if (!productIds.length) return orders;
-  const { data: productRows } = await supabase.from('products').select('id,image_url').in('id', productIds);
-  const productImages = new Map((productRows || []).map((product) => [String(product.id), String(product.image_url || '')]));
+  const { data: productRows } = await supabase.from('products').select('id,image_url,colors_json').in('id', productIds);
+  const productImages = new Map((productRows || []).map((product) => [String(product.id), product]));
   return orders.map((order) => ({
     ...order,
-    order_items: (order.order_items || []).map((item) => ({ ...item, image_url: item.product_id ? productImages.get(item.product_id) || null : null })),
+    order_items: (order.order_items || []).map((item) => ({ ...item, image_url: item.product_id ? imageForOrderColor(productImages.get(item.product_id) || {}, item.color) : null })),
   }));
 }
 
@@ -214,9 +220,9 @@ async function getMyOrderByOwnerReference(
   const order = data as unknown as CustomerOrderRecord;
   const productIds = [...new Set((order.order_items || []).map((item) => item.product_id).filter((id): id is string => Boolean(id)))];
   const { data: productRows } = productIds.length
-    ? await supabase.from('products').select('id,image_url').in('id', productIds)
+    ? await supabase.from('products').select('id,image_url,colors_json').in('id', productIds)
     : { data: [] };
-  const productImages = new Map((productRows || []).map((product) => [String(product.id), String(product.image_url || '')]));
+  const productImages = new Map((productRows || []).map((product) => [String(product.id), product]));
 
   return {
     ...order,
@@ -227,7 +233,7 @@ async function getMyOrderByOwnerReference(
       ...item,
       quantity: Number(item.quantity || 0),
       unit_price: Number(item.unit_price || 0),
-      image_url: item.product_id ? productImages.get(item.product_id) || null : null,
+      image_url: item.product_id ? imageForOrderColor(productImages.get(item.product_id) || {}, item.color) : null,
     })),
   };
 }

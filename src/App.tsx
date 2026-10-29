@@ -809,7 +809,7 @@ export default function App() {
   // Detailed Modal Add To Cart
   const handleDetailAddToCart = (
     product: Product,
-    selectedColor: { name: string; hex: string },
+    selectedColor: Product['colors'][number],
     selectedStitch: string,
     selectedThickness: { label: string; extraPrice: number },
     customEmbroideryText?: string,
@@ -834,7 +834,7 @@ export default function App() {
 
   const handleDetailBuyNow = (
     product: Product,
-    selectedColor: { name: string; hex: string },
+    selectedColor: Product['colors'][number],
     selectedStitch: string,
     selectedThickness: { label: string; extraPrice: number },
     quantity: number,
@@ -1908,7 +1908,7 @@ export default function App() {
             setActiveTab('home');
           }}
           onAddCustomSeatToCart={(p, col, stitch, thick, emb) => {
-            handleDetailAddToCart(p, col, stitch, thick, emb);
+            handleDetailAddToCart(p, { ...col, bgClass: 'bg-slate-900' }, stitch, thick, emb);
             setActiveTab('cart');
             setIsCartOpen(true);
           }}

@@ -30,7 +30,7 @@ export interface Product {
   isCustomizable?: boolean;
   inStock: boolean;
   materials: string[];
-  colors: { name: string; hex: string; bgClass: string }[];
+  colors: { name: string; hex: string; bgClass: string; images?: string[] }[];
   stitchPatterns: string[];
   compatibility: string[];
   thicknessOptions: { label: string; extraPrice: number }[];
@@ -40,7 +40,7 @@ export interface CartItem {
   cartItemId: string;
   product: Product;
   quantity: number;
-  selectedColor: { name: string; hex: string };
+  selectedColor: { name: string; hex: string; images?: string[] };
   selectedStitch?: string;
   selectedThickness?: { label: string; extraPrice: number };
   customEmbroideryText?: string;

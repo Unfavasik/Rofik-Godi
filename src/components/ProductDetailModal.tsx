@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowLeft,
@@ -31,7 +31,7 @@ interface ProductDetailModalProps {
   onClose: () => void;
   onAddToCart: (
     product: Product,
-    selectedColor: { name: string; hex: string },
+    selectedColor: Product['colors'][number],
     selectedStitch: string,
     selectedThickness: { label: string; extraPrice: number },
     customEmbroideryText?: string,
@@ -45,7 +45,7 @@ interface ProductDetailModalProps {
   onOpenSearch?: () => void;
   onBuyNow?: (
     product: Product,
-    selectedColor: { name: string; hex: string },
+    selectedColor: Product['colors'][number],
     selectedStitch: string,
     selectedThickness: { label: string; extraPrice: number },
     quantity: number,
@@ -92,10 +92,15 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   customerId,
   onRequestLogin,
 }) => {
-  const images = useMemo(() => {
+  const [selectedColor, setSelectedColor] = useState(() => product.colors?.[0] || { name: 'Standard', hex: '#111827', bgClass: 'bg-slate-900', images: [] });
+  const defaultImages = useMemo(() => {
     const curated = localProductImages[product.id];
     return curated?.length ? curated : [product.image, ...(product.additionalImages ?? [])];
   }, [product]);
+  const images = useMemo(() => {
+    const colorImages = selectedColor.images?.filter(Boolean) ?? [];
+    return colorImages.length ? colorImages : defaultImages;
+  }, [defaultImages, selectedColor]);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const swipeStartX = useRef<number | null>(null);
   const swipeStartY = useRef<number | null>(null);
@@ -112,7 +117,10 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
     if (Math.abs(deltaX) < 45 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
     setActiveImageIndex((current) => Math.max(0, Math.min(images.length - 1, current + (deltaX < 0 ? 1 : -1))));
   };
-  const [selectedColor, setSelectedColor] = useState(() => product.colors?.[0] || { name: 'Standard', hex: '#111827', bgClass: 'bg-slate-900' });
+  useEffect(() => {
+    product.colors.flatMap((color) => color.images || []).filter(Boolean).forEach((src) => { const image = new Image(); image.src = src; });
+  }, [product.colors]);
+  useEffect(() => { setActiveImageIndex((current) => Math.min(current, Math.max(0, images.length - 1))); }, [images.length]);
   const [selectedStitch] = useState(() => resolveStitchPatternSelection(product.stitchPatterns));
   const [selectedThickness] = useState(
     product.thicknessOptions[0] || { label: 'Standard', extraPrice: 0 }
@@ -207,12 +215,17 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 onTouchStart={handleGalleryTouchStart}
                 onTouchEnd={handleGalleryTouchEnd}
               >
-                <img
+                <AnimatePresence mode="wait" initial={false}><motion.img
+                  key={images[activeImageIndex] ?? product.image}
                   src={images[activeImageIndex] ?? product.image}
                   alt={product.title}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.25 }}
                   className="h-full w-full object-cover"
                   onError={(event) => { event.currentTarget.src = product.image; }}
-                />
+                /></AnimatePresence>
                 <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4">
                   <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white">{activeImageIndex + 1}/{images.length}</span>
                   <div className="flex gap-2">
@@ -263,9 +276,9 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               <div className="mb-3 flex items-center justify-between"><h2 className="text-[16px] font-extrabold tracking-tight">Color Options</h2><span className="text-[11px] text-slate-500">{selectedColor.name}</span></div>
               <div className="grid grid-cols-5 gap-2">
                 {product.colors.map((color, index) => (
-                  <button key={color.name} type="button" onClick={() => setSelectedColor(color)} className="min-w-0 text-center">
+                  <button key={color.name} type="button" onClick={() => { setSelectedColor(color); setActiveImageIndex(0); }} className="min-w-0 text-center">
                     <span className={`relative mx-auto block aspect-square w-full overflow-hidden rounded-xl border-2 bg-slate-100 ${selectedColor.name === color.name ? 'border-[#d9232d]' : 'border-transparent'}`}>
-                      <img src={images[index % images.length]} alt="" className="h-full w-full object-cover" />
+                      <img src={color.images?.[0] || defaultImages[index % defaultImages.length]} alt="" className="h-full w-full object-cover" />
                       <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-2 border-white shadow" style={{ backgroundColor: color.hex }} />
                     </span>
                     <span className="mt-1.5 block truncate text-[9px] leading-tight text-slate-600">{color.name.replace(' & ', ' ')}</span>

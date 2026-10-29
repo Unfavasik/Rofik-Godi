@@ -10,8 +10,16 @@ type ProductRow = Record<string, unknown>;
 
 const asStrings = (value: unknown): string[] => Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
 const asColors = (value: unknown, legacy: unknown): Product['colors'] => {
-  if (Array.isArray(value) && value.length) return value as Product['colors'];
-  return asStrings(legacy).map((name, index) => ({ name, hex: ['#111827', '#D9232D', '#8C5A3C', '#2563EB'][index % 4], bgClass: 'bg-slate-900' }));
+  if (Array.isArray(value) && value.length) return value.flatMap((item): Product['colors'] => {
+    if (!item || typeof item !== 'object') return [];
+    const color = item as Record<string, unknown>;
+    const name = typeof color.name === 'string' ? color.name.trim() : '';
+    const hex = typeof color.hex === 'string' ? color.hex.trim() : '';
+    const bgClass = typeof color.bgClass === 'string' ? color.bgClass.trim() : 'bg-slate-900';
+    const images = asStrings(color.images).map((image) => image.trim()).filter(Boolean);
+    return name || hex ? [{ name, hex, bgClass, ...(images.length ? { images } : {}) }] : [];
+  });
+  return asStrings(legacy).map((name, index) => ({ name: name.trim(), hex: ['#111827', '#D9232D', '#8C5A3C', '#2563EB'][index % 4], bgClass: 'bg-slate-900' }));
 };
 
 export const mapSupabaseProduct = (row: ProductRow): Product => {
@@ -74,7 +82,7 @@ const toRow = (product: Product) => ({
   // such as "Bike" or "Bike Cover" reach the products.category column.
   category: categoryLabels[product.category], category_key: product.category, price: product.price, original_price: product.originalPrice,
   image_url: product.image, additional_images: product.additionalImages || [], description: product.description,
-  features: product.features || [], materials: product.materials || [], stitch_patterns: product.stitchPatterns || [], thickness_options: product.thicknessOptions || [], colors_json: product.colors || [],
+  features: product.features || [], materials: product.materials || [], stitch_patterns: product.stitchPatterns || [], thickness_options: product.thicknessOptions || [], colors_json: (product.colors || []).map((color) => ({ ...color, name: color.name.trim(), hex: color.hex.trim(), bgClass: color.bgClass.trim(), images: (color.images || []).map((image) => image.trim()).filter(Boolean) })),
   colors: (product.colors || []).map((color) => color.name), compatibility_list: product.compatibility || [], compatibility: (product.compatibility || []).join(', '), badge: product.badge || null,
   badge_color: product.badgeColor || null, updated_at: new Date().toISOString(), is_bestseller: Boolean(product.isBestseller), is_new: Boolean(product.isNew), is_waterproof: Boolean(product.isWaterproof),
   is_customizable: Boolean(product.isCustomizable), in_stock: Boolean(product.inStock), is_active: true, display_order: product.displayOrder ?? 0,
