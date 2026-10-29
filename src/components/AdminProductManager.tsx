@@ -423,7 +423,11 @@ export const AdminProductManager: React.FC<{
     }
     setProducts((current) => current.filter((item) => item.id !== id));
     clearCatalogCache();
-    notify('Product deleted');
+    notify(
+      result.storageError
+        ? `Product deleted, but some Storage images could not be removed: ${result.storageError.message}`
+        : 'Product and its Supabase Storage images deleted',
+    );
   };
   const duplicate = async (product: Product) => {
     const copy = {
