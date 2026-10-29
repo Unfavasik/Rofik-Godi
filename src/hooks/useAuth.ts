@@ -13,6 +13,29 @@ const guestUser = (): UserProfile => ({
   isGuest: true,
 });
 
+const ADMIN_VERIFICATION_KEY = 'rofik-godi:admin-verification:v1';
+
+const readCachedAdminVerification = (userId: string): boolean | null => {
+  try {
+    const cached = JSON.parse(localStorage.getItem(ADMIN_VERIFICATION_KEY) || 'null') as { userId?: string; isAdmin?: boolean } | null;
+    return cached?.userId === userId && typeof cached.isAdmin === 'boolean' ? cached.isAdmin : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeCachedAdminVerification = (userId: string, isAdmin: boolean) => {
+  try {
+    localStorage.setItem(ADMIN_VERIFICATION_KEY, JSON.stringify({ userId, isAdmin }));
+  } catch {
+    // Session storage is optional; server-side checks still protect every admin operation.
+  }
+};
+
+const clearCachedAdminVerification = () => {
+  try { localStorage.removeItem(ADMIN_VERIFICATION_KEY); } catch { /* best effort */ }
+};
+
 export function useAuth() {
   const [currentUser, setCurrentUser] = useState<UserProfile>(guestUser);
   const [authStatus, setAuthStatus] = useState<AuthStatus>('AUTH_LOADING');
@@ -43,6 +66,7 @@ export function useAuth() {
       setCurrentUser(guestUser());
       setAuthStatus('UNAUTHENTICATED');
       setIsAdmin(false);
+      clearCachedAdminVerification();
     };
 
     const applySession = (user: { id: string; email?: string; user_metadata?: Record<string, unknown> }) => {
@@ -58,7 +82,14 @@ export function useAuth() {
       });
       setAuthStatus('AUTHENTICATED');
       setIsAdmin(null);
-      void Promise.all([checkIsAdmin(), getMyProfile(user.id).catch(() => null)]).then(([admin, profile]) => {
+      const cachedAdmin = readCachedAdminVerification(user.id);
+      const adminPromise = cachedAdmin === null
+        ? checkIsAdmin().then((admin) => {
+          writeCachedAdminVerification(user.id, admin);
+          return admin;
+        })
+        : Promise.resolve(cachedAdmin);
+      void Promise.all([adminPromise, getMyProfile(user.id).catch(() => null)]).then(([admin, profile]) => {
         if (!active || resolutionId !== currentResolution || activeUserId !== user.id) return;
         setIsAdmin(admin);
         if (profile) {

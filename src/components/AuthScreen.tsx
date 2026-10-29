@@ -34,6 +34,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -44,6 +45,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setError('');
 
     if (!isSupabaseConfigured || !supabase) {
@@ -51,60 +53,41 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       return;
     }
 
-    if (mode === 'signup') {
-      if (!name.trim()) {
-        setError('Enter your full name');
-        return;
-      }
-      if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) {
-        setError('Enter a valid email');
-        return;
-      }
-      if (password.length < 8) {
-        setError('Password must be at least 8 characters');
-        return;
-      }
-      if (!agree) {
-        setError('Please accept the personal data terms');
-        return;
-      }
+    setIsSubmitting(true);
+    try {
+      if (mode === 'signup') {
+        if (!name.trim()) { setError('Enter your full name'); return; }
+        if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) { setError('Enter a valid email'); return; }
+        if (password.length < 8) { setError('Password must be at least 8 characters'); return; }
+        if (!agree) { setError('Please accept the personal data terms'); return; }
 
-      const { data, error: authError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          emailRedirectTo: getAuthCallbackUrl(),
-          data: { full_name: name.trim() },
-        },
-      });
-      if (authError) {
-        setError(authError.message.toLowerCase().includes('already') ? 'This email is already registered' : 'Unable to create account. Please try again.');
-        return;
-      }
-      if (!data.user) {
-        setError('Unable to create account. Please try again.');
-        return;
-      }
-      showToast(data.session ? 'Account created' : 'Check your email to confirm your account');
-      if (!data.session) return;
-      onSuccess({ id: data.user.id, name: name.trim(), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) }, true);
-    } else {
-      if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) {
-        setError('Enter a valid email');
-        return;
-      }
-      if (password.length < 8) {
-        setError('Password must be at least 8 characters');
-        return;
-      }
+        const { data, error: authError } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: { emailRedirectTo: getAuthCallbackUrl(), data: { full_name: name.trim() } },
+        });
+        if (authError) {
+          setError(authError.message.toLowerCase().includes('already') ? 'This email is already registered' : authError.message || 'Unable to create account. Please try again.');
+          return;
+        }
+        if (!data.user) { setError('Unable to create account. Please try again.'); return; }
+        showToast(data.session ? 'Account created' : 'Check your email to confirm your account');
+        if (!data.session) return;
+        onSuccess({ id: data.user.id, name: name.trim(), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) }, true);
+      } else {
+        if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) { setError('Enter a valid email'); return; }
+        if (password.length < 8) { setError('Password must be at least 8 characters'); return; }
 
-      const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (authError || !data.user) {
-        setError('Invalid email or password');
-        return;
+        const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (authError || !data.user) { setError(authError?.message || 'Invalid email or password'); return; }
+        showToast('Signed in');
+        onSuccess({ id: data.user.id, name: String(data.user.user_metadata?.full_name || 'Rider'), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) }, false);
       }
-      showToast('Signed in');
-      onSuccess({ id: data.user.id, name: String(data.user.user_metadata?.full_name || 'Rider'), email: data.user.email || email.trim(), phone: '', isGuest: false, vehicle: 'Hero Splendor Plus & Toto', joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) }, false);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : '';
+      setError(message || 'Unable to connect to the sign-in service. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -389,9 +372,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             <button
               type="submit"
               id="go"
-              className="relative flex h-14 w-full cursor-pointer items-center justify-center overflow-hidden rounded-[28px] border-0 bg-[linear-gradient(180deg,#ea2a3d_0%,#d0132a_100%)] text-[19px] font-semibold text-white shadow-[0_10px_22px_rgba(224,24,45,0.32)] transition-transform active:scale-[0.985]"
+              disabled={isSubmitting}
+              className="relative flex h-14 w-full cursor-pointer items-center justify-center overflow-hidden rounded-[28px] border-0 bg-[linear-gradient(180deg,#ea2a3d_0%,#d0132a_100%)] text-[19px] font-semibold text-white shadow-[0_10px_22px_rgba(224,24,45,0.32)] transition-transform active:scale-[0.985] disabled:cursor-wait disabled:opacity-70"
             >
-              <span>{mode === 'signup' ? 'Sign up' : 'Sign in'}</span>
+              <span>{isSubmitting ? 'Connecting…' : mode === 'signup' ? 'Sign up' : 'Sign in'}</span>
               <i className="absolute bottom-0 right-0 top-0 flex w-[66px] items-center justify-center rounded-l-[28px] bg-white/10">
                 <svg
                   width="26"
