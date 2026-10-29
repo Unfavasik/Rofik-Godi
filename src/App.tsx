@@ -567,9 +567,22 @@ export default function App() {
   }, [appPhase, authStatus, catalogLoaded, catalogProducts, location.pathname, navigate]);
 
   const openProductRoute = useCallback((product: Product) => {
+    // Save the exact storefront position before opening the full-screen detail
+    // route. The route-level restore effect will put it back when the customer
+    // taps Back, instead of sending them to the top of Home or Shop.
+    if (resolveAppRoute(location.pathname).kind !== 'product') {
+      const key = `${SCROLL_KEY}:${location.pathname}${location.search}`;
+      try {
+        const value = String(window.scrollY);
+        sessionStorage.setItem(key, value);
+        localStorage.setItem(key, value);
+      } catch {
+        // Scroll restoration is best-effort when storage is unavailable.
+      }
+    }
     setSelectedProduct(product);
     navigate(getPathForProduct(product.slug), { state: { returnTo: location.pathname } });
-  }, [location.pathname, navigate]);
+  }, [location.pathname, location.search, navigate]);
   const closeProductRoute = useCallback(() => {
     setSelectedProduct(null);
     if (resolveAppRoute(location.pathname).kind !== 'product') return;
