@@ -424,7 +424,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 <span className="text-[11px] text-slate-500">{selectedColor.name}</span>
               </div>
               <div className="grid grid-cols-5 gap-2">
-                {product.colors.map((color, index) => (
+                {product.colors.map((color) => (
                   <button
                     key={color.name}
                     type="button"
@@ -438,7 +438,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                       className={`relative mx-auto block aspect-square w-full overflow-hidden rounded-xl border-2 bg-slate-100 ${selectedColor.name === color.name ? 'border-[#d9232d]' : 'border-transparent'}`}
                     >
                       <img
-                        src={color.images?.[0] || defaultImages[index % defaultImages.length]}
+                        src={color.images?.[0] || defaultImages[0]}
                         alt=""
                         className="h-full w-full object-cover"
                       />

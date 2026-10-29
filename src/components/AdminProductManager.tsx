@@ -35,7 +35,6 @@ import {
   getColorNameFromHex,
   isValidProductColorValue,
 } from '../lib/productColors';
-import { recolorImage } from '../lib/recolorImage';
 import { convertImageToWebP } from '../lib/imagePipeline';
 import { notifyCatalogChanged } from '../lib/localCache';
 import { BottomSheet } from './BottomSheet';
@@ -326,47 +325,19 @@ export const AdminProductManager: React.FC<{
       notify('Upload the primary product image first');
       return;
     }
-    let colorsWithImages;
-    try {
-      colorsWithImages = await Promise.all(
-        (draft.colors || []).map(async (color) => {
-          const baseColor = { ...color } as typeof color & { nameTouched?: boolean };
-          delete baseColor.nameTouched;
-          const hex = color.hex.trim();
-          const images = (color.images || []).map((item) => item.trim()).filter(Boolean);
-          if (images.length)
-            return {
-              ...baseColor,
-              name: color.name.trim() || getColorNameFromHex(hex),
-              hex,
-              bgClass: getColorBgClass(hex),
-              images,
-            };
-          const blob = await recolorImage(image, hex);
-          const uploaded = await uploadProductImage(
-            new File(
-              [blob],
-              `${slugify(draft.title) || 'product'}-${slugify(color.name || hex)}-auto.webp`,
-              { type: 'image/webp' },
-            ),
-          );
-          return {
-            ...baseColor,
-            name: color.name.trim() || getColorNameFromHex(hex),
-            hex,
-            bgClass: getColorBgClass(hex),
-            images: [uploaded.url],
-          };
-        }),
-      );
-    } catch (error) {
-      notify(
-        error instanceof Error
-          ? error.message
-          : "This image can't be recolored automatically. Upload the image file instead.",
-      );
-      return;
-    }
+    const colorsWithImages = (draft.colors || []).map((color) => {
+      const baseColor = { ...color } as typeof color & { nameTouched?: boolean };
+      delete baseColor.nameTouched;
+      const hex = color.hex.trim();
+      const images = (color.images || []).map((item) => item.trim()).filter(Boolean);
+      return {
+        ...baseColor,
+        name: color.name.trim() || getColorNameFromHex(hex),
+        hex,
+        bgClass: getColorBgClass(hex),
+        ...(images.length ? { images } : {}),
+      };
+    });
     const normalized: Product = {
       ...draft,
       image,
@@ -1224,15 +1195,6 @@ const ProductEditor: React.FC<{
               onChange={(colors) => set('colors', colors)}
               onUploadFiles={uploadColorFiles}
               mainImage={form.image}
-              onGenerateImage={async (hex) => {
-                const blob = await recolorImage(form.image, hex);
-                const uploaded = await uploadEditorImage(
-                  new File([blob], `${slugify(form.title) || 'product'}-color-auto.webp`, {
-                    type: 'image/webp',
-                  }),
-                );
-                return uploaded.url;
-              }}
             />
             <div className="flex flex-wrap gap-x-5 gap-y-3 rounded-xl bg-slate-50 p-4">
               {[
