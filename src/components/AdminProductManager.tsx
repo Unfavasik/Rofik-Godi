@@ -646,7 +646,7 @@ export const AdminProductManager: React.FC<{
       <ConfirmDialog
         open={Boolean(pendingDeleteId)}
         title="Delete product?"
-        message="This permanently removes the product from the catalog and database."
+        message="This permanently removes the product from the catalog and database, then deletes its primary, gallery, and colour images from Supabase Storage."
         confirmLabel="Delete product"
         onCancel={() => setPendingDeleteId(null)}
         onConfirm={() => void confirmRemove()}
