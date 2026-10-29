@@ -17,15 +17,18 @@ const asColors = (value: unknown, legacy: unknown): Product['colors'] => {
     const hex = typeof color.hex === 'string' ? color.hex.trim() : '';
     const bgClass = typeof color.bgClass === 'string' ? color.bgClass.trim() : 'bg-slate-900';
     const images = asStrings(color.images).map((image) => image.trim()).filter(Boolean);
-    return name || hex ? [{ name, hex, bgClass, ...(images.length ? { images } : {}) }] : [];
+    const list = (key: string) => Object.prototype.hasOwnProperty.call(color, key) ? asStrings(color[key]) : undefined;
+    return name || hex ? [{ name, hex, bgClass, ...(images.length ? { images } : {}), ...(typeof color.subtitle === 'string' ? { subtitle: color.subtitle } : {}), ...(list('features') !== undefined ? { features: list('features') } : {}), ...(list('compatibility') !== undefined ? { compatibility: list('compatibility') } : {}), ...(list('materials') !== undefined ? { materials: list('materials') } : {}), ...(list('stitchPatterns') !== undefined ? { stitchPatterns: list('stitchPatterns') } : {}) }] : [];
   });
   return asStrings(legacy).map((name, index) => ({ name: name.trim(), hex: ['#111827', '#D9232D', '#8C5A3C', '#2563EB'][index % 4], bgClass: 'bg-slate-900' }));
 };
 
 export const mapSupabaseProduct = (row: ProductRow): Product => {
   const bundled = PRODUCTS.find((item) => item.slug === String(row.slug || ''));
+  const useBundledFallback = !supabase;
   const value = (key: string, fallback: unknown) => {
     const candidate = row[key];
+    if (!useBundledFallback) return candidate === null || candidate === undefined ? fallback === undefined ? candidate : (Array.isArray(fallback) ? [] : '') : candidate;
     if (candidate === null || candidate === undefined || candidate === '' || (Array.isArray(candidate) && candidate.length === 0)) return fallback;
     return candidate;
   };
@@ -76,17 +79,22 @@ export const loadAdminProducts = async (): Promise<Product[]> => {
   return mapProductsWithReviewSummaries(data as ProductRow[]);
 };
 
-const toRow = (product: Product) => ({
-  ...(product.id.match(/^[0-9a-f-]{36}$/i) ? { id: product.id } : {}), slug: product.slug, name: product.title, subtitle: product.subtitle || '',
+const toRow = (product: Product) => {
+  const colors = product.colors || [];
+  const unique = (key: 'features' | 'compatibility' | 'materials' | 'stitchPatterns', fallback: string[]) => [...new Set(colors.flatMap((color) => color[key] === undefined ? fallback : color[key] || []))];
+  const derived = { subtitle: colors[0]?.subtitle ?? product.subtitle ?? '', features: unique('features', product.features || []), compatibility: unique('compatibility', product.compatibility || []), materials: unique('materials', product.materials || []), stitchPatterns: unique('stitchPatterns', product.stitchPatterns || []) };
+  return ({
+  ...(product.id.match(/^[0-9a-f-]{36}$/i) ? { id: product.id } : {}), slug: product.slug, name: product.title, subtitle: derived.subtitle,
   // The database constraint is authoritative; never let a stale display label
   // such as "Bike" or "Bike Cover" reach the products.category column.
   category: categoryLabels[product.category], category_key: product.category, price: product.price, original_price: product.originalPrice,
   image_url: product.image, additional_images: product.additionalImages || [], description: product.description,
-  features: product.features || [], materials: product.materials || [], stitch_patterns: product.stitchPatterns || [], thickness_options: product.thicknessOptions || [], colors_json: (product.colors || []).map((color) => ({ ...color, name: color.name.trim(), hex: color.hex.trim(), bgClass: color.bgClass.trim(), images: (color.images || []).map((image) => image.trim()).filter(Boolean) })),
-  colors: (product.colors || []).map((color) => color.name), compatibility_list: product.compatibility || [], compatibility: (product.compatibility || []).join(', '), badge: product.badge || null,
+  features: derived.features, materials: derived.materials, stitch_patterns: derived.stitchPatterns, thickness_options: product.thicknessOptions || [], colors_json: colors.map((color) => ({ ...color, name: color.name.trim(), hex: color.hex.trim(), bgClass: color.bgClass.trim(), images: (color.images || []).map((image) => image.trim()).filter(Boolean) })),
+  colors: colors.map((color) => color.name), compatibility_list: derived.compatibility, compatibility: derived.compatibility.join(', '), badge: product.badge || null,
   badge_color: product.badgeColor || null, updated_at: new Date().toISOString(), is_bestseller: Boolean(product.isBestseller), is_new: Boolean(product.isNew), is_waterproof: Boolean(product.isWaterproof),
   is_customizable: Boolean(product.isCustomizable), in_stock: Boolean(product.inStock), is_active: true, display_order: product.displayOrder ?? 0,
-});
+  });
+};
 
 export const reorderSupabaseProducts = async (productIds: string[]) => {
   if (!supabase) return { error: new Error('Supabase is not configured') };

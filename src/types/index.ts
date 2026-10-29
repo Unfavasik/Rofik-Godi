@@ -30,7 +30,7 @@ export interface Product {
   isCustomizable?: boolean;
   inStock: boolean;
   materials: string[];
-  colors: { name: string; hex: string; bgClass: string; images?: string[] }[];
+  colors: { name: string; hex: string; bgClass: string; images?: string[]; subtitle?: string; features?: string[]; compatibility?: string[]; materials?: string[]; stitchPatterns?: string[] }[];
   stitchPatterns: string[];
   compatibility: string[];
   thicknessOptions: { label: string; extraPrice: number }[];

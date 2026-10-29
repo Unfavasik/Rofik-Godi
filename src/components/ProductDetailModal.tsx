@@ -24,6 +24,8 @@ import { CartItem, Product } from '../types';
 import { createDefaultCartItem, hasMatchingCartItem, resolveStitchPatternSelection } from '../lib/cart';
 import { getProductAvailability } from '../lib/productAvailability';
 import { ProductReviews } from './ProductReviews';
+import { BottomSheet } from './BottomSheet';
+import { getColorDetails } from '../lib/productColors';
 
 interface ProductDetailModalProps {
   products: Product[];
@@ -121,7 +123,10 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
     product.colors.flatMap((color) => color.images || []).filter(Boolean).forEach((src) => { const image = new Image(); image.src = src; });
   }, [product.colors]);
   useEffect(() => { setActiveImageIndex((current) => Math.min(current, Math.max(0, images.length - 1))); }, [images.length]);
-  const [selectedStitch] = useState(() => resolveStitchPatternSelection(product.stitchPatterns));
+  const details = useMemo(() => getColorDetails(product, selectedColor), [product, selectedColor]);
+  const [selectedStitch, setSelectedStitch] = useState<string | undefined>(() => resolveStitchPatternSelection(details.stitchPatterns));
+  const [detailSheet, setDetailSheet] = useState<'features' | 'compatibility' | 'materials' | 'stitchPatterns' | null>(null);
+  useEffect(() => { setSelectedStitch(resolveStitchPatternSelection(details.stitchPatterns)); setSelectedModel(''); }, [selectedColor, details.stitchPatterns]);
   const [selectedThickness] = useState(
     product.thicknessOptions[0] || { label: 'Standard', extraPrice: 0 }
   );
@@ -179,7 +184,9 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
 
   const suggested = products.filter((item) => item.id !== product.id).slice(0, 4);
   const reviewsValue = (product.rating ?? 4.8).toFixed(1);
-  const modelOptions = product.compatibility.length ? product.compatibility : ['Universal fit'];
+  const modelOptions = details.compatibility;
+  const sheetLabels = { features: 'Features', compatibility: 'Compatible vehicles', materials: 'Materials', stitchPatterns: 'Stitch patterns' } as const;
+  const preview = (items: string[]) => items.slice(0, 2).join(' · ') + (items.length > 2 ? ` +${items.length - 2} more` : '');
 
   return (
     <AnimatePresence>
@@ -257,19 +264,14 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                 <b className="text-slate-900">{reviewsValue}</b><span>({product.reviewCount} reviews)</span>
               </div>
+              {details.subtitle && <p className="mt-2 text-[13px] font-medium text-slate-500">{details.subtitle}</p>}
               <div className="mt-4 flex items-center gap-2.5">
                 <strong className="text-[30px] font-black leading-none tracking-[-.045em]">₹{totalPrice}</strong>
                 <span className="text-[15px] text-slate-400 line-through">₹{displayOriginalPrice}</span>
                 <span className="rounded-md bg-rose-50 px-2 py-1 text-[10px] font-extrabold text-[#d9232d]">{discount}% OFF</span>
               </div>
               <p role="status" className={`mt-2 text-[11px] font-bold ${availability.state === 'out-of-stock' ? 'text-amber-700' : 'text-emerald-700'}`}>{availability.label}</p>
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                {[['Premium Quality', ShieldCheck], ['Waterproof', Droplets], ['Long Lasting', Clock3]].map(([label, Icon]) => (
-                  <div key={label as string} className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-100 bg-white px-2 py-2 text-center text-[10px] font-semibold text-slate-700 shadow-[0_2px_8px_rgba(15,23,42,.03)]">
-                    <Icon className="h-4 w-4 shrink-0 text-slate-700" /><span>{label as string}</span>
-                  </div>
-                ))}
-              </div>
+              {product.isWaterproof && <div className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-slate-100 bg-white px-3 py-2 text-[10px] font-semibold text-slate-700"><Droplets className="h-4 w-4" />Waterproof</div>}
             </section>
 
             <section className="border-t border-slate-100 px-5 py-4">
@@ -302,44 +304,18 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               </div>
             </section>
 
-            <section className="border-t border-slate-100 px-5 py-4">
+            {modelOptions.length > 0 && <section className="border-t border-slate-100 px-5 py-4">
               <div className="mb-2 text-[16px] font-extrabold tracking-tight">Select Model <span className="text-[12px] font-medium text-slate-400">(Optional)</span></div>
-              <label className="relative block">
-                <span className="sr-only">Choose your vehicle model</span>
-                <select value={selectedModel} onChange={(event) => setSelectedModel(event.target.value)} className="h-[48px] w-full appearance-none rounded-xl border border-slate-200 bg-white pl-12 pr-10 text-[13px] text-slate-600 outline-none focus:border-[#d9232d]">
-                  <option value="">Choose your {vehicleType.toLowerCase()} model</option>
-                  {modelOptions.map((model) => <option key={model} value={model}>{model}</option>)}
-                </select>
-                <Bike className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#d9232d]" />
-                <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-              </label>
-              <div className="mt-3 flex items-center gap-2 rounded-xl bg-rose-50 px-3.5 py-3 text-[11px] leading-relaxed text-[#d9232d]">
-                <CircleCheck className="h-4 w-4 shrink-0" />
-                <span>Not sure? Don’t worry! This cover fits most models.</span>
-              </div>
-            </section>
+              <label className="relative block"><span className="sr-only">Choose your vehicle model</span><select value={selectedModel} onChange={(event) => setSelectedModel(event.target.value)} className="h-[48px] w-full appearance-none rounded-xl border border-slate-200 bg-white pl-12 pr-10 text-[13px] text-slate-600"><option value="">Choose your {vehicleType.toLowerCase()} model</option>{modelOptions.map((model) => <option key={model} value={model}>{model}</option>)}</select><Bike className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#d9232d]" /><ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" /></label>
+              <div className="mt-3 flex items-center gap-2 rounded-xl bg-rose-50 px-3.5 py-3 text-[11px] text-[#d9232d]"><CircleCheck className="h-4 w-4 shrink-0" /><span>Fits the selected compatible models.</span></div>
+            </section>}
 
-            <section className="border-t border-slate-100 px-5 py-4">
-              <h2 className="mb-3 text-[16px] font-extrabold tracking-tight">Key Features</h2>
-              <div className="grid grid-cols-2 gap-2.5">
-                {[
-                  { title: 'Waterproof', detail: 'Rain & dust protection', Icon: Droplets, tone: 'blue' },
-                  { title: 'Anti-Slip', detail: 'Better grip & comfort', Icon: ShieldCheck, tone: 'red' },
-                  { title: 'Premium Material', detail: 'Durable & long lasting', Icon: PackageCheck, tone: 'orange' },
-                  { title: 'Easy to Install', detail: 'No tools required', Icon: Wrench, tone: 'green' },
-                ].map(({ title, detail, Icon, tone }) => (
-                  <div key={title} className="flex min-h-[74px] items-center gap-2.5 rounded-2xl border border-slate-100 bg-white p-2.5 shadow-[0_3px_12px_rgba(15,23,42,.035)]">
-                    <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${tone === 'blue' ? 'bg-blue-50 text-blue-500' : tone === 'red' ? 'bg-rose-50 text-[#d9232d]' : tone === 'orange' ? 'bg-orange-50 text-orange-500' : 'bg-emerald-50 text-emerald-600'}`}><Icon className="h-5 w-5" /></span>
-                    <span><b className="block text-[11px] leading-tight">{title}</b><small className="mt-1 block text-[10px] leading-snug text-slate-500">{detail}</small></span>
-                  </div>
-                ))}
-              </div>
-            </section>
+            {(['features', 'compatibility', 'materials', 'stitchPatterns'] as const).map((key) => details[key].length > 0 && <section key={key} className="border-t border-slate-100 px-5 py-3"><button type="button" onClick={() => setDetailSheet(key)} className="flex w-full items-center justify-between text-left"><span><b className="block text-[14px] font-extrabold">{sheetLabels[key]}</b><span className="mt-1 block text-[11px] text-slate-500">{key === 'stitchPatterns' && selectedStitch ? selectedStitch : preview(details[key])}</span></span><ChevronDown className="h-4 w-4 -rotate-90 text-slate-400" /></button></section>)}
 
             <section className="border-t border-slate-100 px-5 py-4">
               <h2 className="mb-2 text-[16px] font-extrabold tracking-tight">Description</h2>
               <p className={`text-[12px] leading-[1.6] text-slate-600 ${descriptionOpen ? '' : 'line-clamp-4'}`}>
-                Upgrade your bike’s look and comfort with our {product.description || 'premium seat cover, crafted from high-quality waterproof material.'} It protects your original seat from rain, dust, and heat while giving a stylish finish. Perfect fit, easy to install, and made for long-lasting everyday rides.
+{product.description}
               </p>
               <button type="button" onClick={() => setDescriptionOpen((open) => !open)} className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 text-[12px] font-bold text-slate-800">
                 {descriptionOpen ? 'Read less' : 'Read more'}<ChevronDown className={`h-4 w-4 transition ${descriptionOpen ? 'rotate-180' : ''}`} />
@@ -350,10 +326,10 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               <h2 className="mb-2 text-[16px] font-extrabold tracking-tight">Specifications</h2>
               <div className="divide-y divide-slate-100">
                 {[
-                  ['Material', product.materials?.[0] || 'Premium Leatherette'],
+                  ['Material', details.materials.join(', ')],
                   ['Waterproof', product.isWaterproof ? 'Yes' : 'Breathable'],
-                  ['Anti-Slip', 'Yes'],
-                  ['Suitable For', product.compatibility[0] || 'Most Bike Models'],
+
+                  ['Suitable For', details.compatibility.join(', ')],
                   ['Package Includes', '1 Seat Cover'],
                   ['Installation', 'Easy (DIY)'],
                 ].map(([label, value]) => (
@@ -365,6 +341,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               </div>
             </section>
 
+            <BottomSheet open={detailSheet !== null} title={detailSheet ? sheetLabels[detailSheet] : ''} onClose={() => setDetailSheet(null)}>{detailSheet && <div className="space-y-2">{details[detailSheet].map((item) => <div key={item} className="rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-700">{detailSheet === 'stitchPatterns' ? <label className="flex items-center gap-3"><input type="radio" name="stitch-pattern" checked={selectedStitch === item} onChange={() => { setSelectedStitch(item); setDetailSheet(null); }} />{item}</label> : item}</div>)}</div>}</BottomSheet>
             <ProductReviews productId={product.id} productTitle={product.title} isAuthenticated={isAuthenticated} customerId={customerId} onRequestLogin={onRequestLogin || (() => undefined)} />
 
             <section className="border-t border-slate-100 px-5 py-5">

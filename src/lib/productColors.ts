@@ -91,3 +91,20 @@ export function toColorPickerValue(value: string): string {
   if (digits.length === 3) return `#${digits.split('').map((digit) => `${digit}${digit}`).join('')}`;
   return `#${digits}`;
 }
+
+import type { Product } from '../types';
+
+/** Returns the selected colour's values. An explicitly empty list is authoritative. */
+export function getColorDetails(product: Product, color: Product['colors'][number]) {
+  const own = <T,>(key: keyof Product['colors'][number], fallback: T): T => {
+    const value = color[key] as T | undefined;
+    return value === undefined ? fallback : value;
+  };
+  return {
+    subtitle: own('subtitle', product.subtitle || ''),
+    features: own('features', product.features || []),
+    compatibility: own('compatibility', product.compatibility || []),
+    materials: own('materials', product.materials || []),
+    stitchPatterns: own('stitchPatterns', product.stitchPatterns || []),
+  };
+}

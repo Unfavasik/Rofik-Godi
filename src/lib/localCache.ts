@@ -1,6 +1,6 @@
 import type { Product } from '../types';
 
-const PUBLIC_CATALOG_KEY = 'rofik-godi:public-catalog:v1';
+const PUBLIC_CATALOG_KEY = 'rofik-godi:public-catalog:v2';
 export const CATALOG_CHANGED_EVENT = 'rofik-godi:catalog-changed';
 export const notifyCatalogChanged = () => window.dispatchEvent(new Event(CATALOG_CHANGED_EVENT));
 const NOTIFICATION_CACHE_VERSION = 1;
@@ -41,7 +41,7 @@ export function readPublicCatalogCache(): Product[] | null {
 
 export function writePublicCatalogCache(products: Product[]) {
   try {
-    localStorage.setItem(PUBLIC_CATALOG_KEY, JSON.stringify({ version: 1, savedAt: Date.now(), products }));
+    localStorage.setItem(PUBLIC_CATALOG_KEY, JSON.stringify({ version: 2, savedAt: Date.now(), products }));
   } catch {
     // The live catalog remains available when browser storage is full or disabled.
   }

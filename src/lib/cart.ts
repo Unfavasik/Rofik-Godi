@@ -31,7 +31,7 @@ function isSameCartConfiguration(left: CartItem, right: CartItem): boolean {
 export function createDefaultCartItem(product: Product, cartItemId = `${product.id}-quick-${Date.now()}`): CartItem {
   const selectedColor = product.colors[0] || { name: 'Standard', hex: '#111827' };
   const selectedThickness = product.thicknessOptions[0] || { label: 'Standard', extraPrice: 0 };
-  const selectedStitch = resolveStitchPatternSelection(product.stitchPatterns);
+  const selectedStitch = resolveStitchPatternSelection(selectedColor.stitchPatterns ?? product.stitchPatterns);
   return {
     cartItemId,
     product,
@@ -141,7 +141,7 @@ export function refreshCartFromCatalog(cart: CartItem[], catalogProducts: Produc
     const selectedColor = currentProduct.colors.find(
       (color) => color.name.toLowerCase() === item.selectedColor?.name?.toLowerCase(),
     ) || currentProduct.colors[0] || item.selectedColor;
-    const selectedStitch = resolveStitchPatternSelection(currentProduct.stitchPatterns, item.selectedStitch);
+    const selectedStitch = resolveStitchPatternSelection(selectedColor.stitchPatterns ?? currentProduct.stitchPatterns, item.selectedStitch);
     const quantity = Math.max(1, Math.min(MAX_ORDER_ITEM_QUANTITY, Math.floor(Number(item.quantity) || 1)));
 
     return [{
@@ -173,13 +173,13 @@ export function buildReorderCartItems(
     const colorName = (orderItem.color || '').trim().toLowerCase();
     const selectedColor = product.colors.find((color) => color.name.trim().toLowerCase() === colorName)
       || (orderItem.color
-        ? { name: orderItem.color, hex: product.colors[0]?.hex || '#111827' }
-        : product.colors[0] || { name: 'Standard', hex: '#111827' });
+        ? { name: orderItem.color, hex: product.colors[0]?.hex || '#111827', stitchPatterns: undefined }
+        : product.colors[0] || { name: 'Standard', hex: '#111827', stitchPatterns: undefined });
     const thicknessLabel = (orderItem.selected_thickness || '').trim();
     const selectedThickness = product.thicknessOptions.find((option) => option.label.trim().toLowerCase() === thicknessLabel.toLowerCase())
       || product.thicknessOptions[0]
       || { label: 'Standard', extraPrice: 0 };
-    const selectedStitch = resolveStitchPatternSelection(product.stitchPatterns, orderItem.selected_stitch);
+    const selectedStitch = resolveStitchPatternSelection(selectedColor.stitchPatterns ?? product.stitchPatterns, orderItem.selected_stitch);
     const customEmbroideryText = orderItem.custom_embroidery_text?.trim() || undefined;
     return [{
       cartItemId: `buy-again-${product.id}-${Date.now()}-${index}`,

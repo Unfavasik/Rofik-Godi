@@ -94,6 +94,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const { t } = useI18n();
   const availability = getProductAvailability(product);
+  const cardSubtitle = product.subtitle || product.colors[0]?.subtitle;
   const availabilityLabel = availability.state === 'out-of-stock' ? t('product.outOfStock') : t('product.inStock');
   const availabilityClass = availability.state === 'out-of-stock' ? 'text-amber-700' : 'text-emerald-700';
   const [notifySubmitting, setNotifySubmitting] = useState(false);
@@ -152,9 +153,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </h4>
           <p className={`mt-1 text-[10px] font-bold ${availabilityClass}`}>{availabilityLabel}</p>
 
-          {product.subtitle && (
+          {cardSubtitle && (
             <p className="line-clamp-1 text-[10px] text-gray-500 font-medium mt-0.5 break-words">
-              {product.subtitle}
+              {cardSubtitle}
             </p>
           )}
 
@@ -279,9 +280,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <p className={`relative z-10 pointer-events-none text-[10px] font-bold ${availabilityClass}`}>{availabilityLabel}</p>
 
       {/* Subtitle / Short Description */}
-      {product.subtitle && (
+      {cardSubtitle && (
         <p className="relative z-10 pointer-events-none line-clamp-1 text-[10px] text-gray-500 font-medium mb-1 break-words">
-          {product.subtitle}
+          {cardSubtitle}
         </p>
       )}
 
