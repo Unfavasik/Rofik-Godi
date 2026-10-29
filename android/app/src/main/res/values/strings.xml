@@ -4,4 +4,5 @@
     <string name="title_activity_main">Rofik Godi Center</string>
     <string name="package_name">com.rofikgodi.centre</string>
     <string name="custom_url_scheme">com.rofikgodi.centre</string>
+    <string name="default_notification_channel_id">rofik-godi-updates</string>
 </resources>

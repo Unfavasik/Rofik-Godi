@@ -277,8 +277,10 @@ Deno.serve(async (request) => {
       android: {
         priority: notification.kind === 'order' ? 'HIGH' : 'NORMAL',
         notification: {
-          channel_id: 'rofik-godi-updates',
-          sound: 'default',
+          channel_id: 'rofik-godi-updates-premium-v1',
+          sound: 'rofik_notification',
+          icon: 'ic_stat_rofik',
+          color: '#D9232D',
           ...(notificationImageUrl ? { image: notificationImageUrl } : {}),
         },
       },

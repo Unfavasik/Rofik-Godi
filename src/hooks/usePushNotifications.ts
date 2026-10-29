@@ -1,12 +1,25 @@
 import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { PushNotifications } from '@capacitor/push-notifications';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { supabase } from '../lib/supabase';
 
-const ANDROID_CHANNEL_ID = 'rofik-godi-updates';
+const DEFAULT_ANDROID_CHANNEL_ID = 'rofik-godi-updates';
+const PREMIUM_ANDROID_CHANNEL_ID = 'rofik-godi-updates-premium-v1';
+const PREMIUM_ANDROID_VERSION = '1.1.28';
 const SITE_ORIGIN = 'https://rofik-godi.pages.dev';
+
+function isVersionAtLeast(version: string, minimum: string) {
+  const actual = version.split('.').map((part) => Number.parseInt(part, 10) || 0);
+  const required = minimum.split('.').map((part) => Number.parseInt(part, 10) || 0);
+  for (let i = 0; i < Math.max(actual.length, required.length); i += 1) {
+    const difference = (actual[i] || 0) - (required[i] || 0);
+    if (difference !== 0) return difference > 0;
+  }
+  return true;
+}
 
 function openNotificationTarget(navigate: (path: string) => void, actionUrl: unknown) {
   if (typeof actionUrl !== 'string' || !actionUrl.trim()) {
@@ -49,6 +62,20 @@ export function usePushNotifications(userId: string | null, navigate: (path: str
         }));
         if (!active || !userId || !supabase) return;
 
+        let appVersion = '';
+        if (Capacitor.getPlatform() === 'android') {
+          try {
+            appVersion = (await App.getInfo()).version;
+          } catch {
+            // Older Android shells can continue using the default channel.
+          }
+        }
+        const usePremiumAndroidChannel = isVersionAtLeast(appVersion, PREMIUM_ANDROID_VERSION);
+        const notificationChannelId = usePremiumAndroidChannel
+          ? PREMIUM_ANDROID_CHANNEL_ID
+          : DEFAULT_ANDROID_CHANNEL_ID;
+        const notificationSound = usePremiumAndroidChannel ? 'rofik_notification' : 'default';
+
         let permission = await PushNotifications.checkPermissions();
         if (permission.receive !== 'granted') {
           permission = await PushNotifications.requestPermissions();
@@ -56,21 +83,21 @@ export function usePushNotifications(userId: string | null, navigate: (path: str
         if (!active || permission.receive !== 'granted') return;
 
         await PushNotifications.createChannel({
-          id: ANDROID_CHANNEL_ID,
+          id: notificationChannelId,
           name: 'Rofik Godi updates',
           description: 'Order updates and offers from Rofik Godi Centre',
           importance: 4,
-          sound: 'default',
+          sound: notificationSound,
           vibration: true,
           lights: true,
           lightColor: '#D9232D',
         });
         await LocalNotifications.createChannel({
-          id: ANDROID_CHANNEL_ID,
+          id: notificationChannelId,
           name: 'Rofik Godi updates',
           description: 'Order updates and offers from Rofik Godi Centre',
           importance: 4,
-          sound: 'default',
+          sound: notificationSound,
           vibration: true,
           lights: true,
           lightColor: '#D9232D',
@@ -107,7 +134,7 @@ export function usePushNotifications(userId: string | null, navigate: (path: str
                 id: Math.floor(Date.now() % 2_000_000_000),
                 title: notification.title || 'Rofik Godi Centre',
                 body: notification.body || '',
-                channelId: ANDROID_CHANNEL_ID,
+                channelId: notificationChannelId,
                 extra: notification.data,
                 schedule: { at: new Date(Date.now() + 250) },
               }],
