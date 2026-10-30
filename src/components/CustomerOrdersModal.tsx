@@ -25,6 +25,7 @@ import type { CustomerOrderRecord } from '../types';
 import { WORKSHOP_INFO } from '../data/products';
 import type { ProductReviewRecord } from '../lib/supabaseReviews';
 import { canCancelCustomerOrder, getCustomerOrderTimeline, getOrderPreviewItems, isOrderComplete } from '../lib/orderPresentation';
+import { getCustomerOrderDeepLinkLookupKey } from '../lib/customerOrderDeepLink';
 import { cancelMyOrder, getMyOrderBySlug, listMyOrderStatusHistory } from '../lib/supabaseOrders';
 import { InvoiceTemplate } from './InvoiceTemplate';
 import { PickupQrCard } from './PickupQrCard';
@@ -198,20 +199,21 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
       }
       return;
     }
-    if (initialOrderHandled.current === initialOrderSlug) return;
+    const lookupKey = getCustomerOrderDeepLinkLookupKey(currentUserId, initialOrderSlug);
+    if (!lookupKey || initialOrderHandled.current === lookupKey) return;
     if (selectedOrderId) setSelectedOrderId(null);
     setDirectOrder(null);
     setDirectOrderNotFound(false);
     if (loading || !currentUserId) return;
     const targetOrder = orders.find((order) => order.order_slug.toLowerCase() === initialOrderSlug.toLowerCase());
     if (targetOrder) {
-      initialOrderHandled.current = initialOrderSlug;
+      initialOrderHandled.current = lookupKey;
       setSelectedOrderId(targetOrder.id);
       onInitialOrderOpened?.();
       return;
     }
     let active = true;
-    initialOrderHandled.current = initialOrderSlug;
+    initialOrderHandled.current = lookupKey;
     setDirectOrderLoading(true);
     void getMyOrderBySlug(currentUserId, initialOrderSlug)
       .then((result) => {

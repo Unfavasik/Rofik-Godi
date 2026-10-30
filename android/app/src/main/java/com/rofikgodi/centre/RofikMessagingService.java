@@ -67,7 +67,9 @@ public final class RofikMessagingService extends FirebaseMessagingService {
         String viewRoute = routeForView(data, kind, notificationId, orderNumber);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_rofik)
-            .setLargeIcon(brandIcon())
+            // Android requires a monochrome small status icon; use the real launcher artwork
+            // as the larger notification-card icon instead of duplicating the R glyph.
+            .setLargeIcon(launcherIcon())
             .setColor(Color.rgb(217, 35, 45))
             .setContentTitle(title)
             .setContentText(body)
@@ -84,7 +86,7 @@ public final class RofikMessagingService extends FirebaseMessagingService {
         if (productImage != null) {
             builder.setStyle(new NotificationCompat.BigPictureStyle()
                 .bigPicture(productImage)
-                .bigLargeIcon(brandIcon()));
+                .bigLargeIcon(launcherIcon()));
         }
 
         boolean orderNotification = "order".equalsIgnoreCase(kind) || type.startsWith("order_") || "pickup_ready".equals(type);
@@ -244,8 +246,13 @@ public final class RofikMessagingService extends FirebaseMessagingService {
         return matcher.find() ? matcher.group().toUpperCase(Locale.ROOT) : null;
     }
 
-    private Bitmap brandIcon() {
-        Drawable drawable = ContextCompat.getDrawable(this, R.drawable.ic_rofik_notification_brand);
+    private Bitmap launcherIcon() {
+        Drawable drawable;
+        try {
+            drawable = getPackageManager().getApplicationIcon(getPackageName());
+        } catch (PackageManager.NameNotFoundException ignored) {
+            drawable = ContextCompat.getDrawable(this, R.mipmap.ic_launcher);
+        }
         if (drawable == null) return null;
         int size = 96;
         Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
