@@ -116,6 +116,28 @@ function safeFcmError(data: Record<string, unknown>) {
   return String(coded || error?.status || 'FCM_SEND_FAILED').slice(0, 80);
 }
 
+function isVersionAtLeast(version: string | null | undefined, minimum: string) {
+  if (!version) return false;
+  const actual = version.split('.').map((part) => Number.parseInt(part, 10) || 0);
+  const required = minimum.split('.').map((part) => Number.parseInt(part, 10) || 0);
+  for (let index = 0; index < Math.max(actual.length, required.length); index += 1) {
+    const difference = (actual[index] || 0) - (required[index] || 0);
+    if (difference !== 0) return difference > 0;
+  }
+  return true;
+}
+
+function inferNotificationType(kind: string, title: string, body: string) {
+  const text = `${kind} ${title} ${body}`.toLowerCase();
+  if (text.includes('completed') || text.includes('picked up') || text.includes('picked_up')) return 'order_completed';
+  if (text.includes('payment') || text.includes('paid')) return 'payment_confirmed';
+  if (text.includes('ready') || text.includes('pickup')) return 'pickup_ready';
+  if (text.includes('order')) return 'order_update';
+  if (text.includes('coupon') || text.includes('offer') || text.includes('promo')) return 'offer';
+  if (text.includes('arrival') || text.includes('product')) return 'product_arrival';
+  return 'general';
+}
+
 function parseFirebaseServiceAccount(raw: string): FirebaseServiceAccount {
   let text = raw.trim().replace(/^\uFEFF/, '').replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
   const firstBrace = text.indexOf('{');
@@ -142,6 +164,40 @@ async function resolveNotificationImageUrl(
   notification: NotificationRow,
 ) {
   if (notification.image_url) return notification.image_url;
+  if (notification.kind === 'order') {
+    const orderNumber = `${notification.title} ${notification.body} ${notification.action_url || ''}`
+      .match(/\bRGC-[A-Z0-9]{8,32}\b/i)?.[0]?.toUpperCase();
+    if (!orderNumber) return null;
+    const { data: order } = await supabase
+      .from('orders')
+      .select('id')
+      .eq('user_id', notification.user_id)
+      .eq('order_number', orderNumber)
+      .limit(1)
+      .maybeSingle();
+    if (!order?.id) return null;
+    const { data: orderItems } = await supabase
+      .from('order_items')
+      .select('product_id')
+      .eq('order_id', order.id)
+      .not('product_id', 'is', null)
+      .limit(5);
+    const productIds = [...new Set((orderItems || []).map((item) => item.product_id).filter((id): id is string => Boolean(id)))];
+    if (!productIds.length) return null;
+    const { data: products } = await supabase
+      .from('products')
+      .select('image_url')
+      .in('id', productIds)
+      .limit(5);
+    const imageUrl = products?.find((product) => typeof product.image_url === 'string' && product.image_url.trim())?.image_url;
+    if (!imageUrl) return null;
+    try {
+      const parsed = new URL(imageUrl);
+      return parsed.protocol === 'https:' ? parsed.toString() : null;
+    } catch {
+      return null;
+    }
+  }
   if (!notification.action_url?.startsWith('/admin/activity') && !notification.action_url?.startsWith('/admin/support')) return null;
   let requestId: string;
   try {
@@ -222,7 +278,7 @@ Deno.serve(async (request) => {
   const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: devices, error: devicesError } = await supabase
     .from('push_devices')
-    .select('id,token')
+    .select('id,token,app_version')
     .eq('user_id', notification.user_id)
     .limit(200);
   if (devicesError) return jsonResponse({ error: 'Could not load registered devices' }, 500);
@@ -261,29 +317,38 @@ Deno.serve(async (request) => {
       continue;
     }
 
+    const styledAndroidClient = isVersionAtLeast(device.app_version, '1.1.39');
+    const notificationType = inferNotificationType(notification.kind, notification.title, notification.body);
     const message: Record<string, unknown> = {
       token: device.token,
-      notification: {
-        title: notification.title,
-        body: notification.body,
-        ...(notificationImageUrl ? { image: notificationImageUrl } : {}),
-      },
       data: {
         notification_id: notification.id,
         kind: notification.kind || 'general',
+        type: notificationType,
+        title: notification.title,
+        body: notification.body,
         action_url: notification.action_url || '',
         image_url: notificationImageUrl || '',
       },
       android: {
-        priority: notification.kind === 'order' ? 'HIGH' : 'NORMAL',
+        priority: styledAndroidClient || notification.kind === 'order' ? 'HIGH' : 'NORMAL',
+        ...(!styledAndroidClient ? {
+          notification: {
+            channel_id: 'rofik-godi-updates-premium-v1',
+            sound: 'rofik_notification',
+            icon: 'ic_stat_rofik',
+            color: '#D9232D',
+            ...(notificationImageUrl ? { image: notificationImageUrl } : {}),
+          },
+        } : {}),
+      },
+      ...(!styledAndroidClient ? {
         notification: {
-          channel_id: 'rofik-godi-updates-premium-v1',
-          sound: 'rofik_notification',
-          icon: 'ic_stat_rofik',
-          color: '#D9232D',
+          title: notification.title,
+          body: notification.body,
           ...(notificationImageUrl ? { image: notificationImageUrl } : {}),
         },
-      },
+      } : {}),
     };
     const response = await fetch(`https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`, {
       method: 'POST',

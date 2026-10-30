@@ -58,6 +58,7 @@ import {
 import { supabase } from './lib/supabase';
 import { NATIVE_AUTH_CALLBACK_URL } from './lib/oauthRedirect';
 import { getPathForCustomerOrder, getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
+import { getNotificationTargetPath } from './lib/notificationTarget';
 import { signOutCurrentDevice } from './lib/authLogout';
 import { CUSTOMER_PREFERENCES_CHANGED_EVENT, isNotificationEnabledByPreferences, prefersHapticFeedback, readCustomerAppPreferences } from './lib/customerPreferences';
 import type { PreferredLanguage } from './lib/customerPreferences';
@@ -1284,6 +1285,8 @@ export default function App() {
             onOpenProduct={openProductRoute}
             onOpenSupportRequest={(requestId) => navigate(`/support/${encodeURIComponent(requestId)}`)}
             onOpenContactSupport={() => navigate('/contact-support?from=notifications', { state: { returnTo: '/notifications' } })}
+            onOpenActionUrl={(path) => navigate(getNotificationTargetPath(path))}
+            onBuyAgain={handleBuyAgain}
             onOpenMyOrders={(orderSlug) => {
               navigate(orderSlug ? getPathForCustomerOrder(orderSlug) : '/my-orders');
             }}

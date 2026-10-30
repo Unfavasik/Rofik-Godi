@@ -2,6 +2,7 @@ package com.rofikgodi.centre;
 
 import android.graphics.Color;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
 import com.getcapacitor.BridgeActivity;
@@ -12,6 +13,17 @@ import androidx.core.view.WindowInsetsControllerCompat;
 
 public class MainActivity extends BridgeActivity implements PaymentResultWithDataListener {
     private static final String HOME_URL = "https://rofik-godi.pages.dev/";
+    public static final String EXTRA_NOTIFICATION_ROUTE = "com.rofikgodi.centre.notification_route";
+
+    private String notificationLaunchUrl(Intent intent) {
+        if (intent == null) return null;
+        String route = intent.getStringExtra(EXTRA_NOTIFICATION_ROUTE);
+        if (route == null || !route.startsWith("/") || route.startsWith("//") || route.contains("\\")) return null;
+        Uri parsed = Uri.parse(route);
+        if (parsed.isAbsolute() || parsed.getAuthority() != null) return null;
+        String base = HOME_URL.endsWith("/") ? HOME_URL.substring(0, HOME_URL.length() - 1) : HOME_URL;
+        return base + route;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -21,13 +33,14 @@ public class MainActivity extends BridgeActivity implements PaymentResultWithDat
             && "com.rofikgodi.centre".equals(launchIntent.getData().getScheme())
             && "auth".equals(launchIntent.getData().getHost())
             && "/callback".equals(launchIntent.getData().getPath());
+        String notificationUrl = notificationLaunchUrl(launchIntent);
         registerPlugin(NativeRazorpayPlugin.class);
         // Do not restore a WebView snapshot that may contain an abandoned bank/Razorpay page.
         super.onCreate(null);
         if (!isOAuthCallback) {
             getBridge().getWebView().clearHistory();
             getBridge().getWebView().clearCache(false);
-            getBridge().getWebView().loadUrl(HOME_URL);
+            getBridge().getWebView().loadUrl(notificationUrl == null ? HOME_URL : notificationUrl);
         }
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
@@ -49,6 +62,12 @@ public class MainActivity extends BridgeActivity implements PaymentResultWithDat
             && "com.rofikgodi.centre".equals(intent.getData().getScheme())
             && "auth".equals(intent.getData().getHost())
             && "/callback".equals(intent.getData().getPath());
+        String notificationUrl = notificationLaunchUrl(intent);
+        if (notificationUrl != null) {
+            getBridge().getWebView().clearHistory();
+            getBridge().getWebView().loadUrl(notificationUrl);
+            return;
+        }
         if (Intent.ACTION_MAIN.equals(intent.getAction()) && !isOAuthCallback) {
             getBridge().getWebView().clearHistory();
             getBridge().getWebView().loadUrl(HOME_URL);

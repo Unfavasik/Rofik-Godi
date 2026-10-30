@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Bell, ChevronRight, Package, Settings, Star, Tag, Truck, Volume2, Moon, Smartphone, Megaphone, TrendingDown, Trash2, MessageCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { deleteMyNotification, listMyNotifications, markNotificationRead } from '../lib/supabaseCustomer';
@@ -16,6 +16,7 @@ import { CloudLoader } from './CloudLoader';
 import { getCustomerNotificationCategory, getSupportRequestIdFromNotification, matchesCustomerNotificationFilter, getNotificationRowSurfaceClass, isSupportNotification, type CustomerNotificationFilter } from '../lib/notificationCategory';
 import { isNotificationEnabledByPreferences, readCustomerAppPreferences } from '../lib/customerPreferences';
 import { readCustomerNotificationCache, writeCustomerNotificationCache, type CachedCustomerNotification } from '../lib/localCache';
+import { getNotificationTargetPath } from '../lib/notificationTarget';
 
 type NotificationItem = CachedCustomerNotification & {
   orderNumber?: string | null;
@@ -71,8 +72,9 @@ const toneFor = (item: NotificationItem) => {
   return 'bg-blue-50 text-blue-500';
 };
 
-export function NotificationsView({ userId, isGuest, onBack, onNotificationsChanged, onOpenShop, onOpenProduct, products = [], onOpenMyOrders, onOpenSupportRequest, onOpenContactSupport }: { userId: string; isGuest: boolean; onBack: () => void; onNotificationsChanged?: () => void; onOpenShop?: () => void; onOpenProduct?: (product: Product) => void; products?: Product[]; onOpenMyOrders?: (orderSlug?: string) => void; onOpenSupportRequest?: (requestId: string) => void; onOpenContactSupport?: () => void }) {
+export function NotificationsView({ userId, isGuest, onBack, onNotificationsChanged, onOpenShop, onOpenProduct, products = [], onOpenMyOrders, onOpenSupportRequest, onOpenContactSupport, onOpenActionUrl, onBuyAgain }: { userId: string; isGuest: boolean; onBack: () => void; onNotificationsChanged?: () => void; onOpenShop?: () => void; onOpenProduct?: (product: Product) => void; products?: Product[]; onOpenMyOrders?: (orderSlug?: string) => void; onOpenSupportRequest?: (requestId: string) => void; onOpenContactSupport?: () => void; onOpenActionUrl?: (path: string) => void; onBuyAgain?: (order: CustomerOrderRecord) => Promise<{ error?: string }> }) {
   const [filter, setFilter] = useState<NotificationFilter>('All');
+  const [autoBuyAgain] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('buyAgain') === '1');
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [couponOffer, setCouponOffer] = useState<CustomerCouponOffer | null>(null);
   const [couponDetailsLoading, setCouponDetailsLoading] = useState(false);
@@ -90,6 +92,7 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
   const liveNotificationIdsRef = useRef(new Set<string>());
   const pointerGestureRef = useRef<NotificationPointerGesture | null>(null);
   const suppressRowClickRef = useRef(false);
+  const handledOrderDeepLinkRef = useRef('');
 
   useEffect(() => {
     setSelectedNotification(null);
@@ -246,14 +249,36 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
   }), [enabledItems]);
   const hasUnreadSupport = enabledItems.some((item) => !item.read_at && getCustomerNotificationCategory(item) === 'Support');
 
-  const openNotification = (item: NotificationItem) => {
+  const openNotification = useCallback((item: NotificationItem) => {
     setSelectedNotification(item);
     if (!item.read_at && !isGuest) {
       const readAt = new Date().toISOString();
       setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, read_at: readAt } : entry));
       void markNotificationRead(item.id, userId).then(() => onNotificationsChanged?.());
     }
-  };
+  }, [isGuest, onNotificationsChanged, userId]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requestedNotificationId = params.get('notification');
+    const requestedOrder = getNotificationOrderNumber(params.get('order') || '');
+    if ((!requestedOrder && !requestedNotificationId) || loading) return;
+    const deepLinkKey = requestedNotificationId ? `${userId}:notification:${requestedNotificationId}` : `${userId}:order:${requestedOrder}`;
+    if (handledOrderDeepLinkRef.current === deepLinkKey) return;
+    handledOrderDeepLinkRef.current = deepLinkKey;
+    if (requestedNotificationId) {
+      const matchingById = items.find((item) => item.id === requestedNotificationId);
+      if (matchingById) openNotification(matchingById);
+      return;
+    }
+    const matchingNotification = items.find((item) => item.orderNumber?.toUpperCase() === requestedOrder);
+    if (matchingNotification) {
+      openNotification(matchingNotification);
+      return;
+    }
+    const createdAt = new Date().toISOString();
+    setSelectedNotification({ id: `order-deep-link-${requestedOrder}`, kind: 'order', title: 'Order update', body: `Order #${requestedOrder}`, action_url: null, image_url: null, read_at: createdAt, created_at: createdAt, expires_at: null, orderNumber: requestedOrder, orderRecord: null });
+  }, [items, loading, openNotification, userId]);
 
   const handleNotificationRowClick = (item: NotificationItem) => {
     if (suppressRowClickRef.current) {
@@ -370,6 +395,8 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
       initialOrder={selectedNotification.orderRecord}
       notificationTitle={selectedNotification.title}
       notificationBody={selectedNotification.body}
+      onBuyAgain={onBuyAgain}
+      autoBuyAgain={autoBuyAgain}
       onBack={() => setSelectedNotification(null)}
       onOpenMyOrders={(orderSlug) => {
         setSelectedNotification(null);
@@ -418,7 +445,7 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
           <h2 className="text-[20px] font-extrabold leading-tight text-slate-900">{selectedNotification.title}</h2>
           <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">{selectedNotification.body}</p>
         </section>
-        {selectedNotification.action_url && <a href={selectedNotification.action_url} className="mt-3 flex min-h-[50px] w-full items-center justify-center rounded-2xl bg-[#E51E2B] text-sm font-extrabold text-white">View details <ChevronRight className="ml-2 inline h-4 w-4" /></a>}
+        {selectedNotification.action_url && <button type="button" onClick={() => onOpenActionUrl?.(getNotificationTargetPath(selectedNotification.action_url))} className="mt-3 flex min-h-[50px] w-full items-center justify-center rounded-2xl bg-[#E51E2B] text-sm font-extrabold text-white">View details <ChevronRight className="ml-2 inline h-4 w-4" /></button>}
       </div>
     </main>;
   }

@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 import {
   ArrowLeft,
   ArrowRight,
@@ -18,6 +20,7 @@ import { WORKSHOP_INFO } from '../data/products';
 import { getMyOrderByNumber } from '../lib/supabaseOrders';
 import type { CustomerOrderRecord } from '../types';
 import { formatInr, useI18n, type TranslationKey } from '../lib/i18n';
+import { isOrderComplete } from '../lib/orderPresentation';
 
 const money = formatInr;
 const orderDate = (value: string, locale: string) => {
@@ -66,6 +69,8 @@ export function OrderNotificationDetails({
   initialOrder,
   notificationTitle,
   notificationBody,
+  onBuyAgain,
+  autoBuyAgain = false,
   onBack,
   onOpenMyOrders,
 }: {
@@ -74,6 +79,8 @@ export function OrderNotificationDetails({
   initialOrder?: CustomerOrderRecord | null;
   notificationTitle?: string;
   notificationBody?: string;
+  onBuyAgain?: (order: CustomerOrderRecord) => Promise<{ error?: string }>;
+  autoBuyAgain?: boolean;
   onBack: () => void;
   onOpenMyOrders: (orderSlug?: string) => void;
 }) {
@@ -83,6 +90,9 @@ export function OrderNotificationDetails({
   const [order, setOrder] = useState<CustomerOrderRecord | null>(initialOrder || null);
   const [loading, setLoading] = useState(!initialOrder);
   const [loadError, setLoadError] = useState(false);
+  const autoBuyAgainHandledRef = useRef(false);
+  const [buyAgainLoading, setBuyAgainLoading] = useState(false);
+  const [buyAgainError, setBuyAgainError] = useState('');
 
   useEffect(() => {
     const updateVisibleHeight = () => {
@@ -125,7 +135,40 @@ export function OrderNotificationDetails({
 
   const viewportStyle = { height: viewportHeight ? `${viewportHeight}px` : '100dvh' };
   const phoneHref = `tel:${WORKSHOP_INFO.phone.replace(/[^+\d]/g, '')}`;
-  const mapHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${WORKSHOP_INFO.name}, ${WORKSHOP_INFO.address}`)}`;
+  const mapHref = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${WORKSHOP_INFO.name}, ${WORKSHOP_INFO.address}`)}&travelmode=driving`;
+  const openDirections = () => {
+    if (!Capacitor.isNativePlatform()) {
+      window.open(mapHref, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    void Browser.open({ url: mapHref }).catch(() => window.open(mapHref, '_blank', 'noopener,noreferrer'));
+  };
+  const handleBuyAgain = useCallback(async () => {
+    if (!order || !onBuyAgain || buyAgainLoading) return;
+    setBuyAgainLoading(true);
+    setBuyAgainError('');
+    try {
+      const result = await onBuyAgain(order);
+      if (result.error) setBuyAgainError(result.error);
+    } catch (error) {
+      setBuyAgainError(error instanceof Error ? error.message : 'The items could not be added to your cart. Please try again.');
+    } finally {
+      setBuyAgainLoading(false);
+    }
+  }, [buyAgainLoading, onBuyAgain, order]);
+
+  useEffect(() => {
+    if (!autoBuyAgain || autoBuyAgainHandledRef.current || !order || loading || loadError || !onBuyAgain || !isOrderComplete(order.status)) return;
+    autoBuyAgainHandledRef.current = true;
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('buyAgain');
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+    } catch {
+      // The action still proceeds when history state is unavailable in an embedded WebView.
+    }
+    void handleBuyAgain();
+  }, [autoBuyAgain, handleBuyAgain, loadError, loading, onBuyAgain, order]);
 
   if (loading) return <main className={screenClass} style={viewportStyle}>
     <OrderHeader orderNumber={orderNumber} onBack={onBack} />
@@ -241,15 +284,17 @@ export function OrderNotificationDetails({
         <div className="flex items-start gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-rose-50 text-[#d9232d]"><MapPin className="h-5 w-5" /></span>
           <div className="min-w-0 flex-1"><p className="text-[12px] font-extrabold text-slate-950">{t('checkout.pickupAt', { store: order.pickup_store || WORKSHOP_INFO.name })}</p><p className="mt-1 text-[11px] leading-relaxed text-slate-500">{WORKSHOP_INFO.address}</p></div>
-          <a href={mapHref} target="_blank" rel="noreferrer" aria-label={t('notification.openMap')} className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-2xl bg-slate-50 text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d9232d]"><Navigation className="h-5 w-5" /></a>
+          <a href={mapHref} onClick={(event) => { event.preventDefault(); openDirections(); }} aria-label={t('notification.openMap')} className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-2xl bg-slate-50 text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d9232d]"><Navigation className="h-5 w-5" /></a>
         </div>
       </section>
     </div>
 
     <footer className="shrink-0 border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-5px_20px_rgba(15,23,42,0.07)] backdrop-blur">
       <div className="mx-auto grid max-w-xl grid-cols-[1fr_auto] gap-2.5">
-        <button type="button" aria-label={t('notification.openOrderAria', { orderNumber: order.order_number })} onClick={() => onOpenMyOrders(order.order_slug)} className="flex min-h-[56px] items-center justify-center gap-2 rounded-[18px] bg-[#d9232d] px-4 text-[14px] font-extrabold text-white shadow-[0_5px_14px_rgba(217,35,45,0.18)] transition hover:bg-[#c91d2a] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-200 active:scale-[0.99]"><Store className="h-5 w-5" />{t('notification.openOrder')} <span className="sr-only">{t('notification.openOrderSr')}</span><ArrowRight className="h-5 w-5" /></button>
-        <a href={phoneHref} aria-label={t('notification.callStore')} className="grid min-h-[56px] min-w-[56px] place-items-center rounded-[18px] border border-slate-200 bg-white text-slate-800 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d9232d]"><Phone className="h-5 w-5" /></a>
+        <button type="button" aria-label={t('notification.openOrderAria', { orderNumber: order.order_number })} onClick={() => onOpenMyOrders(order.order_slug)} className="flex min-h-[52px] items-center justify-center gap-2 rounded-[18px] bg-[#d9232d] px-4 text-[13px] font-extrabold text-white shadow-[0_5px_14px_rgba(217,35,45,0.18)] transition hover:bg-[#c91d2a] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-200 active:scale-[0.99]"><Store className="h-5 w-5" />{t('notification.openOrder')} <span className="sr-only">{t('notification.openOrderSr')}</span><ArrowRight className="h-5 w-5" /></button>
+        <a href={phoneHref} aria-label={t('notification.callStore')} className="grid min-h-[52px] min-w-[52px] place-items-center rounded-[18px] border border-slate-200 bg-white text-slate-800 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d9232d]"><Phone className="h-5 w-5" /></a>
+        {isOrderComplete(order.status) && onBuyAgain && <button type="button" onClick={() => void handleBuyAgain()} disabled={buyAgainLoading} className="col-span-2 flex min-h-11 items-center justify-center gap-2 rounded-[16px] border border-rose-200 bg-rose-50 px-4 text-[12px] font-extrabold text-[#c92330] transition hover:bg-rose-100 disabled:cursor-wait disabled:opacity-60">{buyAgainLoading ? <Clock3 className="h-4 w-4 animate-spin" /> : <Package className="h-4 w-4" />}{buyAgainLoading ? t('orders.adding') : t('orders.buyAgain')}</button>}
+        {buyAgainError && <p role="alert" className="col-span-2 rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800">{buyAgainError}</p>}
       </div>
     </footer>
   </main>;

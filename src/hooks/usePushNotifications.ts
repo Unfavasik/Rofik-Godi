@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
-import { LocalNotifications } from '@capacitor/local-notifications';
 import { PushNotifications } from '@capacitor/push-notifications';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { supabase } from '../lib/supabase';
+import { getNotificationTargetPath } from '../lib/notificationTarget';
 
 const DEFAULT_ANDROID_CHANNEL_ID = 'rofik-godi-updates';
-const PREMIUM_ANDROID_CHANNEL_ID = 'rofik-godi-updates-premium-v1';
-const PREMIUM_ANDROID_VERSION = '1.1.28';
+const STYLED_ANDROID_CHANNEL_ID = 'rofik-godi-styled-v1';
+const STYLED_ANDROID_VERSION = '1.1.39';
 const SITE_ORIGIN = 'https://rofik-godi.pages.dev';
 
 function isVersionAtLeast(version: string, minimum: string) {
@@ -21,28 +21,25 @@ function isVersionAtLeast(version: string, minimum: string) {
   return true;
 }
 
-function openNotificationTarget(navigate: (path: string) => void, actionUrl: unknown) {
-  if (typeof actionUrl !== 'string' || !actionUrl.trim()) {
-    navigate('/notifications');
-    return;
-  }
+function openNotificationTarget(navigate: (path: string) => void, actionUrl: unknown, context: { kind?: unknown; notificationId?: unknown } = {}) {
+  const targetPath = getNotificationTargetPath(actionUrl, SITE_ORIGIN, context);
   try {
-    const target = new URL(actionUrl, SITE_ORIGIN);
-    if (target.origin === SITE_ORIGIN) {
-      const legacySupportRequestId = target.pathname === '/admin/activity'
-        ? target.searchParams.get('support_request')
-        : null;
-      if (legacySupportRequestId) {
-        navigate(`/admin/support/${encodeURIComponent(legacySupportRequestId)}`);
-        return;
+    if (typeof actionUrl === 'string' && actionUrl.trim()) {
+      const target = new URL(actionUrl, SITE_ORIGIN);
+      if (target.origin === SITE_ORIGIN) {
+        const legacySupportRequestId = target.pathname === '/admin/activity'
+          ? target.searchParams.get('support_request')
+          : null;
+        if (legacySupportRequestId) {
+          navigate(`/admin/support/${encodeURIComponent(legacySupportRequestId)}`);
+          return;
+        }
       }
-      navigate(`${target.pathname}${target.search}${target.hash}`);
-      return;
     }
   } catch {
-    // Route malformed or external notification links to the in-app notification list.
+    // The shared resolver sends malformed values to the in-app notification list.
   }
-  navigate('/notifications');
+  navigate(targetPath);
 }
 
 export function usePushNotifications(userId: string | null, navigate: (path: string) => void) {
@@ -54,11 +51,7 @@ export function usePushNotifications(userId: string | null, navigate: (path: str
     const setup = async () => {
       try {
         listeners.push(await PushNotifications.addListener('pushNotificationActionPerformed', ({ notification }) => {
-          openNotificationTarget(navigate, notification.data?.action_url);
-        }));
-        listeners.push(await LocalNotifications.addListener('localNotificationActionPerformed', ({ notification }) => {
-          const extra = notification.extra as Record<string, unknown> | undefined;
-          openNotificationTarget(navigate, extra?.action_url);
+          openNotificationTarget(navigate, notification.data?.action_url, { kind: notification.data?.kind, notificationId: notification.data?.notification_id });
         }));
         if (!active || !userId || !supabase) return;
 
@@ -70,11 +63,11 @@ export function usePushNotifications(userId: string | null, navigate: (path: str
             // Older Android shells can continue using the default channel.
           }
         }
-        const usePremiumAndroidChannel = isVersionAtLeast(appVersion, PREMIUM_ANDROID_VERSION);
-        const notificationChannelId = usePremiumAndroidChannel
-          ? PREMIUM_ANDROID_CHANNEL_ID
+        const useStyledAndroidChannel = isVersionAtLeast(appVersion, STYLED_ANDROID_VERSION);
+        const notificationChannelId = useStyledAndroidChannel
+          ? STYLED_ANDROID_CHANNEL_ID
           : DEFAULT_ANDROID_CHANNEL_ID;
-        const notificationSound = usePremiumAndroidChannel ? 'rofik_notification' : 'default';
+        const notificationSound = useStyledAndroidChannel ? 'rofik_notification' : 'default';
 
         let permission = await PushNotifications.checkPermissions();
         if (permission.receive !== 'granted') {
@@ -92,23 +85,13 @@ export function usePushNotifications(userId: string | null, navigate: (path: str
           lights: true,
           lightColor: '#D9232D',
         });
-        await LocalNotifications.createChannel({
-          id: notificationChannelId,
-          name: 'Rofik Godi updates',
-          description: 'Order updates and offers from Rofik Godi Centre',
-          importance: 4,
-          sound: notificationSound,
-          vibration: true,
-          lights: true,
-          lightColor: '#D9232D',
-        });
-
         listeners.push(await PushNotifications.addListener('registration', async ({ value }) => {
           if (!active || !supabase) return;
           const { error } = await supabase.from('push_devices').upsert({
             user_id: userId,
             token: value,
             platform: 'android',
+            app_version: appVersion || null,
             updated_at: new Date().toISOString(),
             last_seen_at: new Date().toISOString(),
           }, { onConflict: 'token' });
@@ -125,23 +108,6 @@ export function usePushNotifications(userId: string | null, navigate: (path: str
 
         listeners.push(await PushNotifications.addListener('registrationError', () => {
           console.warn('Android push registration failed.');
-        }));
-
-        listeners.push(await PushNotifications.addListener('pushNotificationReceived', async (notification) => {
-          try {
-            await LocalNotifications.schedule({
-              notifications: [{
-                id: Math.floor(Date.now() % 2_000_000_000),
-                title: notification.title || 'Rofik Godi Centre',
-                body: notification.body || '',
-                channelId: notificationChannelId,
-                extra: notification.data,
-                schedule: { at: new Date(Date.now() + 250) },
-              }],
-            });
-          } catch {
-            // The system FCM banner handles background delivery; foreground display is best-effort.
-          }
         }));
 
         if (active) await PushNotifications.register();
