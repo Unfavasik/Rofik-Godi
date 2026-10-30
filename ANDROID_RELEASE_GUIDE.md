@@ -6,14 +6,12 @@
 - Android application ID / package name: `com.rofikgodi.centre`
 - Native source: `android/`
 - Capacitor configuration: `capacitor.config.ts`
-- Current release line: version name `1.1.34`, version code `36` (`android/app/build.gradle`)
+- Current release line: version name `1.1.8`, version code `10` (`android/app/build.gradle`)
 - Supabase native OAuth callback: `com.rofikgodi.centre://auth/callback`
 
 ## What this app build contains
 
 The Android app uses the deployed website URL through the Capacitor shell so website-only UI, modes and copy can update on app open. It also includes persistent catalog and notification caches, silent background refresh, Realtime notification updates, session-gated admin RPC calls, Firebase Cloud Messaging registration, native back navigation, and Google OAuth return-to-app handling. Native Android code, permissions and plugins still require a new APK.
-
-The native Android launch splash and the in-app loading fallback show only the launcher app icon over the solid brand-color background.
 
 Google OAuth opens a secure Android browser tab, then returns to the app through the custom callback URI. Before native Google sign-in can complete, add `com.rofikgodi.centre://auth/callback` to Supabase Dashboard → **Authentication → URL Configuration → Redirect URLs**. Keep the existing Site URL and Google OAuth provider's authorized Supabase callback unchanged; the working provider callback is `https://cyijfvylyhhusackvcuj.supabase.co/auth/v1/callback`.
 

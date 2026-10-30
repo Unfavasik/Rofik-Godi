@@ -9,14 +9,12 @@ import com.razorpay.PaymentData;
 import com.razorpay.PaymentResultWithDataListener;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
-import androidx.core.splashscreen.SplashScreen;
 
 public class MainActivity extends BridgeActivity implements PaymentResultWithDataListener {
     private static final String HOME_URL = "https://rofik-godi.pages.dev/";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        SplashScreen.installSplashScreen(this);
         Intent launchIntent = getIntent();
         boolean isOAuthCallback = launchIntent != null
             && launchIntent.getData() != null
