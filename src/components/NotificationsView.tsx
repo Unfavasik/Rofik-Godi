@@ -86,6 +86,7 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
   const [items, setItems] = useState<NotificationItem[]>(() => isGuest ? [] : readCachedNotificationItems(userId));
   const [itemsOwnerId, setItemsOwnerId] = useState(userId);
   const [loading, setLoading] = useState(() => !isGuest && readCustomerNotificationCache(userId).length === 0);
+  const [orderLookupReady, setOrderLookupReady] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [revealedDeleteId, setRevealedDeleteId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState('');
@@ -114,13 +115,16 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
 
   useEffect(() => {
     let active = true;
+    setOrderLookupReady(isGuest || !userId);
     if (isGuest || !userId) {
       setItems([]);
       setItemsOwnerId(userId);
       setLoadError('');
       setLoading(false);
+      setOrderLookupReady(true);
       return () => { active = false; };
     }
+    setOrderLookupReady(false);
     liveNotificationIdsRef.current.clear();
     const cachedRows = readCachedNotificationItems(userId);
     setItemsOwnerId(userId);
@@ -133,6 +137,7 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
         setLoadError('The request is taking too long. Check your connection and try again.');
         setLoading(false);
       }
+      setOrderLookupReady(true);
     }, 15000);
     void Promise.all([listMyNotifications(userId), listMyOrders(userId)]).then(([rows, orders]) => {
       if (!active) return;
@@ -156,7 +161,10 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
       if (active && cachedRows.length === 0) setLoadError(error instanceof Error ? error.message : 'Your notifications could not be loaded.');
     }).finally(() => {
       window.clearTimeout(timeoutId);
-      if (active) setLoading(false);
+      if (active) {
+        setLoading(false);
+        setOrderLookupReady(true);
+      }
     });
     return () => { active = false; window.clearTimeout(timeoutId); };
   }, [userId, isGuest, loadAttempt]);
@@ -265,22 +273,52 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
     const requestedNotificationId = params.get('notification');
     const requestedOrder = getNotificationOrderNumber(params.get('order') || '');
     if ((!requestedOrder && !requestedNotificationId) || loading) return;
+    if ((requestedOrder || requestedNotificationId) && !orderLookupReady) return;
     const deepLinkKey = requestedNotificationId ? `${userId}:notification:${requestedNotificationId}` : `${userId}:order:${requestedOrder}`;
     if (handledOrderDeepLinkRef.current === deepLinkKey) return;
     handledOrderDeepLinkRef.current = deepLinkKey;
-    if (requestedNotificationId) {
-      const matchingById = items.find((item) => item.id === requestedNotificationId);
-      if (matchingById) openNotification(matchingById);
+    const matchingByOrder = requestedOrder
+      ? items.find((item) => item.orderNumber?.toUpperCase() === requestedOrder)
+      : null;
+    const orderSlug = matchingByOrder?.orderRecord?.order_slug;
+    if (orderSlug && /^[0-9a-f]{32}$/i.test(orderSlug) && onOpenMyOrders) {
+      if (matchingByOrder) openNotification(matchingByOrder);
+      onOpenMyOrders(orderSlug.toLowerCase());
       return;
     }
-    const matchingNotification = items.find((item) => item.orderNumber?.toUpperCase() === requestedOrder);
-    if (matchingNotification) {
-      openNotification(matchingNotification);
+    if (requestedNotificationId) {
+      const matchingById = items.find((item) => item.id === requestedNotificationId);
+      if (matchingById) {
+        const notificationOrderSlug = matchingById.orderRecord?.order_slug;
+        if (notificationOrderSlug && /^[0-9a-f]{32}$/i.test(notificationOrderSlug) && onOpenMyOrders) {
+          openNotification(matchingById);
+          onOpenMyOrders(notificationOrderSlug.toLowerCase());
+          return;
+        }
+        const notificationKind = matchingById.kind.toLowerCase();
+        const isProductNotification = notificationKind.includes('product') || notificationKind.includes('arrival');
+        const actionPath = getNotificationTargetPath(matchingById.action_url);
+        if (isProductNotification && /^\/shop\/products\/[^/?#]+/i.test(actionPath)) {
+          openNotification(matchingById);
+          onOpenActionUrl?.(actionPath);
+          return;
+        }
+        if (matchingById.action_url && onOpenActionUrl) {
+          openNotification(matchingById);
+          onOpenActionUrl(actionPath);
+          return;
+        }
+        openNotification(matchingById);
+      }
+      return;
+    }
+    if (matchingByOrder) {
+      openNotification(matchingByOrder);
       return;
     }
     const createdAt = new Date().toISOString();
     setSelectedNotification({ id: `order-deep-link-${requestedOrder}`, kind: 'order', title: 'Order update', body: `Order #${requestedOrder}`, action_url: null, image_url: null, read_at: createdAt, created_at: createdAt, expires_at: null, orderNumber: requestedOrder, orderRecord: null });
-  }, [items, loading, openNotification, userId]);
+  }, [items, loading, onOpenActionUrl, onOpenMyOrders, openNotification, orderLookupReady, userId]);
 
   const handleNotificationRowClick = (item: NotificationItem) => {
     if (suppressRowClickRef.current) {

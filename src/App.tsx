@@ -1288,7 +1288,9 @@ export default function App() {
             onOpenActionUrl={(path) => navigate(getNotificationTargetPath(path))}
             onBuyAgain={handleBuyAgain}
             onOpenMyOrders={(orderSlug) => {
-              navigate(orderSlug ? getPathForCustomerOrder(orderSlug) : '/my-orders');
+              navigate(orderSlug && /^[0-9a-f]{32}$/i.test(orderSlug)
+                ? getPathForCustomerOrder(orderSlug.toLowerCase())
+                : '/notifications');
             }}
           />
         ) : activeTab === 'shop' ? (

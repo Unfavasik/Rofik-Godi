@@ -26,7 +26,7 @@ export function getNotificationTargetPath(
     if (target.origin !== siteOrigin) return '/notifications';
 
     const path = target.pathname;
-    if (isOrderNotification && notificationId && /^\/profile\/?$/i.test(path)) {
+    if (isOrderNotification && notificationId && /^\/(?:profile|account)\/?$/i.test(path)) {
       return notificationFallback;
     }
     const isCustomerOrderPath = CUSTOMER_ORDER_PATH.test(path);

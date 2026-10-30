@@ -34,6 +34,13 @@ describe('notification target routing', () => {
     ).toBe(`/notifications?notification=${notificationId}`);
   });
 
+  it('recovers legacy order alerts that still point to /account', () => {
+    const notificationId = '01234567-89ab-cdef-0123-456789abcdef';
+    expect(getNotificationTargetPath('/account', undefined, { kind: 'order', notificationId })).toBe(
+      `/notifications?notification=${notificationId}`,
+    );
+  });
+
   it('does not navigate to an external origin from notification data', () => {
     expect(getNotificationTargetPath('https://attacker.example/my-orders/RGC-ABCDEF123456')).toBe(
       '/notifications',

@@ -4,6 +4,9 @@ import android.graphics.Color;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 import com.getcapacitor.BridgeActivity;
 import com.razorpay.PaymentData;
@@ -14,15 +17,42 @@ import androidx.core.view.WindowInsetsControllerCompat;
 public class MainActivity extends BridgeActivity implements PaymentResultWithDataListener {
     private static final String HOME_URL = "https://rofik-godi.pages.dev/";
     public static final String EXTRA_NOTIFICATION_ROUTE = "com.rofikgodi.centre.notification_route";
+    private static final Pattern NOTIFICATION_ID = Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern ORDER_DETAIL_PATH = Pattern.compile("^/(?:my-orders|myorder|my-order)/order/[0-9a-f]{32}$", Pattern.CASE_INSENSITIVE);
 
     private String notificationLaunchUrl(Intent intent) {
         if (intent == null) return null;
         String route = intent.getStringExtra(EXTRA_NOTIFICATION_ROUTE);
+        String notificationId = notificationIdFromIntent(intent);
+        if (notificationId != null && isLegacyNotificationRoute(route)) {
+            route = "/notifications?notification=" + Uri.encode(notificationId);
+        }
         if (route == null || !route.startsWith("/") || route.startsWith("//") || route.contains("\\")) return null;
         Uri parsed = Uri.parse(route);
         if (parsed.isAbsolute() || parsed.getAuthority() != null) return null;
         String base = HOME_URL.endsWith("/") ? HOME_URL.substring(0, HOME_URL.length() - 1) : HOME_URL;
         return base + route;
+    }
+
+    private String notificationIdFromIntent(Intent intent) {
+        Uri data = intent.getData();
+        if (data == null || !"rofikgodi".equalsIgnoreCase(data.getScheme()) || !"notification".equalsIgnoreCase(data.getHost())) return null;
+        List<String> segments = data.getPathSegments();
+        if (segments.isEmpty() || !NOTIFICATION_ID.matcher(segments.get(0)).matches()) return null;
+        return segments.get(0);
+    }
+
+    private boolean isLegacyNotificationRoute(String route) {
+        if (route == null) return false;
+        String path = Uri.parse(route).getPath();
+        if (path == null) return false;
+        String normalized = path.toLowerCase(Locale.ROOT);
+        if (ORDER_DETAIL_PATH.matcher(normalized).matches()) return false;
+        return normalized.equals("/account") || normalized.equals("/profile")
+            || normalized.equals("/my-orders") || normalized.startsWith("/my-orders/")
+            || normalized.equals("/myorder") || normalized.startsWith("/myorder/")
+            || normalized.equals("/my-order") || normalized.startsWith("/my-order/")
+            || normalized.equals("/shop") || normalized.equals("/shop/");
     }
 
     @Override

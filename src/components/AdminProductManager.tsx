@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import type { Product, VehicleCategory } from '../types';
+import { getPathForProduct } from '../lib/appRoutes';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import {
   deleteSupabaseProduct,
@@ -389,7 +390,7 @@ export const AdminProductManager: React.FC<{
             synced.product.subtitle ||
             `${synced.product.title} is now available at Rofik Godi Centre. Explore it in the shop.`,
           kind: 'product',
-          actionUrl: '/shop',
+          actionUrl: getPathForProduct(synced.product.slug || synced.product.id),
           imageUrl: synced.product.image || null,
           userIds: announcement.audience === 'ALL' ? null : announcement.userIds,
         });

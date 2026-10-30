@@ -67,6 +67,8 @@ describe('main route preservation', () => {
 
   it('uses /shop/products/:slug as the canonical product route and normalizes legacy paths', () => {
     expect(resolveAppRoute('/shop/products/premium-bike-seat-cover')).toMatchObject({ kind: 'product', tab: 'shop', slug: 'premium-bike-seat-cover', canonicalPath: '/shop/products/premium-bike-seat-cover' });
+    expect(resolveAppRoute('/shop/products/2882')).toMatchObject({ kind: 'product', tab: 'shop', slug: '2882', canonicalPath: '/shop/products/2882' });
+    expect(getPathForProduct('2882')).toBe('/shop/products/2882');
     expect(resolveAppRoute('/products/premium-bike-seat-cover').canonicalPath).toBe('/shop/products/premium-bike-seat-cover');
     expect(resolveAppRoute('/product/premium-bike-seat-cover').canonicalPath).toBe('/shop/products/premium-bike-seat-cover');
     expect(getPathForPhase('main', '/product/premium-bike-seat-cover')).toBe('/shop/products/premium-bike-seat-cover');

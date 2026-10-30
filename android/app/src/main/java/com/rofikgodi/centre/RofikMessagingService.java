@@ -41,6 +41,8 @@ public final class RofikMessagingService extends FirebaseMessagingService {
     private static final String CHANNEL_NAME = "Rofik Godi notifications";
     private static final int MAX_IMAGE_BYTES = 3 * 1024 * 1024;
     private static final Pattern ORDER_NUMBER = Pattern.compile("\\bRGC-[A-Z0-9]{8,32}\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern ORDER_DETAIL_PATH = Pattern.compile("^/(?:my-orders|myorder|my-order)/order/[0-9a-f]{32}$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern LEGACY_PRODUCT_ARRIVAL_TITLE = Pattern.compile("^\\s*New arrival:\\s*(.+?)\\s*$", Pattern.CASE_INSENSITIVE);
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
@@ -87,6 +89,7 @@ public final class RofikMessagingService extends FirebaseMessagingService {
 
         boolean orderNotification = "order".equalsIgnoreCase(kind) || type.startsWith("order_") || "pickup_ready".equals(type);
         boolean accountSecurityNotification = "security".equalsIgnoreCase(kind) || "account_security".equals(type);
+        boolean productNotification = "product".equalsIgnoreCase(kind) || type.contains("product") || type.contains("arrival");
         if (orderNotification) {
             String orderActionLabel = "pickup_ready".equals(type) ? "View Pickup QR" : "View My Order";
             builder.addAction(android.R.drawable.ic_menu_view, orderActionLabel,
@@ -100,6 +103,9 @@ public final class RofikMessagingService extends FirebaseMessagingService {
                 builder.addAction(android.R.drawable.ic_menu_directions, "Directions",
                     mapIntent(notificationId));
             }
+        } else if (productNotification) {
+            builder.addAction(android.R.drawable.ic_menu_view, "View Product",
+                actionIntent(viewRoute, notificationId, "view_product"));
         } else if (accountSecurityNotification) {
             builder.addAction(android.R.drawable.ic_menu_view, "Review Activity",
                 actionIntent(viewRoute, notificationId, "review_activity"));
@@ -162,13 +168,40 @@ public final class RofikMessagingService extends FirebaseMessagingService {
 
     private String routeForView(Map<String, String> data, String kind, String notificationId, String orderNumber) {
         String candidate = internalPath(data.get("action_url"));
-        boolean orderNotification = "order".equalsIgnoreCase(kind) || inferType(data, "", "").startsWith("order_");
-        if (candidate != null && !(orderNotification && "/profile".equalsIgnoreCase(candidate))) return candidate;
-        if (orderNumber != null && !TextUtils.isEmpty(notificationId)) {
-            return "/notifications?notification=" + Uri.encode(notificationId) + "&order=" + Uri.encode(orderNumber);
+        String type = inferType(data, value(data.get("title")), value(data.get("body")));
+        boolean orderNotification = "order".equalsIgnoreCase(kind) || type.startsWith("order_") || "pickup_ready".equals(type);
+        if (orderNotification && !isSpecificOrderRoute(candidate)) {
+            String route = "/notifications";
+            if (!TextUtils.isEmpty(notificationId)) route += "?notification=" + Uri.encode(notificationId);
+            if (!TextUtils.isEmpty(orderNumber)) route += (route.contains("?") ? "&" : "?") + "order=" + Uri.encode(orderNumber);
+            return route;
         }
+        boolean productNotification = "product".equalsIgnoreCase(kind) || type.contains("product") || type.contains("arrival");
+        if (productNotification && (candidate == null || "/shop".equalsIgnoreCase(candidate) || "/shop/".equalsIgnoreCase(candidate))) {
+            String productRoute = legacyProductRoute(data);
+            if (productRoute != null) return productRoute;
+        }
+        if (candidate != null) return candidate;
         if (!TextUtils.isEmpty(notificationId)) return "/notifications?notification=" + Uri.encode(notificationId);
-        return "/my-orders";
+        return "/notifications";
+    }
+
+    private boolean isSpecificOrderRoute(String route) {
+        if (TextUtils.isEmpty(route)) return false;
+        String path = route.split("[?#]", 2)[0];
+        return ORDER_DETAIL_PATH.matcher(path).matches();
+    }
+
+    private String legacyProductRoute(Map<String, String> data) {
+        String slug = value(data.get("product_slug")).trim();
+        if (TextUtils.isEmpty(slug)) {
+            Matcher matcher = LEGACY_PRODUCT_ARRIVAL_TITLE.matcher(value(data.get("title")));
+            if (!matcher.matches()) return null;
+            slug = matcher.group(1).trim();
+        }
+        slug = slug.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "-").replaceAll("^-|-+$", "");
+        if (!slug.matches("[a-z0-9]+(?:-[a-z0-9]+)*")) return null;
+        return "/shop/products/" + Uri.encode(slug);
     }
 
     private String internalPath(String raw) {
