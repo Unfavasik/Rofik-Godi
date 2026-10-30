@@ -1,10 +1,11 @@
-const SHELL_CACHE = 'rofik-godi-shell-v11';
-const RUNTIME_CACHE = 'rofik-godi-runtime-v11';
+const SHELL_CACHE = 'rofik-godi-shell-v12';
+const RUNTIME_CACHE = 'rofik-godi-runtime-v12';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/site.webmanifest',
   '/favicon.svg',
+  '/images/rofik-center-splash.webp',
   '/icon-192.png',
   '/icon-foreground.png',
   '/icon-maskable-512.png',

@@ -8,8 +8,9 @@ describe('startup splash', () => {
     const markup = renderToStaticMarkup(<SplashScreen />);
 
     expect(markup).toContain('data-purpose="splash-screen"');
-    expect(markup).toContain('Loading Rofik Godi Centre');
-    expect(markup).toContain('ROFIK GODI');
+    expect(markup).toContain('Loading Rofik Godi Center');
+    expect(markup).toContain('ROFIK GODI CENTER');
+    expect(markup).toContain('src="/images/rofik-center-splash.webp"');
     expect(markup).toContain('bg-[#D9232D]');
   });
 });

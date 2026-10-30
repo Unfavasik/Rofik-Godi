@@ -2,13 +2,13 @@ import React from 'react';
 
 // Keep this local and optimized so startup does not wait on a remote image.
 const WELCOME_IMAGE = '/images/rofiq-splash.webp';
-const APP_ICON = '/icon-foreground.png';
+const APP_ICON = '/images/rofik-center-splash.webp';
 
 export const SplashScreen: React.FC = () => (
   <div
     className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[#D9232D] select-none"
     data-purpose="splash-screen"
-    aria-label="Loading Rofik Godi Centre"
+    aria-label="Loading Rofik Godi Center"
     role="status"
     aria-live="polite"
   >
@@ -33,7 +33,7 @@ export const SplashScreen: React.FC = () => (
         className="mx-auto mb-4 h-28 w-28 object-contain drop-shadow-[0_12px_18px_rgba(0,0,0,0.28)]"
         draggable={false}
       />
-      <p className="text-sm font-semibold tracking-[0.24em]">ROFIK GODI</p>
+      <p className="text-sm font-semibold tracking-[0.18em]">ROFIK GODI CENTER</p>
       <p className="mt-1 text-xs text-white/75">Loading your ride essentials</p>
 
       <div className="loader mx-auto mt-5" aria-hidden="true">
