@@ -15,7 +15,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 public class MainActivity extends BridgeActivity implements PaymentResultWithDataListener {
-    private static final String HOME_URL = "https://rofik-godi.pages.dev/";
+    private static final String HOME_URL = "http://localhost/";
     public static final String EXTRA_NOTIFICATION_ROUTE = "com.rofikgodi.centre.notification_route";
     private static final Pattern NOTIFICATION_ID = Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", Pattern.CASE_INSENSITIVE);
     private static final Pattern ORDER_DETAIL_PATH = Pattern.compile("^/(?:my-orders|myorder|my-order)/order/[0-9a-f]{32}$", Pattern.CASE_INSENSITIVE);
