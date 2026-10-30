@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Bell, ChevronRight, Package, Settings, Star, Tag, Truck, Volume2, Moon, Smartphone, Megaphone, TrendingDown, Trash2, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Bell, ChevronRight, Package, Settings, Star, Tag, Truck, Volume2, Moon, Smartphone, Megaphone, TrendingDown, Trash2, MessageCircle, ShieldAlert } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { deleteMyNotification, listMyNotifications, markNotificationRead } from '../lib/supabaseCustomer';
 import { getNotificationOrderNumber } from '../lib/orderPresentation';
@@ -55,6 +55,7 @@ const timeAgo = (value: string) => {
 const iconFor = (item: NotificationItem) => {
   if (isSupportNotification(item)) return <MessageCircle className="h-5 w-5" />;
   const value = item.kind.toLowerCase();
+  if (value.includes('security')) return <ShieldAlert className="h-6 w-6" />;
   if (value.includes('order') || value.includes('pickup')) return <Truck className="h-6 w-6" />;
   if (value.includes('offer') || value.includes('promo') || value.includes('coupon')) return <Tag className="h-6 w-6" />;
   if (value.includes('review')) return <Star className="h-6 w-6" />;
@@ -65,6 +66,7 @@ const iconFor = (item: NotificationItem) => {
 const toneFor = (item: NotificationItem) => {
   if (isSupportNotification(item)) return 'bg-rose-50 text-[#D9232D]';
   const value = item.kind.toLowerCase();
+  if (value.includes('security')) return 'bg-amber-50 text-amber-600';
   if (value.includes('order') || value.includes('pickup')) return 'bg-red-50 text-red-500';
   if (value.includes('offer') || value.includes('promo') || value.includes('coupon')) return 'bg-rose-50 text-rose-500';
   if (value.includes('review')) return 'bg-amber-50 text-amber-500';

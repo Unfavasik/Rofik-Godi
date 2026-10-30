@@ -19,6 +19,7 @@ describe('customer notification categories', () => {
     expect(getCustomerNotificationCategory({ kind: 'order', title: 'Your order is confirmed', body: 'Order #RGC-1042 is being prepared.' })).toBe('Orders');
     expect(getCustomerNotificationCategory({ kind: 'promotion', title: 'Special offer just for you', body: 'Use coupon RGC20.' })).toBe('Offers');
     expect(getCustomerNotificationCategory({ kind: 'update', title: 'Profile updated', body: 'Your profile was updated successfully.' })).toBe('System');
+    expect(getCustomerNotificationCategory({ kind: 'security', title: '🔐 Important account update', body: 'Updated: Password.' })).toBe('System');
   });
 
   it('ignores unrelated and malformed action URLs when extracting ticket IDs', () => {

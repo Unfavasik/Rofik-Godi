@@ -129,6 +129,7 @@ function isVersionAtLeast(version: string | null | undefined, minimum: string) {
 
 function inferNotificationType(kind: string, title: string, body: string) {
   const text = `${kind} ${title} ${body}`.toLowerCase();
+  if (kind.trim().toLowerCase() === 'security' || text.includes('security')) return 'account_security';
   if (text.includes('completed') || text.includes('picked up') || text.includes('picked_up')) return 'order_completed';
   if (text.includes('payment') || text.includes('paid')) return 'payment_confirmed';
   if (text.includes('ready') || text.includes('pickup')) return 'pickup_ready';

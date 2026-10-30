@@ -86,8 +86,10 @@ public final class RofikMessagingService extends FirebaseMessagingService {
         }
 
         boolean orderNotification = "order".equalsIgnoreCase(kind) || type.startsWith("order_") || "pickup_ready".equals(type);
+        boolean accountSecurityNotification = "security".equalsIgnoreCase(kind) || "account_security".equals(type);
         if (orderNotification) {
-            builder.addAction(android.R.drawable.ic_menu_view, "View Order",
+            String orderActionLabel = "pickup_ready".equals(type) ? "View Pickup QR" : "View My Order";
+            builder.addAction(android.R.drawable.ic_menu_view, orderActionLabel,
                 actionIntent(viewRoute, notificationId, "view_order"));
             if ("order_completed".equals(type) && orderNumber != null) {
                 String againRoute = "/notifications?notification=" + Uri.encode(notificationId)
@@ -98,6 +100,9 @@ public final class RofikMessagingService extends FirebaseMessagingService {
                 builder.addAction(android.R.drawable.ic_menu_directions, "Directions",
                     mapIntent(notificationId));
             }
+        } else if (accountSecurityNotification) {
+            builder.addAction(android.R.drawable.ic_menu_view, "Review Activity",
+                actionIntent(viewRoute, notificationId, "review_activity"));
         } else {
             builder.addAction(android.R.drawable.ic_menu_view, "Open",
                 actionIntent(viewRoute, notificationId, "open"));
@@ -184,6 +189,7 @@ public final class RofikMessagingService extends FirebaseMessagingService {
         String explicit = value(data.get("type")).toLowerCase(Locale.ROOT);
         if (!explicit.isEmpty()) return explicit;
         String text = (value(data.get("kind")) + " " + title + " " + body).toLowerCase(Locale.ROOT);
+        if ("security".equalsIgnoreCase(value(data.get("kind"))) || text.contains("security")) return "account_security";
         if (text.contains("completed") || text.contains("picked up") || text.contains("picked_up")) return "order_completed";
         if (text.contains("payment") || text.contains("paid")) return "payment_confirmed";
         if (text.contains("ready") || text.contains("pickup")) return "pickup_ready";
