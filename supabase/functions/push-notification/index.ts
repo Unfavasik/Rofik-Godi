@@ -34,6 +34,12 @@ const corsHeaders = {
 let cachedAccessToken = '';
 let cachedAccessTokenExpiresAt = 0;
 
+function orderSlugFromActionUrl(actionUrl: string | null) {
+  if (!actionUrl) return null;
+  const match = actionUrl.match(/^\/(?:my-orders|myorder|my-order)\/order\/([0-9a-f]{32})$/i);
+  return match?.[1]?.toLowerCase() || null;
+}
+
 function jsonResponse(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: corsHeaders });
 }
@@ -329,6 +335,9 @@ Deno.serve(async (request) => {
         title: notification.title,
         body: notification.body,
         action_url: notification.action_url || '',
+        ...(notification.kind === 'order' && orderSlugFromActionUrl(notification.action_url)
+          ? { order_slug: orderSlugFromActionUrl(notification.action_url) }
+          : {}),
         image_url: notificationImageUrl || '',
       },
       android: {

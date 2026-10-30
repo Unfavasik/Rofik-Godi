@@ -7,7 +7,7 @@ const ORDER_SLUG_PATH = /^\/(?:my-orders|myorder|my-order)\/order\/([0-9a-f]{32}
 export function getNotificationTargetPath(
   actionUrl: unknown,
   siteOrigin = SITE_ORIGIN,
-  context: { kind?: unknown; notificationId?: unknown } = {},
+  context: { kind?: unknown; notificationId?: unknown; orderSlug?: unknown } = {},
 ): string {
   const notificationId =
     typeof context.notificationId === 'string' && /^[0-9a-f-]{36}$/i.test(context.notificationId)
@@ -15,17 +15,22 @@ export function getNotificationTargetPath(
       : null;
   const isOrderNotification =
     typeof context.kind === 'string' && context.kind.toLowerCase() === 'order';
+  const payloadOrderSlug = typeof context.orderSlug === 'string' && /^[0-9a-f]{32}$/i.test(context.orderSlug.trim())
+    ? context.orderSlug.trim().toLowerCase()
+    : null;
+  const payloadOrderPath = payloadOrderSlug ? `/my-order/order/${payloadOrderSlug}` : null;
   const notificationFallback =
     isOrderNotification && notificationId
       ? `/notifications?notification=${encodeURIComponent(notificationId)}`
       : '/notifications';
-  if (typeof actionUrl !== 'string' || !actionUrl.trim()) return notificationFallback;
+  if (typeof actionUrl !== 'string' || !actionUrl.trim()) return payloadOrderPath || notificationFallback;
 
   try {
     const target = new URL(actionUrl, siteOrigin);
     if (target.origin !== siteOrigin) return '/notifications';
 
     const path = target.pathname;
+    if (isOrderNotification && payloadOrderPath && !ORDER_SLUG_PATH.test(path)) return payloadOrderPath;
     if (isOrderNotification && notificationId && /^\/(?:profile|account)\/?$/i.test(path)) {
       return notificationFallback;
     }

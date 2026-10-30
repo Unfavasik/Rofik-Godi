@@ -21,7 +21,7 @@ function isVersionAtLeast(version: string, minimum: string) {
   return true;
 }
 
-function openNotificationTarget(navigate: (path: string) => void, actionUrl: unknown, context: { kind?: unknown; notificationId?: unknown } = {}) {
+function openNotificationTarget(navigate: (path: string) => void, actionUrl: unknown, context: { kind?: unknown; notificationId?: unknown; orderSlug?: unknown } = {}) {
   const targetPath = getNotificationTargetPath(actionUrl, SITE_ORIGIN, context);
   try {
     if (typeof actionUrl === 'string' && actionUrl.trim()) {
@@ -51,7 +51,11 @@ export function usePushNotifications(userId: string | null, navigate: (path: str
     const setup = async () => {
       try {
         listeners.push(await PushNotifications.addListener('pushNotificationActionPerformed', ({ notification }) => {
-          openNotificationTarget(navigate, notification.data?.action_url, { kind: notification.data?.kind, notificationId: notification.data?.notification_id });
+          openNotificationTarget(navigate, notification.data?.action_url, {
+            kind: notification.data?.kind,
+            notificationId: notification.data?.notification_id,
+            orderSlug: notification.data?.order_slug || notification.data?.orderSlug,
+          });
         }));
         if (!active || !userId || !supabase) return;
 

@@ -41,6 +41,7 @@ public final class RofikMessagingService extends FirebaseMessagingService {
     private static final String CHANNEL_NAME = "Rofik Godi notifications";
     private static final int MAX_IMAGE_BYTES = 3 * 1024 * 1024;
     private static final Pattern ORDER_NUMBER = Pattern.compile("\\bRGC-[A-Z0-9]{8,32}\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern ORDER_SLUG = Pattern.compile("^[0-9a-f]{32}$", Pattern.CASE_INSENSITIVE);
     private static final Pattern ORDER_DETAIL_PATH = Pattern.compile("^/(?:my-orders|myorder|my-order)/order/[0-9a-f]{32}$", Pattern.CASE_INSENSITIVE);
     private static final Pattern LEGACY_PRODUCT_ARRIVAL_TITLE = Pattern.compile("^\\s*New arrival:\\s*(.+?)\\s*$", Pattern.CASE_INSENSITIVE);
 
@@ -172,6 +173,12 @@ public final class RofikMessagingService extends FirebaseMessagingService {
         String candidate = internalPath(data.get("action_url"));
         String type = inferType(data, value(data.get("title")), value(data.get("body")));
         boolean orderNotification = "order".equalsIgnoreCase(kind) || type.startsWith("order_") || "pickup_ready".equals(type);
+        String orderSlug = value(data.get("order_slug"));
+        if (!ORDER_SLUG.matcher(orderSlug).matches()) orderSlug = value(data.get("orderSlug"));
+        if (orderNotification && ORDER_SLUG.matcher(orderSlug).matches()
+            && !isSpecificOrderRoute(candidate)) {
+            return "/my-order/order/" + orderSlug.toLowerCase(Locale.ROOT);
+        }
         if (orderNotification && !isSpecificOrderRoute(candidate)) {
             String route = "/notifications";
             if (!TextUtils.isEmpty(notificationId)) route += "?notification=" + Uri.encode(notificationId);

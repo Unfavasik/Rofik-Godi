@@ -18,6 +18,16 @@ describe('notification target routing', () => {
     );
   });
 
+  it('uses the validated order slug from the push payload when the delivered action is stale', () => {
+    const slug = '0123456789abcdef0123456789abcdef';
+    expect(getNotificationTargetPath('/my-orders', undefined, { kind: 'order', orderSlug: slug })).toBe(
+      `/my-order/order/${slug}`,
+    );
+    expect(getNotificationTargetPath('/my-order/order/sulg', undefined, { kind: 'order', orderSlug: slug })).toBe(
+      `/my-order/order/${slug}`,
+    );
+  });
+
   it('sends old list-only order URLs and empty actions to the inbox', () => {
     expect(getNotificationTargetPath('/my')).toBe('/notifications');
     expect(getNotificationTargetPath('/my-orders')).toBe('/notifications');
