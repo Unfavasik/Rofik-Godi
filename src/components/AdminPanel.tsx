@@ -64,7 +64,7 @@ import { PRODUCTS } from '../data/products';
 import type { Product } from '../types';
 import { supabase } from '../lib/supabase';
 import { getOrderStatusLabel, isOrderComplete } from '../lib/orderPresentation';
-import { getAdminCustomerIdFromPath, getAdminOrderIdFromPath, getAdminSectionFromPath, getAdminSupportRequestIdFromPath, getPathForAdminCustomer, getPathForAdminOrder, getPathForAdminSection, type AdminSectionRoute } from '../lib/appRoutes';
+import { getAdminCouponIdFromPath, getAdminCustomerIdFromPath, getAdminOrderIdFromPath, getAdminProductIdFromPath, getAdminSectionFromPath, getAdminSupportRequestIdFromPath, getPathForAdminCoupon, getPathForAdminCustomer, getPathForAdminOrder, getPathForAdminProduct, getPathForAdminSection, isAdminNotificationComposePath, type AdminSectionRoute } from '../lib/appRoutes';
 
 type AdminSection = AdminSectionRoute;
 type OrderStatus = AdminOrderRecord['status'];
@@ -306,10 +306,14 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     const customerId = getAdminCustomerIdFromPath(location.pathname);
     setSelectedCustomerId(customerId);
     const orderId = getAdminOrderIdFromPath(location.pathname);
+    const productId = getAdminProductIdFromPath(location.pathname);
+    const couponId = getAdminCouponIdFromPath(location.pathname);
+    if (productId) setFocusProductId(productId);
+    if (couponId) setFocusCouponId(couponId);
     const routeSection = getAdminSectionFromPath(location.pathname);
     if (!routeSection) return;
     setSection(routeSection);
-    if (customerId || orderId) return;
+    if (customerId || orderId || productId || couponId || isAdminNotificationComposePath(location.pathname)) return;
     const requestId = getAdminSupportRequestIdFromPath(location.pathname);
     const canonicalPath = requestId
       ? `${getPathForAdminSection('support')}/${encodeURIComponent(requestId)}`
@@ -412,12 +416,12 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     navigate(getPathForAdminCustomer(event.entity_id));
   };
   const openActivityProduct = (event: AdminActivityEvent) => {
-    setFocusProductId(event.entity_id);
-    goTo('products');
+    setSidebarOpen(false);
+    navigate(getPathForAdminProduct(event.entity_id));
   };
   const openActivityCoupon = (event: AdminActivityEvent) => {
-    setFocusCouponId(event.entity_id);
-    goTo('marketing');
+    setSidebarOpen(false);
+    navigate(getPathForAdminCoupon(event.entity_id));
   };
   const openActivityCampaign = (event: AdminActivityEvent) => {
     setFocusCampaignId(event.entity_id);
