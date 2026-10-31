@@ -195,23 +195,32 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
         setSelectedOrderId(null);
         setDirectOrder(null);
         setDirectOrderNotFound(false);
-        setDirectOrderLoading(false);
       }
+      setDirectOrderLoading(false);
       return;
     }
     const lookupKey = getCustomerOrderDeepLinkLookupKey(currentUserId, initialOrderSlug);
-    if (!lookupKey || initialOrderHandled.current === lookupKey) return;
+    if (!lookupKey) return;
+    if (loading || !currentUserId) return;
+    // Prefer the already-loaded list: on slow connections the direct fetch can
+    // take seconds, but the target order usually arrives with the list first.
+    const targetOrder = orders.find((order) => order.order_slug?.toLowerCase() === initialOrderSlug.toLowerCase());
+    if (targetOrder) {
+      const alreadyOpen = selectedOrderId === targetOrder.id;
+      initialOrderHandled.current = lookupKey;
+      setDirectOrderLoading(false);
+      setDirectOrderNotFound(false);
+      if (!alreadyOpen) {
+        setDirectOrder(null);
+        setSelectedOrderId(targetOrder.id);
+        onInitialOrderOpened?.();
+      }
+      return;
+    }
+    if (initialOrderHandled.current === lookupKey) return;
     if (selectedOrderId) setSelectedOrderId(null);
     setDirectOrder(null);
     setDirectOrderNotFound(false);
-    if (loading || !currentUserId) return;
-    const targetOrder = orders.find((order) => order.order_slug.toLowerCase() === initialOrderSlug.toLowerCase());
-    if (targetOrder) {
-      initialOrderHandled.current = lookupKey;
-      setSelectedOrderId(targetOrder.id);
-      onInitialOrderOpened?.();
-      return;
-    }
     let active = true;
     initialOrderHandled.current = lookupKey;
     setDirectOrderLoading(true);
