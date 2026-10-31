@@ -411,7 +411,10 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
   if (showSettings) return <NotificationSettingsView onBack={() => setShowSettings(false)} />;
 
   if (selectedNotification) {
-    if (isSupportNotification(selectedNotification)) return <SupportNotificationDetails
+    // Only ticket-linked notifications (action_url /support/<id>) open the ticket
+    // details screen; admin-facing "New customer support request" notifications
+    // point at /admin/activity and fall through to the generic details view.
+    if (isSupportNotification(selectedNotification) && getSupportRequestIdFromNotification(selectedNotification)) return <SupportNotificationDetails
       requestId={getSupportRequestIdFromNotification(selectedNotification)}
       userId={userId}
       isAuthenticated={!isGuest}
