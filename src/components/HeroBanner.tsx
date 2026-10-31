@@ -127,6 +127,52 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
   return (
     <section className="px-5 mb-6" data-purpose="promotional-banner">
+      {slide.fullBleed ? (
+        /* Admin banner: the uploaded image IS the banner — full width, uncropped, no overlay. */
+        <div>
+          <div className="relative overflow-hidden rounded-[26px] bg-[#0E0F12] shadow-xl border border-neutral-800/60">
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={slide.id}
+                src={slide.image}
+                alt={typeof slide.headline === 'string' ? slide.headline : slide.badge}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                className="block min-h-[160px] w-full h-auto object-cover"
+              />
+            </AnimatePresence>
+            {slide.ctaText && (
+              <div className="absolute bottom-4 left-4 z-10">
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={slide.ctaAction}
+                  className="inline-flex items-center space-x-1.5 whitespace-nowrap rounded-full bg-[#D9232D] px-3 py-2 text-[11px] font-bold text-white shadow-lg transition-all hover:bg-[#BF1B24] active:scale-95 sm:px-4 sm:text-[12px]"
+                >
+                  <span>{slide.ctaText}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </motion.button>
+              </div>
+            )}
+          </div>
+          {/* Carousel Indicators Dots */}
+          <div className="mt-3 flex items-center justify-center space-x-1.5">
+            {slides.map((s, idx) => (
+              <button
+                key={s.id}
+                onClick={() => setCurrentSlide(idx)}
+                aria-label={`Slide ${idx + 1}`}
+                className={`transition-all ${
+                  currentIndex === idx
+                    ? 'w-5 h-1.5 bg-[#D9232D] rounded-full'
+                    : 'w-1.5 h-1.5 bg-gray-400/70 rounded-full hover:bg-gray-500'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
       <div className="relative min-h-[260px] overflow-hidden rounded-[26px] bg-gradient-to-br from-[#121213] via-[#0E0F12] to-[#08080A] p-5 pt-6 text-white shadow-xl border border-neutral-800/60">
         {/* Ambient red glow background effect */}
         <div className="absolute -right-8 -top-10 w-56 h-56 bg-[#D9232D]/25 rounded-full blur-3xl pointer-events-none" />
@@ -222,6 +268,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
           ))}
         </div>
       </div>
+      )}
     </section>
   );
 };

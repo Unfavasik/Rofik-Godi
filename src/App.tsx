@@ -58,7 +58,7 @@ import {
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { NATIVE_AUTH_CALLBACK_URL } from './lib/oauthRedirect';
-import { getPathForCustomerOrder, getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
+import { getPathForCustomerOrder, getPathForPhase, getPathForProduct, getPathForSettingsSection, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from './lib/supabaseCoupons';
 import { getNotificationTargetPath } from './lib/notificationTarget';
 import { signOutCurrentDevice } from './lib/authLogout';
@@ -1389,7 +1389,10 @@ export default function App() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               onOpenWishlist={openWishlistPage}
-              routeModal={resolvedRoute.kind === 'profile-edit' ? 'profile' : resolvedRoute.kind === 'orders' ? 'orders' : resolvedRoute.kind === 'settings' ? 'settings' : resolvedRoute.kind === 'support' ? 'support' : resolvedRoute.kind === 'contact-support' ? 'contact-support' : null}
+              routeModal={resolvedRoute.kind === 'profile-edit' ? 'profile' : resolvedRoute.kind === 'orders' ? 'orders' : resolvedRoute.kind === 'settings' || resolvedRoute.kind === 'settings-section' ? 'settings' : resolvedRoute.kind === 'support' ? 'support' : resolvedRoute.kind === 'contact-support' ? 'contact-support' : null}
+              settingsSection={resolvedRoute.kind === 'settings-section' ? resolvedRoute.section : null}
+              onOpenSettingsSection={(section) => navigate(getPathForSettingsSection(section))}
+              onCloseSettingsSection={() => navigate('/settings')}
               initialOrderSlug={resolvedRoute.kind === 'orders' ? resolvedRoute.orderSlug : null}
               initialSupportRequestId={resolvedRoute.kind === 'support' ? resolvedRoute.requestId : null}
               onOpenOrdersPage={() => navigate('/my-orders')}
@@ -1400,7 +1403,7 @@ export default function App() {
               onOpenSettingsPage={() => navigate('/settings')}
               onOpenSupportPage={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/contact-support/my-support-requests')}
               onOpenContactSupport={() => {
-                const from = resolvedRoute.kind === 'settings' ? 'settings' : 'profile';
+                const from = resolvedRoute.kind === 'settings' || resolvedRoute.kind === 'settings-section' ? 'settings' : 'profile';
                 navigate(`/contact-support?from=${from}`, { state: { returnTo: from === 'settings' ? '/settings' : '/profile' } });
               }}
               onSelectSupportRequest={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/support')}

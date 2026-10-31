@@ -1,6 +1,7 @@
 export type AppPhase = 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth';
 export type RouteTab = 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart' | 'notifications';
 export type AdminSectionRoute = 'overview' | 'orders' | 'products' | 'categories' | 'customers' | 'reviews' | 'marketing' | 'banners' | 'notifications' | 'activity' | 'support' | 'reports' | 'settings';
+export type SettingsSectionRoute = 'notifications' | 'app' | 'coupons' | 'reviews' | 'about' | 'help';
 
 export const APP_ROUTE_PATHS = [
   '/', '/home', '/shop', '/search', '/custom', '/wishlist', '/cart', '/checkout',
@@ -8,7 +9,8 @@ export const APP_ROUTE_PATHS = [
   '/my-orders/order/:orderSlug', '/myorder/order/:orderSlug', '/my-order/order/:orderSlug',
   '/notifications', '/notification', '/shop/products/:slug', '/products/:slug', '/product/:slug',
   '/support', '/support/:requestId', '/contact-support', '/contact-support/my-support-requests', '/contact-us', '/contact-workshop',
-  '/settings', '/privacy-policy', '/privacy', '/terms-and-conditions', '/terms', '/store', '/store-info',
+  '/settings', '/settings/notifications', '/settings/app', '/settings/coupons', '/settings/reviews', '/settings/about', '/settings/help',
+  '/privacy-policy', '/privacy', '/terms-and-conditions', '/terms', '/store', '/store-info',
   '/admin', '/admin/dashboard', '/admin/orders', '/admin/orders/:orderId', '/admin/products', '/admin/categories', '/admin/customers',
   '/admin/customers/:customerId', '/admin/reviews', '/admin/coupons', '/admin/marketing', '/admin/banners', '/admin/notifications', '/admin/activity', '/admin/support', '/admin/support/:requestId',
   '/admin/reports', '/admin/settings', '/Onboarding', '/onboarding', '/signup', '/signup/onboarding', '/signup/loading',
@@ -28,6 +30,7 @@ export type ResolvedAppRoute =
   | { kind: 'contact-support'; tab: 'account'; canonicalPath: '/contact-support' }
   | { kind: 'product'; tab: 'shop'; slug: string; canonicalPath: string }
   | { kind: 'settings'; tab: 'account'; canonicalPath: '/settings' }
+  | { kind: 'settings-section'; tab: 'account'; section: SettingsSectionRoute; canonicalPath: string }
   | { kind: 'privacy'; tab: 'home'; canonicalPath: '/privacy-policy' }
   | { kind: 'terms'; tab: 'home'; canonicalPath: '/terms-and-conditions' }
   | { kind: 'store'; tab: 'home'; canonicalPath: '/store' }
@@ -61,6 +64,33 @@ const adminSectionsBySlug: Record<string, AdminSectionRoute> = {
 
 export function getPathForAdminSection(section: AdminSectionRoute): string {
   return adminSectionPaths[section];
+}
+
+const settingsSectionPaths: Record<SettingsSectionRoute, string> = {
+  notifications: '/settings/notifications',
+  app: '/settings/app',
+  coupons: '/settings/coupons',
+  reviews: '/settings/reviews',
+  about: '/settings/about',
+  help: '/settings/help',
+};
+const settingsSectionsBySlug: Record<string, SettingsSectionRoute> = {
+  notifications: 'notifications',
+  app: 'app',
+  preferences: 'app',
+  coupons: 'coupons',
+  reviews: 'reviews',
+  about: 'about',
+  help: 'help',
+};
+
+export function getPathForSettingsSection(section: SettingsSectionRoute): string {
+  return settingsSectionPaths[section];
+}
+
+export function getSettingsSectionFromPath(pathname: string): SettingsSectionRoute | null {
+  const slug = trimPath(pathname).toLowerCase().match(/^\/settings\/([^/]+)$/)?.[1];
+  return slug ? settingsSectionsBySlug[slug] || null : null;
 }
 
 export function getPathForAdminCustomer(customerId: string): string {
@@ -205,6 +235,10 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
     return { kind: 'admin', tab: 'home', section: adminSection, canonicalPath: `${getPathForAdminSection(adminSection)}${detailSuffix}` };
   }
   if (path === '/checkout') return { kind: 'checkout', tab: 'cart', canonicalPath: '/checkout' };
+  const settingsSection = getSettingsSectionFromPath(path);
+  if (settingsSection) {
+    return { kind: 'settings-section', tab: 'account', section: settingsSection, canonicalPath: getPathForSettingsSection(settingsSection) };
+  }
   if (path === '/settings') return { kind: 'settings', tab: 'account', canonicalPath: '/settings' };
   if (['/contact-support', '/contact-us', '/contact-workshop'].includes(path.toLowerCase())) {
     return { kind: 'contact-support', tab: 'account', canonicalPath: '/contact-support' };
