@@ -40,6 +40,29 @@ function orderSlugFromActionUrl(actionUrl: string | null) {
   return match?.[1]?.toLowerCase() || null;
 }
 
+// Order pushes must always carry the order slug so a tap opens the order detail
+// page directly, even when the stored action link is the legacy list-only /my-orders.
+async function resolveOrderSlugForNotification(
+  supabase: ReturnType<typeof createClient>,
+  notification: NotificationRow,
+) {
+  const fromActionUrl = orderSlugFromActionUrl(notification.action_url);
+  if (fromActionUrl) return fromActionUrl;
+  if (notification.kind !== 'order') return null;
+  const orderNumber = `${notification.title} ${notification.body} ${notification.action_url || ''}`
+    .match(/\bRGC-[A-Z0-9]{8,32}\b/i)?.[0]?.toUpperCase();
+  if (!orderNumber) return null;
+  const { data: order } = await supabase
+    .from('orders')
+    .select('order_slug')
+    .eq('user_id', notification.user_id)
+    .eq('order_number', orderNumber)
+    .limit(1)
+    .maybeSingle();
+  const slug = typeof order?.order_slug === 'string' ? order.order_slug.trim().toLowerCase() : '';
+  return /^[0-9a-f]{32}$/.test(slug) ? slug : null;
+}
+
 function jsonResponse(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: corsHeaders });
 }
@@ -301,6 +324,9 @@ Deno.serve(async (request) => {
   let sent = 0;
   let failed = 0;
   const notificationImageUrl = await resolveNotificationImageUrl(supabase, notification);
+  const orderSlug = notification.kind === 'order'
+    ? await resolveOrderSlugForNotification(supabase, notification)
+    : null;
   for (const device of devices) {
     const { data: previous } = await supabase
       .from('push_delivery_logs')
@@ -335,9 +361,7 @@ Deno.serve(async (request) => {
         title: notification.title,
         body: notification.body,
         action_url: notification.action_url || '',
-        ...(notification.kind === 'order' && orderSlugFromActionUrl(notification.action_url)
-          ? { order_slug: orderSlugFromActionUrl(notification.action_url) }
-          : {}),
+        ...(orderSlug ? { order_slug: orderSlug } : {}),
         image_url: notificationImageUrl || '',
       },
       android: {

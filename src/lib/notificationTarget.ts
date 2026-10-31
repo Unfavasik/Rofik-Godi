@@ -41,11 +41,12 @@ export function getNotificationTargetPath(
         path.match(ORDER_NUMBER_PATTERN)?.[0];
       if (orderNumber)
         return `/notifications?order=${encodeURIComponent(orderNumber.toUpperCase())}`;
-      if (isOrderNotification && notificationId) return notificationFallback;
-
-      // Keep valid opaque order links. Malformed and old list-only order links
-      // are routed to the notification inbox instead of silently opening /my.
+      // A valid opaque order link opens the order detail directly. Never downgrade
+      // it to the inbox hop: that recovery depends on the notification still being
+      // listed and the order still resolving, so a miss strands the customer on
+      // the orders list instead of the detail page.
       if (ORDER_SLUG_PATH.test(path)) return `${path}${target.search}${target.hash}`;
+      if (isOrderNotification && notificationId) return notificationFallback;
       return notificationFallback;
     }
 
