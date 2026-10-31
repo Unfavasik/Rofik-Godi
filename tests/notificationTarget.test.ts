@@ -28,6 +28,21 @@ describe('notification target routing', () => {
     );
   });
 
+  it('opens a valid order deep link directly instead of routing through the inbox', () => {
+    const slug = '0123456789abcdef0123456789abcdef';
+    const notificationId = '01234567-89ab-cdef-0123-456789abcdef';
+    expect(
+      getNotificationTargetPath(`/my-order/order/${slug}`, undefined, {
+        kind: 'order',
+        notificationId,
+        orderSlug: slug,
+      }),
+    ).toBe(`/my-order/order/${slug}`);
+    expect(
+      getNotificationTargetPath(`/my-order/order/${slug}`, undefined, { kind: 'order', notificationId }),
+    ).toBe(`/my-order/order/${slug}`);
+  });
+
   it('sends old list-only order URLs and empty actions to the inbox', () => {
     expect(getNotificationTargetPath('/my')).toBe('/notifications');
     expect(getNotificationTargetPath('/my-orders')).toBe('/notifications');
