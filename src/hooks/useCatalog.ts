@@ -10,6 +10,7 @@ const isRefreshRoute = (pathname: string) => ['/shop', '/home', '/search'].inclu
 export function useCatalog(pathname = '/') {
   const [products, setProducts] = useState<Product[]>(() => readPublicCatalogCache() ?? PRODUCTS);
   const [isLoaded, setIsLoaded] = useState(true);
+  const [isFresh, setIsFresh] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const requestIdRef = useRef(0);
@@ -29,7 +30,7 @@ export function useCatalog(pathname = '/') {
       if (requestId !== requestIdRef.current) return;
       if (!readPublicCatalogCache() && productsRef.current.length === 0) setError(loadError instanceof Error ? loadError : new Error('Unable to load the product catalog.'));
     }).finally(() => {
-      if (requestId === requestIdRef.current) { setIsLoaded(true); setIsLoading(false); }
+      if (requestId === requestIdRef.current) { setIsLoaded(true); setIsFresh(true); setIsLoading(false); }
     });
   }, []);
   const retry = useCallback(() => { setError(null); load(false); }, [load]);
@@ -46,5 +47,5 @@ export function useCatalog(pathname = '/') {
     return () => { window.removeEventListener(CATALOG_CHANGED_EVENT, onCatalogChanged); window.removeEventListener('focus', refresh); window.removeEventListener('pageshow', refresh); document.removeEventListener('visibilitychange', onVisibility); removeResume?.(); if (channel) void supabase?.removeChannel(channel); };
   }, [load]);
   useEffect(() => { if (isRefreshRoute(pathname)) load(true); }, [pathname, load]);
-  return { products, isLoaded, isLoading, error, retry };
+  return { products, isLoaded, isFresh, isLoading, error, retry };
 }
