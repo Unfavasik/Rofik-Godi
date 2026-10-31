@@ -1547,7 +1547,7 @@ export default function App() {
 
             {/* Full Shop / Product Catalog Section */}
             <section id="shop-section" className="px-5 mb-6">
-              <div className="flex justify-between items-center mb-3">
+              <div className="mb-3">
                 <div>
                   <h3 className="text-[17px] font-black text-gray-900 tracking-tight">
                     {selectedCategory === 'all'
@@ -1559,69 +1559,52 @@ export default function App() {
                     available
                   </p>
                 </div>
+              </div>
 
-                {/* Sort & Filter Action Bar */}
-                <div className="flex items-center gap-2">
-                  {/* Sort Trigger Button */}
-                  <button
-                    onClick={() => setIsHomeSortOpen(true)}
-                    className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200/80 px-2.5 py-1.5 rounded-xl text-[11.5px] font-bold text-gray-700 transition-all active:scale-95 cursor-pointer border border-gray-200/60"
-                    title="Change sorting order"
-                  >
-                    <ArrowUpDown className="w-3.5 h-3.5 text-gray-500" />
-                    <span>
-                      {SORT_LABELS[sortBy]?.label
-                        ? SORT_LABELS[sortBy].label.split(' ')[0]
-                        : 'Sort'}
-                    </span>
-                  </button>
-
-                  {/* Filter Trigger Button with badge */}
-                  <button
-                    onClick={() => setIsHomeFilterOpen(true)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11.5px] font-bold transition-all active:scale-95 cursor-pointer border ${
-                      activeHomeFiltersCount > 0
-                        ? 'bg-[#D9232D] text-white border-[#D9232D] shadow-xs'
-                        : 'bg-gray-100 hover:bg-gray-200/80 text-gray-700 border-gray-200/60'
-                    }`}
-                    title="Open Filters"
-                  >
-                    <SlidersHorizontal className="w-3.5 h-3.5" />
-                    <span>Filter</span>
-                    {activeHomeFiltersCount > 0 && (
-                      <span className="bg-white text-[#D9232D] text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">
-                        {activeHomeFiltersCount}
-                      </span>
-                    )}
-                  </button>
-
-                  {/* Grid / List Switcher */}
-                  <div className="flex items-center bg-gray-100 p-0.5 rounded-xl border border-gray-200/60">
+              {/* Sort & Filter toolbar — identical to the /shop page */}
+              <div className="flex items-center justify-between mb-3">
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsHomeSortOpen(true)}
+                      aria-label="Sort products"
+                      className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold"
+                    >
+                      <ArrowUpDown className="h-3.5 w-3.5" /> {SORT_LABELS[sortBy]?.label || 'Sort'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsHomeFilterOpen(true)}
+                      aria-label="Filter products"
+                      className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold"
+                    >
+                      <SlidersHorizontal className="h-3.5 w-3.5" /> Filter
+                      {activeHomeFiltersCount > 0 && (
+                        <span className="grid h-4 min-w-4 place-items-center rounded-full bg-[#e61e25] px-1 text-[9px] font-extrabold text-white">
+                          {activeHomeFiltersCount}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                  <div className="flex gap-1">
                     <button
                       onClick={() => setShopLayoutMode('grid')}
-                      className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                        shopLayoutMode === 'grid'
-                          ? 'bg-white text-[#D9232D] shadow-xs'
-                          : 'text-gray-500 hover:text-gray-800'
-                      }`}
-                      title="2-Column Grid View"
+                      aria-label="Grid view"
+                      aria-pressed={shopLayoutMode === 'grid'}
+                      className={`rounded-lg p-1.5 ${shopLayoutMode === 'grid' ? 'bg-[#e61e25] text-white' : 'text-slate-500'}`}
                     >
-                      <LayoutGrid className="w-3.5 h-3.5" />
+                      <LayoutGrid className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => setShopLayoutMode('list')}
-                      className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                        shopLayoutMode === 'list'
-                          ? 'bg-white text-[#D9232D] shadow-xs'
-                          : 'text-gray-500 hover:text-gray-800'
-                      }`}
-                      title="List View"
+                      aria-label="List view"
+                      aria-pressed={shopLayoutMode === 'list'}
+                      className={`rounded-lg p-1.5 ${shopLayoutMode === 'list' ? 'bg-[#e61e25] text-white' : 'text-slate-500'}`}
                     >
-                      <List className="w-3.5 h-3.5" />
+                      <List className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
-              </div>
 
               {/* Active Filter Chips */}
               {(selectedCategory !== 'all' ||
