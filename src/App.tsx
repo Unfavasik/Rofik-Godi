@@ -528,6 +528,7 @@ export default function App() {
   const {
     products: catalogProducts,
     isLoaded: catalogLoaded,
+    isFresh: catalogFresh,
     isLoading: catalogLoading,
     error: catalogError,
     retry: retryCatalog,
@@ -570,8 +571,10 @@ export default function App() {
     }
     const product = catalogProducts.find((item) => item.slug === route.slug);
     if (product) setSelectedProduct(product);
-    else navigate('/shop', { replace: true });
-  }, [appPhase, authStatus, catalogLoaded, catalogProducts, location.pathname, navigate]);
+    // Wait for the live catalog before giving up: a just-listed product is not in
+    // the cached/bundled catalog yet, so only redirect once the fetch has finished.
+    else if (catalogFresh) navigate('/shop', { replace: true });
+  }, [appPhase, authStatus, catalogLoaded, catalogFresh, catalogProducts, location.pathname, navigate]);
 
   useEffect(() => {
     if (!couponRouteCode) return;

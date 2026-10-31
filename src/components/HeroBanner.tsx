@@ -27,7 +27,20 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
     };
   }, []);
 
-  const defaultSlides = [
+  type HeroSlide = {
+    id: number;
+    badge: string;
+    headline: React.ReactNode;
+    subtext: string;
+    ctaText: string;
+    ctaAction: () => void;
+    image: string;
+    badgeIcon: React.ReactNode;
+    tagColor: string;
+    fullBleed?: boolean;
+  };
+
+  const defaultSlides: HeroSlide[] = [
     {
       id: 0,
       badge: 'PREMIUM SEAT COVERS',
@@ -96,6 +109,8 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
         image: banner.imageUrl,
         badgeIcon: <Sparkles className="w-3 h-3 text-[#D9232D]" />,
         tagColor: '#D9232D',
+        // Admin banners are full-bleed photos; default slides are product cutouts.
+        fullBleed: true,
       }))
     : defaultSlides;
 
@@ -125,17 +140,31 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -12 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="absolute right-0 top-16 bottom-10 w-[40%] flex items-center justify-center pointer-events-none z-0"
+            className={`${
+              slide.fullBleed
+                ? 'absolute inset-0'
+                : 'absolute right-0 top-16 bottom-10 w-[40%] flex items-center justify-center'
+            } pointer-events-none z-0`}
           >
             {slide.image && (
               <img
                 src={slide.image}
                 alt={slide.badge}
-                className="h-full w-full object-contain object-center drop-shadow-[0_12px_24px_rgba(0,0,0,0.65)]"
+                className={`h-full w-full ${
+                  slide.fullBleed
+                    ? 'object-cover object-center'
+                    : 'object-contain object-center drop-shadow-[0_12px_24px_rgba(0,0,0,0.65)]'
+                }`}
               />
             )}
             {/* Dark gradient overlay for seamless blending */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0E0F12] via-[#0E0F12]/20 to-transparent" />
+            <div
+              className={`absolute inset-0 bg-gradient-to-r ${
+                slide.fullBleed
+                  ? 'from-[#0E0F12] via-[#0E0F12]/60 to-transparent'
+                  : 'from-[#0E0F12] via-[#0E0F12]/20 to-transparent'
+              }`}
+            />
           </motion.div>
         </AnimatePresence>
 
