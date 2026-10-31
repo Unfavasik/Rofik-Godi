@@ -24,6 +24,7 @@ const WishlistModal = lazy(() => import('./components/WishlistModal').then((modu
 const StoreLocationModal = lazy(() => import('./components/StoreLocationModal').then((module) => ({ default: module.StoreLocationModal })));
 const PrivacyPolicyView = lazy(() => import('./components/PrivacyPolicyView').then((module) => ({ default: module.PrivacyPolicyView })));
 const TermsConditionsView = lazy(() => import('./components/TermsConditionsView').then((module) => ({ default: module.TermsConditionsView })));
+const CouponDetailsView = lazy(() => import('./components/CouponDetailsView').then((module) => ({ default: module.CouponDetailsView })));
 const AccountView = lazy(() => import('./components/AccountView').then((module) => ({ default: module.AccountView })));
 const CustomerReviews = lazy(() => import('./components/CustomerReviews').then((module) => ({ default: module.CustomerReviews })));
 import { BottomNav } from './components/BottomNav';
@@ -58,6 +59,7 @@ import {
 import { supabase } from './lib/supabase';
 import { NATIVE_AUTH_CALLBACK_URL } from './lib/oauthRedirect';
 import { getPathForCustomerOrder, getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
+import { loadCustomerCouponOffers, type CustomerCouponOffer } from './lib/supabaseCoupons';
 import { getNotificationTargetPath } from './lib/notificationTarget';
 import { signOutCurrentDevice } from './lib/authLogout';
 import { CUSTOMER_PREFERENCES_CHANGED_EVENT, isNotificationEnabledByPreferences, prefersHapticFeedback, readCustomerAppPreferences } from './lib/customerPreferences';
@@ -451,6 +453,9 @@ export default function App() {
   const [isStoreInfoOpen, setIsStoreInfoOpen] = useState(false);
   const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
   const [isTermsConditionsOpen, setIsTermsConditionsOpen] = useState(false);
+  const [couponRouteCode, setCouponRouteCode] = useState<string | null>(null);
+  const [couponRouteOffer, setCouponRouteOffer] = useState<CustomerCouponOffer | null>(null);
+  const [couponRouteLoading, setCouponRouteLoading] = useState(false);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
@@ -488,7 +493,7 @@ export default function App() {
         const route = resolveAppRoute(currentPath);
         const fallback = route.kind === 'product'
           ? '/shop'
-          : route.kind === 'orders' || route.kind === 'support' || route.kind === 'contact-support' || route.kind === 'settings'
+          : route.kind === 'orders' || route.kind === 'support' || route.kind === 'contact-support' || route.kind === 'settings' || route.kind === 'coupon'
             ? '/profile'
             : route.kind === 'checkout'
               ? '/cart'
@@ -554,6 +559,7 @@ export default function App() {
     setIsPrivacyPolicyOpen(route.kind === 'privacy');
     setIsTermsConditionsOpen(route.kind === 'terms');
     setIsStoreInfoOpen(route.kind === 'store');
+    setCouponRouteCode(route.kind === 'coupon' ? route.couponCode : null);
     if (route.kind !== 'product') {
       setSelectedProduct(null);
       return;
@@ -566,6 +572,20 @@ export default function App() {
     if (product) setSelectedProduct(product);
     else navigate('/shop', { replace: true });
   }, [appPhase, authStatus, catalogLoaded, catalogProducts, location.pathname, navigate]);
+
+  useEffect(() => {
+    if (!couponRouteCode) return;
+    let active = true;
+    setCouponRouteLoading(true);
+    setCouponRouteOffer(null);
+    void loadCustomerCouponOffers().then(({ data }) => {
+      if (!active) return;
+      const offer = data?.find((item) => item.code.toLowerCase() === couponRouteCode.toLowerCase()) || null;
+      setCouponRouteOffer(offer);
+      setCouponRouteLoading(false);
+    });
+    return () => { active = false; };
+  }, [couponRouteCode]);
 
   const openProductRoute = useCallback((product: Product) => {
     // Save the exact storefront position before opening the full-screen detail
@@ -2003,6 +2023,33 @@ export default function App() {
               onBack={() => navigateBackToPage('/home')}
               onOpenStoreInfo={() => openPageRoute('/store')}
             />
+          </div>
+        )}
+
+        {/* 🎟️ Coupon details route (/coupons/<code>) */}
+        {couponRouteCode && (
+          <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+            {couponRouteOffer ? (
+              <Suspense fallback={null}>
+                <CouponDetailsView
+                  offer={couponRouteOffer}
+                  onBack={() => navigateBackToPage('/profile')}
+                  onShopNow={() => navigate('/shop')}
+                />
+              </Suspense>
+            ) : (
+              <main className="min-h-screen w-full bg-white font-sans text-slate-800">
+                <header className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
+                  <button onClick={() => navigateBackToPage('/profile')} aria-label="Back" className="rounded-full p-1 text-slate-700">←</button>
+                  <h1 className="text-[22px] font-extrabold tracking-tight">Coupon Details</h1>
+                </header>
+                <section className="mx-auto max-w-xl px-5 py-12 text-center">
+                  <h2 className="mt-4 text-lg font-extrabold text-slate-900">{couponRouteLoading ? 'Loading offer details…' : 'Offer details unavailable'}</h2>
+                  {!couponRouteLoading && <p role="status" className="mt-2 text-sm leading-relaxed text-slate-600">This coupon is no longer active.</p>}
+                  {!couponRouteLoading && <button type="button" onClick={() => navigate('/shop')} className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#E51E35] px-6 py-3.5 text-sm font-extrabold text-white">Shop Now</button>}
+                </section>
+              </main>
+            )}
           </div>
         )}
 

@@ -22,6 +22,7 @@ export type ResolvedAppRoute =
   | { kind: 'admin-order'; tab: 'home'; orderId: string; canonicalPath: string }
   | { kind: 'checkout'; tab: 'cart'; canonicalPath: '/checkout' }
   | { kind: 'orders'; tab: 'account'; orderSlug: string | null; canonicalPath: string }
+  | { kind: 'coupon'; tab: 'account'; couponCode: string; canonicalPath: string }
   | { kind: 'profile-edit'; tab: 'account'; canonicalPath: '/profile/edit' }
   | { kind: 'support'; tab: 'account'; requestId: string | null; canonicalPath: string }
   | { kind: 'contact-support'; tab: 'account'; canonicalPath: '/contact-support' }
@@ -89,11 +90,45 @@ export function getAdminSupportRequestIdFromPath(pathname: string): string | nul
   return requestId ? decodeSegment(requestId) : null;
 }
 
+export function getPathForAdminProduct(productId: string): string {
+  return `/admin/products/${encodeURIComponent(productId)}`;
+}
+
+export function getAdminProductIdFromPath(pathname: string): string | null {
+  const productId = trimPath(pathname).match(/^\/admin\/products\/([^/]+)$/i)?.[1];
+  return productId ? decodeSegment(productId) : null;
+}
+
+export function getPathForAdminCoupon(couponId: string): string {
+  return `/admin/coupons/${encodeURIComponent(couponId)}`;
+}
+
+export function getAdminCouponIdFromPath(pathname: string): string | null {
+  const couponId = trimPath(pathname).match(/^\/admin\/coupons\/([^/]+)$/i)?.[1];
+  return couponId ? decodeSegment(couponId) : null;
+}
+
+export function isAdminNotificationComposePath(pathname: string): boolean {
+  return /^\/admin\/notifications\/compose$/i.test(trimPath(pathname));
+}
+
+export function getPathForCustomerCoupon(couponCode: string): string {
+  return `/coupons/${encodeURIComponent(couponCode)}`;
+}
+
+export function getCustomerCouponCodeFromPath(pathname: string): string | null {
+  const code = trimPath(pathname).match(/^\/coupons\/([^/]+)$/i)?.[1];
+  return code ? decodeSegment(code) : null;
+}
+
 export function getAdminSectionFromPath(pathname: string): AdminSectionRoute | null {
   const path = trimPath(pathname).toLowerCase();
   if (path === '/admin') return 'overview';
   if (/^\/admin\/orders\/[^/]+$/i.test(path)) return 'orders';
   if (/^\/admin\/customers\/[^/]+$/i.test(path)) return 'customers';
+  if (/^\/admin\/products\/[^/]+$/i.test(path)) return 'products';
+  if (/^\/admin\/coupons\/[^/]+$/i.test(path)) return 'marketing';
+  if (/^\/admin\/notifications\/compose$/i.test(path)) return 'notifications';
   if (/^\/admin\/support(?:\/[^/]+)?$/i.test(path)) return 'support';
   const slug = path.match(/^\/admin\/([^/]+)$/)?.[1];
   return slug ? adminSectionsBySlug[slug] || null : null;
@@ -127,6 +162,10 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
       canonicalPath: requestId ? `/support/${encodeURIComponent(requestId)}` : '/support',
     };
   }
+  const couponCode = getCustomerCouponCodeFromPath(path);
+  if (couponCode) {
+    return { kind: 'coupon', tab: 'account', couponCode, canonicalPath: getPathForCustomerCoupon(couponCode) };
+  }
   if (path === '/auth/callback') return { kind: 'tab', tab: 'home', canonicalPath: path };
 
   const adminOrderId = getAdminOrderIdFromPath(path);
@@ -148,7 +187,23 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
     };
   }
   const adminSection = getAdminSectionFromPath(path);
-  if (adminSection) return { kind: 'admin', tab: 'home', section: adminSection, canonicalPath: getPathForAdminSection(adminSection) };
+  if (adminSection) {
+    // Keep detail segments (product/coupon focus, compose, support ticket) in the
+    // canonical path so deep links are not rewritten back to the bare section URL.
+    const adminProductId = getAdminProductIdFromPath(path);
+    const adminCouponId = getAdminCouponIdFromPath(path);
+    const adminSupportId = getAdminSupportRequestIdFromPath(path);
+    const detailSuffix = adminProductId
+      ? `/${encodeURIComponent(adminProductId)}`
+      : adminCouponId
+        ? `/${encodeURIComponent(adminCouponId)}`
+        : adminSupportId
+          ? `/${encodeURIComponent(adminSupportId)}`
+          : isAdminNotificationComposePath(path)
+            ? '/compose'
+            : '';
+    return { kind: 'admin', tab: 'home', section: adminSection, canonicalPath: `${getPathForAdminSection(adminSection)}${detailSuffix}` };
+  }
   if (path === '/checkout') return { kind: 'checkout', tab: 'cart', canonicalPath: '/checkout' };
   if (path === '/settings') return { kind: 'settings', tab: 'account', canonicalPath: '/settings' };
   if (['/contact-support', '/contact-us', '/contact-workshop'].includes(path.toLowerCase())) {
@@ -185,7 +240,7 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
 
 export function requiresCustomerAuthentication(pathname: string): boolean {
   const kind = resolveAppRoute(pathname).kind;
-  return kind === 'checkout' || kind === 'orders' || kind === 'support' || kind === 'contact-support' || kind === 'profile-edit';
+  return kind === 'checkout' || kind === 'orders' || kind === 'support' || kind === 'contact-support' || kind === 'profile-edit' || kind === 'coupon';
 }
 
 export function getPathForProduct(slug: string): string {
