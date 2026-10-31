@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getAdminCustomerIdFromPath, getAdminOrderIdFromPath, getAdminSectionFromPath, getPathForAdminCustomer, getPathForAdminOrder, getPathForAdminSection, getPathForCustomerOrder, getPathForPhase, getPathForProduct, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace } from '../src/lib/appRoutes';
+import { getAdminCustomerIdFromPath, getAdminOrderIdFromPath, getAdminSectionFromPath, getPathForAdminCustomer, getPathForAdminOrder, getPathForAdminSection, getPathForCustomerOrder, getPathForPhase, getPathForProduct, getPathForSettingsSection, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace } from '../src/lib/appRoutes';
 
 describe('main route preservation', () => {
   it.each([
@@ -87,6 +87,23 @@ describe('main route preservation', () => {
     ['/store', 'store'],
   ])('resolves the %s page', (path, kind) => {
     expect(resolveAppRoute(path).kind).toBe(kind);
+  });
+
+  it.each([
+    ['/settings/notifications', 'notifications'],
+    ['/settings/app', 'app'],
+    ['/settings/preferences', 'app'],
+    ['/settings/coupons', 'coupons'],
+    ['/settings/reviews', 'reviews'],
+    ['/settings/about', 'about'],
+    ['/settings/help', 'help'],
+  ] as const)('resolves the %s settings section', (path, section) => {
+    expect(resolveAppRoute(path)).toMatchObject({ kind: 'settings-section', section, canonicalPath: getPathForSettingsSection(section) });
+    expect(getPathForPhase('main', path)).toBe(getPathForSettingsSection(section));
+  });
+
+  it('keeps the settings hub canonical when a section slug is unknown', () => {
+    expect(resolveAppRoute('/settings/unknown')).toEqual({ kind: 'not-found', tab: 'home', canonicalPath: '/home' });
   });
 });
 

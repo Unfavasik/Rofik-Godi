@@ -28,6 +28,7 @@ import { ContactSupportView } from './ContactSupportView';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { WORKSHOP_INFO } from '../data/products';
+import type { SettingsSectionRoute } from '../lib/appRoutes';
 import {
   getCheckoutVehicleCompanies,
   getCheckoutVehicleModels,
@@ -68,6 +69,9 @@ interface AccountViewProps {
   onBackFromContactSupport?: () => void;
   onOpenPrivacyPage?: () => void;
   onOpenTermsPage?: () => void;
+  settingsSection?: SettingsSectionRoute | null;
+  onOpenSettingsSection?: (section: SettingsSectionRoute) => void;
+  onCloseSettingsSection?: () => void;
   onExitRoutedPage?: () => void;
   routeModal?: 'orders' | 'settings' | 'support' | 'contact-support' | 'profile' | null;
   initialOrderSlug?: string | null;
@@ -101,6 +105,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
   onBackFromContactSupport,
   onOpenPrivacyPage,
   onOpenTermsPage,
+  settingsSection = null,
+  onOpenSettingsSection,
+  onCloseSettingsSection,
   onExitRoutedPage,
   routeModal = null,
   initialOrderSlug,
@@ -456,6 +463,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
         onOpenShop={onOpenShop}
         onOpenPrivacyPage={onOpenPrivacyPage}
         onOpenTermsPage={onOpenTermsPage}
+        activeSection={settingsSection}
+        onOpenSection={onOpenSettingsSection}
+        onCloseSection={onCloseSettingsSection}
         pwaInstallCard={pwaInstallCard}
       />
     );

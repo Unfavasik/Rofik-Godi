@@ -8,6 +8,7 @@ import { CouponDetailsView } from './CouponDetailsView';
 import { WORKSHOP_INFO } from '../data/products';
 import { readCustomerAppPreferences, saveCustomerAppPreferences, type CustomerNotificationPreferences, type PreferredLanguage } from '../lib/customerPreferences';
 import { translate, useI18n } from '../lib/i18n';
+import type { SettingsSectionRoute } from '../lib/appRoutes';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -21,9 +22,90 @@ interface SettingsViewProps {
   onOpenShop?: () => void;
   onOpenPrivacyPage?: () => void;
   onOpenTermsPage?: () => void;
+  /** Active settings sub-section, driven by the router (/settings/notifications, /settings/app, ...). */
+  activeSection?: SettingsSectionRoute | null;
+  /** Navigate to a settings sub-section route. Falls back to local state when omitted. */
+  onOpenSection?: (section: SettingsSectionRoute) => void;
+  /** Return from a sub-section to the /settings hub. */
+  onCloseSection?: () => void;
   isAuthenticated: boolean;
   pwaInstallCard?: React.ReactNode;
 }
+
+const ChevronRight = () => (
+  <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const BackArrow = () => (
+  <svg className="w-6 h-6 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+interface SettingsRowProps {
+  icon: React.ReactNode;
+  iconBg: string;
+  title: string;
+  subtitle: string;
+  onClick: () => void;
+  danger?: boolean;
+}
+
+const SettingsRow: React.FC<SettingsRowProps> = ({ icon, iconBg, title, subtitle, onClick, danger }) => (
+  <button
+    onClick={onClick}
+    type="button"
+    className={`w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left ${
+      danger ? 'hover:bg-red-50/40' : ''
+    }`}
+  >
+    <div className="flex items-center space-x-3.5">
+      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>{icon}</div>
+      <div>
+        <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{title}</h2>
+        <p className="text-[12px] text-gray-500 font-normal">{subtitle}</p>
+      </div>
+    </div>
+    <ChevronRight />
+  </button>
+);
+
+const SettingsGroup: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+  <div className="space-y-2.5">
+    <h2 className="px-1 pt-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</h2>
+    {children}
+  </div>
+);
+
+interface SectionPageProps {
+  title: string;
+  subtitle: string;
+  onBack: () => void;
+  children: React.ReactNode;
+}
+
+/** Full-screen shell for routed settings sub-sections, matching the app's page header pattern. */
+const SectionPage: React.FC<SectionPageProps> = ({ title, subtitle, onBack, children }) => (
+  <div className="w-full flex-1 bg-[#F7F8FA] min-h-full flex flex-col animate-fade-in font-sans">
+    <section className="px-5 pt-3 pb-3" data-purpose="page-header">
+      <div className="flex items-center space-x-3 mb-1">
+        <button
+          onClick={onBack}
+          aria-label="Back to settings"
+          className="p-1 -ml-1 text-gray-900 hover:opacity-75 transition-opacity active:scale-95"
+          type="button"
+        >
+          <BackArrow />
+        </button>
+        <h1 className="text-[25px] font-bold text-gray-900 tracking-tight">{title}</h1>
+      </div>
+      <p className="text-[13.5px] text-[#64748B] font-normal pl-0.5">{subtitle}</p>
+    </section>
+    <div className="flex-1 px-4 pb-10 pt-1 space-y-3">{children}</div>
+  </div>
+);
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
   onBack,
@@ -35,24 +117,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onOpenShop,
   onOpenPrivacyPage,
   onOpenTermsPage,
+  activeSection = null,
+  onOpenSection,
+  onCloseSection,
   isAuthenticated,
   pwaInstallCard,
 }) => {
   const { t } = useI18n();
-  const [activeModal, setActiveModal] = useState<
-    | 'notifications'
-    | 'coupons'
-    | 'reviews'
-    | 'privacy'
-    | 'terms'
-    | 'about'
-    | 'app-settings'
-    | 'help'
-    | 'logout'
-    | null
-  >(null);
+  const [localSection, setLocalSection] = useState<SettingsSectionRoute | null>(null);
+  const section = activeSection ?? localSection;
+  const openSection = (next: SettingsSectionRoute) => {
+    if (onOpenSection) onOpenSection(next);
+    else setLocalSection(next);
+  };
+  const closeSection = () => {
+    if (onCloseSection) onCloseSection();
+    else setLocalSection(null);
+  };
 
-  // States for sub-modals
+  const [activeDialog, setActiveDialog] = useState<'logout' | 'privacy' | 'terms' | null>(null);
+
+  // States for sub-pages
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
   const [selectedCouponOffer, setSelectedCouponOffer] = useState<CustomerCouponOffer | null>(null);
   const [couponOffers, setCouponOffers] = useState<CustomerCouponOffer[]>([]);
@@ -74,8 +159,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     setHapticFeedback(preferences.hapticFeedback);
   }, [preferenceOwnerId]);
 
+  // Section pages replace the hub, so always land at the top of the page.
   useEffect(() => {
-    if (activeModal !== 'coupons') return;
+    if (section) window.scrollTo({ top: 0 });
+  }, [section]);
+
+  useEffect(() => {
+    if (section !== 'coupons') return;
     let active = true;
     setCouponOffersLoading(true);
     setCouponOffersError('');
@@ -89,7 +179,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       if (active) setCouponOffersLoading(false);
     });
     return () => { active = false; };
-  }, [activeModal]);
+  }, [section]);
 
   const handleCopyCoupon = async (code: string) => {
     setCopyError('');
@@ -120,7 +210,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     const saved = saveCustomerAppPreferences(preferenceOwnerId, { notifications: notificationState });
     setNotificationState(saved.notifications);
     setSettingsNotice('Notification preferences saved on this device. They control which categories appear in your in-app inbox.');
-    setActiveModal(null);
   };
 
   const saveAppPreferences = () => {
@@ -128,7 +217,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     setLanguage(saved.language);
     setHapticFeedback(saved.hapticFeedback);
     setSettingsNotice(translate(saved.language, saved.language === 'hi' ? 'settings.hindiHint' : 'settings.banglaHint'));
-    setActiveModal(null);
   };
 
   const couponBenefit = (offer: CustomerCouponOffer) => offer.discount_type === 'PERCENTAGE'
@@ -145,6 +233,225 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     return parts.filter(Boolean).join(' · ');
   };
 
+  /* ------------------------------ Section pages ------------------------------ */
+
+  if (section === 'notifications') {
+    return (
+      <SectionPage title={t('settings.notifications')} subtitle="Choose what appears in your in-app inbox" onBack={closeSection}>
+        {settingsNotice && <p role="status" className="rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-medium leading-relaxed text-emerald-800">{settingsNotice}</p>}
+        <div className="space-y-3">
+          {[
+            { key: 'offers', label: 'Festival Discounts & Coupons', desc: 'Alerts about seasonal flash sales & discounts' },
+            { key: 'orderUpdates', label: 'Order Status & Tracking', desc: 'Realtime updates when stitching starts or completes' },
+            { key: 'workshopAlerts', label: 'Support & Workshop Replies', desc: 'Responses to your support requests' },
+            { key: 'systemUpdates', label: 'Product & Account Updates', desc: 'New products, profile and service notices' },
+          ].map((item) => (
+            <div key={item.key} className="flex justify-between items-center p-3.5 bg-white rounded-2xl border border-gray-100/75 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)]">
+              <div className="pr-2">
+                <div className="text-[13px] font-bold text-gray-900">{item.label}</div>
+                <div className="text-[11px] text-gray-500">{item.desc}</div>
+              </div>
+              <input
+                type="checkbox"
+                aria-label={item.label}
+                checked={notificationState[item.key as keyof typeof notificationState]}
+                onChange={(e) => setNotificationState({ ...notificationState, [item.key]: e.target.checked })}
+                className="w-5 h-5 rounded text-[#D9232D] focus:ring-[#D9232D] cursor-pointer"
+              />
+            </div>
+          ))}
+        </div>
+
+        <p className="text-[10px] leading-relaxed text-gray-500 px-1">These preferences filter your in-app inbox and unread badge. They do not control push or WhatsApp delivery.</p>
+
+        <button
+          onClick={saveNotifications}
+          className="w-full py-3 bg-[#D9232D] text-white text-xs font-bold rounded-2xl shadow-sm hover:bg-red-700 transition-colors"
+        >
+          Save Preferences
+        </button>
+      </SectionPage>
+    );
+  }
+
+  if (section === 'app') {
+    return (
+      <SectionPage title={t('settings.appPreferences')} subtitle={t('settings.appSettingsHint')} onBack={closeSection}>
+        {settingsNotice && <p role="status" className="rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-medium leading-relaxed text-emerald-800">{settingsNotice}</p>}
+
+        <div className="p-4 bg-white rounded-2xl border border-gray-100/75 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] space-y-3">
+          <label className="text-xs font-bold text-gray-700 block flex items-center gap-1.5">
+            <Globe className="w-3.5 h-3.5 text-blue-600" />
+            <span>{t('settings.language')}</span>
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id: 'en', label: 'English' },
+              { id: 'bn', label: 'বাংলা' },
+              { id: 'hi', label: 'हिन्दी' },
+            ].map((l) => (
+              <button
+                key={l.id}
+                onClick={() => setLanguage(l.id as PreferredLanguage)}
+                className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${
+                  language === l.id ? 'border-[#D9232D] bg-[#FEECEC] text-[#D9232D]' : 'border-gray-200 text-gray-700'
+                }`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] leading-relaxed text-gray-500">{language === 'hi' ? t('settings.hindiHint') : t('settings.banglaHint')}</p>
+        </div>
+
+        <label className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-gray-100/75 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] text-xs font-semibold text-gray-700">
+          <span>
+            <span className="block">{t('settings.haptic')}</span>
+            <span className="mt-0.5 block text-[10px] font-normal text-gray-500">{t('settings.hapticHint')}</span>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            aria-label={t('settings.haptic')}
+            checked={hapticFeedback}
+            onChange={(event) => setHapticFeedback(event.target.checked)}
+            className="h-5 w-5 cursor-pointer rounded text-[#D9232D] focus:ring-[#D9232D]"
+          />
+        </label>
+
+        <button
+          onClick={saveAppPreferences}
+          className="w-full py-3 bg-[#D9232D] text-white text-xs font-bold rounded-2xl shadow-sm hover:bg-red-700 transition-colors"
+        >
+          {t('settings.savePreferences')}
+        </button>
+      </SectionPage>
+    );
+  }
+
+  if (section === 'coupons') {
+    if (selectedCouponOffer) {
+      return (
+        <CouponDetailsView
+          offer={selectedCouponOffer}
+          onBack={() => setSelectedCouponOffer(null)}
+          onShopNow={() => {
+            setSelectedCouponOffer(null);
+            closeSection();
+            onOpenShop?.();
+          }}
+        />
+      );
+    }
+    return (
+      <SectionPage title={t('settings.coupons')} subtitle="Tap an offer for details or copy its code" onBack={closeSection}>
+        {couponOffersLoading ? <p className="py-10 text-center text-xs font-semibold text-gray-400">Loading active offers…</p>
+          : couponOffersError ? <p role="status" className="rounded-xl bg-amber-50 p-4 text-center text-xs font-semibold text-amber-800">{couponOffersError}</p>
+          : couponOffers.length === 0 ? <p className="py-10 text-center text-xs font-semibold text-gray-400">No active coupon offers right now. Please check back later.</p>
+          : couponOffers.map((offer) => (
+            <div key={offer.code} className="rounded-2xl border border-red-200/70 bg-gradient-to-r from-red-50 to-orange-50 p-3.5">
+              <div className="flex items-center justify-between gap-3">
+                <button type="button" onClick={() => setSelectedCouponOffer(offer)} className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] focus-visible:ring-offset-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-sm font-black tracking-wide text-[#D9232D]">{offer.code}</span>
+                    <span className="rounded bg-[#D9232D] px-1.5 py-0.5 text-[9px] font-extrabold text-white">{couponBenefit(offer)}</span>
+                  </div>
+                  <p className="mt-1 text-[11.5px] text-gray-600">{couponDetails(offer)}</p>
+                  <p className="mt-1 text-[10px] font-semibold text-gray-400">Valid until {new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }).format(new Date(offer.expires_at))}</p>
+                </button>
+                <button type="button" onClick={() => handleCopyCoupon(offer.code)} className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${copiedCoupon === offer.code ? 'bg-emerald-600 text-white' : 'border border-gray-200 bg-white text-gray-900 shadow-xs'}`}>
+                  {copiedCoupon === offer.code ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+            </div>
+          ))}
+        {copyError && <p role="alert" className="rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">{copyError}</p>}
+      </SectionPage>
+    );
+  }
+
+  if (section === 'reviews') {
+    return (
+      <SectionPage title={t('settings.reviews')} subtitle="Help other riders with your feedback" onBack={closeSection}>
+        <div className="space-y-3 py-6 text-center bg-white rounded-2xl border border-gray-100/75 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] p-5">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-500">
+            <Star className="h-6 w-6 fill-current" />
+          </div>
+          <h2 className="text-sm font-bold text-gray-900">Verified product reviews</h2>
+          <p className="text-xs leading-relaxed text-gray-500 max-w-[300px] mx-auto">Reviews are tied to products in a completed order. Open your order history to choose a purchased product and submit a verified review.</p>
+          <button
+            type="button"
+            onClick={() => onOpenOrders?.()}
+            className="w-full rounded-2xl bg-[#D9232D] py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-700"
+          >
+            {isAuthenticated ? 'Open order history' : 'Sign in to review a purchase'}
+          </button>
+        </div>
+      </SectionPage>
+    );
+  }
+
+  if (section === 'about') {
+    return (
+      <SectionPage title={t('settings.about')} subtitle="Crafting premium ride comfort since 2012" onBack={closeSection}>
+        <div className="space-y-2.5 bg-white rounded-2xl border border-gray-100/75 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] p-5 text-xs text-gray-600 leading-relaxed">
+          <div className="bg-[#FEECEC] p-3 rounded-2xl text-[#D9232D] font-bold text-center">
+            Crafting Premium Ride Comfort Since 2012
+          </div>
+          <p>
+            <strong>ROFIK GODI CENTRE</strong> is Murshidabad's premier workshop for handcrafted motorcycle, scooter, and Toto e-rickshaw seat modifications.
+          </p>
+          <p>
+            Every seat cover is reinforced with high-tensile Japanese thread, triple-layer rexine, and high-density anti-fatigue memory foam tailored specifically for Indian road conditions.
+          </p>
+          <div className="pt-2 border-t border-gray-100 flex flex-col gap-1 text-[11px] text-gray-500 font-medium">
+            <span>📍 {WORKSHOP_INFO.address}</span>
+            <span>☎ {WORKSHOP_INFO.phone}</span>
+          </div>
+        </div>
+        {onOpenStoreInfo && (
+          <button
+            type="button"
+            onClick={onOpenStoreInfo}
+            className="w-full rounded-2xl border border-gray-200 bg-white py-3 text-xs font-bold text-gray-900 shadow-xs transition-colors hover:bg-gray-50"
+          >
+            View store & workshop info
+          </button>
+        )}
+      </SectionPage>
+    );
+  }
+
+  if (section === 'help') {
+    return (
+      <SectionPage title={t('settings.help')} subtitle="Common questions" onBack={closeSection}>
+        <div className="space-y-2.5">
+          {[
+            { q: 'How does on-spot fitting work?', a: 'On-site fitting availability and timing can vary. Please contact the workshop before travelling for a specific fitting request.' },
+            { q: 'Are the seat covers water-proof?', a: 'Water resistance and materials vary by product. Check the product details before ordering or contact the workshop if you need help.' },
+            { q: 'Can I customize piping and stitch patterns?', a: 'Yes, use the "Custom Fit" 3D studio in the app to pick your exact colors and foam cushion thickness.' },
+          ].map((faq) => (
+            <div key={faq.q} className="p-3.5 bg-white rounded-2xl border border-gray-100/75 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] space-y-1">
+              <h3 className="text-[13px] font-bold text-gray-900">Q: {faq.q}</h3>
+              <p className="text-xs text-gray-500">A: {faq.a}</p>
+            </div>
+          ))}
+        </div>
+        {onOpenContactSupport && (
+          <button
+            type="button"
+            onClick={onOpenContactSupport}
+            className="w-full rounded-2xl bg-[#D9232D] py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-700"
+          >
+            Still stuck? Contact support
+          </button>
+        )}
+      </SectionPage>
+    );
+  }
+
+  /* -------------------------------- Settings hub ------------------------------- */
+
   return (
     <div className="w-full flex-1 bg-[#F7F8FA] min-h-full flex flex-col animate-fade-in font-sans">
       {/* BEGIN: NavigationHeader */}
@@ -157,9 +464,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             className="p-1 -ml-1 text-gray-900 hover:opacity-75 transition-opacity active:scale-95"
             type="button"
           >
-            <svg className="w-6 h-6 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <BackArrow />
           </button>
           <h1 className="text-[25px] font-bold text-gray-900 tracking-tight">{t('settings.title')}</h1>
         </div>
@@ -172,197 +477,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {pwaInstallCard && <div className="px-4 pt-1">{pwaInstallCard}</div>}
 
       {/* BEGIN: SettingsMenuList */}
-      {/* Vertical list of setting option cards matching exact colors and contents from screenshot */}
-        <nav aria-label={t('settings.title')} className="flex-1 px-4 space-y-2.5 mt-1 pb-10">
-        {/* Item 1: Notifications */}
-        <button
-          onClick={() => setActiveModal('notifications')}
-          className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left"
-          type="button"
-        >
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#FEECEC] flex items-center justify-center flex-shrink-0">
-              {/* Red Bell Icon */}
-              <svg className="w-5 h-5 text-[#EF4444]" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2a6 6 0 0 0-6 6v3.586l-.707.707A1 1 0 0 0 5 13v2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2a1 1 0 0 0-.293-.707L18 11.586V8a6 6 0 0 0-6-6zm0 19a3 3 0 0 1-2.83-2h5.66A3 3 0 0 1 12 21z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.notifications')}</h2>
-              <p className="text-[12px] text-gray-500 font-normal">{t('settings.offersUpdates')}</p>
-            </div>
-          </div>
-          <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-
-        {/* Item 2: Coupons & Offers */}
-        <button
-          onClick={() => { setSelectedCouponOffer(null); setActiveModal('coupons'); }}
-          className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left"
-          type="button"
-        >
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#FEECEC] flex items-center justify-center flex-shrink-0">
-              {/* Red Discount Coupon Icon */}
-              <svg className="w-5 h-5 text-[#EF4444]" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  clipRule="evenodd"
-                  d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2.5a1.5 1.5 0 0 0 0 3V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2.5a1.5 1.5 0 0 0 0-3V6zm5.5 3a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-5.2 2.7a.75.75 0 0 1 0-1.06l5-5a.75.75 0 1 1 1.06 1.06l-5 5a.75.75 0 0 1-1.06 0z"
-                  fillRule="evenodd"
-                />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.coupons')}</h2>
-              <p className="text-[12px] text-gray-500 font-normal">{t('settings.saveMore')}</p>
-            </div>
-          </div>
-          <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-
-        {/* Item 3: Order History */}
-        <button
-          onClick={() => {
-            if (onOpenOrders) onOpenOrders();
-            else setActiveModal('help');
-          }}
-          className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left"
-          type="button"
-        >
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#F0EEFF] flex items-center justify-center flex-shrink-0">
-              {/* Purple Clock/History Icon */}
-              <svg className="w-5 h-5 text-[#6366F1]" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                <path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.orderHistory')}</h2>
-              <p className="text-[12px] text-gray-500 font-normal">{t('settings.pastPurchases')}</p>
-            </div>
-          </div>
-          <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-
-        {/* Item 4: Reviews */}
-        <button
-          onClick={() => setActiveModal('reviews')}
-          className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left"
-          type="button"
-        >
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#FFF6E5] flex items-center justify-center flex-shrink-0">
-              {/* Amber/Yellow Star Icon */}
-              <svg className="w-5 h-5 text-[#F59E0B]" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.reviews')}</h2>
-              <p className="text-[12px] text-gray-500 font-normal">{t('settings.reviewPurchases')}</p>
-            </div>
-          </div>
-          <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-
-        {/* Item 5: Privacy Policy */}
-        <button
-          onClick={() => onOpenPrivacyPage ? onOpenPrivacyPage() : setActiveModal('privacy')}
-          className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left"
-          type="button"
-        >
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#E8F8F0] flex items-center justify-center flex-shrink-0">
-              {/* Green Shield Protection Icon */}
-              <svg className="w-5 h-5 text-[#10B981]" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  clipRule="evenodd"
-                  d="M12 2.25c-4.28 0-8 2.053-8 2.053s.25 9.07 8 17.447c7.75-8.377 8-17.447 8-17.447s-3.72-2.053-8-2.053zm3.707 7.957a.75.75 0 0 0-1.06-1.06L10.75 13.043l-1.397-1.396a.75.75 0 1 0-1.06 1.06l1.927 1.927a.75.75 0 0 0 1.06 0l4.427-4.427z"
-                  fillRule="evenodd"
-                />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.privacy')}</h2>
-              <p className="text-[12px] text-gray-500 font-normal">{t('settings.dataSecurity')}</p>
-            </div>
-          </div>
-          <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-
-        {/* Item 6: Terms & Conditions */}
-        <button
-          onClick={() => onOpenTermsPage ? onOpenTermsPage() : setActiveModal('terms')}
-          className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left"
-          type="button"
-        >
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#EBF5FF] flex items-center justify-center flex-shrink-0">
-              {/* Light Blue Document Icon */}
-              <svg className="w-5 h-5 text-[#3B82F6]" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  clipRule="evenodd"
-                  d="M5.625 1.5H9a3.75 3.75 0 0 1 3.75 3.75v1.875H18a2.25 2.25 0 0 1 2.25 2.25v10.5A2.25 2.25 0 0 1 18 22.125H6a2.25 2.25 0 0 1-2.25-2.25V3.75A2.25 2.25 0 0 1 5.625 1.5zm3.75 12a.75.75 0 0 0 0 1.5h6.75a.75.75 0 0 0 0-1.5H9.375zm0 3.75a.75.75 0 0 0 0 1.5h6.75a.75.75 0 0 0 0-1.5H9.375zm0-7.5a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3z"
-                  fillRule="evenodd"
-                />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.terms')}</h2>
-              <p className="text-[12px] text-gray-500 font-normal">{t('settings.appRules')}</p>
-            </div>
-          </div>
-          <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-
-        {/* Item 7: About Us */}
-        <button
-          onClick={() => setActiveModal('about')}
-          className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left"
-          type="button"
-        >
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#EBF5FF] flex items-center justify-center flex-shrink-0">
-              {/* Light Blue Info Icon */}
-              <svg className="w-5 h-5 text-[#3B82F6]" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  clipRule="evenodd"
-                  d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022zM12 9a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z"
-                  fillRule="evenodd"
-                />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.about')}</h2>
-              <p className="text-[12px] text-gray-500 font-normal">{t('settings.ourStory')}</p>
-            </div>
-          </div>
-          <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-
-        {/* Item 8: App Settings */}
-        <button
-          onClick={() => setActiveModal('app-settings')}
-          className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left"
-          type="button"
-        >
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#F4ECFF] flex items-center justify-center flex-shrink-0">
-              {/* Purple Palette/Preferences Icon */}
+      {/* Settings hub organised into labelled groups; every entry is a routed page. */}
+      <nav aria-label={t('settings.title')} className="flex-1 px-4 space-y-5 mt-1 pb-10">
+        <SettingsGroup label="Preferences">
+          <SettingsRow
+            onClick={() => openSection('notifications')}
+            iconBg="bg-[#FEECEC]"
+            icon={<Bell className="w-5 h-5 text-[#EF4444]" />}
+            title={t('settings.notifications')}
+            subtitle={t('settings.offersUpdates')}
+          />
+          <SettingsRow
+            onClick={() => openSection('app')}
+            iconBg="bg-[#F4ECFF]"
+            icon={
               <svg className="w-5 h-5 text-[#8B5CF6]" fill="currentColor" viewBox="0 0 24 24">
                 <path
                   clipRule="evenodd"
@@ -370,50 +498,60 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   fillRule="evenodd"
                 />
               </svg>
-            </div>
-            <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.appSettings')}</h2>
-              <p className="text-[12px] text-gray-500 font-normal">{t('settings.appSettingsHint')}</p>
-            </div>
-          </div>
-          <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
+            }
+            title={t('settings.appSettings')}
+            subtitle={t('settings.appSettingsHint')}
+          />
+        </SettingsGroup>
 
-        {/* Item 9: Help & FAQ */}
-        <button
-          onClick={() => setActiveModal('help')}
-          className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left"
-          type="button"
-        >
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#FEECEC] flex items-center justify-center flex-shrink-0">
-              {/* Red Help Question Icon */}
-              <svg className="w-5 h-5 text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="9.5" />
-                <path d="M9.879 9.879a3 3 0 114.242 2.828c-.566.377-.871.868-.871 1.543V15m0 3h.01" strokeLinecap="round" strokeLinejoin="round" />
+        <SettingsGroup label="Offers & activity">
+          <SettingsRow
+            onClick={() => { setSelectedCouponOffer(null); openSection('coupons'); }}
+            iconBg="bg-[#FEECEC]"
+            icon={
+              <svg className="w-5 h-5 text-[#EF4444]" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  clipRule="evenodd"
+                  d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2.5a1.5 1.5 0 0 0 0 3V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2.5a1.5 1.5 0 0 0 0-3V6zm5.5 3a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-5.2 2.7a.75.75 0 0 1 0-1.06l5-5a.75.75 0 1 1 1.06 1.06l-5 5a.75.75 0 0 1-1.06 0z"
+                  fillRule="evenodd"
+                />
               </svg>
-            </div>
-            <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{t('settings.help')}</h2>
-              <p className="text-[12px] text-gray-500 font-normal">Common questions</p>
-            </div>
-          </div>
-          <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
+            }
+            title={t('settings.coupons')}
+            subtitle={t('settings.saveMore')}
+          />
+          <SettingsRow
+            onClick={() => {
+              if (onOpenOrders) onOpenOrders();
+              else openSection('help');
+            }}
+            iconBg="bg-[#F0EEFF]"
+            icon={
+              <svg className="w-5 h-5 text-[#6366F1]" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            }
+            title={t('settings.orderHistory')}
+            subtitle={t('settings.pastPurchases')}
+          />
+          <SettingsRow
+            onClick={() => openSection('reviews')}
+            iconBg="bg-[#FFF6E5]"
+            icon={
+              <svg className="w-5 h-5 text-[#F59E0B]" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+              </svg>
+            }
+            title={t('settings.reviews')}
+            subtitle={t('settings.reviewPurchases')}
+          />
+        </SettingsGroup>
 
-        {/* Item 10: Contact Support */}
-        <button
-          onClick={() => onOpenContactSupport?.()}
-          className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left"
-          type="button"
-        >
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#EBF5FF] flex items-center justify-center flex-shrink-0">
-              {/* Blue Phone Icon */}
+        <SettingsGroup label="Workshop & support">
+          <SettingsRow
+            onClick={() => onOpenContactSupport?.()}
+            iconBg="bg-[#EBF5FF]"
+            icon={
               <svg className="w-5 h-5 text-[#2563EB]" fill="currentColor" viewBox="0 0 24 24">
                 <path
                   clipRule="evenodd"
@@ -421,204 +559,112 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   fillRule="evenodd"
                 />
               </svg>
-            </div>
-            <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">Contact Support</h2>
-              <p className="text-[12px] text-gray-500 font-normal">Message the workshop team</p>
-            </div>
-          </div>
-          <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
+            }
+            title="Contact Support"
+            subtitle="Message the workshop team"
+          />
+          {onOpenStoreInfo && (
+            <SettingsRow
+              onClick={onOpenStoreInfo}
+              iconBg="bg-[#E8F8F0]"
+              icon={
+                <svg className="w-5 h-5 text-[#10B981]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M3 9l1.5-5.25h15L21 9M3 9v10.5A1.5 1.5 0 004.5 21h15a1.5 1.5 0 001.5-1.5V9M3 9h18M9 21v-6h6v6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              }
+              title="Store & Workshop"
+              subtitle="Timings, location and store details"
+            />
+          )}
+        </SettingsGroup>
 
-        {/* Item 11: Logout */}
-        <button
-          onClick={() => {
-            setLogoutConfirmed(false);
-            setLogoutError('');
-            setActiveModal('logout');
-          }}
-          className="w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-red-50/40 active:scale-[0.99] transition-all duration-150 text-left"
-          type="button"
-        >
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#FEECEC] flex items-center justify-center flex-shrink-0">
-              {/* Red Logout Icon */}
+        <SettingsGroup label="Legal & about">
+          <SettingsRow
+            onClick={() => onOpenPrivacyPage ? onOpenPrivacyPage() : setActiveDialog('privacy')}
+            iconBg="bg-[#E8F8F0]"
+            icon={
+              <svg className="w-5 h-5 text-[#10B981]" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  clipRule="evenodd"
+                  d="M12 2.25c-4.28 0-8 2.053-8 2.053s.25 9.07 8 17.447c7.75-8.377 8-17.447 8-17.447s-3.72-2.053-8-2.053zm3.707 7.957a.75.75 0 0 0-1.06-1.06L10.75 13.043l-1.397-1.396a.75.75 0 1 0-1.06 1.06l1.927 1.927a.75.75 0 0 0 1.06 0l4.427-4.427z"
+                  fillRule="evenodd"
+                />
+              </svg>
+            }
+            title={t('settings.privacy')}
+            subtitle={t('settings.dataSecurity')}
+          />
+          <SettingsRow
+            onClick={() => onOpenTermsPage ? onOpenTermsPage() : setActiveDialog('terms')}
+            iconBg="bg-[#EBF5FF]"
+            icon={
+              <svg className="w-5 h-5 text-[#3B82F6]" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  clipRule="evenodd"
+                  d="M5.625 1.5H9a3.75 3.75 0 0 1 3.75 3.75v1.875H18a2.25 2.25 0 0 1 2.25 2.25v10.5A2.25 2.25 0 0 1 18 22.125H6a2.25 2.25 0 0 1-2.25-2.25V3.75A2.25 2.25 0 0 1 5.625 1.5zm3.75 12a.75.75 0 0 0 0 1.5h6.75a.75.75 0 0 0 0-1.5H9.375zm0 3.75a.75.75 0 0 0 0 1.5h6.75a.75.75 0 0 0 0-1.5H9.375zm0-7.5a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3z"
+                  fillRule="evenodd"
+                />
+              </svg>
+            }
+            title={t('settings.terms')}
+            subtitle={t('settings.appRules')}
+          />
+          <SettingsRow
+            onClick={() => openSection('about')}
+            iconBg="bg-[#EBF5FF]"
+            icon={
+              <svg className="w-5 h-5 text-[#3B82F6]" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  clipRule="evenodd"
+                  d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022zM12 9a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z"
+                  fillRule="evenodd"
+                />
+              </svg>
+            }
+            title={t('settings.about')}
+            subtitle={t('settings.ourStory')}
+          />
+          <SettingsRow
+            onClick={() => openSection('help')}
+            iconBg="bg-[#FEECEC]"
+            icon={
+              <svg className="w-5 h-5 text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9.5" />
+                <path d="M9.879 9.879a3 3 0 114.242 2.828c-.566.377-.871.868-.871 1.543V15m0 3h.01" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            }
+            title={t('settings.help')}
+            subtitle="Common questions"
+          />
+        </SettingsGroup>
+
+        <SettingsGroup label="Session">
+          <SettingsRow
+            danger
+            onClick={() => {
+              setLogoutConfirmed(false);
+              setLogoutError('');
+              setActiveDialog('logout');
+            }}
+            iconBg="bg-[#FEECEC]"
+            icon={
               <svg className="w-5 h-5 text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                 <path d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </div>
-            <div>
-              <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">Logout</h2>
-              <p className="text-[12px] text-gray-500 font-normal">Sign out from your account</p>
-            </div>
-          </div>
-          <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
+            }
+            title="Logout"
+            subtitle="Sign out from your account"
+          />
+        </SettingsGroup>
       </nav>
       {/* END: SettingsMenuList */}
 
       {settingsNotice && <p role="status" className="mx-5 mb-4 rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-medium leading-relaxed text-emerald-800">{settingsNotice}</p>}
 
-      {/* --- SUB MODALS FOR INTERACTION --- */}
+      {/* --- DIALOGS (logout confirmation + offline privacy/terms fallback) --- */}
 
-      {/* 1. Notifications Modal */}
       <AnimatePresence>
-        {activeModal === 'notifications' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
-            <motion.div initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }} className="relative w-full max-w-[420px] bg-white rounded-[28px] shadow-2xl p-5 z-10 space-y-4">
-              <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-2xl bg-[#FEECEC] flex items-center justify-center text-[#EF4444]">
-                    <Bell className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-gray-900">Notification Preferences</h3>
-                    <p className="text-xs text-gray-500">Choose what appears in your in-app inbox</p>
-                  </div>
-                </div>
-                <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {[
-                  { key: 'offers', label: 'Festival Discounts & Coupons', desc: 'Alerts about seasonal flash sales & discounts' },
-                  { key: 'orderUpdates', label: 'Order Status & Tracking', desc: 'Realtime updates when stitching starts or completes' },
-                  { key: 'workshopAlerts', label: 'Support & Workshop Replies', desc: 'Responses to your support requests' },
-                  { key: 'systemUpdates', label: 'Product & Account Updates', desc: 'New products, profile and service notices' },
-                ].map((item) => (
-                  <div key={item.key} className="flex justify-between items-center p-3 bg-gray-50 rounded-2xl">
-                    <div className="pr-2">
-                      <div className="text-[13px] font-bold text-gray-900">{item.label}</div>
-                      <div className="text-[11px] text-gray-500">{item.desc}</div>
-                    </div>
-                    <input
-                      type="checkbox"
-                      aria-label={item.label}
-                      checked={notificationState[item.key as keyof typeof notificationState]}
-                      onChange={(e) => setNotificationState({ ...notificationState, [item.key]: e.target.checked })}
-                      className="w-5 h-5 rounded text-[#D9232D] focus:ring-[#D9232D] cursor-pointer"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <p className="-mt-2 text-[10px] leading-relaxed text-gray-500">These preferences filter your in-app inbox and unread badge. They do not control push or WhatsApp delivery.</p>
-
-              <button
-                onClick={saveNotifications}
-                className="w-full py-3 bg-[#D9232D] text-white text-xs font-bold rounded-2xl shadow-sm hover:bg-red-700 transition-colors"
-              >
-                Save Preferences
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* 2. Coupons & Offers Modal */}
-      <AnimatePresence>
-        {activeModal === 'coupons' && (
-          selectedCouponOffer ? (
-            <CouponDetailsView
-              offer={selectedCouponOffer}
-              onBack={() => setSelectedCouponOffer(null)}
-              onShopNow={() => {
-                setSelectedCouponOffer(null);
-                setActiveModal(null);
-                onOpenShop?.();
-              }}
-            />
-          ) : (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setSelectedCouponOffer(null); setActiveModal(null); }} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
-              <motion.div initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }} className="relative w-full max-w-[420px] bg-white rounded-[28px] shadow-2xl p-5 z-10 space-y-4">
-                <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                  <div>
-                    <h3 className="text-base font-bold text-gray-900">Coupons & Special Offers</h3>
-                    <p className="text-xs text-gray-500">Tap an offer for details or copy its code</p>
-                  </div>
-                  <button onClick={() => { setSelectedCouponOffer(null); setActiveModal(null); }} aria-label="Close coupons" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="max-h-[60vh] space-y-2.5 overflow-y-auto">
-                  {couponOffersLoading ? <p className="py-8 text-center text-xs font-semibold text-gray-400">Loading active offers…</p>
-                    : couponOffersError ? <p role="status" className="rounded-xl bg-amber-50 p-4 text-center text-xs font-semibold text-amber-800">{couponOffersError}</p>
-                    : couponOffers.length === 0 ? <p className="py-8 text-center text-xs font-semibold text-gray-400">No active coupon offers right now. Please check back later.</p>
-                    : couponOffers.map((offer) => (
-                      <div key={offer.code} className="rounded-2xl border border-red-200/70 bg-gradient-to-r from-red-50 to-orange-50 p-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <button type="button" onClick={() => setSelectedCouponOffer(offer)} className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] focus-visible:ring-offset-2">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="font-mono text-sm font-black tracking-wide text-[#D9232D]">{offer.code}</span>
-                              <span className="rounded bg-[#D9232D] px-1.5 py-0.5 text-[9px] font-extrabold text-white">{couponBenefit(offer)}</span>
-                            </div>
-                            <p className="mt-1 text-[11.5px] text-gray-600">{couponDetails(offer)}</p>
-                            <p className="mt-1 text-[10px] font-semibold text-gray-400">Valid until {new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }).format(new Date(offer.expires_at))}</p>
-                          </button>
-                          <button type="button" onClick={() => handleCopyCoupon(offer.code)} className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${copiedCoupon === offer.code ? 'bg-emerald-600 text-white' : 'border border-gray-200 bg-white text-gray-900 shadow-xs'}`}>
-                            {copiedCoupon === offer.code ? 'Copied!' : 'Copy'}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-                {copyError && <p role="alert" className="rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">{copyError}</p>}
-              </motion.div>
-            </div>
-          )
-        )}
-      </AnimatePresence>
-
-      {/* 3. Reviews Modal */}
-      <AnimatePresence>
-        {activeModal === 'reviews' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
-            <motion.div initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }} className="relative w-full max-w-[420px] bg-white rounded-[28px] shadow-2xl p-5 z-10 space-y-4">
-              <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                <div>
-                  <h3 className="text-base font-bold text-gray-900">Rate & Review</h3>
-                  <p className="text-xs text-gray-500">Help other riders with your feedback</p>
-                </div>
-                <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="space-y-3 py-2 text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-500">
-                  <Star className="h-6 w-6 fill-current" />
-                </div>
-                <h4 className="text-sm font-bold text-gray-900">Verified product reviews</h4>
-                <p className="text-xs leading-relaxed text-gray-500">Reviews are tied to products in a completed order. Open your order history to choose a purchased product and submit a verified review.</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveModal(null);
-                    onOpenOrders?.();
-                  }}
-                  className="w-full rounded-2xl bg-[#D9232D] py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-700"
-                >
-                  {isAuthenticated ? 'Open order history' : 'Sign in to review a purchase'}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* 4. Privacy Policy View */}
-      <AnimatePresence>
-        {activeModal === 'privacy' && (
+        {activeDialog === 'privacy' && (
           <motion.div
             initial={{ opacity: 0, x: '100%' }}
             animate={{ opacity: 1, x: 0 }}
@@ -627,16 +673,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             className="fixed inset-0 z-50 overflow-y-auto bg-[#F8FAFC]"
           >
             <PrivacyPolicyView
-              onBack={() => setActiveModal(null)}
+              onBack={() => setActiveDialog(null)}
               onOpenStoreInfo={onOpenStoreInfo}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 5. Terms & Conditions View */}
       <AnimatePresence>
-        {activeModal === 'terms' && (
+        {activeDialog === 'terms' && (
           <motion.div
             initial={{ opacity: 0, x: '100%' }}
             animate={{ opacity: 1, x: 0 }}
@@ -645,149 +690,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             className="fixed inset-0 z-50 overflow-y-auto bg-[#F7F9FC]"
           >
             <TermsConditionsView
-              onBack={() => setActiveModal(null)}
+              onBack={() => setActiveDialog(null)}
               onOpenStoreInfo={onOpenStoreInfo}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 6. About Us Modal */}
       <AnimatePresence>
-        {activeModal === 'about' && (
+        {activeDialog === 'logout' && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
-            <motion.div initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }} className="relative w-full max-w-[420px] bg-white rounded-[28px] shadow-2xl p-5 z-10 space-y-4">
-              <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                <h3 className="text-base font-bold text-gray-900">About Rofik Godi Centre</h3>
-                <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="space-y-2.5 text-xs text-gray-600 leading-relaxed">
-                <div className="bg-[#FEECEC] p-3 rounded-2xl text-[#D9232D] font-bold text-center">
-                  Crafting Premium Ride Comfort Since 2012
-                </div>
-                <p>
-                  <strong>ROFIK GODI CENTRE</strong> is Murshidabad's premier workshop for handcrafted motorcycle, scooter, and Toto e-rickshaw seat modifications.
-                </p>
-                <p>
-                  Every seat cover is reinforced with high-tensile Japanese thread, triple-layer rexine, and high-density anti-fatigue memory foam tailored specifically for Indian road conditions.
-                </p>
-                <div className="pt-2 border-t border-gray-100 flex justify-between text-[11px] text-gray-500 font-medium">
-                  <span>📍 {WORKSHOP_INFO.address}</span>
-                  <span>☎ {WORKSHOP_INFO.phone}</span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* 7. App Settings Modal */}
-      <AnimatePresence>
-        {activeModal === 'app-settings' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
-            <motion.div initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }} className="relative w-full max-w-[420px] bg-white rounded-[28px] shadow-2xl p-5 z-10 space-y-4">
-              <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                <h3 className="text-base font-bold text-gray-900">{t('settings.appPreferences')}</h3>
-                <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1.5 flex items-center gap-1.5">
-                    <Globe className="w-3.5 h-3.5 text-blue-600" />
-                    <span>{t('settings.language')}</span>
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'en', label: 'English' },
-                      { id: 'bn', label: 'বাংলা' },
-                      { id: 'hi', label: 'हिन्दी' },
-                    ].map((l) => (
-                      <button
-                        key={l.id}
-                        onClick={() => setLanguage(l.id as PreferredLanguage)}
-                        className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${
-                          language === l.id ? 'border-[#D9232D] bg-[#FEECEC] text-[#D9232D]' : 'border-gray-200 text-gray-700'
-                        }`}
-                      >
-                        {l.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <p className="text-[10px] leading-relaxed text-gray-500">{language === 'hi' ? t('settings.hindiHint') : t('settings.banglaHint')}</p>
-                <label className="flex items-center justify-between rounded-2xl bg-gray-50 p-3 text-xs font-semibold text-gray-700">
-                  <span>
-                    <span className="block">{t('settings.haptic')}</span>
-                    <span className="mt-0.5 block text-[10px] font-normal text-gray-500">{t('settings.hapticHint')}</span>
-                  </span>
-                  <input
-                    type="checkbox"
-                    role="switch"
-                    aria-label={t('settings.haptic')}
-                    checked={hapticFeedback}
-                    onChange={(event) => setHapticFeedback(event.target.checked)}
-                    className="h-5 w-5 cursor-pointer rounded text-[#D9232D] focus:ring-[#D9232D]"
-                  />
-                </label>
-              </div>
-
-              <button
-                onClick={saveAppPreferences}
-                className="w-full py-3 bg-[#D9232D] text-white text-xs font-bold rounded-2xl shadow-sm"
-              >
-                {t('settings.savePreferences')}
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* 8. Help & FAQ Modal */}
-      <AnimatePresence>
-        {activeModal === 'help' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
-            <motion.div initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }} className="relative w-full max-w-[420px] max-h-[80vh] bg-white rounded-[28px] shadow-2xl p-5 z-10 flex flex-col space-y-3">
-              <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                <h3 className="text-base font-bold text-gray-900">Frequently Asked Questions</h3>
-                <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="overflow-y-auto space-y-2.5 text-xs text-gray-700 flex-1 pr-1">
-                <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
-                  <h4 className="font-bold text-gray-900">Q: How does on-spot fitting work?</h4>
-                  <p className="text-gray-500">A: On-site fitting availability and timing can vary. Please contact the workshop before travelling for a specific fitting request.</p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
-                  <h4 className="font-bold text-gray-900">Q: Are the seat covers water-proof?</h4>
-                  <p className="text-gray-500">A: Water resistance and materials vary by product. Check the product details before ordering or contact the workshop if you need help.</p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
-                  <h4 className="font-bold text-gray-900">Q: Can I customize piping and stitch patterns?</h4>
-                  <p className="text-gray-500">A: Yes, use the "Custom Fit" 3D studio in the app to pick your exact colors and foam cushion thickness.</p>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* 10. Logout Modal */}
-      <AnimatePresence>
-        {activeModal === 'logout' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveDialog(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
             <motion.div initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }} className="relative w-full max-w-[380px] bg-white rounded-[28px] shadow-2xl p-5 z-10 space-y-4 text-center">
               <div className="w-12 h-12 rounded-2xl bg-[#FEECEC] text-[#EF4444] mx-auto flex items-center justify-center">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
@@ -802,7 +715,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               <div className="grid grid-cols-2 gap-2.5 pt-2">
                 <button
-                  onClick={() => setActiveModal(null)}
+                  onClick={() => setActiveDialog(null)}
                   className="py-2.5 bg-gray-100 text-gray-700 text-xs font-bold rounded-xl"
                 >
                   Cancel
