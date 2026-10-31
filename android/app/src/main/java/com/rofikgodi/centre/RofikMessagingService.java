@@ -57,6 +57,7 @@ public final class RofikMessagingService extends FirebaseMessagingService {
         String kind = firstNonEmpty(data.get("kind"), "general");
         String type = inferType(data, title, body);
         String orderNumber = findOrderNumber(title + " " + body + " " + value(data.get("order_number")));
+        Bitmap brandImage = BitmapFactory.decodeResource(getResources(), R.drawable.rofik_notification_brand);
 
         ensureNotificationChannel();
         if (Build.VERSION.SDK_INT >= 33
@@ -67,9 +68,7 @@ public final class RofikMessagingService extends FirebaseMessagingService {
         String viewRoute = routeForView(data, kind, notificationId, orderNumber);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_rofik)
-            // Android requires a monochrome small status icon; use the real launcher artwork
-            // as the larger notification-card icon instead of duplicating the R glyph.
-            .setLargeIcon(launcherIcon())
+            .setLargeIcon(brandImage)
             .setColor(Color.rgb(217, 35, 45))
             .setContentTitle(title)
             .setContentText(body)
@@ -86,7 +85,7 @@ public final class RofikMessagingService extends FirebaseMessagingService {
         if (productImage != null) {
             builder.setStyle(new NotificationCompat.BigPictureStyle()
                 .bigPicture(productImage)
-                .bigLargeIcon(launcherIcon()));
+                .bigLargeIcon(brandImage));
         }
 
         boolean orderNotification = "order".equalsIgnoreCase(kind) || type.startsWith("order_") || "pickup_ready".equals(type);
@@ -221,17 +220,7 @@ public final class RofikMessagingService extends FirebaseMessagingService {
     }
 
     private String inferType(Map<String, String> data, String title, String body) {
-        String explicit = value(data.get("type")).toLowerCase(Locale.ROOT);
-        if (!explicit.isEmpty()) return explicit;
-        String text = (value(data.get("kind")) + " " + title + " " + body).toLowerCase(Locale.ROOT);
-        if ("security".equalsIgnoreCase(value(data.get("kind"))) || text.contains("security")) return "account_security";
-        if (text.contains("completed") || text.contains("picked up") || text.contains("picked_up")) return "order_completed";
-        if (text.contains("payment") || text.contains("paid")) return "payment_confirmed";
-        if (text.contains("ready") || text.contains("pickup")) return "pickup_ready";
-        if (text.contains("order")) return "order_update";
-        if (text.contains("coupon") || text.contains("offer") || text.contains("promo")) return "offer";
-        if (text.contains("arrival") || text.contains("product")) return "product_arrival";
-        return "general";
+        return NotificationIconMapper.resolveType(value(data.get("kind")), value(data.get("type")), title, body);
     }
 
     private String categoryFor(String type) {
@@ -254,7 +243,16 @@ public final class RofikMessagingService extends FirebaseMessagingService {
             drawable = ContextCompat.getDrawable(this, R.mipmap.ic_launcher);
         }
         if (drawable == null) return null;
-        int size = 96;
+        return drawableToBitmap(drawable, 96);
+    }
+
+    private Bitmap notificationTypeIcon(String type) {
+        Drawable drawable = ContextCompat.getDrawable(this, NotificationIconMapper.iconResourceForType(type));
+        if (drawable == null) return launcherIcon();
+        return drawableToBitmap(drawable, 96);
+    }
+
+    private Bitmap drawableToBitmap(Drawable drawable, int size) {
         Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         drawable.setBounds(0, 0, size, size);
