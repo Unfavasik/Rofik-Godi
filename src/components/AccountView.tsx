@@ -614,10 +614,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
               <Package className="w-4 h-4 stroke-[2]" />
             </div>
             <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">{t('account.myOrders')}</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">{t('account.ordersHint')}</p>
+              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none truncate">{t('account.myOrders')}</h3>
+              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none truncate">{t('account.ordersHint')}</p>
             </div>
-            <svg className="w-3 h-3 text-slate-700 absolute bottom-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 text-slate-700 absolute top-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
@@ -632,12 +632,12 @@ export const AccountView: React.FC<AccountViewProps> = ({
               <Heart className="w-4 h-4 fill-[#2E7CF6] text-[#2E7CF6]" />
             </div>
             <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">{t('account.wishlist')}</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">
+              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none truncate">{t('account.wishlist')}</h3>
+              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none truncate">
                 {wishlistCount > 0 ? t('account.savedCount', { count: wishlistCount }) : t('account.savedItems')}
               </p>
             </div>
-            <svg className="w-3 h-3 text-slate-700 absolute bottom-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 text-slate-700 absolute top-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
@@ -659,10 +659,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
               </svg>
             </div>
             <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">{t('account.coupons')}</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">{t('account.couponsHint')}</p>
+              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none truncate">{t('account.coupons')}</h3>
+              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none truncate">{t('account.couponsHint')}</p>
             </div>
-            <svg className="w-3 h-3 text-slate-700 absolute bottom-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 text-slate-700 absolute top-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
@@ -677,10 +677,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
               <Settings className="w-4 h-4 text-[#7C3AED] fill-[#7C3AED]" />
             </div>
             <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">{t('account.settings')}</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">{t('account.preferences')}</p>
+              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none truncate">{t('account.settings')}</h3>
+              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none truncate">{t('account.preferences')}</p>
             </div>
-            <svg className="w-3 h-3 text-slate-700 absolute bottom-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 text-slate-700 absolute top-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
