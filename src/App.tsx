@@ -1468,7 +1468,11 @@ export default function App() {
               onOpenSettingsPage={() => openPageRoute('/settings')}
               onOpenCouponsPage={() => openPageRoute('/settings/coupons')}
               onOpenSupportPage={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/contact-support/my-support-requests')}
-              onOpenContactSupport={() => {
+              onOpenContactSupport={(orderSlug) => {
+                if (orderSlug) {
+                  navigate('/contact-support?from=orders', { state: { returnTo: getPathForCustomerOrder(orderSlug.toLowerCase()) } });
+                  return;
+                }
                 const from = resolvedRoute.kind === 'settings' || resolvedRoute.kind === 'settings-section' ? 'settings' : 'profile';
                 navigate(`/contact-support?from=${from}`, { state: { returnTo: from === 'settings' ? '/settings' : '/profile' } });
               }}
@@ -1480,7 +1484,7 @@ export default function App() {
                   ? '/notifications'
                   : from === 'settings' || returnTo === '/settings'
                     ? '/settings'
-                    : '/profile');
+                    : returnTo || '/profile');
               }}
               onOpenPrivacyPage={() => openPageRoute('/privacy-policy')}
               onOpenTermsPage={() => openPageRoute('/terms-and-conditions')}

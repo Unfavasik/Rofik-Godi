@@ -46,6 +46,7 @@ interface CustomerOrdersModalProps {
   onBackToOrdersRoute?: () => void;
   onClose: () => void;
   onRefresh?: () => Promise<void> | void;
+  onNeedHelp?: (order: CustomerOrderRecord) => void;
   onReview: (order: CustomerOrderRecord, productId: string, productTitle: string, review?: ProductReviewRecord) => void;
   onBuyAgain?: (order: CustomerOrderRecord) => Promise<BuyAgainResult>;
 }
@@ -152,7 +153,7 @@ const OrderTimeline = ({ orderId, status, createdAt }: { orderId: string; status
   );
 };
 
-export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders, reviews, loading, error, customerName, currentUserId, initialOrderSlug, onInitialOrderOpened, onSelectOrderRoute, onBackToOrdersRoute, onClose, onRefresh, onReview, onBuyAgain }) => {
+export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders, reviews, loading, error, customerName, currentUserId, initialOrderSlug, onInitialOrderOpened, onSelectOrderRoute, onBackToOrdersRoute, onClose, onRefresh, onNeedHelp, onReview, onBuyAgain }) => {
   const { t } = useI18n();
   const [filter, setFilter] = useState<OrderFilter>('all');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -277,7 +278,7 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
         <AnimatePresence mode="wait" initial={false}>
           {selectedOrder ? (
             <motion.div key="details" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.16 }} className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-7 sm:py-5">
-              <OrderDetails order={selectedOrder} customerName={customerName} reviews={reviews} onRefresh={onRefresh} onInvoice={() => openInvoice(selectedOrder)} onReview={onReview} onBuyAgain={onBuyAgain} />
+              <OrderDetails order={selectedOrder} customerName={customerName} reviews={reviews} onRefresh={onRefresh} onInvoice={() => openInvoice(selectedOrder)} onReview={onReview} onBuyAgain={onBuyAgain} onNeedHelp={onNeedHelp ? () => onNeedHelp(selectedOrder) : undefined} />
             </motion.div>
           ) : (
             <motion.div key="list" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} transition={{ duration: 0.16 }} className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-7 sm:py-5">
@@ -370,7 +371,7 @@ const OrderCard = ({ order, index, onOpen, onInvoice }: { order: CustomerOrderRe
   );
 };
 
-export const OrderDetails = ({ order: sourceOrder, customerName, reviews, onRefresh, onInvoice, onReview, onBuyAgain }: { order: CustomerOrderRecord; customerName: string; reviews: ProductReviewRecord[]; onRefresh?: CustomerOrdersModalProps['onRefresh']; onInvoice: () => void; onReview: CustomerOrdersModalProps['onReview']; onBuyAgain?: CustomerOrdersModalProps['onBuyAgain'] }) => {
+export const OrderDetails = ({ order: sourceOrder, customerName, reviews, onRefresh, onInvoice, onReview, onBuyAgain, onNeedHelp }: { order: CustomerOrderRecord; customerName: string; reviews: ProductReviewRecord[]; onRefresh?: CustomerOrdersModalProps['onRefresh']; onInvoice: () => void; onReview: CustomerOrdersModalProps['onReview']; onBuyAgain?: CustomerOrdersModalProps['onBuyAgain']; onNeedHelp?: () => void }) => {
   const { t, language } = useI18n();
   const [cancelledAfterSuccess, setCancelledAfterSuccess] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -514,7 +515,7 @@ export const OrderDetails = ({ order: sourceOrder, customerName, reviews, onRefr
 
       <div className="grid grid-cols-3 gap-2 pb-2">
         <button type="button" onClick={() => document.getElementById('customer-order-progress')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="flex min-h-11 items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2 text-[9px] font-extrabold text-slate-800"><Truck className="h-3.5 w-3.5" />{t('orders.track')}</button>
-        <a href={`mailto:${WORKSHOP_INFO.email}?subject=${encodeURIComponent(`Help with order ${order.order_number}`)}`} className="flex min-h-11 items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2 text-[9px] font-extrabold text-slate-800"><FileText className="h-3.5 w-3.5" />{t('orders.needHelp')}</a>
+        <button type="button" onClick={() => (onNeedHelp ? onNeedHelp() : window.open(`mailto:${WORKSHOP_INFO.email}?subject=${encodeURIComponent(`Help with order ${order.order_number}`)}`, '_self'))} className="flex min-h-11 items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2 text-[9px] font-extrabold text-slate-800"><FileText className="h-3.5 w-3.5" />{t('orders.needHelp')}</button>
         <a href={phoneHref} className="flex min-h-11 items-center justify-center gap-1 rounded-xl bg-[#d9232d] px-2 text-[9px] font-extrabold text-white"><Phone className="h-3.5 w-3.5" />{t('orders.contactStore')}</a>
       </div>
       <ConfirmDialog
