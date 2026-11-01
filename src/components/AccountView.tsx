@@ -20,6 +20,7 @@ import {
   ShoppingBag,
   Sparkles,
   LogOut,
+  ArrowLeft,
 } from 'lucide-react';
 import { CustomerOrderRecord, Product, UserProfile } from '../types';
 import { listMyOrders } from '../lib/supabaseOrders';
@@ -1078,25 +1079,22 @@ export const AccountView: React.FC<AccountViewProps> = ({
       {/* 4. Profile Modal */}
       <AnimatePresence>
         {activeModal === 'profile' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={requestCloseProfile} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
-            <motion.div role="dialog" aria-modal="true" aria-labelledby="profile-modal-title" initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="relative w-full max-w-[440px] max-h-[85vh] bg-white rounded-[28px] shadow-2xl flex flex-col z-10 overflow-hidden">
-              <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100 bg-white">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-[#FCE6E1] flex items-center justify-center text-[#E55845]">
-                    <User className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 id="profile-modal-title" className="text-[15px] font-black text-gray-900">Rider Profile</h3>
-                    <p className="text-[11px] text-gray-400">Your Supabase customer profile</p>
-                  </div>
-                </div>
-                <button type="button" onClick={requestCloseProfile} disabled={profileSaving} aria-label="Close profile editor" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 disabled:opacity-50">
-                  <X className="w-4 h-4" />
+          <motion.div role="dialog" aria-modal="true" aria-labelledby="profile-modal-title" initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'tween', duration: 0.28, ease: 'easeOut' }} className="fixed inset-0 z-50 flex flex-col bg-white overflow-hidden">
+              <div className="flex items-center gap-2.5 px-4 py-3.5 border-b border-gray-100 bg-white">
+                <button type="button" onClick={requestCloseProfile} disabled={profileSaving} aria-label="Close profile editor" className="rounded-full p-1.5 text-gray-700 hover:bg-gray-100 disabled:opacity-50">
+                  <ArrowLeft className="h-5 w-5" />
                 </button>
+                <div className="w-8 h-8 rounded-full bg-[#FCE6E1] flex items-center justify-center text-[#E55845]">
+                  <User className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 id="profile-modal-title" className="text-[15px] font-black text-gray-900">Rider Profile</h3>
+                  <p className="text-[11px] text-gray-400">Your Supabase customer profile</p>
+                </div>
               </div>
 
-              <div className="overflow-y-auto px-5 py-4 space-y-3 flex-1 no-scrollbar text-gray-800">
+              <div className="overflow-y-auto flex-1 no-scrollbar text-gray-800">
+                <div className="mx-auto w-full max-w-[560px] px-5 py-4 space-y-3">
                 {profileLoading && <CloudLoader label="Loading profile…" className="rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-3" />}
                 <div className="flex items-center gap-4 rounded-2xl border border-rose-100 bg-rose-50/60 p-3">
                   <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-white bg-[#FCE6E1] text-lg font-black text-[#D9232D] shadow-sm">
@@ -1252,9 +1250,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   {profileSaving ? 'Saving…' : profileLoading ? 'Loading…' : 'Save Profile'}
                 </button>
                 {profileMessage && <p role="status" className={`text-center text-[11px] font-semibold ${profileMessage.toLowerCase().includes('saved') && !profileMessage.toLowerCase().includes('could not') ? 'text-emerald-700' : 'text-red-600'}`}>{profileMessage}</p>}
+                </div>
               </div>
             </motion.div>
-          </div>
         )}
       </AnimatePresence>
       <ConfirmDialog
