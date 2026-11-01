@@ -1,45 +1,24 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Bike, Car, Crosshair, Footprints, MapPin, Star } from 'lucide-react';
+import { Navigatr } from '@navigatr/web';
+import type { NavigatrMap, NavigatrMarker } from '@navigatr/web';
+import { ArrowLeft, ArrowRight, Bike, Car, Crosshair, Footprints, MapPin, Star, X } from 'lucide-react';
 import { WORKSHOP_INFO } from '../data/products';
 
-const GOOGLE_MAPS_API_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined)?.trim() || '';
 const STORE_IMAGE = '/images/rofik-godi-store.webp';
 const BRAND_ICON = '/images/rofik-center-splash.webp';
+const MAP_CONTAINER_ID = 'store-location-map-host';
 
 type LatLng = { lat: number; lng: number };
 type TravelModeKey = 'drive' | 'bike' | 'walk';
-
 type LegInfo = { durationText: string; distanceText: string };
 
-declare global {
-  interface Window {
-    google?: typeof google;
-    __rofikGoogleMapsReady?: () => void;
-  }
-}
-
-let mapsPromise: Promise<typeof google.maps> | null = null;
-
-// Uses the callback bootstrap (not loading=async) so the full legacy
-// namespace — LatLng, Marker, InfoWindow, Geocoder, DistanceMatrixService —
-// is available on window.google.maps once the script reports ready.
-function loadGoogleMaps(apiKey: string): Promise<typeof google.maps> {
-  if (window.google?.maps?.Map) return Promise.resolve(window.google.maps);
-  if (mapsPromise) return mapsPromise;
-  mapsPromise = new Promise((resolve, reject) => {
-    window.__rofikGoogleMapsReady = () => {
-      if (window.google?.maps?.Map) resolve(window.google.maps);
-      else reject(new Error('Google Maps unavailable'));
-    };
-    const script = document.createElement('script');
-    script.id = 'google-maps-script';
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&v=weekly&callback=__rofikGoogleMapsReady`;
-    script.async = true;
-    script.onerror = () => reject(new Error('Google Maps unavailable'));
-    document.head.appendChild(script);
-  });
-  return mapsPromise;
-}
+// The MapLibre map is cached across mounts: NavigatrMap exposes no destroy API,
+// so re-creating it on every visit would leak a WebGL context per open. The
+// host element is detached on unmount and re-attached on the next visit.
+let cachedMap: NavigatrMap | null = null;
+let cachedHost: HTMLDivElement | null = null;
+let cachedStoreMarker: NavigatrMarker | null = null;
+let cachedUserMarker: NavigatrMarker | null = null;
 
 const haversineKm = (from: LatLng, to: LatLng) => {
   const radius = 6371;
@@ -63,34 +42,46 @@ const travelModes: { key: TravelModeKey; label: string; icon: React.ComponentTyp
   { key: 'walk', label: 'walk', icon: Footprints, speedKmh: 4.5 },
 ];
 
-const directionsUrl = (mode: TravelModeKey, store: LatLng) =>
+const googleDirectionsUrl = (mode: TravelModeKey, store: LatLng) =>
   `https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}&travelmode=${mode === 'drive' ? 'driving' : mode === 'bike' ? 'bicycling' : 'walking'}`;
 
-const calloutHtml = () => `
-  <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;min-width:190px;font-family:inherit;">
-    <img src="${BRAND_ICON}" alt="" style="width:30px;height:30px;border-radius:8px;object-fit:cover;flex-shrink:0;" />
-    <div style="min-width:0;">
-      <div style="font-size:12.5px;font-weight:800;color:#0f172a;white-space:nowrap;">Rofik Godi Centre</div>
-      <div style="font-size:8.5px;font-weight:700;letter-spacing:0.14em;color:#94a3b8;white-space:nowrap;">BIKE &bull; TOTO &bull; SEAT COVERS</div>
+// Callout card + red pin stacked above an invisible spacer: MapLibre centers
+// the marker element on the coordinate, so the spacer keeps the pin tip on it.
+const storeMarkerHtml = () => `
+  <div style="display:flex;flex-direction:column;align-items:center;">
+    <div style="display:flex;align-items:center;gap:8px;background:#ffffff;border-radius:14px;padding:7px 12px;box-shadow:0 4px 16px rgba(0,0,0,0.22);white-space:nowrap;">
+      <img src="${BRAND_ICON}" alt="" style="width:28px;height:28px;border-radius:8px;object-fit:cover;" />
+      <div>
+        <div style="font-size:12px;font-weight:800;color:#0f172a;line-height:1.25;">Rofik Godi Centre</div>
+        <div style="font-size:8px;font-weight:700;letter-spacing:0.12em;color:#94a3b8;">BIKE &bull; TOTO &bull; SEAT COVERS</div>
+      </div>
     </div>
+    <svg width="26" height="34" viewBox="0 0 24 32" style="margin-top:2px;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.3));">
+      <path d="M12 0C5.4 0 0 5.2 0 11.6 0 20.3 12 32 12 32s12-11.7 12-20.4C24 5.2 18.6 0 12 0z" fill="#E51E2B"/>
+      <circle cx="12" cy="11.5" r="4.5" fill="#ffffff"/>
+    </svg>
+    <div style="height:80px;" aria-hidden="true"></div>
   </div>`;
 
+const userMarkerHtml = () =>
+  '<div style="width:16px;height:16px;border-radius:50%;background:#2563EB;border:3px solid #ffffff;box-shadow:0 1px 6px rgba(0,0,0,0.35);"></div>';
+
 export function StoreLocationView({ onClose }: { onClose: () => void }) {
-  const mapRef = useRef<HTMLDivElement | null>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const googleRef = useRef<typeof google.maps | null>(null);
-  const markerRef = useRef<google.maps.Marker | null>(null);
-  const userMarkerRef = useRef<google.maps.Marker | null>(null);
+  const hostWrapperRef = useRef<HTMLDivElement | null>(null);
+  const navRef = useRef<Navigatr | null>(null);
+  const watchIdRef = useRef<number | null>(null);
   const [storePos, setStorePos] = useState<LatLng>({ lat: WORKSHOP_INFO.lat, lng: WORKSHOP_INFO.lng });
   const [userPos, setUserPos] = useState<LatLng | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState('');
   const [activeMode, setActiveMode] = useState<TravelModeKey>('drive');
   const [legs, setLegs] = useState<Record<TravelModeKey, LegInfo | null>>({ drive: null, bike: null, walk: null });
+  const [routeLoading, setRouteLoading] = useState(false);
+  const [navigating, setNavigating] = useState(false);
 
   const fallbackLegs = useMemo(() => {
-    const km = userPos ? haversineKm(userPos, storePos) : null;
-    if (km === null) return null;
+    if (!userPos) return null;
+    const km = haversineKm(userPos, storePos);
     return {
       drive: estimateLeg(km, 20),
       bike: estimateLeg(km, 15),
@@ -98,92 +89,103 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
     } satisfies Record<TravelModeKey, LegInfo>;
   }, [userPos, storePos]);
 
-  const fitToStoreAndUser = useCallback((maps: typeof google.maps, user: LatLng | null, store: LatLng) => {
-    const map = mapInstanceRef.current;
-    if (!map) return;
-    if (user) {
-      const bounds = new maps.LatLngBounds();
-      bounds.extend(new maps.LatLng(user.lat, user.lng));
-      bounds.extend(new maps.LatLng(store.lat, store.lng));
-      map.fitBounds(bounds, 64);
-      return;
-    }
-    map.panTo(new maps.LatLng(store.lat, store.lng));
-    map.setZoom(15);
+  const stopNavigation = useCallback(() => {
+    if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+    watchIdRef.current = null;
+    cachedMap?.stopNavigation();
+    cachedMap?.clearRoute();
+    setNavigating(false);
   }, []);
 
-  const fetchTravelTimes = useCallback((maps: typeof google.maps, user: LatLng, store: LatLng) => {
-    const service = new maps.DistanceMatrixService();
-    const requests: { key: TravelModeKey; mode: google.maps.TravelMode }[] = [
-      { key: 'drive', mode: maps.TravelMode.DRIVING },
-      { key: 'bike', mode: maps.TravelMode.BICYCLING },
-      { key: 'walk', mode: maps.TravelMode.WALKING },
-    ];
-    requests.forEach(({ key, mode }) => {
-      service.getDistanceMatrix(
-        {
-          origins: [new maps.LatLng(user.lat, user.lng)],
-          destinations: [new maps.LatLng(store.lat, store.lng)],
-          travelMode: mode,
-        },
-        (response, status) => {
-          if (status !== maps.DistanceMatrixStatus.OK) return;
-          const element = response?.rows?.[0]?.elements?.[0];
-          if (!element || element.status !== 'OK') return;
-          setLegs((current) => ({
-            ...current,
-            [key]: { durationText: element.duration?.text || '', distanceText: element.distance?.text || '' },
-          }));
-        },
-      );
+  const fetchTravelTimes = useCallback(async (nav: Navigatr, user: LatLng, store: LatLng) => {
+    const results = await Promise.allSettled(
+      (['drive', 'bike', 'walk'] as TravelModeKey[]).map(async (mode) => {
+        const route = await nav.route({ origin: user, destination: store, mode });
+        return { mode, durationText: route.durationText, distanceText: route.distanceText };
+      }),
+    );
+    setLegs((current) => {
+      const next = { ...current };
+      results.forEach((result) => {
+        if (result.status === 'fulfilled') next[result.value.mode] = { durationText: result.value.durationText, distanceText: result.value.distanceText };
+      });
+      return next;
     });
   }, []);
 
-  // Boot the map: load the SDK, place the store marker, refine the position by
-  // geocoding the workshop address, then pick up the visitor's location.
+  const trackLivePosition = useCallback((onPosition: (position: LatLng) => void) => {
+    if (!('geolocation' in navigator)) return;
+    if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (position) => onPosition({ lat: position.coords.latitude, lng: position.coords.longitude }),
+      () => undefined,
+      { enableHighAccuracy: true, maximumAge: 5000 },
+    );
+  }, []);
+
+  // Boot (or re-attach) the cached map, place the store marker, refine the
+  // position by geocoding the workshop address, then pick up the user's
+  // location for live travel times.
   useEffect(() => {
-    if (!GOOGLE_MAPS_API_KEY || !mapRef.current) return;
+    const wrapper = hostWrapperRef.current;
+    if (!wrapper) return;
     let cancelled = false;
-    loadGoogleMaps(GOOGLE_MAPS_API_KEY)
-      .then((maps) => {
-        if (cancelled || !mapRef.current) return;
-        googleRef.current = maps;
-        const map = new maps.Map(mapRef.current, {
-          center: new maps.LatLng(WORKSHOP_INFO.lat, WORKSHOP_INFO.lng),
-          zoom: 15,
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: false,
+
+    if (!cachedHost) {
+      cachedHost = document.createElement('div');
+      cachedHost.id = MAP_CONTAINER_ID;
+      cachedHost.style.cssText = 'position:absolute;inset:0;';
+    }
+    wrapper.appendChild(cachedHost);
+
+    const boot = async () => {
+      try {
+        const nav = navRef.current || new Navigatr();
+        navRef.current = nav;
+        if (!cachedMap) {
+          // MapLibre accepts an HTMLElement container at runtime; the SDK type
+          // only declares the string id form.
+          cachedMap = nav.map({
+            container: cachedHost as unknown as string,
+            center: { lat: WORKSHOP_INFO.lat, lng: WORKSHOP_INFO.lng },
+            zoom: 15,
+          });
+        }
+        if (cancelled) return;
+        cachedStoreMarker?.remove();
+        cachedStoreMarker = cachedMap.addMarker({
+          lat: WORKSHOP_INFO.lat,
+          lng: WORKSHOP_INFO.lng,
+          iconHtml: storeMarkerHtml(),
         });
-        mapInstanceRef.current = map;
-        const marker = new maps.Marker({
-          map,
-          position: new maps.LatLng(WORKSHOP_INFO.lat, WORKSHOP_INFO.lng),
-          title: WORKSHOP_INFO.name,
-        });
-        markerRef.current = marker;
-        const infoWindow = new maps.InfoWindow({ content: calloutHtml(), disableAutoPan: true });
-        infoWindow.open({ map, anchor: marker });
         setMapReady(true);
 
-        const geocoder = new maps.Geocoder();
-        geocoder.geocode({ address: WORKSHOP_INFO.address }, (results, status) => {
-          if (cancelled || status !== maps.GeocoderStatus.OK || !results?.[0]) return;
-          const location = results[0].geometry.location;
-          const refined = { lat: location.lat(), lng: location.lng() };
-          setStorePos(refined);
-          marker.setPosition(new maps.LatLng(refined.lat, refined.lng));
-          fitToStoreAndUser(maps, userMarkerRef.current ? userPos : null, refined);
-        });
-      })
-      .catch((error) => {
-        if (!cancelled) setMapError(error instanceof Error ? error.message : 'Google Maps could not be loaded.');
-      });
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [GOOGLE_MAPS_API_KEY]);
+        const geocoded = await nav.geocode({ address: WORKSHOP_INFO.address }).catch(() => null);
+        if (cancelled || !geocoded) return;
+        const refined = { lat: geocoded.lat, lng: geocoded.lng };
+        setStorePos(refined);
+        cachedStoreMarker?.setLatLng(refined);
+        cachedMap.panTo(refined);
+      } catch (error) {
+        if (!cancelled) setMapError(error instanceof Error ? error.message : 'The map could not be loaded.');
+      }
+    };
+    void boot();
 
-  // Ask for the visitor's location once the map exists; refine ETAs when granted.
+    return () => {
+      cancelled = true;
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      cachedUserMarker?.remove();
+      cachedUserMarker = null;
+      if (cachedHost && cachedHost.parentElement === wrapper) wrapper.removeChild(cachedHost);
+    };
+  }, []);
+
+  // Ask for the visitor's location once the map exists; show the live dot and
+  // fetch drive/bike/walk ETAs from the Valhalla router.
   useEffect(() => {
     if (!mapReady || !('geolocation' in navigator)) return;
     let cancelled = false;
@@ -192,16 +194,12 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
         if (cancelled) return;
         const user = { lat: position.coords.latitude, lng: position.coords.longitude };
         setUserPos(user);
-        const maps = googleRef.current;
-        if (!maps) return;
-        if (userMarkerRef.current) userMarkerRef.current.setMap(null);
-        userMarkerRef.current = new maps.Marker({
-          map: mapInstanceRef.current,
-          position: new maps.LatLng(user.lat, user.lng),
-          title: 'You are here',
-        });
-        fitToStoreAndUser(maps, user, storePos);
-        fetchTravelTimes(maps, user, storePos);
+        const nav = navRef.current;
+        const map = cachedMap;
+        if (!nav || !map) return;
+        cachedUserMarker?.remove();
+        cachedUserMarker = map.addMarker({ lat: user.lat, lng: user.lng, iconHtml: userMarkerHtml() });
+        void fetchTravelTimes(nav, user, storePos);
       },
       () => undefined,
       { timeout: 8000, maximumAge: 120000 },
@@ -211,10 +209,10 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
   }, [mapReady]);
 
   const handleLocate = () => {
-    const maps = googleRef.current;
-    if (!maps) return;
+    const map = cachedMap;
+    if (!map) return;
     if (userPos) {
-      fitToStoreAndUser(maps, userPos, storePos);
+      map.panTo(userPos);
       return;
     }
     if (!('geolocation' in navigator)) return;
@@ -222,18 +220,40 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
       (position) => {
         const user = { lat: position.coords.latitude, lng: position.coords.longitude };
         setUserPos(user);
-        if (userMarkerRef.current) userMarkerRef.current.setMap(null);
-        userMarkerRef.current = new maps.Marker({
-          map: mapInstanceRef.current,
-          position: new maps.LatLng(user.lat, user.lng),
-          title: 'You are here',
-        });
-        fitToStoreAndUser(maps, user, storePos);
-        fetchTravelTimes(maps, user, storePos);
+        cachedUserMarker?.remove();
+        cachedUserMarker = map.addMarker({ lat: user.lat, lng: user.lng, iconHtml: userMarkerHtml() });
+        map.panTo(user);
+        const nav = navRef.current;
+        if (nav) void fetchTravelTimes(nav, user, storePos);
       },
       () => undefined,
       { timeout: 8000, maximumAge: 120000 },
     );
+  };
+
+  const handleGetDirections = async () => {
+    const nav = navRef.current;
+    if (!nav || !cachedMap || !userPos) {
+      window.open(googleDirectionsUrl(activeMode, storePos), '_blank');
+      return;
+    }
+    setRouteLoading(true);
+    try {
+      const route = await nav.route({ origin: userPos, destination: storePos, mode: activeMode });
+      cachedMap.drawRoute(route.polyline, { color: '#2563EB', weight: 6 });
+      cachedMap.fitRoute(route.polyline);
+      cachedMap.startNavigation(route);
+      setNavigating(true);
+      trackLivePosition((position) => {
+        cachedMap?.updatePosition(position);
+        setUserPos(position);
+      });
+    } catch {
+      // Public Valhalla can be briefly unavailable; Google Maps still gets the user there.
+      window.open(googleDirectionsUrl(activeMode, storePos), '_blank');
+    } finally {
+      setRouteLoading(false);
+    }
   };
 
   return (
@@ -255,20 +275,22 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
       </header>
 
       <div className="relative min-h-0 flex-1">
-        <div ref={mapRef} className="absolute inset-0" aria-hidden="true" />
-        {!GOOGLE_MAPS_API_KEY && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#E8EDF3] px-6 text-center">
-            <MapPin className="h-10 w-10 text-[#D9232D]" />
-            <p className="text-sm font-bold text-slate-800">Map preview needs the Google Maps API key</p>
-            <p className="max-w-[280px] text-xs leading-relaxed text-slate-500">Add GOOGLE_MAPS_API_KEY in project settings to see the live map. Directions still work below.</p>
-          </div>
-        )}
-        {GOOGLE_MAPS_API_KEY && mapError && (
+        <div ref={hostWrapperRef} className="absolute inset-0" />
+        {mapError && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#E8EDF3] px-6 text-center">
             <MapPin className="h-10 w-10 text-[#D9232D]" />
             <p className="text-sm font-bold text-slate-800">The map could not be loaded</p>
-            <p className="max-w-[280px] text-xs leading-relaxed text-slate-500">{mapError}. Check the API key and billing, or use Get Directions below.</p>
+            <p className="max-w-[280px] text-xs leading-relaxed text-slate-500">{mapError}. Please check your connection and try again.</p>
           </div>
+        )}
+        {navigating && (
+          <button
+            type="button"
+            onClick={stopNavigation}
+            className="absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-full bg-slate-900/90 px-3.5 py-2 text-xs font-bold text-white shadow-lg transition-transform active:scale-95"
+          >
+            <X className="h-3.5 w-3.5" /> Exit navigation
+          </button>
         )}
         <button
           type="button"
@@ -322,15 +344,15 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
             })}
           </div>
 
-          <a
-            href={directionsUrl(activeMode, storePos)}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#E51E2B] py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(229,30,43,0.3)] transition-colors hover:bg-[#C81E28] active:scale-[0.99]"
+          <button
+            type="button"
+            onClick={() => void handleGetDirections()}
+            disabled={routeLoading}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#E51E2B] py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(229,30,43,0.3)] transition-colors hover:bg-[#C81E28] active:scale-[0.99] disabled:opacity-70"
           >
-            Get Directions
+            {routeLoading ? 'Finding route…' : 'Get Directions'}
             <ArrowRight className="h-4 w-4" />
-          </a>
+          </button>
         </div>
       </section>
     </div>
