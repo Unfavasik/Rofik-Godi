@@ -36,6 +36,7 @@ import { CustomerOrdersModal, type BuyAgainResult } from './CustomerOrdersModal'
 import { SettingsView } from './SettingsView';
 import { SupportCenter } from './SupportCenter';
 import { ContactSupportView } from './ContactSupportView';
+import { OrderHelpSupportView } from './OrderHelpSupportView';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { WORKSHOP_INFO } from '../data/products';
@@ -76,7 +77,7 @@ interface AccountViewProps {
   onOpenSettingsPage?: () => void;
   onOpenCouponsPage?: () => void;
   onOpenSupportPage?: (requestId?: string) => void;
-  onOpenContactSupport?: () => void;
+  onOpenContactSupport?: (orderSlug?: string) => void;
   onSelectSupportRequest?: (requestId: string) => void;
   onBackFromContactSupport?: () => void;
   onOpenPrivacyPage?: () => void;
@@ -138,6 +139,11 @@ export const AccountView: React.FC<AccountViewProps> = ({
   const [activeModal, setActiveModal] = useState<'orders' | 'pickupStore' | 'settings' | 'support' | 'contact-support' | 'profile' | 'privacy' | 'terms' | null>(null);
   const previousRouteModal = useRef<'orders' | 'settings' | 'support' | 'contact-support' | 'profile' | null>(null);
   const [initialOrderSlugForModal, setInitialOrderSlugForModal] = useState<string | null>(null);
+  const [helpOrder, setHelpOrder] = useState<CustomerOrderRecord | null>(null);
+
+  useEffect(() => {
+    if (activeModal !== 'orders' && helpOrder) setHelpOrder(null);
+  }, [activeModal, helpOrder]);
 
   useEffect(() => {
     if (routeModal) {
@@ -812,7 +818,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             <h2 className="text-base font-bold text-slate-900 tracking-tight">{t('account.needHelp')}</h2>
             <button
               type="button"
-              onClick={onOpenContactSupport}
+              onClick={() => onOpenContactSupport?.()}
               className="text-xs font-semibold text-slate-500 hover:text-slate-700 flex items-center"
             >
               {t('account.getSupport')}
@@ -837,7 +843,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             </div>
             <button
               type="button"
-              onClick={onOpenContactSupport}
+              onClick={() => onOpenContactSupport?.()}
               className="min-h-11 bg-[#1EB754] hover:bg-[#16A34A] text-white text-xs font-semibold px-4 py-2 rounded-full flex items-center space-x-1.5 transition-colors flex-shrink-0 shadow-sm"
             >
               <span>{t('account.chatNow')}</span>
@@ -1044,6 +1050,16 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
       {/* Sub-Modals for Account Features */}
       <AnimatePresence>
+        {activeModal === 'orders' && helpOrder && (
+          <OrderHelpSupportView
+            order={helpOrder}
+            onBack={() => setHelpOrder(null)}
+            onOpenLiveChat={() => onOpenContactSupport?.(helpOrder.order_slug)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {activeModal === 'orders' && (
           <CustomerOrdersModal
             orders={customerOrders}
@@ -1057,6 +1073,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             onBackToOrdersRoute={onBackToOrdersRoute}
             onClose={closeRoutedPage}
             onRefresh={refreshCustomerOrders}
+            onNeedHelp={(order) => setHelpOrder(order)}
             onBuyAgain={onBuyAgain}
             onReview={(order, productId, productTitle, review) =>
               setReviewComposer({
