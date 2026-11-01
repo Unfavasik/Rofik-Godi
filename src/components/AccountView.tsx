@@ -67,6 +67,7 @@ interface AccountViewProps {
   onSelectOrderRoute?: (orderSlug: string) => void;
   onBackToOrdersRoute?: () => void;
   onOpenSettingsPage?: () => void;
+  onOpenCouponsPage?: () => void;
   onOpenSupportPage?: (requestId?: string) => void;
   onOpenContactSupport?: () => void;
   onSelectSupportRequest?: (requestId: string) => void;
@@ -104,6 +105,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
   onSelectOrderRoute,
   onBackToOrdersRoute,
   onOpenSettingsPage,
+  onOpenCouponsPage,
   onOpenSupportPage,
   onOpenContactSupport,
   onSelectSupportRequest,
@@ -561,10 +563,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
       <main className="px-4 space-y-4">
         {/* BEGIN: ProfileHeroCard */}
         <section
-          className="relative overflow-hidden rounded-3xl bg-white border border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.04)] p-4"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FCE6E1] via-[#FDF4F1] to-[#F9E7E2] border border-[#F5DFD9] shadow-[0_4px_16px_rgba(0,0,0,0.04)] p-4"
           data-purpose="profile-hero-card"
         >
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-[#FCE6E1] via-[#FDF3F1] to-transparent" />
           <div className="relative flex items-center gap-3.5">
             <div className="h-16 w-16 shrink-0 rounded-2xl bg-[#FCE6E1] ring-2 ring-white shadow-sm flex items-center justify-center overflow-hidden">
               {currentUser?.avatar ? (
@@ -641,19 +642,25 @@ export const AccountView: React.FC<AccountViewProps> = ({
             </svg>
           </button>
 
-          {/* 3. Profile details (Soft Rose) */}
+          {/* 3. Coupons (Soft Amber) */}
           <button
             type="button"
-            onClick={() => handleProtectedAction('profile')}
-            aria-label={t('account.profile')}
-            className="bg-[#FDECE9] hover:bg-[#FCD8CF] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
+            onClick={() => (onOpenCouponsPage ? onOpenCouponsPage() : handleProtectedAction('settings'))}
+            aria-label={t('account.coupons')}
+            className="bg-[#FFF4E0] hover:bg-[#FEE9C7] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
           >
-            <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#E55845]">
-              <User className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#F59E0B]">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  clipRule="evenodd"
+                  d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2.5a1.5 1.5 0 0 0 0 3V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2.5a1.5 1.5 0 0 0 0-3V6zm5.5 3a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-5.2 2.7a.75.75 0 0 1 0-1.06l5-5a.75.75 0 1 1 1.06 1.06l-5 5a.75.75 0 0 1-1.06 0z"
+                  fillRule="evenodd"
+                />
+              </svg>
             </div>
             <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">{t('account.profile')}</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">{t('account.personalDetails')}</p>
+              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">{t('account.coupons')}</h3>
+              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">{t('account.couponsHint')}</p>
             </div>
             <svg className="w-3 h-3 text-slate-700 absolute bottom-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
