@@ -713,6 +713,24 @@ export const AccountView: React.FC<AccountViewProps> = ({
             <ChevronRight className="w-4 h-4 text-slate-400" />
           </button>
 
+          {/* Rating store — opens the Google review page */}
+          <button
+            type="button"
+            onClick={() => window.open('https://g.page/r/CUiStgroG6BfEAE/review', '_blank', 'noopener,noreferrer')}
+            className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#EAF7EF] flex items-center justify-center text-[#15803D] flex-shrink-0">
+                <Star className="w-5 h-5 fill-current" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 leading-tight">{t('account.ratingStore')}</h3>
+                <p className="text-[11px] text-slate-500 font-normal mt-0.5">{t('account.ratingStoreHint')}</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400" />
+          </button>
+
           {/* Support requests */}
           <button
             type="button"

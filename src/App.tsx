@@ -1092,7 +1092,19 @@ export default function App() {
   const handleLoginSuccess = async (user: UserProfile, isNewAccount?: boolean) => {
     // Resolve the protected role before updating the route, so admins never flash the storefront.
     const admin = await checkIsAdmin();
-    setCurrentUser(user);
+    // AuthScreen builds its user from session metadata only (no avatar, default vehicle).
+    // Merge over the session-derived user so the profile-loaded avatar/vehicle is not wiped.
+    setCurrentUser((current) =>
+      current.id === user.id
+        ? {
+            ...user,
+            name: user.name || current.name,
+            phone: user.phone || current.phone,
+            avatar: current.avatar ?? user.avatar,
+            vehicle: current.vehicle?.trim() ? current.vehicle : user.vehicle,
+          }
+        : user,
+    );
     setAuthStatus('AUTHENTICATED');
     setIsAdmin(admin);
     setIsLoginModalOpen(false);
