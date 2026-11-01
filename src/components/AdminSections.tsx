@@ -248,8 +248,8 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
         <br />
         <b>Image size:</b> the image fills the whole banner card at a <b>3:2 ratio</b> —{' '}
         <b>1200 × 800 px</b> is recommended and shows edge-to-edge with no cropping; other sizes
-        are gently center-cropped to fit. Bake any text or offer details into the image itself;
-        the app adds only the action button and a small brand chip on top.
+        are gently center-cropped to fit. The title and subtitle you enter appear over the image
+        along with the action button and a small brand chip.
       </div>
       {loading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-xs text-slate-400">
@@ -373,9 +373,21 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-[#1A1B1F] to-[#0B0C0E]" />
                   )}
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/65 via-black/25 to-transparent" />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                   <div className="absolute left-2 top-2 inline-flex items-center rounded-full bg-black/35 px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-wider text-white ring-1 ring-white/15 backdrop-blur-md">
                     ROFIK GODI CENTRE
+                  </div>
+                  <div className="absolute inset-x-2 bottom-9 max-w-[92%]">
+                    {draft.title.trim() && (
+                      <p className="text-[12px] font-black leading-tight text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">
+                        {draft.title.trim()}
+                      </p>
+                    )}
+                    {draft.subtitle.trim() && (
+                      <p className="mt-0.5 line-clamp-2 text-[9.5px] leading-snug text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+                        {draft.subtitle.trim()}
+                      </p>
+                    )}
                   </div>
                   <div className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold text-gray-900 shadow">
                     {draft.buttonLabel.trim() || 'Shop now'}
@@ -485,8 +497,8 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                 />
                 <span className="mt-1 block text-[10px] font-normal text-slate-400">
                   Recommended: 1200 × 800 px (3:2 landscape) — fills the whole banner card;
-                  other sizes are gently center-cropped. Bake text into the image. Upload JPG,
-                  PNG, WEBP or GIF; it is converted to WebP and saved securely.
+                  other sizes are gently center-cropped. Upload JPG, PNG, WEBP or GIF; it is
+                  converted to WebP and saved securely.
                 </span>
               </label>
               <label className="text-[11px] font-bold text-slate-600">
@@ -686,7 +698,7 @@ export function NotificationsView({
                       <span className="rounded-full bg-slate-100 px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-slate-600">{campaign.kind}</span>
                     </div>
                     <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-600">{campaign.body}</p>
-                    <p className="mt-2 text-[10px] font-medium text-slate-400">{campaign.recipient_count} recipient{campaign.recipient_count === 1 ? '' : 's'} · {dateLabel(campaign.created_at)}</p>
+                    <p className="mt-2 text-[10px] font-medium text-slate-400">{campaign.recipient_count} recipient{campaign.recipient_count === 1 ? '' : 's'} �� {dateLabel(campaign.created_at)}</p>
                   </div>
                   <button type="button" onClick={() => setPendingCampaign(campaign)} className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-[10px] font-black text-red-700 transition hover:bg-red-50">
                     <Trash2 className="h-3.5 w-3.5" />Delete for everyone

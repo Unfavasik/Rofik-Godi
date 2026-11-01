@@ -132,7 +132,19 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
             )}
 
             {/* Legibility scrim — bottom edge only */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/65 via-black/25 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+
+            {/* Admin title + subtitle, overlaid above the CTA */}
+            <div className="absolute inset-x-3 bottom-12 z-10 max-w-[92%] sm:inset-x-4">
+              <h2 className="text-balance text-base font-black leading-tight text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] sm:text-xl">
+                {slide.title}
+              </h2>
+              {slide.subtitle && (
+                <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] sm:text-[13px]">
+                  {slide.subtitle}
+                </p>
+              )}
+            </div>
 
             {/* Brand chip */}
             <div className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/35 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wider text-white ring-1 ring-white/15 backdrop-blur-md">
