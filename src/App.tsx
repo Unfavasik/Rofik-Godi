@@ -1435,16 +1435,16 @@ export default function App() {
               routeModal={resolvedRoute.kind === 'profile-edit' ? 'profile' : resolvedRoute.kind === 'orders' ? 'orders' : resolvedRoute.kind === 'settings' || resolvedRoute.kind === 'settings-section' ? 'settings' : resolvedRoute.kind === 'support' ? 'support' : resolvedRoute.kind === 'contact-support' ? 'contact-support' : null}
               settingsSection={resolvedRoute.kind === 'settings-section' ? resolvedRoute.section : null}
               onOpenSettingsSection={(section) => navigate(getPathForSettingsSection(section))}
-              onCloseSettingsSection={() => navigate('/settings')}
+              onCloseSettingsSection={() => navigateBackToPage('/settings')}
               initialOrderSlug={resolvedRoute.kind === 'orders' ? resolvedRoute.orderSlug : null}
               initialSupportRequestId={resolvedRoute.kind === 'support' ? resolvedRoute.requestId : null}
-              onOpenOrdersPage={() => navigate('/my-orders')}
-              onOpenProfileEditPage={() => navigate('/profile/edit')}
+              onOpenOrdersPage={() => openPageRoute('/my-orders')}
+              onOpenProfileEditPage={() => openPageRoute('/profile/edit')}
               onBuyAgain={handleBuyAgain}
               onSelectOrderRoute={(orderSlug) => navigate(getPathForCustomerOrder(orderSlug))}
-              onBackToOrdersRoute={() => navigate('/my-orders')}
-              onOpenSettingsPage={() => navigate('/settings')}
-  onOpenCouponsPage={() => navigate('/settings/coupons')}
+              onBackToOrdersRoute={() => navigateBackToPage('/my-orders')}
+              onOpenSettingsPage={() => openPageRoute('/settings')}
+              onOpenCouponsPage={() => openPageRoute('/settings/coupons')}
               onOpenSupportPage={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/contact-support/my-support-requests')}
               onOpenContactSupport={() => {
                 const from = resolvedRoute.kind === 'settings' || resolvedRoute.kind === 'settings-section' ? 'settings' : 'profile';
