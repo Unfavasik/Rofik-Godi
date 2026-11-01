@@ -9,6 +9,7 @@ import {
   uploadStorefrontBannerImage,
 } from '../lib/supabaseBanners';
 import { AdminNotificationComposer } from './AdminNotificationComposer';
+import { BannerLinkPicker } from './BannerLinkPicker';
 import { ConfirmDialog } from './ConfirmDialog';
 import {
   deleteAdminNotificationCampaign,
@@ -489,15 +490,12 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                 </span>
               </label>
               <label className="text-[11px] font-bold text-slate-600">
-                Shop button link
-                <input
-                  value={draft.linkUrl}
-                  onChange={(event) => setField('linkUrl', event.target.value)}
-                  placeholder="/shop or https://example.com/page"
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-xs"
-                />
-                <span className="mt-1 block text-[10px] font-normal text-slate-400">
-                  Tapping the button opens this internal page or external website.
+                Button destination
+                <span className="mt-1 block font-normal">
+                  <BannerLinkPicker
+                    value={draft.linkUrl}
+                    onChange={(linkUrl) => setField('linkUrl', linkUrl)}
+                  />
                 </span>
               </label>
               <div className="grid gap-3 sm:grid-cols-2">
