@@ -256,6 +256,37 @@ async function resolveNotificationImageUrl(
   return signed?.signedUrl || null;
 }
 
+// Mirrors the client-side category mapping in src/lib/notificationCategory.ts so a
+// category the user disabled never reaches their device as a push notification.
+type NotificationPreferenceCategory = 'offers' | 'orderUpdates' | 'workshopAlerts' | 'systemUpdates';
+
+function isSupportNotificationRow(notification: NotificationRow): boolean {
+  let supportPath = false;
+  try {
+    supportPath = /^\/support\/[^/]+\/?$/i.test(new URL(notification.action_url || '', 'https://rofikgodi.invalid').pathname);
+  } catch {
+    supportPath = false;
+  }
+  const text = `${notification.kind} ${notification.title} ${notification.body}`.toLowerCase();
+  return supportPath || text.includes('support request') || text.includes('support ticket') ||
+    text.includes('workshop replied') || text.includes('support reply');
+}
+
+function resolveNotificationPreferenceCategory(notification: NotificationRow): NotificationPreferenceCategory {
+  if (isSupportNotificationRow(notification)) return 'workshopAlerts';
+  const kind = notification.kind.toLowerCase();
+  const text = `${notification.title} ${notification.body}`.toLowerCase();
+  if (kind.includes('order') || kind.includes('pickup') || text.includes('order #') || text.includes('order ')) return 'orderUpdates';
+  if (kind.includes('offer') || kind.includes('promo') || kind.includes('coupon') || text.includes('special offer') || text.includes('coupon')) return 'offers';
+  return 'systemUpdates';
+}
+
+function isCategoryEnabledInMetadata(metadata: Record<string, unknown>, category: NotificationPreferenceCategory): boolean {
+  const preferences = metadata.notification_preferences;
+  if (!preferences || typeof preferences !== 'object') return true;
+  return (preferences as Record<string, unknown>)[category] !== false;
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405);
@@ -306,6 +337,14 @@ Deno.serve(async (request) => {
   }
 
   const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  // Fail open on preference lookup errors so a transient failure never swallows an order push.
+  const { data: userData, error: userError } = await supabase.auth.admin.getUserById(notification.user_id);
+  if (!userError && userData?.user) {
+    const category = resolveNotificationPreferenceCategory(notification);
+    if (!isCategoryEnabledInMetadata(userData.user.user_metadata ?? {}, category)) {
+      return jsonResponse({ sent: 0, skipped: `disabled_${category}` });
+    }
+  }
   const { data: devices, error: devicesError } = await supabase
     .from('push_devices')
     .select('id,token,app_version')

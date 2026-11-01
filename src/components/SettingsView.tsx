@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, Globe, Bell } from 'lucide-react';
+import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
@@ -241,28 +241,34 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {settingsNotice && <p role="status" className="rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-medium leading-relaxed text-emerald-800">{settingsNotice}</p>}
         <div className="space-y-3">
           {[
-            { key: 'offers', label: 'Festival Discounts & Coupons', desc: 'Alerts about seasonal flash sales & discounts' },
-            { key: 'orderUpdates', label: 'Order Status & Tracking', desc: 'Realtime updates when stitching starts or completes' },
-            { key: 'workshopAlerts', label: 'Support & Workshop Replies', desc: 'Responses to your support requests' },
-            { key: 'systemUpdates', label: 'Product & Account Updates', desc: 'New products, profile and service notices' },
+            { key: 'offers', label: 'Festival Discounts & Coupons', desc: 'Alerts about seasonal flash sales & discounts', icon: <Tag className="h-5 w-5 fill-current text-[#E51E2B]" />, tone: 'bg-red-50' },
+            { key: 'orderUpdates', label: 'Order Status & Tracking', desc: 'Realtime updates when stitching starts or completes', icon: <Truck className="h-5 w-5 text-[#E51E2B]" />, tone: 'bg-rose-50' },
+            { key: 'workshopAlerts', label: 'Support & Workshop Replies', desc: 'Responses to your support requests', icon: <MessageCircle className="h-5 w-5 text-[#E51E2B]" />, tone: 'bg-rose-50' },
+            { key: 'systemUpdates', label: 'Product & Account Updates', desc: 'New products, profile and service notices', icon: <Package className="h-5 w-5 text-purple-600" />, tone: 'bg-purple-50' },
           ].map((item) => (
             <div key={item.key} className="flex justify-between items-center p-3.5 bg-white rounded-2xl border border-gray-100/75 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)]">
-              <div className="pr-2">
-                <div className="text-[13px] font-bold text-gray-900">{item.label}</div>
-                <div className="text-[11px] text-gray-500">{item.desc}</div>
+              <div className="flex min-w-0 items-center gap-3.5">
+                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${item.tone}`}>{item.icon}</div>
+                <div className="min-w-0 pr-2">
+                  <div className="text-[13px] font-bold text-gray-900">{item.label}</div>
+                  <div className="text-[11px] text-gray-500">{item.desc}</div>
+                </div>
               </div>
-              <input
-                type="checkbox"
+              <button
+                type="button"
+                role="switch"
                 aria-label={item.label}
-                checked={notificationState[item.key as keyof typeof notificationState]}
-                onChange={(e) => setNotificationState({ ...notificationState, [item.key]: e.target.checked })}
-                className="w-5 h-5 rounded text-[#D9232D] focus:ring-[#D9232D] cursor-pointer"
-              />
+                aria-checked={notificationState[item.key as keyof typeof notificationState]}
+                onClick={() => setNotificationState({ ...notificationState, [item.key]: !notificationState[item.key as keyof typeof notificationState] })}
+                className={`relative ml-3 h-6 w-12 shrink-0 rounded-full transition-colors ${notificationState[item.key as keyof typeof notificationState] ? 'bg-[#E51E2B]' : 'bg-gray-200'}`}
+              >
+                <span className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform ${notificationState[item.key as keyof typeof notificationState] ? 'translate-x-6' : 'translate-x-0.5'}`} />
+              </button>
             </div>
           ))}
         </div>
 
-        <p className="text-[10px] leading-relaxed text-gray-500 px-1">These preferences filter your in-app inbox and unread badge. They do not control push or WhatsApp delivery.</p>
+        <p className="text-[10px] leading-relaxed text-gray-500 px-1">These preferences filter your in-app inbox, unread badge, and push notifications. WhatsApp delivery is not affected.</p>
 
         <button
           onClick={saveNotifications}
