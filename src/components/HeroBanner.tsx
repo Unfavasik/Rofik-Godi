@@ -118,6 +118,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
                   key={slide.id}
                   src={slide.imageUrl}
                   alt={slide.title}
+                  // The first banner is typically the home page LCP element.
+                  fetchPriority={currentIndex === 0 ? 'high' : 'auto'}
+                  loading={currentIndex === 0 ? 'eager' : 'lazy'}
                   initial={{ opacity: 0, scale: 1.04 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0 }}
