@@ -34,7 +34,16 @@ export const BannerLinkPicker: React.FC<{
   value: string;
   onChange: (linkUrl: string) => void;
 }> = ({ value, onChange }) => {
-  const mode = detectMode(value);
+  // Mode is held in state: clearing a product link sets the value to '', which
+  // detectMode() would classify as "shop" and snap the tab back mid-edit.
+  const [mode, setMode] = useState<LinkMode>(() => detectMode(value));
+  useEffect(() => {
+    const next = detectMode(value);
+    // Only follow the value when it clearly points at another mode; an empty
+    // value stays in the current mode so the product search remains visible.
+    if (value.trim() && next !== mode) setMode(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
   const [products, setProducts] = useState<Product[] | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [query, setQuery] = useState('');
@@ -76,8 +85,9 @@ export const BannerLinkPicker: React.FC<{
     );
   }, [products, query]);
 
-  const setMode = (next: LinkMode) => {
+  const switchMode = (next: LinkMode) => {
     if (next === mode) return;
+    setMode(next);
     if (next === 'shop') onChange('/shop');
     if (next === 'product') onChange('');
     if (next === 'external') onChange('https://');
@@ -93,7 +103,7 @@ export const BannerLinkPicker: React.FC<{
             type="button"
             role="tab"
             aria-selected={mode === option.id}
-            onClick={() => setMode(option.id)}
+            onClick={() => switchMode(option.id)}
             className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[10.5px] font-bold transition-colors ${
               mode === option.id
                 ? 'bg-[#D9232D] text-white shadow-sm'
