@@ -561,10 +561,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
       <main className="px-4 space-y-4">
         {/* BEGIN: ProfileHeroCard */}
         <section
-          className="relative overflow-hidden rounded-3xl bg-white border border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.04)] p-4"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FCE6E1] via-[#FDF4F1] to-[#F9E7E2] border border-[#F5DFD9] shadow-[0_4px_16px_rgba(0,0,0,0.04)] p-4"
           data-purpose="profile-hero-card"
         >
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-[#FCE6E1] via-[#FDF3F1] to-transparent" />
           <div className="relative flex items-center gap-3.5">
             <div className="h-16 w-16 shrink-0 rounded-2xl bg-[#FCE6E1] ring-2 ring-white shadow-sm flex items-center justify-center overflow-hidden">
               {currentUser?.avatar ? (
