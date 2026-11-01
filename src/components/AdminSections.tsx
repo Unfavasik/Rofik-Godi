@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Bell, Download, Image, Plus, Tag, Trash2, Upload } from 'lucide-react';
+import { Bell, ChevronDown, ChevronUp, Download, Image, Plus, Tag, Trash2, Upload } from 'lucide-react';
 import type { Product, VehicleCategory } from '../types';
 import type { AdminNotification } from '../lib/supabaseAdmin';
 import { loadAdminJsonSetting, saveAdminJsonSetting } from '../lib/supabaseAdmin';
@@ -150,6 +150,14 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
     setDraft((current) => (current ? { ...current, [key]: value } : current));
   const uploadImage = async (file?: File) => {
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      notify('Please choose an image file (JPG, PNG, WEBP or GIF).');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      notify('Please choose an image smaller than 10MB.');
+      return;
+    }
     setUploadingImage(true);
     try {
       const result = await uploadStorefrontBannerImage(file);
@@ -163,14 +171,34 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
   };
   const saveDraft = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!draft?.title.trim()) {
+    if (!draft) return;
+    if (!draft.title.trim()) {
       notify('Enter a banner title');
       return;
     }
-    const next = banners.some((banner) => banner.id === draft.id)
-      ? banners.map((banner) => (banner.id === draft.id ? draft : banner))
-      : [draft, ...banners];
+    const link = draft.linkUrl.trim();
+    if (link && !/^(\/|https?:\/\/)/i.test(link)) {
+      notify('The link must start with "/" for an internal page or "https://" for a website.');
+      return;
+    }
+    const normalized: StoreBanner = {
+      ...draft,
+      title: draft.title.trim(),
+      subtitle: draft.subtitle.trim(),
+      linkUrl: link,
+      buttonLabel: draft.buttonLabel.trim() || 'Shop now',
+    };
+    const next = banners.some((banner) => banner.id === normalized.id)
+      ? banners.map((banner) => (banner.id === normalized.id ? normalized : banner))
+      : [normalized, ...banners];
     if (await persist(next)) setDraft(null);
+  };
+  const move = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= banners.length) return;
+    const next = [...banners];
+    [next[index], next[target]] = [next[target], next[index]];
+    void persist(next);
   };
   const toggleActive = (banner: StoreBanner) =>
     void persist(
@@ -228,7 +256,7 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
         </div>
       ) : banners.length ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {banners.map((banner) => (
+          {banners.map((banner, index) => (
             <article
               key={banner.id}
               className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
@@ -257,12 +285,30 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                   {banner.subtitle || 'No subtitle'}
                 </p>
                 <div className="mt-4 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
-                  <button
-                    onClick={() => setDraft(banner)}
-                    className="text-[11px] font-bold text-slate-700"
-                  >
-                    Edit
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => move(index, -1)}
+                      disabled={index === 0 || saving}
+                      aria-label={`Move ${banner.title} up`}
+                      className="rounded-lg border border-slate-200 p-1 text-slate-500 transition-colors hover:bg-slate-50 disabled:opacity-30"
+                    >
+                      <ChevronUp className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => move(index, 1)}
+                      disabled={index === banners.length - 1 || saving}
+                      aria-label={`Move ${banner.title} down`}
+                      className="rounded-lg border border-slate-200 p-1 text-slate-500 transition-colors hover:bg-slate-50 disabled:opacity-30"
+                    >
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setDraft(banner)}
+                      className="ml-1 text-[11px] font-bold text-slate-700"
+                    >
+                      Edit
+                    </button>
+                  </div>
                   <div className="flex gap-3">
                     <button
                       onClick={() => toggleActive(banner)}
@@ -310,6 +356,33 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                 Close
               </button>
             </div>
+            {/* Live storefront preview — mirrors the home-page banner card */}
+            <div className="mt-4">
+              <p className="mb-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
+                Storefront preview
+              </p>
+              <div className="overflow-hidden rounded-2xl bg-[#0E0F12] ring-1 ring-black/5">
+                <div className="relative aspect-[3/2] w-full">
+                  {draft.imageUrl ? (
+                    <img
+                      src={draft.imageUrl}
+                      alt="Banner preview"
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#1A1B1F] to-[#0B0C0E]" />
+                  )}
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/65 via-black/25 to-transparent" />
+                  <div className="absolute left-2 top-2 inline-flex items-center rounded-full bg-black/35 px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-wider text-white ring-1 ring-white/15 backdrop-blur-md">
+                    ROFIK GODI CENTRE
+                  </div>
+                  <div className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold text-gray-900 shadow">
+                    {draft.buttonLabel.trim() || 'Shop now'}
+                    <span aria-hidden="true">→</span>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className="mt-4 grid gap-3">
               <label className="text-[11px] font-bold text-slate-600">
                 Title
@@ -332,23 +405,65 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
               </label>
               <label className="text-[11px] font-bold text-slate-600">
                 Banner image
-                <div className="mt-1 flex gap-2">
-                  <input
-                    type="url"
-                    value={draft.imageUrl}
-                    onChange={(event) => setField('imageUrl', event.target.value)}
-                    placeholder="https://…"
-                    className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-xs"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => imageInputRef.current?.click()}
-                    disabled={uploadingImage}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-[11px] font-bold text-slate-600 disabled:opacity-50"
-                  >
-                    <Upload className="h-3.5 w-3.5" />
-                    {uploadingImage ? 'Uploading…' : 'Upload'}
-                  </button>
+                <div
+                  className="mt-1"
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    void uploadImage(event.dataTransfer.files?.[0]);
+                  }}
+                >
+                  {draft.imageUrl ? (
+                    <div className="relative overflow-hidden rounded-xl border border-slate-200">
+                      <div className="aspect-[3/2] w-full bg-slate-100">
+                        <img
+                          src={draft.imageUrl}
+                          alt="Banner image preview"
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      {uploadingImage && (
+                        <div className="absolute inset-0 grid place-items-center bg-white/70 text-[11px] font-bold text-slate-600">
+                          Uploading…
+                        </div>
+                      )}
+                      <div className="absolute right-2 top-2 flex gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => imageInputRef.current?.click()}
+                          disabled={uploadingImage}
+                          className="rounded-lg bg-white/95 px-2.5 py-1.5 text-[10px] font-bold text-slate-700 shadow disabled:opacity-50"
+                        >
+                          Replace
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setField('imageUrl', '')}
+                          disabled={uploadingImage}
+                          className="rounded-lg bg-white/95 px-2.5 py-1.5 text-[10px] font-bold text-red-600 shadow disabled:opacity-50"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef.current?.click()}
+                      disabled={uploadingImage}
+                      className="grid aspect-[3/2] w-full place-items-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-center transition-colors hover:border-[#D9232D] hover:bg-red-50/40 disabled:opacity-50"
+                    >
+                      <span className="pointer-events-none px-4">
+                        <Upload className="mx-auto h-6 w-6 text-slate-400" />
+                        <span className="mt-2 block text-[11px] font-bold text-slate-600">
+                          {uploadingImage ? 'Uploading…' : 'Click or drop an image to upload'}
+                        </span>
+                        <span className="mt-1 block text-[10px] font-normal text-slate-400">
+                          JPG, PNG, WEBP or GIF · up to 10MB
+                        </span>
+                      </span>
+                    </button>
+                  )}
                 </div>
                 <input
                   ref={imageInputRef}
@@ -359,6 +474,13 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                     void uploadImage(event.target.files?.[0]);
                     event.currentTarget.value = '';
                   }}
+                />
+                <input
+                  type="url"
+                  value={draft.imageUrl}
+                  onChange={(event) => setField('imageUrl', event.target.value)}
+                  placeholder="…or paste an image URL (https://…)"
+                  className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-[11px] font-normal"
                 />
                 <span className="mt-1 block text-[10px] font-normal text-slate-400">
                   Recommended: 1200 × 800 px (3:2 landscape) — fills the whole banner card;
