@@ -26,6 +26,7 @@ import { CustomerOrderRecord, Product, UserProfile } from '../types';
 import { listMyOrders } from '../lib/supabaseOrders';
 import { listMyProductReviews, type ProductReviewRecord } from '../lib/supabaseReviews';
 import { ReviewComposer } from './ReviewComposer';
+import { AvatarCropModal } from './AvatarCropModal';
 import { CustomerOrdersModal, type BuyAgainResult } from './CustomerOrdersModal';
 import { SettingsView } from './SettingsView';
 import { SupportCenter } from './SupportCenter';
@@ -227,6 +228,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
   const [profileEmail, setProfileEmail] = useState('');
   const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
   const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null);
+  const [pendingCropFile, setPendingCropFile] = useState<File | null>(null);
   const [profileSnapshot, setProfileSnapshot] = useState({ name: '', phone: '', phoneCountry: 'IN' as CountryCode, vehicle: '', avatar: null as string | null });
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
@@ -406,8 +408,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
       return;
     }
     setProfileMessage('');
-    setProfileAvatarFile(file);
-    setProfileAvatarUrl(URL.createObjectURL(file));
+    setPendingCropFile(file);
+  };
+
+  const handleCroppedAvatar = (cropped: File) => {
+    setPendingCropFile(null);
+    setProfileMessage('');
+    setProfileAvatarFile(cropped);
+    setProfileAvatarUrl(URL.createObjectURL(cropped));
   };
 
   useEffect(() => {
@@ -1125,6 +1133,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
                     <p className="mt-0.5 text-[10px] leading-relaxed text-gray-500">Image files up to 5 MB. Saved as a square WebP.</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <input ref={avatarFileInputRef} type="file" accept="image/*" aria-label="Choose profile photo" className="sr-only" onChange={handleAvatarFile} />
+                      {pendingCropFile && (
+                        <AvatarCropModal file={pendingCropFile} onCancel={() => setPendingCropFile(null)} onConfirm={handleCroppedAvatar} />
+                      )}
                       <button type="button" aria-label="Upload profile photo" disabled={profileSaving || profileLoading} onClick={() => avatarFileInputRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-lg bg-[#D9232D] px-3 py-2 text-[10px] font-bold text-white disabled:opacity-50">
                         <Camera className="h-3.5 w-3.5" aria-hidden="true" /> Change photo
                       </button>
