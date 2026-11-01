@@ -565,7 +565,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
           data-purpose="profile-hero-card"
         >
           <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-[#FCE6E1] via-[#FDF3F1] to-transparent" />
-          <div className="relative flex items-center gap-3.5">
+          <div className="relative flex flex-wrap items-center gap-3.5">
             <div className="h-16 w-16 shrink-0 rounded-2xl bg-[#FCE6E1] ring-2 ring-white shadow-sm flex items-center justify-center overflow-hidden">
               {currentUser?.avatar ? (
                 <img src={currentUser.avatar} alt={`${currentUser.name || 'Rider'} avatar`} className="h-full w-full object-cover" />
@@ -573,7 +573,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 <span aria-hidden="true" className="text-lg font-black text-[#D9232D]">{getInitials(currentUser?.name || '')}</span>
               )}
             </div>
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 basis-36">
               <h2 className="truncate text-[15px] font-extrabold tracking-tight text-slate-900 leading-tight">
                 {currentUser?.name?.trim() || (isGuest ? t('account.guestTitle') : 'Rider')}
               </h2>
@@ -590,7 +590,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
               <button
                 type="button"
                 onClick={() => handleProtectedAction('profile')}
-                className="min-h-11 shrink-0 rounded-full bg-[#D9232D] px-4 text-xs font-bold text-white shadow-xs transition-all active:scale-95 hover:bg-[#C01B24]"
+                className="min-h-11 w-full sm:w-auto shrink-0 rounded-full bg-[#D9232D] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all active:scale-95 hover:bg-[#C01B24]"
               >
                 {t('account.editProfile')}
               </button>
@@ -602,19 +602,19 @@ export const AccountView: React.FC<AccountViewProps> = ({
         {/* BEGIN: QuickActionsGrid */}
         <section className="space-y-2.5 pt-0.5" data-purpose="account-categories">
           <h2 className="px-1 text-base font-bold tracking-tight text-slate-900">{t('account.yourAccount')}</h2>
-          <div className="grid grid-cols-4 gap-2.5" data-purpose="quick-navigation-grid">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5" data-purpose="quick-navigation-grid">
           {/* 1. My Orders (Soft Pink) */}
           <button
             type="button"
             onClick={() => handleProtectedAction('orders')}
-            className="bg-[#FDECE9] hover:bg-[#FCD8CF] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
+            className="bg-[#FDECE9] hover:bg-[#FCD8CF] rounded-2xl p-3 sm:p-2.5 flex flex-col justify-between aspect-[1/0.78] sm:aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
           >
-            <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#E55845]">
+            <div className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-white/70 flex items-center justify-center text-[#E55845]">
               <Package className="w-4 h-4 stroke-[2]" />
             </div>
-            <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">{t('account.myOrders')}</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">{t('account.ordersHint')}</p>
+            <div className="pr-5">
+              <h3 className="text-[13px] sm:text-[12px] font-bold text-slate-800 tracking-tight leading-tight">{t('account.myOrders')}</h3>
+              <p className="text-[11px] sm:text-[10px] text-slate-500 font-normal mt-1 leading-tight">{t('account.ordersHint')}</p>
             </div>
             <svg className="w-3 h-3 text-slate-700 absolute bottom-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -625,14 +625,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
           <button
             type="button"
             onClick={onOpenWishlist}
-            className="bg-[#EBF3FC] hover:bg-[#D9EAFB] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
+            className="bg-[#EBF3FC] hover:bg-[#D9EAFB] rounded-2xl p-3 sm:p-2.5 flex flex-col justify-between aspect-[1/0.78] sm:aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
           >
-            <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#3B82F6]">
+            <div className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-white/70 flex items-center justify-center text-[#3B82F6]">
               <Heart className="w-4 h-4 fill-[#2E7CF6] text-[#2E7CF6]" />
             </div>
-            <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">{t('account.wishlist')}</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">
+            <div className="pr-5">
+              <h3 className="text-[13px] sm:text-[12px] font-bold text-slate-800 tracking-tight leading-tight">{t('account.wishlist')}</h3>
+              <p className="text-[11px] sm:text-[10px] text-slate-500 font-normal mt-1 leading-tight">
                 {wishlistCount > 0 ? t('account.savedCount', { count: wishlistCount }) : t('account.savedItems')}
               </p>
             </div>
@@ -646,14 +646,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
             type="button"
             onClick={() => handleProtectedAction('profile')}
             aria-label={t('account.profile')}
-            className="bg-[#FDECE9] hover:bg-[#FCD8CF] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
+            className="bg-[#FDECE9] hover:bg-[#FCD8CF] rounded-2xl p-3 sm:p-2.5 flex flex-col justify-between aspect-[1/0.78] sm:aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
           >
-            <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#E55845]">
+            <div className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-white/70 flex items-center justify-center text-[#E55845]">
               <User className="w-4 h-4" />
             </div>
-            <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">{t('account.profile')}</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">{t('account.personalDetails')}</p>
+            <div className="pr-5">
+              <h3 className="text-[13px] sm:text-[12px] font-bold text-slate-800 tracking-tight leading-tight">{t('account.profile')}</h3>
+              <p className="text-[11px] sm:text-[10px] text-slate-500 font-normal mt-1 leading-tight">{t('account.personalDetails')}</p>
             </div>
             <svg className="w-3 h-3 text-slate-700 absolute bottom-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -664,14 +664,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
           <button
             type="button"
             onClick={() => handleProtectedAction('settings')}
-            className="bg-[#F3EEFD] hover:bg-[#EAE1FB] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
+            className="bg-[#F3EEFD] hover:bg-[#EAE1FB] rounded-2xl p-3 sm:p-2.5 flex flex-col justify-between aspect-[1/0.78] sm:aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
           >
-            <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#7C3AED]">
+            <div className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-white/70 flex items-center justify-center text-[#7C3AED]">
               <Settings className="w-4 h-4 text-[#7C3AED] fill-[#7C3AED]" />
             </div>
-            <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">{t('account.settings')}</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">{t('account.preferences')}</p>
+            <div className="pr-5">
+              <h3 className="text-[13px] sm:text-[12px] font-bold text-slate-800 tracking-tight leading-tight">{t('account.settings')}</h3>
+              <p className="text-[11px] sm:text-[10px] text-slate-500 font-normal mt-1 leading-tight">{t('account.preferences')}</p>
             </div>
             <svg className="w-3 h-3 text-slate-700 absolute bottom-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
