@@ -15,7 +15,7 @@ function detectMode(linkUrl: string): LinkMode {
   return 'shop';
 }
 
-function productSlugFromLink(linkUrl: string): string | null {
+function productKeyFromLink(linkUrl: string): string | null {
   const match = linkUrl.trim().match(PRODUCT_PATH_PATTERN);
   return match ? decodeURIComponent(match[1]) : null;
 }
@@ -28,7 +28,7 @@ const MODE_OPTIONS: Array<{ id: LinkMode; label: string; icon: React.ReactNode }
 
 /**
  * Structured banner link editor. Internal product links are always built from the
- * product's slug via getPathForProduct — the admin picks a product, never types a path.
+ * product's immutable id via getPathForProduct — the admin picks a product, never types a path.
  */
 export const BannerLinkPicker: React.FC<{
   value: string;
@@ -56,10 +56,12 @@ export const BannerLinkPicker: React.FC<{
     };
   }, [mode, products, loadFailed]);
 
-  const selectedSlug = mode === 'product' ? productSlugFromLink(value) : null;
+  const selectedKey = mode === 'product' ? productKeyFromLink(value) : null;
   const selectedProduct = useMemo(
-    () => (products && selectedSlug ? products.find((item) => item.slug === selectedSlug) || null : null),
-    [products, selectedSlug],
+    () => (products && selectedKey
+      ? products.find((item) => item.id === selectedKey || item.slug === selectedKey) || null
+      : null),
+    [products, selectedKey],
   );
 
   const filteredProducts = useMemo(() => {
@@ -140,7 +142,7 @@ export const BannerLinkPicker: React.FC<{
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[11.5px] font-bold text-slate-800">{selectedProduct.title}</p>
                   <p className="truncate font-mono text-[10px] text-slate-500">
-                    {getPathForProduct(selectedProduct.slug)}
+                    {getPathForProduct(selectedProduct.id)}
                   </p>
                 </div>
                 <button
@@ -181,7 +183,7 @@ export const BannerLinkPicker: React.FC<{
                       <button
                         key={product.id}
                         type="button"
-                        onClick={() => onChange(getPathForProduct(product.slug))}
+                        onClick={() => onChange(getPathForProduct(product.id))}
                         className="flex w-full items-center gap-2.5 border-b border-slate-100 p-2 text-left transition-colors last:border-b-0 hover:bg-red-50/60"
                       >
                         <img
@@ -203,7 +205,7 @@ export const BannerLinkPicker: React.FC<{
                   )}
                 </div>
                 <p className="mt-1.5 text-[10px] font-normal text-slate-400">
-                  Pick a product — its link is built automatically from the product slug.
+                  Pick a product — its link is built automatically from the product ID.
                 </p>
               </>
             )}

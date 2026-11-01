@@ -569,12 +569,18 @@ export default function App() {
       setSelectedProduct(null);
       return;
     }
-    const product = catalogProducts.find((item) => item.slug === route.slug);
-    if (product) setSelectedProduct(product);
+    const product = catalogProducts.find((item) => item.id === route.slug || item.slug === route.slug);
+    if (product) {
+      setSelectedProduct(product);
+      const canonicalProductPath = getPathForProduct(product.id);
+      if (location.pathname !== canonicalProductPath) {
+        navigate(canonicalProductPath, { replace: true, state: location.state });
+      }
+    }
     // Wait for the live catalog before giving up: a just-listed product is not in
     // the cached/bundled catalog yet, so only redirect once the fetch has finished.
     else if (catalogFresh) navigate('/shop', { replace: true });
-  }, [appPhase, authStatus, catalogLoaded, catalogFresh, catalogProducts, location.pathname, navigate]);
+  }, [appPhase, authStatus, catalogLoaded, catalogFresh, catalogProducts, location.pathname, location.state, navigate]);
 
   useEffect(() => {
     if (!couponRouteCode) return;
@@ -605,7 +611,7 @@ export default function App() {
       }
     }
     setSelectedProduct(product);
-    navigate(getPathForProduct(product.slug), { state: { returnTo: location.pathname } });
+    navigate(getPathForProduct(product.id), { state: { returnTo: location.pathname } });
   }, [location.pathname, location.search, navigate]);
   const closeProductRoute = useCallback(() => {
     setSelectedProduct(null);
@@ -635,14 +641,14 @@ export default function App() {
     ownerId: 'guest-user',
     items: [],
   });
-  const wishlistIds = ownedWishlist.ownerId === currentUser.id ? ownedWishlist.items : [];
   const wishlist = useMemo(() => {
     const productsById = new Map<string, Product>();
     catalogProducts.forEach((product) => productsById.set(product.id, product));
+    const wishlistIds = ownedWishlist.ownerId === currentUser.id ? ownedWishlist.items : [];
     return wishlistIds
       .map((id) => productsById.get(id))
       .filter((product): product is Product => Boolean(product));
-  }, [catalogProducts, wishlistIds]);
+  }, [catalogProducts, currentUser.id, ownedWishlist]);
 
   useEffect(() => {
     if (ownedWishlist.ownerId === currentUser.id) return;

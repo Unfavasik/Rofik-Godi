@@ -390,7 +390,7 @@ export const AdminProductManager: React.FC<{
             synced.product.subtitle ||
             `${synced.product.title} is now available at Rofik Godi Centre. Explore it in the shop.`,
           kind: 'product',
-          actionUrl: getPathForProduct(synced.product.slug || synced.product.id),
+          actionUrl: getPathForProduct(synced.product.id),
           imageUrl: synced.product.image || null,
           userIds: announcement.audience === 'ALL' ? null : announcement.userIds,
         });

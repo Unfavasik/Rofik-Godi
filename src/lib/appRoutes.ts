@@ -7,7 +7,7 @@ export const APP_ROUTE_PATHS = [
   '/', '/home', '/shop', '/search', '/custom', '/wishlist', '/cart', '/checkout',
   '/profile', '/profile/edit', '/account', '/my-orders', '/myorder', '/my-order',
   '/my-orders/order/:orderSlug', '/myorder/order/:orderSlug', '/my-order/order/:orderSlug',
-  '/notifications', '/notification', '/shop/products/:slug', '/products/:slug', '/product/:slug',
+  '/notifications', '/notification', '/shop/products/:id', '/products/:id', '/product/:id',
   '/coupons/:couponCode',
   '/support', '/support/:requestId', '/contact-support', '/contact-support/my-support-requests', '/contact-us', '/contact-workshop',
   '/settings', '/settings/notifications', '/settings/app', '/settings/coupons', '/settings/reviews', '/settings/about', '/settings/help',
@@ -278,8 +278,9 @@ export function requiresCustomerAuthentication(pathname: string): boolean {
   return kind === 'checkout' || kind === 'orders' || kind === 'support' || kind === 'contact-support' || kind === 'profile-edit' || kind === 'coupon';
 }
 
-export function getPathForProduct(slug: string): string {
-  return `/shop/products/${encodeURIComponent(slug)}`;
+/** Product detail URLs use the immutable product id as their canonical key. */
+export function getPathForProduct(productId: string): string {
+  return `/shop/products/${encodeURIComponent(productId)}`;
 }
 
 export function getPathForTab(tab: RouteTab): string {

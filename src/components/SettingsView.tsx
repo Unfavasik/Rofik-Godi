@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Star, Globe, Bell } from 'lucide-react';
+import { Star, Globe, Bell } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
