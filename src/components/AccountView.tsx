@@ -601,7 +601,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
         {/* BEGIN: QuickActionsGrid */}
         <section className="space-y-2.5 pt-0.5" data-purpose="account-categories">
           <h2 className="px-1 text-base font-bold tracking-tight text-slate-900">{t('account.yourAccount')}</h2>
-          <div className="grid grid-cols-4 gap-2.5" data-purpose="quick-navigation-grid">
+          <div className="grid grid-cols-3 gap-2.5" data-purpose="quick-navigation-grid">
           {/* 1. My Orders (Soft Pink) */}
           <button
             type="button"
@@ -640,26 +640,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             </svg>
           </button>
 
-          {/* 3. Profile details (Soft Rose) */}
-          <button
-            type="button"
-            onClick={() => handleProtectedAction('profile')}
-            aria-label={t('account.profile')}
-            className="bg-[#FDECE9] hover:bg-[#FCD8CF] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
-          >
-            <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#E55845]">
-              <User className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none">{t('account.profile')}</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none">{t('account.personalDetails')}</p>
-            </div>
-            <svg className="w-3 h-3 text-slate-700 absolute bottom-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-
-          {/* 4. Settings (Soft Purple) */}
+          {/* 3. Settings (Soft Purple) */}
           <button
             type="button"
             onClick={() => handleProtectedAction('settings')}
