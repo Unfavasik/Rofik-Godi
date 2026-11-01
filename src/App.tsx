@@ -1421,6 +1421,7 @@ export default function App() {
               onSelectOrderRoute={(orderSlug) => navigate(getPathForCustomerOrder(orderSlug))}
               onBackToOrdersRoute={() => navigate('/my-orders')}
               onOpenSettingsPage={() => navigate('/settings')}
+  onOpenCouponsPage={() => navigate('/settings/coupons')}
               onOpenSupportPage={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/contact-support/my-support-requests')}
               onOpenContactSupport={() => {
                 const from = resolvedRoute.kind === 'settings' || resolvedRoute.kind === 'settings-section' ? 'settings' : 'profile';
