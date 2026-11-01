@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package } from 'lucide-react';
+import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2 } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
@@ -22,6 +22,7 @@ interface SettingsViewProps {
   onOpenShop?: () => void;
   onOpenPrivacyPage?: () => void;
   onOpenTermsPage?: () => void;
+  onOpenPersonalData?: () => void;
   /** Active settings sub-section, driven by the router (/settings/notifications, /settings/app, ...). */
   activeSection?: SettingsSectionRoute | null;
   /** Navigate to a settings sub-section route. Falls back to local state when omitted. */
@@ -111,12 +112,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onBack,
   onLogout,
   onOpenOrders,
+  onOpenWishlist,
   onOpenContactSupport,
   currentUserId,
   onOpenStoreInfo,
   onOpenShop,
   onOpenPrivacyPage,
   onOpenTermsPage,
+  onOpenPersonalData,
   activeSection = null,
   onOpenSection,
   onCloseSection,
@@ -217,6 +220,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     setLanguage(saved.language);
     setHapticFeedback(saved.hapticFeedback);
     setSettingsNotice(translate(saved.language, saved.language === 'hi' ? 'settings.hindiHint' : 'settings.banglaHint'));
+  };
+
+  const handleShareApp = async () => {
+    const shareUrl = window.location.origin;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Rofik Godi Centre', text: 'Premium seat covers for bikes and totos', url: shareUrl });
+        return;
+      }
+      await navigator.clipboard.writeText(shareUrl);
+      setSettingsNotice('App link copied. Share it with your friends!');
+    } catch {
+      // User closed the share sheet or the clipboard is unavailable; nothing to show.
+    }
   };
 
   const couponBenefit = (offer: CustomerCouponOffer) => offer.discount_type === 'PERCENTAGE'
@@ -508,6 +525,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             title={t('settings.appSettings')}
             subtitle={t('settings.appSettingsHint')}
           />
+          <SettingsRow
+            onClick={() => void handleShareApp()}
+            iconBg="bg-[#EAF2FE]"
+            icon={<Share2 className="w-5 h-5 text-[#2563EB]" />}
+            title="Invite friends"
+            subtitle="Share the app with other riders"
+          />
         </SettingsGroup>
 
         <SettingsGroup label="Offers & activity">
@@ -526,6 +550,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             title={t('settings.coupons')}
             subtitle={t('settings.saveMore')}
           />
+          {onOpenWishlist && (
+            <SettingsRow
+              onClick={onOpenWishlist}
+              iconBg="bg-[#FDECEC]"
+              icon={<Heart className="w-5 h-5 text-[#E51E2B]" />}
+              title="Wishlist"
+              subtitle="Saved seat covers & favorites"
+            />
+          )}
           <SettingsRow
             onClick={() => {
               if (onOpenOrders) onOpenOrders();
@@ -615,6 +648,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             title={t('settings.terms')}
             subtitle={t('settings.appRules')}
           />
+          {onOpenPersonalData && (
+            <SettingsRow
+              onClick={onOpenPersonalData}
+              iconBg="bg-[#F4ECFF]"
+              icon={<ShieldCheck className="w-5 h-5 text-[#7C3AED]" />}
+              title="Personal Data"
+              subtitle="How your data is processed"
+            />
+          )}
           <SettingsRow
             onClick={() => openSection('about')}
             iconBg="bg-[#EBF5FF]"
@@ -664,6 +706,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </SettingsGroup>
       </nav>
       {/* END: SettingsMenuList */}
+
+      <p className="pb-6 text-center text-[10px] font-medium text-gray-400">Rofik Godi Centre • App version 1.0.0</p>
 
       {settingsNotice && <p role="status" className="mx-5 mb-4 rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-medium leading-relaxed text-emerald-800">{settingsNotice}</p>}
 
