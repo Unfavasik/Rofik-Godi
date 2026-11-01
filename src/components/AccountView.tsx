@@ -914,17 +914,16 @@ export const AccountView: React.FC<AccountViewProps> = ({
               </div>
               {/* Get directions pill button */}
               <div className="pt-2 flex flex-wrap items-center gap-2">
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(WORKSHOP_INFO.address)}`}
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  type="button"
+                  onClick={() => handleProtectedAction('pickupStore')}
                   className="inline-flex items-center space-x-1.5 bg-[#FEE5DF] hover:bg-[#FCD8CF] text-[#C83F2D] text-xs font-semibold px-4 py-1.5 rounded-full transition-colors"
                 >
                   <span>Get directions</span>
                   <svg className="w-3 h-3 text-[#C83F2D]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                     <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                </a>
+                </button>
                 <button
                   type="button"
                   onClick={() => handleProtectedAction('pickupStore')}

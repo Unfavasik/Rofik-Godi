@@ -21,7 +21,7 @@ const CustomSeatBuilder = lazy(() => import('./components/CustomSeatBuilder').th
 const CartDrawer = lazy(() => import('./components/CartDrawer').then((module) => ({ default: module.CartDrawer })));
 const CheckoutModal = lazy(() => import('./components/CheckoutModal').then((module) => ({ default: module.CheckoutModal })));
 const WishlistModal = lazy(() => import('./components/WishlistModal').then((module) => ({ default: module.WishlistModal })));
-const StoreLocationModal = lazy(() => import('./components/StoreLocationModal').then((module) => ({ default: module.StoreLocationModal })));
+const StoreLocationView = lazy(() => import('./components/StoreLocationView').then((module) => ({ default: module.StoreLocationView })));
 const PrivacyPolicyView = lazy(() => import('./components/PrivacyPolicyView').then((module) => ({ default: module.PrivacyPolicyView })));
 const TermsConditionsView = lazy(() => import('./components/TermsConditionsView').then((module) => ({ default: module.TermsConditionsView })));
 const PersonalDataView = lazy(() => import('./components/PersonalDataView').then((module) => ({ default: module.PersonalDataView })));
@@ -2070,7 +2070,7 @@ export default function App() {
           onOpenCart={handleOpenCart}
         />}
 
-        {isStoreInfoOpen && <StoreLocationModal isOpen={isStoreInfoOpen} onClose={() => navigateBackToPage('/home')} />}
+        {isStoreInfoOpen && <StoreLocationView onClose={() => navigateBackToPage('/home')} />}
 
         {/* 📜 Privacy Policy Modal / Slide-over */}
         {isPrivacyPolicyOpen && (

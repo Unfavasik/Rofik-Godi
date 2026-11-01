@@ -373,6 +373,11 @@ export const WORKSHOP_INFO = {
   whatsapp: '+91 98321 45678',
   email: 'support@rofikgodi.com',
   workingHours: 'Mon - Sun: 8:00 AM – 9:30 PM',
+  // Approximate workshop coordinates; refined at runtime via Google geocoding.
+  lat: 24.1105,
+  lng: 88.2805,
+  rating: 4.8,
+  reviewCount: 128,
   services: [
     'Free On-Spot Seat Fitment at Workshop',
     'Custom Foam Modification & Tailbone Cutout',
