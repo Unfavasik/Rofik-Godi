@@ -58,6 +58,10 @@ export function ContactSupportView({ currentUserId, isAuthenticated, initialOrde
             <span className="flex items-center gap-2.5"><Phone className="h-5 w-5" />Call {WORKSHOP_INFO.phone}</span>
             <span>Dial →</span>
           </a>
+          <a href={`tel:${WORKSHOP_INFO.phoneAlt.replace(/\s/g, '')}`} className="flex items-center justify-between rounded-2xl bg-[#EBF5FF] p-3.5 text-xs font-bold text-[#2563EB]">
+            <span className="flex items-center gap-2.5"><Phone className="h-5 w-5" />Call {WORKSHOP_INFO.phoneAlt}</span>
+            <span>Dial →</span>
+          </a>
           <a href={`https://wa.me/${WORKSHOP_INFO.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className="flex items-center justify-between rounded-2xl bg-[#E8F8F0] p-3.5 text-xs font-bold text-[#10B981]">
             <span className="flex items-center gap-2.5"><MessageCircle className="h-5 w-5" />WhatsApp Direct Support</span>
             <span>Chat →</span>

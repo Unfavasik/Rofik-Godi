@@ -102,6 +102,8 @@ const storeMarkerHtml = () => `
 const userMarkerHtml = () =>
   '<div style="width:16px;height:16px;border-radius:50%;background:#2563EB;border:3px solid #ffffff;box-shadow:0 1px 6px rgba(0,0,0,0.35);"></div>';
 
+const STORE_POS: LatLng = { lat: WORKSHOP_INFO.lat, lng: WORKSHOP_INFO.lng };
+
 const getCurrentPosition = (): Promise<LatLng> =>
   new Promise((resolve, reject) => {
     if (!('geolocation' in navigator)) {
@@ -123,9 +125,7 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
   const latestPosRef = useRef<LatLng | null>(null);
   const reroutingRef = useRef(false);
   const activeModeRef = useRef<TravelModeKey>('drive');
-  const storePosRef = useRef<LatLng>({ lat: WORKSHOP_INFO.lat, lng: WORKSHOP_INFO.lng });
-
-  const [storePos, setStorePos] = useState<LatLng>({ lat: WORKSHOP_INFO.lat, lng: WORKSHOP_INFO.lng });
+  const storePosRef = useRef<LatLng>(STORE_POS);
   const [userPos, setUserPos] = useState<LatLng | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState('');
@@ -142,17 +142,16 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
   const [routeError, setRouteError] = useState('');
 
   activeModeRef.current = activeMode;
-  storePosRef.current = storePos;
 
   const fallbackLegs = useMemo(() => {
     if (!userPos) return null;
-    const km = haversineKm(userPos, storePos);
+    const km = haversineKm(userPos, STORE_POS);
     return {
       drive: estimateLeg(km, 20),
       bike: estimateLeg(km, 15),
       walk: estimateLeg(km, 4.5),
     } satisfies Record<TravelModeKey, LegInfo>;
-  }, [userPos, storePos]);
+  }, [userPos]);
 
   const clearWatch = () => {
     if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
@@ -244,13 +243,6 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
           iconHtml: storeMarkerHtml(),
         });
         setMapReady(true);
-
-        const geocoded = await nav.geocode({ address: WORKSHOP_INFO.address }).catch(() => null);
-        if (cancelled || !geocoded) return;
-        const refined = { lat: geocoded.lat, lng: geocoded.lng };
-        setStorePos(refined);
-        cachedStoreMarker?.setLatLng(refined);
-        cachedMap.panTo(refined);
       } catch (error) {
         if (!cancelled) setMapError(error instanceof Error ? error.message : 'The map could not be loaded.');
       }
@@ -322,7 +314,7 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
         if (cancelled) return;
         adoptUserPosition(user);
         const nav = navRef.current;
-        if (nav) void fetchTravelTimes(nav, user, storePos);
+        if (nav) void fetchTravelTimes(nav, user, STORE_POS);
       })
       .catch(() => undefined);
     return () => { cancelled = true; };
@@ -341,7 +333,7 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
         adoptUserPosition(user);
         map.panTo(user);
         const nav = navRef.current;
-        if (nav) void fetchTravelTimes(nav, user, storePos);
+        if (nav) void fetchTravelTimes(nav, user, STORE_POS);
       })
       .catch(() => undefined);
   };
@@ -392,7 +384,7 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
       const user = await getCurrentPosition();
       adoptUserPosition(user);
       const nav = navRef.current;
-      if (nav) void fetchTravelTimes(nav, user, storePos);
+      if (nav) void fetchTravelTimes(nav, user, STORE_POS);
       setLocationNeeded(false);
       await startTurnByTurn(user);
     } catch (error) {
@@ -549,7 +541,7 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
                       Try again
                     </button>
                     <a
-                      href={googleDirectionsUrl(activeMode, storePos)}
+                      href={googleDirectionsUrl(activeMode, STORE_POS)}
                       target="_blank"
                       rel="noreferrer"
                       className="rounded-full border border-amber-300 bg-white px-3 py-1.5 text-[10px] font-bold text-amber-800"

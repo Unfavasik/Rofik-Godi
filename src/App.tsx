@@ -1901,7 +1901,7 @@ export default function App() {
                       <PhoneCall className="w-3.5 h-3.5" />
                     </a>
                     <a
-                      href={`https://wa.me/919832145678`}
+                      href={`https://wa.me/${WORKSHOP_INFO.whatsapp.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noreferrer"
                       className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-700 transition-colors"

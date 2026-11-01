@@ -81,7 +81,7 @@ describe('InvoiceTemplate', () => {
     );
 
     expect(DEFAULT_STORE.address).toContain('Berhampore');
-    expect(html).toContain('Jalangi Road, Raninagar');
+    expect(html).toContain('Kadbeltal, Petrol Pump More');
     expect(html).toContain('support@rofikgodi.com');
     expect(html).toContain('PENDING');
     expect(html).toContain('Balance due at store');

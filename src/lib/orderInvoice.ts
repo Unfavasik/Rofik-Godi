@@ -33,7 +33,7 @@ export const downloadOrderInvoice = (
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(9);
   pdf.text(String(WORKSHOP_INFO.address || 'Murshidabad, West Bengal'), margin, 26);
-  pdf.text(`Phone: ${WORKSHOP_INFO.phone || '+91 98321 45678'}`, margin, 31);
+    pdf.text(`Phone: ${WORKSHOP_INFO.phone || '+91 94348 86786'}`, margin, 31);
 
   pdf.setFillColor(255, 244, 241);
   pdf.roundedRect(right - 48, 13, 48, 24, 3, 3, 'F');
@@ -159,7 +159,7 @@ export const downloadOrderInvoice = (
   pdf.setFont('helvetica', 'normal');
   pdf.setTextColor(113, 118, 126);
   pdf.setFontSize(7);
-  pdf.text(`Questions? Call ${WORKSHOP_INFO.phone || '+91 98321 45678'}`, pageWidth / 2, y + 13, { align: 'center' });
+    pdf.text(`Questions? Call ${WORKSHOP_INFO.phone || '+91 94348 86786'}`, pageWidth / 2, y + 13, { align: 'center' });
 
   const pageCount = pdf.getNumberOfPages();
   for (let page = 1; page <= pageCount; page += 1) {

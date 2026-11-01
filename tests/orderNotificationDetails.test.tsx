@@ -38,7 +38,7 @@ describe('order notification details screen', () => {
       'Order update', order.order_number, 'Latest order update', 'Your order is being prepared',
       'The store has started preparing your order.', 'Progress', 'Step 1 of 4', 'Received',
       'Confirmed', 'Ready', 'Picked up', '2 items', '₹575', 'Order summary', '2 products',
-      'Bike Seat Cover', 'Neck Cushion', '₹450', '₹150', 'Black Red', 'Jalangi Road',
+      'Bike Seat Cover', 'Neck Cushion', '₹450', '₹150', 'Black Red', 'Kadbeltal, Petrol Pump More',
       'Open My Orders',
     ]) expect(html).toContain(content);
     expect(html).toContain(`aria-label="Open order ${order.order_number} details in My Orders"`);
