@@ -14,26 +14,31 @@ type LegInfo = { durationText: string; distanceText: string };
 declare global {
   interface Window {
     google?: typeof google;
+    __rofikGoogleMapsReady?: () => void;
   }
 }
 
+let mapsPromise: Promise<typeof google.maps> | null = null;
+
+// Uses the callback bootstrap (not loading=async) so the full legacy
+// namespace — LatLng, Marker, InfoWindow, Geocoder, DistanceMatrixService —
+// is available on window.google.maps once the script reports ready.
 function loadGoogleMaps(apiKey: string): Promise<typeof google.maps> {
-  if (window.google?.maps) return Promise.resolve(window.google.maps);
-  return new Promise((resolve, reject) => {
-    const existing = document.getElementById('google-maps-script');
-    if (existing) {
-      existing.addEventListener('load', () => window.google?.maps ? resolve(window.google.maps) : reject(new Error('Google Maps unavailable')));
-      existing.addEventListener('error', () => reject(new Error('Google Maps unavailable')));
-      return;
-    }
+  if (window.google?.maps?.Map) return Promise.resolve(window.google.maps);
+  if (mapsPromise) return mapsPromise;
+  mapsPromise = new Promise((resolve, reject) => {
+    window.__rofikGoogleMapsReady = () => {
+      if (window.google?.maps?.Map) resolve(window.google.maps);
+      else reject(new Error('Google Maps unavailable'));
+    };
     const script = document.createElement('script');
     script.id = 'google-maps-script';
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&loading=async&v=weekly`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&v=weekly&callback=__rofikGoogleMapsReady`;
     script.async = true;
-    script.onload = () => (window.google?.maps ? resolve(window.google.maps) : reject(new Error('Google Maps unavailable')));
     script.onerror = () => reject(new Error('Google Maps unavailable'));
     document.head.appendChild(script);
   });
+  return mapsPromise;
 }
 
 const haversineKm = (from: LatLng, to: LatLng) => {
