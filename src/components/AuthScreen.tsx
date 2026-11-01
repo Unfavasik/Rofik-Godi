@@ -91,13 +91,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     }
   };
 
-  const handleSocial = async (provider: string) => {
+  // Google is the only OAuth provider configured in Supabase; the other
+  // social buttons were removed because they could only show an error.
+  const handleSocial = async () => {
     if (!isSupabaseConfigured || !supabase) {
       setError('Service configuration unavailable. Please try again.');
-      return;
-    }
-    if (provider !== 'Google') {
-      setError(`${provider} sign-in is not configured yet. Use email sign-in.`);
       return;
     }
     const isNative = Capacitor.isNativePlatform();
@@ -400,29 +398,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             <div className="h-[1px] flex-1 bg-[#d9d3d5]" />
           </div>
 
-          {/* Social Buttons */}
-          <div className="flex justify-center gap-4">
-            {/* Facebook */}
-            <button
-              type="button"
-              aria-label="Facebook"
-              onClick={() => handleSocial('Facebook')}
-              className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 bg-white shadow-[0_6px_16px_rgba(224,24,45,0.12)] transition-transform active:scale-95"
-            >
-              <svg width="34" height="34" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="11" fill="#1877f2" />
-                <path
-                  d="M13.4 21v-7h2.4l.4-2.8h-2.8V9.5c0-.8.3-1.4 1.4-1.4h1.5V5.6c-.3 0-1.1-.1-2.1-.1-2.2 0-3.6 1.3-3.6 3.7v2H8.2V14h2.4v7z"
-                  fill="#fff"
-                />
-              </svg>
-            </button>
-
-            {/* Google */}
+          {/* Social Buttons — Google OAuth is the only provider configured */}
+          <div className="flex justify-center">
             <button
               type="button"
               aria-label="Google"
-              onClick={() => handleSocial('Google')}
+              onClick={() => handleSocial()}
               className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 bg-white shadow-[0_6px_16px_rgba(224,24,45,0.12)] transition-transform active:scale-95"
             >
               <svg width="32" height="32" viewBox="0 0 24 24">
@@ -441,36 +422,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 <path
                   fill="#34a853"
                   d="M12 23.2c3 0 5.5-1 7.4-2.7l-3.5-2.7c-1 .7-2.3 1.1-3.9 1.1-3 0-5.5-2-6.4-4.8l-3.5 2.7C4 20.7 7.7 23.2 12 23.2z"
-                />
-              </svg>
-            </button>
-
-            {/* Apple */}
-            <button
-              type="button"
-              aria-label="Apple"
-              onClick={() => handleSocial('Apple')}
-              className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 bg-white shadow-[0_6px_16px_rgba(224,24,45,0.12)] transition-transform active:scale-95"
-            >
-              <svg width="30" height="30" viewBox="0 0 24 24">
-                <path
-                  fill="#111"
-                  d="M16.4 12.7c0-2.4 2-3.5 2.1-3.6-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.5 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8 2.2-1.2 3-2.4c.9-1.4 1.3-2.7 1.3-2.8 0 0-2.6-1-2.6-4.1zM14.1 5.6c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.1 1.8-1 2.9 1.1.1 2.1-.6 2.8-1.4z"
-                />
-              </svg>
-            </button>
-
-            {/* Twitter */}
-            <button
-              type="button"
-              aria-label="Twitter"
-              onClick={() => handleSocial('Twitter')}
-              className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 bg-white shadow-[0_6px_16px_rgba(224,24,45,0.12)] transition-transform active:scale-95"
-            >
-              <svg width="32" height="32" viewBox="0 0 24 24">
-                <path
-                  fill="#1d9bf0"
-                  d="M23 4.6c-.8.4-1.7.6-2.6.7.9-.6 1.6-1.4 2-2.5-.9.5-1.9.9-2.9 1.1a4.5 4.5 0 00-7.7 4.1C8 7.8 4.7 6 2.5 3.3c-1.2 2-.6 4.7 1.4 6-.7 0-1.4-.2-2-.6 0 2.2 1.5 4.1 3.6 4.5-.7.2-1.4.2-2 .1.6 1.8 2.2 3.1 4.2 3.1A9 9 0 011 18.3 12.8 12.8 0 007.9 20.3c8.3 0 12.9-6.9 12.7-13 .9-.6 1.7-1.4 2.4-2.4z"
                 />
               </svg>
             </button>
@@ -508,9 +459,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               </>
             )}
           </div>
-
-          {/* Home indicator bar */}
-          <div className="mx-auto mt-5 h-[5px] w-[130px] rounded-[5px] bg-[#111]" />
         </div>
 
         {/* Toast Component */}

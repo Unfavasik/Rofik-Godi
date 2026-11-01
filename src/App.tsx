@@ -32,6 +32,7 @@ import { SplashScreen } from './components/SplashScreen';
 const Onboarding = lazy(() => import('./components/Onboarding'));
 const RofikOnboarding = lazy(() => import('./components/RofikOnboarding'));
 const AuthScreen = lazy(() => import('./components/AuthScreen').then((module) => ({ default: module.AuthScreen })));
+const SignupProfilePage = lazy(() => import('./components/SignupProfilePage').then((module) => ({ default: module.SignupProfilePage })));
 const LoginRequiredModal = lazy(() => import('./components/LoginRequiredModal').then((module) => ({ default: module.LoginRequiredModal })));
 const SearchView = lazy(() => import('./components/SearchView').then((module) => ({ default: module.SearchView })));
 const NotificationsView = lazy(() => import('./components/NotificationsView').then((module) => ({ default: module.NotificationsView })));
@@ -1053,13 +1054,14 @@ export default function App() {
     navigate('/checkout');
   };
 
-  const handleLoginSuccess = async (user: UserProfile) => {
+  const handleLoginSuccess = async (user: UserProfile, isNewAccount?: boolean) => {
     // Resolve the protected role before updating the route, so admins never flash the storefront.
     const admin = await checkIsAdmin();
     setCurrentUser(user);
     setAuthStatus('AUTHENTICATED');
     setIsAdmin(admin);
     setIsLoginModalOpen(false);
+    setPendingProfileSetup(false);
     if (admin) {
       pendingStockAlertProductRef.current = null;
       adminStorefrontRequested.current = true;
@@ -1068,6 +1070,8 @@ export default function App() {
       navigate('/profile', { replace: true });
       return;
     }
+    // Fresh email signups continue to the personal-details page before entering the app.
+    if (isNewAccount) setPendingProfileSetup(true);
     const returnPath = protectedRouteAfterAuth.current;
     protectedRouteAfterAuth.current = null;
     if (returnPath) {

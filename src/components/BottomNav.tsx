@@ -100,9 +100,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           </span>
         </button>
       </div>
-
-      {/* iOS Home Indicator Pill */}
-      <div className="w-32 h-1 bg-gray-300 rounded-full mx-auto mt-2.5" />
     </nav>
   );
 };
