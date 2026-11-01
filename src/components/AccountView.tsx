@@ -21,6 +21,11 @@ import {
   Sparkles,
   LogOut,
   ArrowLeft,
+  Bell,
+  Pencil,
+  SlidersHorizontal,
+  ExternalLink,
+  Bike,
 } from 'lucide-react';
 import { CustomerOrderRecord, Product, UserProfile } from '../types';
 import { listMyOrders } from '../lib/supabaseOrders';
@@ -521,26 +526,34 @@ export const AccountView: React.FC<AccountViewProps> = ({
   }
 
   return (
-    <div className="w-full flex flex-col space-y-4 pb-12 animate-fade-in text-slate-800">
+    <div className="w-full flex-1 flex flex-col space-y-5 pb-12 animate-fade-in text-slate-800 bg-[#ECEBF6]">
       {/* Account Page Title & Avatar */}
-      <section className="px-5 pt-3 pb-2 flex justify-between items-start" data-purpose="account-header">
+      <section className="px-5 pt-4 pb-1 flex justify-between items-start" data-purpose="account-header">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 leading-tight">{t('account.title')}</h1>
-          <p className="text-xs text-slate-500 font-medium mt-0.5 tracking-tight">
+          <h1 className="text-[32px] font-black tracking-tight text-slate-900 leading-tight">{t('account.title')}</h1>
+          <p className="text-xs text-slate-500 font-medium mt-1 tracking-tight">
             {isGuest ? t('account.guestSubtitle') : t('account.subtitle')}
           </p>
         </div>
-        {/* User Avatar / Profile Icon Button */}
-        <button
-          type="button"
-          onClick={() => handleProtectedAction('profile')}
-          aria-label={t('account.profile')}
-          className="min-h-11 min-w-11 h-11 w-11 rounded-full bg-[#FCE6E1] flex items-center justify-center transition-transform active:scale-95 text-slate-700 shadow-xs hover:bg-[#FCD8CF]"
-        >
-          {currentUser?.avatar
-            ? <img src={currentUser.avatar} alt={`${currentUser.name || 'Rider'} avatar`} className="h-full w-full rounded-full object-cover" />
-            : <span aria-hidden="true" className="text-sm font-black text-[#D9232D]">{getInitials(currentUser?.name || '')}</span>}
-        </button>
+        <div className="flex items-center gap-2.5 pt-1.5">
+          <button
+            type="button"
+            onClick={() => onOpenSupportPage?.()}
+            aria-label={t('account.supportRequests')}
+            className="relative min-h-11 min-w-11 h-11 w-11 rounded-full bg-white flex items-center justify-center text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.05)] transition-transform active:scale-95"
+          >
+            <Bell className="h-5 w-5" />
+            <span aria-hidden="true" className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-[#D9232D] ring-2 ring-white" />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleProtectedAction('settings')}
+            aria-label={t('account.settings')}
+            className="min-h-11 min-w-11 h-11 w-11 rounded-full bg-white flex items-center justify-center text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.05)] transition-transform active:scale-95"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
+        </div>
       </section>
 
       {/* Guest Mode Banner */}
@@ -572,94 +585,96 @@ export const AccountView: React.FC<AccountViewProps> = ({
       <main className="px-4 space-y-4">
         {/* BEGIN: ProfileHeroCard */}
         <section
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FCE6E1] via-[#FDF4F1] to-[#F9E7E2] border border-[#F5DFD9] shadow-[0_4px_16px_rgba(0,0,0,0.04)] p-4"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FCE7E9] via-[#FDF1F3] to-[#F8E5EE] border border-[#F6DCE3] shadow-[0_4px_16px_rgba(0,0,0,0.04)] p-4"
           data-purpose="profile-hero-card"
         >
-          <div className="relative flex items-center gap-3.5">
-            <div className="h-16 w-16 shrink-0 rounded-2xl bg-[#FCE6E1] ring-2 ring-white shadow-sm flex items-center justify-center overflow-hidden">
-              {currentUser?.avatar ? (
-                <img src={currentUser.avatar} alt={`${currentUser.name || 'Rider'} avatar`} className="h-full w-full object-cover" />
-              ) : (
-                <span aria-hidden="true" className="text-lg font-black text-[#D9232D]">{getInitials(currentUser?.name || '')}</span>
-              )}
+          <button
+            type="button"
+            onClick={() => handleProtectedAction('profile')}
+            aria-label={t('account.editProfile')}
+            className="relative flex w-full items-center gap-4 text-left"
+          >
+            <div className="relative h-20 w-20 shrink-0">
+              <div className="h-20 w-20 rounded-full bg-[#FCE6E1] ring-2 ring-white shadow-sm flex items-center justify-center overflow-hidden">
+                {currentUser?.avatar ? (
+                  <img src={currentUser.avatar} alt={`${currentUser.name || 'Rider'} avatar`} className="h-full w-full object-cover" />
+                ) : (
+                  <span aria-hidden="true" className="text-xl font-black text-[#D9232D]">{getInitials(currentUser?.name || '')}</span>
+                )}
+              </div>
+              <span aria-hidden="true" className="absolute bottom-0 right-0 grid h-6 w-6 place-items-center rounded-full bg-[#D9232D] text-white ring-2 ring-white">
+                <Pencil className="h-3 w-3" />
+              </span>
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="truncate text-[15px] font-extrabold tracking-tight text-slate-900 leading-tight">
+              <h2 className="truncate text-[17px] font-extrabold tracking-tight text-slate-900 leading-tight">
                 {currentUser?.name?.trim() || (isGuest ? t('account.guestTitle') : 'Rider')}
               </h2>
-              <p className="mt-0.5 truncate text-[11.5px] font-medium text-slate-500">
+              <p className="mt-0.5 truncate text-xs font-medium text-slate-500">
                 {currentUser?.email?.trim() || currentUser?.phone?.trim() || t('account.subtitle')}
               </p>
               {currentUser?.vehicle?.trim() && (
-                <span className="mt-1.5 inline-flex max-w-full items-center rounded-full bg-[#F3EEFD] px-2 py-0.5 text-[10px] font-bold text-[#6D28D9]">
+                <span className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full bg-[#EFEAFD] px-2.5 py-1 text-[10.5px] font-bold text-[#6D28D9]">
+                  <Bike className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">{currentUser.vehicle.trim()}</span>
                 </span>
               )}
             </div>
-            {!isGuest && (
-              <button
-                type="button"
-                onClick={() => handleProtectedAction('profile')}
-                className="min-h-11 shrink-0 rounded-full bg-[#D9232D] px-4 text-xs font-bold text-white shadow-xs transition-all active:scale-95 hover:bg-[#C01B24]"
-              >
-                {t('account.editProfile')}
-              </button>
-            )}
-          </div>
+            <ChevronRight className="h-5 w-5 shrink-0 text-slate-700" />
+          </button>
         </section>
         {/* END: ProfileHeroCard */}
 
         {/* BEGIN: QuickActionsGrid */}
-        <section className="space-y-2.5 pt-0.5" data-purpose="account-categories">
-          <h2 className="px-1 text-base font-bold tracking-tight text-slate-900">{t('account.yourAccount')}</h2>
-          <div className="grid grid-cols-4 gap-2.5" data-purpose="quick-navigation-grid">
-          {/* 1. My Orders (Soft Pink) */}
+        <section className="space-y-3 pt-1" data-purpose="account-categories">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-base font-bold tracking-tight text-slate-900">{t('account.yourAccount')}</h2>
+            <p className="text-[11px] font-medium text-slate-400">{t('account.manageExperience')}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3" data-purpose="quick-navigation-grid">
+          {/* 1. My Orders */}
           <button
             type="button"
             onClick={() => handleProtectedAction('orders')}
-            className="bg-[#FDECE9] hover:bg-[#FCD8CF] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
+            className="bg-white rounded-2xl p-3 flex items-center gap-2 shadow-[0_2px_10px_rgba(0,0,0,0.03)] active:scale-[0.98] transition-transform text-left"
           >
-            <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#E55845]">
-              <Package className="w-4 h-4 stroke-[2]" />
+            <div className="h-9 w-9 rounded-xl bg-[#FDECE9] flex items-center justify-center text-[#E55845] shrink-0">
+              <Package className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none truncate">{t('account.myOrders')}</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none truncate">{t('account.ordersHint')}</p>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.myOrders')}</h3>
+              <p className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">{t('account.ordersHint')}</p>
             </div>
-            <svg className="w-3 h-3 text-slate-700 absolute top-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300" />
           </button>
 
-          {/* 2. Wishlist (Soft Blue) */}
+          {/* 2. Wishlist */}
           <button
             type="button"
             onClick={onOpenWishlist}
-            className="bg-[#EBF3FC] hover:bg-[#D9EAFB] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
+            className="bg-white rounded-2xl p-3 flex items-center gap-2 shadow-[0_2px_10px_rgba(0,0,0,0.03)] active:scale-[0.98] transition-transform text-left"
           >
-            <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#3B82F6]">
-              <Heart className="w-4 h-4 fill-[#2E7CF6] text-[#2E7CF6]" />
+            <div className="h-9 w-9 rounded-xl bg-[#F3EEFD] flex items-center justify-center text-[#7C3AED] shrink-0">
+              <Heart className="w-5 h-5 fill-current" />
             </div>
-            <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none truncate">{t('account.wishlist')}</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none truncate">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.wishlist')}</h3>
+              <p className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">
                 {wishlistCount > 0 ? t('account.savedCount', { count: wishlistCount }) : t('account.savedItems')}
               </p>
             </div>
-            <svg className="w-3 h-3 text-slate-700 absolute top-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300" />
           </button>
 
-          {/* 3. Coupons (Soft Amber) */}
+          {/* 3. Coupons */}
           <button
             type="button"
             onClick={() => (onOpenCouponsPage ? onOpenCouponsPage() : handleProtectedAction('settings'))}
             aria-label={t('account.coupons')}
-            className="bg-[#FFF4E0] hover:bg-[#FEE9C7] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
+            className="bg-white rounded-2xl p-3 flex items-center gap-2 shadow-[0_2px_10px_rgba(0,0,0,0.03)] active:scale-[0.98] transition-transform text-left"
           >
-            <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#F59E0B]">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <div className="h-9 w-9 rounded-xl bg-[#FFF4E0] flex items-center justify-center text-[#F59E0B] shrink-0">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
                   clipRule="evenodd"
                   d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2.5a1.5 1.5 0 0 0 0 3V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2.5a1.5 1.5 0 0 0 0-3V6zm5.5 3a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-5.2 2.7a.75.75 0 0 1 0-1.06l5-5a.75.75 0 1 1 1.06 1.06l-5 5a.75.75 0 0 1-1.06 0z"
@@ -667,31 +682,27 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 />
               </svg>
             </div>
-            <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none truncate">{t('account.coupons')}</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none truncate">{t('account.couponsHint')}</p>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.coupons')}</h3>
+              <p className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">{t('account.couponsHint')}</p>
             </div>
-            <svg className="w-3 h-3 text-slate-700 absolute top-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300" />
           </button>
 
-          {/* 4. Settings (Soft Purple) */}
+          {/* 4. Settings */}
           <button
             type="button"
             onClick={() => handleProtectedAction('settings')}
-            className="bg-[#F3EEFD] hover:bg-[#EAE1FB] rounded-2xl p-2.5 flex flex-col justify-between aspect-[1/1.08] relative group active:scale-95 transition-transform shadow-xs text-left"
+            className="bg-white rounded-2xl p-3 flex items-center gap-2 shadow-[0_2px_10px_rgba(0,0,0,0.03)] active:scale-[0.98] transition-transform text-left"
           >
-            <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-[#7C3AED]">
-              <Settings className="w-4 h-4 text-[#7C3AED] fill-[#7C3AED]" />
+            <div className="h-9 w-9 rounded-xl bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] shrink-0">
+              <SlidersHorizontal className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="text-[12px] font-bold text-slate-800 tracking-tight leading-none truncate">{t('account.settings')}</h3>
-              <p className="text-[10px] text-slate-500 font-normal mt-1 leading-none truncate">{t('account.preferences')}</p>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.settings')}</h3>
+              <p className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">{t('account.preferences')}</p>
             </div>
-            <svg className="w-3 h-3 text-slate-700 absolute top-3 right-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300" />
           </button>
           </div>
         </section>
@@ -708,7 +719,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#FFF7E6] flex items-center justify-center text-[#B45309] flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#FFF7E6] flex items-center justify-center text-[#B45309] flex-shrink-0">
                 <Star className="w-5 h-5 fill-current" />
               </div>
               <div>
@@ -728,7 +739,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#EAF7EF] flex items-center justify-center text-[#15803D] flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#EAF7EF] flex items-center justify-center text-[#15803D] flex-shrink-0">
                 <Star className="w-5 h-5 fill-current" />
               </div>
               <div>
@@ -746,7 +757,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] flex-shrink-0">
                 <MessageCircle className="w-5 h-5" />
               </div>
               <div>
@@ -764,7 +775,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#F3EEFD] flex items-center justify-center text-[#7C3AED] flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#F3EEFD] flex items-center justify-center text-[#7C3AED] flex-shrink-0">
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
@@ -782,7 +793,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#FDECE9] flex items-center justify-center text-[#E55845] flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#FDECE9] flex items-center justify-center text-[#E55845] flex-shrink-0">
                 <ShoppingBag className="w-5 h-5" />
               </div>
               <div>
@@ -812,10 +823,12 @@ export const AccountView: React.FC<AccountViewProps> = ({
           </div>
 
           {/* WhatsApp Support Card */}
-          <div className="bg-white rounded-2xl p-3.5 flex items-center justify-between border border-emerald-100/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
+          <div className="bg-[#EAF7EF] rounded-2xl p-3.5 flex items-center justify-between border border-emerald-100/70 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#25D366] flex items-center justify-center text-white shadow-sm flex-shrink-0">
-                <MessageCircle className="w-6 h-6 fill-white text-[#25D366]" />
+              <div className="w-11 h-11 rounded-full bg-[#25D366] flex items-center justify-center text-white shadow-sm flex-shrink-0">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                </svg>
               </div>
               <div>
                 <h3 className="text-sm font-bold text-slate-900 leading-tight">{t('account.chatWhatsApp')}</h3>
@@ -825,12 +838,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
             <button
               type="button"
               onClick={onOpenContactSupport}
-              className="min-h-11 bg-[#1EB754] hover:bg-[#16A34A] text-white text-xs font-semibold px-3 py-1.5 rounded-full flex items-center space-x-1 transition-colors flex-shrink-0"
+              className="min-h-11 bg-[#1EB754] hover:bg-[#16A34A] text-white text-xs font-semibold px-4 py-2 rounded-full flex items-center space-x-1.5 transition-colors flex-shrink-0 shadow-sm"
             >
               <span>{t('account.chatNow')}</span>
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <ExternalLink className="w-3.5 h-3.5" />
             </button>
           </div>
         </section>
@@ -846,7 +857,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             <div className="col-span-7 space-y-2">
               {/* Pin Badge & Name */}
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-xl bg-[#FEE5DF] flex items-center justify-center text-[#E55845] flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-[#FEE5DF] flex items-center justify-center text-[#E55845] flex-shrink-0">
                   <MapPin className="w-5 h-5 fill-current" />
                 </div>
                 <div>
@@ -862,11 +873,11 @@ export const AccountView: React.FC<AccountViewProps> = ({
               <div className="space-y-1 pt-1 text-[11px] text-slate-600 font-medium">
                 <div className="flex items-center space-x-1.5">
                   <Clock className="w-3.5 h-3.5 text-slate-700 flex-shrink-0" />
-                  <span className="truncate">{WORKSHOP_INFO.workingHours}</span>
+                  <span>{WORKSHOP_INFO.workingHours}</span>
                 </div>
                 <div className="flex items-center space-x-1.5">
                   <MapPin className="w-3.5 h-3.5 text-slate-700 flex-shrink-0" />
-                  <span className="truncate">{WORKSHOP_INFO.address}</span>
+                  <span>{WORKSHOP_INFO.address}</span>
                 </div>
               </div>
               {/* Get directions pill button */}
@@ -885,7 +896,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 <button
                   type="button"
                   onClick={() => handleProtectedAction('pickupStore')}
-                  className="inline-flex items-center space-x-1.5 bg-[#ECF8F1] hover:bg-[#DCF2E4] text-[#15803D] text-xs font-semibold px-4 py-1.5 rounded-full transition-colors"
+                  className="inline-flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-1.5 rounded-full transition-colors"
                 >
                   <span>Pickup details</span>
                   <ChevronRight className="h-3 w-3" />
@@ -947,7 +958,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
         {/* BEGIN: MoreOptionsSection */}
         <section className="pt-1 space-y-2.5" data-purpose="more-options-section">
           <h2 className="text-base font-bold text-slate-900 tracking-tight px-1 mb-1">More options</h2>
-          {isAdmin && onOpenAdminPanel && <button type="button" onClick={onOpenAdminPanel} className="w-full bg-[#FFF3E8] rounded-2xl p-3.5 flex items-center justify-between border border-orange-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-orange-50 transition-colors text-left cursor-pointer"><div className="flex items-center space-x-3"><div className="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center text-orange-700 flex-shrink-0"><ShieldCheck className="w-5 h-5" /></div><div><h3 className="text-sm font-bold text-slate-900 leading-tight">Go to admin panel</h3><p className="text-[11px] text-slate-500 font-normal mt-0.5">Manage products, orders and support</p></div></div><ChevronRight className="w-4 h-4 text-slate-400" /></button>}
+          {isAdmin && onOpenAdminPanel && <button type="button" onClick={onOpenAdminPanel} className="w-full bg-[#FFF3E8] rounded-2xl p-3.5 flex items-center justify-between border border-orange-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-orange-50 transition-colors text-left cursor-pointer"><div className="flex items-center space-x-3"><div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 flex-shrink-0"><ShieldCheck className="w-5 h-5" /></div><div><h3 className="text-sm font-bold text-slate-900 leading-tight">Go to admin panel</h3><p className="text-[11px] text-slate-500 font-normal mt-0.5">Manage products, orders and support</p></div></div><ChevronRight className="w-4 h-4 text-slate-400" /></button>}
 
           {/* Privacy Policy Card */}
           <button
@@ -956,7 +967,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left cursor-pointer"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#E8F8F0] flex items-center justify-center text-[#10B981] flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#E8F8F0] flex items-center justify-center text-[#10B981] flex-shrink-0">
                 <ShieldCheck className="w-5 h-5 fill-current" />
               </div>
               <div>
@@ -976,7 +987,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left cursor-pointer"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] flex-shrink-0">
                 <FileText className="w-5 h-5" />
               </div>
               <div>
@@ -995,7 +1006,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             href="tel:+919832145678"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#EAF2FE] flex items-center justify-center text-[#2563EB] flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#EAF2FE] flex items-center justify-center text-[#2563EB] flex-shrink-0">
                 <Phone className="w-5 h-5 fill-current" />
               </div>
               <div>
@@ -1016,7 +1027,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
               className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-red-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-red-50 transition-colors text-left"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#FDECE9] flex items-center justify-center text-[#D9232D] flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-[#FDECE9] flex items-center justify-center text-[#D9232D] flex-shrink-0">
                   <LogOut className="w-5 h-5" />
                 </div>
                 <div>
