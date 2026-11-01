@@ -12,6 +12,7 @@ export const APP_ROUTE_PATHS = [
   '/support', '/support/:requestId', '/contact-support', '/contact-support/my-support-requests', '/contact-us', '/contact-workshop',
   '/settings', '/settings/notifications', '/settings/app', '/settings/coupons', '/settings/reviews', '/settings/about', '/settings/help',
   '/privacy-policy', '/privacy', '/terms-and-conditions', '/terms', '/store', '/store-info',
+  '/personal-data', '/personal-data-processing',
   '/admin', '/admin/dashboard', '/admin/orders', '/admin/orders/:orderId', '/admin/products', '/admin/products/:productId', '/admin/categories', '/admin/customers',
   '/admin/customers/:customerId', '/admin/reviews', '/admin/coupons', '/admin/coupons/:couponId', '/admin/marketing', '/admin/banners', '/admin/notifications', '/admin/notifications/compose', '/admin/activity', '/admin/support', '/admin/support/:requestId',
   '/admin/reports', '/admin/settings', '/Onboarding', '/onboarding', '/signup', '/signup/onboarding', '/signup/loading',
@@ -34,6 +35,7 @@ export type ResolvedAppRoute =
   | { kind: 'settings-section'; tab: 'account'; section: SettingsSectionRoute; canonicalPath: string }
   | { kind: 'privacy'; tab: 'home'; canonicalPath: '/privacy-policy' }
   | { kind: 'terms'; tab: 'home'; canonicalPath: '/terms-and-conditions' }
+  | { kind: 'personal-data'; tab: 'home'; canonicalPath: '/personal-data' }
   | { kind: 'store'; tab: 'home'; canonicalPath: '/store' }
   | { kind: 'not-found'; tab: 'home'; canonicalPath: '/home' };
 
@@ -246,6 +248,7 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
   }
   if (path === '/privacy-policy' || path === '/privacy') return { kind: 'privacy', tab: 'home', canonicalPath: '/privacy-policy' };
   if (path === '/terms-and-conditions' || path === '/terms') return { kind: 'terms', tab: 'home', canonicalPath: '/terms-and-conditions' };
+  if (path === '/personal-data' || path === '/personal-data-processing') return { kind: 'personal-data', tab: 'home', canonicalPath: '/personal-data' };
   if (path === '/store' || path === '/store-info') return { kind: 'store', tab: 'home', canonicalPath: '/store' };
 
   const orderMatch = path.match(/^\/(my-orders|myorder|my-order)(?:\/order\/([^/]+))?$/i);

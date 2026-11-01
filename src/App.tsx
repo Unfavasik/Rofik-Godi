@@ -24,6 +24,7 @@ const WishlistModal = lazy(() => import('./components/WishlistModal').then((modu
 const StoreLocationModal = lazy(() => import('./components/StoreLocationModal').then((module) => ({ default: module.StoreLocationModal })));
 const PrivacyPolicyView = lazy(() => import('./components/PrivacyPolicyView').then((module) => ({ default: module.PrivacyPolicyView })));
 const TermsConditionsView = lazy(() => import('./components/TermsConditionsView').then((module) => ({ default: module.TermsConditionsView })));
+const PersonalDataView = lazy(() => import('./components/PersonalDataView').then((module) => ({ default: module.PersonalDataView })));
 const CouponDetailsView = lazy(() => import('./components/CouponDetailsView').then((module) => ({ default: module.CouponDetailsView })));
 const AccountView = lazy(() => import('./components/AccountView').then((module) => ({ default: module.AccountView })));
 const CustomerReviews = lazy(() => import('./components/CustomerReviews').then((module) => ({ default: module.CustomerReviews })));
@@ -160,6 +161,8 @@ export default function App() {
   // for the rest of the current app session.
   const [guestWelcomeComplete, setGuestWelcomeComplete] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  // Tracks whether the signed-in user still needs the personal-details setup step.
+  const [pendingProfileSetup, setPendingProfileSetup] = useState(false);
   const [loginModalReason, setLoginModalReason] = useState('Please login to place your order.');
   const [pendingCheckoutAfterLogin, setPendingCheckoutAfterLogin] = useState(false);
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>(
@@ -351,7 +354,7 @@ export default function App() {
       '/signup/loading',
     ].includes(route);
     const routeKind = resolveAppRoute(route).kind;
-    const publicInfoPath = routeKind === 'privacy' || routeKind === 'terms' || routeKind === 'store';
+    const publicInfoPath = routeKind === 'privacy' || routeKind === 'terms' || routeKind === 'store' || routeKind === 'personal-data';
     if (authStatus === 'AUTHENTICATED' && isAdmin === null) {
       if (appPhase === 'splash') goToPhase('main');
       return;
@@ -454,6 +457,7 @@ export default function App() {
   const [isStoreInfoOpen, setIsStoreInfoOpen] = useState(false);
   const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
   const [isTermsConditionsOpen, setIsTermsConditionsOpen] = useState(false);
+  const [isPersonalDataOpen, setIsPersonalDataOpen] = useState(false);
   const [couponRouteCode, setCouponRouteCode] = useState<string | null>(null);
   const [couponRouteOffer, setCouponRouteOffer] = useState<CustomerCouponOffer | null>(null);
   const [couponRouteLoading, setCouponRouteLoading] = useState(false);
@@ -548,7 +552,7 @@ export default function App() {
   useEffect(() => {
     if (appPhase !== 'main' || authStatus === 'AUTH_LOADING') return;
     const route = resolveAppRoute(location.pathname);
-    const publicInfoPath = route.kind === 'privacy' || route.kind === 'terms' || route.kind === 'store';
+    const publicInfoPath = route.kind === 'privacy' || route.kind === 'terms' || route.kind === 'store' || route.kind === 'personal-data';
     if (authStatus === 'UNAUTHENTICATED' && !publicInfoPath) return;
     if (route.kind === 'not-found') {
       navigate('/home', { replace: true });
@@ -560,6 +564,7 @@ export default function App() {
     setIsCheckoutOpen(route.kind === 'checkout');
     setIsPrivacyPolicyOpen(route.kind === 'privacy');
     setIsTermsConditionsOpen(route.kind === 'terms');
+    setIsPersonalDataOpen(route.kind === 'personal-data');
     setIsStoreInfoOpen(route.kind === 'store');
     setCouponRouteCode(route.kind === 'coupon' ? route.couponCode : null);
     if (route.kind !== 'product') {
@@ -1213,7 +1218,11 @@ export default function App() {
   if (authStatus === 'AUTH_LOADING') {
     return <SplashScreen />;
   }
-  if (authStatus === 'UNAUTHENTICATED' && appPhase === 'main' && !guestWelcomeComplete) {
+  // Public info pages (privacy, terms, store, signup consent) must stay reachable
+  // for unauthenticated deep links — the guest welcome funnel only gates app tabs.
+  const gateRouteKind = resolveAppRoute(location.pathname).kind;
+  const isPublicInfoRoute = gateRouteKind === 'privacy' || gateRouteKind === 'terms' || gateRouteKind === 'store' || gateRouteKind === 'personal-data';
+  if (authStatus === 'UNAUTHENTICATED' && appPhase === 'main' && !guestWelcomeComplete && !isPublicInfoRoute) {
     return <Suspense fallback={<SplashScreen />}><Onboarding onFinish={finishWelcomeOnboarding} /></Suspense>;
   }
   if (authStatus === 'AUTHENTICATED' && appPhase !== 'main') {
@@ -1244,6 +1253,7 @@ export default function App() {
           onBack={() => goToPhase(guestWelcomeComplete ? 'main' : 'onboarding')}
           onOpenTerms={() => openPageRoute('/terms-and-conditions')}
           onOpenPrivacy={() => openPageRoute('/privacy-policy')}
+          onOpenPersonalData={() => openPageRoute('/personal-data')}
         />
       </div>
       </Suspense>
@@ -2021,6 +2031,18 @@ export default function App() {
               onBack={() => navigateBackToPage('/home')}
               onOpenStoreInfo={() => openPageRoute('/store')}
             />
+          </div>
+        )}
+
+        {/* 🔐 Personal Data Processing Modal / Slide-over (signup consent) */}
+        {isPersonalDataOpen && (
+          <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+            <Suspense fallback={<SplashScreen />}>
+              <PersonalDataView
+                onBack={() => navigateBackToPage('/signup')}
+                onOpenStoreInfo={() => openPageRoute('/store')}
+              />
+            </Suspense>
           </div>
         )}
 
