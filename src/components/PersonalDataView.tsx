@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   ShieldCheck,
   Lock,
-  Database,
   Eye,
   Phone,
   Calendar,

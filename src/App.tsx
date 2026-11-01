@@ -33,7 +33,6 @@ import { SplashScreen } from './components/SplashScreen';
 const Onboarding = lazy(() => import('./components/Onboarding'));
 const RofikOnboarding = lazy(() => import('./components/RofikOnboarding'));
 const AuthScreen = lazy(() => import('./components/AuthScreen').then((module) => ({ default: module.AuthScreen })));
-const SignupProfilePage = lazy(() => import('./components/SignupProfilePage').then((module) => ({ default: module.SignupProfilePage })));
 const LoginRequiredModal = lazy(() => import('./components/LoginRequiredModal').then((module) => ({ default: module.LoginRequiredModal })));
 const SearchView = lazy(() => import('./components/SearchView').then((module) => ({ default: module.SearchView })));
 const NotificationsView = lazy(() => import('./components/NotificationsView').then((module) => ({ default: module.NotificationsView })));
@@ -101,6 +100,9 @@ export default function App() {
     routerNavigate(to as To, options);
   }) as NavigateFunction, [routerNavigate]);
   const resolvedRoute = resolveAppRoute(location.pathname);
+  const initialSupportOrderId = resolvedRoute.kind === 'contact-support'
+    ? new URLSearchParams(location.search).get('order')
+    : null;
   // Route flow: /Onboarding -> /home, and account creation opens at /signup.
   const phaseFromPath = (
     pathname: string,
@@ -187,7 +189,7 @@ export default function App() {
   const [guestWelcomeComplete, setGuestWelcomeComplete] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   // Tracks whether the signed-in user still needs the personal-details setup step.
-  const [pendingProfileSetup, setPendingProfileSetup] = useState(false);
+  const [, setPendingProfileSetup] = useState(false);
   const [loginModalReason, setLoginModalReason] = useState('Please login to place your order.');
   const [pendingCheckoutAfterLogin, setPendingCheckoutAfterLogin] = useState(false);
   const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login' | 'phone_otp'>(
@@ -1460,6 +1462,7 @@ export default function App() {
               onCloseSettingsSection={() => navigateBackToPage('/settings')}
               initialOrderSlug={resolvedRoute.kind === 'orders' ? resolvedRoute.orderSlug : null}
               initialSupportRequestId={resolvedRoute.kind === 'support' ? resolvedRoute.requestId : null}
+              initialSupportOrderId={initialSupportOrderId}
               onOpenOrdersPage={() => openPageRoute('/my-orders')}
               onOpenProfileEditPage={() => openPageRoute('/profile/edit')}
             onBuyAgain={handleBuyAgain}
@@ -1468,9 +1471,10 @@ export default function App() {
               onOpenSettingsPage={() => openPageRoute('/settings')}
               onOpenCouponsPage={() => openPageRoute('/settings/coupons')}
               onOpenSupportPage={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/contact-support/my-support-requests')}
-              onOpenContactSupport={(orderSlug) => {
+              onOpenContactSupport={(orderSlug, relatedOrderId) => {
                 if (orderSlug) {
-                  navigate('/contact-support?from=orders', { state: { returnTo: getPathForCustomerOrder(orderSlug.toLowerCase()) } });
+                  const orderQuery = relatedOrderId ? `&order=${encodeURIComponent(relatedOrderId)}` : '';
+                  navigate(`/contact-support?from=orders${orderQuery}`, { state: { returnTo: getPathForCustomerOrder(orderSlug.toLowerCase()) } });
                   return;
                 }
                 const from = resolvedRoute.kind === 'settings' || resolvedRoute.kind === 'settings-section' ? 'settings' : 'profile';

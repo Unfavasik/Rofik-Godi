@@ -13,6 +13,10 @@
 - [x] My Support, support detail and Contact Support render as full-height pages without the persistent account tab bar; the mobile ticket list is an edge-to-edge page rather than a nested oversized card.
 - [x] Notification delete is revealed by press-and-hold or swipe-left; swipe-right/tap closes it, ordinary tap opens details, and keyboard focus exposes the accessible delete control.
 
+## Order-specific Help & Support
+- [x] In `/my-order/order/:orderSlug`, the bottom `Need help?` action opens the supplied Help & Support-style page with the real order summary, status, order item image, support topics, phone, WhatsApp and store links.
+- [x] Every Help & Support topic and `Live Chat` action opens `/contact-support` and preselects the originating customer-owned order, while the existing Supabase support RPC, private thread, attachment limits and RLS remain the source of truth.
+
 ## Guest onboarding and authentication flow
 - [x] On every fresh app open/reload without an authenticated session, show the welcome onboarding (no persisted “seen” flag). After finishing it, allow guest browsing for the rest of that app session instead of forcing account creation; public shop/product/search/cart/wishlist/account/settings surfaces remain available.
 - [x] Guest checkout/Buy Now, order history and private support routes request authentication before private data or checkout is shown. Create-account goes through Rofik signup onboarding then signup; existing customers can choose direct sign-in. Successful auth resumes the protected destination or pending checkout; dismissing the prompt returns safely to guest browsing.

@@ -19,10 +19,11 @@ const categories: SupportRequestCategory[] = [
 export const CustomerSupportRequestForm: React.FC<{
   isAuthenticated: boolean;
   expectedUserId?: string;
+  initialRelatedOrderId?: string | null;
   onOpenLogin?: () => void;
   onOpenSupportRequest?: (requestId: string) => void;
   compact?: boolean;
-}> = ({ isAuthenticated, expectedUserId, onOpenLogin, onOpenSupportRequest, compact = false }) => {
+}> = ({ isAuthenticated, expectedUserId, initialRelatedOrderId, onOpenLogin, onOpenSupportRequest, compact = false }) => {
   const [category, setCategory] = useState<SupportRequestCategory>('Order issue');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -50,12 +51,15 @@ export const CustomerSupportRequestForm: React.FC<{
     void listMySupportOrderChoices(expectedUserId).then((result) => {
       if (!active) return;
       setOrders(result.data);
+      if (initialRelatedOrderId && result.data.some((order) => order.id === initialRelatedOrderId)) {
+        setRelatedOrderId(initialRelatedOrderId);
+      }
       if (result.error) setError(result.error.message);
     }).catch(() => {
       if (active) setError('Your orders could not be loaded; you can still submit without linking an order.');
     }).finally(() => { if (active) setOrdersLoading(false); });
     return () => { active = false; };
-  }, [expectedUserId, isAuthenticated]);
+  }, [expectedUserId, initialRelatedOrderId, isAuthenticated]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

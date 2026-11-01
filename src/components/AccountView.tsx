@@ -77,7 +77,7 @@ interface AccountViewProps {
   onOpenSettingsPage?: () => void;
   onOpenCouponsPage?: () => void;
   onOpenSupportPage?: (requestId?: string) => void;
-  onOpenContactSupport?: (orderSlug?: string) => void;
+  onOpenContactSupport?: (orderSlug?: string, relatedOrderId?: string) => void;
   onSelectSupportRequest?: (requestId: string) => void;
   onBackFromContactSupport?: () => void;
   onOpenPrivacyPage?: () => void;
@@ -89,6 +89,7 @@ interface AccountViewProps {
   routeModal?: 'orders' | 'settings' | 'support' | 'contact-support' | 'profile' | null;
   initialOrderSlug?: string | null;
   initialSupportRequestId?: string | null;
+  initialSupportOrderId?: string | null;
   onProfileChange?: (profile: Pick<UserProfile, 'name' | 'phone' | 'avatar' | 'vehicle'>) => void;
   onBuyAgain?: (order: CustomerOrderRecord) => Promise<BuyAgainResult>;
   products?: Product[];
@@ -101,8 +102,6 @@ export const AccountView: React.FC<AccountViewProps> = ({
   onOpenAdminPanel,
   onOpenLogin,
   onLogout,
-  onContinueShopping,
-  onBackToHome,
   onOpenWishlist,
   wishlistCount = 0,
   onOpenStoreInfo,
@@ -127,15 +126,12 @@ export const AccountView: React.FC<AccountViewProps> = ({
   routeModal = null,
   initialOrderSlug,
   initialSupportRequestId,
+  initialSupportOrderId,
   onProfileChange,
   onBuyAgain,
   pwaInstallCard,
 }) => {
   const { t } = useI18n();
-  const handleGoHome = () => {
-    if (onBackToHome) onBackToHome();
-    else if (onContinueShopping) onContinueShopping();
-  };
   const [activeModal, setActiveModal] = useState<'orders' | 'pickupStore' | 'settings' | 'support' | 'contact-support' | 'profile' | 'privacy' | 'terms' | null>(null);
   const previousRouteModal = useRef<'orders' | 'settings' | 'support' | 'contact-support' | 'profile' | null>(null);
   const [initialOrderSlugForModal, setInitialOrderSlugForModal] = useState<string | null>(null);
@@ -483,6 +479,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
     return <ContactSupportView
       currentUserId={currentUser?.id || ''}
       isAuthenticated={Boolean(currentUser && !currentUser.isGuest)}
+      initialOrderId={initialSupportOrderId}
       onBack={onBackFromContactSupport ?? closeRoutedPage}
       onOpenLogin={onOpenLogin}
       onOpenSupportRequest={onSelectSupportRequest}
@@ -1054,7 +1051,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
           <OrderHelpSupportView
             order={helpOrder}
             onBack={() => setHelpOrder(null)}
-            onOpenLiveChat={() => onOpenContactSupport?.(helpOrder.order_slug)}
+            onOpenLiveChat={(orderId) => onOpenContactSupport?.(helpOrder.order_slug, orderId)}
           />
         )}
       </AnimatePresence>

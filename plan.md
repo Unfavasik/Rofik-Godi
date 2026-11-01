@@ -32,6 +32,7 @@ Continue the existing red/white Rofik Godi Centre mobile storefront design: clea
 - Product arrival detail is associated with the real active catalog item and uses the product's actual images, price, stock and descriptions.
 - Notification categories are derived from the real notification payload. Support replies open the actual private ticket and render real ticket status, category, submission time and latest staff message.
 - `/contact-support` reuses the authenticated support request/RPC flow and its existing limits/attachments. `/support` and ticket details are full-height routes without the persistent account tab bar; the mobile ticket list is an edge-to-edge page, not a nested oversized card.
+- `/my-order/order/:orderSlug` exposes an order-specific Help & Support surface styled from the supplied mobile reference. Its topic cards and Live Chat action route to `/contact-support?from=orders&order=<owned-order-id>`, so the compact request form can preselect the originating order while Supabase validates ownership through the existing RPC.
 - Notification deletion is a separate accessible action revealed by press-and-hold or swipe-left. Swipe-right/tap closes the tray; ordinary tap opens the notification. Keyboard focus can reveal the delete control.
 
 ## Admin order details

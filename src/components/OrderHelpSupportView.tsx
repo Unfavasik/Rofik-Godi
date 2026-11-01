@@ -27,7 +27,7 @@ import { getOrderStatusLabel, isOrderComplete } from '../lib/orderPresentation';
 interface OrderHelpSupportViewProps {
   order: CustomerOrderRecord;
   onBack: () => void;
-  onOpenLiveChat: () => void;
+  onOpenLiveChat: (orderId?: string) => void;
 }
 
 const formatDate = (value: string) => {
@@ -164,7 +164,7 @@ export function OrderHelpSupportView({ order, onBack, onOpenLiveChat }: OrderHel
             <button
               key={topic.title}
               type="button"
-              onClick={onOpenLiveChat}
+              onClick={() => onOpenLiveChat(order.id)}
               className="group flex items-start gap-3 rounded-[18px] border border-slate-100 bg-white p-3.5 text-left shadow-[0_3px_12px_rgba(20,20,20,0.03)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_25px_rgba(20,20,20,0.07)]"
             >
               <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${topic.blue ? 'bg-[#EBF3FF] text-[#2563EB]' : 'bg-[#FDECE9] text-[#D9232D]'}`}>
@@ -199,7 +199,7 @@ export function OrderHelpSupportView({ order, onBack, onOpenLiveChat }: OrderHel
             </p>
             <button
               type="button"
-              onClick={onOpenLiveChat}
+              onClick={() => onOpenLiveChat(order.id)}
               className="mt-3 inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-[#D9232D] px-3 text-[11px] font-extrabold text-white shadow-[0_5px_14px_rgba(217,35,45,0.22)] transition hover:bg-[#c91d2a] active:scale-[0.98]"
             >
               <MessageCircle className="h-3.5 w-3.5" />

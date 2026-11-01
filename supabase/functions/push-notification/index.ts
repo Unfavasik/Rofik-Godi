@@ -261,12 +261,13 @@ async function resolveNotificationImageUrl(
 type NotificationPreferenceCategory = 'offers' | 'orderUpdates' | 'workshopAlerts' | 'systemUpdates';
 
 function isSupportNotificationRow(notification: NotificationRow): boolean {
-  let supportPath = false;
-  try {
-    supportPath = /^\/support\/[^/]+\/?$/i.test(new URL(notification.action_url || '', 'https://rofikgodi.invalid').pathname);
-  } catch {
-    supportPath = false;
-  }
+  const supportPath = (() => {
+    try {
+      return /^\/support\/[^/]+\/?$/i.test(new URL(notification.action_url || '', 'https://rofikgodi.invalid').pathname);
+    } catch {
+      return false;
+    }
+  })();
   const text = `${notification.kind} ${notification.title} ${notification.body}`.toLowerCase();
   return supportPath || text.includes('support request') || text.includes('support ticket') ||
     text.includes('workshop replied') || text.includes('support reply');

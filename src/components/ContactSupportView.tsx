@@ -3,9 +3,10 @@ import { Bell, Headphones, MessageCircle, Phone, X } from 'lucide-react';
 import { CustomerSupportRequestForm } from './CustomerSupportRequestForm';
 import { WORKSHOP_INFO } from '../data/products';
 
-export function ContactSupportView({ currentUserId, isAuthenticated, onBack, onOpenLogin, onOpenSupportRequest, onOpenSupportRequests }: {
+export function ContactSupportView({ currentUserId, isAuthenticated, initialOrderId, onBack, onOpenLogin, onOpenSupportRequest, onOpenSupportRequests }: {
   currentUserId: string;
   isAuthenticated: boolean;
+  initialOrderId?: string | null;
   onBack: () => void;
   onOpenLogin?: () => void;
   onOpenSupportRequest?: (requestId: string) => void;
@@ -34,6 +35,7 @@ export function ContactSupportView({ currentUserId, isAuthenticated, onBack, onO
         <CustomerSupportRequestForm
           isAuthenticated={isAuthenticated}
           expectedUserId={currentUserId}
+          initialRelatedOrderId={initialOrderId}
           onOpenLogin={onOpenLogin}
           onOpenSupportRequest={onOpenSupportRequest}
           compact
