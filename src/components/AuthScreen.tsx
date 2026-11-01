@@ -13,6 +13,7 @@ interface AuthScreenProps {
   onBack: () => void;
   onOpenTerms?: () => void;
   onOpenPrivacy?: () => void;
+  onOpenPersonalData?: () => void;
 }
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({
@@ -21,6 +22,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   onBack,
   onOpenTerms,
   onOpenPrivacy,
+  onOpenPersonalData,
 }) => {
   const [mode, setMode] = useState<'signup' | 'login'>(
     initialMode === 'login' ? 'login' : 'signup'
@@ -329,7 +331,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
-                      if (onOpenTerms) onOpenTerms();
+                      if (onOpenPersonalData) onOpenPersonalData();
+                      else if (onOpenTerms) onOpenTerms();
                       else if (onOpenPrivacy) onOpenPrivacy();
                     }}
                     className="font-semibold text-[#e0182d] hover:underline"
