@@ -1,4 +1,5 @@
 import { getCustomerNotificationCategory, type CustomerNotificationCategory, type NotificationLike } from './notificationCategory';
+import { supabase } from './supabase';
 
 export type PreferredLanguage = 'en' | 'bn' | 'hi';
 
@@ -16,6 +17,91 @@ export interface CustomerAppPreferences {
 }
 
 export const CUSTOMER_PREFERENCES_CHANGED_EVENT = 'rofik:customer-preferences-changed';
+
+// Notification preferences are mirrored into the signed-in user's auth metadata so
+// the push-notification edge function can filter pushes server-side. Without the
+// mirror, a disabled category would still reach the device as a push notification.
+const NOTIFICATION_PREFS_METADATA_KEY = 'notification_preferences';
+const NOTIFICATION_PREFS_SYNCED_AT_METADATA_KEY = 'notification_preferences_synced_at';
+
+function preferenceSyncedAtStorageKey(userId?: string): string {
+  const owner = userId?.trim() || 'guest-user';
+  return `work-app:${encodeURIComponent(owner)}:preferences-synced-at:v1`;
+}
+
+function readSyncedAtFromStorage(userId?: string): string {
+  try {
+    return globalThis.localStorage?.getItem(preferenceSyncedAtStorageKey(userId)) || '';
+  } catch {
+    return '';
+  }
+}
+
+async function mirrorNotificationPreferencesToServer(
+  userId: string | undefined,
+  notifications: CustomerNotificationPreferences,
+): Promise<void> {
+  const owner = userId?.trim();
+  if (!supabase || !owner) return;
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const sessionUserId = sessionData?.session?.user?.id;
+    if (!sessionUserId || sessionUserId !== owner) return;
+    const syncedAt = new Date().toISOString();
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        [NOTIFICATION_PREFS_METADATA_KEY]: notifications,
+        [NOTIFICATION_PREFS_SYNCED_AT_METADATA_KEY]: syncedAt,
+      },
+    });
+    if (error) return;
+    try {
+      globalThis.localStorage?.setItem(preferenceSyncedAtStorageKey(userId), syncedAt);
+    } catch {
+      // The server copy is still authoritative for push filtering.
+    }
+  } catch {
+    // Server sync is best-effort; local preferences remain the fallback.
+  }
+}
+
+export async function syncCustomerNotificationPreferencesFromServer(userId: string | undefined): Promise<void> {
+  const owner = userId?.trim();
+  if (!supabase || !owner) return;
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const sessionUserId = sessionData?.session?.user?.id;
+    if (!sessionUserId || sessionUserId !== owner) return;
+    const { data: userData, error } = await supabase.auth.getUser();
+    if (error || !userData?.user) return;
+    const metadata = userData.user.user_metadata ?? {};
+    const serverPrefs = metadata[NOTIFICATION_PREFS_METADATA_KEY];
+    const serverSyncedAt = typeof metadata[NOTIFICATION_PREFS_SYNCED_AT_METADATA_KEY] === 'string'
+      ? metadata[NOTIFICATION_PREFS_SYNCED_AT_METADATA_KEY] as string
+      : '';
+    if (!serverPrefs || typeof serverPrefs !== 'object' || !serverSyncedAt) return;
+    if (readSyncedAtFromStorage(userId) >= serverSyncedAt) return;
+    const merged = normalizePreferences({
+      ...readCustomerAppPreferences(userId),
+      notifications: serverPrefs as Partial<CustomerNotificationPreferences>,
+    });
+    try {
+      globalThis.localStorage?.setItem(preferenceStorageKey(userId), JSON.stringify(merged));
+      globalThis.localStorage?.setItem(preferenceSyncedAtStorageKey(userId), serverSyncedAt);
+    } catch {
+      // Storage may be blocked; the in-memory read still reflects the merge.
+    }
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent(CUSTOMER_PREFERENCES_CHANGED_EVENT, { detail: { userId: owner } }));
+      } catch {
+        // Listeners refresh on their own schedule when events are unsupported.
+      }
+    }
+  } catch {
+    // Pull sync is best-effort; local preferences remain usable.
+  }
+}
 
 export const DEFAULT_CUSTOMER_APP_PREFERENCES: CustomerAppPreferences = {
   language: 'en',
@@ -90,6 +176,7 @@ export function saveCustomerAppPreferences(
       // Preference persistence must not depend on custom-event support.
     }
   }
+  void mirrorNotificationPreferencesToServer(userId, next.notifications);
   return next;
 }
 

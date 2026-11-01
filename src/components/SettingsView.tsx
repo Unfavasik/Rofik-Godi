@@ -268,7 +268,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           ))}
         </div>
 
-        <p className="text-[10px] leading-relaxed text-gray-500 px-1">These preferences filter your in-app inbox and unread badge. They do not control push or WhatsApp delivery.</p>
+        <p className="text-[10px] leading-relaxed text-gray-500 px-1">These preferences filter your in-app inbox, unread badge, and push notifications. WhatsApp delivery is not affected.</p>
 
         <button
           onClick={saveNotifications}

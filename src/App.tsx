@@ -64,7 +64,7 @@ import { getPathForCustomerOrder, getPathForNotificationsSettings, getPathForPha
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from './lib/supabaseCoupons';
 import { getNotificationTargetPath } from './lib/notificationTarget';
 import { signOutCurrentDevice } from './lib/authLogout';
-import { CUSTOMER_PREFERENCES_CHANGED_EVENT, isNotificationEnabledByPreferences, prefersHapticFeedback, readCustomerAppPreferences } from './lib/customerPreferences';
+import { CUSTOMER_PREFERENCES_CHANGED_EVENT, isNotificationEnabledByPreferences, prefersHapticFeedback, readCustomerAppPreferences, syncCustomerNotificationPreferencesFromServer } from './lib/customerPreferences';
 import type { PreferredLanguage } from './lib/customerPreferences';
 import { I18nProvider, translate } from './lib/i18n';
 import { useAuth } from './hooks/useAuth';
@@ -270,6 +270,11 @@ export default function App() {
     if (kind === 'checkout') setPendingCheckoutAfterLogin(true);
     setIsLoginModalOpen(true);
   };
+
+  useEffect(() => {
+    if (currentUser.isGuest || !currentUser.id) return;
+    void syncCustomerNotificationPreferencesFromServer(currentUser.id);
+  }, [currentUser.id, currentUser.isGuest]);
 
   const [notificationCount, setNotificationCount] = useState(() => currentUser.isGuest ? 0 : readCustomerNotificationCountCache(currentUser.id) ?? 0);
   const refreshNotificationCount = () => {
