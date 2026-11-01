@@ -1445,7 +1445,6 @@ export default function App() {
             {/* Hero Section Banner */}
             <HeroBanner
               onExploreClick={scrollToShop}
-              onCustomClick={openCustomBuilderPage}
               onBannerClick={handleBannerClick}
             />
 
