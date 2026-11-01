@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { RotateCw, X } from 'lucide-react';
 import { useI18n } from '../lib/i18n';
 
-const VIEW = 288; // square viewport size in CSS px — keep in sync with the w-72 h-72 frame
+const VIEW = 288; // square viewport size in CSS px — keep in sync with the h-72 w-72 frame
 const OUTPUT = 512; // exported square image size in px
 
 interface AvatarCropModalProps {
@@ -212,34 +212,35 @@ export function AvatarCropModal({ file, onCancel, onConfirm }: AvatarCropModalPr
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label={t('account.cropTitle')}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.18, ease: 'easeOut' }}
-        className="w-full max-w-[360px] rounded-3xl bg-white p-5 shadow-2xl"
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-black text-gray-900">{t('account.cropTitle')}</h2>
-          <button type="button" aria-label={t('account.cropCancel')} onClick={onCancel} className="grid h-8 w-8 place-items-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600">
-            <X className="h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-[70] flex flex-col bg-black" role="dialog" aria-modal="true" aria-label={t('account.cropTitle')}>
+      <div className="flex items-center justify-between gap-2 px-3 py-3">
+        <button type="button" aria-label={t('account.cropCancel')} onClick={onCancel} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-white transition-colors hover:bg-white/10 active:scale-95">
+          <X className="h-5 w-5" aria-hidden="true" />
+        </button>
+        <h2 className="truncate text-[13px] font-bold text-white">{t('account.cropTitle')}</h2>
+        <button type="button" onClick={confirm} disabled={!dims || exporting} className="min-h-9 shrink-0 rounded-full px-3.5 text-[13px] font-bold text-white transition-colors hover:bg-white/10 disabled:opacity-40">
+          {t('account.cropSave')}
+        </button>
+      </div>
 
-        {failed ? (
-          <div className="py-10 text-center">
-            <p className="text-xs font-semibold text-gray-600">{t('account.cropFailed')}</p>
-          </div>
-        ) : (
-          <>
-            <div
+      {failed ? (
+        <div className="flex flex-1 items-center justify-center px-8 text-center">
+          <p className="text-xs font-semibold text-white/70">{t('account.cropFailed')}</p>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-1 flex-col items-center justify-center px-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
               ref={viewportRef}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerUp}
               onWheel={onWheel}
-              className="relative mx-auto mt-4 h-72 w-72 touch-none select-none overflow-hidden rounded-full bg-gray-900 shadow-inner ring-4 ring-rose-50"
+              className="relative h-72 w-72 touch-none select-none overflow-hidden rounded-full bg-zinc-900 ring-4 ring-white/10"
               style={{ cursor: dragState.current ? 'grabbing' : 'grab' }}
             >
               {objectUrl && (
@@ -247,46 +248,32 @@ export function AvatarCropModal({ file, onCancel, onConfirm }: AvatarCropModalPr
                   src={objectUrl}
                   alt=""
                   draggable={false}
-                  className="pointer-events-none absolute left-1/2 top-1/2 max-w-none will-change-transform"
-                  style={{ transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) scale(${scale})` }}
+                  className="pointer-events-none absolute left-1/2 top-1/2 will-change-transform"
+                  style={{ width: dims?.w, height: dims?.h, maxWidth: 'none', transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) scale(${scale})` }}
                 />
               )}
-            </div>
-            <p className="mt-3 text-center text-[10px] font-medium text-gray-400">{t('account.cropHint')}</p>
+            </motion.div>
+            <p className="mt-4 text-center text-[10px] font-medium text-white/40">{t('account.cropHint')}</p>
+          </div>
 
-            <div className="mt-4 flex items-center gap-3">
-              <button
-                type="button"
-                aria-label={t('account.cropRotate')}
-                onClick={rotate}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gray-200 text-gray-600 transition-colors hover:bg-gray-50 active:scale-95"
-              >
-                <RotateCw className="h-4 w-4" aria-hidden="true" />
-              </button>
-              <input
-                type="range"
-                aria-label={t('account.cropZoom')}
-                min={dims?.cover ?? 1}
-                max={(dims?.cover ?? 1) * 5}
-                step="any"
-                value={scale}
-                disabled={!dims}
-                onChange={onSliderChange}
-                className="h-1.5 w-full accent-[#D9232D]"
-              />
-            </div>
-
-            <div className="mt-5 flex gap-2">
-              <button type="button" onClick={onCancel} className="min-h-11 flex-1 rounded-xl border border-gray-200 text-xs font-bold text-gray-600 transition-colors hover:bg-gray-50">
-                {t('account.cropCancel')}
-              </button>
-              <button type="button" onClick={confirm} disabled={!dims || exporting} className="min-h-11 flex-1 rounded-xl bg-[#D9232D] text-xs font-bold text-white transition-all hover:bg-[#C01B24] active:scale-[0.98] disabled:opacity-60">
-                {t('account.cropSave')}
-              </button>
-            </div>
-          </>
-        )}
-      </motion.div>
+          <div className="flex items-center gap-4 px-5 pb-9 pt-2">
+            <button type="button" aria-label={t('account.cropRotate')} onClick={rotate} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 active:scale-95">
+              <RotateCw className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <input
+              type="range"
+              aria-label={t('account.cropZoom')}
+              min={dims?.cover ?? 1}
+              max={(dims?.cover ?? 1) * 5}
+              step="any"
+              value={scale}
+              disabled={!dims}
+              onChange={onSliderChange}
+              className="h-1.5 w-full accent-white"
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }

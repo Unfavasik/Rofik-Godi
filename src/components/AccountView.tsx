@@ -1117,6 +1117,15 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   <h3 id="profile-modal-title" className="text-[15px] font-black text-gray-900">Rider Profile</h3>
                   <p className="text-[11px] text-gray-400">Your Supabase customer profile</p>
                 </div>
+                <button
+                  type="button"
+                  aria-label="Save profile changes"
+                  disabled={profileSaving || profileLoading || !profileDirty || Object.keys(profileFieldErrors).length > 0}
+                  onClick={() => void handleSaveProfile()}
+                  className="ml-auto shrink-0 rounded-full bg-[#D9232D] px-4 py-2 text-[11px] font-bold text-white shadow-sm transition-all hover:bg-[#C01B24] active:scale-95 disabled:opacity-50"
+                >
+                  {profileSaving ? 'Saving…' : profileLoading ? 'Loading…' : 'Save'}
+                </button>
               </div>
 
               <div className="overflow-y-auto flex-1 no-scrollbar text-gray-800">
@@ -1269,15 +1278,6 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   <p id="profile-email-hint" className="mt-1 text-[10px] text-gray-500">Email cannot be changed</p>
                 </div>
 
-                <button
-                  type="button"
-                  aria-label="Save profile changes"
-                  disabled={profileSaving || profileLoading || !profileDirty || Object.keys(profileFieldErrors).length > 0}
-                  onClick={() => void handleSaveProfile()}
-                  className="w-full py-3 bg-[#D9232D] text-white text-[12.5px] font-bold rounded-xl shadow-sm mt-2 disabled:opacity-60"
-                >
-                  {profileSaving ? 'Saving…' : profileLoading ? 'Loading…' : 'Save Profile'}
-                </button>
                 {profileMessage && <p role="status" className={`text-center text-[11px] font-semibold ${profileMessage.toLowerCase().includes('saved') && !profileMessage.toLowerCase().includes('could not') ? 'text-emerald-700' : 'text-red-600'}`}>{profileMessage}</p>}
                 </div>
               </div>
