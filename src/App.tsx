@@ -1438,12 +1438,12 @@ export default function App() {
               onCloseSettingsSection={() => navigateBackToPage('/settings')}
               initialOrderSlug={resolvedRoute.kind === 'orders' ? resolvedRoute.orderSlug : null}
               initialSupportRequestId={resolvedRoute.kind === 'support' ? resolvedRoute.requestId : null}
-              onOpenOrdersPage={() => navigate('/my-orders')}
-              onOpenProfileEditPage={() => navigate('/profile/edit')}
+              onOpenOrdersPage={() => openPageRoute('/my-orders')}
+              onOpenProfileEditPage={() => openPageRoute('/profile/edit')}
               onBuyAgain={handleBuyAgain}
               onSelectOrderRoute={(orderSlug) => navigate(getPathForCustomerOrder(orderSlug))}
-              onBackToOrdersRoute={() => navigate('/my-orders')}
-              onOpenSettingsPage={() => navigate('/settings')}
+              onBackToOrdersRoute={() => navigateBackToPage('/my-orders')}
+              onOpenSettingsPage={() => openPageRoute('/settings')}
               onOpenCouponsPage={() => openPageRoute('/settings/coupons')}
               onOpenSupportPage={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/contact-support/my-support-requests')}
               onOpenContactSupport={() => {
