@@ -1495,6 +1495,7 @@ export default function App() {
               }}
               onOpenPrivacyPage={() => openPageRoute('/privacy-policy')}
               onOpenTermsPage={() => openPageRoute('/terms-and-conditions')}
+              onOpenPersonalData={() => openPageRoute('/personal-data')}
               onExitRoutedPage={() => {
                 if (resolvedRoute.kind === 'support') {
                   if (location.pathname.toLowerCase() === '/contact-support/my-support-requests') {
