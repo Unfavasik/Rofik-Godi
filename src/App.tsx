@@ -41,7 +41,7 @@ import { ShopView } from './components/ShopView';
 import { buildReorderCartItems, createDefaultCartItem, getCartItemUnitPrice, hasMatchingCartItem, MAX_ORDER_ITEM_QUANTITY, refreshCartFromCatalog, toggleCartItem } from './lib/cart';
 import { isOrderComplete } from './lib/orderPresentation';
 import { createMyStockAlert } from './lib/supabaseStockAlerts';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, type NavigateFunction } from 'react-router-dom';
 const AdminPanel = lazy(() =>
   import('./components/AdminPanel').then((module) => ({ default: module.AdminPanel })),
 );
@@ -80,7 +80,24 @@ const LAST_ROUTE_KEY = 'rofik-godi:last-route:v1';
 const SCROLL_KEY = 'rofik-godi:scroll:v1';
 export default function App() {
   const location = useLocation();
-  const navigate = useNavigate();
+  const routerNavigate = useNavigate();
+  // Capture the outgoing page's scroll position before the DOM swaps, so the
+  // route-level restore effect can put the customer back exactly where they
+  // left when they return (e.g. Account -> Coupons -> Back).
+  const outgoingRouteRef = useRef({ pathname: location.pathname, search: location.search });
+  outgoingRouteRef.current = { pathname: location.pathname, search: location.search };
+  const navigate = useCallback<NavigateFunction>((to, options) => {
+    try {
+      const { pathname, search } = outgoingRouteRef.current;
+      const key = `${SCROLL_KEY}:${pathname}${search}`;
+      const value = String(window.scrollY);
+      sessionStorage.setItem(key, value);
+      localStorage.setItem(key, value);
+    } catch {
+      // Scroll restoration is best-effort when storage is unavailable.
+    }
+    routerNavigate(to, options);
+  }, [routerNavigate]);
   const resolvedRoute = resolveAppRoute(location.pathname);
   // Route flow: /Onboarding -> /home, and account creation opens at /signup.
   const phaseFromPath = (
@@ -122,6 +139,12 @@ export default function App() {
       if (saved?.path && saved.at && Date.now() - saved.at < 24 * 60 * 60 * 1000 && saved.path !== '/home') navigate(saved.path, { replace: true });
     } catch { /* malformed storage is ignored */ }
   }, [authStatus, navigate]);
+  useEffect(() => {
+    // The route-level restore effect below owns scroll restoration; the
+    // browser's native history restoration fires later with clamped values
+    // and would override it (e.g. dropping the customer at the page bottom).
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  }, []);
   useEffect(() => {
     const key = `${SCROLL_KEY}:${location.pathname}${location.search}`;
     const restore = () => { try { const value = Number(sessionStorage.getItem(key) || localStorage.getItem(key)); if (Number.isFinite(value)) window.scrollTo(0, value); } catch { /* optional persistence */ } };
