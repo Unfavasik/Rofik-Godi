@@ -128,48 +128,62 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   return (
     <section className="px-5 mb-6" data-purpose="promotional-banner">
       {slide.fullBleed ? (
-        /* Admin banner: the uploaded image IS the banner — full width, uncropped, no overlay. */
+        /* Admin banner: the uploaded image fills the whole card. A soft bottom scrim keeps
+           the CTA readable on any artwork without covering the image itself. */
         <div>
-          <div className="relative overflow-hidden rounded-[26px] bg-[#0E0F12] shadow-xl border border-neutral-800/60">
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={slide.id}
-                src={slide.image}
-                alt={typeof slide.headline === 'string' ? slide.headline : slide.badge}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
-                className="block min-h-[160px] w-full h-auto object-cover"
-              />
-            </AnimatePresence>
-            {slide.ctaText && (
-              <div className="absolute bottom-4 left-4 z-10">
-                <motion.button
-                  whileTap={{ scale: 0.96 }}
-                  onClick={slide.ctaAction}
-                  className="inline-flex items-center space-x-1.5 whitespace-nowrap rounded-full bg-[#D9232D] px-3 py-2 text-[11px] font-bold text-white shadow-lg transition-all hover:bg-[#BF1B24] active:scale-95 sm:px-4 sm:text-[12px]"
-                >
-                  <span>{slide.ctaText}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </motion.button>
+          <div className="relative overflow-hidden rounded-[26px] bg-[#0E0F12] shadow-[0_24px_48px_-24px_rgba(0,0,0,0.45)] ring-1 ring-black/5">
+            <div className="relative aspect-[3/2] w-full sm:aspect-[16/9]">
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={slide.id}
+                  src={slide.image}
+                  alt={typeof slide.headline === 'string' ? slide.headline : slide.badge}
+                  initial={{ opacity: 0, scale: 1.04 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5, ease: 'easeOut' }}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              </AnimatePresence>
+
+              {/* Legibility scrim — bottom edge only */}
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/65 via-black/25 to-transparent" />
+
+              {/* Brand chip */}
+              <div className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/35 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wider text-white ring-1 ring-white/15 backdrop-blur-md">
+                <Sparkles className="h-3 w-3 text-[#FF8A8F]" />
+                <span>ROFIK GODI CENTRE</span>
               </div>
-            )}
-          </div>
-          {/* Carousel Indicators Dots */}
-          <div className="mt-3 flex items-center justify-center space-x-1.5">
-            {slides.map((s, idx) => (
-              <button
-                key={s.id}
-                onClick={() => setCurrentSlide(idx)}
-                aria-label={`Slide ${idx + 1}`}
-                className={`transition-all ${
-                  currentIndex === idx
-                    ? 'w-5 h-1.5 bg-[#D9232D] rounded-full'
-                    : 'w-1.5 h-1.5 bg-gray-400/70 rounded-full hover:bg-gray-500'
-                }`}
-              />
-            ))}
+
+              {/* CTA */}
+              {slide.ctaText && (
+                <div className="absolute bottom-3 left-3 z-10">
+                  <motion.button
+                    whileTap={{ scale: 0.96 }}
+                    onClick={slide.ctaAction}
+                    className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/95 px-3.5 py-2 text-[11px] font-bold text-gray-900 shadow-lg backdrop-blur transition-all hover:bg-white active:scale-95 sm:text-[12px]"
+                  >
+                    <span>{slide.ctaText}</span>
+                    <ArrowRight className="h-3.5 w-3.5 text-[#D9232D]" />
+                  </motion.button>
+                </div>
+              )}
+
+              {/* Carousel indicators — inside the card, bottom-right */}
+              <div className="absolute bottom-4 right-3 z-10 flex items-center gap-1.5">
+                {slides.map((s, idx) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setCurrentSlide(idx)}
+                    aria-label={`Slide ${idx + 1}`}
+                    aria-current={currentIndex === idx}
+                    className={`h-1.5 rounded-full transition-all ${
+                      currentIndex === idx ? 'w-5 bg-white' : 'w-1.5 bg-white/50 hover:bg-white/80'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       ) : (

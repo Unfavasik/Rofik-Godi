@@ -217,9 +217,10 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
         <b>Storefront feed:</b> active banners appear in the home-page carousel. Paused banners stay
         hidden, and the existing hero slides remain as the fallback when no banner is active.
         <br />
-        <b>Image size:</b> the banner shows your image full-width, exactly as uploaded — any
-        landscape size works. <b>1200 × 800 px (3:2)</b> is recommended. Bake any text or offer
-        details into the image itself; only the action button is overlaid on top.
+        <b>Image size:</b> the image fills the whole banner card at a <b>3:2 ratio</b> —{' '}
+        <b>1200 × 800 px</b> is recommended and shows edge-to-edge with no cropping; other sizes
+        are gently center-cropped to fit. Bake any text or offer details into the image itself;
+        the app adds only the action button and a small brand chip on top.
       </div>
       {loading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-xs text-slate-400">
@@ -360,9 +361,9 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                   }}
                 />
                 <span className="mt-1 block text-[10px] font-normal text-slate-400">
-                  Recommended: 1200 × 800 px (3:2 landscape). The banner shows your image
-                  full-width exactly as uploaded — bake text into the image. Upload JPG, PNG, WEBP
-                  or GIF; it is converted to WebP and saved securely.
+                  Recommended: 1200 × 800 px (3:2 landscape) — fills the whole banner card;
+                  other sizes are gently center-cropped. Bake text into the image. Upload JPG,
+                  PNG, WEBP or GIF; it is converted to WebP and saved securely.
                 </span>
               </label>
               <label className="text-[11px] font-bold text-slate-600">
