@@ -213,7 +213,10 @@ export function OrderHelpSupportView({ order, onBack, onOpenLiveChat }: OrderHel
                 <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Phone className="h-4 w-4" /></div>
                 <h4 className="text-xs font-bold leading-tight text-slate-900">Call Us</h4>
                 <p className="mt-0.5 text-[9.5px] leading-snug text-slate-400">Speak directly with our store</p>
-                <div className="mt-1.5 inline-block rounded-md bg-rose-50 px-1.5 py-0.5"><span className="whitespace-nowrap text-[8.5px] font-bold tracking-tight text-rose-600">{WORKSHOP_INFO.phone}</span></div>
+                <div className="mt-1.5 flex flex-col items-start gap-1">
+                  <span className="inline-block rounded-md bg-rose-50 px-1.5 py-0.5"><span className="whitespace-nowrap text-[8.5px] font-bold tracking-tight text-rose-600">{WORKSHOP_INFO.phone}</span></span>
+                  <span className="inline-block rounded-md bg-rose-50 px-1.5 py-0.5"><span className="whitespace-nowrap text-[8.5px] font-bold tracking-tight text-rose-600">{WORKSHOP_INFO.phoneAlt}</span></span>
+                </div>
               </div>
               <a href={phoneHref} className="mt-2.5 flex w-full items-center justify-center space-x-1 rounded-xl border border-[#E11D48] bg-white px-1 py-1.5 text-[10px] font-bold text-[#E11D48] transition-all hover:bg-rose-50 active:scale-95"><Phone className="h-3 w-3" /><span>Call Now</span></a>
             </div>

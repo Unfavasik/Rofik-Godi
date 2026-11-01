@@ -41,7 +41,7 @@ export interface OrderStatusEmail {
 
 const STORE_NAME = 'ROFIK GODI CENTRE';
 const STORE_SUBTITLE = 'CUSTOM SEAT COMFORT';
-const STORE_ADDRESS = 'Jalangi Road, Raninagar, Keshobnagar, Berhampore, West Bengal 742102';
+const STORE_ADDRESS = 'Kadbeltal, Petrol Pump More, Raninagar, Keshobnagar, Berhampore, West Bengal 742101';
 const STORE_PHONE = '+91 9775333555';
 const STORE_EMAIL = 'rofikgodicentre.store@gmail.com';
 const STORE_MAP_URL = 'https://maps.app.goo.gl/hRVfWHTkQ6vkrcS7A';

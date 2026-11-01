@@ -368,14 +368,16 @@ export const PRODUCTS: Product[] = [
 export const WORKSHOP_INFO = {
   name: 'ROFIK GODI CENTRE',
   subtitle: 'Local Ride Essentials & Seat Manufacturing',
-  address: 'Jalangi Road, Raninagar, Keshobnagar, Berhampore, West Bengal 742102',
-  phone: '+91 98321 45678',
-  whatsapp: '+91 98321 45678',
+  address: 'Kadbeltal, Petrol Pump More, Raninagar, Keshobnagar, Berhampore, West Bengal 742101',
+  phone: '+91 94348 86786',
+  phoneAlt: '+91 97753 33555',
+  whatsapp: '+91 94348 86786',
   email: 'support@rofikgodi.com',
   workingHours: 'Mon - Sun: 8:00 AM – 9:30 PM',
-  // Approximate workshop coordinates; refined at runtime via Google geocoding.
-  lat: 24.1105,
-  lng: 88.2805,
+  plusCode: '37WF+WC',
+  // Exact workshop coordinates (Plus Code 37WF+WC).
+  lat: 24.0973125,
+  lng: 88.2735625,
   rating: 4.8,
   reviewCount: 128,
   services: [

@@ -1034,7 +1034,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
           {/* Call us Card */}
           <a
             className="bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors"
-            href="tel:+919832145678"
+            href={`tel:${WORKSHOP_INFO.phone.replace(/[^+\d]/g, '')}`}
           >
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-full bg-[#EAF2FE] flex items-center justify-center text-[#2563EB] flex-shrink-0">
