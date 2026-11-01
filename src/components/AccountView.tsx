@@ -16,6 +16,10 @@ import {
   Camera,
   LockKeyhole,
   Trash2,
+  Star,
+  ShoppingBag,
+  Sparkles,
+  LogOut,
 } from 'lucide-react';
 import { CustomerOrderRecord, Product, UserProfile } from '../types';
 import { listMyOrders } from '../lib/supabaseOrders';
@@ -94,6 +98,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
   wishlistCount = 0,
   onOpenStoreInfo,
   onOpenShop,
+  onOpenCustomBuilder,
   onOpenOrdersPage,
   onOpenProfileEditPage,
   onSelectOrderRoute,
@@ -192,6 +197,21 @@ export const AccountView: React.FC<AccountViewProps> = ({
       setOrdersLoading(false);
     }
   }, []);
+
+  // Load the review count for the account page summary; the orders modal
+  // refreshes the same list again when it opens.
+  useEffect(() => {
+    let active = true;
+    const reviewsUser = currentUserRef.current;
+    if (!reviewsUser || reviewsUser.isGuest) {
+      setMyReviews([]);
+      return () => { active = false; };
+    }
+    void listMyProductReviews(reviewsUser.id).then((reviews) => {
+      if (active) setMyReviews(reviews);
+    }).catch(() => { /* The count simply stays at zero. */ });
+    return () => { active = false; };
+  }, [currentUser?.id, currentUser?.isGuest]);
 
   const [profileName, setProfileName] = useState('');
   const [profilePhone, setProfilePhone] = useState('');
@@ -539,129 +559,49 @@ export const AccountView: React.FC<AccountViewProps> = ({
       )}
 
       <main className="px-4 space-y-4">
-        {/* BEGIN: HeroBanner (Matching exact prompt HTML) */}
+        {/* BEGIN: ProfileHeroCard */}
         <section
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1E1C21] via-[#151418] to-[#0A0A0C] p-5 text-white shadow-lg border border-neutral-800/60 select-none"
-          data-purpose="promo-banner"
+          className="relative overflow-hidden rounded-3xl bg-white border border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.04)] p-4"
+          data-purpose="profile-hero-card"
         >
-          {/* Glow / Background warm illumination */}
-          <div className="absolute -right-8 top-10 w-64 h-64 bg-amber-700/20 blur-3xl pointer-events-none rounded-full" />
-          <div className="absolute right-0 bottom-0 w-52 h-44 bg-gradient-to-t from-orange-950/40 to-transparent pointer-events-none" />
-
-          {/* Banner Top Row */}
-          <div className="flex justify-between items-center mb-2.5">
-            <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-orange-200/90 font-mono">
-              ROFIK GODI CENTRE
-            </span>
-            {/* Royal Crown Silhouette */}
-            <svg className="w-5 h-5 text-amber-400 drop-shadow-sm" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M3 18h18v-2H3v2zm1.5-4h15l1-7-4.5 3.5L12 4 7.5 10.5 3 7l1.5 7z" />
-            </svg>
-          </div>
-
-          {/* Main Banner Heading and Seat Graphic Container */}
-          <div className="relative grid grid-cols-12 gap-2 z-10">
-            <div className="col-span-7 flex flex-col justify-between pr-1">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight text-white leading-tight">
-                  Your ride <br />deserves <span className="text-[#E5624E]">better.</span>
-                </h2>
-                <p className="text-[11px] text-zinc-300 font-normal leading-relaxed mt-2 pr-1 opacity-90">
-                  Premium seat covers for bike &amp; toto. Simple, durable and made for local journeys.
-                </p>
-              </div>
-
-              {/* Call to action button */}
-              <div className="mt-4">
-                <button
-                  type="button"
-                  onClick={handleGoHome}
-                  className="min-h-11 inline-flex items-center justify-between bg-[#FEE5DF] hover:bg-[#FCD7CE] text-zinc-900 rounded-full pl-3.5 pr-1.5 py-1.5 transition-all shadow-sm group active:scale-95"
-                >
-                  <span className="text-xs font-semibold text-slate-900 tracking-tight mr-2">{t('account.continueShopping')}</span>
-                  <span className="w-6 h-6 rounded-full bg-[#E55845] flex items-center justify-center text-white transition-transform group-hover:translate-x-0.5">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                      <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                </button>
-              </div>
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-[#FCE6E1] via-[#FDF3F1] to-transparent" />
+          <div className="relative flex items-center gap-3.5">
+            <div className="h-16 w-16 shrink-0 rounded-2xl bg-[#FCE6E1] ring-2 ring-white shadow-sm flex items-center justify-center overflow-hidden">
+              {currentUser?.avatar ? (
+                <img src={currentUser.avatar} alt={`${currentUser.name || 'Rider'} avatar`} className="h-full w-full object-cover" />
+              ) : (
+                <span aria-hidden="true" className="text-lg font-black text-[#D9232D]">{getInitials(currentUser?.name || '')}</span>
+              )}
             </div>
-
-            {/* Banner Right Seat Cover Illustration & Badges */}
-            <div className="col-span-5 relative flex flex-col items-end justify-between">
-              {/* Simulated Seat Graphic using detailed SVG */}
-              <div className="w-full h-32 relative flex items-center justify-center">
-                <svg className="w-full h-full drop-shadow-2xl overflow-visible" viewBox="0 0 160 170">
-                  <defs>
-                    <linearGradient id="leatherGradAccount" x1="0%" x2="100%" y1="0%" y2="100%">
-                      <stop offset="0%" stopColor="#363435" />
-                      <stop offset="45%" stopColor="#242124" />
-                      <stop offset="90%" stopColor="#141215" />
-                    </linearGradient>
-                    <linearGradient id="tanLeatherAccount" x1="0%" x2="100%" y1="100%" y2="0%">
-                      <stop offset="0%" stopColor="#7B3A23" />
-                      <stop offset="50%" stopColor="#B25531" />
-                      <stop offset="100%" stopColor="#D26E43" />
-                    </linearGradient>
-                    <linearGradient id="stitchHighlightAccount" x1="0%" x2="100%" y1="0%" y2="0%">
-                      <stop offset="0%" stopColor="#E5624E" stopOpacity="0.8" />
-                      <stop offset="100%" stopColor="#FFA88B" stopOpacity="0.9" />
-                    </linearGradient>
-                  </defs>
-                  {/* Main Seat Backing */}
-                  <path
-                    d="M 40,25 C 70,12 110,14 135,38 C 152,56 158,95 145,130 C 132,165 95,172 65,160 C 42,150 25,125 22,95 C 18,65 24,35 40,25 Z"
-                    fill="url(#leatherGradAccount)"
-                    stroke="#4A4545"
-                    strokeWidth="1.5"
-                  />
-                  {/* Tan/Cognac Bolster side patch */}
-                  <path
-                    d="M 105,28 C 125,40 148,68 143,105 C 138,125 125,142 110,148 C 118,128 120,95 110,65 C 104,48 95,35 105,28 Z"
-                    fill="url(#tanLeatherAccount)"
-                    stroke="#E5624E"
-                    strokeWidth="1"
-                  />
-                  {/* Quilted / Ribbed Stitch lines */}
-                  <path d="M 38,62 C 60,67 85,68 112,56" fill="none" stroke="url(#stitchHighlightAccount)" strokeDasharray="3,2" strokeWidth="2" />
-                  <path d="M 34,80 C 60,86 85,86 114,72" fill="none" stroke="url(#stitchHighlightAccount)" strokeDasharray="3,2" strokeWidth="2" />
-                  <path d="M 34,98 C 60,105 84,103 115,88" fill="none" stroke="url(#stitchHighlightAccount)" strokeDasharray="3,2" strokeWidth="2" />
-                  <path d="M 38,116 C 62,122 84,118 114,104" fill="none" stroke="url(#stitchHighlightAccount)" strokeDasharray="3,2" strokeWidth="2" />
-                  {/* Glow reflection */}
-                  <ellipse cx="60" cy="50" fill="#FFFFFF" opacity="0.08" rx="35" ry="15" transform="rotate(-20 60 50)" />
-                </svg>
-              </div>
-
-              {/* Mini Quality Badges stacked */}
-              <div className="flex flex-col items-end space-y-1.5 w-full mt-1">
-                <div className="flex items-center space-x-1.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 shadow-sm text-[9px] text-zinc-200">
-                  <svg className="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2a4 4 0 00-4 4c0 2.21 4 7 4 7s4-4.79 4-7a4 4 0 00-4-4zm0 6a2 2 0 110-4 2 2 0 010 4z" />
-                  </svg>
-                  <span className="font-medium">Comfort</span>
-                </div>
-                <div className="flex items-center space-x-1.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 shadow-sm text-[9px] text-zinc-200">
-                  <svg className="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
-                  </svg>
-                  <span className="font-medium">Durable</span>
-                </div>
-                <div className="flex items-center space-x-1.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 shadow-sm text-[9px] text-zinc-200">
-                  <svg className="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                  </svg>
-                  <span className="font-medium">Local Choice</span>
-                </div>
-              </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate text-[15px] font-extrabold tracking-tight text-slate-900 leading-tight">
+                {currentUser?.name?.trim() || (isGuest ? t('account.guestTitle') : 'Rider')}
+              </h2>
+              <p className="mt-0.5 truncate text-[11.5px] font-medium text-slate-500">
+                {currentUser?.email?.trim() || currentUser?.phone?.trim() || t('account.subtitle')}
+              </p>
+              {currentUser?.vehicle?.trim() && (
+                <span className="mt-1.5 inline-flex max-w-full items-center rounded-full bg-[#F3EEFD] px-2 py-0.5 text-[10px] font-bold text-[#6D28D9]">
+                  <span className="truncate">{currentUser.vehicle.trim()}</span>
+                </span>
+              )}
             </div>
+            {!isGuest && (
+              <button
+                type="button"
+                onClick={() => handleProtectedAction('profile')}
+                className="min-h-11 shrink-0 rounded-full bg-[#D9232D] px-4 text-xs font-bold text-white shadow-xs transition-all active:scale-95 hover:bg-[#C01B24]"
+              >
+                {t('account.editProfile')}
+              </button>
+            )}
           </div>
         </section>
-        {/* END: HeroBanner */}
+        {/* END: ProfileHeroCard */}
 
         {/* BEGIN: QuickActionsGrid */}
         <section className="space-y-2.5 pt-0.5" data-purpose="account-categories">
-          <h2 className="px-1 text-base font-bold tracking-tight text-slate-900">Your account</h2>
+          <h2 className="px-1 text-base font-bold tracking-tight text-slate-900">{t('account.yourAccount')}</h2>
           <div className="grid grid-cols-4 gap-2.5" data-purpose="quick-navigation-grid">
           {/* 1. My Orders (Soft Pink) */}
           <button
@@ -740,6 +680,86 @@ export const AccountView: React.FC<AccountViewProps> = ({
           </div>
         </section>
         {/* END: QuickActionsGrid */}
+
+        {/* BEGIN: ActivityServicesSection */}
+        <section className="pt-2 space-y-2.5" data-purpose="activity-services">
+          <h2 className="px-1 text-base font-bold tracking-tight text-slate-900">{t('account.activityServices')}</h2>
+
+          {/* My reviews */}
+          <button
+            type="button"
+            onClick={() => handleProtectedAction('orders')}
+            className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#FFF7E6] flex items-center justify-center text-[#B45309] flex-shrink-0">
+                <Star className="w-5 h-5 fill-current" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 leading-tight">{t('account.myReviews')}</h3>
+                <p className="text-[11px] text-slate-500 font-normal mt-0.5">
+                  {myReviews.length > 0 ? t('account.reviewsCount', { count: myReviews.length }) : t('account.reviewsHint')}
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400" />
+          </button>
+
+          {/* Support requests */}
+          <button
+            type="button"
+            onClick={() => onOpenSupportPage?.()}
+            className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] flex-shrink-0">
+                <MessageCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 leading-tight">{t('account.supportRequests')}</h3>
+                <p className="text-[11px] text-slate-500 font-normal mt-0.5">{t('account.supportRequestsHint')}</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400" />
+          </button>
+
+          {/* Custom seat builder */}
+          <button
+            type="button"
+            onClick={onOpenCustomBuilder}
+            className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#F3EEFD] flex items-center justify-center text-[#7C3AED] flex-shrink-0">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 leading-tight">{t('account.customSeat')}</h3>
+                <p className="text-[11px] text-slate-500 font-normal mt-0.5">{t('account.customSeatHint')}</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400" />
+          </button>
+
+          {/* Browse shop */}
+          <button
+            type="button"
+            onClick={onOpenShop}
+            className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#FDECE9] flex items-center justify-center text-[#E55845] flex-shrink-0">
+                <ShoppingBag className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 leading-tight">{t('account.browseShop')}</h3>
+                <p className="text-[11px] text-slate-500 font-normal mt-0.5">{t('account.browseShopHint')}</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400" />
+          </button>
+        </section>
+        {/* END: ActivityServicesSection */}
 
         {/* BEGIN: NeedHelpSection */}
         <section className="pt-2" data-purpose="help-section">
@@ -953,6 +973,26 @@ export const AccountView: React.FC<AccountViewProps> = ({
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </a>
+
+          {/* Log out Card */}
+          {!isGuest && onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-red-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-red-50 transition-colors text-left"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#FDECE9] flex items-center justify-center text-[#D9232D] flex-shrink-0">
+                  <LogOut className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 leading-tight">{t('account.logout')}</h3>
+                  <p className="text-[11px] text-slate-500 font-normal mt-0.5">{t('account.logoutHint')}</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </button>
+          )}
         </section>
         {/* END: MoreOptionsSection */}
       </main>
