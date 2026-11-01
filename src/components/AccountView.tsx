@@ -28,7 +28,7 @@ import {
   Bike,
 } from 'lucide-react';
 import { CustomerOrderRecord, Product, UserProfile } from '../types';
-import { listMyOrders } from '../lib/supabaseOrders';
+import { getMyOrderBySlug, listMyOrders } from '../lib/supabaseOrders';
 import { listMyProductReviews, type ProductReviewRecord } from '../lib/supabaseReviews';
 import { ReviewComposer } from './ReviewComposer';
 import { AvatarCropModal } from './AvatarCropModal';
@@ -74,6 +74,9 @@ interface AccountViewProps {
   onOpenProfileEditPage?: () => void;
   onSelectOrderRoute?: (orderSlug: string) => void;
   onBackToOrdersRoute?: () => void;
+  helpOrderSlug?: string | null;
+  onOpenOrderHelp?: (order: CustomerOrderRecord) => void;
+  onCloseOrderHelp?: (orderSlug: string) => void;
   onOpenSettingsPage?: () => void;
   onOpenCouponsPage?: () => void;
   onOpenSupportPage?: (requestId?: string) => void;
@@ -111,6 +114,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
   onOpenProfileEditPage,
   onSelectOrderRoute,
   onBackToOrdersRoute,
+  helpOrderSlug = null,
+  onOpenOrderHelp,
+  onCloseOrderHelp,
   onOpenSettingsPage,
   onOpenCouponsPage,
   onOpenSupportPage,
@@ -192,6 +198,28 @@ export const AccountView: React.FC<AccountViewProps> = ({
     });
     return () => { active = false; };
   }, [activeModal, currentUser?.id, currentUser?.isGuest]);
+
+  // Keep the order help overlay in sync with /my-order/order/:slug/order-need-help.
+  // The orders modal stays mounted underneath, so its scroll position survives the round trip.
+  useEffect(() => {
+    if (!helpOrderSlug) {
+      setHelpOrder((current) => (current ? null : current));
+      return;
+    }
+    const normalizedSlug = helpOrderSlug.toLowerCase();
+    if (helpOrder?.order_slug?.toLowerCase() === normalizedSlug) return;
+    const fromList = customerOrders.find((order) => order.order_slug?.toLowerCase() === normalizedSlug);
+    if (fromList) {
+      setHelpOrder(fromList);
+      return;
+    }
+    if (!currentUser || currentUser.isGuest) return;
+    let active = true;
+    void getMyOrderBySlug(currentUser.id, normalizedSlug)
+      .then((order) => { if (active && order) setHelpOrder(order); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [helpOrderSlug, helpOrder, customerOrders, currentUser]);
 
   const refreshCustomerOrders = useCallback(async () => {
     const ordersUser = currentUserRef.current;
@@ -1050,7 +1078,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
         {activeModal === 'orders' && helpOrder && (
           <OrderHelpSupportView
             order={helpOrder}
-            onBack={() => setHelpOrder(null)}
+            onBack={() => {
+              setHelpOrder(null);
+              onCloseOrderHelp?.(helpOrder.order_slug);
+            }}
             onOpenLiveChat={(orderId) => onOpenContactSupport?.(helpOrder.order_slug, orderId)}
           />
         )}
@@ -1070,7 +1101,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
             onBackToOrdersRoute={onBackToOrdersRoute}
             onClose={closeRoutedPage}
             onRefresh={refreshCustomerOrders}
-            onNeedHelp={(order) => setHelpOrder(order)}
+            onNeedHelp={(order) => {
+              setHelpOrder(order);
+              onOpenOrderHelp?.(order);
+            }}
             onBuyAgain={onBuyAgain}
             onReview={(order, productId, productTitle, review) =>
               setReviewComposer({

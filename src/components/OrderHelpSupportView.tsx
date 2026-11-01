@@ -155,14 +155,14 @@ export function OrderHelpSupportView({ order, onBack, onOpenLiveChat }: OrderHel
         </section>
 
         <section className="relative pt-1">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
               <h2 className="text-lg font-bold tracking-tight text-slate-900">How can we help you?</h2>
               <p className="mt-0.5 text-xs font-normal text-slate-500">Choose a topic or get in touch with our support team.</p>
             </div>
-            <div className="relative flex h-14 w-16 shrink-0 items-center justify-center">
-              <span className="absolute -top-0 right-7 flex h-5 w-6 items-center justify-center rounded-full rounded-br-none bg-[#FDA4AF] text-[9px] font-black leading-none text-white">•••</span>
-              <Headset className="h-12 w-12 text-[#E11D48]" strokeWidth={2.4} />
+            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center">
+              <span className="absolute -top-1 right-0 z-10 flex h-4 w-5 items-center justify-center rounded-full rounded-br-none bg-[#FDA4AF] text-[8px] font-black leading-none text-white">•••</span>
+              <Headset className="h-10 w-10 text-[#E11D48]" strokeWidth={2.4} />
             </div>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2.5">
@@ -173,18 +173,16 @@ export function OrderHelpSupportView({ order, onBack, onOpenLiveChat }: OrderHel
                   key={topic.title}
                   type="button"
                   onClick={() => onOpenLiveChat(order.id)}
-                  className="flex items-start justify-between rounded-2xl border border-slate-100 bg-white p-3 text-left shadow-[0_2px_6px_-2px_rgba(0,0,0,0.03)] transition-colors hover:border-rose-200"
+                  className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 text-left shadow-[0_2px_6px_-2px_rgba(0,0,0,0.03)] transition hover:border-rose-200 active:scale-[0.98]"
                 >
-                  <span className="flex min-w-0 items-start space-x-2.5">
+                  <span className="flex items-center justify-between">
                     <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${topic.blue ? 'border-sky-200 bg-sky-50 text-sky-600' : 'border-rose-100 bg-rose-50 text-rose-600'}`}>
                       <TopicIcon className="h-5 w-5" />
                     </span>
-                    <span className="min-w-0">
-                      <span className="block text-xs font-bold leading-tight text-slate-800">{topic.title}</span>
-                      <span className="mt-0.5 block text-[10px] leading-snug text-slate-400">{topic.hint}</span>
-                    </span>
+                    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300" />
                   </span>
-                  <ChevronRight className="mt-1 h-3.5 w-3.5 shrink-0 text-slate-300" />
+                  <span className="mt-2.5 block text-xs font-bold leading-tight text-slate-800">{topic.title}</span>
+                  <span className="mt-1 block text-[10px] leading-snug text-slate-400">{topic.hint}</span>
                 </button>
               );
             })}
