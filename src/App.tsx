@@ -1435,7 +1435,7 @@ export default function App() {
               routeModal={resolvedRoute.kind === 'profile-edit' ? 'profile' : resolvedRoute.kind === 'orders' ? 'orders' : resolvedRoute.kind === 'settings' || resolvedRoute.kind === 'settings-section' ? 'settings' : resolvedRoute.kind === 'support' ? 'support' : resolvedRoute.kind === 'contact-support' ? 'contact-support' : null}
               settingsSection={resolvedRoute.kind === 'settings-section' ? resolvedRoute.section : null}
               onOpenSettingsSection={(section) => navigate(getPathForSettingsSection(section))}
-              onCloseSettingsSection={() => navigate('/settings')}
+              onCloseSettingsSection={() => navigateBackToPage('/settings')}
               initialOrderSlug={resolvedRoute.kind === 'orders' ? resolvedRoute.orderSlug : null}
               initialSupportRequestId={resolvedRoute.kind === 'support' ? resolvedRoute.requestId : null}
               onOpenOrdersPage={() => navigate('/my-orders')}
@@ -1444,7 +1444,7 @@ export default function App() {
               onSelectOrderRoute={(orderSlug) => navigate(getPathForCustomerOrder(orderSlug))}
               onBackToOrdersRoute={() => navigate('/my-orders')}
               onOpenSettingsPage={() => navigate('/settings')}
-  onOpenCouponsPage={() => navigate('/settings/coupons')}
+              onOpenCouponsPage={() => openPageRoute('/settings/coupons')}
               onOpenSupportPage={(requestId) => navigate(requestId ? `/support/${encodeURIComponent(requestId)}` : '/contact-support/my-support-requests')}
               onOpenContactSupport={() => {
                 const from = resolvedRoute.kind === 'settings' || resolvedRoute.kind === 'settings-section' ? 'settings' : 'profile';
