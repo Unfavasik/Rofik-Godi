@@ -41,7 +41,7 @@ import { ShopView } from './components/ShopView';
 import { buildReorderCartItems, createDefaultCartItem, getCartItemUnitPrice, hasMatchingCartItem, MAX_ORDER_ITEM_QUANTITY, refreshCartFromCatalog, toggleCartItem } from './lib/cart';
 import { isOrderComplete } from './lib/orderPresentation';
 import { createMyStockAlert } from './lib/supabaseStockAlerts';
-import { Outlet, useLocation, useNavigate, type NavigateFunction } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, type NavigateFunction, type NavigateOptions, type To } from 'react-router-dom';
 const AdminPanel = lazy(() =>
   import('./components/AdminPanel').then((module) => ({ default: module.AdminPanel })),
 );
@@ -60,7 +60,7 @@ import {
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { NATIVE_AUTH_CALLBACK_URL } from './lib/oauthRedirect';
-import { getPathForCustomerOrder, getPathForPhase, getPathForProduct, getPathForSettingsSection, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
+import { getPathForCustomerOrder, getPathForNotificationsSettings, getPathForPhase, getPathForProduct, getPathForSettingsSection, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from './lib/supabaseCoupons';
 import { getNotificationTargetPath } from './lib/notificationTarget';
 import { signOutCurrentDevice } from './lib/authLogout';
@@ -86,7 +86,9 @@ export default function App() {
   // left when they return (e.g. Account -> Coupons -> Back).
   const outgoingRouteRef = useRef({ pathname: location.pathname, search: location.search });
   outgoingRouteRef.current = { pathname: location.pathname, search: location.search };
-  const navigate = useCallback<NavigateFunction>((to, options) => {
+  // The cast keeps react-router's two overloads (path and delta) while the
+  // implementation only needs the path form.
+  const navigate = useCallback(((to: To | number, options?: NavigateOptions) => {
     try {
       const { pathname, search } = outgoingRouteRef.current;
       const key = `${SCROLL_KEY}:${pathname}${search}`;
@@ -96,8 +98,8 @@ export default function App() {
     } catch {
       // Scroll restoration is best-effort when storage is unavailable.
     }
-    routerNavigate(to, options);
-  }, [routerNavigate]);
+    routerNavigate(to as To, options);
+  }) as NavigateFunction, [routerNavigate]);
   const resolvedRoute = resolveAppRoute(location.pathname);
   // Route flow: /Onboarding -> /home, and account creation opens at /signup.
   const phaseFromPath = (
@@ -1353,6 +1355,9 @@ export default function App() {
             onOpenContactSupport={() => navigate('/contact-support?from=notifications', { state: { returnTo: '/notifications' } })}
             onOpenActionUrl={(path) => navigate(getNotificationTargetPath(path))}
             onBuyAgain={handleBuyAgain}
+            settingsRouteOpen={resolvedRoute.kind === 'notifications-settings'}
+            onOpenSettingsRoute={() => openPageRoute(getPathForNotificationsSettings())}
+            onCloseSettingsRoute={() => navigateBackToPage('/notifications')}
             onOpenMyOrders={(orderSlug) => {
               navigate(orderSlug && /^[0-9a-f]{32}$/i.test(orderSlug)
                 ? getPathForCustomerOrder(orderSlug.toLowerCase())
@@ -1440,7 +1445,7 @@ export default function App() {
               initialSupportRequestId={resolvedRoute.kind === 'support' ? resolvedRoute.requestId : null}
               onOpenOrdersPage={() => openPageRoute('/my-orders')}
               onOpenProfileEditPage={() => openPageRoute('/profile/edit')}
-              onBuyAgain={handleBuyAgain}
+            onBuyAgain={handleBuyAgain}
               onSelectOrderRoute={(orderSlug) => navigate(getPathForCustomerOrder(orderSlug))}
               onBackToOrdersRoute={() => navigateBackToPage('/my-orders')}
               onOpenSettingsPage={() => openPageRoute('/settings')}

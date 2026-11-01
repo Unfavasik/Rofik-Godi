@@ -7,7 +7,7 @@ export const APP_ROUTE_PATHS = [
   '/', '/home', '/shop', '/search', '/custom', '/wishlist', '/cart', '/checkout',
   '/profile', '/profile/edit', '/account', '/my-orders', '/myorder', '/my-order',
   '/my-orders/order/:orderSlug', '/myorder/order/:orderSlug', '/my-order/order/:orderSlug',
-  '/notifications', '/notification', '/shop/products/:id', '/products/:id', '/product/:id',
+  '/notifications', '/notification', '/notifications/settings', '/shop/products/:id', '/products/:id', '/product/:id',
   '/coupons/:couponCode',
   '/support', '/support/:requestId', '/contact-support', '/contact-support/my-support-requests', '/contact-us', '/contact-workshop',
   '/settings', '/settings/notifications', '/settings/app', '/settings/coupons', '/settings/reviews', '/settings/about', '/settings/help',
@@ -33,6 +33,7 @@ export type ResolvedAppRoute =
   | { kind: 'product'; tab: 'shop'; slug: string; canonicalPath: string }
   | { kind: 'settings'; tab: 'account'; canonicalPath: '/settings' }
   | { kind: 'settings-section'; tab: 'account'; section: SettingsSectionRoute; canonicalPath: string }
+  | { kind: 'notifications-settings'; tab: 'notifications'; canonicalPath: '/notifications/settings' }
   | { kind: 'privacy'; tab: 'home'; canonicalPath: '/privacy-policy' }
   | { kind: 'terms'; tab: 'home'; canonicalPath: '/terms-and-conditions' }
   | { kind: 'personal-data'; tab: 'home'; canonicalPath: '/personal-data' }
@@ -179,6 +180,7 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
   if (path === '/custom') return { kind: 'tab', tab: 'custom', canonicalPath: '/custom' };
   if (path === '/wishlist') return { kind: 'tab', tab: 'wishlist', canonicalPath: '/wishlist' };
   if (path === '/cart') return { kind: 'tab', tab: 'cart', canonicalPath: '/cart' };
+  if (path === '/notifications/settings') return { kind: 'notifications-settings', tab: 'notifications', canonicalPath: '/notifications/settings' };
   if (path === '/notifications' || path === '/notification') return { kind: 'tab', tab: 'notifications', canonicalPath: '/notifications' };
   if (path === '/profile/edit') return { kind: 'profile-edit', tab: 'account', canonicalPath: '/profile/edit' };
   if (path === '/profile' || path === '/account') return { kind: 'tab', tab: 'account', canonicalPath: '/profile' };
@@ -288,6 +290,10 @@ export function getPathForProduct(productId: string): string {
 
 export function getPathForTab(tab: RouteTab): string {
   return tab === 'account' ? '/profile' : `/${tab}`;
+}
+
+export function getPathForNotificationsSettings(): string {
+  return '/notifications/settings';
 }
 
 export function getPathForPhase(phase: AppPhase, currentPath: string): string {

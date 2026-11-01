@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Bell, ChevronRight, Package, Settings, Star, Tag, Truck, Volume2, Moon, Smartphone, Megaphone, TrendingDown, Trash2, MessageCircle, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Bell, ChevronRight, Package, Settings, Star, Tag, Truck, Trash2, MessageCircle, ShieldAlert } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { deleteMyNotification, listMyNotifications, markNotificationRead } from '../lib/supabaseCustomer';
 import { getNotificationOrderNumber } from '../lib/orderPresentation';
@@ -14,7 +14,7 @@ import { NewProductNotificationDetails } from './NewProductNotificationDetails';
 import { SupportNotificationDetails } from './SupportNotificationDetails';
 import { CloudLoader } from './CloudLoader';
 import { getCustomerNotificationCategory, getSupportRequestIdFromNotification, matchesCustomerNotificationFilter, getNotificationRowSurfaceClass, isSupportNotification, type CustomerNotificationFilter } from '../lib/notificationCategory';
-import { isNotificationEnabledByPreferences, readCustomerAppPreferences } from '../lib/customerPreferences';
+import { isNotificationEnabledByPreferences, readCustomerAppPreferences, saveCustomerAppPreferences, type CustomerNotificationPreferences } from '../lib/customerPreferences';
 import { readCustomerNotificationCache, writeCustomerNotificationCache, type CachedCustomerNotification } from '../lib/localCache';
 import { getNotificationTargetPath } from '../lib/notificationTarget';
 
@@ -74,7 +74,7 @@ const toneFor = (item: NotificationItem) => {
   return 'bg-blue-50 text-blue-500';
 };
 
-export function NotificationsView({ userId, isGuest, onBack, onNotificationsChanged, onOpenShop, onOpenProduct, products = [], onOpenMyOrders, onOpenSupportRequest, onOpenContactSupport, onOpenActionUrl, onBuyAgain }: { userId: string; isGuest: boolean; onBack: () => void; onNotificationsChanged?: () => void; onOpenShop?: () => void; onOpenProduct?: (product: Product) => void; products?: Product[]; onOpenMyOrders?: (orderSlug?: string) => void; onOpenSupportRequest?: (requestId: string) => void; onOpenContactSupport?: () => void; onOpenActionUrl?: (path: string) => void; onBuyAgain?: (order: CustomerOrderRecord) => Promise<{ error?: string }> }) {
+export function NotificationsView({ userId, isGuest, onBack, onNotificationsChanged, onOpenShop, onOpenProduct, products = [], onOpenMyOrders, onOpenSupportRequest, onOpenContactSupport, onOpenActionUrl, onBuyAgain, settingsRouteOpen = false, onOpenSettingsRoute, onCloseSettingsRoute }: { userId: string; isGuest: boolean; onBack: () => void; onNotificationsChanged?: () => void; settingsRouteOpen?: boolean; onOpenSettingsRoute?: () => void; onCloseSettingsRoute?: () => void; onOpenShop?: () => void; onOpenProduct?: (product: Product) => void; products?: Product[]; onOpenMyOrders?: (orderSlug?: string) => void; onOpenSupportRequest?: (requestId: string) => void; onOpenContactSupport?: () => void; onOpenActionUrl?: (path: string) => void; onBuyAgain?: (order: CustomerOrderRecord) => Promise<{ error?: string }> }) {
   const [filter, setFilter] = useState<NotificationFilter>('All');
   const [autoBuyAgain] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('buyAgain') === '1');
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
@@ -408,7 +408,15 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
     }
   };
 
-  if (showSettings) return <NotificationSettingsView onBack={() => setShowSettings(false)} />;
+  if (showSettings || settingsRouteOpen) {
+    return (
+      <NotificationSettingsView
+        userId={userId}
+        onBack={settingsRouteOpen && onCloseSettingsRoute ? onCloseSettingsRoute : () => setShowSettings(false)}
+        onSaved={(preferences) => setNotificationPreferences(preferences)}
+      />
+    );
+  }
 
   if (selectedNotification) {
     // Only ticket-linked notifications (action_url /support/<id>) open the ticket
@@ -497,7 +505,7 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
     <header className="flex min-h-[62px] items-center gap-3 bg-[#D9232D] px-4 py-3 text-white shadow-sm">
       <button onClick={onBack} aria-label="Go back" className="-ml-1 rounded-full p-1.5 hover:bg-white/10"><ArrowLeft className="h-5 w-5" /></button>
       <div className="min-w-0 flex-1"><h1 className="text-[20px] font-extrabold tracking-tight leading-snug">Notifications</h1></div>
-      <button onClick={() => setShowSettings(true)} aria-label="Notification settings" className="rounded-full p-1.5 text-white hover:bg-white/10"><Settings className="h-5 w-5" /></button>
+      <button onClick={() => (onOpenSettingsRoute ? onOpenSettingsRoute() : setShowSettings(true))} aria-label="Notification settings" className="rounded-full p-1.5 text-white hover:bg-white/10"><Settings className="h-5 w-5" /></button>
     </header>
     <nav aria-label="Notification categories" className="no-scrollbar flex gap-2 overflow-x-auto bg-white px-3.5 py-3 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
       {(['All', 'Orders', 'Offers', 'Support', 'System'] as NotificationFilter[]).map((name) => <button key={name} onClick={() => { setFilter(name); setRevealedDeleteId(null); }} className={`relative flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-[11px] font-bold transition-colors ${filter === name ? 'border-rose-100 bg-rose-100 text-[#D9232D]' : 'border-slate-100 bg-slate-50 text-slate-700 hover:bg-slate-100'}`}>{name}<span className={`text-[9px] ${filter === name ? 'text-[#D9232D]/65' : 'text-slate-400'}`}>{counts[name]}</span>{name === 'Support' && hasUnreadSupport && <span aria-label="Unread support reply" className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[#E51E2B]" />}</button>)}
@@ -550,23 +558,30 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
   </main>;
 }
 
-function NotificationSettingsView({ onBack }: { onBack: () => void }) {
-  const [preferences, setPreferences] = useState({ order: true, offers: true, arrivals: true, priceDrops: true, reviews: false, appUpdates: true, promotions: false, quietHours: false });
-  const toggle = (key: keyof typeof preferences) => setPreferences((current) => ({ ...current, [key]: !current[key] }));
+function NotificationSettingsView({ userId, onBack, onSaved }: { userId: string; onBack: () => void; onSaved: (preferences: CustomerNotificationPreferences) => void }) {
+  const [preferences, setPreferences] = useState<CustomerNotificationPreferences>(() => readCustomerAppPreferences(userId).notifications);
+  const [saved, setSaved] = useState(false);
+  // Same categories and persistence as the Settings → Notifications section,
+  // so both surfaces always control the same in-app inbox filters.
   const rows = [
-    { key: 'order' as const, title: 'Pickup Order Updates', description: 'Confirmation, preparation and pickup status', icon: <Truck className="h-5 w-5 text-[#E51E2B]" />, tone: 'bg-rose-50' },
-    { key: 'offers' as const, title: 'Offers & Discounts', description: 'Special offers, coupons, deals', icon: <Tag className="h-5 w-5 fill-current text-[#E51E2B]" />, tone: 'bg-red-50' },
-    { key: 'arrivals' as const, title: 'New Arrivals', description: 'Latest products and collections', icon: <Package className="h-5 w-5 text-purple-600" />, tone: 'bg-purple-50' },
-    { key: 'priceDrops' as const, title: 'Price Drop Alerts', description: 'Get notified when prices drop', icon: <TrendingDown className="h-5 w-5 text-[#E51E2B]" />, tone: 'bg-rose-50' },
-    { key: 'reviews' as const, title: 'Review Reminders', description: 'Remind me to review my purchases', icon: <Star className="h-5 w-5 fill-current text-amber-500" />, tone: 'bg-amber-50' },
-    { key: 'appUpdates' as const, title: 'App Updates', description: 'New features and improvements', icon: <Smartphone className="h-5 w-5 text-blue-600" />, tone: 'bg-blue-50' },
-    { key: 'promotions' as const, title: 'Promotional Messages', description: 'Marketing and promotional content', icon: <Megaphone className="h-5 w-5 fill-current text-[#E51E2B]" />, tone: 'bg-red-50' },
+    { key: 'offers' as const, title: 'Festival Discounts & Coupons', description: 'Alerts about seasonal flash sales & discounts', icon: <Tag className="h-5 w-5 fill-current text-[#E51E2B]" />, tone: 'bg-red-50' },
+    { key: 'orderUpdates' as const, title: 'Order Status & Tracking', description: 'Realtime updates when stitching starts or completes', icon: <Truck className="h-5 w-5 text-[#E51E2B]" />, tone: 'bg-rose-50' },
+    { key: 'workshopAlerts' as const, title: 'Support & Workshop Replies', description: 'Responses to your support requests', icon: <MessageCircle className="h-5 w-5 text-[#E51E2B]" />, tone: 'bg-rose-50' },
+    { key: 'systemUpdates' as const, title: 'Product & Account Updates', description: 'New products, profile and service notices', icon: <Package className="h-5 w-5 text-purple-600" />, tone: 'bg-purple-50' },
   ];
+  const save = () => {
+    const savedPreferences = saveCustomerAppPreferences(userId, { notifications: preferences });
+    setPreferences(savedPreferences.notifications);
+    setSaved(true);
+    onSaved(savedPreferences.notifications);
+  };
   return <main className="min-h-screen w-full bg-[#FCFCFD] text-slate-800 font-sans">
-    <header className="flex items-start gap-3 bg-white px-5 pb-4 pt-4"><button onClick={onBack} aria-label="Go back" className="mt-1 -ml-1 rounded-full p-1"><ArrowLeft className="h-6 w-6" /></button><div><h1 className="text-[22px] font-bold leading-tight tracking-tight text-slate-900">Notification Settings</h1><p className="mt-0.5 text-[13px] text-slate-500">Manage what notifications you receive</p></div></header>
+    <header className="flex items-start gap-3 bg-white px-5 pb-4 pt-4"><button onClick={onBack} aria-label="Go back" className="mt-1 -ml-1 rounded-full p-1"><ArrowLeft className="h-6 w-6" /></button><div><h1 className="text-[22px] font-bold leading-tight tracking-tight text-slate-900">Notification Settings</h1><p className="mt-0.5 text-[13px] text-slate-500">Choose what appears in your in-app inbox</p></div></header>
     <div className="space-y-3 overflow-y-auto bg-[#FCFCFD] px-4 pb-8 pt-3"><section className="flex items-center gap-4 rounded-2xl border border-rose-100/60 bg-gradient-to-r from-[#FFF2F2] to-[#FFF5F5] p-4 shadow-sm"><div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-rose-100"><div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-200/70"><Bell className="h-6 w-6 fill-current text-[#E51E2B]" /></div></div><div><h2 className="text-base font-bold leading-snug text-slate-900">Stay Updated</h2><p className="mt-0.5 text-[12.5px] leading-normal text-slate-500">Get important updates about your orders, offers and more.</p></div></section>
-      <section className="space-y-2.5">{rows.map((row) => <article key={row.key} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm"><div className="flex min-w-0 items-center gap-3.5"><div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${row.tone}`}>{row.icon}</div><div className="min-w-0"><h3 className="text-[14.5px] font-bold text-slate-900">{row.title}</h3><p className="mt-0.5 text-[12px] leading-tight text-slate-500">{row.description}</p></div></div><button type="button" role="switch" aria-checked={preferences[row.key]} aria-label={`${row.title} notifications`} onClick={() => toggle(row.key)} className={`relative ml-3 h-6 w-12 shrink-0 rounded-full transition-colors ${preferences[row.key] ? 'bg-[#E51E2B]' : 'bg-slate-200'}`}><span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform ${preferences[row.key] ? 'translate-x-6' : 'translate-x-0.5'}`} /></button></article>)}</section>
-      <section className="space-y-2.5 pt-1"><div className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><div className="flex items-center gap-3.5"><Volume2 className="h-5 w-5 text-slate-700" /><span className="text-[14.5px] font-bold text-slate-900">Notification Sound</span></div><div className="flex items-center gap-1.5 text-[13px] font-medium text-slate-500">Default<ChevronRight className="h-4 w-4" /></div></div><article className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm"><div className="flex items-center gap-3.5"><Moon className="h-5 w-5 text-slate-700" /><div><h3 className="text-[14.5px] font-bold text-slate-900">Quiet Hours</h3><p className="mt-0.5 text-[12px] leading-tight text-slate-500">Pause notifications during specific hours</p></div></div><button type="button" role="switch" aria-checked={preferences.quietHours} aria-label="Quiet Hours" onClick={() => toggle('quietHours')} className={`relative h-6 w-12 shrink-0 rounded-full transition-colors ${preferences.quietHours ? 'bg-[#E51E2B]' : 'bg-slate-200'}`}><span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform ${preferences.quietHours ? 'translate-x-6' : 'translate-x-0.5'}`} /></button></article></section>
+      <section className="space-y-2.5">{rows.map((row) => <article key={row.key} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm"><div className="flex min-w-0 items-center gap-3.5"><div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${row.tone}`}>{row.icon}</div><div className="min-w-0"><h3 className="text-[14.5px] font-bold text-slate-900">{row.title}</h3><p className="mt-0.5 text-[12px] leading-tight text-slate-500">{row.description}</p></div></div><button type="button" role="switch" aria-checked={preferences[row.key]} aria-label={`${row.title} notifications`} onClick={() => { setSaved(false); setPreferences({ ...preferences, [row.key]: !preferences[row.key] }); }} className={`relative ml-3 h-6 w-12 shrink-0 rounded-full transition-colors ${preferences[row.key] ? 'bg-[#E51E2B]' : 'bg-slate-200'}`}><span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform ${preferences[row.key] ? 'translate-x-6' : 'translate-x-0.5'}`} /></button></article>)}</section>
+      {saved && <p role="status" className="rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-medium leading-relaxed text-emerald-800">Notification preferences saved on this device. They control which categories appear in your in-app inbox.</p>}
+      <p className="text-[10px] leading-relaxed text-slate-500 px-1">These preferences filter your in-app inbox and unread badge. They do not control push or WhatsApp delivery.</p>
+      <button type="button" onClick={save} className="w-full py-3 bg-[#D9232D] text-white text-xs font-bold rounded-2xl shadow-sm hover:bg-red-700 transition-colors">Save Preferences</button>
     </div>
   </main>;
 }
