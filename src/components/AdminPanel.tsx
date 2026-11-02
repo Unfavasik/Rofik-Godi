@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { AdminActivityView } from './AdminActivityView';
 import { AdminProductManager } from './AdminProductManager';
+import { AdminVehicleCatalogManager } from './AdminVehicleCatalogManager';
 import { CouponManagement } from './CouponManagement';
 import { AdminReviewsView } from './AdminReviewsView';
 import { InvoiceTemplate } from './InvoiceTemplate';
@@ -628,6 +629,8 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
             />
           )}
           {section === 'products' && (
+            <div className="space-y-5">
+            <AdminVehicleCatalogManager notify={notify} />
             <AdminProductManager
               initialProducts={products}
               onProductsChange={setProducts}
@@ -636,6 +639,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
               focusProductId={focusProductId}
               onFocusHandled={() => setFocusProductId(null)}
             />
+            </div>
           )}
           {section === 'categories' && (
             <CategoriesView products={products} onManageProducts={() => goTo('products')} />

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { VEHICLE_BRANDS } from '../data/products';
-import { VEHICLE_MODELS, type VehicleCatalogModel } from '../data/vehicleModels';
+import { getVisibleVehicleModels, VEHICLE_CATALOG_CHANGED_EVENT } from '../lib/vehicleCatalogAdmin';
+import type { VehicleCatalogModel } from '../data/vehicleModels';
 import { CheckCircle2, ChevronDown, RotateCcw, Shield } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -21,13 +22,20 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
   activeVehicleFilter,
 }) => {
   const [selectedType, setSelectedType] = useState<FinderType>('bike');
+  const [catalogModels, setCatalogModels] = useState<VehicleCatalogModel[]>(() => getVisibleVehicleModels());
   const [selectedBrand, setSelectedBrand] = useState('');
+
+  useEffect(() => {
+    const refresh = () => setCatalogModels(getVisibleVehicleModels());
+    window.addEventListener(VEHICLE_CATALOG_CHANGED_EVENT, refresh);
+    return () => window.removeEventListener(VEHICLE_CATALOG_CHANGED_EVENT, refresh);
+  }, []);
   const [selectedModel, setSelectedModel] = useState('');
 
   const currentBrands =
     selectedType === 'toto'
       ? VEHICLE_BRANDS.toto.map(({ brand }) => brand)
-      : Array.from(new Set(VEHICLE_MODELS.filter((model) => model.type === selectedType).map((model) => model.brand))).sort(
+      : Array.from(new Set(catalogModels.filter((model) => model.type === selectedType).map((model) => model.brand))).sort(
           (a, b) => a.localeCompare(b),
         );
   const currentModels: FinderModel[] =
@@ -36,7 +44,7 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
           brand: selectedBrand,
           name,
         }))
-      : VEHICLE_MODELS.filter(
+      : catalogModels.filter(
           (model: VehicleCatalogModel) => model.type === selectedType && model.brand === selectedBrand,
         );
   const selectedVehicle = currentModels.find((model) => model.name === selectedModel);

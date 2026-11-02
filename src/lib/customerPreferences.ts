@@ -123,6 +123,7 @@ function isLanguage(value: unknown): value is PreferredLanguage {
   return value === 'en' || value === 'bn' || value === 'hi';
 }
 
+
 function normalizePreferences(value: unknown): CustomerAppPreferences {
   if (!value || typeof value !== 'object') return structuredClone(DEFAULT_CUSTOMER_APP_PREFERENCES);
   const record = value as Record<string, unknown>;
