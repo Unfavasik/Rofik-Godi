@@ -506,23 +506,22 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     notify(ok ? 'Report CSV downloaded' : 'Report unavailable');
   };
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(217,35,45,0.08),_transparent_32%),#f7f8fb] font-sans text-slate-900">
+    <div className="min-h-screen bg-[#f5f7fb] font-sans text-slate-900">
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-[270px] flex-col border-r border-slate-200/80 bg-slate-950 px-4 py-5 text-white shadow-2xl shadow-slate-950/10 transition-transform duration-200 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed inset-y-0 left-0 z-40 flex w-[250px] flex-col border-r border-slate-200 bg-white px-4 py-5 transition-transform duration-200 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex items-center justify-between px-2">
-          <div className="flex items-center gap-3">
-            <span className="grid size-9 place-items-center rounded-xl bg-[#D9232D] text-sm font-black shadow-lg shadow-red-950/30">RG</span>
-            <div><p className="text-sm font-black tracking-tight">ROFIK <span className="text-red-400">GODI</span></p><p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">Admin workspace</p></div>
-          </div>
+          <p className="text-sm font-black">
+            ROFIK <span className="text-[#D9232D]">GODI</span>
+          </p>
           <button className="lg:hidden" onClick={() => setSidebarOpen(false)}>
             <X className="h-5 w-5 text-slate-400" />
           </button>
         </div>
-        <div className="mt-10 flex flex-1 flex-col gap-7 overflow-y-auto">
+        <div className="mt-8 space-y-6 overflow-y-auto">
           {navGroups.map((group) => (
             <div key={group.label}>
-              <p className="mb-2 px-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+              <p className="mb-2 px-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
                 {group.label}
               </p>
               <div className="space-y-1">
@@ -531,7 +530,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
                     key={id}
                     onClick={() => goTo(id)}
                     aria-current={section === id ? 'page' : undefined}
-                    className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[12px] font-bold transition ${section === id ? 'bg-[#D9232D] text-white shadow-lg shadow-red-950/20' : 'text-slate-400 hover:bg-white/10 hover:text-white'}`}
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[12px] font-bold ${section === id ? 'bg-red-50 text-[#D9232D]' : 'text-slate-500 hover:bg-slate-50'}`}
                   >
                     <Icon className="h-4 w-4" />
                     {label}
@@ -558,8 +557,8 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
           </button>
         </div>
       </aside>
-      <div className="lg:pl-[270px]">
-        <header className="sticky top-0 z-30 flex h-[78px] items-center justify-between border-b border-slate-200/80 bg-white/85 px-4 backdrop-blur-xl md:px-8">
+      <div className="lg:pl-[250px]">
+        <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur md:px-8">
           <div className="flex items-center gap-3">
             <button
               className="rounded-lg p-2 hover:bg-slate-100 lg:hidden"
@@ -603,7 +602,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
             </button>
           </div>
         </header>
-        <main className="mx-auto max-w-[1440px] p-4 md:p-8 lg:p-10">
+        <main className="mx-auto max-w-[1440px] p-4 md:p-8">
           {error && (
             <div className="mb-5 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-700">
               {error}
