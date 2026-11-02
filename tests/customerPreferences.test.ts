@@ -35,6 +35,7 @@ describe('customer app preferences', () => {
 
     expect(readCustomerAppPreferences('user-a')).toEqual({
       language: 'bn',
+      theme: 'system',
       hapticFeedback: false,
       notifications: {
         offers: false,

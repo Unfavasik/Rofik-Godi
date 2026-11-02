@@ -33,6 +33,44 @@
   }
 }
 
+/* User-selectable dark theme. Component-level brand colors remain intact while
+   common Tailwind surfaces and text tokens switch consistently site-wide. */
+html.app-dark,
+html.app-dark body,
+html.app-dark #root {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+html.app-dark .bg-white { background-color: #172033 !important; }
+html.app-dark .bg-\[\#F7F8FA\],
+html.app-dark .bg-\[\#F8FAFC\],
+html.app-dark .bg-\[\#F5F6F8\] { background-color: #0f172a !important; }
+html.app-dark .bg-slate-50,
+html.app-dark .bg-gray-50 { background-color: #1e293b !important; }
+html.app-dark .text-gray-900,
+html.app-dark .text-slate-900,
+html.app-dark .text-gray-800,
+html.app-dark .text-slate-800 { color: #f1f5f9 !important; }
+html.app-dark .text-gray-700,
+html.app-dark .text-slate-700,
+html.app-dark .text-gray-600,
+html.app-dark .text-slate-600 { color: #cbd5e1 !important; }
+html.app-dark .text-gray-500,
+html.app-dark .text-slate-500,
+html.app-dark .text-gray-400,
+html.app-dark .text-slate-400 { color: #94a3b8 !important; }
+html.app-dark .border-gray-100,
+html.app-dark .border-gray-200,
+html.app-dark .border-slate-100,
+html.app-dark .border-slate-200 { border-color: rgba(148,163,184,.22) !important; }
+html.app-dark input,
+html.app-dark textarea,
+html.app-dark select { color: #f1f5f9; }
+html.app-dark input::placeholder,
+html.app-dark textarea::placeholder { color: #94a3b8; }
+html.app-dark .shadow-sm,
+html.app-dark .shadow-xs { box-shadow: 0 4px 18px rgba(0,0,0,.22); }
+
 /* Keep every route inside the viewport on narrow phones and embedded WebViews. */
 *,
 *::before,
