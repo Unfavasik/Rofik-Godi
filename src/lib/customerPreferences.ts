@@ -2,7 +2,6 @@ import { getCustomerNotificationCategory, type CustomerNotificationCategory, typ
 import { supabase } from './supabase';
 
 export type PreferredLanguage = 'en' | 'bn' | 'hi';
-export type AppTheme = 'system' | 'light' | 'dark';
 
 export interface CustomerNotificationPreferences {
   offers: boolean;
@@ -13,7 +12,6 @@ export interface CustomerNotificationPreferences {
 
 export interface CustomerAppPreferences {
   language: PreferredLanguage;
-  theme: AppTheme;
   hapticFeedback: boolean;
   notifications: CustomerNotificationPreferences;
 }
@@ -107,7 +105,6 @@ export async function syncCustomerNotificationPreferencesFromServer(userId: stri
 
 export const DEFAULT_CUSTOMER_APP_PREFERENCES: CustomerAppPreferences = {
   language: 'en',
-  theme: 'system',
   hapticFeedback: true,
   notifications: {
     offers: true,
@@ -126,9 +123,6 @@ function isLanguage(value: unknown): value is PreferredLanguage {
   return value === 'en' || value === 'bn' || value === 'hi';
 }
 
-function isTheme(value: unknown): value is AppTheme {
-  return value === 'system' || value === 'light' || value === 'dark';
-}
 
 function normalizePreferences(value: unknown): CustomerAppPreferences {
   if (!value || typeof value !== 'object') return structuredClone(DEFAULT_CUSTOMER_APP_PREFERENCES);
@@ -138,7 +132,6 @@ function normalizePreferences(value: unknown): CustomerAppPreferences {
     : {};
   return {
     language: isLanguage(record.language) ? record.language : 'en',
-    theme: isTheme(record.theme) ? record.theme : 'system',
     hapticFeedback: typeof record.hapticFeedback === 'boolean' ? record.hapticFeedback : true,
     notifications: {
       offers: typeof rawNotifications.offers === 'boolean' ? rawNotifications.offers : true,

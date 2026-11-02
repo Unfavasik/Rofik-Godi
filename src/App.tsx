@@ -127,26 +127,6 @@ export default function App() {
     setIsAdmin,
     checkIsAdmin,
   } = useAuth();
-  const applyTheme = useCallback(() => {
-    const preference = readCustomerAppPreferences(currentUser?.id).theme;
-    const systemDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
-    const dark = preference === 'dark' || (preference === 'system' && systemDark);
-    document.documentElement.classList.toggle('app-dark', dark);
-    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
-  }, [currentUser?.id]);
-
-  useEffect(() => {
-    applyTheme();
-    const media = window.matchMedia?.('(prefers-color-scheme: dark)');
-    const onSystemTheme = () => applyTheme();
-    media?.addEventListener?.('change', onSystemTheme);
-    const onPreferencesChanged = () => applyTheme();
-    window.addEventListener(CUSTOMER_PREFERENCES_CHANGED_EVENT, onPreferencesChanged);
-    return () => {
-      media?.removeEventListener?.('change', onSystemTheme);
-      window.removeEventListener(CUSTOMER_PREFERENCES_CHANGED_EVENT, onPreferencesChanged);
-    };
-  }, [applyTheme]);
   usePushNotifications(currentUser.isGuest ? null : currentUser.id, navigate);
   const launchPathRef = useRef(location.pathname);
   const restoredRouteRef = useRef(false);
