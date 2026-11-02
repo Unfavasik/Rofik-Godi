@@ -424,7 +424,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-[#17223B] via-[#17223B]/35 to-transparent" />
           <div className="absolute bottom-4 left-4 right-4 flex items-end gap-3 text-white">
             <img src="/images/rofik-center-splash.webp" alt="Rofik Godi Centre logo" className="h-14 w-14 rounded-2xl border border-white/30 object-cover shadow-lg" />
-            <div><p className="text-[9px] font-bold uppercase tracking-[0.18em] text-blue-200">Since 2012</p><h2 className="mt-1 text-xl font-black tracking-tight">Rofik Godi Centre</h2></div>
+            <div><p className="text-[9px] font-bold uppercase tracking-[0.18em] text-blue-200">Since 2007</p><h2 className="mt-1 text-xl font-black tracking-tight">Rofik Godi Centre</h2></div>
           </div>
         </section>
 
