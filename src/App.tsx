@@ -11,7 +11,7 @@ import { WORKSHOP_INFO } from './data/products';
 import { Product, CartItem, CustomerOrderRecord, VehicleCategory, UserProfile } from './types';
 import { Header } from './components/Header';
 import { HeroBanner } from './components/HeroBanner';
-import { CategorySection } from './components/CategorySection';
+import { CategorySection, type CategoryFilter } from './components/CategorySection';
 import { CatalogStatus } from './components/CatalogStatus';
 import { VehicleFinder } from './components/VehicleFinder';
 import { ProductCard } from './components/ProductCard';
@@ -468,7 +468,7 @@ export default function App() {
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<VehicleCategory | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('all');
   const [vehicleFilter, setVehicleFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('manual');
   const [homeFilters, setHomeFilters] = useState<FilterState>(INITIAL_FILTERS);

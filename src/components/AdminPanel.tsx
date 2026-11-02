@@ -36,7 +36,8 @@ import { AdminReviewsView } from './AdminReviewsView';
 import { InvoiceTemplate } from './InvoiceTemplate';
 import { AdminOrderDetails } from './AdminOrderDetails';
 import { PickupVerification } from './PickupVerification';
-import { BannersView, CategoriesView, NotificationsView, ReportsView } from './AdminSections';
+import { BannersView, NotificationsView, ReportsView } from './AdminSections';
+import { AdminCategoriesManager } from './AdminCategoriesManager';
 import { AdminCustomerProfile } from './AdminCustomerProfile';
 import {
   loadAdminOrderById,
@@ -650,7 +651,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
           )}
           {section === 'vehicle' && (vehicleEditModelId ? <AdminVehicleModelEdit modelId={vehicleEditModelId} notify={notify} /> : <AdminVehicleCatalogManager notify={notify} />)}
           {section === 'categories' && (
-            <CategoriesView products={products} onManageProducts={() => goTo('products')} />
+            <AdminCategoriesManager products={products} notify={notify} />
           )}
           {section === 'activity' && (
             <AdminActivityView
