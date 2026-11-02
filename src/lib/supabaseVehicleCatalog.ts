@@ -164,9 +164,9 @@ export async function setVehicleBrandVisibility(brand: string, type: VehicleCata
 export async function uploadVehicleModelImage(id: string, file: File) {
   if (!supabase) throw new Error('Supabase is not configured');
   if (file.size > 5 * 1024 * 1024) throw new Error('Please choose an image smaller than 5MB.');
-  // Any input size/shape is normalized to a 4:3 landscape 800x600 WebP with the
-  // full image contained (transparent padding) so nothing gets cropped away.
-  const webp = await convertImageToWebP(file, { fitSize: { width: 800, height: 600 } });
+  // Any input size/shape is normalized to a 4:3 landscape 800x600 WebP that
+  // fills the frame (center-cropped) so thumbnails never look tiny.
+  const webp = await convertImageToWebP(file, { coverSize: { width: 800, height: 600 } });
   const path = `vehicle-models/${id}/${crypto.randomUUID()}.webp`;
   const { error: uploadError } = await supabase.storage.from('product-images').upload(path, webp, {
     cacheControl: '31536000',

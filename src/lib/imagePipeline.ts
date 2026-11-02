@@ -6,6 +6,8 @@ export interface ImageConversionOptions {
   squareSize?: number;
   /** Scale the whole image to fit inside this canvas (transparent padding, nothing cropped). */
   fitSize?: { width: number; height: number };
+  /** Scale the image to cover this canvas and center-crop the overflow. */
+  coverSize?: { width: number; height: number };
 }
 
 export async function convertImageToWebP(file: File, options: ImageConversionOptions = {}): Promise<File> {
@@ -13,12 +15,17 @@ export async function convertImageToWebP(file: File, options: ImageConversionOpt
   const bitmap = await createImageBitmap(file);
   const squareSize = options.squareSize;
   const fitSize = options.fitSize;
-  const width = fitSize
-    ? fitSize.width
-    : squareSize ?? Math.max(1, Math.round(bitmap.width * Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height))));
-  const height = fitSize
-    ? fitSize.height
-    : squareSize ?? Math.max(1, Math.round(bitmap.height * Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height))));
+  const coverSize = options.coverSize;
+  const width = coverSize
+    ? coverSize.width
+    : fitSize
+      ? fitSize.width
+      : squareSize ?? Math.max(1, Math.round(bitmap.width * Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height))));
+  const height = coverSize
+    ? coverSize.height
+    : fitSize
+      ? fitSize.height
+      : squareSize ?? Math.max(1, Math.round(bitmap.height * Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height))));
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -35,6 +42,13 @@ export async function convertImageToWebP(file: File, options: ImageConversionOpt
       const sourceX = (bitmap.width - cropSize) / 2;
       const sourceY = (bitmap.height - cropSize) / 2;
       context.drawImage(bitmap, sourceX, sourceY, cropSize, cropSize, 0, 0, squareSize, squareSize);
+    } else if (coverSize) {
+      // Cover: scale up until the canvas is filled, then center-crop the
+      // overflow so the subject fills the frame instead of shrinking.
+      const scale = Math.max(coverSize.width / bitmap.width, coverSize.height / bitmap.height);
+      const drawWidth = Math.max(coverSize.width, Math.round(bitmap.width * scale));
+      const drawHeight = Math.max(coverSize.height, Math.round(bitmap.height * scale));
+      context.drawImage(bitmap, Math.round((coverSize.width - drawWidth) / 2), Math.round((coverSize.height - drawHeight) / 2), drawWidth, drawHeight);
     } else if (fitSize) {
       // Contain: scale the full image down to fit the canvas and center it,
       // leaving transparent padding instead of cropping anything away.
