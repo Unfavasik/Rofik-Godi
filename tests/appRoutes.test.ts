@@ -6,9 +6,15 @@ describe('main route preservation', () => {
     '/home', '/shop', '/profile', '/profile/edit', '/account', '/search', '/wishlist', '/cart',
     '/notifications', '/notification', '/custom', '/checkout', '/my-orders',
     '/my-order/order/0123456789abcdef0123456789abcdef', '/shop/products/premium-bike-seat-cover', '/settings', '/support',
-    '/privacy-policy', '/terms-and-conditions', '/store',
+    '/privacy-policy', '/terms-and-conditions', '/store-map',
   ])('keeps %s when entering the main phase', (path) => {
     expect(getPathForPhase('main', path)).toBe(path === '/account' ? '/profile' : path === '/notification' ? '/notifications' : path);
+  });
+
+  it('normalizes legacy store paths to the /store-map canonical route', () => {
+    expect(getPathForPhase('main', '/store')).toBe('/store-map');
+    expect(getPathForPhase('main', '/store-info')).toBe('/store-map');
+    expect(getPathForPhase('main', '/store/navigation')).toBe('/store-map/navigation');
   });
 
   it('falls back to home when entering main from an auth or onboarding route', () => {
@@ -84,6 +90,7 @@ describe('main route preservation', () => {
     ['/settings', 'settings'],
     ['/privacy-policy', 'privacy'],
     ['/terms-and-conditions', 'terms'],
+    ['/store-map', 'store'],
     ['/store', 'store'],
   ])('resolves the %s page', (path, kind) => {
     expect(resolveAppRoute(path).kind).toBe(kind);

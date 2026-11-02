@@ -33,6 +33,7 @@ const ROUTE_TIMEOUT_MS = 15000;
 type LatLng = { lat: number; lng: number };
 type TravelModeKey = 'drive' | 'bike' | 'walk';
 type LegInfo = { durationText: string; distanceText: string };
+type CompassOrientationEvent = DeviceOrientationEvent & { webkitCompassHeading?: number };
 type Maneuver = { instruction: string; type: string; distanceText: string; distanceMeters: number };
 
 // The MapLibre map is cached across mounts: NavigatrMap exposes no destroy API,
@@ -177,7 +178,10 @@ let lastSpokenTime = 0;
 const speak = (text: string, options: { priority?: boolean; language: SpeechLanguage } ) => {
   if (!('speechSynthesis' in window)) return;
   const now = Date.now();
-  if (!options.priority && text === lastSpokenText && now - lastSpokenTime < 5000) return;
+  // The same sentence is never repeated within the cooldown — even at
+  // priority. Priority only interrupts the queue when there is something
+  // new to say, so near-destination events cannot loop the same phrase.
+  if (text === lastSpokenText && now - lastSpokenTime < 5000) return;
   lastSpokenText = text;
   lastSpokenTime = now;
   if (options.priority) window.speechSynthesis.cancel();
@@ -257,7 +261,17 @@ const getCurrentPosition = (): Promise<LatLng> =>
     );
   });
 
-export function StoreLocationView({ onClose }: { onClose: () => void }) {
+interface StoreLocationViewProps {
+  onClose: () => void;
+  /** When true (routed at /store-map/navigation), turn-by-turn starts automatically once the location is known. */
+  startInNavigation?: boolean;
+  /** Routed flow: navigating to the dedicated navigation page instead of starting in place. */
+  onStartNavigation?: () => void;
+  /** Routed flow: leaving turn-by-turn returns to the store page. */
+  onExitNavigation?: () => void;
+}
+
+export function StoreLocationView({ onClose, startInNavigation = false, onStartNavigation, onExitNavigation }: StoreLocationViewProps) {
   const hostWrapperRef = useRef<HTMLDivElement | null>(null);
   const navRef = useRef<Navigatr | null>(null);
   const watchIdRef = useRef<number | null>(null);
@@ -270,6 +284,8 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
   const announcedStageRef = useRef<{ key: string; stage: 'pre' | 'final' } | null>(null);
   const latestSpeedRef = useRef<number | null>(null);
   const voiceEnabledRef = useRef(true);
+  const deviceHeadingRef = useRef<number | null>(null);
+  const orientationListenerRef = useRef<(() => void) | null>(null);
   const { language } = useI18n();
   const speechLanguage: SpeechLanguage = language === 'bn' ? 'bn' : 'en';
   const languageRef = useRef<SpeechLanguage>(speechLanguage);
@@ -291,6 +307,7 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
   const [routeError, setRouteError] = useState('');
   const [speedAnomaly, setSpeedAnomaly] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [liveSpeedKmh, setLiveSpeedKmh] = useState<number | null>(null);
 
   activeModeRef.current = activeMode;
   voiceEnabledRef.current = voiceEnabled;
@@ -312,8 +329,41 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
     watchIdRef.current = null;
   };
 
+  // Compass tracking: the walking cone follows the phone's facing (like
+  // Google Maps), even while standing still. iOS requires a permission
+  // request from a user gesture — handled in the Get Directions handler.
+  const startCompass = useCallback(() => {
+    if (orientationListenerRef.current || !('DeviceOrientationEvent' in window)) return;
+    const handler = (event: Event) => {
+      const orientation = event as CompassOrientationEvent;
+      const heading = typeof orientation.webkitCompassHeading === 'number'
+        ? orientation.webkitCompassHeading
+        : orientation.alpha !== null && orientation.alpha !== undefined
+          ? (360 - orientation.alpha) % 360
+          : null;
+      if (heading === null || Number.isNaN(heading)) return;
+      deviceHeadingRef.current = heading;
+      if (activeModeRef.current === 'walk' && navRouteRef.current) {
+        const el = cachedHost?.querySelector('.navigatr-driver-icon') as HTMLElement | null;
+        if (el) el.style.transform = `rotate(${heading}deg)`;
+      }
+    };
+    window.addEventListener('deviceorientation', handler, true);
+    orientationListenerRef.current = () => window.removeEventListener('deviceorientation', handler, true);
+  }, []);
+
+  const stopCompass = useCallback(() => {
+    orientationListenerRef.current?.();
+    orientationListenerRef.current = null;
+    deviceHeadingRef.current = null;
+  }, []);
+
+  const onExitNavigationRef = useRef<(() => void) | undefined>(undefined);
+  onExitNavigationRef.current = onExitNavigation;
+
   const exitNavigation = useCallback(() => {
     clearWatch();
+    stopCompass();
     unsubscribeEventsRef.current?.();
     unsubscribeEventsRef.current = null;
     cachedMap?.stopNavigation();
@@ -331,9 +381,12 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
     setArrived(false);
     setOffRoute(false);
     setSpeedAnomaly(false);
+    setLiveSpeedKmh(null);
     navRouteRef.current = null;
     offRouteTicksRef.current = 0;
-  }, []);
+    // Routed flow: leaving turn-by-turn returns to the store page.
+    onExitNavigationRef.current?.();
+  }, [stopCompass]);
 
   const fetchTravelTimes = useCallback(async (nav: Navigatr, user: LatLng, store: LatLng) => {
     const results = await Promise.allSettled(
@@ -487,10 +540,12 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
         setThenManeuver(index >= 0 ? maneuvers[index + 1] || null : null);
         // Voice: pre-turn warning at the mode's announce distance, then the
         // immediate instruction close to the turn. Each stage speaks once.
+        // The arrival maneuver is skipped here — the arrival event speaks it.
         const spec = MODE_SPECS[activeModeRef.current];
         const key = event.maneuver.instruction;
         const stage = event.distanceMeters <= spec.finalTurnAnnounceM ? 'final' : 'pre';
-        if (event.distanceMeters <= spec.preTurnAnnounceM && (announcedStageRef.current?.key !== key || announcedStageRef.current?.stage !== stage)) {
+        const isArrivalManeuver = event.maneuver.type.startsWith('destination');
+        if (!isArrivalManeuver && event.distanceMeters <= spec.preTurnAnnounceM && (announcedStageRef.current?.key !== key || announcedStageRef.current?.stage !== stage)) {
           announcedStageRef.current = { key, stage };
           if (voiceEnabledRef.current) {
             speak(
@@ -563,6 +618,8 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
       map.fitRoute(route.polyline);
       map.startNavigation(route);
       map.updateDriverMarker({ lat: origin.lat, lng: origin.lng, icon: driverIconFor(activeModeRef.current) });
+      // Walking mode: the view cone follows the phone's compass facing.
+      if (activeModeRef.current === 'walk') startCompass();
       // The car marker now represents the user; the separate blue dot would
       // only duplicate it during navigation.
       cachedUserMarker?.remove();
@@ -578,12 +635,23 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
         latestPosRef.current = position;
         setUserPos(position);
         map.updatePosition(position);
+        // Walking mode: the cone points where the phone faces (compass),
+        // overriding the movement bearing the SDK applies on each update.
+        if (activeModeRef.current === 'walk' && deviceHeadingRef.current !== null) {
+          const el = cachedHost?.querySelector('.navigatr-driver-icon') as HTMLElement | null;
+          if (el) el.style.transform = `rotate(${deviceHeadingRef.current}deg)`;
+        }
+        // Live speed readout (GPS reports m/s; display km/h like Google Maps).
+        setLiveSpeedKmh(raw.coords.speed !== null && raw.coords.speed !== undefined ? raw.coords.speed * 3.6 : null);
         // Mode-aware deviation check per the spec: cross-track distance past
         // the mode threshold (30/20/12 m) OR a heading delta past the mode's
         // opposite-direction angle while moving, confirmed on consecutive
         // ticks (3 for vehicles, 4 for walking) before recalculating.
+        // Suppressed within 30 m of the destination — GPS drift while standing
+        // at the shop must not trigger reroute/arrival loops.
         const activeRoute = navRouteRef.current;
-        if (activeRoute && activeRoute.polyline.length > 1) {
+        const metersToDestination = haversineKm(position, STORE_POS) * 1000;
+        if (activeRoute && activeRoute.polyline.length > 1 && metersToDestination > 30) {
           const spec = MODE_SPECS[activeModeRef.current];
           const { distanceMeters, routeBearing } = locateOnRoute(position, activeRoute.polyline);
           const gpsHeading = raw.coords.heading;
@@ -620,11 +688,54 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
     } finally {
       setRouteLoading(false);
     }
-  }, [trackLivePosition, rerouteFrom]);
+  }, [trackLivePosition, rerouteFrom, startCompass]);
+
+  // Routed deep link (/store-map/navigation): begin turn-by-turn automatically as
+  // soon as the map and the visitor's location are ready. If the position is
+  // not known yet, request it once; on failure show the location prompt.
+  const autoStartRef = useRef(false);
+  const autoLocationRef = useRef(false);
+  useEffect(() => {
+    if (!startInNavigation) {
+      autoStartRef.current = false;
+      autoLocationRef.current = false;
+      return;
+    }
+    if (autoStartRef.current || navigating || !mapReady) return;
+    if (userPos) {
+      autoStartRef.current = true;
+      void startTurnByTurn(userPos);
+      return;
+    }
+    if (autoLocationRef.current) return;
+    autoLocationRef.current = true;
+    getCurrentPosition()
+      .then((user) => {
+        adoptUserPosition(user);
+        const nav = navRef.current;
+        if (nav) void fetchTravelTimes(nav, user, STORE_POS);
+      })
+      .catch((error) => {
+        setLocationNeeded(true);
+        setRouteError(error instanceof Error ? error.message : 'Location is needed for directions.');
+      });
+  }, [startInNavigation, mapReady, userPos, navigating, startTurnByTurn, adoptUserPosition, fetchTravelTimes]);
 
   const handleGetDirections = async () => {
     if (navigating) {
       exitNavigation();
+      return;
+    }
+    // iOS 13+ requires the compass permission to be requested from a user
+    // gesture; this click is that gesture. Other platforms ignore it.
+    const orientationApi = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<'granted' | 'denied'> };
+    if (typeof orientationApi.requestPermission === 'function') {
+      orientationApi.requestPermission().catch(() => undefined);
+    }
+    // Routed flow: the turn-by-turn view is its own page (/store-map/navigation);
+    // this instance stays mounted and auto-starts once the route flips.
+    if (onStartNavigation) {
+      onStartNavigation();
       return;
     }
     if (userPos) {
@@ -672,7 +783,13 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
       <header className="flex shrink-0 items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
         <button
           type="button"
-          onClick={onClose}
+          onClick={() => {
+            if (navigating) {
+              exitNavigation();
+              return;
+            }
+            onClose();
+          }}
           aria-label="Go back"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100/80 text-slate-700 transition-transform hover:bg-slate-200/80 active:scale-95"
         >
@@ -727,8 +844,15 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
+        {navigating && (
+          <div className="absolute bottom-3 left-3 z-10 flex items-baseline gap-1 rounded-xl bg-white px-3 py-2 shadow-lg" role="status" aria-label="Current speed">
+            <span className="text-lg font-black leading-none text-slate-900">{liveSpeedKmh !== null ? Math.round(liveSpeedKmh) : '--'}</span>
+            <span className="text-[10px] font-bold text-slate-500">km/h</span>
+          </div>
+        )}
+
         {navigating && offRoute && !arrived && (
-          <div className="absolute bottom-3 left-3 right-3 z-20" role="alert">
+          <div className="absolute bottom-20 left-3 right-3 z-20" role="alert">
             <div className="flex items-center gap-2.5 rounded-2xl bg-amber-500 p-3 shadow-xl">
               <TriangleAlert className="h-5 w-5 shrink-0 text-white" />
               <p className="text-xs font-bold text-white">Off route — finding a new way…</p>
@@ -737,7 +861,7 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
         )}
 
         {navigating && speedAnomaly && !arrived && !offRoute && (
-          <div className="absolute bottom-3 left-3 right-3 z-20" role="alert">
+          <div className="absolute bottom-20 left-3 right-3 z-20" role="alert">
             <div className="flex flex-col gap-2 rounded-2xl bg-blue-600 p-3.5 shadow-xl">
               <p className="text-xs font-bold text-white">You are moving fast for walking mode. Switch to bike or car?</p>
               <div className="flex gap-2">
