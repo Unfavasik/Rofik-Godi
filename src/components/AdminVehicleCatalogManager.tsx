@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Edit3, Eye, EyeOff, ImagePlus, Plus, Trash2 } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Edit3, Eye, EyeOff, Plus, Trash2, Upload } from 'lucide-react';
 import {
   createVehicleModel,
   deleteVehicleModel,
   loadVehicleModels,
+  uploadVehicleModelImage,
   updateVehicleModel,
   type VehicleCatalogModel,
   type VehicleCatalogType,
@@ -19,6 +20,8 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
   const [image, setImage] = useState('');
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [uploadingModelId, setUploadingModelId] = useState<string | null>(null);
+  const uploadInputRef = useRef<HTMLInputElement | null>(null);
 
   const refresh = async () => {
     setLoading(true);
@@ -50,12 +53,10 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
   const editModel = async (model: VehicleCatalogModel) => {
     const nextName = window.prompt('Model name', model.name);
     if (nextName === null || !nextName.trim()) return;
-    const nextImage = window.prompt('Model image URL', model.image);
-    if (nextImage === null) return;
     try {
-      await updateVehicleModel(model.id, { name: nextName, image: nextImage });
+      await updateVehicleModel(model.id, { name: nextName });
       await refresh();
-      notify('Model name and image updated', 'success');
+      notify('Model name updated. Use the upload button to replace its image with WebP.', 'success');
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not update model', 'error');
     }
@@ -68,6 +69,23 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
       notify(model.isActive ? 'Model hidden from customers' : 'Model visible to customers', 'success');
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not update visibility', 'error');
+    }
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    const modelId = event.target.dataset.modelId;
+    event.target.value = '';
+    if (!file || !modelId) return;
+    setUploadingModelId(modelId);
+    try {
+      const result = await uploadVehicleModelImage(modelId, file);
+      await refresh();
+      notify(`Image converted to WebP and saved (${Math.round(result.bytes / 1024)} KB)`, 'success');
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Could not upload model image', 'error');
+    } finally {
+      setUploadingModelId(null);
     }
   };
 
@@ -121,9 +139,10 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
         {filtered.map((model) => <div key={model.id} className={`flex items-center gap-3 rounded-2xl border p-2.5 ${model.isActive ? 'border-slate-100 bg-white' : 'border-rose-200 bg-rose-50/50 opacity-60'}`}>
           {model.image ? <img src={model.image} alt="" className="h-12 w-16 shrink-0 rounded-xl bg-slate-100 object-contain" /> : <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl">{model.type === 'scooter' ? '🛵' : '🏍️'}</div>}
           <div className="min-w-0 flex-1"><p className="truncate text-[10px] font-bold text-slate-400">{model.brand}</p><p className="truncate text-xs font-black text-slate-900">{model.name}</p><p className="text-[9px] font-semibold uppercase text-slate-400">{model.type} · {model.isActive ? 'visible' : 'hidden'}</p></div>
-          <div className="flex shrink-0 gap-1"><button type="button" onClick={() => void toggleModel(model)} aria-label="Toggle model visibility" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100">{model.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}</button><button type="button" onClick={() => void editModel(model)} aria-label="Edit model name and image" className="rounded-lg p-2 text-blue-600 hover:bg-blue-50"><Edit3 className="h-4 w-4" /><ImagePlus className="hidden" /></button><button type="button" onClick={() => void removeModel(model)} aria-label="Remove model" className="rounded-lg p-2 text-rose-600 hover:bg-rose-50"><Trash2 className="h-4 w-4" /></button></div>
+          <div className="flex shrink-0 gap-1"><button type="button" onClick={() => void toggleModel(model)} aria-label="Toggle model visibility" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100">{model.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}</button><button type="button" onClick={() => void editModel(model)} aria-label="Edit model name or image URL" className="rounded-lg p-2 text-blue-600 hover:bg-blue-50"><Edit3 className="h-4 w-4" /></button><button type="button" onClick={() => { if (uploadInputRef.current) { uploadInputRef.current.dataset.modelId = model.id; uploadInputRef.current.click(); } }} disabled={uploadingModelId === model.id} aria-label="Upload new model image" className="rounded-lg p-2 text-emerald-600 hover:bg-emerald-50 disabled:opacity-50"><Upload className="h-4 w-4" /></button><button type="button" onClick={() => void removeModel(model)} aria-label="Remove model" className="rounded-lg p-2 text-rose-600 hover:bg-rose-50"><Trash2 className="h-4 w-4" /></button></div>
         </div>)}
       </div>}
+      <input ref={uploadInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" aria-label="Upload vehicle model image" />
     </section>
   );
 }

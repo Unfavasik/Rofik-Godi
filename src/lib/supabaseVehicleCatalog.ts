@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { convertImageToWebP } from './imagePipeline';
 
 export type VehicleCatalogType = 'bike' | 'scooter';
 
@@ -93,4 +94,20 @@ export async function deleteVehicleModel(id: string) {
   const { error } = await supabase.from('vehicle_models').delete().eq('id', id);
   if (error) throw error;
   emitChanged();
+}
+
+export async function uploadVehicleModelImage(id: string, file: File) {
+  if (!supabase) throw new Error('Supabase is not configured');
+  if (file.size > 10 * 1024 * 1024) throw new Error('Please choose an image smaller than 10MB.');
+  const webp = await convertImageToWebP(file, { squareSize: 800 });
+  const path = `vehicle-models/${id}/${crypto.randomUUID()}.webp`;
+  const { error: uploadError } = await supabase.storage.from('product-images').upload(path, webp, {
+    cacheControl: '31536000',
+    upsert: false,
+    contentType: 'image/webp',
+  });
+  if (uploadError) throw uploadError;
+  const { data } = supabase.storage.from('product-images').getPublicUrl(path);
+  await updateVehicleModel(id, { image: data.publicUrl });
+  return { url: data.publicUrl, path, fileName: webp.name, bytes: webp.size };
 }
