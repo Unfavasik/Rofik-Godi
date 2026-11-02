@@ -281,6 +281,9 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
   const activeModeRef = useRef<TravelModeKey>('drive');
   const navRouteRef = useRef<RouteResult | null>(null);
   const offRouteTicksRef = useRef(0);
+  const lastAccuracyRef = useRef<number | null>(null);
+  const lastRerouteAtRef = useRef(0);
+  const previousDestinationDistanceRef = useRef<number | null>(null);
   const announcedStageRef = useRef<{ key: string; stage: 'pre' | 'final' } | null>(null);
   const latestSpeedRef = useRef<number | null>(null);
   const voiceEnabledRef = useRef(true);
@@ -330,26 +333,37 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
   };
 
   // Compass tracking: the walking cone follows the phone's facing (like
-  // Google Maps), even while standing still. iOS requires a permission
-  // request from a user gesture — handled in the Get Directions handler.
+  // Google Maps) while standing still. Only true-north sources are trusted —
+  // iOS webkitCompassHeading and the absolute orientation event; the plain
+  // relative alpha on Android drifts and points the wrong way. iOS requires
+  // a permission request from a user gesture — handled in Get Directions.
   const startCompass = useCallback(() => {
     if (orientationListenerRef.current || !('DeviceOrientationEvent' in window)) return;
     const handler = (event: Event) => {
       const orientation = event as CompassOrientationEvent;
-      const heading = typeof orientation.webkitCompassHeading === 'number'
-        ? orientation.webkitCompassHeading
-        : orientation.alpha !== null && orientation.alpha !== undefined
-          ? (360 - orientation.alpha) % 360
-          : null;
+      let heading: number | null;
+      if (typeof orientation.webkitCompassHeading === 'number') {
+        heading = orientation.webkitCompassHeading;
+      } else if (event.type === 'deviceorientationabsolute' && orientation.alpha !== null && orientation.alpha !== undefined) {
+        heading = (360 - orientation.alpha) % 360;
+      } else {
+        return;
+      }
       if (heading === null || Number.isNaN(heading)) return;
       deviceHeadingRef.current = heading;
-      if (activeModeRef.current === 'walk' && navRouteRef.current) {
-        const el = cachedHost?.querySelector('.navigatr-driver-icon') as HTMLElement | null;
-        if (el) el.style.transform = `rotate(${heading}deg)`;
+      // While standing still the cone follows the phone's facing; while moving
+      // the GPS course takes over (handled in the GPS tick).
+      if (activeModeRef.current === 'walk' && navRouteRef.current && (latestSpeedRef.current === null || latestSpeedRef.current < 0.5)) {
+        const rotor = cachedHost?.querySelector('.nav-marker-rotor') as HTMLElement | null;
+        if (rotor) rotor.style.transform = `rotate(${heading}deg)`;
       }
     };
+    window.addEventListener('deviceorientationabsolute', handler, true);
     window.addEventListener('deviceorientation', handler, true);
-    orientationListenerRef.current = () => window.removeEventListener('deviceorientation', handler, true);
+    orientationListenerRef.current = () => {
+      window.removeEventListener('deviceorientationabsolute', handler, true);
+      window.removeEventListener('deviceorientation', handler, true);
+    };
   }, []);
 
   const stopCompass = useCallback(() => {
@@ -434,6 +448,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
       navRouteRef.current = route;
       setNavRoute(route);
       setOffRoute(false);
+      lastRerouteAtRef.current = Date.now();
     } catch {
       // Keep guiding with the old line; the next position update retries.
     } finally {
@@ -478,19 +493,21 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
           });
           // The SDK rebuilds its default green vehicle SVG on every position
           // update, so swap in the branded top-down marker right after each
-          // rebuild, sized per the spec (car 48px, bike 40px, walk 24px dot)
-          // and scaled down slightly as speed rises. The heading rotation
-          // lives on the wrapper element and keeps working.
+          // rebuild. Rotation lives on an INNER rotor div — the marker element
+          // itself is positioned by MapLibre via its transform, so writing a
+          // rotate there (the SDK does this) makes the phone's compass clobber
+          // the positioning translate and throw the marker off-screen.
           const originalUpdateDriverMarker = cachedMap.updateDriverMarker.bind(cachedMap);
           cachedMap.updateDriverMarker = (options) => {
             originalUpdateDriverMarker(options);
             const spec = MODE_SPECS[activeModeRef.current];
             const iconEl = cachedHost?.querySelector('.navigatr-driver-icon');
             if (!iconEl) return;
+            const heading = options.heading ?? 0;
             if (activeModeRef.current === 'walk') {
               // Google Maps-style walking puck: blue dot with a 45-degree
-              // view cone that rotates with the heading via the wrapper.
-              iconEl.innerHTML = `<div style="position:relative;width:64px;height:64px;display:flex;align-items:center;justify-content:center;">
+              // view cone, rotated by the compass via the rotor.
+              iconEl.innerHTML = `<div class="nav-marker-rotor" style="position:relative;width:64px;height:64px;display:flex;align-items:center;justify-content:center;transform:rotate(${heading}deg);">
                 <svg width="64" height="64" viewBox="0 0 64 64" style="position:absolute;inset:0;" aria-hidden="true">
                   <path d="M32 32 L20.5 4.3 A30 30 0 0 1 43.5 4.3 Z" fill="rgba(26,115,232,0.28)"/>
                 </svg>
@@ -500,7 +517,9 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
             }
             const iconUrl = activeModeRef.current === 'drive' ? NAV_CAR_ICON : NAV_BIKE_ICON;
             const scale = markerScaleFor(latestSpeedRef.current);
-            iconEl.innerHTML = `<img src="${iconUrl}" alt="" style="width:${spec.markerWidthPx}px;height:${spec.markerHeightPx}px;object-fit:contain;transform:scale(${scale});filter:drop-shadow(0 2px 5px rgba(0,0,0,0.4));" draggable="false" />`;
+            iconEl.innerHTML = `<div class="nav-marker-rotor" style="transform:rotate(${heading}deg) scale(${scale});display:flex;">
+              <img src="${iconUrl}" alt="" style="width:${spec.markerWidthPx}px;height:${spec.markerHeightPx}px;object-fit:contain;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.4));" draggable="false" />
+            </div>`;
           };
         }
         if (cancelled) return;
@@ -565,9 +584,9 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
         return;
       }
       if (event.type === 'off_route') {
-        setOffRoute(true);
-        const origin = latestPosRef.current;
-        if (origin) void rerouteFrom(origin, activeModeRef.current);
+        // The SDK's own check uses a fixed 50 m on the raw GPS point and
+        // ignores accuracy — the spec-based tick check in the GPS callback
+        // governs rerouting instead, so phone noise cannot loop this.
       }
     });
     return unsubscribe;
@@ -635,11 +654,14 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
         latestPosRef.current = position;
         setUserPos(position);
         map.updatePosition(position);
-        // Walking mode: the cone points where the phone faces (compass),
-        // overriding the movement bearing the SDK applies on each update.
-        if (activeModeRef.current === 'walk' && deviceHeadingRef.current !== null) {
-          const el = cachedHost?.querySelector('.navigatr-driver-icon') as HTMLElement | null;
-          if (el) el.style.transform = `rotate(${deviceHeadingRef.current}deg)`;
+        // Walking cone: point along the GPS course while actually moving; the
+        // compass takes over when standing still.
+        if (activeModeRef.current === 'walk') {
+          const rotor = cachedHost?.querySelector('.nav-marker-rotor') as HTMLElement | null;
+          const course = raw.coords.heading;
+          if (rotor && course !== null && course !== undefined && (raw.coords.speed ?? 0) > 0.5) {
+            rotor.style.transform = `rotate(${course}deg)`;
+          }
         }
         // Live speed readout (GPS reports m/s; display km/h like Google Maps).
         setLiveSpeedKmh(raw.coords.speed !== null && raw.coords.speed !== undefined ? raw.coords.speed * 3.6 : null);
@@ -651,24 +673,46 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
         // at the shop must not trigger reroute/arrival loops.
         const activeRoute = navRouteRef.current;
         const metersToDestination = haversineKm(position, STORE_POS) * 1000;
-        if (activeRoute && activeRoute.polyline.length > 1 && metersToDestination > 30) {
+        const accuracyMeters = raw.coords.accuracy ?? 0;
+        lastAccuracyRef.current = accuracyMeters;
+        // Loop guards: skip deviation checks for a grace period after each
+        // reroute, and never reroute while the user is actually getting
+        // closer to the destination — GPS noise on the road must not loop
+        // the "off route" banner and voice.
+        const inRerouteGrace = Date.now() - lastRerouteAtRef.current < 20000;
+        const previousDistance = previousDestinationDistanceRef.current;
+        previousDestinationDistanceRef.current = metersToDestination;
+        const makingProgress = previousDistance !== null && metersToDestination < previousDistance;
+        if (activeRoute && activeRoute.polyline.length > 1 && metersToDestination > 30 && !inRerouteGrace) {
           const spec = MODE_SPECS[activeModeRef.current];
           const { distanceMeters, routeBearing } = locateOnRoute(position, activeRoute.polyline);
           const gpsHeading = raw.coords.heading;
           const speedMps = raw.coords.speed ?? 0;
           const headingDelta = gpsHeading !== null && gpsHeading !== 0 && routeBearing !== null ? angularDiff(gpsHeading, routeBearing) : 0;
-          const isDeviated = distanceMeters > spec.offRouteThresholdM;
+          // Spec: judge deviation excluding GPS accuracy — a raw point 25 m off
+          // with 30 m accuracy is still on the route. Without this, phone GPS
+          // noise triggers "off route" constantly even when walking the line.
+          const isDeviated = distanceMeters - accuracyMeters > spec.offRouteThresholdM;
           const isMovingOpposite = gpsHeading !== null && gpsHeading !== 0 && routeBearing !== null
-            && headingDelta > spec.oppositeDeltaDeg && speedMps > spec.minOppositeSpeedMps;
+            && headingDelta > spec.oppositeDeltaDeg && speedMps > spec.minOppositeSpeedMps
+            && accuracyMeters < spec.offRouteThresholdM;
+          // Poor GPS (accuracy above half the threshold) needs double the
+          // confirmation ticks before a reroute.
+          const requiredTicks = accuracyMeters > spec.offRouteThresholdM / 2 ? spec.offRouteTicks * 2 : spec.offRouteTicks;
           if (isDeviated || isMovingOpposite) {
             offRouteTicksRef.current += 1;
-            if (offRouteTicksRef.current >= spec.offRouteTicks) {
+            if (offRouteTicksRef.current >= requiredTicks && !(isDeviated && makingProgress)) {
               offRouteTicksRef.current = 0;
+              setOffRoute(true);
               void rerouteFrom(position, activeModeRef.current, isMovingOpposite && !isDeviated ? 'opposite' : 'deviation');
             }
           } else {
             offRouteTicksRef.current = 0;
+            setOffRoute(false);
           }
+        } else if (!inRerouteGrace) {
+          offRouteTicksRef.current = 0;
+          setOffRoute(false);
         }
         // Walking speed anomaly: if the user on foot moves like a vehicle,
         // suggest switching the travel mode (spoken once per detection).
