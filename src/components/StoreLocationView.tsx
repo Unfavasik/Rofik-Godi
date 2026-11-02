@@ -23,6 +23,7 @@ import { WORKSHOP_INFO } from '../data/products';
 const STORE_IMAGE = '/images/rofik-godi-store.webp';
 const BRAND_ICON = '/images/rofik-center-splash.webp';
 const NAV_CAR_ICON = '/images/nav-car.png';
+const NAV_BIKE_ICON = '/images/nav-bike.png';
 const MAP_CONTAINER_ID = 'store-location-map-host';
 const ROUTE_TIMEOUT_MS = 15000;
 
@@ -240,15 +241,22 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
             center: { lat: WORKSHOP_INFO.lat, lng: WORKSHOP_INFO.lng },
             zoom: 15,
           });
-          // The SDK rebuilds its default green car SVG on every position update,
-          // so swap in the branded top-down car right after each rebuild. The
-          // heading rotation lives on the wrapper element and keeps working.
+          // The SDK rebuilds its default green vehicle SVG on every position
+          // update, so swap in the branded top-down marker right after each
+          // rebuild. The heading rotation lives on the wrapper element and
+          // keeps working. Walk mode keeps the SDK's pedestrian glyph.
           const originalUpdateDriverMarker = cachedMap.updateDriverMarker.bind(cachedMap);
           cachedMap.updateDriverMarker = (options) => {
             originalUpdateDriverMarker(options);
+            const iconUrl = activeModeRef.current === 'drive'
+              ? NAV_CAR_ICON
+              : activeModeRef.current === 'bike'
+                ? NAV_BIKE_ICON
+                : '';
             const iconEl = cachedHost?.querySelector('.navigatr-driver-icon');
-            if (iconEl) {
-              iconEl.innerHTML = `<img src="${NAV_CAR_ICON}" alt="" style="width:26px;height:58px;object-fit:contain;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.4));" draggable="false" />`;
+            if (iconEl && iconUrl) {
+              const size = iconUrl === NAV_CAR_ICON ? 'width:26px;height:58px;' : 'width:22px;height:58px;';
+              iconEl.innerHTML = `<img src="${iconUrl}" alt="" style="${size}object-fit:contain;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.4));" draggable="false" />`;
             }
           };
         }
