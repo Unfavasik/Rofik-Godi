@@ -51,6 +51,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [vehicleCompany, setVehicleCompany] = useState('');
   const [vehicleModel, setVehicleModel] = useState('');
   const [vehicleCatalogModels, setVehicleCatalogModels] = useState<VehicleCatalogModel[]>([]);
+  const [catalogReady, setCatalogReady] = useState(false);
   const [hasSavedVehicle, setHasSavedVehicle] = useState(false);
   const [editingPhone, setEditingPhone] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState(false);
@@ -92,10 +93,26 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       : type === 'Car' ? t('checkout.vehicleCar')
         : type === 'Toto / E-rickshaw' ? t('checkout.vehicleToto') : t('checkout.vehicleOther');
 
+  // The vehicle catalog loads once per open. It must stay in its own effect:
+  // loadVehicleModels() returns a fresh array every call, so letting the profile
+  // effect both fetch it and depend on it loops forever and pins the modal on
+  // the "Loading your secure account details…" state.
   useEffect(() => {
-    if (!isOpen || !userId) return;
+    if (!isOpen) return;
     let active = true;
-    void loadVehicleModels().then(({ data }) => { if (active) setVehicleCatalogModels(data); });
+    setCatalogReady(false);
+    setVehicleCatalogModels([]);
+    void loadVehicleModels().then(({ data }) => {
+      if (!active) return;
+      setVehicleCatalogModels(data);
+      setCatalogReady(true);
+    });
+    return () => { active = false; };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !userId || !catalogReady) return;
+    let active = true;
     setProfileLoad('loading'); setProfileError(''); setSubmissionError(''); setToastMessage(''); setStep(1); setPendingOnlineOrder(null); setPlacedOrder(null);
     setEditingPhone(false); setEditingVehicle(false); setPhoneError('');
     const loadProfile = async () => {
@@ -145,7 +162,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     };
     void loadProfile();
     return () => { active = false; };
-  }, [isOpen, t, userId, vehicleCatalogModels]);
+  }, [isOpen, t, userId, catalogReady, vehicleCatalogModels]);
 
   useEffect(() => () => {
     if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);

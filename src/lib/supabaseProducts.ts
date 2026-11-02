@@ -117,6 +117,12 @@ export const mapSupabaseProduct = (row: ProductRow): Product => {
         ? Boolean(bundled?.isCustomizable)
         : Boolean(row.is_customizable),
     inStock: row.in_stock === undefined ? (bundled?.inStock ?? true) : Boolean(row.in_stock),
+    stockQuantity:
+      row.stock_quantity === null || row.stock_quantity === undefined ? null : Number(row.stock_quantity),
+    lowStockThreshold:
+      row.low_stock_threshold === null || row.low_stock_threshold === undefined
+        ? null
+        : Number(row.low_stock_threshold),
     materials: asStrings(value('materials', bundled?.materials || [])),
     colors: asColors(
       value('colors_json', bundled?.colors || []),
@@ -235,6 +241,8 @@ const toRow = (product: Product) => {
     is_waterproof: Boolean(product.isWaterproof),
     is_customizable: Boolean(product.isCustomizable),
     in_stock: Boolean(product.inStock),
+    stock_quantity: product.stockQuantity ?? null,
+    low_stock_threshold: product.lowStockThreshold ?? null,
     is_active: true,
     display_order: product.displayOrder ?? 0,
   };
