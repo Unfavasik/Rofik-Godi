@@ -25,8 +25,11 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
   const [selectedBrand, setSelectedBrand] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'active' | 'hidden'>('all');
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploadingModelId, setUploadingModelId] = useState<string | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  const createImageInputRef = useRef<HTMLInputElement | null>(null);
 
   const refresh = async () => {
     setLoading(true);
@@ -55,13 +58,19 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
     const cleanBrand = brand.trim();
     const cleanName = name.trim();
     if (!cleanBrand || !cleanName) return notify('Company and model name are required', 'error');
+    if (imageFile && imageFile.size > 5 * 1024 * 1024) return notify('Choose an image smaller than 5MB', 'error');
+    setCreating(true);
     try {
-      await createVehicleModel({ brand: cleanBrand, name: cleanName, type, image });
-      setBrand(''); setName(''); setImage('');
+      const created = await createVehicleModel({ brand: cleanBrand, name: cleanName, type, image: imageFile ? '' : image });
+      if (imageFile) await uploadVehicleModelImage(created.id, imageFile);
+      setBrand(''); setName(''); setImage(''); setImageFile(null);
       await refresh();
       notify('Vehicle model added to Supabase', 'success');
     } catch (error) {
-      notify(error instanceof Error ? error.message : 'Could not add vehicle model', 'error');
+      await refresh();
+      notify(error instanceof Error ? `Model may be saved, but setup failed: ${error.message}` : 'Could not add vehicle model', 'error');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -132,7 +141,7 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
         <div className="grid gap-4 md:grid-cols-3">
           <label className="rounded-xl border border-slate-200 bg-white p-3"><span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Vehicle Type <b className="text-[#D9232D]">*</b></span><select value={type} onChange={(event) => setType(event.target.value as VehicleCatalogType)} className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold outline-none focus:border-[#D9232D]"><option value="bike">Bike</option><option value="scooter">Scooty / Scooter</option></select></label>
           <div className="rounded-xl border border-slate-200 bg-white p-3"><span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Company <b className="text-[#D9232D]">*</b> &amp; Model <b className="text-[#D9232D]">*</b></span><div className="mt-2 grid gap-2"><input value={brand} onChange={(event) => setBrand(event.target.value)} placeholder="Company name" className="rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#D9232D]" /><input value={name} onChange={(event) => setName(event.target.value)} placeholder="Model name" className="rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#D9232D]" /></div></div>
-          <div className="rounded-xl border border-slate-200 bg-white p-3"><span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Model Image <span className="font-normal normal-case">(Optional)</span></span><input value={image} onChange={(event) => setImage(event.target.value)} placeholder="Optional image URL" className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#D9232D]" /><button type="button" onClick={() => void addModel()} className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#e51d2a] px-3 py-3 text-sm font-bold text-white shadow-lg shadow-red-200 hover:bg-[#bf1f29]"><Plus className="h-4 w-4" />Add model</button></div>
+          <div className="rounded-xl border border-slate-200 bg-white p-3"><span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Model Image <span className="font-normal normal-case">(Optional)</span></span><button type="button" onClick={() => createImageInputRef.current?.click()} className="mt-2 flex min-h-20 w-full flex-col items-center justify-center rounded-lg border border-dashed border-red-200 bg-slate-50 px-2 py-3 text-center hover:bg-red-50"><ImagePlus className="h-5 w-5 text-[#D9232D]" /><span className="mt-1 max-w-full truncate text-[11px] font-semibold text-slate-700">{imageFile?.name || 'Tap to upload image'}</span><span className="text-[9px] text-slate-400">JPG, PNG or WEBP · max 5MB</span></button><input ref={createImageInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setImageFile(event.target.files?.[0] || null)} className="hidden" aria-label="Choose vehicle model image" /><button type="button" onClick={() => void addModel()} disabled={creating} className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#e51d2a] px-3 py-3 text-sm font-bold text-white shadow-lg shadow-red-200 hover:bg-[#bf1f29] disabled:cursor-wait disabled:opacity-60">{creating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}{creating ? 'Adding model…' : 'Add model'}</button><input value={image} onChange={(event) => setImage(event.target.value)} placeholder="Or paste image URL" className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#D9232D]" /></div>
         </div>
       </div>
 
