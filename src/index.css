@@ -41,12 +41,29 @@ html.app-dark #root {
   background-color: #0f172a;
   color: #e2e8f0;
 }
-html.app-dark .bg-white { background-color: #172033 !important; }
+html.app-dark .bg-white,
+html.app-dark .bg-\[\#FFFFFF\],
+html.app-dark .bg-\[\#ffffff\],
+html.app-dark [class*="bg-white"] { background-color: #172033 !important; }
 html.app-dark .bg-\[\#F7F8FA\],
 html.app-dark .bg-\[\#F8FAFC\],
-html.app-dark .bg-\[\#F5F6F8\] { background-color: #0f172a !important; }
-html.app-dark .bg-slate-50,
-html.app-dark .bg-gray-50 { background-color: #1e293b !important; }
+html.app-dark .bg-\[\#F5F6F8\],
+html.app-dark .bg-\[\#F4F5F8\],
+html.app-dark .bg-\[\#F7F9FC\],
+html.app-dark .bg-\[\#FAFAFA\],
+html.app-dark .bg-gray-50,
+html.app-dark .bg-slate-50 { background-color: #0f172a !important; }
+html.app-dark .bg-gray-100,
+html.app-dark .bg-slate-100,
+html.app-dark .bg-\[\#F3F4F6\] { background-color: #1e293b !important; }
+html.app-dark .bg-rose-50,
+html.app-dark .bg-red-50,
+html.app-dark .bg-\[\#FEECEC\] { background-color: rgba(217,35,45,.18) !important; }
+html.app-dark .bg-blue-50,
+html.app-dark .bg-\[\#EBF5FF\] { background-color: rgba(37,99,235,.18) !important; }
+html.app-dark .bg-emerald-50,
+html.app-dark .bg-green-50,
+html.app-dark .bg-\[\#E8F8F0\] { background-color: rgba(16,185,129,.16) !important; }
 html.app-dark .text-gray-900,
 html.app-dark .text-slate-900,
 html.app-dark .text-gray-800,
@@ -58,7 +75,22 @@ html.app-dark .text-slate-600 { color: #cbd5e1 !important; }
 html.app-dark .text-gray-500,
 html.app-dark .text-slate-500,
 html.app-dark .text-gray-400,
-html.app-dark .text-slate-400 { color: #94a3b8 !important; }
+html.app-dark .text-slate-400,
+html.app-dark .text-slate-300 { color: #94a3b8 !important; }
+html.app-dark .text-slate-100,
+html.app-dark .text-gray-100 { color: #e2e8f0 !important; }
+html.app-dark .text-black,
+html.app-dark .text-slate-950,
+html.app-dark [class*="text-gray-900"],
+html.app-dark [class*="text-slate-900"] { color: #f8fafc !important; }
+html.app-dark h1,
+html.app-dark h2,
+html.app-dark h3,
+html.app-dark h4,
+html.app-dark h5,
+html.app-dark h6 { color: #f1f5f9; }
+html.app-dark label { color: #cbd5e1; }
+html.app-dark .placeholder\:text-slate-400::placeholder { color: #94a3b8 !important; }
 html.app-dark .border-gray-100,
 html.app-dark .border-gray-200,
 html.app-dark .border-slate-100,
