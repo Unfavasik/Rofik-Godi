@@ -533,7 +533,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           );
         }) : <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center"><Search className="mx-auto h-7 w-7 text-slate-300" /><p className="mt-2 text-xs font-bold text-slate-700">No matching help topics</p><button type="button" onClick={() => setFaqQuery('')} className="mt-2 text-[11px] font-bold text-[#D9232D] underline">Clear search</button></div>}
 
-        <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-center"><p className="text-xs font-bold text-slate-800">Still need help?</p><p className="mt-1 text-[11px] text-slate-500">Our workshop team can help with a specific order or fitment.</p>{onOpenContactSupport && <button type="button" onClick={onOpenContactSupport} className="mt-3 rounded-xl bg-[#D9232D] px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-700">Contact support</button>}</div>
+        <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-center"><p className="text-xs font-bold text-slate-800">Still need help?</p><p className="mt-1 text-[11px] text-slate-500">Our workshop team can help with a specific order or fitment.</p>{onOpenContactSupport && <button type="button" onClick={() => onOpenContactSupport()} className="mt-3 rounded-xl bg-[#D9232D] px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-700">Contact support</button>}</div>
       </SectionPage>
     );
   }
