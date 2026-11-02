@@ -54,6 +54,14 @@ const haversineKm = (from: LatLng, to: LatLng) => {
 
 const formatKm = (km: number) => (km < 1 ? `${Math.max(1, Math.round(km * 10) * 100)} m` : `${km.toFixed(1)} km`);
 
+// Very short trips round to "0 mins" through the router's own text; show real
+// seconds below a minute so a 55 m walk reads "40 sec" instead of "0 mins".
+const formatDuration = (seconds: number, fallbackText: string) => {
+  if (!Number.isFinite(seconds) || seconds <= 0) return fallbackText;
+  if (seconds < 60) return `${Math.max(1, Math.round(seconds))} sec`;
+  return fallbackText;
+};
+
 const formatMeters = (meters: number) => (meters < 1000 ? `${Math.max(10, Math.round(meters / 10) * 10)} m` : `${(meters / 1000).toFixed(1)} km`);
 
 const estimateLeg = (km: number, speedKmh: number): LegInfo => ({
@@ -331,7 +339,7 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
     const results = await Promise.allSettled(
       (['drive', 'bike', 'walk'] as TravelModeKey[]).map(async (mode) => {
         const route = await withTimeout(nav.route({ origin: user, destination: store, mode }), ROUTE_TIMEOUT_MS, 'Route');
-        return { mode, durationText: route.durationText, distanceText: route.distanceText };
+        return { mode, durationText: formatDuration(route.durationSeconds, route.durationText), distanceText: route.distanceText };
       }),
     );
     setLegs((current) => {
@@ -427,7 +435,14 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
             const iconEl = cachedHost?.querySelector('.navigatr-driver-icon');
             if (!iconEl) return;
             if (activeModeRef.current === 'walk') {
-              iconEl.innerHTML = `<div style="width:${spec.markerWidthPx}px;height:${spec.markerHeightPx}px;border-radius:50%;background:#1A73E8;border:3px solid #ffffff;box-shadow:0 1px 6px rgba(0,0,0,0.35);"></div>`;
+              // Google Maps-style walking puck: blue dot with a 45-degree
+              // view cone that rotates with the heading via the wrapper.
+              iconEl.innerHTML = `<div style="position:relative;width:64px;height:64px;display:flex;align-items:center;justify-content:center;">
+                <svg width="64" height="64" viewBox="0 0 64 64" style="position:absolute;inset:0;" aria-hidden="true">
+                  <path d="M32 32 L20.5 4.3 A30 30 0 0 1 43.5 4.3 Z" fill="rgba(26,115,232,0.28)"/>
+                </svg>
+                <div style="position:relative;width:${spec.markerWidthPx}px;height:${spec.markerHeightPx}px;border-radius:50%;background:#1A73E8;border:3px solid #ffffff;box-shadow:0 1px 6px rgba(0,0,0,0.35);"></div>
+              </div>`;
               return;
             }
             const iconUrl = activeModeRef.current === 'drive' ? NAV_CAR_ICON : NAV_BIKE_ICON;
@@ -756,7 +771,7 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
               <X className="h-5 w-5" strokeWidth={2.4} />
             </button>
             <div className="min-w-0 flex-1 text-center">
-              <p className="text-xl font-black leading-none text-emerald-600">{navRoute?.durationText || '--'}</p>
+              <p className="text-xl font-black leading-none text-emerald-600">{navRoute ? formatDuration(navRoute.durationSeconds, navRoute.durationText) : '--'}</p>
               <p className="mt-1 truncate text-[11px] font-medium text-slate-500">
                 {navRoute?.distanceText || '--'}{arrivalTime ? ` • ${arrivalTime}` : ''}
               </p>
