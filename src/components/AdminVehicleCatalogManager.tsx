@@ -165,21 +165,6 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
 
   return (
     <section className="mx-auto max-w-[480px] space-y-4 bg-[#F8FAFC] p-4 sm:p-4">
-      <div>
-        <p className="text-[26px] font-extrabold leading-tight tracking-tight text-[#0B1528]">Vehicle Models</p>
-        <p className="mt-0.5 text-[13px] font-medium text-slate-400">Vehicle fitment library and model management</p>
-      </div>
-
-      <div className="relative min-h-[140px] overflow-hidden rounded-2xl bg-[#210b12] shadow-sm">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#210b12] via-[#690b13]/95 to-[#d5111b]/70" />
-        <img src="/images/premium-seat-cover-hero.webp" alt="Premium vehicle seat cover" className="absolute inset-y-0 right-0 h-full w-[62%] object-cover object-center opacity-95 mix-blend-screen" />
-        <div className="relative flex min-h-[140px] max-w-[430px] flex-col justify-center p-5">
-          <span className="w-fit rounded-full bg-[#e84650] px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white">Fitment library</span>
-          <h1 className="mt-2 text-2xl font-black tracking-tight text-white">Vehicle Models</h1>
-          <p className="mt-1 max-w-[230px] text-[12px] font-medium leading-[17px] text-white/85">Manage bike and scooter fitments, companies, and models in one place.</p>
-        </div>
-      </div>
-
       <div className="flex gap-2.5">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
