@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Bike, Building2, CheckCircle2, Edit3, Eye, EyeOff, ImagePlus, Layers3, Plus, RefreshCw, Search, SlidersHorizontal, Trash2, Upload } from 'lucide-react';
+import { Bike, Building2, CheckCircle2, Edit3, Eye, EyeOff, ImagePlus, Plus, RefreshCw, Search, SlidersHorizontal, Trash2, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   createVehicleModel,
@@ -59,16 +59,18 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
     const cleanName = name.trim();
     if (!cleanBrand || !cleanName) return notify('Company and model name are required', 'error');
     if (imageFile && imageFile.size > 5 * 1024 * 1024) return notify('Choose an image smaller than 5MB', 'error');
+    if (imageFile && !['image/jpeg', 'image/png', 'image/webp'].includes(imageFile.type)) return notify('Choose a JPG, PNG or WEBP image', 'error');
     setCreating(true);
+    let createdModel: VehicleCatalogModel | null = null;
     try {
-      const created = await createVehicleModel({ brand: cleanBrand, name: cleanName, type, image: imageFile ? '' : image });
-      if (imageFile) await uploadVehicleModelImage(created.id, imageFile);
+      createdModel = await createVehicleModel({ brand: cleanBrand, name: cleanName, type, image: imageFile ? '' : image });
       setBrand(''); setName(''); setImage(''); setImageFile(null);
+      if (imageFile) await uploadVehicleModelImage(createdModel.id, imageFile);
       await refresh();
       notify('Vehicle model added to Supabase', 'success');
     } catch (error) {
       await refresh();
-      notify(error instanceof Error ? `Model may be saved, but setup failed: ${error.message}` : 'Could not add vehicle model', 'error');
+      notify(error instanceof Error ? (createdModel ? `Model added, but image upload failed: ${error.message}` : error.message) : 'Could not add vehicle model', 'error');
     } finally {
       setCreating(false);
     }
@@ -102,7 +104,7 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
   };
 
   const toggleBrand = async (value: string) => {
-    const brandModels = models.filter((model) => model.brand === value);
+    const brandModels = models.filter((model) => model.brand === value && model.type === selectedType);
     const nextActive = brandModels.some((model) => !model.isActive);
     try {
       await Promise.all(brandModels.map((model) => updateVehicleModel(model.id, { isActive: nextActive })));
@@ -128,7 +130,7 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
     <section className="mx-auto max-w-[480px] space-y-4 rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-xl shadow-slate-200/40 sm:p-6">
       <div><p className="text-3xl font-black tracking-tight text-[#10213f] sm:text-4xl">Vehicle Models</p><p className="mt-1 text-base font-medium text-slate-400">Vehicle fitment library and model management</p></div>
       <div className="relative min-h-[190px] overflow-hidden rounded-[22px] bg-[#210b12] shadow-lg"><div className="absolute inset-0 bg-gradient-to-r from-[#210b12] via-[#690b13]/95 to-[#d5111b]/70" /><img src="/images/premium-seat-cover-hero.webp" alt="Premium vehicle seat cover" className="absolute inset-y-0 right-0 h-full w-[62%] object-cover object-center opacity-95 mix-blend-screen" /><div className="relative flex min-h-[190px] max-w-[430px] flex-col justify-center p-6 sm:p-8"><span className="w-fit rounded-full bg-[#e84650] px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.15em] text-white">Fitment library</span><h1 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl">Vehicle Models</h1><p className="mt-2 max-w-[250px] text-sm font-medium leading-5 text-white/80">Manage bike and scooter fitments, companies, and models in one place.</p></div></div>
-      <div className="flex gap-3"><div className="relative flex-1"><Search className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" /><input aria-label="Search vehicles" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search vehicles, models or companies..." className="h-14 w-full rounded-2xl border border-slate-200 bg-white pl-14 pr-4 text-sm font-semibold text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-[#D9232D] focus:ring-4 focus:ring-red-50" /></div><button type="button" aria-label="Open filters" className="grid size-14 shrink-0 place-items-center rounded-2xl bg-red-50 text-[#D9232D] shadow-sm"><SlidersHorizontal /></button><button type="button" onClick={() => void refresh()} aria-label="Refresh vehicle catalog" className="hidden size-14 shrink-0 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-500 hover:border-red-200 hover:text-[#D9232D] sm:grid"><RefreshCw className={loading ? 'animate-spin' : ''} /></button></div>
+      <div className="flex gap-3"><div className="relative flex-1"><Search className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" /><input aria-label="Search vehicles" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search vehicles, models or companies..." className="h-14 w-full rounded-2xl border border-slate-200 bg-white pl-14 pr-4 text-sm font-semibold text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-[#D9232D] focus:ring-4 focus:ring-red-50" /></div><button type="button" onClick={() => setVisibilityFilter((current) => current === 'all' ? 'active' : current === 'active' ? 'hidden' : 'all')} aria-label={`Cycle visibility filter, currently ${visibilityFilter}`} title={`Visibility: ${visibilityFilter}`} className={`grid size-14 shrink-0 place-items-center rounded-2xl shadow-sm ${visibilityFilter === 'all' ? 'bg-red-50 text-[#D9232D]' : 'bg-[#D9232D] text-white'}`}><SlidersHorizontal /></button><button type="button" onClick={() => void refresh()} aria-label="Refresh vehicle catalog" className="hidden size-14 shrink-0 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-500 hover:border-red-200 hover:text-[#D9232D] sm:grid"><RefreshCw className={loading ? 'animate-spin' : ''} /></button></div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-2xl border border-red-100 bg-gradient-to-br from-red-50 to-white p-4"><div className="flex items-center gap-3 text-[#D9232D]"><span className="grid size-10 place-items-center rounded-xl bg-red-100"><Bike /></span><span className="text-sm font-bold text-[#10213f]">Total Models</span></div><p className="mt-2 pl-1 text-3xl font-black text-[#10213f]">{models.length}</p></div>
@@ -155,7 +157,7 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
       </div></div>
 
       {loading ? <p className="rounded-2xl bg-slate-50 py-12 text-center text-sm text-slate-500">Loading vehicle catalog…</p> : <div><div className="mb-2 flex items-center justify-between"><p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">03 · Models <span className="font-normal normal-case tracking-normal">({filtered.length} shown)</span></p><span className="text-[10px] font-semibold text-slate-400">Tap Edit to update a model</span></div><div className="flex flex-col gap-2">
-        {filtered.map((model) => <div key={model.id} className={`group flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-2.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${model.isActive ? '' : 'bg-rose-50/50 opacity-60'}`}>
+        {filtered.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-10 text-center"><p className="text-sm font-bold text-slate-700">No vehicle models found</p><p className="mt-1 text-xs text-slate-400">Try another search or clear the current filters.</p><button type="button" onClick={() => { setQuery(''); setSelectedBrand(''); setVisibilityFilter('all'); }} className="mt-3 rounded-full bg-red-50 px-3 py-1.5 text-xs font-bold text-[#D9232D]">Clear filters</button></div> : filtered.map((model) => <div key={model.id} className={`group flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-2.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${model.isActive ? '' : 'bg-rose-50/50 opacity-60'}`}>
           {model.image ? <img src={model.image} alt="" className="h-14 w-16 shrink-0 rounded-xl bg-slate-50 object-contain p-1" /> : <div className="flex h-14 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500"><Bike className="h-7 w-7" /></div>}
           <div className="min-w-0 flex-1"><p className="truncate text-[10px] font-bold text-slate-400">{model.brand}</p><p className="truncate text-xs font-black text-slate-900">{model.name}</p><p className={`inline-flex items-center gap-1 text-[9px] font-semibold uppercase ${model.isActive ? 'text-emerald-600' : 'text-rose-500'}`}>{model.isActive && <CheckCircle2 />} {model.isActive ? 'visible to customers' : 'hidden from customers'}</p></div>
           <div className="flex shrink-0 flex-col gap-1"><button type="button" onClick={() => navigate(`/admin/Vehicle/${encodeURIComponent(model.id)}/edit`)} aria-label={`Edit ${model.name}`} className="grid size-8 place-items-center rounded-lg bg-blue-50/70 text-blue-600 hover:bg-blue-100"><Edit3 className="h-3.5 w-3.5" /></button><div className="flex gap-1"><button type="button" onClick={() => void toggleModel(model)} aria-label="Toggle model visibility" className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100">{model.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}</button><button type="button" onClick={() => { if (uploadInputRef.current) { uploadInputRef.current.dataset.modelId = model.id; uploadInputRef.current.click(); } }} disabled={uploadingModelId === model.id} aria-label="Upload new model image" className="rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50 disabled:opacity-50"><Upload className="h-4 w-4" /></button><button type="button" onClick={() => void removeModel(model)} aria-label="Remove model" className="rounded-lg p-1.5 text-rose-600 hover:bg-rose-50"><Trash2 className="h-4 w-4" /></button></div></div>

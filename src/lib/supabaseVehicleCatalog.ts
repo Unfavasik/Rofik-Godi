@@ -98,7 +98,7 @@ export async function deleteVehicleModel(id: string) {
 
 export async function uploadVehicleModelImage(id: string, file: File) {
   if (!supabase) throw new Error('Supabase is not configured');
-  if (file.size > 10 * 1024 * 1024) throw new Error('Please choose an image smaller than 10MB.');
+  if (file.size > 5 * 1024 * 1024) throw new Error('Please choose an image smaller than 5MB.');
   const webp = await convertImageToWebP(file, { squareSize: 800 });
   const path = `vehicle-models/${id}/${crypto.randomUUID()}.webp`;
   const { error: uploadError } = await supabase.storage.from('product-images').upload(path, webp, {
