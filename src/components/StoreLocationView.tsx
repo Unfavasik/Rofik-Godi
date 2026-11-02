@@ -83,6 +83,45 @@ const withTimeout = <T,>(promise: Promise<T>, ms: number, label: string): Promis
     new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error(`${label} timed out`)), ms)),
   ]);
 
+// Per-mode route styling from the navigation spec: car = solid blue 6px,
+// bike = teal 5px, walking = blue 5px (the SDK style API has no dash option).
+const routeStyleFor = (mode: TravelModeKey) =>
+  mode === 'drive'
+    ? { color: '#1A73E8', weight: 6 }
+    : mode === 'bike'
+      ? { color: '#00897B', weight: 5 }
+      : { color: '#4285F4', weight: 5 };
+
+// Reroute thresholds from the navigation spec: 30 m for car/bike, 15 m for
+// walking, confirmed on 3 consecutive GPS ticks before recalculating.
+const offRouteThresholdMeters = (mode: TravelModeKey) => (mode === 'walk' ? 15 : 30);
+const OFF_ROUTE_TICKS_REQUIRED = 3;
+const WALK_ANOMALY_SPEED_MPS = 20 / 3.6;
+
+// Distance from a point to the route polyline in meters (equirectangular
+// projection around the point — accurate enough at city scale).
+const distanceToPolylineMeters = (point: LatLng, polyline: LatLng[]) => {
+  const latRad = (point.lat * Math.PI) / 180;
+  const toXY = (p: LatLng) => ({
+    x: (p.lng - point.lng) * 111320 * Math.cos(latRad),
+    y: (p.lat - point.lat) * 110574,
+  });
+  const a = toXY(point);
+  let min = Infinity;
+  for (let i = 0; i < polyline.length - 1; i++) {
+    const b = toXY(polyline[i]);
+    const c = toXY(polyline[i + 1]);
+    const abx = c.x - b.x;
+    const aby = c.y - b.y;
+    const lenSq = abx * abx + aby * aby;
+    const t = lenSq === 0 ? 0 : Math.max(0, Math.min(1, ((a.x - b.x) * abx + (a.y - b.y) * aby) / lenSq));
+    const dx = a.x - (b.x + t * abx);
+    const dy = a.y - (b.y + t * aby);
+    min = Math.min(min, Math.sqrt(dx * dx + dy * dy));
+  }
+  return min;
+};
+
 // Callout card + red pin stacked above an invisible spacer: MapLibre centers
 // the marker element on the coordinate, so the spacer keeps the pin tip on it.
 const storeMarkerHtml = () => `
@@ -127,6 +166,8 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
   const latestPosRef = useRef<LatLng | null>(null);
   const reroutingRef = useRef(false);
   const activeModeRef = useRef<TravelModeKey>('drive');
+  const navRouteRef = useRef<RouteResult | null>(null);
+  const offRouteTicksRef = useRef(0);
   const storePosRef = useRef<LatLng>(STORE_POS);
   const [userPos, setUserPos] = useState<LatLng | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -142,6 +183,7 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
   const [offRoute, setOffRoute] = useState(false);
   const [locationNeeded, setLocationNeeded] = useState(false);
   const [routeError, setRouteError] = useState('');
+  const [speedAnomaly, setSpeedAnomaly] = useState(false);
 
   activeModeRef.current = activeMode;
 
@@ -178,6 +220,9 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
     setThenManeuver(null);
     setArrived(false);
     setOffRoute(false);
+    setSpeedAnomaly(false);
+    navRouteRef.current = null;
+    offRouteTicksRef.current = 0;
   }, []);
 
   const fetchTravelTimes = useCallback(async (nav: Navigatr, user: LatLng, store: LatLng) => {
@@ -196,14 +241,37 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
     });
   }, []);
 
-  const trackLivePosition = useCallback((onPosition: (position: LatLng) => void) => {
+  const trackLivePosition = useCallback((onPosition: (position: LatLng, raw: GeolocationPosition) => void) => {
     if (!('geolocation' in navigator)) return;
     clearWatch();
     watchIdRef.current = navigator.geolocation.watchPosition(
-      (position) => onPosition({ lat: position.coords.latitude, lng: position.coords.longitude }),
+      (position) => onPosition({ lat: position.coords.latitude, lng: position.coords.longitude }, position),
       () => undefined,
       { enableHighAccuracy: true, maximumAge: 5000 },
     );
+  }, []);
+
+  const rerouteFrom = useCallback(async (position: LatLng, mode: TravelModeKey) => {
+    const nav = navRef.current;
+    const map = cachedMap;
+    if (!nav || !map) return;
+    if (reroutingRef.current) return;
+    reroutingRef.current = true;
+    setOffRoute(true);
+    try {
+      const route = await withTimeout(nav.route({ origin: position, destination: STORE_POS, mode, maneuvers: true }), ROUTE_TIMEOUT_MS, 'Route');
+      if (!reroutingRef.current) return;
+      map.drawRoute(route.polyline, routeStyleFor(mode));
+      map.startNavigation(route);
+      map.updateDriverMarker({ lat: position.lat, lng: position.lng, icon: driverIconFor(mode) });
+      navRouteRef.current = route;
+      setNavRoute(route);
+      setOffRoute(false);
+    } catch {
+      // Keep guiding with the old line; the next position update retries.
+    } finally {
+      window.setTimeout(() => { reroutingRef.current = false; }, 8000);
+    }
   }, []);
 
   const adoptUserPosition = useCallback((user: LatLng) => {
@@ -306,29 +374,12 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
       }
       if (event.type === 'off_route') {
         setOffRoute(true);
-        if (reroutingRef.current) return;
-        reroutingRef.current = true;
-        void (async () => {
-          try {
-            const nav = navRef.current;
-            const origin = latestPosRef.current;
-            if (!nav || !origin || !cachedMap) return;
-            const route = await withTimeout(nav.route({ origin, destination: storePosRef.current, mode: activeModeRef.current, maneuvers: true }), ROUTE_TIMEOUT_MS, 'Route');
-            if (!reroutingRef.current) return;
-            cachedMap.drawRoute(route.polyline, { color: '#2563EB', weight: 6 });
-            cachedMap.startNavigation(route);
-            setNavRoute(route);
-            setOffRoute(false);
-          } catch {
-            // Keep guiding with the old line; the next position update retries.
-          } finally {
-            window.setTimeout(() => { reroutingRef.current = false; }, 8000);
-          }
-        })();
+        const origin = latestPosRef.current;
+        if (origin) void rerouteFrom(origin, activeModeRef.current);
       }
     });
     return unsubscribe;
-  }, [mapReady, navRoute, exitNavigation]);
+  }, [mapReady, navRoute, exitNavigation, rerouteFrom]);
 
   // Pick up the visitor's location once the map exists for the ETA cards.
   useEffect(() => {
@@ -371,7 +422,7 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
     setRouteError('');
     try {
       const route = await withTimeout(nav.route({ origin, destination: storePosRef.current, mode: activeModeRef.current, maneuvers: true }), ROUTE_TIMEOUT_MS, 'Route');
-      map.drawRoute(route.polyline, { color: '#2563EB', weight: 6 });
+      map.drawRoute(route.polyline, routeStyleFor(activeModeRef.current));
       map.fitRoute(route.polyline);
       map.startNavigation(route);
       map.updateDriverMarker({ lat: origin.lat, lng: origin.lng, icon: driverIconFor(activeModeRef.current) });
@@ -380,14 +431,36 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
       cachedUserMarker?.remove();
       cachedUserMarker = null;
       const first = route.maneuvers?.[0] || null;
+      navRouteRef.current = route;
+      offRouteTicksRef.current = 0;
       setNavRoute(route);
       setBanner(first ? { instruction: first.instruction, distance: first.distanceText, type: first.type } : null);
       setThenManeuver(route.maneuvers?.[1] || null);
       setNavigating(true);
-      trackLivePosition((position) => {
+      trackLivePosition((position, raw) => {
         latestPosRef.current = position;
         setUserPos(position);
         map.updatePosition(position);
+        // Mode-aware deviation check: reroute only after several consecutive
+        // off-route ticks so a single GPS jump doesn't recalculate.
+        const activeRoute = navRouteRef.current;
+        if (activeRoute && activeRoute.polyline.length > 1) {
+          const deviation = distanceToPolylineMeters(position, activeRoute.polyline);
+          if (deviation > offRouteThresholdMeters(activeModeRef.current)) {
+            offRouteTicksRef.current += 1;
+            if (offRouteTicksRef.current >= OFF_ROUTE_TICKS_REQUIRED) {
+              offRouteTicksRef.current = 0;
+              void rerouteFrom(position, activeModeRef.current);
+            }
+          } else {
+            offRouteTicksRef.current = 0;
+          }
+        }
+        // Walking speed anomaly: if the user on foot moves like a vehicle,
+        // suggest switching the travel mode.
+        const speedMps = raw.coords.speed;
+        if (activeModeRef.current === 'walk' && speedMps !== null && speedMps > WALK_ANOMALY_SPEED_MPS) setSpeedAnomaly(true);
+        else if (speedMps !== null && speedMps < 4 / 3.6) setSpeedAnomaly(false);
       });
     } catch (error) {
       setRouteError(error instanceof Error && error.message.includes('timed out')
@@ -396,7 +469,7 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
     } finally {
       setRouteLoading(false);
     }
-  }, [trackLivePosition]);
+  }, [trackLivePosition, rerouteFrom]);
 
   const handleGetDirections = async () => {
     if (navigating) {
@@ -430,6 +503,16 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
       new Date(Date.now() + navRoute.durationSeconds * 1000),
     );
   }, [navRoute]);
+
+  // Switching the travel mode mid-navigation recalculates the route while
+  // keeping the current position and the store destination untouched.
+  const switchModeDuringNavigation = (mode: TravelModeKey) => {
+    setActiveMode(mode);
+    setSpeedAnomaly(false);
+    offRouteTicksRef.current = 0;
+    const origin = latestPosRef.current;
+    if (origin) void rerouteFrom(origin, mode);
+  };
 
   const BannerIcon = banner ? maneuverIcon(banner.type) : ArrowUp;
 
@@ -494,10 +577,23 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
         )}
 
         {navigating && offRoute && !arrived && (
-          <div className="absolute left-3 right-3 top-3 z-20" role="alert">
+          <div className="absolute bottom-3 left-3 right-3 z-20" role="alert">
             <div className="flex items-center gap-2.5 rounded-2xl bg-amber-500 p-3 shadow-xl">
               <TriangleAlert className="h-5 w-5 shrink-0 text-white" />
               <p className="text-xs font-bold text-white">Off route — finding a new way…</p>
+            </div>
+          </div>
+        )}
+
+        {navigating && speedAnomaly && !arrived && !offRoute && (
+          <div className="absolute bottom-3 left-3 right-3 z-20" role="alert">
+            <div className="flex flex-col gap-2 rounded-2xl bg-blue-600 p-3.5 shadow-xl">
+              <p className="text-xs font-bold text-white">You are moving fast for walking mode. Switch to bike or car?</p>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => switchModeDuringNavigation('bike')} className="flex-1 rounded-xl bg-white/15 py-2 text-[11px] font-bold text-white transition-colors hover:bg-white/25">Use bike</button>
+                <button type="button" onClick={() => switchModeDuringNavigation('drive')} className="flex-1 rounded-xl bg-white/15 py-2 text-[11px] font-bold text-white transition-colors hover:bg-white/25">Use car</button>
+                <button type="button" onClick={() => setSpeedAnomaly(false)} className="rounded-xl bg-white/15 px-3 py-2 text-[11px] font-bold text-white transition-colors hover:bg-white/25">Dismiss</button>
+              </div>
             </div>
           </div>
         )}
