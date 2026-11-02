@@ -210,7 +210,7 @@ const turnAnnouncement = (directionType: string, meters: number, immediate: bool
 
 const OFF_ROUTE_SPEECH: Record<SpeechLanguage, string> = {
   en: 'You are off route. Rerouting...',
-  bn: 'আপনি নির্ধারিত রুট থেকে সরে গেছেন। নতুন রাস্তা খোঁজা হচ্ছে...',
+  bn: 'আপনি নির্ধারিত রুট থেকে সরে গেছেন। নতুন রাস্তা ��োঁজা হচ্ছে...',
 };
 const WALKING_OPPOSITE_SPEECH: Record<SpeechLanguage, string> = {
   en: 'You are walking in the opposite direction. Please turn around.',
@@ -289,6 +289,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
   const voiceEnabledRef = useRef(true);
   const deviceHeadingRef = useRef<number | null>(null);
   const orientationListenerRef = useRef<(() => void) | null>(null);
+  const cameraBearingRef = useRef(0);
   const { language } = useI18n();
   const speechLanguage: SpeechLanguage = language === 'bn' ? 'bn' : 'en';
   const languageRef = useRef<SpeechLanguage>(speechLanguage);
@@ -332,6 +333,16 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
     watchIdRef.current = null;
   };
 
+  // Rotates the marker's inner rotor relative to the map's current rotation so
+  // the marker points along its compass heading on screen. The camera bearing
+  // is tracked from the SDK's own heading updates (it eases to each one).
+  const applyMarkerRotation = useCallback((desiredCompass: number, scale?: number) => {
+    const rotor = cachedHost?.querySelector('.nav-marker-rotor') as HTMLElement | null;
+    if (!rotor) return;
+    const relative = ((desiredCompass - cameraBearingRef.current) % 360 + 360) % 360;
+    rotor.style.transform = scale !== undefined ? `rotate(${relative}deg) scale(${scale})` : `rotate(${relative}deg)`;
+  }, []);
+
   // Compass tracking: the walking cone follows the phone's facing (like
   // Google Maps) while standing still. Only true-north sources are trusted —
   // iOS webkitCompassHeading and the absolute orientation event; the plain
@@ -354,8 +365,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
       // While standing still the cone follows the phone's facing; while moving
       // the GPS course takes over (handled in the GPS tick).
       if (activeModeRef.current === 'walk' && navRouteRef.current && (latestSpeedRef.current === null || latestSpeedRef.current < 0.5)) {
-        const rotor = cachedHost?.querySelector('.nav-marker-rotor') as HTMLElement | null;
-        if (rotor) rotor.style.transform = `rotate(${heading}deg)`;
+        applyMarkerRotation(heading);
       }
     };
     window.addEventListener('deviceorientationabsolute', handler, true);
@@ -364,7 +374,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
       window.removeEventListener('deviceorientationabsolute', handler, true);
       window.removeEventListener('deviceorientation', handler, true);
     };
-  }, []);
+  }, [applyMarkerRotation]);
 
   const stopCompass = useCallback(() => {
     orientationListenerRef.current?.();
@@ -507,19 +517,22 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
             if (activeModeRef.current === 'walk') {
               // Google Maps-style walking puck: blue dot with a 45-degree
               // view cone, rotated by the compass via the rotor.
-              iconEl.innerHTML = `<div class="nav-marker-rotor" style="position:relative;width:64px;height:64px;display:flex;align-items:center;justify-content:center;transform:rotate(${heading}deg);">
+              iconEl.innerHTML = `<div class="nav-marker-rotor" style="position:relative;width:64px;height:64px;display:flex;align-items:center;justify-content:center;">
                 <svg width="64" height="64" viewBox="0 0 64 64" style="position:absolute;inset:0;" aria-hidden="true">
                   <path d="M32 32 L20.5 4.3 A30 30 0 0 1 43.5 4.3 Z" fill="rgba(26,115,232,0.28)"/>
                 </svg>
                 <div style="position:relative;width:${spec.markerWidthPx}px;height:${spec.markerHeightPx}px;border-radius:50%;background:#1A73E8;border:3px solid #ffffff;box-shadow:0 1px 6px rgba(0,0,0,0.35);"></div>
               </div>`;
-              return;
+            } else {
+              const iconUrl = activeModeRef.current === 'drive' ? NAV_CAR_ICON : NAV_BIKE_ICON;
+              iconEl.innerHTML = `<div class="nav-marker-rotor" style="display:flex;">
+                <img src="${iconUrl}" alt="" style="width:${spec.markerWidthPx}px;height:${spec.markerHeightPx}px;object-fit:contain;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.4));" draggable="false" />
+              </div>`;
             }
-            const iconUrl = activeModeRef.current === 'drive' ? NAV_CAR_ICON : NAV_BIKE_ICON;
-            const scale = markerScaleFor(latestSpeedRef.current);
-            iconEl.innerHTML = `<div class="nav-marker-rotor" style="transform:rotate(${heading}deg) scale(${scale});display:flex;">
-              <img src="${iconUrl}" alt="" style="width:${spec.markerWidthPx}px;height:${spec.markerHeightPx}px;object-fit:contain;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.4));" draggable="false" />
-            </div>`;
+            // The camera eases to this heading; rotate the rotor relative to
+            // the map's rotation so the marker points along the route on screen.
+            applyMarkerRotation(heading, activeModeRef.current === 'walk' ? undefined : markerScaleFor(latestSpeedRef.current));
+            cameraBearingRef.current = heading;
           };
         }
         if (cancelled) return;
@@ -545,7 +558,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
       cachedUserMarker = null;
       if (cachedHost && cachedHost.parentElement === wrapper) wrapper.removeChild(cachedHost);
     };
-  }, []);
+  }, [applyMarkerRotation]);
 
   // Navigation events: upcoming turns drive the banner, leaving the route
   // triggers a re-route from the live position, arrival closes the session.
@@ -590,7 +603,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
       }
     });
     return unsubscribe;
-  }, [mapReady, navRoute, exitNavigation, rerouteFrom]);
+  }, [mapReady, navRoute, exitNavigation, rerouteFrom, applyMarkerRotation]);
 
   // Pick up the visitor's location once the map exists for the ETA cards.
   useEffect(() => {
@@ -657,10 +670,9 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
         // Walking cone: point along the GPS course while actually moving; the
         // compass takes over when standing still.
         if (activeModeRef.current === 'walk') {
-          const rotor = cachedHost?.querySelector('.nav-marker-rotor') as HTMLElement | null;
           const course = raw.coords.heading;
-          if (rotor && course !== null && course !== undefined && (raw.coords.speed ?? 0) > 0.5) {
-            rotor.style.transform = `rotate(${course}deg)`;
+          if (course !== null && course !== undefined && (raw.coords.speed ?? 0) > 0.5) {
+            applyMarkerRotation(course);
           }
         }
         // Live speed readout (GPS reports m/s; display km/h like Google Maps).
@@ -732,7 +744,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
     } finally {
       setRouteLoading(false);
     }
-  }, [trackLivePosition, rerouteFrom, startCompass]);
+  }, [trackLivePosition, rerouteFrom, startCompass, applyMarkerRotation]);
 
   // Routed deep link (/store-map/navigation): begin turn-by-turn automatically as
   // soon as the map and the visitor's location are ready. If the position is
