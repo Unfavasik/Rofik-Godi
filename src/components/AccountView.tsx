@@ -420,6 +420,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
       setProfileMessage(metadataError
         ? `Profile saved, but account details could not be synced. Please try saving again.${warning}`
         : `Profile saved.${warning}`);
+      // Mirror the vehicle-edit flow: a clean save returns to the profile page.
+      // closeProfileModal() is avoided here because its snapshot reset would
+      // read the stale pre-save avatar in this same tick.
+      if (!metadataError) {
+        setConfirmProfileClose(false);
+        if (routeModal === 'profile') closeRoutedPage();
+        else setActiveModal(null);
+      }
     } catch (error) {
       setProfileMessage(error instanceof Error ? error.message : 'Unable to save profile. Please try again.');
     } finally {

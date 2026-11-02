@@ -108,6 +108,8 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
       setDescription(updated.shortDescription || '');
       setIsActive(Boolean(updated.isActive));
       notify('Vehicle model changes saved', 'success');
+      // Mirror the profile-edit flow: save, then return to the model list.
+      navigate('/admin/Vehicle');
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not save vehicle model', 'error');
     } finally {
@@ -174,8 +176,8 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
   const displayBrand = brand || model.brand;
 
   return (
-    <section className="mx-auto max-w-[480px] overflow-hidden rounded-[24px] bg-[#F4F5F9] shadow-xl shadow-slate-200/60">
-      <header className="bg-[#db1a24] px-4 pb-6 pt-4 text-white sm:px-5">
+    <section className="min-h-full w-full bg-[#F4F5F9]">
+      <header className="bg-[#db1a24] px-4 pb-6 pt-4 text-white sm:px-6">
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => navigate('/admin/Vehicle')} aria-label="Back to vehicle models" className="-ml-1 rounded-full p-1 text-white transition hover:bg-white/10">
             <ArrowLeft className="h-6 w-6" />
@@ -197,7 +199,7 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
         </div>
       </header>
 
-      <div className="space-y-3.5 px-3 pb-6 pt-4 sm:px-4">
+      <div className="mx-auto max-w-[480px] space-y-3.5 px-3 pb-6 pt-4 sm:px-4">
         <section className="rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm" aria-label="Vehicle summary">
           <div className="flex items-start gap-3.5">
             <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="Change model image" className="relative h-[100px] w-[100px] shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
@@ -281,7 +283,7 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
             <span className="grid size-9 place-items-center rounded-xl bg-[#FCEBEB] text-[#db1a24]"><ImageIcon className="h-4 w-4" /></span>
             <h3 className="text-[17px] font-extrabold text-slate-900">Model Image</h3>
           </div>
-          <p className="text-[12px] font-medium text-slate-500">Update the model image — any size works, auto-set to 800×600 WebP (Max 5MB)</p>
+          <p className="text-[12px] font-medium text-slate-500">Update the model image — any size works, auto-cropped to 800×600 WebP (Max 5MB)</p>
           <div className="flex items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/60 p-3">
             {model.image ? (
               <div className="relative h-[92px] w-[108px] shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
