@@ -318,7 +318,10 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     const routeSection = getAdminSectionFromPath(location.pathname);
     if (!routeSection) return;
     setSection(routeSection);
-    if (customerId || orderId || productId || couponId || isAdminNotificationComposePath(location.pathname)) return;
+    // Keep vehicle model edit deep links; the canonical path below would otherwise
+    // bounce /admin/Vehicle/:modelId/edit straight back to the model list.
+    const vehicleModelId = getAdminVehicleModelIdFromPath(location.pathname);
+    if (customerId || orderId || productId || couponId || vehicleModelId || isAdminNotificationComposePath(location.pathname)) return;
     const requestId = getAdminSupportRequestIdFromPath(location.pathname);
     const canonicalPath = requestId
       ? `${getPathForAdminSection('support')}/${encodeURIComponent(requestId)}`

@@ -21,6 +21,7 @@ import {
   createVehicleModel,
   deleteVehicleModel,
   loadVehicleModels,
+  setVehicleBrandVisibility,
   uploadVehicleModelImage,
   updateVehicleModel,
   type VehicleCatalogModel,
@@ -58,6 +59,7 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
   const [creating, setCreating] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploadingModelId, setUploadingModelId] = useState<string | null>(null);
+  const [brandUpdating, setBrandUpdating] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const createImageInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -114,6 +116,25 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
     }
   };
 
+  const toggleBrandVisibility = async () => {
+    if (!selectedBrand || brandUpdating) return;
+    const brandModels = typeModels.filter((model) => model.brand === selectedBrand);
+    const makeVisible = brandModels.every((model) => !model.isActive);
+    if (!window.confirm(makeVisible
+      ? `Show all ${brandModels.length} ${selectedBrand} models in the public catalog?`
+      : `Hide all ${brandModels.length} ${selectedBrand} models from customers?`)) return;
+    setBrandUpdating(true);
+    try {
+      await setVehicleBrandVisibility(selectedBrand, selectedType, makeVisible);
+      await refresh();
+      notify(makeVisible ? `${selectedBrand} is now visible to customers` : `${selectedBrand} hidden from customers`, 'success');
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Could not update company visibility', 'error');
+    } finally {
+      setBrandUpdating(false);
+    }
+  };
+
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     const modelId = event.target.dataset.modelId;
@@ -144,21 +165,6 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
 
   return (
     <section className="mx-auto max-w-[480px] space-y-4 bg-[#F8FAFC] p-4 sm:p-4">
-      <div>
-        <p className="text-[26px] font-extrabold leading-tight tracking-tight text-[#0B1528]">Vehicle Models</p>
-        <p className="mt-0.5 text-[13px] font-medium text-slate-400">Vehicle fitment library and model management</p>
-      </div>
-
-      <div className="relative min-h-[140px] overflow-hidden rounded-2xl bg-[#210b12] shadow-sm">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#210b12] via-[#690b13]/95 to-[#d5111b]/70" />
-        <img src="/images/premium-seat-cover-hero.webp" alt="Premium vehicle seat cover" className="absolute inset-y-0 right-0 h-full w-[62%] object-cover object-center opacity-95 mix-blend-screen" />
-        <div className="relative flex min-h-[140px] max-w-[430px] flex-col justify-center p-5">
-          <span className="w-fit rounded-full bg-[#e84650] px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white">Fitment library</span>
-          <h1 className="mt-2 text-2xl font-black tracking-tight text-white">Vehicle Models</h1>
-          <p className="mt-1 max-w-[230px] text-[12px] font-medium leading-[17px] text-white/85">Manage bike and scooter fitments, companies, and models in one place.</p>
-        </div>
-      </div>
-
       <div className="flex gap-2.5">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
@@ -262,14 +268,34 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
         <div className="grid grid-cols-3 gap-2">
           {displayedBrands.map((item) => {
             const active = selectedBrand === item;
+            const brandModels = typeModels.filter((model) => model.brand === item);
+            const brandHidden = brandModels.length > 0 && brandModels.every((model) => !model.isActive);
             return (
-              <button key={item} type="button" onClick={() => setSelectedBrand(active ? '' : item)} className={`inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full border px-2 py-2 text-[10px] font-bold shadow-sm transition ${active ? 'border-red-300 bg-[#FCEBEB] text-slate-900' : 'border-slate-100 bg-white text-slate-800 hover:border-red-200'}`}>
+              <button key={item} type="button" onClick={() => setSelectedBrand(active ? '' : item)} className={`inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full border px-2 py-2 text-[10px] font-bold shadow-sm transition ${active ? 'border-red-300 bg-[#FCEBEB] text-slate-900' : brandHidden ? 'border-dashed border-slate-300 bg-slate-50 text-slate-400' : 'border-slate-100 bg-white text-slate-800 hover:border-red-200'}`}>
                 <BrandLogo brand={item} />
                 <span className="truncate">{item}</span>
+                {brandHidden && <EyeOff className="h-3 w-3 shrink-0 text-slate-400" />}
               </button>
             );
           })}
         </div>
+        {selectedBrand && (() => {
+          const brandModels = typeModels.filter((model) => model.brand === selectedBrand);
+          const visibleCount = brandModels.filter((model) => model.isActive).length;
+          const makeVisible = visibleCount === 0;
+          return (
+            <div className="mt-2 flex items-center justify-between gap-2.5 rounded-xl border border-slate-100 bg-white p-2.5 shadow-sm">
+              <div className="min-w-0">
+                <p className="truncate text-[12px] font-extrabold text-slate-900">{selectedBrand}</p>
+                <p className="text-[10px] font-medium text-slate-400">{visibleCount}/{brandModels.length} models visible to users</p>
+              </div>
+              <button type="button" onClick={() => void toggleBrandVisibility()} disabled={brandUpdating} className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-extrabold transition disabled:opacity-60 ${makeVisible ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-[#FCEBEB] text-[#D9232D] hover:bg-red-100'}`}>
+                {brandUpdating ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : makeVisible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                {brandUpdating ? 'Updating…' : makeVisible ? 'Show Company' : 'Hide Company'}
+              </button>
+            </div>
+          );
+        })()}
       </div>
 
       {loading ? (
