@@ -1065,6 +1065,34 @@ const ProductEditor: React.FC<{
                   onChange={(event) => set('originalPrice', Number(event.target.value))}
                 />
               </Field>
+              <Field label="Stock quantity">
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="Not tracked"
+                  value={form.stockQuantity ?? ''}
+                  onChange={(event) =>
+                    set(
+                      'stockQuantity',
+                      event.target.value === '' ? null : Math.max(0, Number(event.target.value)),
+                    )
+                  }
+                />
+              </Field>
+              <Field label="Low stock alert at">
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="5"
+                  value={form.lowStockThreshold ?? ''}
+                  onChange={(event) =>
+                    set(
+                      'lowStockThreshold',
+                      event.target.value === '' ? null : Math.max(0, Number(event.target.value)),
+                    )
+                  }
+                />
+              </Field>
               <div className="block">
                 <span className="mb-1.5 block text-[11px] font-bold text-slate-600">Badge</span>
                 <button
