@@ -41,7 +41,7 @@ function BrandLogo({ brand }: { brand: string }) {
       </span>
     );
   }
-  return <img src={url} alt="" loading="lazy" onError={() => setFailed(true)} className="h-5 w-5 shrink-0 object-contain" />;
+  return <img src={url} alt="" loading="lazy" onError={() => setFailed(true)} className="h-5 w-auto max-w-[30px] shrink-0 object-contain" />;
 }
 
 export function AdminVehicleCatalogManager({ notify }: Props) {
