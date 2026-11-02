@@ -5,6 +5,7 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   BarChart3,
+  Bike,
   Bell,
   Check,
   ClipboardList,
@@ -77,6 +78,7 @@ const navGroups = [
       { id: 'overview' as AdminSection, label: 'Dashboard', icon: LayoutDashboard },
       { id: 'orders' as AdminSection, label: 'Orders', icon: ClipboardList },
       { id: 'products' as AdminSection, label: 'Products', icon: Package },
+      { id: 'vehicle' as AdminSection, label: 'Vehicle', icon: Bike },
       { id: 'categories' as AdminSection, label: 'Categories', icon: Tag },
       { id: 'customers' as AdminSection, label: 'Customers', icon: Users },
       { id: 'activity' as AdminSection, label: 'Notifications', icon: Activity },
@@ -433,6 +435,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
       overview: 'Dashboard',
       orders: 'Orders',
       products: 'Products',
+      vehicle: 'Vehicle models',
       categories: 'Categories',
       customers: 'Customers',
       reviews: 'Reviews',
@@ -630,7 +633,6 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
           )}
           {section === 'products' && (
             <div className="space-y-5">
-            <AdminVehicleCatalogManager notify={notify} />
             <AdminProductManager
               initialProducts={products}
               onProductsChange={setProducts}
@@ -641,6 +643,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
             />
             </div>
           )}
+          {section === 'vehicle' && <AdminVehicleCatalogManager notify={notify} />}
           {section === 'categories' && (
             <CategoriesView products={products} onManageProducts={() => goTo('products')} />
           )}

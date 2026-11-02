@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Edit3, Eye, EyeOff, Plus, Trash2, Upload } from 'lucide-react';
+import { Bike, Edit3, Eye, EyeOff, ImagePlus, Plus, Trash2, Upload } from 'lucide-react';
 import {
   createVehicleModel,
   deleteVehicleModel,
@@ -35,6 +35,7 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
 
   const brands = useMemo(() => Array.from(new Set(models.map((model) => model.brand))).sort(), [models]);
   const filtered = models.filter((model) => `${model.brand} ${model.name}`.toLowerCase().includes(query.toLowerCase()));
+  const activeCount = models.filter((model) => model.isActive).length;
 
   const addModel = async () => {
     const cleanBrand = brand.trim();
@@ -115,16 +116,23 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
   return (
     <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div><p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#D9232D]">Supabase catalog</p><h2 className="mt-1 text-lg font-black text-slate-900">Vehicle companies & models</h2><p className="mt-1 text-xs text-slate-500">Every customer sees active rows from Supabase. Add models, edit names/images, or hide items without changing app code.</p></div>
+        <div><p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#D9232D]">Fitment library</p><h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Vehicle models</h2><p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">This is the same library customers use in Vehicle Fitment Finder. Manage bikes and scooties here once; every customer immediately sees the active catalog.</p></div>
         <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search vehicles" className="rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#D9232D]" />
       </div>
 
-      <div className="grid gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-3 sm:grid-cols-2 lg:grid-cols-5">
-        <input value={brand} onChange={(event) => setBrand(event.target.value)} placeholder="Company name" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs outline-none" />
-        <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Model name" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs outline-none" />
-        <select value={type} onChange={(event) => setType(event.target.value as VehicleCatalogType)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs outline-none"><option value="bike">Bike</option><option value="scooter">Scooter</option></select>
-        <input value={image} onChange={(event) => setImage(event.target.value)} placeholder="Image URL (optional)" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs outline-none" />
-        <button type="button" onClick={() => void addModel()} className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#D9232D] px-3 py-2 text-xs font-bold text-white"><Plus className="h-4 w-4" />Add model</button>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-red-100 bg-gradient-to-br from-red-50 to-white p-4"><div className="flex items-center gap-2 text-[#D9232D]"><Bike className="h-4 w-4" /><span className="text-[10px] font-black uppercase tracking-[0.16em]">Total models</span></div><p className="mt-2 text-2xl font-black text-slate-900">{models.length}</p><p className="mt-1 text-[11px] text-slate-500">Bike and scooter fitments</p></div>
+        <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-4"><div className="flex items-center gap-2 text-emerald-700"><Eye className="h-4 w-4" /><span className="text-[10px] font-black uppercase tracking-[0.16em]">Visible to users</span></div><p className="mt-2 text-2xl font-black text-slate-900">{activeCount}</p><p className="mt-1 text-[11px] text-slate-500">Live in Vehicle Fitment Finder</p></div>
+        <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4"><div className="flex items-center gap-2 text-blue-700"><Bike className="h-4 w-4" /><span className="text-[10px] font-black uppercase tracking-[0.16em]">Companies</span></div><p className="mt-2 text-2xl font-black text-slate-900">{brands.length}</p><p className="mt-1 text-[11px] text-slate-500">Selectable companies</p></div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mb-3 flex items-center justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#D9232D]">Add in 3 steps</p><h3 className="mt-1 text-base font-black text-slate-900">Create a new fitment model</h3></div><ImagePlus className="h-5 w-5 text-slate-300" /></div>
+        <div className="grid gap-3 md:grid-cols-3">
+          <label className="rounded-xl border border-slate-200 bg-white p-3"><span className="text-[10px] font-black uppercase tracking-wider text-slate-400">01 · Vehicle type</span><select value={type} onChange={(event) => setType(event.target.value as VehicleCatalogType)} className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold outline-none focus:border-[#D9232D]"><option value="bike">Bike</option><option value="scooter">Scooty / Scooter</option></select></label>
+          <div className="rounded-xl border border-slate-200 bg-white p-3"><span className="text-[10px] font-black uppercase tracking-wider text-slate-400">02 · Company & model</span><div className="mt-2 grid gap-2"><input value={brand} onChange={(event) => setBrand(event.target.value)} placeholder="Company name" className="rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#D9232D]" /><input value={name} onChange={(event) => setName(event.target.value)} placeholder="Model name" className="rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#D9232D]" /></div></div>
+          <div className="rounded-xl border border-slate-200 bg-white p-3"><span className="text-[10px] font-black uppercase tracking-wider text-slate-400">03 · Image & publish</span><input value={image} onChange={(event) => setImage(event.target.value)} placeholder="Optional image URL" className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-[#D9232D]" /><button type="button" onClick={() => void addModel()} className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#D9232D] px-3 py-2 text-xs font-bold text-white hover:bg-[#bf1f29]"><Plus className="h-4 w-4" />Add model</button></div>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

@@ -36,6 +36,7 @@
     { "path": "/admin/orders", "title": "Admin Orders" },
     { "path": "/admin/orders/:orderId", "title": "Admin Order Details" },
     { "path": "/admin/products", "title": "Admin Products" },
+    { "path": "/admin/Vehicle", "title": "Admin Vehicle Models" },
     { "path": "/admin/categories", "title": "Admin Categories" },
     { "path": "/admin/customers", "title": "Admin Customers" },
     { "path": "/admin/customers/:customerId", "title": "Admin Customer Profile" },
