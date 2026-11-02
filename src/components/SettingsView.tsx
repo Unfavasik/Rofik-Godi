@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2 } from 'lucide-react';
+import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2, Search, ChevronDown, ShoppingBag, MapPin, CreditCard, Wrench, HelpCircle } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
@@ -154,6 +154,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [logoutConfirmed, setLogoutConfirmed] = useState(false);
   const [logoutError, setLogoutError] = useState('');
   const [copyError, setCopyError] = useState('');
+  const [faqQuery, setFaqQuery] = useState('');
+  const [openFaq, setOpenFaq] = useState<string | null>(null);
 
   useEffect(() => {
     const preferences = readCustomerAppPreferences(preferenceOwnerId);
@@ -446,29 +448,92 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   }
 
   if (section === 'help') {
+    const faqGroups = [
+      {
+        label: 'Orders & pickup',
+        icon: ShoppingBag,
+        tone: 'bg-rose-50 text-[#D9232D]',
+        items: [
+          { q: 'How do I place an order?', a: 'Choose a product, select your vehicle fitment, add any available customization, then add it to your cart and complete checkout.' },
+          { q: 'Where can I see my order status?', a: 'Open Account → Order history. Select an order to see its status timeline, payment details, pickup information and invoice.' },
+          { q: 'How does store pickup work?', a: 'We prepare your order for pickup at Rofik Godi Centre. Keep your order ID ready and show it to the workshop team when you arrive.' },
+        ],
+      },
+      {
+        label: 'Products & fitment',
+        icon: Wrench,
+        tone: 'bg-violet-50 text-violet-600',
+        items: [
+          { q: 'How does on-spot fitting work?', a: 'Free on-spot seat fitment is available at our workshop. Contact the team before travelling so we can confirm timing and availability.' },
+          { q: 'How do I find the right vehicle model?', a: 'Use Vehicle Fitment Finder on the shop or home page. Select your vehicle category, company and model before choosing a cover.' },
+          { q: 'Can I customize piping, stitching or foam?', a: 'Yes. Open Custom Fit to choose colors, piping, stitch patterns and foam options. Custom requests may affect preparation time.' },
+          { q: 'Are the covers waterproof?', a: 'Materials and water resistance vary by product. Check the product details for the specific cover, or contact us before ordering.' },
+        ],
+      },
+      {
+        label: 'Payment & after-sales',
+        icon: CreditCard,
+        tone: 'bg-blue-50 text-blue-600',
+        items: [
+          { q: 'Which payment methods are supported?', a: 'Available payment options are shown during checkout. Your order page also shows the payment method and payment status.' },
+          { q: 'Can I change or cancel an order?', a: 'Open the order details as soon as possible. Cancellation or changes depend on the preparation status; contact support for help.' },
+          { q: 'How do returns or exchanges work?', a: 'Contact the workshop with your order ID and a description of the issue. We will review product fitment, condition and eligibility before arranging the next step.' },
+        ],
+      },
+      {
+        label: 'Store & app',
+        icon: MapPin,
+        tone: 'bg-emerald-50 text-emerald-600',
+        items: [
+          { q: 'Where is Rofik Godi Centre?', a: `${WORKSHOP_INFO.address}. We are open ${WORKSHOP_INFO.workingHours}.`, action: 'store' },
+          { q: 'How does the store map work?', a: 'Open Store map to see the workshop, check drive, bike or walking time from your location, and start turn-by-turn directions.' },
+          { q: 'Why does the app need my location for directions?', a: 'Location is used only to calculate your route, live speed and estimated arrival. You can deny permission and still open the destination in Google Maps.' },
+        ],
+      },
+    ];
+    const normalizedQuery = faqQuery.trim().toLowerCase();
+    const visibleGroups = faqGroups.map((group) => ({
+      ...group,
+      items: group.items.filter((item) => !normalizedQuery || `${item.q} ${item.a}`.toLowerCase().includes(normalizedQuery)),
+    })).filter((group) => group.items.length > 0);
+
     return (
-      <SectionPage title={t('settings.help')} subtitle="Common questions" onBack={closeSection}>
-        <div className="space-y-2.5">
-          {[
-            { q: 'How does on-spot fitting work?', a: 'On-site fitting availability and timing can vary. Please contact the workshop before travelling for a specific fitting request.' },
-            { q: 'Are the seat covers water-proof?', a: 'Water resistance and materials vary by product. Check the product details before ordering or contact the workshop if you need help.' },
-            { q: 'Can I customize piping and stitch patterns?', a: 'Yes, use the "Custom Fit" 3D studio in the app to pick your exact colors and foam cushion thickness.' },
-          ].map((faq) => (
-            <div key={faq.q} className="p-3.5 bg-white rounded-2xl border border-gray-100/75 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] space-y-1">
-              <h3 className="text-[13px] font-bold text-gray-900">Q: {faq.q}</h3>
-              <p className="text-xs text-gray-500">A: {faq.a}</p>
-            </div>
-          ))}
+      <SectionPage title={t('settings.help')} subtitle="Answers for shopping, pickup, fitment and support" onBack={closeSection}>
+        <div className="rounded-[26px] bg-gradient-to-br from-[#17223B] to-[#293A63] p-4 text-white shadow-[0_10px_24px_rgba(23,34,59,0.18)]">
+          <div className="flex items-start gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10"><HelpCircle className="h-6 w-6" /></div>
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-200">Rofik Godi Centre</p><h2 className="mt-1 text-base font-black">How can we help?</h2><p className="mt-1 text-[11px] leading-relaxed text-slate-300">Search answers about your order, vehicle fitment or workshop visit.</p></div>
+          </div>
+          <label className="mt-4 flex items-center gap-2 rounded-2xl bg-white px-3 py-3 text-slate-400 shadow-sm">
+            <Search className="h-4 w-4 shrink-0" />
+            <input value={faqQuery} onChange={(event) => setFaqQuery(event.target.value)} placeholder="Search help topics" aria-label="Search help topics" className="min-w-0 flex-1 bg-transparent text-xs font-medium text-slate-800 outline-none placeholder:text-slate-400" />
+          </label>
         </div>
-        {onOpenContactSupport && (
-          <button
-            type="button"
-            onClick={onOpenContactSupport}
-            className="w-full rounded-2xl bg-[#D9232D] py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-700"
-          >
-            Still stuck? Contact support
-          </button>
-        )}
+
+        {visibleGroups.length ? visibleGroups.map((group) => {
+          const GroupIcon = group.icon;
+          return (
+            <section key={group.label} className="space-y-2">
+              <div className="flex items-center gap-2 px-1 pt-2"><span className={`flex h-8 w-8 items-center justify-center rounded-xl ${group.tone}`}><GroupIcon className="h-4 w-4" /></span><h2 className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">{group.label}</h2></div>
+              <div className="overflow-hidden rounded-2xl border border-gray-100/80 bg-white shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)]">
+                {group.items.map((faq, index) => {
+                  const faqKey = `${group.label}:${faq.q}`;
+                  const isOpen = openFaq === faqKey;
+                  return (
+                    <div key={faq.q} className={index ? 'border-t border-slate-100' : ''}>
+                      <button type="button" onClick={() => setOpenFaq(isOpen ? null : faqKey)} aria-expanded={isOpen} className="flex w-full items-center justify-between gap-3 px-3.5 py-3.5 text-left transition-colors hover:bg-slate-50">
+                        <span className="text-[13px] font-bold leading-snug text-slate-900">{faq.q}</span><ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {isOpen && <div className="px-3.5 pb-3.5 text-[11.5px] leading-relaxed text-slate-600"><p>{faq.a}</p>{faq.action === 'store' && onOpenStoreInfo && <button type="button" onClick={onOpenStoreInfo} className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-emerald-700">Open store map <MapPin className="h-3 w-3" /></button>}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        }) : <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center"><Search className="mx-auto h-7 w-7 text-slate-300" /><p className="mt-2 text-xs font-bold text-slate-700">No matching help topics</p><button type="button" onClick={() => setFaqQuery('')} className="mt-2 text-[11px] font-bold text-[#D9232D] underline">Clear search</button></div>}
+
+        <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-center"><p className="text-xs font-bold text-slate-800">Still need help?</p><p className="mt-1 text-[11px] text-slate-500">Our workshop team can help with a specific order or fitment.</p>{onOpenContactSupport && <button type="button" onClick={onOpenContactSupport} className="mt-3 rounded-xl bg-[#D9232D] px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-700">Contact support</button>}</div>
       </SectionPage>
     );
   }
