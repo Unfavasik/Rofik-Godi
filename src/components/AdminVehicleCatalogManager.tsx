@@ -230,7 +230,7 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
             <button type="button" onClick={() => createImageInputRef.current?.click()} className="flex min-h-[70px] w-full flex-col items-center justify-center rounded-xl border border-dashed border-red-200 bg-[#FBFBFC] px-2 py-3 text-center transition hover:bg-red-50/40">
               <ImagePlus className="h-6 w-6 text-[#D71920]" />
               <span className="mt-1 text-[12px] font-semibold text-slate-700">{imageFile?.name || 'Tap to upload image'}</span>
-              <span className="text-[10px] font-medium text-slate-400">JPG, PNG or WEBP (Max 5MB)</span>
+              <span className="text-[10px] font-medium text-slate-400">Any size · auto-set to 800×600 WebP (Max 5MB)</span>
             </button>
             <input ref={createImageInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { setImageFile(event.target.files?.[0] || null); event.target.value = ''; }} className="hidden" aria-label="Choose vehicle model image" />
           </div>
