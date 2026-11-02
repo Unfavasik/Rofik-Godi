@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2, Search, ChevronDown, ShoppingBag, MapPin, CreditCard, Wrench, HelpCircle } from 'lucide-react';
+import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2, Search, ChevronDown, ShoppingBag, MapPin, CreditCard, Wrench, HelpCircle, Clock3, Phone, CheckCircle2 } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
@@ -418,31 +418,41 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   if (section === 'about') {
     return (
-      <SectionPage title={t('settings.about')} subtitle="Crafting premium ride comfort since 2012" onBack={closeSection}>
-        <div className="space-y-2.5 bg-white rounded-2xl border border-gray-100/75 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] p-5 text-xs text-gray-600 leading-relaxed">
-          <div className="bg-[#FEECEC] p-3 rounded-2xl text-[#D9232D] font-bold text-center">
-            Crafting Premium Ride Comfort Since 2012
+      <SectionPage title={t('settings.about')} subtitle="The people and craft behind your ride comfort" onBack={closeSection}>
+        <section className="relative overflow-hidden rounded-[26px] bg-[#17223B] shadow-[0_10px_26px_rgba(23,34,59,0.2)]">
+          <img src="/images/rofik-godi-store.webp" alt="Rofik Godi Centre workshop" className="h-40 w-full object-cover opacity-75" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#17223B] via-[#17223B]/35 to-transparent" />
+          <div className="absolute bottom-4 left-4 right-4 flex items-end gap-3 text-white">
+            <img src="/images/rofik-center-splash.webp" alt="Rofik Godi Centre logo" className="h-14 w-14 rounded-2xl border border-white/30 object-cover shadow-lg" />
+            <div><p className="text-[9px] font-bold uppercase tracking-[0.18em] text-blue-200">Since 2012</p><h2 className="mt-1 text-xl font-black tracking-tight">Rofik Godi Centre</h2></div>
           </div>
-          <p>
-            <strong>ROFIK GODI CENTRE</strong> is Murshidabad's premier workshop for handcrafted motorcycle, scooter, and Toto e-rickshaw seat modifications.
-          </p>
-          <p>
-            Every seat cover is reinforced with high-tensile Japanese thread, triple-layer rexine, and high-density anti-fatigue memory foam tailored specifically for Indian road conditions.
-          </p>
-          <div className="pt-2 border-t border-gray-100 flex flex-col gap-1 text-[11px] text-gray-500 font-medium">
-            <span>📍 {WORKSHOP_INFO.address}</span>
-            <span>☎ {WORKSHOP_INFO.phone}</span>
-          </div>
+        </section>
+
+        <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)]">
+          <p className="text-[13px] leading-[1.7] text-slate-600"><strong className="text-slate-900">Local craftsmanship, made for Indian roads.</strong> We create comfortable, durable seat covers and custom seat solutions for motorcycles, scooters and Toto e-rickshaws across Murshidabad.</p>
+          <p className="mt-3 text-[13px] leading-[1.7] text-slate-600">From a quick fitment to a fully customized finish, our workshop combines practical materials, careful stitching and hands-on service so every ride feels better.</p>
+        </section>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-2xl border border-slate-100 bg-white p-3 text-center shadow-sm"><p className="text-lg font-black text-[#D9232D]">4.8</p><p className="mt-0.5 text-[9px] font-bold text-slate-400">CUSTOMER RATING</p></div>
+          <div className="rounded-2xl border border-slate-100 bg-white p-3 text-center shadow-sm"><p className="text-lg font-black text-[#D9232D]">12+</p><p className="mt-0.5 text-[9px] font-bold text-slate-400">YEARS OF CRAFT</p></div>
+          <div className="rounded-2xl border border-slate-100 bg-white p-3 text-center shadow-sm"><p className="text-lg font-black text-[#D9232D]">4</p><p className="mt-0.5 text-[9px] font-bold text-slate-400">CORE SERVICES</p></div>
         </div>
-        {onOpenStoreInfo && (
-          <button
-            type="button"
-            onClick={onOpenStoreInfo}
-            className="w-full rounded-2xl border border-gray-200 bg-white py-3 text-xs font-bold text-gray-900 shadow-xs transition-colors hover:bg-gray-50"
-          >
-            View store & workshop info
-          </button>
-        )}
+
+        <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)]">
+          <div className="flex items-center gap-2"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-[#D9232D]"><Wrench className="h-4 w-4" /></span><div><h2 className="text-sm font-black text-slate-900">What we do</h2><p className="text-[10px] text-slate-500">Workshop services for your vehicle</p></div></div>
+          <div className="mt-3 space-y-2">{WORKSHOP_INFO.services.map((service) => <div key={service} className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2.5 text-[11px] font-medium leading-snug text-slate-600"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />{service}</div>)}</div>
+        </section>
+
+        <section className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+          <div className="flex items-start gap-2.5"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" /><div><h2 className="text-sm font-black text-slate-900">Built for everyday riding</h2><p className="mt-1 text-[11px] leading-relaxed text-slate-600">We use durable rexine, high-tensile thread and comfort-focused foam options selected for local weather and road conditions.</p></div></div>
+        </section>
+
+        <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+          <h2 className="text-sm font-black text-slate-900">Visit the workshop</h2>
+          <div className="mt-3 space-y-2 text-[11px] font-medium text-slate-600"><p className="flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#D9232D]" />{WORKSHOP_INFO.address}</p><p className="flex items-center gap-2"><Clock3 className="h-4 w-4 shrink-0 text-blue-600" />{WORKSHOP_INFO.workingHours}</p><p className="flex items-center gap-2"><Phone className="h-4 w-4 shrink-0 text-emerald-600" />{WORKSHOP_INFO.phone} · {WORKSHOP_INFO.phoneAlt}</p></div>
+          {onOpenStoreInfo && <button type="button" onClick={() => onOpenStoreInfo()} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#D9232D] py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-700"><MapPin className="h-4 w-4" />Open store map</button>}
+        </section>
       </SectionPage>
     );
   }
