@@ -14,7 +14,7 @@ export const APP_ROUTE_PATHS = [
   '/settings', '/settings/notifications', '/settings/app', '/settings/coupons', '/settings/reviews', '/settings/about', '/settings/help',
   '/privacy-policy', '/privacy', '/terms-and-conditions', '/terms', '/store-map', '/store', '/store-info', '/store-map/navigation', '/store/navigation',
   '/personal-data', '/personal-data-processing',
-  '/admin', '/admin/dashboard', '/admin/orders', '/admin/orders/:orderId', '/admin/products', '/admin/products/:productId', '/admin/Vehicle', '/admin/categories', '/admin/customers',
+  '/admin', '/admin/dashboard', '/admin/orders', '/admin/orders/:orderId', '/admin/products', '/admin/products/:productId', '/admin/Vehicle', '/admin/Vehicle/:modelId/edit', '/admin/categories', '/admin/customers',
   '/admin/customers/:customerId', '/admin/reviews', '/admin/coupons', '/admin/coupons/:couponId', '/admin/marketing', '/admin/banners', '/admin/notifications', '/admin/notifications/compose', '/admin/activity', '/admin/support', '/admin/support/:requestId',
   '/admin/reports', '/admin/settings', '/Onboarding', '/onboarding', '/signup', '/signup/onboarding', '/signup/loading',
   '/auth/callback', '/example/shop',
@@ -136,6 +136,11 @@ export function getAdminSupportRequestIdFromPath(pathname: string): string | nul
   return requestId ? decodeSegment(requestId) : null;
 }
 
+export function getAdminVehicleModelIdFromPath(pathname: string): string | null {
+  const modelId = trimPath(pathname).match(/^\/admin\/vehicle\/([^/]+)\/edit$/i)?.[1];
+  return modelId ? decodeSegment(modelId) : null;
+}
+
 export function getPathForAdminProduct(productId: string): string {
   return `/admin/products/${encodeURIComponent(productId)}`;
 }
@@ -173,6 +178,7 @@ export function getAdminSectionFromPath(pathname: string): AdminSectionRoute | n
   if (/^\/admin\/orders\/[^/]+$/i.test(path)) return 'orders';
   if (/^\/admin\/customers\/[^/]+$/i.test(path)) return 'customers';
   if (/^\/admin\/products\/[^/]+$/i.test(path)) return 'products';
+  if (/^\/admin\/vehicle\/[^/]+\/edit$/i.test(path)) return 'vehicle';
   if (/^\/admin\/coupons\/[^/]+$/i.test(path)) return 'marketing';
   if (/^\/admin\/notifications\/compose$/i.test(path)) return 'notifications';
   if (/^\/admin\/support(?:\/[^/]+)?$/i.test(path)) return 'support';
@@ -238,11 +244,14 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
     // Keep detail segments (product/coupon focus, compose, support ticket) in the
     // canonical path so deep links are not rewritten back to the bare section URL.
     const adminProductId = getAdminProductIdFromPath(path);
+    const adminVehicleModelId = getAdminVehicleModelIdFromPath(path);
     const adminCouponId = getAdminCouponIdFromPath(path);
     const adminSupportId = getAdminSupportRequestIdFromPath(path);
     const detailSuffix = adminProductId
       ? `/${encodeURIComponent(adminProductId)}`
-      : adminCouponId
+      : adminVehicleModelId
+        ? `/${encodeURIComponent(adminVehicleModelId)}/edit`
+        : adminCouponId
         ? `/${encodeURIComponent(adminCouponId)}`
         : adminSupportId
           ? `/${encodeURIComponent(adminSupportId)}`

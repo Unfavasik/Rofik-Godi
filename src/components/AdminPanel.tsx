@@ -30,6 +30,7 @@ import {
 import { AdminActivityView } from './AdminActivityView';
 import { AdminProductManager } from './AdminProductManager';
 import { AdminVehicleCatalogManager } from './AdminVehicleCatalogManager';
+import { AdminVehicleModelEdit } from './AdminVehicleModelEdit';
 import { CouponManagement } from './CouponManagement';
 import { AdminReviewsView } from './AdminReviewsView';
 import { InvoiceTemplate } from './InvoiceTemplate';
@@ -66,7 +67,7 @@ import { PRODUCTS } from '../data/products';
 import type { Product } from '../types';
 import { supabase } from '../lib/supabase';
 import { getOrderStatusLabel, isOrderComplete } from '../lib/orderPresentation';
-import { getAdminCouponIdFromPath, getAdminCustomerIdFromPath, getAdminOrderIdFromPath, getAdminProductIdFromPath, getAdminSectionFromPath, getAdminSupportRequestIdFromPath, getPathForAdminCoupon, getPathForAdminCustomer, getPathForAdminOrder, getPathForAdminProduct, getPathForAdminSection, isAdminNotificationComposePath, type AdminSectionRoute } from '../lib/appRoutes';
+import { getAdminCouponIdFromPath, getAdminCustomerIdFromPath, getAdminOrderIdFromPath, getAdminProductIdFromPath, getAdminSectionFromPath, getAdminSupportRequestIdFromPath, getAdminVehicleModelIdFromPath, getPathForAdminCoupon, getPathForAdminCustomer, getPathForAdminOrder, getPathForAdminProduct, getPathForAdminSection, isAdminNotificationComposePath, type AdminSectionRoute } from '../lib/appRoutes';
 
 type AdminSection = AdminSectionRoute;
 type OrderStatus = AdminOrderRecord['status'];
@@ -226,6 +227,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
   const selectedCustomer = selectedCustomerId
     ? customers.find((customer) => customer.id === selectedCustomerId) || null
     : null;
+  const vehicleEditModelId = getAdminVehicleModelIdFromPath(location.pathname);
   const notify = useCallback((message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(''), 2600);
@@ -643,7 +645,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
             />
             </div>
           )}
-          {section === 'vehicle' && <AdminVehicleCatalogManager notify={notify} />}
+          {section === 'vehicle' && (vehicleEditModelId ? <AdminVehicleModelEdit modelId={vehicleEditModelId} notify={notify} /> : <AdminVehicleCatalogManager notify={notify} />)}
           {section === 'categories' && (
             <CategoriesView products={products} onManageProducts={() => goTo('products')} />
           )}

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Bike, Edit3, Eye, EyeOff, ImagePlus, Plus, Trash2, Upload } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   createVehicleModel,
   deleteVehicleModel,
@@ -13,12 +14,15 @@ import {
 type Props = { notify: (message: string, tone?: 'success' | 'error' | 'info') => void };
 
 export function AdminVehicleCatalogManager({ notify }: Props) {
+  const navigate = useNavigate();
   const [models, setModels] = useState<VehicleCatalogModel[]>([]);
   const [brand, setBrand] = useState('');
   const [name, setName] = useState('');
   const [type, setType] = useState<VehicleCatalogType>('bike');
   const [image, setImage] = useState('');
   const [query, setQuery] = useState('');
+  const [selectedType, setSelectedType] = useState<VehicleCatalogType>('bike');
+  const [selectedBrand, setSelectedBrand] = useState('');
   const [loading, setLoading] = useState(true);
   const [uploadingModelId, setUploadingModelId] = useState<string | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
@@ -34,7 +38,9 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
   useEffect(() => { void refresh(); }, []);
 
   const brands = useMemo(() => Array.from(new Set(models.map((model) => model.brand))).sort(), [models]);
-  const filtered = models.filter((model) => `${model.brand} ${model.name}`.toLowerCase().includes(query.toLowerCase()));
+  const typeModels = models.filter((model) => model.type === selectedType);
+  const typeBrands = Array.from(new Set(typeModels.map((model) => model.brand))).sort();
+  const filtered = typeModels.filter((model) => (!selectedBrand || model.brand === selectedBrand) && `${model.brand} ${model.name}`.toLowerCase().includes(query.toLowerCase()));
   const activeCount = models.filter((model) => model.isActive).length;
 
   const addModel = async () => {
@@ -48,18 +54,6 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
       notify('Vehicle model added to Supabase', 'success');
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not add vehicle model', 'error');
-    }
-  };
-
-  const editModel = async (model: VehicleCatalogModel) => {
-    const nextName = window.prompt('Model name', model.name);
-    if (nextName === null || !nextName.trim()) return;
-    try {
-      await updateVehicleModel(model.id, { name: nextName });
-      await refresh();
-      notify('Model name updated. Use the upload button to replace its image with WebP.', 'success');
-    } catch (error) {
-      notify(error instanceof Error ? error.message : 'Could not update model', 'error');
     }
   };
 
@@ -135,21 +129,22 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {brands.map((item) => {
-          const brandModels = models.filter((model) => model.brand === item);
-          const hidden = brandModels.every((model) => !model.isActive);
-          return <button key={item} type="button" onClick={() => void toggleBrand(item)} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold ${hidden ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-slate-200 bg-white text-slate-700'}`}>{hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}{item}</button>;
-        })}
-      </div>
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3"><p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">01 · Choose vehicle type</p><div className="grid grid-cols-2 gap-2"><button type="button" onClick={() => { setSelectedType('bike'); setSelectedBrand(''); }} className={`flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-black transition ${selectedType === 'bike' ? 'bg-[#D9232D] text-white shadow-sm' : 'bg-white text-slate-500 hover:bg-slate-100'}`}><span className="text-base">🏍️</span>Bike</button><button type="button" onClick={() => { setSelectedType('scooter'); setSelectedBrand(''); }} className={`flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-black transition ${selectedType === 'scooter' ? 'bg-[#D9232D] text-white shadow-sm' : 'bg-white text-slate-500 hover:bg-slate-100'}`}><span className="text-base">🛵</span>Scooty / Scooter</button></div></div>
 
-      {loading ? <p className="rounded-2xl bg-slate-50 py-12 text-center text-sm text-slate-500">Loading vehicle catalog…</p> : <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <div><p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">02 · Choose company <span className="font-normal normal-case tracking-normal">({typeBrands.length} companies)</span></p><div className="flex flex-wrap gap-2"><button type="button" onClick={() => setSelectedBrand('')} className={`rounded-full border px-3 py-1.5 text-[11px] font-bold ${!selectedBrand ? 'border-[#D9232D] bg-red-50 text-[#D9232D]' : 'border-slate-200 bg-white text-slate-600'}`}>All companies</button>{typeBrands.map((item) => {
+          const brandModels = typeModels.filter((model) => model.brand === item);
+          const hidden = brandModels.every((model) => !model.isActive);
+          return <button key={item} type="button" onClick={() => setSelectedBrand(item)} onDoubleClick={() => void toggleBrand(item)} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold ${selectedBrand === item ? 'border-[#D9232D] bg-red-50 text-[#D9232D]' : hidden ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-slate-200 bg-white text-slate-700'}`}>{hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}{item}</button>;
+        })}
+      </div></div>
+
+      {loading ? <p className="rounded-2xl bg-slate-50 py-12 text-center text-sm text-slate-500">Loading vehicle catalog…</p> : <div><div className="mb-2 flex items-center justify-between"><p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">03 · Models <span className="font-normal normal-case tracking-normal">({filtered.length} shown)</span></p><span className="text-[10px] font-semibold text-slate-400">Tap Edit to update a model</span></div><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((model) => <div key={model.id} className={`flex items-center gap-3 rounded-2xl border p-2.5 ${model.isActive ? 'border-slate-100 bg-white' : 'border-rose-200 bg-rose-50/50 opacity-60'}`}>
-          {model.image ? <img src={model.image} alt="" className="h-12 w-16 shrink-0 rounded-xl bg-slate-100 object-contain" /> : <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl">{model.type === 'scooter' ? '🛵' : '🏍️'}</div>}
-          <div className="min-w-0 flex-1"><p className="truncate text-[10px] font-bold text-slate-400">{model.brand}</p><p className="truncate text-xs font-black text-slate-900">{model.name}</p><p className="text-[9px] font-semibold uppercase text-slate-400">{model.type} · {model.isActive ? 'visible' : 'hidden'}</p></div>
-          <div className="flex shrink-0 gap-1"><button type="button" onClick={() => void toggleModel(model)} aria-label="Toggle model visibility" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100">{model.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}</button><button type="button" onClick={() => void editModel(model)} aria-label="Edit model name or image URL" className="rounded-lg p-2 text-blue-600 hover:bg-blue-50"><Edit3 className="h-4 w-4" /></button><button type="button" onClick={() => { if (uploadInputRef.current) { uploadInputRef.current.dataset.modelId = model.id; uploadInputRef.current.click(); } }} disabled={uploadingModelId === model.id} aria-label="Upload new model image" className="rounded-lg p-2 text-emerald-600 hover:bg-emerald-50 disabled:opacity-50"><Upload className="h-4 w-4" /></button><button type="button" onClick={() => void removeModel(model)} aria-label="Remove model" className="rounded-lg p-2 text-rose-600 hover:bg-rose-50"><Trash2 className="h-4 w-4" /></button></div>
+          {model.image ? <img src={model.image} alt="" className="h-16 w-20 shrink-0 rounded-xl bg-slate-100 object-contain" /> : <div className="flex h-16 w-20 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl">{model.type === 'scooter' ? '🛵' : '🏍️'}</div>}
+          <div className="min-w-0 flex-1"><p className="truncate text-[10px] font-bold text-slate-400">{model.brand}</p><p className="truncate text-xs font-black text-slate-900">{model.name}</p><p className="text-[9px] font-semibold uppercase text-slate-400">{model.isActive ? 'visible' : 'hidden'}</p></div>
+          <div className="flex shrink-0 flex-col gap-1"><button type="button" onClick={() => navigate(`/admin/Vehicle/${encodeURIComponent(model.id)}/edit`)} aria-label={`Edit ${model.name}`} className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2 py-1.5 text-[10px] font-black text-blue-700 hover:bg-blue-100"><Edit3 className="h-3.5 w-3.5" />Edit</button><div className="flex gap-1"><button type="button" onClick={() => void toggleModel(model)} aria-label="Toggle model visibility" className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100">{model.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}</button><button type="button" onClick={() => { if (uploadInputRef.current) { uploadInputRef.current.dataset.modelId = model.id; uploadInputRef.current.click(); } }} disabled={uploadingModelId === model.id} aria-label="Upload new model image" className="rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50 disabled:opacity-50"><Upload className="h-4 w-4" /></button><button type="button" onClick={() => void removeModel(model)} aria-label="Remove model" className="rounded-lg p-1.5 text-rose-600 hover:bg-rose-50"><Trash2 className="h-4 w-4" /></button></div></div>
         </div>)}
-      </div>}
+      </div></div>}
       <input ref={uploadInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" aria-label="Upload vehicle model image" />
     </section>
   );
