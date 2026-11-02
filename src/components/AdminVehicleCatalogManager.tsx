@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Bike,
-  Building2,
   ChevronDown,
   Edit3,
   Ellipsis,
@@ -15,6 +14,7 @@ import {
   SlidersHorizontal,
   Trash2,
   Upload,
+  X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -73,7 +73,6 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
 
   useEffect(() => { void refresh(); }, []);
 
-  const brands = useMemo(() => Array.from(new Set(models.map((model) => model.brand))).sort(), [models]);
   const typeModels = models.filter((model) => model.type === selectedType);
   const typeBrands = Array.from(new Set(typeModels.map((model) => model.brand))).sort();
   const displayedBrands = showAllBrands ? typeBrands : typeBrands.slice(0, 9);
@@ -82,7 +81,6 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
     (visibilityFilter === 'all' || (visibilityFilter === 'active' ? model.isActive : !model.isActive)) &&
     `${model.brand} ${model.name}`.toLowerCase().includes(query.toLowerCase()),
   );
-  const activeCount = models.filter((model) => model.isActive).length;
 
   const addModel = async () => {
     const cleanBrand = brand.trim();
@@ -167,39 +165,34 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
     <section className="mx-auto max-w-[480px] space-y-4 bg-[#F8FAFC] p-4 sm:p-4">
       <div className="flex gap-2.5">
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-          <input aria-label="Search vehicles" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search vehicles, models or companies..." className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-[13px] font-semibold text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-[#D9232D] focus:ring-2 focus:ring-red-50" />
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input aria-label="Search vehicles" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search vehicles, models or companies..." className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-10 text-[13px] font-semibold text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-[#D9232D] focus:ring-2 focus:ring-red-50" />
+          {query && (
+            <button type="button" onClick={() => setQuery('')} aria-label="Clear search" className="absolute right-2.5 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
-        <button type="button" onClick={() => setVisibilityFilter((current) => current === 'all' ? 'active' : current === 'active' ? 'hidden' : 'all')} aria-label={`Cycle visibility filter, currently ${visibilityFilter}`} title={`Visibility: ${visibilityFilter}`} className={`grid size-11 shrink-0 place-items-center rounded-xl shadow-sm ${visibilityFilter === 'all' ? 'bg-red-50 text-[#D9232D]' : 'bg-[#D9232D] text-white'}`}>
-          <SlidersHorizontal className="h-4 w-4" />
-        </button>
-        <button type="button" onClick={() => void refresh()} aria-label="Refresh vehicle catalog" className="hidden size-11 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:border-red-200 hover:text-[#D9232D] sm:grid">
+        <details className="relative shrink-0">
+          <summary aria-label={`Filter models, currently ${visibilityFilter}`} className={`flex h-12 cursor-pointer list-none items-center gap-1.5 rounded-2xl px-3.5 shadow-sm transition [&::-webkit-details-marker]:hidden ${visibilityFilter === 'all' ? 'bg-red-50 text-[#D9232D]' : 'bg-[#D9232D] text-white'}`}>
+            <SlidersHorizontal className="h-4 w-4" />
+            {visibilityFilter !== 'all' && <span className="text-[11px] font-extrabold">{visibilityFilter === 'active' ? 'Visible' : 'Hidden'}</span>}
+          </summary>
+          <div className="absolute right-0 top-14 z-20 w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
+            {([
+              ['all', 'All models', SlidersHorizontal],
+              ['active', 'Visible only', Eye],
+              ['hidden', 'Hidden only', EyeOff],
+            ] as const).map(([value, label, Icon]) => (
+              <button key={value} type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); setVisibilityFilter(value); }} className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold transition ${visibilityFilter === value ? 'bg-red-50 text-[#D9232D]' : 'text-slate-700 hover:bg-slate-50'}`}>
+                <Icon className="h-3.5 w-3.5" />{label}
+              </button>
+            ))}
+          </div>
+        </details>
+        <button type="button" onClick={() => void refresh()} aria-label="Refresh vehicle catalog" className="hidden size-12 shrink-0 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-500 hover:border-red-200 hover:text-[#D9232D] sm:grid">
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2.5">
-        <div className="rounded-xl border border-red-100 bg-[#FDECEC] p-3">
-          <div className="flex items-center gap-1.5 text-[#D9232D]">
-            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-red-100"><Bike className="h-4 w-4" /></span>
-            <span className="text-[10px] font-bold leading-tight text-slate-700">Total Models</span>
-          </div>
-          <p className="mt-1.5 pl-1 text-[21px] font-black leading-none text-[#10213f]">{models.length}</p>
-        </div>
-        <div className="rounded-xl border border-emerald-100 bg-[#E8F8F0] p-3">
-          <div className="flex items-center gap-1.5 text-emerald-600">
-            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-emerald-100"><Eye className="h-4 w-4" /></span>
-            <span className="text-[10px] font-bold leading-tight text-slate-700">Visible to Users</span>
-          </div>
-          <p className="mt-1.5 pl-1 text-[21px] font-black leading-none text-[#10213f]">{activeCount}</p>
-        </div>
-        <div className="rounded-xl border border-blue-100 bg-[#EBF3FE] p-3">
-          <div className="flex items-center gap-1.5 text-blue-600">
-            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-blue-100"><Building2 className="h-4 w-4" /></span>
-            <span className="text-[10px] font-bold leading-tight text-slate-700">Companies</span>
-          </div>
-          <p className="mt-1.5 pl-1 text-[21px] font-black leading-none text-[#10213f]">{brands.length}</p>
-        </div>
       </div>
 
       <div className="rounded-[20px] border border-slate-200/80 bg-white p-4 shadow-sm">
