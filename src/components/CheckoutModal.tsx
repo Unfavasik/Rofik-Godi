@@ -7,12 +7,12 @@ import {
   UserRound, X,
 } from 'lucide-react';
 import { VEHICLE_BRANDS, WORKSHOP_INFO } from '../data/products';
-import { VEHICLE_MODELS } from '../data/vehicleModels';
 import {
   getCheckoutVehicleCompanies,
   getCheckoutVehicleModels,
   type CheckoutVehicleType,
 } from '../lib/checkoutVehicleFitment';
+import { loadVehicleModels, type VehicleCatalogModel } from '../lib/supabaseVehicleCatalog';
 import { CartItem, OrderDetails } from '../types';
 import { cancelUnpaidOnlineOrder, createSupabaseOrder } from '../lib/supabaseOrders';
 import { openRazorpayCheckout } from '../lib/razorpay';
@@ -50,6 +50,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [vehicleType, setVehicleType] = useState<VehicleType>('Bike');
   const [vehicleCompany, setVehicleCompany] = useState('');
   const [vehicleModel, setVehicleModel] = useState('');
+  const [vehicleCatalogModels, setVehicleCatalogModels] = useState<VehicleCatalogModel[]>([]);
   const [hasSavedVehicle, setHasSavedVehicle] = useState(false);
   const [editingPhone, setEditingPhone] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState(false);
@@ -77,10 +78,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const pickupDates = useMemo(() => Array.from({ length: 7 }, (_, index) => {
     const date = new Date(); date.setDate(date.getDate() + index + 1); return date;
   }), []);
-  const vehicleCompanies = useMemo(() => getCheckoutVehicleCompanies(vehicleType), [vehicleType]);
+  const vehicleCompanies = useMemo(() => getCheckoutVehicleCompanies(vehicleType, vehicleCatalogModels), [vehicleType, vehicleCatalogModels]);
   const vehicleModelOptions = useMemo(
-    () => getCheckoutVehicleModels(vehicleType, vehicleCompany),
-    [vehicleType, vehicleCompany],
+    () => getCheckoutVehicleModels(vehicleType, vehicleCompany, vehicleCatalogModels),
+    [vehicleType, vehicleCompany, vehicleCatalogModels],
   );
   const selectedFitment = vehicleModelOptions.find((model) => model.name === vehicleModel);
   const vehicleValue = vehicleModel.trim()
@@ -94,6 +95,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   useEffect(() => {
     if (!isOpen || !userId) return;
     let active = true;
+    void loadVehicleModels().then(({ data }) => { if (active) setVehicleCatalogModels(data); });
     setProfileLoad('loading'); setProfileError(''); setSubmissionError(''); setToastMessage(''); setStep(1); setPendingOnlineOrder(null); setPlacedOrder(null);
     setEditingPhone(false); setEditingVehicle(false); setPhoneError('');
     const loadProfile = async () => {
@@ -120,8 +122,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       const savedModel = vehicleParts.length > 1 ? vehicleParts.slice(1).join(' · ') : vehicleParts[0] || '';
       const savedCatalogType = savedType === 'Bike' ? 'bike' : savedType === 'Scooter' ? 'scooter' : null;
       const savedCatalogVehicle = savedCatalogType
-        ? VEHICLE_MODELS.find((model) => model.type === savedCatalogType && model.name.toLowerCase() === savedModel.toLowerCase()) ||
-          VEHICLE_MODELS.find(
+        ? vehicleCatalogModels.find((model) => model.type === savedCatalogType && model.name.toLowerCase() === savedModel.toLowerCase()) ||
+          vehicleCatalogModels.find(
             (model) =>
               model.type === savedCatalogType &&
               (model.name.toLowerCase().endsWith(` ${savedModel.toLowerCase()}`) ||
@@ -143,7 +145,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     };
     void loadProfile();
     return () => { active = false; };
-  }, [isOpen, t, userId]);
+  }, [isOpen, t, userId, vehicleCatalogModels]);
 
   useEffect(() => () => {
     if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);

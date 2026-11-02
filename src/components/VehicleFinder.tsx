@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { VEHICLE_BRANDS } from '../data/products';
-import { getVisibleVehicleModels, VEHICLE_CATALOG_CHANGED_EVENT } from '../lib/vehicleCatalogAdmin';
-import type { VehicleCatalogModel } from '../data/vehicleModels';
+import { loadVehicleModels, VEHICLE_CATALOG_CHANGED_EVENT, type VehicleCatalogModel } from '../lib/supabaseVehicleCatalog';
 import { CheckCircle2, ChevronDown, RotateCcw, Shield } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -22,11 +21,16 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
   activeVehicleFilter,
 }) => {
   const [selectedType, setSelectedType] = useState<FinderType>('bike');
-  const [catalogModels, setCatalogModels] = useState<VehicleCatalogModel[]>(() => getVisibleVehicleModels());
+  const [catalogModels, setCatalogModels] = useState<VehicleCatalogModel[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [selectedBrand, setSelectedBrand] = useState('');
 
   useEffect(() => {
-    const refresh = () => setCatalogModels(getVisibleVehicleModels());
+    const refresh = () => {
+      setCatalogLoading(true);
+      void loadVehicleModels().then(({ data }) => setCatalogModels(data)).finally(() => setCatalogLoading(false));
+    };
+    refresh();
     window.addEventListener(VEHICLE_CATALOG_CHANGED_EVENT, refresh);
     return () => window.removeEventListener(VEHICLE_CATALOG_CHANGED_EVENT, refresh);
   }, []);
@@ -135,7 +139,7 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
               }}
               className="w-full cursor-pointer appearance-none rounded-xl border border-gray-700/80 bg-gray-800/90 py-2 pl-3 pr-8 text-[12px] font-semibold text-white focus:border-[#D9232D] focus:outline-none"
             >
-              <option value="">Select Company</option>
+              <option value="">{catalogLoading ? 'Loading companies…' : 'Select Company'}</option>
               {currentBrands.map((brand) => (
                 <option key={brand} value={brand}>
                   {brand}
@@ -156,7 +160,7 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
                 !selectedBrand ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
               }`}
             >
-              <option value="">{selectedBrand ? 'Select Model' : 'Pick Company First'}</option>
+              <option value="">{catalogLoading ? 'Loading models…' : selectedBrand ? 'Select Model' : 'Pick Company First'}</option>
               {currentModels.map((model, index) => (
                 <option key={`${model.name}-${index}`} value={model.name}>
                   {model.name}
