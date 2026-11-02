@@ -675,8 +675,12 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
             applyMarkerRotation(course);
           }
         }
-        // Live speed readout (GPS reports m/s; display km/h like Google Maps).
-        setLiveSpeedKmh(raw.coords.speed !== null && raw.coords.speed !== undefined ? raw.coords.speed * 3.6 : null);
+        // GPS speed jitters by 1–2 km/h while the phone is stationary.
+        // Treat sub-2 km/h movement as stopped so sitting still shows 0.
+        const gpsSpeedKmh = raw.coords.speed !== null && raw.coords.speed !== undefined
+          ? raw.coords.speed * 3.6
+          : 0;
+        setLiveSpeedKmh(gpsSpeedKmh < 2 ? 0 : gpsSpeedKmh);
         // Mode-aware deviation check per the spec: cross-track distance past
         // the mode threshold (30/20/12 m) OR a heading delta past the mode's
         // opposite-direction angle while moving, confirmed on consecutive
