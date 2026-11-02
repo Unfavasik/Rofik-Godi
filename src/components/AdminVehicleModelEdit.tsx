@@ -281,7 +281,7 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
             <span className="grid size-9 place-items-center rounded-xl bg-[#FCEBEB] text-[#db1a24]"><ImageIcon className="h-4 w-4" /></span>
             <h3 className="text-[17px] font-extrabold text-slate-900">Model Image</h3>
           </div>
-          <p className="text-[12px] font-medium text-slate-500">Update the model image (JPG, PNG or WEBP · Max 5MB)</p>
+          <p className="text-[12px] font-medium text-slate-500">Update the model image — any size works, auto-set to 800×600 WebP (Max 5MB)</p>
           <div className="flex items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/60 p-3">
             {model.image ? (
               <div className="relative h-[92px] w-[108px] shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
