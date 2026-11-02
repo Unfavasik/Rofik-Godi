@@ -59,7 +59,7 @@ import {
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { NATIVE_AUTH_CALLBACK_URL } from './lib/oauthRedirect';
-import { getPathForCustomerOrder, getPathForNotificationsSettings, getPathForOrderHelp, getPathForPhase, getPathForProduct, getPathForSettingsSection, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
+import { getPathForCustomerOrder, getPathForNotificationsSettings, getPathForOrderHelp, getPathForPhase, getPathForProduct, getPathForSettingsSection, getPathForStoreNavigation, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from './lib/supabaseCoupons';
 import { getNotificationTargetPath } from './lib/notificationTarget';
 import { signOutCurrentDevice } from './lib/authLogout';
@@ -386,7 +386,7 @@ export default function App() {
       '/signup/loading',
     ].includes(route);
     const routeKind = resolveAppRoute(route).kind;
-    const publicInfoPath = routeKind === 'privacy' || routeKind === 'terms' || routeKind === 'store' || routeKind === 'personal-data';
+    const publicInfoPath = routeKind === 'privacy' || routeKind === 'terms' || routeKind === 'store' || routeKind === 'store-navigation' || routeKind === 'personal-data';
     if (authStatus === 'AUTHENTICATED' && isAdmin === null) {
       if (appPhase === 'splash') goToPhase('main');
       return;
@@ -584,7 +584,7 @@ export default function App() {
   useEffect(() => {
     if (appPhase !== 'main' || authStatus === 'AUTH_LOADING') return;
     const route = resolveAppRoute(location.pathname);
-    const publicInfoPath = route.kind === 'privacy' || route.kind === 'terms' || route.kind === 'store' || route.kind === 'personal-data';
+    const publicInfoPath = route.kind === 'privacy' || route.kind === 'terms' || route.kind === 'store' || route.kind === 'store-navigation' || route.kind === 'personal-data';
     if (authStatus === 'UNAUTHENTICATED' && !publicInfoPath) return;
     if (route.kind === 'not-found') {
       navigate('/home', { replace: true });
@@ -597,7 +597,7 @@ export default function App() {
     setIsPrivacyPolicyOpen(route.kind === 'privacy');
     setIsTermsConditionsOpen(route.kind === 'terms');
     setIsPersonalDataOpen(route.kind === 'personal-data');
-    setIsStoreInfoOpen(route.kind === 'store');
+    setIsStoreInfoOpen(route.kind === 'store' || route.kind === 'store-navigation');
     setCouponRouteCode(route.kind === 'coupon' ? route.couponCode : null);
     if (route.kind !== 'product') {
       setSelectedProduct(null);
@@ -1265,7 +1265,7 @@ export default function App() {
   // Public info pages (privacy, terms, store, signup consent) must stay reachable
   // for unauthenticated deep links — the guest welcome funnel only gates app tabs.
   const gateRouteKind = resolveAppRoute(location.pathname).kind;
-  const isPublicInfoRoute = gateRouteKind === 'privacy' || gateRouteKind === 'terms' || gateRouteKind === 'store' || gateRouteKind === 'personal-data';
+  const isPublicInfoRoute = gateRouteKind === 'privacy' || gateRouteKind === 'terms' || gateRouteKind === 'store' || gateRouteKind === 'store-navigation' || gateRouteKind === 'personal-data';
   if (authStatus === 'UNAUTHENTICATED' && appPhase === 'main' && !guestWelcomeComplete && !isPublicInfoRoute) {
     return <Suspense fallback={<SplashScreen />}><Onboarding onFinish={finishWelcomeOnboarding} /></Suspense>;
   }
@@ -2070,7 +2070,14 @@ export default function App() {
           onOpenCart={handleOpenCart}
         />}
 
-        {isStoreInfoOpen && <StoreLocationView onClose={() => navigateBackToPage('/home')} />}
+        {isStoreInfoOpen && (
+          <StoreLocationView
+            startInNavigation={resolvedRoute.kind === 'store-navigation'}
+            onStartNavigation={() => navigate(getPathForStoreNavigation())}
+            onExitNavigation={() => navigate('/store', { replace: true })}
+            onClose={() => navigateBackToPage(resolvedRoute.kind === 'store-navigation' ? '/store' : '/home')}
+          />
+        )}
 
         {/* 📜 Privacy Policy Modal / Slide-over */}
         {isPrivacyPolicyOpen && (

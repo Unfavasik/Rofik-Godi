@@ -257,7 +257,17 @@ const getCurrentPosition = (): Promise<LatLng> =>
     );
   });
 
-export function StoreLocationView({ onClose }: { onClose: () => void }) {
+interface StoreLocationViewProps {
+  onClose: () => void;
+  /** When true (routed at /store/navigation), turn-by-turn starts automatically once the location is known. */
+  startInNavigation?: boolean;
+  /** Routed flow: navigating to the dedicated navigation page instead of starting in place. */
+  onStartNavigation?: () => void;
+  /** Routed flow: leaving turn-by-turn returns to the store page. */
+  onExitNavigation?: () => void;
+}
+
+export function StoreLocationView({ onClose, startInNavigation = false, onStartNavigation, onExitNavigation }: StoreLocationViewProps) {
   const hostWrapperRef = useRef<HTMLDivElement | null>(null);
   const navRef = useRef<Navigatr | null>(null);
   const watchIdRef = useRef<number | null>(null);
@@ -312,6 +322,9 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
     watchIdRef.current = null;
   };
 
+  const onExitNavigationRef = useRef<(() => void) | undefined>(undefined);
+  onExitNavigationRef.current = onExitNavigation;
+
   const exitNavigation = useCallback(() => {
     clearWatch();
     unsubscribeEventsRef.current?.();
@@ -333,6 +346,8 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
     setSpeedAnomaly(false);
     navRouteRef.current = null;
     offRouteTicksRef.current = 0;
+    // Routed flow: leaving turn-by-turn returns to the store page.
+    onExitNavigationRef.current?.();
   }, []);
 
   const fetchTravelTimes = useCallback(async (nav: Navigatr, user: LatLng, store: LatLng) => {
@@ -622,9 +637,28 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
     }
   }, [trackLivePosition, rerouteFrom]);
 
+  // Routed deep link (/store/navigation): begin turn-by-turn automatically as
+  // soon as the map and the visitor's location are ready.
+  const autoStartRef = useRef(false);
+  useEffect(() => {
+    if (!startInNavigation) {
+      autoStartRef.current = false;
+      return;
+    }
+    if (autoStartRef.current || navigating || !mapReady || !userPos) return;
+    autoStartRef.current = true;
+    void startTurnByTurn(userPos);
+  }, [startInNavigation, mapReady, userPos, navigating, startTurnByTurn]);
+
   const handleGetDirections = async () => {
     if (navigating) {
       exitNavigation();
+      return;
+    }
+    // Routed flow: the turn-by-turn view is its own page (/store/navigation);
+    // this instance stays mounted and auto-starts once the route flips.
+    if (onStartNavigation) {
+      onStartNavigation();
       return;
     }
     if (userPos) {
@@ -672,7 +706,13 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
       <header className="flex shrink-0 items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
         <button
           type="button"
-          onClick={onClose}
+          onClick={() => {
+            if (navigating) {
+              exitNavigation();
+              return;
+            }
+            onClose();
+          }}
           aria-label="Go back"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100/80 text-slate-700 transition-transform hover:bg-slate-200/80 active:scale-95"
         >
