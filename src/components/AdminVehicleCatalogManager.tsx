@@ -21,6 +21,7 @@ import {
   createVehicleModel,
   deleteVehicleModel,
   loadVehicleModels,
+  setVehicleBrandVisibility,
   uploadVehicleModelImage,
   updateVehicleModel,
   type VehicleCatalogModel,
@@ -58,6 +59,7 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
   const [creating, setCreating] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploadingModelId, setUploadingModelId] = useState<string | null>(null);
+  const [brandUpdating, setBrandUpdating] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const createImageInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -111,6 +113,25 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
       notify(model.isActive ? 'Model hidden from customers' : 'Model visible to customers', 'success');
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not update visibility', 'error');
+    }
+  };
+
+  const toggleBrandVisibility = async () => {
+    if (!selectedBrand || brandUpdating) return;
+    const brandModels = typeModels.filter((model) => model.brand === selectedBrand);
+    const makeVisible = brandModels.every((model) => !model.isActive);
+    if (!window.confirm(makeVisible
+      ? `Show all ${brandModels.length} ${selectedBrand} models in the public catalog?`
+      : `Hide all ${brandModels.length} ${selectedBrand} models from customers?`)) return;
+    setBrandUpdating(true);
+    try {
+      await setVehicleBrandVisibility(selectedBrand, selectedType, makeVisible);
+      await refresh();
+      notify(makeVisible ? `${selectedBrand} is now visible to customers` : `${selectedBrand} hidden from customers`, 'success');
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Could not update company visibility', 'error');
+    } finally {
+      setBrandUpdating(false);
     }
   };
 
@@ -262,14 +283,34 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
         <div className="grid grid-cols-3 gap-2">
           {displayedBrands.map((item) => {
             const active = selectedBrand === item;
+            const brandModels = typeModels.filter((model) => model.brand === item);
+            const brandHidden = brandModels.length > 0 && brandModels.every((model) => !model.isActive);
             return (
-              <button key={item} type="button" onClick={() => setSelectedBrand(active ? '' : item)} className={`inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full border px-2 py-2 text-[10px] font-bold shadow-sm transition ${active ? 'border-red-300 bg-[#FCEBEB] text-slate-900' : 'border-slate-100 bg-white text-slate-800 hover:border-red-200'}`}>
+              <button key={item} type="button" onClick={() => setSelectedBrand(active ? '' : item)} className={`inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full border px-2 py-2 text-[10px] font-bold shadow-sm transition ${active ? 'border-red-300 bg-[#FCEBEB] text-slate-900' : brandHidden ? 'border-dashed border-slate-300 bg-slate-50 text-slate-400' : 'border-slate-100 bg-white text-slate-800 hover:border-red-200'}`}>
                 <BrandLogo brand={item} />
                 <span className="truncate">{item}</span>
+                {brandHidden && <EyeOff className="h-3 w-3 shrink-0 text-slate-400" />}
               </button>
             );
           })}
         </div>
+        {selectedBrand && (() => {
+          const brandModels = typeModels.filter((model) => model.brand === selectedBrand);
+          const visibleCount = brandModels.filter((model) => model.isActive).length;
+          const makeVisible = visibleCount === 0;
+          return (
+            <div className="mt-2 flex items-center justify-between gap-2.5 rounded-xl border border-slate-100 bg-white p-2.5 shadow-sm">
+              <div className="min-w-0">
+                <p className="truncate text-[12px] font-extrabold text-slate-900">{selectedBrand}</p>
+                <p className="text-[10px] font-medium text-slate-400">{visibleCount}/{brandModels.length} models visible to users</p>
+              </div>
+              <button type="button" onClick={() => void toggleBrandVisibility()} disabled={brandUpdating} className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-extrabold transition disabled:opacity-60 ${makeVisible ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-[#FCEBEB] text-[#D9232D] hover:bg-red-100'}`}>
+                {brandUpdating ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : makeVisible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                {brandUpdating ? 'Updating…' : makeVisible ? 'Show Company' : 'Hide Company'}
+              </button>
+            </div>
+          );
+        })()}
       </div>
 
       {loading ? (

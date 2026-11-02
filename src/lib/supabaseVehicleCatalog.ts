@@ -150,6 +150,17 @@ export async function deleteVehicleModel(id: string) {
   emitChanged();
 }
 
+export async function setVehicleBrandVisibility(brand: string, type: VehicleCatalogType, isActive: boolean) {
+  if (!supabase) throw new Error('Supabase is not configured');
+  const { error } = await supabase
+    .from('vehicle_models')
+    .update({ is_active: isActive })
+    .eq('brand', brand)
+    .eq('type', type);
+  if (error) throw error;
+  emitChanged();
+}
+
 export async function uploadVehicleModelImage(id: string, file: File) {
   if (!supabase) throw new Error('Supabase is not configured');
   if (file.size > 5 * 1024 * 1024) throw new Error('Please choose an image smaller than 5MB.');
