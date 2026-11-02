@@ -108,6 +108,8 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
       setDescription(updated.shortDescription || '');
       setIsActive(Boolean(updated.isActive));
       notify('Vehicle model changes saved', 'success');
+      // Mirror the profile-edit flow: save, then return to the model list.
+      navigate('/admin/Vehicle');
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not save vehicle model', 'error');
     } finally {
@@ -174,8 +176,8 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
   const displayBrand = brand || model.brand;
 
   return (
-    <section className="mx-auto max-w-[480px] overflow-hidden rounded-[24px] bg-[#F4F5F9] shadow-xl shadow-slate-200/60">
-      <header className="bg-[#db1a24] px-4 pb-6 pt-4 text-white sm:px-5">
+    <section className="min-h-full w-full bg-[#F4F5F9]">
+      <header className="bg-[#db1a24] px-4 pb-6 pt-4 text-white sm:px-6">
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => navigate('/admin/Vehicle')} aria-label="Back to vehicle models" className="-ml-1 rounded-full p-1 text-white transition hover:bg-white/10">
             <ArrowLeft className="h-6 w-6" />
@@ -197,7 +199,7 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
         </div>
       </header>
 
-      <div className="space-y-3.5 px-3 pb-6 pt-4 sm:px-4">
+      <div className="mx-auto max-w-[480px] space-y-3.5 px-3 pb-6 pt-4 sm:px-4">
         <section className="rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm" aria-label="Vehicle summary">
           <div className="flex items-start gap-3.5">
             <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="Change model image" className="relative h-[100px] w-[100px] shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
