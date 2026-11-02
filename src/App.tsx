@@ -1335,7 +1335,7 @@ export default function App() {
                 setIsCartOpen(true);
               }}
               onOpenWishlist={openWishlistPage}
-              onOpenStoreInfo={() => openPageRoute('/store')}
+              onOpenStoreInfo={() => openPageRoute('/store-map')}
               onOpenAccount={() => setActiveTab('account')}
               onOpenNotifications={() => {
                 refreshNotificationCount();
@@ -1509,7 +1509,7 @@ export default function App() {
                 }
                 navigate('/profile');
               }}
-              onOpenStoreInfo={() => openPageRoute('/store')}
+              onOpenStoreInfo={() => openPageRoute('/store-map')}
               onOpenCustomBuilder={openCustomBuilderPage}
               onOpenShop={() => {
                 setActiveTab('shop');
@@ -2074,8 +2074,8 @@ export default function App() {
           <StoreLocationView
             startInNavigation={resolvedRoute.kind === 'store-navigation'}
             onStartNavigation={() => navigate(getPathForStoreNavigation())}
-            onExitNavigation={() => navigate('/store', { replace: true })}
-            onClose={() => navigateBackToPage(resolvedRoute.kind === 'store-navigation' ? '/store' : '/home')}
+            onExitNavigation={() => navigate('/store-map', { replace: true })}
+            onClose={() => navigateBackToPage(resolvedRoute.kind === 'store-navigation' ? '/store-map' : '/home')}
           />
         )}
 
@@ -2084,7 +2084,7 @@ export default function App() {
           <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
             <PrivacyPolicyView
               onBack={() => navigateBackToPage('/home')}
-              onOpenStoreInfo={() => openPageRoute('/store')}
+              onOpenStoreInfo={() => openPageRoute('/store-map')}
             />
           </div>
         )}
@@ -2094,7 +2094,7 @@ export default function App() {
           <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
             <TermsConditionsView
               onBack={() => navigateBackToPage('/home')}
-              onOpenStoreInfo={() => openPageRoute('/store')}
+              onOpenStoreInfo={() => openPageRoute('/store-map')}
             />
           </div>
         )}
@@ -2105,7 +2105,7 @@ export default function App() {
             <Suspense fallback={<SplashScreen />}>
               <PersonalDataView
                 onBack={() => navigateBackToPage('/signup')}
-                onOpenStoreInfo={() => openPageRoute('/store')}
+                onOpenStoreInfo={() => openPageRoute('/store-map')}
               />
             </Suspense>
           </div>

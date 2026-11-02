@@ -259,7 +259,7 @@ const getCurrentPosition = (): Promise<LatLng> =>
 
 interface StoreLocationViewProps {
   onClose: () => void;
-  /** When true (routed at /store/navigation), turn-by-turn starts automatically once the location is known. */
+  /** When true (routed at /store-map/navigation), turn-by-turn starts automatically once the location is known. */
   startInNavigation?: boolean;
   /** Routed flow: navigating to the dedicated navigation page instead of starting in place. */
   onStartNavigation?: () => void;
@@ -637,25 +637,43 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
     }
   }, [trackLivePosition, rerouteFrom]);
 
-  // Routed deep link (/store/navigation): begin turn-by-turn automatically as
-  // soon as the map and the visitor's location are ready.
+  // Routed deep link (/store-map/navigation): begin turn-by-turn automatically as
+  // soon as the map and the visitor's location are ready. If the position is
+  // not known yet, request it once; on failure show the location prompt.
   const autoStartRef = useRef(false);
+  const autoLocationRef = useRef(false);
   useEffect(() => {
     if (!startInNavigation) {
       autoStartRef.current = false;
+      autoLocationRef.current = false;
       return;
     }
-    if (autoStartRef.current || navigating || !mapReady || !userPos) return;
-    autoStartRef.current = true;
-    void startTurnByTurn(userPos);
-  }, [startInNavigation, mapReady, userPos, navigating, startTurnByTurn]);
+    if (autoStartRef.current || navigating || !mapReady) return;
+    if (userPos) {
+      autoStartRef.current = true;
+      void startTurnByTurn(userPos);
+      return;
+    }
+    if (autoLocationRef.current) return;
+    autoLocationRef.current = true;
+    getCurrentPosition()
+      .then((user) => {
+        adoptUserPosition(user);
+        const nav = navRef.current;
+        if (nav) void fetchTravelTimes(nav, user, STORE_POS);
+      })
+      .catch((error) => {
+        setLocationNeeded(true);
+        setRouteError(error instanceof Error ? error.message : 'Location is needed for directions.');
+      });
+  }, [startInNavigation, mapReady, userPos, navigating, startTurnByTurn, adoptUserPosition, fetchTravelTimes]);
 
   const handleGetDirections = async () => {
     if (navigating) {
       exitNavigation();
       return;
     }
-    // Routed flow: the turn-by-turn view is its own page (/store/navigation);
+    // Routed flow: the turn-by-turn view is its own page (/store-map/navigation);
     // this instance stays mounted and auto-starts once the route flips.
     if (onStartNavigation) {
       onStartNavigation();

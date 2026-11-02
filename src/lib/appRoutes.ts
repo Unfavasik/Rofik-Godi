@@ -12,7 +12,7 @@ export const APP_ROUTE_PATHS = [
   '/coupons/:couponCode',
   '/support', '/support/:requestId', '/contact-support', '/contact-support/my-support-requests', '/contact-us', '/contact-workshop',
   '/settings', '/settings/notifications', '/settings/app', '/settings/coupons', '/settings/reviews', '/settings/about', '/settings/help',
-  '/privacy-policy', '/privacy', '/terms-and-conditions', '/terms', '/store', '/store-info', '/store/navigation',
+  '/privacy-policy', '/privacy', '/terms-and-conditions', '/terms', '/store-map', '/store', '/store-info', '/store-map/navigation', '/store/navigation',
   '/personal-data', '/personal-data-processing',
   '/admin', '/admin/dashboard', '/admin/orders', '/admin/orders/:orderId', '/admin/products', '/admin/products/:productId', '/admin/categories', '/admin/customers',
   '/admin/customers/:customerId', '/admin/reviews', '/admin/coupons', '/admin/coupons/:couponId', '/admin/marketing', '/admin/banners', '/admin/notifications', '/admin/notifications/compose', '/admin/activity', '/admin/support', '/admin/support/:requestId',
@@ -39,8 +39,8 @@ export type ResolvedAppRoute =
   | { kind: 'privacy'; tab: 'home'; canonicalPath: '/privacy-policy' }
   | { kind: 'terms'; tab: 'home'; canonicalPath: '/terms-and-conditions' }
   | { kind: 'personal-data'; tab: 'home'; canonicalPath: '/personal-data' }
-  | { kind: 'store'; tab: 'home'; canonicalPath: '/store' }
-  | { kind: 'store-navigation'; tab: 'home'; canonicalPath: '/store/navigation' }
+  | { kind: 'store'; tab: 'home'; canonicalPath: '/store-map' }
+  | { kind: 'store-navigation'; tab: 'home'; canonicalPath: '/store-map/navigation' }
   | { kind: 'not-found'; tab: 'home'; canonicalPath: '/home' };
 
 const trimPath = (pathname: string) => pathname.replace(/\/+$/, '') || '/';
@@ -117,7 +117,7 @@ export function getPathForOrderHelp(orderSlug: string): string {
 }
 
 export function getPathForStoreNavigation(): string {
-  return '/store/navigation';
+  return '/store-map/navigation';
 }
 
 export function getAdminOrderIdFromPath(pathname: string): string | null {
@@ -262,8 +262,8 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
   if (path === '/privacy-policy' || path === '/privacy') return { kind: 'privacy', tab: 'home', canonicalPath: '/privacy-policy' };
   if (path === '/terms-and-conditions' || path === '/terms') return { kind: 'terms', tab: 'home', canonicalPath: '/terms-and-conditions' };
   if (path === '/personal-data' || path === '/personal-data-processing') return { kind: 'personal-data', tab: 'home', canonicalPath: '/personal-data' };
-  if (path === '/store/navigation') return { kind: 'store-navigation', tab: 'home', canonicalPath: '/store/navigation' };
-  if (path === '/store' || path === '/store-info') return { kind: 'store', tab: 'home', canonicalPath: '/store' };
+  if (path === '/store-map/navigation' || path === '/store/navigation') return { kind: 'store-navigation', tab: 'home', canonicalPath: '/store-map/navigation' };
+  if (path === '/store-map' || path === '/store' || path === '/store-info') return { kind: 'store', tab: 'home', canonicalPath: '/store-map' };
 
   const orderHelpMatch = path.match(/^\/(my-orders|myorder|my-order)\/order\/([^/]+)\/order-need-help$/i);
   if (orderHelpMatch) {
