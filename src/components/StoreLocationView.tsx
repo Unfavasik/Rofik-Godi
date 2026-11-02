@@ -301,6 +301,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
   const [routeError, setRouteError] = useState('');
   const [speedAnomaly, setSpeedAnomaly] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [liveSpeedKmh, setLiveSpeedKmh] = useState<number | null>(null);
 
   activeModeRef.current = activeMode;
   voiceEnabledRef.current = voiceEnabled;
@@ -344,6 +345,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
     setArrived(false);
     setOffRoute(false);
     setSpeedAnomaly(false);
+    setLiveSpeedKmh(null);
     navRouteRef.current = null;
     offRouteTicksRef.current = 0;
     // Routed flow: leaving turn-by-turn returns to the store page.
@@ -593,6 +595,8 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
         latestPosRef.current = position;
         setUserPos(position);
         map.updatePosition(position);
+        // Live speed readout (GPS reports m/s; display km/h like Google Maps).
+        setLiveSpeedKmh(raw.coords.speed !== null && raw.coords.speed !== undefined ? raw.coords.speed * 3.6 : null);
         // Mode-aware deviation check per the spec: cross-track distance past
         // the mode threshold (30/20/12 m) OR a heading delta past the mode's
         // opposite-direction angle while moving, confirmed on consecutive
@@ -785,8 +789,15 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
           </div>
         )}
 
+        {navigating && (
+          <div className="absolute bottom-3 left-3 z-10 flex items-baseline gap-1 rounded-xl bg-white px-3 py-2 shadow-lg" role="status" aria-label="Current speed">
+            <span className="text-lg font-black leading-none text-slate-900">{liveSpeedKmh !== null ? Math.round(liveSpeedKmh) : '--'}</span>
+            <span className="text-[10px] font-bold text-slate-500">km/h</span>
+          </div>
+        )}
+
         {navigating && offRoute && !arrived && (
-          <div className="absolute bottom-3 left-3 right-3 z-20" role="alert">
+          <div className="absolute bottom-20 left-3 right-3 z-20" role="alert">
             <div className="flex items-center gap-2.5 rounded-2xl bg-amber-500 p-3 shadow-xl">
               <TriangleAlert className="h-5 w-5 shrink-0 text-white" />
               <p className="text-xs font-bold text-white">Off route — finding a new way…</p>
@@ -795,7 +806,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
         )}
 
         {navigating && speedAnomaly && !arrived && !offRoute && (
-          <div className="absolute bottom-3 left-3 right-3 z-20" role="alert">
+          <div className="absolute bottom-20 left-3 right-3 z-20" role="alert">
             <div className="flex flex-col gap-2 rounded-2xl bg-blue-600 p-3.5 shadow-xl">
               <p className="text-xs font-bold text-white">You are moving fast for walking mode. Switch to bike or car?</p>
               <div className="flex gap-2">
