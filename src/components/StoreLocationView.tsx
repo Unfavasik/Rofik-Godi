@@ -16,9 +16,12 @@ import {
   RotateCw,
   Star,
   TriangleAlert,
+  Volume2,
+  VolumeX,
   X,
 } from 'lucide-react';
 import { WORKSHOP_INFO } from '../data/products';
+import { useI18n } from '../lib/i18n';
 
 const STORE_IMAGE = '/images/rofik-godi-store.webp';
 const BRAND_ICON = '/images/rofik-center-splash.webp';
@@ -92,15 +95,29 @@ const routeStyleFor = (mode: TravelModeKey) =>
       ? { color: '#00897B', weight: 5 }
       : { color: '#4285F4', weight: 5 };
 
-// Reroute thresholds from the navigation spec: 30 m for car/bike, 15 m for
-// walking, confirmed on 3 consecutive GPS ticks before recalculating.
-const offRouteThresholdMeters = (mode: TravelModeKey) => (mode === 'walk' ? 15 : 30);
-const OFF_ROUTE_TICKS_REQUIRED = 3;
+// Reroute thresholds from the navigation spec: 30 m car / 20 m bike / 12 m
+// walking, confirmed on 3 consecutive GPS ticks (4 for walking) before
+// recalculating. A heading delta past the mode limit while moving also counts.
+const MODE_SPECS: Record<TravelModeKey, {
+  markerWidthPx: number;
+  markerHeightPx: number;
+  offRouteThresholdM: number;
+  offRouteTicks: number;
+  preTurnAnnounceM: number;
+  finalTurnAnnounceM: number;
+  oppositeDeltaDeg: number;
+  minOppositeSpeedMps: number;
+}> = {
+  drive: { markerWidthPx: 24, markerHeightPx: 52, offRouteThresholdM: 30, offRouteTicks: 3, preTurnAnnounceM: 300, finalTurnAnnounceM: 40, oppositeDeltaDeg: 135, minOppositeSpeedMps: 10 / 3.6 },
+  bike: { markerWidthPx: 18, markerHeightPx: 44, offRouteThresholdM: 20, offRouteTicks: 3, preTurnAnnounceM: 150, finalTurnAnnounceM: 25, oppositeDeltaDeg: 130, minOppositeSpeedMps: 8 / 3.6 },
+  walk: { markerWidthPx: 24, markerHeightPx: 24, offRouteThresholdM: 12, offRouteTicks: 4, preTurnAnnounceM: 50, finalTurnAnnounceM: 10, oppositeDeltaDeg: 140, minOppositeSpeedMps: 2.5 / 3.6 },
+};
 const WALK_ANOMALY_SPEED_MPS = 20 / 3.6;
 
 // Distance from a point to the route polyline in meters (equirectangular
-// projection around the point — accurate enough at city scale).
-const distanceToPolylineMeters = (point: LatLng, polyline: LatLng[]) => {
+// projection around the point — accurate enough at city scale), plus the
+// compass bearing of the nearest route segment for heading-delta checks.
+const locateOnRoute = (point: LatLng, polyline: LatLng[]): { distanceMeters: number; routeBearing: number | null } => {
   const latRad = (point.lat * Math.PI) / 180;
   const toXY = (p: LatLng) => ({
     x: (p.lng - point.lng) * 111320 * Math.cos(latRad),
@@ -108,6 +125,7 @@ const distanceToPolylineMeters = (point: LatLng, polyline: LatLng[]) => {
   });
   const a = toXY(point);
   let min = Infinity;
+  let bearingAtMin: number | null = null;
   for (let i = 0; i < polyline.length - 1; i++) {
     const b = toXY(polyline[i]);
     const c = toXY(polyline[i + 1]);
@@ -117,9 +135,82 @@ const distanceToPolylineMeters = (point: LatLng, polyline: LatLng[]) => {
     const t = lenSq === 0 ? 0 : Math.max(0, Math.min(1, ((a.x - b.x) * abx + (a.y - b.y) * aby) / lenSq));
     const dx = a.x - (b.x + t * abx);
     const dy = a.y - (b.y + t * aby);
-    min = Math.min(min, Math.sqrt(dx * dx + dy * dy));
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < min) {
+      min = dist;
+      bearingAtMin = (Math.atan2(abx, aby) * 180) / Math.PI;
+    }
   }
-  return min;
+  return { distanceMeters: min, routeBearing: bearingAtMin === null ? null : (bearingAtMin + 360) % 360 };
+};
+
+const angularDiff = (a: number, b: number) => {
+  const diff = Math.abs(a - b) % 360;
+  return diff > 180 ? 360 - diff : diff;
+};
+
+// Marker scale shrinks slightly as speed rises so faster travel shows more road.
+const markerScaleFor = (speedMps: number | null | undefined) => {
+  const kmh = (speedMps ?? 0) * 3.6;
+  if (kmh <= 6) return 1.0;
+  if (kmh <= 25) return 0.95;
+  if (kmh <= 50) return 0.9;
+  if (kmh <= 80) return 0.85;
+  return 0.8;
+};
+
+// --- Voice guidance (Web Speech API) --------------------------------------
+// Bengali + English prompt bank from the navigation spec, with a 5-second
+// deduplication cooldown so the same sentence never repeats back to back.
+type SpeechLanguage = 'en' | 'bn';
+let lastSpokenText = '';
+let lastSpokenTime = 0;
+
+const speak = (text: string, options: { priority?: boolean; language: SpeechLanguage } ) => {
+  if (!('speechSynthesis' in window)) return;
+  const now = Date.now();
+  if (!options.priority && text === lastSpokenText && now - lastSpokenTime < 5000) return;
+  lastSpokenText = text;
+  lastSpokenTime = now;
+  if (options.priority) window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = options.language === 'bn' ? 'bn-IN' : 'en-IN';
+  utterance.rate = 1.02;
+  window.speechSynthesis.speak(utterance);
+};
+
+const maneuverDirection = (type: string, language: SpeechLanguage) => {
+  if (type.includes('left')) return language === 'bn' ? 'বাম দিকে' : 'left';
+  if (type.includes('right')) return language === 'bn' ? 'ডান দিকে' : 'right';
+  return language === 'bn' ? 'সোজা' : 'straight';
+};
+
+const turnAnnouncement = (directionType: string, meters: number, immediate: boolean, language: SpeechLanguage) => {
+  const direction = maneuverDirection(directionType, language);
+  if (direction === 'straight' || directionType.startsWith('destination')) {
+    return language === 'bn' ? 'সোজা এগিয়ে চলুন।' : 'Continue straight.';
+  }
+  if (immediate) {
+    return language === 'bn' ? `এখনই ${direction} ঘুরুন।` : `Turn ${direction} now.`;
+  }
+  return language === 'bn' ? `${meters} মিটার পরে, ${direction} ঘুরুন।` : `In ${meters} meters, turn ${direction}.`;
+};
+
+const OFF_ROUTE_SPEECH: Record<SpeechLanguage, string> = {
+  en: 'You are off route. Rerouting...',
+  bn: 'আপনি নির্ধারিত রুট থেকে সরে গেছেন। নতুন রাস্তা খোঁজা হচ্ছে...',
+};
+const WALKING_OPPOSITE_SPEECH: Record<SpeechLanguage, string> = {
+  en: 'You are walking in the opposite direction. Please turn around.',
+  bn: 'আপনি উল্টো দিকে হাঁটছেন। অনুগ্রহ করে ঘুরে বিপরীত দিকে চলুন।',
+};
+const ANOMALY_SPEECH: Record<SpeechLanguage, string> = {
+  en: 'It looks like you are riding or driving. Would you like to switch from walking mode?',
+  bn: 'আপনার গতি হাঁটার চেয়ে বেশি মনে হচ্ছে। আপনি কি বাইক বা কার মোডে পরিবর্তন করতে চান?',
+};
+const ARRIVAL_SPEECH: Record<SpeechLanguage, string> = {
+  en: 'You have arrived at your destination.',
+  bn: 'আপনি আপনার গন্তব্যে পৌঁছে গেছেন।',
 };
 
 // Callout card + red pin stacked above an invisible spacer: MapLibre centers
@@ -168,6 +259,13 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
   const activeModeRef = useRef<TravelModeKey>('drive');
   const navRouteRef = useRef<RouteResult | null>(null);
   const offRouteTicksRef = useRef(0);
+  const announcedStageRef = useRef<{ key: string; stage: 'pre' | 'final' } | null>(null);
+  const latestSpeedRef = useRef<number | null>(null);
+  const voiceEnabledRef = useRef(true);
+  const { language } = useI18n();
+  const speechLanguage: SpeechLanguage = language === 'bn' ? 'bn' : 'en';
+  const languageRef = useRef<SpeechLanguage>(speechLanguage);
+  languageRef.current = speechLanguage;
   const storePosRef = useRef<LatLng>(STORE_POS);
   const [userPos, setUserPos] = useState<LatLng | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -184,8 +282,12 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
   const [locationNeeded, setLocationNeeded] = useState(false);
   const [routeError, setRouteError] = useState('');
   const [speedAnomaly, setSpeedAnomaly] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
 
   activeModeRef.current = activeMode;
+  voiceEnabledRef.current = voiceEnabled;
+  const speedAnomalyRef = useRef(false);
+  speedAnomalyRef.current = speedAnomaly;
 
   const fallbackLegs = useMemo(() => {
     if (!userPos) return null;
@@ -251,13 +353,17 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
     );
   }, []);
 
-  const rerouteFrom = useCallback(async (position: LatLng, mode: TravelModeKey) => {
+  const rerouteFrom = useCallback(async (position: LatLng, mode: TravelModeKey, reason?: 'deviation' | 'opposite') => {
     const nav = navRef.current;
     const map = cachedMap;
     if (!nav || !map) return;
     if (reroutingRef.current) return;
     reroutingRef.current = true;
     setOffRoute(true);
+    if (voiceEnabledRef.current) {
+      const language = languageRef.current;
+      speak(mode === 'walk' && reason === 'opposite' ? WALKING_OPPOSITE_SPEECH[language] : OFF_ROUTE_SPEECH[language], { priority: true, language });
+    }
     try {
       const route = await withTimeout(nav.route({ origin: position, destination: STORE_POS, mode, maneuvers: true }), ROUTE_TIMEOUT_MS, 'Route');
       if (!reroutingRef.current) return;
@@ -311,21 +417,22 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
           });
           // The SDK rebuilds its default green vehicle SVG on every position
           // update, so swap in the branded top-down marker right after each
-          // rebuild. The heading rotation lives on the wrapper element and
-          // keeps working. Walk mode keeps the SDK's pedestrian glyph.
+          // rebuild, sized per the spec (car 48px, bike 40px, walk 24px dot)
+          // and scaled down slightly as speed rises. The heading rotation
+          // lives on the wrapper element and keeps working.
           const originalUpdateDriverMarker = cachedMap.updateDriverMarker.bind(cachedMap);
           cachedMap.updateDriverMarker = (options) => {
             originalUpdateDriverMarker(options);
-            const iconUrl = activeModeRef.current === 'drive'
-              ? NAV_CAR_ICON
-              : activeModeRef.current === 'bike'
-                ? NAV_BIKE_ICON
-                : '';
+            const spec = MODE_SPECS[activeModeRef.current];
             const iconEl = cachedHost?.querySelector('.navigatr-driver-icon');
-            if (iconEl && iconUrl) {
-              const size = iconUrl === NAV_CAR_ICON ? 'width:26px;height:58px;' : 'width:22px;height:58px;';
-              iconEl.innerHTML = `<img src="${iconUrl}" alt="" style="${size}object-fit:contain;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.4));" draggable="false" />`;
+            if (!iconEl) return;
+            if (activeModeRef.current === 'walk') {
+              iconEl.innerHTML = `<div style="width:${spec.markerWidthPx}px;height:${spec.markerHeightPx}px;border-radius:50%;background:#1A73E8;border:3px solid #ffffff;box-shadow:0 1px 6px rgba(0,0,0,0.35);"></div>`;
+              return;
             }
+            const iconUrl = activeModeRef.current === 'drive' ? NAV_CAR_ICON : NAV_BIKE_ICON;
+            const scale = markerScaleFor(latestSpeedRef.current);
+            iconEl.innerHTML = `<img src="${iconUrl}" alt="" style="width:${spec.markerWidthPx}px;height:${spec.markerHeightPx}px;object-fit:contain;transform:scale(${scale});filter:drop-shadow(0 2px 5px rgba(0,0,0,0.4));" draggable="false" />`;
           };
         }
         if (cancelled) return;
@@ -363,12 +470,27 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
         const maneuvers = navRoute?.maneuvers || [];
         const index = maneuvers.findIndex((m) => m.instruction === event.maneuver.instruction);
         setThenManeuver(index >= 0 ? maneuvers[index + 1] || null : null);
+        // Voice: pre-turn warning at the mode's announce distance, then the
+        // immediate instruction close to the turn. Each stage speaks once.
+        const spec = MODE_SPECS[activeModeRef.current];
+        const key = event.maneuver.instruction;
+        const stage = event.distanceMeters <= spec.finalTurnAnnounceM ? 'final' : 'pre';
+        if (event.distanceMeters <= spec.preTurnAnnounceM && (announcedStageRef.current?.key !== key || announcedStageRef.current?.stage !== stage)) {
+          announcedStageRef.current = { key, stage };
+          if (voiceEnabledRef.current) {
+            speak(
+              turnAnnouncement(event.maneuver.type, Math.round(event.distanceMeters), stage === 'final', languageRef.current),
+              { priority: stage === 'final', language: languageRef.current },
+            );
+          }
+        }
         return;
       }
       if (event.type === 'arrived') {
         setArrived(true);
         setBanner(null);
         clearWatch();
+        if (voiceEnabledRef.current) speak(ARRIVAL_SPEECH[languageRef.current], { priority: true, language: languageRef.current });
         window.setTimeout(() => exitNavigation(), 3000);
         return;
       }
@@ -441,26 +563,40 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
         latestPosRef.current = position;
         setUserPos(position);
         map.updatePosition(position);
-        // Mode-aware deviation check: reroute only after several consecutive
-        // off-route ticks so a single GPS jump doesn't recalculate.
+        // Mode-aware deviation check per the spec: cross-track distance past
+        // the mode threshold (30/20/12 m) OR a heading delta past the mode's
+        // opposite-direction angle while moving, confirmed on consecutive
+        // ticks (3 for vehicles, 4 for walking) before recalculating.
         const activeRoute = navRouteRef.current;
         if (activeRoute && activeRoute.polyline.length > 1) {
-          const deviation = distanceToPolylineMeters(position, activeRoute.polyline);
-          if (deviation > offRouteThresholdMeters(activeModeRef.current)) {
+          const spec = MODE_SPECS[activeModeRef.current];
+          const { distanceMeters, routeBearing } = locateOnRoute(position, activeRoute.polyline);
+          const gpsHeading = raw.coords.heading;
+          const speedMps = raw.coords.speed ?? 0;
+          const headingDelta = gpsHeading !== null && gpsHeading !== 0 && routeBearing !== null ? angularDiff(gpsHeading, routeBearing) : 0;
+          const isDeviated = distanceMeters > spec.offRouteThresholdM;
+          const isMovingOpposite = gpsHeading !== null && gpsHeading !== 0 && routeBearing !== null
+            && headingDelta > spec.oppositeDeltaDeg && speedMps > spec.minOppositeSpeedMps;
+          if (isDeviated || isMovingOpposite) {
             offRouteTicksRef.current += 1;
-            if (offRouteTicksRef.current >= OFF_ROUTE_TICKS_REQUIRED) {
+            if (offRouteTicksRef.current >= spec.offRouteTicks) {
               offRouteTicksRef.current = 0;
-              void rerouteFrom(position, activeModeRef.current);
+              void rerouteFrom(position, activeModeRef.current, isMovingOpposite && !isDeviated ? 'opposite' : 'deviation');
             }
           } else {
             offRouteTicksRef.current = 0;
           }
         }
         // Walking speed anomaly: if the user on foot moves like a vehicle,
-        // suggest switching the travel mode.
+        // suggest switching the travel mode (spoken once per detection).
         const speedMps = raw.coords.speed;
-        if (activeModeRef.current === 'walk' && speedMps !== null && speedMps > WALK_ANOMALY_SPEED_MPS) setSpeedAnomaly(true);
-        else if (speedMps !== null && speedMps < 4 / 3.6) setSpeedAnomaly(false);
+        latestSpeedRef.current = speedMps;
+        if (activeModeRef.current === 'walk' && speedMps !== null && speedMps > WALK_ANOMALY_SPEED_MPS) {
+          if (!speedAnomalyRef.current && voiceEnabledRef.current) speak(ANOMALY_SPEECH[languageRef.current], { priority: true, language: languageRef.current });
+          setSpeedAnomaly(true);
+        } else if (speedMps !== null && speedMps < 4 / 3.6) {
+          setSpeedAnomaly(false);
+        }
       });
     } catch (error) {
       setRouteError(error instanceof Error && error.message.includes('timed out')
@@ -625,12 +761,18 @@ export function StoreLocationView({ onClose }: { onClose: () => void }) {
                 {navRoute?.distanceText || '--'}{arrivalTime ? ` • ${arrivalTime}` : ''}
               </p>
             </div>
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#E51E2B]/10 text-[#E51E2B]">
-              {(() => {
-                const ModeIcon = travelModes.find((m) => m.key === activeMode)?.icon || Car;
-                return <ModeIcon className="h-5 w-5" />;
-              })()}
-            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const next = !voiceEnabled;
+                setVoiceEnabled(next);
+                if (!next) window.speechSynthesis?.cancel();
+              }}
+              aria-label={voiceEnabled ? 'Mute voice guidance' : 'Unmute voice guidance'}
+              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors ${voiceEnabled ? 'bg-[#E51E2B]/10 text-[#E51E2B]' : 'bg-slate-100 text-slate-500'}`}
+            >
+              {voiceEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+            </button>
           </div>
         </section>
       ) : (
