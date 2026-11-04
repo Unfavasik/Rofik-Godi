@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Bell, ChevronRight, Package, Settings, Star, Tag, Truck, Trash2, MessageCircle, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Bell, BellOff, ChevronRight, Package, Settings, Star, Tag, Truck, Trash2, MessageCircle, ShieldAlert } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { deleteMyNotification, listMyNotifications, markNotificationRead } from '../lib/supabaseCustomer';
 import { getNotificationOrderNumber } from '../lib/orderPresentation';
@@ -518,11 +518,20 @@ export function NotificationsView({ userId, isGuest, onBack, onNotificationsChan
         <button type="button" onClick={() => setLoadAttempt((attempt) => attempt + 1)} className="mt-4 rounded-full bg-rose-700 px-4 py-2 text-xs font-extrabold text-white">Try again</button>
       </section>
     ) : visible.length === 0 ? (
-      <section className="mx-4 mt-6 rounded-2xl border border-slate-100 bg-slate-50 px-5 py-9 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm"><Bell className="h-5 w-5" /></div>
-        <h2 className="mt-3 text-[14px] font-bold text-slate-800">{isGuest ? 'Sign in to see your notifications' : 'You’re all caught up'}</h2>
-        <p className="mt-1 text-[12px] text-slate-500">{isGuest ? 'Account notifications will appear here after you sign in.' : 'New updates for your account will appear here.'}</p>
-      </section>
+      items.length > 0 && enabledItems.length === 0 ? (
+        <section className="mx-4 mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-8 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-amber-600 shadow-sm"><BellOff className="h-5 w-5" /></div>
+          <h2 className="mt-3 text-[14px] font-bold text-amber-900">Notifications are turned off</h2>
+          <p className="mt-1 text-[12px] leading-relaxed text-amber-800/90">Every notification category is muted in your settings, so nothing appears here. Turn them back on to see order updates, offers and replies again.</p>
+          <button type="button" onClick={() => (onOpenSettingsRoute ? onOpenSettingsRoute() : setShowSettings(true))} className="mt-4 rounded-full bg-[#D9232D] px-4 py-2 text-xs font-extrabold text-white">Open notification settings</button>
+        </section>
+      ) : (
+        <section className="mx-4 mt-6 rounded-2xl border border-slate-100 bg-slate-50 px-5 py-9 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm"><Bell className="h-5 w-5" /></div>
+          <h2 className="mt-3 text-[14px] font-bold text-slate-800">{isGuest ? 'Sign in to see your notifications' : 'You’re all caught up'}</h2>
+          <p className="mt-1 text-[12px] text-slate-500">{isGuest ? 'Account notifications will appear here after you sign in.' : 'New updates for your account will appear here.'}</p>
+        </section>
+      )
     ) : <section className="mx-auto mt-0 w-full max-w-xl space-y-0 bg-white pb-5">
       {visible.map((item) => {
         const isDeleteRevealed = revealedDeleteId === item.id;
