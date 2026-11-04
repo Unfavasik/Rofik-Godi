@@ -355,7 +355,9 @@ export const deleteSupabaseProduct = async (product: Product) => {
 
 export const uploadProductImage = async (file: File) => {
   if (!supabase) throw new Error('Supabase is not configured');
-  const webp = await convertImageToWebP(file);
+  // Product photos are always stored as an 800x800 square WebP, regardless of
+  // the uploaded size or shape — the storefront displays them in square frames.
+  const webp = await convertImageToWebP(file, { squareSize: 800 });
   const path = `products/${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.webp`;
   const { error } = await supabase.storage
     .from('product-images')
