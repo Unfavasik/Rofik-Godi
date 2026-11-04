@@ -426,7 +426,9 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
   };
   const openActivityProduct = (event: AdminActivityEvent) => {
     setSidebarOpen(false);
-    navigate(getPathForAdminProduct(event.entity_id));
+    // Deep links carry the product id; the URL shows the human-readable slug.
+    const product = products.find((item) => item.id === event.entity_id);
+    navigate(getPathForAdminProduct(product?.slug || event.entity_id));
   };
   const openActivityCoupon = (event: AdminActivityEvent) => {
     setSidebarOpen(false);
