@@ -2,7 +2,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Product } from '../types';
 import { Heart, Plus, Star, ShoppingCart, ImageOff } from 'lucide-react';
 import { motion } from 'motion/react';
-import { getProductAvailability } from '../lib/productAvailability';
+import { getProductAvailability, isProductSellable } from '../lib/productAvailability';
 import { formatInr, useI18n } from '../lib/i18n';
 
 const loadedImageSrcs = new Set<string>();
@@ -95,9 +95,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const { t } = useI18n();
   const availability = getProductAvailability(product);
   const cardSubtitle = product.subtitle || product.colors[0]?.subtitle;
+  const sellable = isProductSellable(product);
+  const trackedSoldOut = product.inStock && product.stockQuantity != null && product.stockQuantity <= 0;
   const availabilityLabel =
     availability.state === 'out-of-stock'
-      ? t('product.outOfStock')
+      ? trackedSoldOut ? t('product.soldOut') : t('product.outOfStock')
       : availability.state === 'low-stock'
         ? availability.label
         : t('product.inStock');
@@ -210,13 +212,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             onClick={(event) => {
               event.stopPropagation();
               if (isInCart) onOpenCart();
-              else if (product.inStock) onQuickAddToCart(product, event);
+              else if (sellable) onQuickAddToCart(product, event);
               else void handleNotifyMe(event);
             }}
-            disabled={!product.inStock && !isInCart && (!onNotifyMe || notifySubmitting)}
-            aria-label={isInCart ? t('product.goToCart') : product.inStock ? t('product.addToCart') : t('product.notifyMe')}
-            title={isInCart ? t('product.goToCart') : product.inStock ? t('product.addToCart') : t('product.notifyMe')}
-            className={`pointer-events-auto ${!product.inStock && !isInCart ? 'min-h-11 min-w-[78px] px-2 text-[9px] font-extrabold' : 'h-11 w-11'} rounded-xl flex items-center justify-center transition-all shadow-sm ${
+            disabled={!sellable && !isInCart && (!onNotifyMe || notifySubmitting)}
+            aria-label={isInCart ? t('product.goToCart') : sellable ? t('product.addToCart') : t('product.notifyMe')}
+            title={isInCart ? t('product.goToCart') : sellable ? t('product.addToCart') : t('product.notifyMe')}
+            className={`pointer-events-auto ${!sellable && !isInCart ? 'min-h-11 min-w-[78px] px-2 text-[9px] font-extrabold' : 'h-11 w-11'} rounded-xl flex items-center justify-center transition-all shadow-sm ${
               isInCart
                 ? 'bg-emerald-600 text-white'
                 : 'bg-[#D9232D] text-white hover:bg-red-700 active:scale-95'
@@ -224,7 +226,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           >
             {isInCart ? (
               <ShoppingCart className="w-4 h-4" />
-            ) : product.inStock ? (
+            ) : sellable ? (
               <Plus className="w-4 h-4 stroke-[3]" />
             ) : t('product.notifyShort')}
           </motion.button>
@@ -310,13 +312,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             onClick={(event) => {
               event.stopPropagation();
               if (isInCart) onOpenCart();
-              else if (product.inStock) onQuickAddToCart(product, event);
+              else if (sellable) onQuickAddToCart(product, event);
               else void handleNotifyMe(event);
             }}
-          disabled={!product.inStock && !isInCart && (!onNotifyMe || notifySubmitting)}
-          aria-label={isInCart ? t('product.goToCart') : product.inStock ? t('product.addToCart') : t('product.notifyMe')}
-          title={isInCart ? t('product.goToCart') : product.inStock ? t('product.addToCart') : t('product.notifyMe')}
-          className={`pointer-events-auto ${!product.inStock && !isInCart ? 'min-h-11 min-w-[82px] px-1.5 text-[9px] font-extrabold' : 'h-11 w-11'} rounded-lg flex items-center justify-center transition-all shadow-xs ${
+          disabled={!sellable && !isInCart && (!onNotifyMe || notifySubmitting)}
+          aria-label={isInCart ? t('product.goToCart') : sellable ? t('product.addToCart') : t('product.notifyMe')}
+          title={isInCart ? t('product.goToCart') : sellable ? t('product.addToCart') : t('product.notifyMe')}
+          className={`pointer-events-auto ${!sellable && !isInCart ? 'min-h-11 min-w-[82px] px-1.5 text-[9px] font-extrabold' : 'h-11 w-11'} rounded-lg flex items-center justify-center transition-all shadow-xs ${
             isInCart
               ? 'bg-emerald-600 text-white'
               : 'bg-[#D9232D] text-white hover:bg-red-700 active:scale-95'
@@ -324,7 +326,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         >
           {isInCart ? (
             <ShoppingCart className="w-3.5 h-3.5" />
-          ) : product.inStock ? (
+          ) : sellable ? (
             <Plus className="w-4 h-4 stroke-[3]" />
           ) : t('product.notifyShort')}
         </motion.button>

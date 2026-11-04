@@ -20,3 +20,9 @@ export function getProductAvailability(
   }
   return { state: 'in-stock', label: 'In stock' };
 }
+
+// A product can only be ordered while it is published and its tracked stock
+// (when tracked at all) has not run out.
+export function isProductSellable(product: Pick<Product, 'inStock' | 'stockQuantity'>): boolean {
+  return product.inStock && (product.stockQuantity == null || product.stockQuantity > 0);
+}

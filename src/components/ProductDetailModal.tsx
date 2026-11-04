@@ -31,7 +31,7 @@ import {
   hasMatchingCartItem,
   resolveStitchPatternSelection,
 } from '../lib/cart';
-import { getProductAvailability } from '../lib/productAvailability';
+import { getProductAvailability, isProductSellable } from '../lib/productAvailability';
 import { ProductReviews } from './ProductReviews';
 import { BottomSheet } from './BottomSheet';
 import { getColorDetails } from '../lib/productColors';
@@ -199,7 +199,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   const discount = Math.round((savings / displayOriginalPrice) * 100);
 
   const addToCart = (buyNow = false) => {
-    if (!product.inStock) return;
+    if (!isProductSellable(product)) return;
     if (buyNow) {
       onBuyNow?.(product, selectedColor, selectedStitch || '', selectedThickness, quantity);
       return;
@@ -740,9 +740,9 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
           </main>
 
           <footer
-            className={`z-40 grid shrink-0 ${product.inStock ? 'grid-cols-2' : 'grid-cols-1'} gap-2.5 border-t border-slate-100 bg-white px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgba(15,23,42,.08)]`}
+            className={`z-40 grid shrink-0 ${isProductSellable(product) ? 'grid-cols-2' : 'grid-cols-1'} gap-2.5 border-t border-slate-100 bg-white px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgba(15,23,42,.08)]`}
           >
-            {product.inStock ? (
+            {isProductSellable(product) ? (
               <>
                 <button
                   type="button"
@@ -840,25 +840,25 @@ const SuggestionCard: React.FC<{
           </span>
           <button
             type="button"
-            disabled={!product.inStock && !isInCart && (!onNotifyMe || notifySubmitting)}
+            disabled={!isProductSellable(product) && !isInCart && (!onNotifyMe || notifySubmitting)}
             onClick={() => {
               if (isInCart) onOpenCart?.();
-              else if (product.inStock) onAdd();
+              else if (isProductSellable(product)) onAdd();
               else void handleNotifyMe();
             }}
             aria-label={
               isInCart
                 ? 'Go to Cart'
-                : product.inStock
+                : isProductSellable(product)
                   ? `Add ${product.title} to cart`
                   : 'Notify me when in stock'
             }
-            title={isInCart ? 'Go to Cart' : product.inStock ? 'Add to cart' : 'Notify me'}
-            className={`grid min-h-11 ${!product.inStock && !isInCart ? 'min-w-[74px] px-2 text-[9px] font-extrabold' : 'min-w-11'} place-items-center rounded-xl text-white ${isInCart ? 'bg-emerald-600' : 'bg-[#d9232d]'}`}
+            title={isInCart ? 'Go to Cart' : isProductSellable(product) ? 'Add to cart' : 'Notify me'}
+            className={`grid min-h-11 ${!isProductSellable(product) && !isInCart ? 'min-w-[74px] px-2 text-[9px] font-extrabold' : 'min-w-11'} place-items-center rounded-xl text-white ${isInCart ? 'bg-emerald-600' : 'bg-[#d9232d]'}`}
           >
             {isInCart ? (
               <ShoppingCart className="h-4 w-4" />
-            ) : product.inStock ? (
+            ) : isProductSellable(product) ? (
               <Plus className="h-4 w-4" />
             ) : notifySubmitting ? (
               'Wait…'
