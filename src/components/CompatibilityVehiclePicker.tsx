@@ -23,6 +23,18 @@ function BrandMark({ brand }: { brand: string }) {
   return <img src={url} alt="" loading="lazy" onError={() => setFailed(true)} className="h-6 w-auto max-w-[34px] shrink-0 object-contain" />;
 }
 
+function ModelThumb({ image }: { image: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!image || failed) {
+    return (
+      <span className="flex h-9 w-14 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-400">
+        <Bike className="h-4 w-4" />
+      </span>
+    );
+  }
+  return <img src={image} alt="" loading="lazy" onError={() => setFailed(true)} className="h-9 w-14 shrink-0 rounded-lg bg-slate-50 object-cover" />;
+}
+
 export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }: Props) {
   const [models, setModels] = useState<VehicleCatalogModel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -188,6 +200,7 @@ export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }:
                             aria-label={`Select ${model.name}`}
                             className="sr-only"
                           />
+                          <ModelThumb image={model.image} />
                           <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-slate-800">{model.name}</span>
                           {brandSelected > 0 && <span className="sr-only">{brandSelected} selected in {group.brand}</span>}
                         </label>
