@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Bike, Check, Loader2, Motorbike, Search, X } from 'lucide-react';
 import { loadVehicleModels, type VehicleCatalogModel } from '../lib/supabaseVehicleCatalog';
 import { getBrandInitials, getBrandLogoUrl } from '../lib/brandLogos';
+import { getOptimizedImageUrl } from '../lib/imageUrls';
 
 type Props = {
   open: boolean;
@@ -32,7 +33,7 @@ function ModelThumb({ image }: { image: string }) {
       </span>
     );
   }
-  return <img src={image} alt="" loading="lazy" onError={() => setFailed(true)} className="h-9 w-14 shrink-0 rounded-lg bg-slate-50 object-cover" />;
+  return <img src={getOptimizedImageUrl(image, { width: 240, height: 180 })} alt="" loading="lazy" onError={() => setFailed(true)} className="h-9 w-14 shrink-0 rounded-lg bg-slate-50 object-cover" />;
 }
 
 export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }: Props) {

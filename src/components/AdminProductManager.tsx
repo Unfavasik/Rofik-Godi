@@ -15,6 +15,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Product, VehicleCategory } from '../types';
 import { getPathForAdminProduct, getPathForProduct } from '../lib/appRoutes';
+import { getOptimizedImageUrl } from '../lib/imageUrls';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import {
   deleteSupabaseProduct,
@@ -591,7 +592,7 @@ export const AdminProductManager: React.FC<{
                     <div className="flex items-center gap-3">
                       <div className="h-12 w-12 overflow-hidden rounded-xl bg-slate-100">
                         <img
-                          src={product.image}
+                          src={getOptimizedImageUrl(product.image, { width: 240, height: 240 })}
                           alt=""
                           className="h-full w-full object-cover"
                           onError={(event) => {

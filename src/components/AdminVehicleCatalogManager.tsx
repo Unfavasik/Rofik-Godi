@@ -28,6 +28,7 @@ import {
   type VehicleCatalogType,
 } from '../lib/supabaseVehicleCatalog';
 import { getBrandInitials, getBrandLogoUrl } from '../lib/brandLogos';
+import { getOptimizedImageUrl } from '../lib/imageUrls';
 
 type Props = { notify: (message: string, tone?: 'success' | 'error' | 'info') => void };
 
@@ -309,7 +310,7 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
             ) : filtered.map((model) => (
               <div key={model.id} className={`group flex min-h-[74px] items-center justify-between gap-2.5 border-b border-slate-100 py-2.5 last:border-0 ${model.isActive ? '' : 'bg-rose-50/50'}`}>
                 {model.image ? (
-                  <img src={model.image} alt={`${model.brand} ${model.name}`} className={`h-16 w-24 shrink-0 rounded-xl bg-slate-50 object-cover ${model.isActive ? '' : 'opacity-60'}`} />
+                  <img src={getOptimizedImageUrl(model.image, { width: 240, height: 180 })} alt={`${model.brand} ${model.name}`} loading="lazy" className={`h-16 w-24 shrink-0 rounded-xl bg-slate-50 object-cover ${model.isActive ? '' : 'opacity-60'}`} />
                 ) : (
                   <div className={`flex h-16 w-24 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500 ${model.isActive ? '' : 'opacity-60'}`}><Bike className="h-7 w-7" /></div>
                 )}

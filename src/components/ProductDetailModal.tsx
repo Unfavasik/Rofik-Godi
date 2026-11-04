@@ -32,6 +32,7 @@ import {
   resolveStitchPatternSelection,
 } from '../lib/cart';
 import { getProductAvailability, isProductSellable } from '../lib/productAvailability';
+import { getOptimizedImageUrl } from '../lib/imageUrls';
 import { ProductReviews } from './ProductReviews';
 import { BottomSheet } from './BottomSheet';
 import { getColorDetails } from '../lib/productColors';
@@ -316,7 +317,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.img
                     key={images[activeImageIndex] ?? product.image}
-                    src={images[activeImageIndex] ?? product.image}
+                    src={getOptimizedImageUrl(images[activeImageIndex] ?? product.image, { width: 600 })}
                     alt={product.title}
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -363,7 +364,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                     aria-label={`View product image ${index + 1}`}
                     className={`h-[66px] w-[66px] shrink-0 overflow-hidden rounded-xl border-2 bg-slate-50 transition ${activeImageIndex === index ? 'border-[#d9232d]' : 'border-transparent'}`}
                   >
-                    <img src={image} alt="" className="h-full w-full object-cover" />
+                    <img src={getOptimizedImageUrl(image, { width: 240, height: 240 })} alt="" loading="lazy" className="h-full w-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -812,7 +813,7 @@ const SuggestionCard: React.FC<{
     <article className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_3px_14px_rgba(15,23,42,.045)]">
       <button type="button" onClick={onSelect} className="block h-[112px] w-full bg-slate-100">
         <img
-          src={localProductImages[product.id]?.[0] ?? product.image}
+          src={getOptimizedImageUrl(localProductImages[product.id]?.[0] ?? product.image, { width: 240 })}
           alt={product.title}
           className="h-full w-full object-cover"
         />
