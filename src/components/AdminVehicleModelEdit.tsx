@@ -18,7 +18,6 @@ import {
   X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getOptimizedImageUrl } from '../lib/imageUrls';
 import {
   deleteVehicleModel,
   loadVehicleModels,
@@ -205,7 +204,7 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
           <div className="flex items-start gap-3.5">
             <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="Change model image" className="relative h-[90px] w-[120px] shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
               {model.image ? (
-                <img src={getOptimizedImageUrl(model.image, { width: 400 })} alt={`${displayBrand} ${displayName}`} className="h-full w-full object-cover" />
+                <img src={model.image} alt={`${displayBrand} ${displayName}`} className="h-full w-full object-cover" />
               ) : (
                 <span className="grid h-full w-full place-items-center"><ImageIcon className="h-8 w-8 text-slate-300" /></span>
               )}
@@ -288,7 +287,7 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
           <div className="flex items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/60 p-3">
             {model.image ? (
               <div className="relative h-[81px] w-[108px] shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
-                <img src={getOptimizedImageUrl(model.image, { width: 240, height: 180 })} alt="Current model preview" className="h-full w-full object-cover" />
+                <img src={model.image} alt="Current model preview" className="h-full w-full object-cover" />
                 <button type="button" onClick={() => void removeImage()} disabled={removingImage} aria-label="Remove model image" className="absolute right-1 top-1 grid size-6 place-items-center rounded-full bg-white text-slate-600 shadow transition hover:text-rose-600 disabled:opacity-50">
                   <X className="h-3.5 w-3.5" />
                 </button>

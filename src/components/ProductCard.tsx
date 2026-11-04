@@ -3,7 +3,6 @@ import { Product } from '../types';
 import { Heart, Plus, Star, ShoppingCart, ImageOff } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getProductAvailability, isProductSellable } from '../lib/productAvailability';
-import { getOptimizedImageUrl } from '../lib/imageUrls';
 import { formatInr, useI18n } from '../lib/i18n';
 
 const loadedImageSrcs = new Set<string>();
@@ -26,7 +25,7 @@ interface ProductCardProps {
 }
 
 const ProductImage: React.FC<{ src: string | null | undefined; alt: string; variant: 'grid' | 'list' }> = ({ src, alt, variant }) => {
-  const imageSrc = typeof src === 'string' ? getOptimizedImageUrl(src.trim(), { width: 400 }) : '';
+  const imageSrc = typeof src === 'string' ? src.trim() : '';
   const [isLoaded, setIsLoaded] = useState(() => loadedImageSrcs.has(imageSrc));
   const [hasFailed, setHasFailed] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
