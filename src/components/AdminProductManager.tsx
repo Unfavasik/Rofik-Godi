@@ -24,6 +24,7 @@ import {
   upsertSupabaseProduct,
 } from '../lib/supabaseProducts';
 import { ConfirmDialog } from './ConfirmDialog';
+import { CompatibilityVehiclePicker } from './CompatibilityVehiclePicker';
 import { sendAdminNotification, type AdminCustomer } from '../lib/supabaseAdmin';
 import {
   NotificationAudiencePicker,
@@ -886,6 +887,7 @@ const ProductEditor: React.FC<{
   const [announcementAudience, setAnnouncementAudience] = useState<NotificationAudience>('NONE');
   const [announcementUserIds, setAnnouncementUserIds] = useState<string[]>([]);
   const [badgeSheetOpen, setBadgeSheetOpen] = useState(false);
+  const [compatibilityPickerOpen, setCompatibilityPickerOpen] = useState(false);
   const [badgeDraft, setBadgeDraft] = useState({
     label: draft.badge || '',
     color: (draft.badgeColor || 'red') as NonNullable<ProductDraft['badgeColor']>,
@@ -1122,6 +1124,23 @@ const ProductEditor: React.FC<{
                 >
                   <span>{form.badge || 'No badge'}</span>
                   <span className="text-[10px] font-bold text-[#D9232D]">Edit in sheet</span>
+                </button>
+              </div>
+              <div className="block">
+                <span className="mb-1.5 block text-[11px] font-bold text-slate-600">Compatible vehicles</span>
+                <button
+                  type="button"
+                  onClick={() => setCompatibilityPickerOpen(true)}
+                  className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left text-xs font-semibold hover:border-[#D9232D] hover:bg-white"
+                >
+                  <span>
+                    {(form.compatibility || []).length > 0
+                      ? `${form.compatibility.length} vehicle ${form.compatibility.length === 1 ? 'model' : 'models'} selected`
+                      : 'Choose the bikes this seat cover fits'}
+                  </span>
+                  <span className="text-[10px] font-bold text-[#D9232D]">
+                    {(form.compatibility || []).length > 0 ? 'Edit list' : 'Pick vehicles'}
+                  </span>
                 </button>
               </div>
               <div className="block">
@@ -1448,6 +1467,15 @@ const ProductEditor: React.FC<{
           </div>
         </BottomSheet>
       </form>
+      <CompatibilityVehiclePicker
+        open={compatibilityPickerOpen}
+        selected={form.compatibility || []}
+        onApply={(models) => {
+          set('compatibility', models);
+          setCompatibilityPickerOpen(false);
+        }}
+        onClose={() => setCompatibilityPickerOpen(false)}
+      />
     </div>
   );
 };
