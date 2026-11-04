@@ -163,7 +163,9 @@ export const AdminProductColorEditor: React.FC<Props> = ({ colors, onChange, onU
           const images = color.images || [];
           return (
             <div
-              key={`${index}-${color.name}`}
+              // A stable key is critical: keying by color.name remounts the card
+              // on every keystroke and dismisses the mobile keyboard mid-edit.
+              key={index}
               className="rounded-xl border border-slate-200 bg-white p-3"
             >
               <div className="mb-2 flex items-center justify-between gap-2">
