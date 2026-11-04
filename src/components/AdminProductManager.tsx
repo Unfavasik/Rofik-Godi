@@ -12,8 +12,9 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { Product, VehicleCategory } from '../types';
-import { getPathForProduct } from '../lib/appRoutes';
+import { getPathForAdminProduct, getPathForProduct } from '../lib/appRoutes';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import {
   deleteSupabaseProduct,
@@ -152,6 +153,8 @@ export const AdminProductManager: React.FC<{
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<'all' | VehicleCategory>('all');
+  const navigate = useNavigate();
+  const location = useLocation();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<ProductDraft | null>(null);
   const [saving, setSaving] = useState(false);
@@ -272,6 +275,17 @@ export const AdminProductManager: React.FC<{
     setEditing(blankDraft());
     setEditorOpen(true);
   };
+  const closeEditor = () => {
+    clearAdminDraft();
+    setEditorOpen(false);
+    setEditing(null);
+    // Allow the same product to be focused again after the editor reopens.
+    handledFocusId.current = null;
+    // Leave the slug URL behind once the editor is done.
+    if (location.pathname.toLowerCase() !== '/admin/products') {
+      navigate('/admin/products', { replace: true });
+    }
+  };
   const openEdit = (product: Product) => {
     setEditing({
       ...product,
@@ -287,11 +301,17 @@ export const AdminProductManager: React.FC<{
       ),
     });
     setEditorOpen(true);
+    // Reflect the edited product in the URL as /admin/products/<slug>.
+    const targetPath = getPathForAdminProduct(product.slug);
+    if (location.pathname.toLowerCase() !== targetPath.toLowerCase()) {
+      navigate(targetPath);
+    }
   };
   const handledFocusId = useRef<string | null>(null);
   useEffect(() => {
     if (!focusProductId || handledFocusId.current === focusProductId) return;
-    const product = products.find((item) => item.id === focusProductId);
+    // The URL segment may be a product slug (new links) or a legacy id.
+    const product = products.find((item) => item.id === focusProductId || item.slug === focusProductId);
     if (!product) return;
     handledFocusId.current = focusProductId;
     setCategory('all');
@@ -300,7 +320,7 @@ export const AdminProductManager: React.FC<{
     window.setTimeout(
       () =>
         document
-          .getElementById(`admin-product-${focusProductId}`)
+          .getElementById(`admin-product-${product.id}`)
           ?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
       60,
     );
@@ -374,9 +394,7 @@ export const AdminProductManager: React.FC<{
         : [synced.product, ...current],
     );
     setLoadState('ready');
-    setEditorOpen(false);
-    setEditing(null);
-    clearAdminDraft();
+    closeEditor();
     const savedMessage = uploadedAsWebP
       ? 'Converted to WebP and saved to Supabase Storage'
       : draft.id
@@ -657,11 +675,7 @@ export const AdminProductManager: React.FC<{
           draft={editing}
           saving={saving}
           setSaving={setSaving}
-          onClose={() => {
-            clearAdminDraft();
-            setEditorOpen(false);
-            setEditing(null);
-          }}
+          onClose={closeEditor}
           onSave={save}
           customers={customers}
         />
