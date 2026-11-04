@@ -49,7 +49,7 @@ export const VehicleModelPicker: React.FC<VehicleModelPickerProps> = ({
       {models.map((model) => (
         <button key={`${model.brand}-${model.name}`} type="button" aria-pressed={false} disabled={disabled} onClick={() => onSelect(model.name)} className="flex min-h-[104px] w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-2.5 text-left transition hover:border-slate-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] disabled:cursor-not-allowed disabled:opacity-60">
           {model.image ? (
-            <span className="h-[86px] w-[42%] shrink-0 overflow-hidden rounded-xl bg-white"><img src={model.image} alt="" loading="lazy" className="h-full w-full object-contain" /></span>
+            <span className="h-[86px] w-[42%] shrink-0 overflow-hidden rounded-xl bg-white"><img src={model.image} alt="" loading="lazy" className="h-full w-full object-cover" /></span>
           ) : (
             <span className="grid h-[86px] w-[42%] shrink-0 place-items-center rounded-xl bg-white text-slate-300"><Truck className="h-8 w-8" /></span>
           )}
