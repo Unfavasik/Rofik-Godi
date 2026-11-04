@@ -202,9 +202,9 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
       <div className="mx-auto max-w-[480px] space-y-3.5 px-3 pb-6 pt-4 sm:px-4">
         <section className="rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm" aria-label="Vehicle summary">
           <div className="flex items-start gap-3.5">
-            <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="Change model image" className="relative h-[100px] w-[100px] shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
+            <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="Change model image" className="relative h-[90px] w-[120px] shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
               {model.image ? (
-                <img src={model.image} alt={`${displayBrand} ${displayName}`} className="h-full w-full object-contain p-1.5" />
+                <img src={model.image} alt={`${displayBrand} ${displayName}`} className="h-full w-full object-cover" />
               ) : (
                 <span className="grid h-full w-full place-items-center"><ImageIcon className="h-8 w-8 text-slate-300" /></span>
               )}
@@ -286,8 +286,8 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
           <p className="text-[12px] font-medium text-slate-500">Update the model image — any size works, auto-cropped to 800×600 WebP (Max 5MB)</p>
           <div className="flex items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/60 p-3">
             {model.image ? (
-              <div className="relative h-[92px] w-[108px] shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
-                <img src={model.image} alt="Current model preview" className="h-full w-full object-contain p-1" />
+              <div className="relative h-[81px] w-[108px] shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
+                <img src={model.image} alt="Current model preview" className="h-full w-full object-cover" />
                 <button type="button" onClick={() => void removeImage()} disabled={removingImage} aria-label="Remove model image" className="absolute right-1 top-1 grid size-6 place-items-center rounded-full bg-white text-slate-600 shadow transition hover:text-rose-600 disabled:opacity-50">
                   <X className="h-3.5 w-3.5" />
                 </button>
