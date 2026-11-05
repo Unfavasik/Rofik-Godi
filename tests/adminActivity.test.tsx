@@ -51,12 +51,14 @@ describe('admin activity feed', () => {
       p_limit: 150,
       p_before_created_at: null,
       p_before_id: null,
+      p_source: 'all',
     });
     expect(result.error).toBeNull();
     expect(result.data[0]).toMatchObject({
       id: 'event-1',
       entity_type: 'order',
       customer_name: 'Amina Rider',
+      actor_is_admin: false,
       details: eventRow.details,
     });
   });
@@ -71,8 +73,29 @@ describe('admin activity feed', () => {
       p_limit: 200,
       p_before_created_at: cursor.createdAt,
       p_before_id: cursor.id,
+      p_source: 'all',
     });
     expect(result.error).toBeNull();
+  });
+
+  it('requests the customer and admin sides of the feed separately', async () => {
+    supabaseMock.rpc.mockResolvedValue({ data: [], error: null });
+
+    await loadAdminActivityEvents(200, undefined, 'customer');
+    await loadAdminActivityEvents(200, undefined, 'admin');
+
+    expect(supabaseMock.rpc).toHaveBeenNthCalledWith(1, 'admin_list_activity_feed', {
+      p_limit: 200,
+      p_before_created_at: null,
+      p_before_id: null,
+      p_source: 'customer',
+    });
+    expect(supabaseMock.rpc).toHaveBeenNthCalledWith(2, 'admin_list_activity_feed', {
+      p_limit: 200,
+      p_before_created_at: null,
+      p_before_id: null,
+      p_source: 'admin',
+    });
   });
 
   it('loads unread count and records per-admin read state through narrow RPCs', async () => {
@@ -84,13 +107,15 @@ describe('admin activity feed', () => {
 
     expect(await loadAdminActivityUnreadCount()).toEqual({ count: 5, error: null });
     expect(await markAdminActivityRead('event-1')).toEqual({ error: null });
-    expect(await markAllAdminActivityRead()).toEqual({ count: 5, error: null });
+    expect(await markAllAdminActivityRead('customer')).toEqual({ count: 5, error: null });
     expect(await updateAdminSupportRequestStatus('ticket-1', 'resolved')).toEqual({ error: null });
     expect(supabaseMock.rpc).toHaveBeenNthCalledWith(1, 'admin_unread_activity_count');
     expect(supabaseMock.rpc).toHaveBeenNthCalledWith(2, 'admin_mark_activity_read', {
       p_event_id: 'event-1',
     });
-    expect(supabaseMock.rpc).toHaveBeenNthCalledWith(3, 'admin_mark_all_activity_read');
+    expect(supabaseMock.rpc).toHaveBeenNthCalledWith(3, 'admin_mark_all_activity_read', {
+      p_source: 'customer',
+    });
     expect(supabaseMock.rpc).toHaveBeenNthCalledWith(4, 'admin_update_customer_support_status', {
       p_request_id: 'ticket-1',
       p_status: 'resolved',
@@ -112,6 +137,8 @@ describe('admin activity feed', () => {
     );
 
     expect(html).toContain('All notifications');
+    expect(html).toContain('Notifications');
+    expect(html).toContain('Activity log');
     expect(html).toContain('Search activity');
     expect(html).toContain('All activity');
     expect(html).toContain('Support');
