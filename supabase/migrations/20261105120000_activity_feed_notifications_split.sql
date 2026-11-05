@@ -60,12 +60,12 @@ begin
       -- event that only the admin panel can produce (legacy anonymous reviews
       -- stay customer-side).
       (aa.user_id is not null or (e.actor_user_id is null and e.event_type <> 'review_created')) as actor_is_admin,
-      coalesce(nullif(ap.full_name,''),nullif(aa.display_name,''),nullif(au.email,''),case when e.actor_user_id is null then 'System' else 'Customer' end)::text,
-      coalesce(au.email,'')::text,
-      coalesce(nullif(o.customer_name,''),nullif(sp.full_name,''),nullif(r.author_name,''),nullif(cp.full_name,''),nullif(p.name,''),nullif(c.code,''),'Account activity')::text,
-      coalesce(su.email,nullif(o.metadata ->> 'email',''),'')::text,
-      coalesce(nullif(o.customer_phone,''),nullif(sp.phone,''),nullif(cp.phone,''),'')::text,
-      e.title::text,e.body::text,
+      coalesce(nullif(ap.full_name,''),nullif(aa.display_name,''),nullif(au.email,''),case when e.actor_user_id is null then 'System' else 'Customer' end)::text as actor_name,
+      coalesce(au.email,'')::text as actor_email,
+      coalesce(nullif(o.customer_name,''),nullif(sp.full_name,''),nullif(r.author_name,''),nullif(cp.full_name,''),nullif(p.name,''),nullif(c.code,''),'Account activity')::text as customer_name,
+      coalesce(su.email,nullif(o.metadata ->> 'email',''),'')::text as customer_email,
+      coalesce(nullif(o.customer_phone,''),nullif(sp.phone,''),nullif(cp.phone,''),'')::text as customer_phone,
+      e.title::text as title,e.body::text as body,
       case
         when e.entity_type='order' and o.id is not null then e.details || jsonb_build_object(
           'order_number',o.order_number,'status',o.status,'payment_status',o.payment_status,'total',o.total,'subtotal',o.subtotal,
@@ -78,8 +78,8 @@ begin
         when e.entity_type='product' and p.id is not null then e.details || jsonb_build_object('name',p.name,'price',p.price,'category',p.category,'is_active',p.is_active,'image_url',p.image_url)
         when e.entity_type='coupon' and c.id is not null then e.details || jsonb_build_object('code',c.code,'discount_type',c.discount_type,'discount_value',c.discount_value,'is_enabled',c.is_enabled)
         else e.details
-      end::jsonb,
-      e.created_at::timestamptz,reads.read_at::timestamptz
+      end::jsonb as details,
+      e.created_at::timestamptz as created_at,reads.read_at::timestamptz as read_at
     from public.admin_activity_events e
     left join public.admin_activity_event_reads reads on reads.event_id=e.id and reads.admin_user_id=v_user
     left join public.orders o on e.entity_type='order' and o.id=e.entity_id
