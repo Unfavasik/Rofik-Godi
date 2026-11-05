@@ -393,6 +393,16 @@ export default function App() {
     }
     if (authStatus === 'AUTHENTICATED' && isAdmin !== null) {
       if (isAdmin) {
+        // Push taps land on the customer notifications route with an order
+        // number; admins go straight to the matching admin order details
+        // instead of being bounced to the workspace home.
+        const notificationOrderNumber = route === '/notifications'
+          ? new URLSearchParams(location.search).get('order')?.match(/\bRGC-[A-Z0-9]{8,32}\b/i)?.[0]?.toUpperCase()
+          : null;
+        if (notificationOrderNumber) {
+          navigate(`/admin/orders/${encodeURIComponent(notificationOrderNumber)}`, { replace: true });
+          return;
+        }
         // Role resolution can finish after login; enter admin unless the admin
         // explicitly chose to return to the storefront for this session.
         if (route === '/admin') adminStorefrontRequested.current = false;
@@ -429,7 +439,7 @@ export default function App() {
       setIsLoginModalOpen(true);
       navigate('/home', { replace: true });
     }
-  }, [authStatus, isAdmin, location.pathname, appPhase, navigate, goToPhase, guestWelcomeComplete]);
+  }, [authStatus, isAdmin, location.pathname, location.search, appPhase, navigate, goToPhase, guestWelcomeComplete]);
 
   const lastSyncedTabRef = useRef<RouteTab>(activeTab);
   useEffect(() => {

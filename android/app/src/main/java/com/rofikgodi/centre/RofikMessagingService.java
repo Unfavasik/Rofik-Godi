@@ -171,6 +171,9 @@ public final class RofikMessagingService extends FirebaseMessagingService {
 
     private String routeForView(Map<String, String> data, String kind, String notificationId, String orderNumber) {
         String candidate = internalPath(data.get("action_url"));
+        // Admin deep links must survive: the order branches below would
+        // otherwise rewrite an admin route into the customer notifications inbox.
+        if (candidate != null && (candidate.equals("/admin") || candidate.startsWith("/admin/"))) return candidate;
         String type = inferType(data, value(data.get("title")), value(data.get("body")));
         boolean orderNotification = "order".equalsIgnoreCase(kind) || type.startsWith("order_") || "pickup_ready".equals(type);
         String orderSlug = value(data.get("order_slug"));
