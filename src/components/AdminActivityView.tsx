@@ -8,6 +8,7 @@ import {
   ChevronDown,
   CircleHelp,
   Clock3,
+  History,
   LoaderCircle,
   Megaphone,
   MessageSquareText,
@@ -29,11 +30,13 @@ import {
   markAllAdminActivityRead,
   updateAdminSupportRequestStatus,
   type AdminActivityEvent,
+  type ActivityFeedSource,
   type SupportRequestStatus,
 } from '../lib/supabaseAdminActivity';
 
 type FeedFilter = 'all' | 'orders' | 'support' | 'reviews' | 'customers' | 'products' | 'coupons' | 'campaigns';
 type FeedCategory = Exclude<FeedFilter, 'all'>;
+type FeedMode = 'notifications' | 'log';
 
 const filterOptions: Array<{ id: FeedFilter; label: string }> = [
   { id: 'all', label: 'All activity' },
@@ -183,6 +186,7 @@ export const AdminActivityView: React.FC<{
   initialSupportRequestId?: string | null;
 }> = ({ onViewOrder, onViewReview, onViewCustomer, onViewProduct, onViewCoupon, onViewCampaign, adminUserId, notify, supportOnly = false, initialSupportRequestId = null }) => {
   const [events, setEvents] = useState<AdminActivityEvent[]>([]);
+  const [mode, setMode] = useState<FeedMode>('notifications');
   const [filter, setFilter] = useState<FeedFilter>('all');
   const [query, setQuery] = useState('');
   const [unreadOnly, setUnreadOnly] = useState(false);
@@ -193,22 +197,29 @@ export const AdminActivityView: React.FC<{
   const [error, setError] = useState('');
   const [selectedSupport, setSelectedSupport] = useState<AdminActivityEvent | null>(null);
 
-  const refresh = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    setError('');
-    try {
-      const result = await loadAdminActivityEvents(200);
-      if (result.error) setError(result.error.message);
-      else {
-        setEvents((current) => mergeEventRows(current, result.data));
-        setHasMore(result.data.length === 200);
+  // The bell page shows customer-initiated events only; admin's own actions
+  // live in the activity log so the admin never gets notified about themselves.
+  const feedSource: ActivityFeedSource = mode === 'log' ? 'admin' : 'customer';
+
+  const refresh = useCallback(
+    async (silent = false, source: ActivityFeedSource = feedSource) => {
+      if (!silent) setLoading(true);
+      setError('');
+      try {
+        const result = await loadAdminActivityEvents(200, undefined, source);
+        if (result.error) setError(result.error.message);
+        else {
+          setEvents((current) => mergeEventRows(current, result.data));
+          setHasMore(result.data.length === 200);
+        }
+      } catch {
+        setError('Activity could not be loaded. Check your connection and try again.');
+      } finally {
+        if (!silent) setLoading(false);
       }
-    } catch {
-      setError('Activity could not be loaded. Check your connection and try again.');
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, []);
+    },
+    [feedSource],
+  );
 
   const loadOlder = async () => {
     const oldest = events[events.length - 1];
@@ -216,7 +227,7 @@ export const AdminActivityView: React.FC<{
     setLoadingOlder(true);
     setError('');
     try {
-      const result = await loadAdminActivityEvents(200, { createdAt: oldest.created_at, id: oldest.id });
+      const result = await loadAdminActivityEvents(200, { createdAt: oldest.created_at, id: oldest.id }, feedSource);
       if (result.error) setError(result.error.message);
       else {
         setEvents((current) => mergeEventRows(current, result.data));
@@ -232,6 +243,19 @@ export const AdminActivityView: React.FC<{
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  const switchMode = (next: FeedMode) => {
+    if (next === mode) return;
+    setMode(next);
+    setFilter('all');
+    setQuery('');
+    setUnreadOnly(false);
+    setEvents([]);
+    setHasMore(false);
+    setSelectedSupport(null);
+    setLoading(true);
+    void refresh(false, next === 'log' ? 'admin' : 'customer');
+  };
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -318,7 +342,7 @@ export const AdminActivityView: React.FC<{
 
   const handleMarkAllRead = async () => {
     setBusy(true);
-    const result = await markAllAdminActivityRead();
+    const result = await markAllAdminActivityRead(feedSource);
     if (result.error) setError(result.error.message);
     else {
       const timestamp = new Date().toISOString();
@@ -370,13 +394,17 @@ export const AdminActivityView: React.FC<{
       <header className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#D9232D]">
-            <Activity className="h-4 w-4" /> {supportOnly ? 'Admin support' : 'Admin activity'}
+            <Activity className="h-4 w-4" /> {supportOnly ? 'Admin support' : mode === 'log' ? 'Admin activity' : 'Admin notifications'}
           </div>
           <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900 md:text-3xl">
-            {supportOnly ? 'Support conversations' : 'All notifications'}
+            {supportOnly ? 'Support conversations' : mode === 'log' ? 'Activity log' : 'All notifications'}
           </h2>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-            {supportOnly ? 'Open a customer conversation, reply, attach images and update its status.' : 'Orders, product and coupon changes, customer support, reviews and campaigns in one place.'}
+            {supportOnly
+              ? 'Open a customer conversation, reply, attach images and update its status.'
+              : mode === 'log'
+                ? 'Every change made from the admin panel — orders, products, coupons, campaigns and customer updates.'
+                : 'New orders, support requests, reviews and account activity from your customers.'}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -401,6 +429,29 @@ export const AdminActivityView: React.FC<{
           </button>
         </div>
       </header>
+
+      {!supportOnly && (
+        <div className="mb-4 inline-flex rounded-2xl border border-slate-200 bg-white p-1 shadow-sm" role="tablist" aria-label="Switch between notifications and activity log">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'notifications'}
+            onClick={() => switchMode('notifications')}
+            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${mode === 'notifications' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+          >
+            <BellRing className="h-4 w-4" /> Notifications
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'log'}
+            onClick={() => switchMode('log')}
+            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${mode === 'log' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+          >
+            <History className="h-4 w-4" /> Activity log
+          </button>
+        </div>
+      )}
 
       <section className="mb-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

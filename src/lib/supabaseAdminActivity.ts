@@ -3,6 +3,7 @@ import { supabase } from './supabase';
 export type ActivityEntityType = 'order' | 'review' | 'customer' | 'support_request' | 'product' | 'coupon' | 'campaign';
 export type SupportRequestStatus = 'open' | 'in_progress' | 'resolved';
 export type AdminActivityCursor = { createdAt: string; id: string };
+export type ActivityFeedSource = 'all' | 'customer' | 'admin';
 
 export type AdminActivityEvent = {
   id: string;
@@ -11,6 +12,7 @@ export type AdminActivityEvent = {
   entity_id: string;
   actor_user_id: string | null;
   subject_user_id: string | null;
+  actor_is_admin: boolean;
   actor_name: string;
   actor_email: string;
   customer_name: string;
@@ -37,6 +39,7 @@ const toEvent = (value: unknown): AdminActivityEvent => {
     entity_id: String(row.entity_id || ''),
     actor_user_id: row.actor_user_id ? String(row.actor_user_id) : null,
     subject_user_id: row.subject_user_id ? String(row.subject_user_id) : null,
+    actor_is_admin: row.actor_is_admin === true,
     actor_name: String(row.actor_name || 'System'),
     actor_email: String(row.actor_email || ''),
     customer_name: String(row.customer_name || 'Customer'),
@@ -50,7 +53,11 @@ const toEvent = (value: unknown): AdminActivityEvent => {
   };
 };
 
-export async function loadAdminActivityEvents(limit = 200, before?: AdminActivityCursor): Promise<{
+export async function loadAdminActivityEvents(
+  limit = 200,
+  before?: AdminActivityCursor,
+  source: ActivityFeedSource = 'all',
+): Promise<{
   data: AdminActivityEvent[];
   error: Error | null;
 }> {
@@ -59,6 +66,7 @@ export async function loadAdminActivityEvents(limit = 200, before?: AdminActivit
     p_limit: limit,
     p_before_created_at: before?.createdAt ?? null,
     p_before_id: before?.id ?? null,
+    p_source: source,
   });
   if (error) return { data: [], error: toError(error) };
   return { data: Array.isArray(data) ? data.map(toEvent) : [], error: null };
@@ -80,12 +88,12 @@ export async function markAdminActivityRead(id: string): Promise<{ error: Error 
   return { error: toError(error) };
 }
 
-export async function markAllAdminActivityRead(): Promise<{
+export async function markAllAdminActivityRead(source: ActivityFeedSource = 'all'): Promise<{
   count: number;
   error: Error | null;
 }> {
   if (!supabase) return { count: 0, error: new Error('Supabase is not configured.') };
-  const { data, error } = await supabase.rpc('admin_mark_all_activity_read');
+  const { data, error } = await supabase.rpc('admin_mark_all_activity_read', { p_source: source });
   if (error) return { count: 0, error: toError(error) };
   return { count: Number(data || 0), error: null };
 }
