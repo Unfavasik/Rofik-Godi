@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import type { CustomerOrderRecord } from '../types';
 import { resolveVehicleFitment } from './checkoutVehicleFitment';
+import { getCachedVehicleModels, loadVehicleModels, type VehicleCatalogModel } from './supabaseVehicleCatalog';
 
 const missingOrderOptionColumns = (error: { message?: string } | null) => Boolean(error && /selected_thickness|selected_stitch|custom_embroidery_text/i.test(error.message || ''));
 const missingVehicleSnapshotColumns = (error: { message?: string } | null) => Boolean(error && /vehicle_type|vehicle_company|vehicle_image_url/i.test(error.message || ''));
@@ -124,6 +125,14 @@ export async function loadAdminOrders(orderId?: string, matchOrderNumber = false
   error: Error | null;
 }> {
   if (!supabase) return { data: [], error: new Error('Supabase is not configured') };
+  // Vehicle images live in the vehicle_models catalog, not on the order row.
+  // Resolve fitment against a loaded catalog — an empty cache (e.g. deep
+  // linking straight into order details) would leave orders without images.
+  let catalogModels: VehicleCatalogModel[] = getCachedVehicleModels();
+  if (!catalogModels.length) {
+    const { data: models } = await loadVehicleModels();
+    if (models?.length) catalogModels = models;
+  }
   let response = orderId
     ? await supabase
         .from('orders')
@@ -188,7 +197,7 @@ export async function loadAdminOrders(orderId?: string, matchOrderNumber = false
             created_at: String(event.created_at || ''),
           }))
         : [];
-      const vehicleFitment = resolveVehicleFitment(String(row.vehicle_model || ''));
+      const vehicleFitment = resolveVehicleFitment(String(row.vehicle_model || ''), catalogModels);
       return {
         id: `#${row.order_number}`,
         userId: String(row.user_id || ''),
