@@ -34,8 +34,18 @@ export function parseVehicleFitmentValue(value: string, models?: VehicleCatalogM
   const parts = original.split('·').map((part) => part.trim()).filter(Boolean);
   const explicitType = checkoutVehicleTypes.find((type) => type.toLowerCase() === parts[0]?.toLowerCase());
   const details = explicitType ? parts.slice(1) : parts;
-  const companyHint = details.length > 1 ? details[0] : '';
-  const modelHint = details.length > 1 ? details.slice(1).join(' · ') : details[0] || '';
+  let companyHint = details.length > 1 ? details[0] : '';
+  let modelHint = details.length > 1 ? details.slice(1).join(' · ') : details[0] || '';
+  // Legacy profile strings separate company and model with a spaced hyphen
+  // ("Bajaj Auto - Bajaj Pulsar N160 2V"); the checkout writes the middle-dot
+  // format, but saved profiles predate it.
+  if (!explicitType && details.length === 1) {
+    const hyphenSplit = modelHint.match(/^(.+?)\s+-\s+(.+)$/);
+    if (hyphenSplit) {
+      companyHint = hyphenSplit[1].trim();
+      modelHint = hyphenSplit[2].trim();
+    }
+  }
   if (!modelHint) return explicitType ? { type: explicitType, company: '', model: '', manualValue: '' } : { type: 'Other', company: '', model: '', manualValue: original };
   const matchesName = (candidate: string, target: string) => candidate.toLowerCase() === target.toLowerCase() || candidate.toLowerCase().startsWith(`${target.toLowerCase()} `) || candidate.toLowerCase().endsWith(` ${target.toLowerCase()}`);
   const allowedCatalogType = explicitType === 'Bike' ? 'bike' : explicitType === 'Scooter' ? 'scooter' : null;
@@ -54,8 +64,8 @@ export function parseVehicleFitmentValue(value: string, models?: VehicleCatalogM
   return { type: 'Other', company: '', model: '', manualValue: original };
 }
 
-export function resolveVehicleFitment(value: string): ResolvedVehicleFitment {
-  const parsed = parseVehicleFitmentValue(value);
-  const catalogModel = catalogFor().find((model) => model.brand.toLowerCase() === parsed.company.toLowerCase() && model.name.toLowerCase() === parsed.model.toLowerCase());
+export function resolveVehicleFitment(value: string, models?: VehicleCatalogModel[]): ResolvedVehicleFitment {
+  const parsed = parseVehicleFitmentValue(value, models);
+  const catalogModel = catalogFor(models).find((model) => model.brand.toLowerCase() === parsed.company.toLowerCase() && model.name.toLowerCase() === parsed.model.toLowerCase());
   return { ...parsed, image: catalogModel?.image || '' };
 }

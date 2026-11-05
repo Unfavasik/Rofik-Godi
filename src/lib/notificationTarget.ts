@@ -30,6 +30,9 @@ export function getNotificationTargetPath(
     if (target.origin !== siteOrigin) return '/notifications';
 
     const path = target.pathname;
+    // Admin deep links route inside the admin workspace; never rewrite them
+    // into the customer order flow.
+    if (/^\/admin(?:\/|$)/i.test(path)) return `${path}${target.search}${target.hash}`;
     if (isOrderNotification && payloadOrderPath && !ORDER_SLUG_PATH.test(path)) return payloadOrderPath;
     if (isOrderNotification && notificationId && /^\/(?:profile|account)\/?$/i.test(path)) {
       return notificationFallback;

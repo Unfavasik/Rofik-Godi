@@ -63,6 +63,16 @@ async function resolveOrderSlugForNotification(
   return /^[0-9a-f]{32}$/.test(slug) ? slug : null;
 }
 
+async function isAdminRecipient(supabase: ReturnType<typeof createClient>, userId: string) {
+  const { data } = await supabase
+    .from('admin_users')
+    .select('user_id')
+    .eq('user_id', userId)
+    .limit(1)
+    .maybeSingle();
+  return Boolean(data?.user_id);
+}
+
 function jsonResponse(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: corsHeaders });
 }
@@ -367,6 +377,16 @@ Deno.serve(async (request) => {
   const orderSlug = notification.kind === 'order'
     ? await resolveOrderSlugForNotification(supabase, notification)
     : null;
+  const orderNumber = notification.kind === 'order'
+    ? `${notification.title} ${notification.body} ${notification.action_url || ''}`
+        .match(/\bRGC-[A-Z0-9]{8,32}\b/i)?.[0]?.toUpperCase() || null
+    : null;
+  // Admin-bound order pushes must deep link into the admin workspace; legacy
+  // triggers write customer-facing action links for admin recipients.
+  let actionUrl = notification.action_url || '';
+  if (orderNumber && !/^\/admin\/orders\//i.test(actionUrl) && (await isAdminRecipient(supabase, notification.user_id))) {
+    actionUrl = `/admin/orders/${orderNumber}`;
+  }
   for (const device of devices) {
     const { data: previous } = await supabase
       .from('push_delivery_logs')
@@ -400,7 +420,8 @@ Deno.serve(async (request) => {
         type: notificationType,
         title: notification.title,
         body: notification.body,
-        action_url: notification.action_url || '',
+        action_url: actionUrl,
+        ...(orderNumber ? { order_number: orderNumber } : {}),
         ...(orderSlug ? { order_slug: orderSlug } : {}),
         image_url: notificationImageUrl || '',
       },
