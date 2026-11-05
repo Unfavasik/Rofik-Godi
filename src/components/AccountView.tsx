@@ -272,6 +272,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
   const [profileMetadataSyncFailed, setProfileMetadataSyncFailed] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
   const [confirmProfileClose, setConfirmProfileClose] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const profileSavingRef = useRef(false);
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
   const profileVehicleCompanies = useMemo(
@@ -1062,7 +1063,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
           {!isGuest && onLogout && (
             <button
               type="button"
-              onClick={onLogout}
+              onClick={() => setConfirmLogout(true)}
               className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-red-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-red-50 transition-colors text-left"
             >
               <div className="flex items-center space-x-3">
@@ -1359,6 +1360,18 @@ export const AccountView: React.FC<AccountViewProps> = ({
         cancelLabel="Keep editing"
         onCancel={() => setConfirmProfileClose(false)}
         onConfirm={closeProfileModal}
+      />
+      <ConfirmDialog
+        open={confirmLogout}
+        title={t('account.logoutConfirmTitle')}
+        message={t('account.logoutConfirmMessage')}
+        confirmLabel={t('account.logoutConfirmYes')}
+        cancelLabel={t('account.logoutConfirmNo')}
+        onCancel={() => setConfirmLogout(false)}
+        onConfirm={() => {
+          setConfirmLogout(false);
+          onLogout?.();
+        }}
       />
     </div>
   );
