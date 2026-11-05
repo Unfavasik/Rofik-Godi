@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import {
   ArrowLeft,
@@ -112,6 +112,18 @@ export function AdminOrderDetails({
   const [showInvoice, setShowInvoice] = useState(false);
   const [busyAction, setBusyAction] = useState<'status' | 'payment' | null>(null);
   const prefersReducedMotion = useReducedMotion();
+  // On phones the details render as a full opaque page — no dimmed backdrop
+  // and no entrance animation — so opening an order feels like a page
+  // navigation instead of a translucent drawer sliding over the list.
+  const [isDesktopLayout, setIsDesktopLayout] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 640px)').matches,
+  );
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 640px)');
+    const handleChange = (event: MediaQueryListEvent) => setIsDesktopLayout(event.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
   const productsById = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
   const timelineEvents = getAdminOrderTimelineEvents(order);
   const nextStatus = getNextPickupOrderStatus(order.status);
@@ -342,13 +354,13 @@ export function AdminOrderDetails({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: prefersReducedMotion ? 0 : 0.16 }}
-          className="absolute inset-0 bg-slate-950/45"
+          className="absolute inset-0 bg-slate-950/45 max-sm:hidden"
         />
         <motion.aside
-          initial={{ x: prefersReducedMotion ? 0 : 24, opacity: prefersReducedMotion ? 1 : 0.92 }}
+          initial={isDesktopLayout && !prefersReducedMotion ? { x: 24, opacity: 0.92 } : false}
           animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: prefersReducedMotion ? 0 : 0.2, ease: 'easeOut' }}
-          className="relative z-10 flex h-[100dvh] w-full max-w-[620px] flex-col overflow-hidden border-l border-slate-200 bg-[#F6F8FB] shadow-2xl"
+          transition={isDesktopLayout && !prefersReducedMotion ? { duration: 0.2, ease: 'easeOut' } : { duration: 0 }}
+          className="relative z-10 flex h-[100dvh] w-full max-w-[620px] flex-col overflow-hidden border-l border-slate-200 bg-[#F6F8FB] shadow-2xl max-sm:border-l-0 max-sm:shadow-none"
         >
           <header className="shrink-0 border-b border-slate-200 bg-white px-4 py-3.5 sm:px-6 sm:py-4">
             <div className="flex items-center gap-3">
