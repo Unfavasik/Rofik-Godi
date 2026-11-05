@@ -149,6 +149,28 @@ export default function App() {
     // and would override it (e.g. dropping the customer at the page bottom).
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   }, []);
+  // Save the outgoing page's scroll position on every route change. The
+  // wrapped navigate above only covers navigations issued inside App; child
+  // components (e.g. the admin panel) call react-router's raw navigate, and
+  // without this their scroll was never saved — so returning from the admin
+  // order-details drawer restored a stale 0 and the orders list jumped to
+  // the top. Runs before the restore effect; the window has not been
+  // scrolled yet at effect time, so window.scrollY is still the outgoing
+  // position.
+  const previousLocationRef = useRef(location);
+  useEffect(() => {
+    const previous = previousLocationRef.current;
+    previousLocationRef.current = location;
+    if (previous.pathname === location.pathname && previous.search === location.search) return;
+    try {
+      const key = `${SCROLL_KEY}:${previous.pathname}${previous.search}`;
+      const value = String(window.scrollY);
+      sessionStorage.setItem(key, value);
+      localStorage.setItem(key, value);
+    } catch {
+      // Scroll persistence is best-effort when storage is unavailable.
+    }
+  }, [location]);
   useEffect(() => {
     const key = `${SCROLL_KEY}:${location.pathname}${location.search}`;
     const restore = () => { try { const value = Number(sessionStorage.getItem(key) || localStorage.getItem(key)); if (Number.isFinite(value)) window.scrollTo(0, value); } catch { /* optional persistence */ } };
