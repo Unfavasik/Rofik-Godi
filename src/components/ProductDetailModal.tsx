@@ -67,6 +67,8 @@ interface ProductDetailModalProps {
   isAuthenticated?: boolean;
   customerId?: string;
   onRequestLogin?: () => void;
+  /** Colour name from a deep link (?color=…) to preselect when the page opens. */
+  initialColorName?: string;
 }
 
 const localProductImages: Record<string, string[]> = {
@@ -81,7 +83,9 @@ const localProductImages: Record<string, string[]> = {
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = (props) => {
   if (!props.product) return null;
-  return <ProductDetailPage key={props.product.id} {...props} product={props.product} />;
+  // The colour is part of the key so opening the same product with a different
+  // ?color= deep link re-initialises the selection.
+  return <ProductDetailPage key={`${props.product.id}:${props.initialColorName ?? ''}`} {...props} product={props.product} />;
 };
 
 const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }> = ({
@@ -102,9 +106,13 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   isAuthenticated = false,
   customerId,
   onRequestLogin,
+  initialColorName,
 }) => {
   const [selectedColor, setSelectedColor] = useState(
     () =>
+      (initialColorName
+        ? product.colors?.find((color) => color.name === initialColorName)
+        : null) ||
       product.colors?.[0] || {
         name: 'Standard',
         hex: '#111827',
