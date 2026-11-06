@@ -52,6 +52,10 @@ const asColors = (value: unknown, legacy: unknown): Product['colors'] => {
               ...(list('stitchPatterns') !== undefined
                 ? { stitchPatterns: list('stitchPatterns') }
                 : {}),
+              ...(list('packageIncludes') !== undefined
+                ? { packageIncludes: list('packageIncludes') }
+                : {}),
+              ...(typeof color.installation === 'string' ? { installation: color.installation } : {}),
             },
           ]
         : [];
@@ -130,6 +134,8 @@ export const mapSupabaseProduct = (row: ProductRow): Product => {
       value('colors', bundled?.colors?.map((color) => color.name) || []),
     ),
     stitchPatterns: asStrings(value('stitch_patterns', bundled?.stitchPatterns || [])),
+    packageIncludes: asStrings(value('package_includes', [])),
+    installation: String(value('installation', '')),
     compatibility: asStrings(value('compatibility_list', bundled?.compatibility || [])).length
       ? asStrings(value('compatibility_list', bundled?.compatibility || []))
       : String(value('compatibility', bundled?.compatibility?.join(', ') || ''))
@@ -194,7 +200,7 @@ export const loadAdminProducts = async (): Promise<Product[]> => {
 const toRow = (product: Product) => {
   const colors = product.colors || [];
   const unique = (
-    key: 'features' | 'compatibility' | 'materials' | 'stitchPatterns',
+    key: 'features' | 'compatibility' | 'materials' | 'stitchPatterns' | 'packageIncludes',
     fallback: string[],
   ) => [
     ...new Set(colors.flatMap((color) => (color[key] === undefined ? fallback : color[key] || []))),
@@ -205,6 +211,8 @@ const toRow = (product: Product) => {
     compatibility: unique('compatibility', product.compatibility || []),
     materials: unique('materials', product.materials || []),
     stitchPatterns: unique('stitchPatterns', product.stitchPatterns || []),
+    packageIncludes: unique('packageIncludes', product.packageIncludes || []),
+    installation: colors.find((color) => color.installation)?.installation ?? product.installation ?? '',
   };
   return {
     ...(product.id.match(/^[0-9a-f-]{36}$/i) ? { id: product.id } : {}),
@@ -223,6 +231,8 @@ const toRow = (product: Product) => {
     features: derived.features,
     materials: derived.materials,
     stitch_patterns: derived.stitchPatterns,
+    package_includes: derived.packageIncludes,
+    installation: derived.installation,
     thickness_options: product.thicknessOptions || [],
     colors_json: colors.map((color) => ({
       ...color,
@@ -258,14 +268,28 @@ export const reorderSupabaseProducts = async (productIds: string[]) => {
   return { error };
 };
 
+// Columns added by migration 20261107120000; older databases without them are
+// detected via the 42703 "undefined column" error and retried without them.
+const SPEC_COLUMNS = ['package_includes', 'installation'] as const;
+
 export const upsertSupabaseProduct = async (product: Product) => {
   if (!supabase) return { product, synced: false, error: null };
   const payload = toRow(product);
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('products')
     .upsert(payload, { onConflict: 'slug' })
     .select('*')
     .single();
+  if (error && (error as { code?: string }).code === '42703') {
+    const legacyPayload = Object.fromEntries(
+      Object.entries(payload).filter(([key]) => !(SPEC_COLUMNS as readonly string[]).includes(key)),
+    );
+    ({ data, error } = await supabase
+      .from('products')
+      .upsert(legacyPayload, { onConflict: 'slug' })
+      .select('*')
+      .single());
+  }
   if (error) return { product, synced: false, error };
   const savedProduct = mapSupabaseProduct(data);
   const gallery = [savedProduct.image, ...(savedProduct.additionalImages || [])]

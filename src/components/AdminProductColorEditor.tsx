@@ -8,13 +8,24 @@ import {
   toColorPickerValue,
 } from '../lib/productColors';
 import { BottomSheet } from './BottomSheet';
+import { DEFAULT_INSTALLATION } from '../lib/productColors';
 
 type ProductColor = Product['colors'][number];
 type LocalColor = ProductColor & { nameTouched?: boolean };
+export type ProductDetailDefaults = {
+  subtitle: string;
+  features: string[];
+  compatibility: string[];
+  materials: string[];
+  stitchPatterns: string[];
+  packageIncludes: string[];
+  installation: string;
+};
 type Props = {
   colors: Product['colors'];
   onChange: (colors: Product['colors']) => void;
   onUploadFiles?: (files: File[]) => Promise<string[]>;
+  productDefaults: ProductDetailDefaults;
 };
 const listValue = (value: string) =>
   value
@@ -23,7 +34,12 @@ const listValue = (value: string) =>
     .filter(Boolean);
 const listText = (value?: string[]) => (value || []).join('\n');
 
-export const AdminProductColorEditor: React.FC<Props> = ({ colors, onChange, onUploadFiles }) => {
+export const AdminProductColorEditor: React.FC<Props> = ({
+  colors,
+  onChange,
+  onUploadFiles,
+  productDefaults,
+}) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const [urlDrafts, setUrlDrafts] = useState<Record<number, string>>({});
@@ -89,7 +105,7 @@ export const AdminProductColorEditor: React.FC<Props> = ({ colors, onChange, onU
   };
   const activeColor = detailsIndex === null ? null : colors[detailsIndex];
   const summary = (color: ProductColor) =>
-    `${color.features?.length || 0} features · ${color.compatibility?.length || 0} vehicles · ${color.materials?.length || 0} materials · ${color.stitchPatterns?.length || 0} stitches`;
+    `${color.features?.length || 0} features · ${color.compatibility?.length || 0} vehicles · ${color.materials?.length || 0} materials · ${color.stitchPatterns?.length || 0} stitches · ${color.packageIncludes?.length || 0} in package`;
   const saveDetails = (patch: Partial<ProductColor>) => {
     if (detailsIndex !== null) updateColor(detailsIndex, patch);
     setDetailsIndex(null);
@@ -104,6 +120,8 @@ export const AdminProductColorEditor: React.FC<Props> = ({ colors, onChange, onU
       compatibility: source.compatibility ? [...source.compatibility] : undefined,
       materials: source.materials ? [...source.materials] : undefined,
       stitchPatterns: source.stitchPatterns ? [...source.stitchPatterns] : undefined,
+      packageIncludes: source.packageIncludes ? [...source.packageIncludes] : undefined,
+      installation: source.installation,
     });
     setCopyFrom('');
   };
@@ -124,8 +142,9 @@ export const AdminProductColorEditor: React.FC<Props> = ({ colors, onChange, onU
         <button
           type="button"
           onClick={() => {
-            const previous = colors[colors.length - 1];
             const hex = '#D9232D';
+            // New colours carry no detail overrides, so they inherit the
+            // product-level defaults until this colour edits its own values.
             onChange([
               ...colors,
               {
@@ -133,11 +152,6 @@ export const AdminProductColorEditor: React.FC<Props> = ({ colors, onChange, onU
                 hex,
                 bgClass: getColorBgClass(hex),
                 images: [],
-                subtitle: previous?.subtitle,
-                features: previous?.features ? [...previous.features] : undefined,
-                compatibility: previous?.compatibility ? [...previous.compatibility] : undefined,
-                materials: previous?.materials ? [...previous.materials] : undefined,
-                stitchPatterns: previous?.stitchPatterns ? [...previous.stitchPatterns] : undefined,
               },
             ]);
           }}
@@ -349,6 +363,7 @@ export const AdminProductColorEditor: React.FC<Props> = ({ colors, onChange, onU
         <ColorDetailsForm
           color={activeColor || { name: '', hex: '', bgClass: '' }}
           colors={colors}
+          productDefaults={productDefaults}
           copyFrom={copyFrom}
           setCopyFrom={setCopyFrom}
           onCopy={copyDetails}
@@ -363,26 +378,44 @@ export const AdminProductColorEditor: React.FC<Props> = ({ colors, onChange, onU
 const ColorDetailsForm: React.FC<{
   color: Product['colors'][number];
   colors: Product['colors'];
+  productDefaults: ProductDetailDefaults;
   copyFrom: string;
   setCopyFrom: (value: string) => void;
   onCopy: () => void;
   onSave: (patch: Partial<Product['colors'][number]>) => void;
   onCancel: () => void;
-}> = ({ color, colors, copyFrom, setCopyFrom, onCopy, onSave, onCancel }) => {
+}> = ({ color, colors, productDefaults, copyFrom, setCopyFrom, onCopy, onSave, onCancel }) => {
   const [subtitle, setSubtitle] = useState(color.subtitle || '');
   const [features, setFeatures] = useState(listText(color.features));
   const [compatibility, setCompatibility] = useState(listText(color.compatibility));
   const [materials, setMaterials] = useState(listText(color.materials));
   const [stitchPatterns, setStitchPatterns] = useState(listText(color.stitchPatterns));
+  const [packageIncludes, setPackageIncludes] = useState(listText(color.packageIncludes));
+  const [installation, setInstallation] = useState(color.installation || '');
   useEffect(() => {
     setSubtitle(color.subtitle || '');
     setFeatures(listText(color.features));
     setCompatibility(listText(color.compatibility));
     setMaterials(listText(color.materials));
     setStitchPatterns(listText(color.stitchPatterns));
+    setPackageIncludes(listText(color.packageIncludes));
+    setInstallation(color.installation || '');
   }, [color]);
+  // An empty field means "inherit from the product", so the saved colour only
+  // carries the values this colour actually overrides.
+  const ownList = (value: string) => (listValue(value).length ? listValue(value) : undefined);
+  const listFields = [
+    ['Features', features, setFeatures, productDefaults.features],
+    ['Suitable For (vehicle models)', compatibility, setCompatibility, productDefaults.compatibility],
+    ['Materials', materials, setMaterials, productDefaults.materials],
+    ['Stitch patterns', stitchPatterns, setStitchPatterns, productDefaults.stitchPatterns],
+    ['Package Includes', packageIncludes, setPackageIncludes, productDefaults.packageIncludes],
+  ] as const;
   return (
     <div className="space-y-3">
+      <p className="text-[11px] leading-relaxed text-slate-500">
+        Empty fields use the product default. Fill a field to give this colour its own value.
+      </p>
       <label className="block text-xs font-bold">
         Copy details from another colour
         <select
@@ -415,25 +448,30 @@ const ColorDetailsForm: React.FC<{
           value={subtitle}
           onChange={(event) => setSubtitle(event.target.value)}
           className="mt-1 w-full rounded-xl border px-3 py-2.5 text-xs"
+          placeholder={productDefaults.subtitle || 'Product default subtitle'}
         />
       </label>
-      {[
-        ['Features', features, setFeatures],
-        ['Compatible vehicles', compatibility, setCompatibility],
-        ['Materials', materials, setMaterials],
-        ['Stitch patterns', stitchPatterns, setStitchPatterns],
-      ].map(([label, value, setter]) => (
-        <label key={label as string} className="block text-xs font-bold">
-          {label as string}
+      {listFields.map(([label, value, setter, fallback]) => (
+        <label key={label} className="block text-xs font-bold">
+          {label}
           <textarea
             rows={4}
-            value={value as string}
-            onChange={(event) => (setter as (value: string) => void)(event.target.value)}
+            value={value}
+            onChange={(event) => setter(event.target.value)}
             className="mt-1 w-full rounded-xl border px-3 py-2.5 text-xs"
-            placeholder="One per line"
+            placeholder={fallback.length ? fallback.join('\n') : 'One per line'}
           />
         </label>
       ))}
+      <label className="block text-xs font-bold">
+        Installation
+        <input
+          value={installation}
+          onChange={(event) => setInstallation(event.target.value)}
+          className="mt-1 w-full rounded-xl border px-3 py-2.5 text-xs"
+          placeholder={productDefaults.installation || DEFAULT_INSTALLATION}
+        />
+      </label>
       <div className="flex justify-end gap-2 pt-2">
         <button
           type="button"
@@ -446,11 +484,13 @@ const ColorDetailsForm: React.FC<{
           type="button"
           onClick={() =>
             onSave({
-              subtitle: subtitle.trim(),
-              features: listValue(features),
-              compatibility: listValue(compatibility),
-              materials: listValue(materials),
-              stitchPatterns: listValue(stitchPatterns),
+              subtitle: subtitle.trim() || undefined,
+              features: ownList(features),
+              compatibility: ownList(compatibility),
+              materials: ownList(materials),
+              stitchPatterns: ownList(stitchPatterns),
+              packageIncludes: ownList(packageIncludes),
+              installation: installation.trim() || undefined,
             })
           }
           className="rounded-xl bg-[#D9232D] px-4 py-2.5 text-xs font-bold text-white"

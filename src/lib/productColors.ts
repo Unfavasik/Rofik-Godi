@@ -94,11 +94,23 @@ export function toColorPickerValue(value: string): string {
 
 import type { Product } from '../types';
 
-/** Returns the selected colour's values. An explicitly empty list is authoritative. */
+/** Defaults shown on the storefront Specifications block when nothing is set. */
+export const DEFAULT_PACKAGE_INCLUDES = ['1 Seat Cover'];
+export const DEFAULT_INSTALLATION = 'Easy (DIY)';
+
+/**
+ * Returns the selected colour's values, falling back to the product-level
+ * defaults. A colour value counts as "set" only when it is a non-empty string
+ * or a non-empty list — an empty field means "inherit from the product", so
+ * colours without their own details always match the product defaults.
+ */
 export function getColorDetails(product: Product, color: Product['colors'][number]) {
   const own = <T,>(key: keyof Product['colors'][number], fallback: T): T => {
     const value = color[key] as T | undefined;
-    return value === undefined ? fallback : value;
+    if (value === undefined) return fallback;
+    if (typeof value === 'string') return (value.trim() ? value : fallback);
+    if (Array.isArray(value)) return (value.length ? value : fallback);
+    return value;
   };
   return {
     subtitle: own('subtitle', product.subtitle || ''),
@@ -106,5 +118,7 @@ export function getColorDetails(product: Product, color: Product['colors'][numbe
     compatibility: own('compatibility', product.compatibility || []),
     materials: own('materials', product.materials || []),
     stitchPatterns: own('stitchPatterns', product.stitchPatterns || []),
+    packageIncludes: own('packageIncludes', product.packageIncludes?.length ? product.packageIncludes : DEFAULT_PACKAGE_INCLUDES),
+    installation: own('installation', product.installation || DEFAULT_INSTALLATION),
   };
 }
