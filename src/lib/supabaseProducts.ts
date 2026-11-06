@@ -2,6 +2,7 @@ import type { Product, VehicleCategory } from '../types';
 import { PRODUCTS } from '../data/products';
 import { supabase } from './supabase';
 import { convertImageToWebP } from './imagePipeline';
+import { DEFAULT_LOW_STOCK_THRESHOLD } from './productAvailability';
 
 const categoryLabels: Record<VehicleCategory, string> = {
   bike: 'Bike Covers',
@@ -242,7 +243,7 @@ const toRow = (product: Product) => {
     is_customizable: Boolean(product.isCustomizable),
     in_stock: Boolean(product.inStock),
     stock_quantity: product.stockQuantity ?? null,
-    low_stock_threshold: product.lowStockThreshold ?? null,
+    low_stock_threshold: product.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD,
     is_active: true,
     display_order: product.displayOrder ?? 0,
   };
