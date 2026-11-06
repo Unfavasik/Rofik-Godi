@@ -173,12 +173,39 @@ export default function App() {
   }, [location]);
   useEffect(() => {
     const key = `${SCROLL_KEY}:${location.pathname}${location.search}`;
-    const restore = () => { try { const value = Number(sessionStorage.getItem(key) || localStorage.getItem(key)); if (Number.isFinite(value)) window.scrollTo(0, value); } catch { /* optional persistence */ } };
+    let savedValue = NaN;
+    try { savedValue = Number(sessionStorage.getItem(key) || localStorage.getItem(key)); } catch { /* optional persistence */ }
+    const restore = () => { if (Number.isFinite(savedValue)) window.scrollTo(0, savedValue); };
+    restore();
+    // Product grids and images grow after the first paint, so a single restore
+    // can be clamped to a still-short document and drop the customer near the
+    // top. Keep re-applying the saved offset until the document is tall enough
+    // (or a short window passes), and stop as soon as the customer scrolls.
+    let attempts = 0;
+    let retryTimer: number | undefined;
+    const stopRetrying = () => {
+      if (retryTimer !== undefined) {
+        window.clearInterval(retryTimer);
+        retryTimer = undefined;
+        window.removeEventListener('wheel', stopRetrying);
+        window.removeEventListener('touchstart', stopRetrying);
+        window.removeEventListener('keydown', stopRetrying);
+      }
+    };
+    if (Number.isFinite(savedValue) && savedValue > 0) {
+      retryTimer = window.setInterval(() => {
+        attempts += 1;
+        restore();
+        if (attempts > 40 || document.documentElement.scrollHeight - window.innerHeight >= savedValue) stopRetrying();
+      }, 50);
+      window.addEventListener('wheel', stopRetrying, { passive: true });
+      window.addEventListener('touchstart', stopRetrying, { passive: true });
+      window.addEventListener('keydown', stopRetrying);
+    }
     const save = () => { try { const value = String(window.scrollY); sessionStorage.setItem(key, value); localStorage.setItem(key, value); } catch { /* optional persistence */ } };
-    window.setTimeout(restore, 0);
     const hidden = () => { if (document.visibilityState === 'hidden') save(); };
     window.addEventListener('pagehide', save); document.addEventListener('visibilitychange', hidden);
-    return () => { window.removeEventListener('pagehide', save); document.removeEventListener('visibilitychange', hidden); };
+    return () => { stopRetrying(); window.removeEventListener('pagehide', save); document.removeEventListener('visibilitychange', hidden); };
   }, [location.pathname, location.search]);
   useEffect(() => {
     if (!supabase) return;
