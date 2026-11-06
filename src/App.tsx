@@ -509,6 +509,9 @@ export default function App() {
 
   // Modals & Drawers
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  // Colour name from a banner deep link (?color=…) that should be preselected
+  // when the product page opens.
+  const [selectedProductColor, setSelectedProductColor] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartReorderNotice, setCartReorderNotice] = useState<string | null>(null);
   const [stockAlertFeedback, setStockAlertFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
@@ -633,15 +636,18 @@ export default function App() {
     setCouponRouteCode(route.kind === 'coupon' ? route.couponCode : null);
     if (route.kind !== 'product') {
       setSelectedProduct(null);
+      setSelectedProductColor(null);
       return;
     }
     if (!catalogLoaded) {
       setSelectedProduct(null);
+      setSelectedProductColor(null);
       return;
     }
     const product = catalogProducts.find((item) => item.id === route.slug || item.slug === route.slug);
     if (product) {
       setSelectedProduct(product);
+      setSelectedProductColor(new URLSearchParams(location.search).get('color'));
       const canonicalProductPath = getPathForProduct(product.id);
       if (location.pathname !== canonicalProductPath) {
         navigate(canonicalProductPath, { replace: true, state: location.state });
@@ -650,7 +656,7 @@ export default function App() {
     // Wait for the live catalog before giving up: a just-listed product is not in
     // the cached/bundled catalog yet, so only redirect once the fetch has finished.
     else if (catalogFresh) navigate('/shop', { replace: true });
-  }, [appPhase, authStatus, catalogLoaded, catalogFresh, catalogProducts, location.pathname, location.state, navigate]);
+  }, [appPhase, authStatus, catalogLoaded, catalogFresh, catalogProducts, location.pathname, location.search, location.state, navigate]);
 
   useEffect(() => {
     if (!couponRouteCode) return;
@@ -2035,6 +2041,7 @@ export default function App() {
             setLoginModalReason('Sign in to review products you have purchased.');
             setIsLoginModalOpen(true);
           }}
+          initialColorName={selectedProductColor ?? undefined}
         />}
 
         {(isCustomBuilderOpen || activeTab === 'custom') && <CustomSeatBuilder
