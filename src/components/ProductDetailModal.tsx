@@ -35,6 +35,13 @@ import { getProductAvailability, isProductSellable } from '../lib/productAvailab
 import { ProductReviews } from './ProductReviews';
 import { BottomSheet } from './BottomSheet';
 import { getColorDetails } from '../lib/productColors';
+import {
+  getCachedVehicleModels,
+  loadVehicleModels,
+  VEHICLE_CATALOG_CHANGED_EVENT,
+  type VehicleCatalogModel,
+  type VehicleCatalogType,
+} from '../lib/supabaseVehicleCatalog';
 
 interface ProductDetailModalProps {
   products: Product[];
@@ -165,15 +172,48 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   const [detailSheet, setDetailSheet] = useState<
     'features' | 'compatibility' | 'materials' | 'stitchPatterns' | null
   >(null);
-  useEffect(() => {
-    setSelectedStitch(resolveStitchPatternSelection(details.stitchPatterns));
-    setSelectedModel('');
-  }, [selectedColor, details.stitchPatterns]);
   const [selectedThickness] = useState(
     product.thicknessOptions[0] || { label: 'Standard', extraPrice: 0 },
   );
-  const [vehicleType, setVehicleType] = useState('Bike');
+  const [vehicleType, setVehicleType] = useState<VehicleCatalogType | ''>('');
   const [selectedModel, setSelectedModel] = useState('');
+  const [catalog, setCatalog] = useState<VehicleCatalogModel[]>(getCachedVehicleModels());
+  useEffect(() => {
+    let active = true;
+    void loadVehicleModels().then(({ data }) => {
+      if (active) setCatalog(data);
+    });
+    const refresh = () =>
+      void loadVehicleModels().then(({ data }) => {
+        if (active) setCatalog(data);
+      });
+    window.addEventListener(VEHICLE_CATALOG_CHANGED_EVENT, refresh);
+    return () => {
+      active = false;
+      window.removeEventListener(VEHICLE_CATALOG_CHANGED_EVENT, refresh);
+    };
+  }, []);
+  const catalogTypeByModel = useMemo(
+    () => new Map(catalog.map((model) => [model.name, model.type])),
+    [catalog],
+  );
+  // Vehicle types this product (or the selected colour) actually fits, derived
+  // from its compatible model list instead of a hardcoded global selector.
+  const compatibleTypes = useMemo(() => {
+    const types = new Set<VehicleCatalogType>();
+    details.compatibility.forEach((name) => {
+      const type = catalogTypeByModel.get(name);
+      if (type) types.add(type);
+    });
+    return Array.from(types);
+  }, [details.compatibility, catalogTypeByModel]);
+  useEffect(() => {
+    setSelectedStitch(resolveStitchPatternSelection(details.stitchPatterns));
+    setSelectedModel('');
+    setVehicleType((current) =>
+      current && compatibleTypes.includes(current) ? current : compatibleTypes[0] || '',
+    );
+  }, [selectedColor, details.stitchPatterns, compatibleTypes]);
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [quantity] = useState(1);
   const [notifySubmitting, setNotifySubmitting] = useState(false);
@@ -234,7 +274,15 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
 
   const suggested = products.filter((item) => item.id !== product.id).slice(0, 4);
   const reviewsValue = (product.rating ?? 4.8).toFixed(1);
-  const modelOptions = details.compatibility;
+  // Only filter by the chosen vehicle type when this product fits more than
+  // one type; models missing from the catalog stay visible for every type.
+  const modelOptions =
+    compatibleTypes.length > 1
+      ? details.compatibility.filter((name) => {
+          const type = catalogTypeByModel.get(name);
+          return !type || type === vehicleType;
+        })
+      : details.compatibility;
   const sheetLabels = {
     features: 'Features',
     compatibility: 'Compatible vehicles',
@@ -463,31 +511,33 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               </div>
             </section>
 
-            <section className="border-t border-slate-100 px-5 py-4">
-              <h2 className="mb-3 text-[16px] font-extrabold tracking-tight">
-                Select Vehicle Type
-              </h2>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { label: 'Bike', Icon: Bike },
-                  { label: 'Toto', Icon: Truck },
-                  { label: 'Scooter', Icon: Zap },
-                ].map(({ label, Icon }) => (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => {
-                      setVehicleType(label);
-                      setSelectedModel('');
-                    }}
-                    className={`flex items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-[11px] font-bold transition ${vehicleType === label ? 'border-[#d9232d] bg-rose-50 text-[#d9232d]' : 'border-slate-200 bg-white text-slate-700'}`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </section>
+            {compatibleTypes.length > 1 && (
+              <section className="border-t border-slate-100 px-5 py-4">
+                <h2 className="mb-3 text-[16px] font-extrabold tracking-tight">
+                  Select Vehicle Type
+                </h2>
+                <div className="grid grid-cols-2 gap-2">
+                  {compatibleTypes.map((type) => {
+                    const label = type === 'bike' ? 'Bike' : 'Scooter';
+                    const Icon = type === 'bike' ? Bike : Zap;
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => {
+                          setVehicleType(type);
+                          setSelectedModel('');
+                        }}
+                        className={`flex items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-[11px] font-bold transition ${vehicleType === type ? 'border-[#d9232d] bg-rose-50 text-[#d9232d]' : 'border-slate-200 bg-white text-slate-700'}`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
 
             {modelOptions.length > 0 && (
               <section className="border-t border-slate-100 px-5 py-4">
@@ -502,7 +552,9 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                     onChange={(event) => setSelectedModel(event.target.value)}
                     className="h-[48px] w-full appearance-none rounded-xl border border-slate-200 bg-white pl-12 pr-10 text-[13px] text-slate-600"
                   >
-                    <option value="">Choose your {vehicleType.toLowerCase()} model</option>
+                    <option value="">
+                      Choose your {vehicleType === 'scooter' ? 'scooter' : 'bike'} model
+                    </option>
                     {modelOptions.map((model) => (
                       <option key={model} value={model}>
                         {model}
@@ -606,14 +658,13 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
             <section className="border-t border-slate-100 px-5 py-4">
               <h2 className="mb-2 text-[16px] font-extrabold tracking-tight">Specifications</h2>
               <div className="divide-y divide-slate-100">
-                {[
+                {([
                   ['Material', details.materials.join(', ')],
                   ['Waterproof', product.isWaterproof ? 'Yes' : 'Breathable'],
-
                   ['Suitable For', details.compatibility.join(', ')],
-                  ['Package Includes', '1 Seat Cover'],
-                  ['Installation', 'Easy (DIY)'],
-                ].map(([label, value]) => (
+                  ['Package Includes', details.packageIncludes.join(', ')],
+                  ['Installation', details.installation],
+                ] as const).filter(([, value]) => value.trim().length > 0).map(([label, value]) => (
                   <div
                     key={label}
                     className="grid grid-cols-[20px_1fr_1.15fr] items-center gap-2 py-2.5 text-[11px]"

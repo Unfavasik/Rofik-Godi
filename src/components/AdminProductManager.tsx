@@ -32,6 +32,8 @@ import {
 } from './NotificationAudiencePicker';
 import { AdminProductColorEditor } from './AdminProductColorEditor';
 import {
+  DEFAULT_INSTALLATION,
+  DEFAULT_PACKAGE_INCLUDES,
   getColorBgClass,
   getColorNameFromHex,
   isValidProductColorValue,
@@ -97,6 +99,8 @@ const blankDraft = (): ProductDraft => ({
   colors: [{ name: 'Black', hex: '#111827', bgClass: 'bg-[#111827]', images: [] }],
   stitchPatterns: [],
   compatibility: [],
+  packageIncludes: [...DEFAULT_PACKAGE_INCLUDES],
+  installation: DEFAULT_INSTALLATION,
   thicknessOptions: [{ label: 'Standard', extraPrice: 0 }],
   rating: 0,
   reviewCount: 0,
@@ -295,6 +299,10 @@ export const AdminProductManager: React.FC<{
       materials: product.materials || [],
       compatibility: product.compatibility || [],
       stitchPatterns: product.stitchPatterns || [],
+      packageIncludes: product.packageIncludes?.length
+        ? product.packageIncludes
+        : [...DEFAULT_PACKAGE_INCLUDES],
+      installation: product.installation || DEFAULT_INSTALLATION,
       colors: seedLegacyColorImages(
         product.colors?.length ? product.colors : blankDraft().colors,
         product.image,
@@ -896,9 +904,10 @@ const ProductEditor: React.FC<{
   const [detailsDraft, setDetailsDraft] = useState({
     subtitle: draft.subtitle || '',
     features: [...(draft.features || [])],
-    compatibility: [...(draft.compatibility || [])],
     materials: [...(draft.materials || [])],
     stitchPatterns: [...(draft.stitchPatterns || [])],
+    packageIncludes: [...(draft.packageIncludes || [])],
+    installation: draft.installation || '',
   });
   const persistDraft = useCallback(() => {
     try {
@@ -1153,9 +1162,10 @@ const ProductEditor: React.FC<{
                     setDetailsDraft({
                       subtitle: form.subtitle || '',
                       features: [...(form.features || [])],
-                      compatibility: [...(form.compatibility || [])],
                       materials: [...(form.materials || [])],
                       stitchPatterns: [...(form.stitchPatterns || [])],
+                      packageIncludes: [...(form.packageIncludes || [])],
+                      installation: form.installation || '',
                     });
                     setDetailsSheetOpen(true);
                   }}
@@ -1178,6 +1188,15 @@ const ProductEditor: React.FC<{
               colors={form.colors || []}
               onChange={(colors) => set('colors', colors)}
               onUploadFiles={uploadColorFiles}
+              productDefaults={{
+                subtitle: form.subtitle || '',
+                features: form.features || [],
+                compatibility: form.compatibility || [],
+                materials: form.materials || [],
+                stitchPatterns: form.stitchPatterns || [],
+                packageIncludes: form.packageIncludes || [],
+                installation: form.installation || '',
+              }}
             />
             <div className="flex flex-wrap gap-x-5 gap-y-3 rounded-xl bg-slate-50 p-4">
               {[
@@ -1316,7 +1335,7 @@ const ProductEditor: React.FC<{
           <div className="space-y-4">
             <p className="text-xs leading-relaxed text-slate-500">
               Set default product details here. A colour can override each value from its own Edit
-              details sheet.
+              details sheet. Compatible vehicles are picked with the dedicated vehicle picker.
             </p>
             <label className="block text-xs font-bold text-slate-700">
               Short subtitle
@@ -1332,9 +1351,9 @@ const ProductEditor: React.FC<{
             {(
               [
                 ['Features', 'features'],
-                ['Compatible vehicles', 'compatibility'],
                 ['Materials', 'materials'],
                 ['Stitch patterns', 'stitchPatterns'],
+                ['Package Includes', 'packageIncludes'],
               ] as const
             ).map(([label, key]) => (
               <label key={key} className="block text-xs font-bold text-slate-700">
@@ -1356,6 +1375,16 @@ const ProductEditor: React.FC<{
                 />
               </label>
             ))}
+            <label className="block text-xs font-bold text-slate-700">
+              Installation
+              <Input
+                value={detailsDraft.installation}
+                onChange={(event) =>
+                  setDetailsDraft((current) => ({ ...current, installation: event.target.value }))
+                }
+                placeholder={DEFAULT_INSTALLATION}
+              />
+            </label>
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
