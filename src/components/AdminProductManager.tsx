@@ -990,7 +990,7 @@ const ProductEditor: React.FC<{
         additionalImages: derived.additionalImages,
         title: form.title.trim(),
         slug: slugify(form.slug || form.title),
-        originalPrice: form.originalPrice || form.price,
+        originalPrice: Math.max(form.originalPrice || form.price, form.price),
         categoryLabel: categoryLabels[form.category],
       },
       { audience: announcementAudience, userIds: announcementUserIds },
