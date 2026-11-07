@@ -17,8 +17,11 @@ const corsHeaders = {
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const IMAGE_PATH_PREFIX = '/storage/v1/object/public/product-images/';
-const GEMINI_MODELS = ['gemini-flash-latest', 'gemini-2.5-flash-lite'];
-const GEMINI_MAX_ATTEMPTS_PER_MODEL = 2;
+const GEMINI_MODELS = [
+  { name: 'gemini-flash-latest', attempts: 2 },
+  { name: 'gemini-2.5-flash-lite', attempts: 1 },
+];
+const GEMINI_REQUEST_TIMEOUT_MS = 15_000;
 const GEMINI_PROMPT = `This is a bike/toto seat cover. Look at the image and return ONLY JSON: {subtitle: short string, features: string[], materials: string[], stitch_patterns: string[]}. Only describe what is visible. If unsure about material, use generic words like 'Premium synthetic leather'. Do not include markdown, code fences, or text outside the JSON object.`;
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
@@ -224,15 +227,15 @@ Deno.serve(async (request) => {
       },
     });
 
-    modelLoop: for (const model of GEMINI_MODELS) {
-      for (let attempt = 0; attempt < GEMINI_MAX_ATTEMPTS_PER_MODEL; attempt += 1) {
+    modelLoop: for (const modelConfig of GEMINI_MODELS) {
+      for (let attempt = 0; attempt < modelConfig.attempts; attempt += 1) {
         geminiResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelConfig.name}:generateContent`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-goog-api-key': geminiApiKey },
             body: requestBody,
-            signal: AbortSignal.timeout(75_000),
+            signal: AbortSignal.timeout(GEMINI_REQUEST_TIMEOUT_MS),
           },
         );
         if (geminiResponse.ok || !isRetryableGeminiStatus(geminiResponse.status)) break;
@@ -241,13 +244,13 @@ Deno.serve(async (request) => {
           status: geminiResponse.status,
           attempt: attempt + 1,
         });
-        if (attempt < GEMINI_MAX_ATTEMPTS_PER_MODEL - 1) {
+        if (attempt < modelConfig.attempts - 1) {
           await waitBeforeRetry(geminiResponse, attempt);
         }
       }
       if (geminiResponse?.ok || !isRetryableGeminiStatus(geminiResponse?.status ?? 0)) break modelLoop;
       console.warn('Gemini model remained unavailable; trying fallback model', {
-        model,
+        model: modelConfig.name,
         status: geminiResponse?.status,
       });
     }
