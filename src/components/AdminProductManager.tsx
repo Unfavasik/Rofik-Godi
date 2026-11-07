@@ -690,6 +690,7 @@ export const AdminProductManager: React.FC<{
           onClose={closeEditor}
           onSave={save}
           customers={customers}
+          notify={notify}
         />
       )}
     </section>
@@ -891,7 +892,8 @@ const ProductEditor: React.FC<{
     announcement: { audience: NotificationAudience; userIds: string[] },
   ) => void | Promise<void>;
   customers: AdminCustomer[];
-}> = ({ draft, saving, setSaving, onClose, onSave, customers }) => {
+  notify: (message: string) => void;
+}> = ({ draft, saving, setSaving, onClose, onSave, customers, notify }) => {
   const [form, setForm] = useState<ProductDraft>(draft);
   const derived = useMemo(() => deriveProductImages(form.colors || []), [form.colors]);
   const [validationError, setValidationError] = useState('');
@@ -1226,6 +1228,7 @@ const ProductEditor: React.FC<{
               colors={form.colors || []}
               onChange={(colors) => set('colors', colors)}
               onUploadFiles={uploadColorFiles}
+              notify={notify}
               productDefaults={{
                 subtitle: form.subtitle || '',
                 features: form.features || [],

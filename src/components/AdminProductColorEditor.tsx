@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Loader2, Plus, Trash2, Upload, X } from 'lucide-react';
+import { Loader2, Plus, Sparkles, Trash2, Upload, X } from 'lucide-react';
 import type { Product } from '../types';
+import { autofillProductDetailsFromImage } from '../lib/productImageAutofill';
 import {
   getColorBgClass,
   getColorNameFromHex,
@@ -26,6 +27,7 @@ type Props = {
   onChange: (colors: Product['colors']) => void;
   onUploadFiles?: (files: File[]) => Promise<string[]>;
   productDefaults: ProductDetailDefaults;
+  notify: (message: string) => void;
 };
 const listValue = (value: string) =>
   value
@@ -39,9 +41,11 @@ export const AdminProductColorEditor: React.FC<Props> = ({
   onChange,
   onUploadFiles,
   productDefaults,
+  notify,
 }) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const [autoFillIndex, setAutoFillIndex] = useState<number | null>(null);
   const [urlDrafts, setUrlDrafts] = useState<Record<number, string>>({});
   const [detailsIndex, setDetailsIndex] = useState<number | null>(null);
   const [copyFrom, setCopyFrom] = useState('');
@@ -110,6 +114,32 @@ export const AdminProductColorEditor: React.FC<Props> = ({
     if (detailsIndex !== null) updateColor(detailsIndex, patch);
     setDetailsIndex(null);
   };
+  const autoFillDetails = async (index: number) => {
+    const imageUrl = colors[index]?.images?.[0];
+    if (!imageUrl) {
+      notify('Upload a colour image first.');
+      return;
+    }
+    setAutoFillIndex(index);
+    try {
+      const details = await autofillProductDetailsFromImage(imageUrl);
+      updateColor(index, {
+        subtitle: details.subtitle,
+        features: details.features,
+        materials: details.materials,
+        stitchPatterns: details.stitch_patterns,
+        packageIncludes: ['1 Seat Cover'],
+        installation: 'Easy (DIY)',
+      });
+      notify('AI details added. Please check them before saving.');
+    } catch (error) {
+      notify(
+        `Could not auto-fill details: ${error instanceof Error ? error.message : 'Please try again.'}`,
+      );
+    } finally {
+      setAutoFillIndex(null);
+    }
+  };
   const copyDetails = () => {
     if (detailsIndex === null || !copyFrom) return;
     const source = colors[Number(copyFrom)];
@@ -141,6 +171,7 @@ export const AdminProductColorEditor: React.FC<Props> = ({
         </div>
         <button
           type="button"
+          disabled={autoFillIndex !== null}
           onClick={() => {
             const hex = '#D9232D';
             // New colours carry no detail overrides, so they inherit the
@@ -189,7 +220,7 @@ export const AdminProductColorEditor: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => onChange(colors.filter((_, colorIndex) => colorIndex !== index))}
-                  disabled={colors.length <= 1}
+                  disabled={colors.length <= 1 || autoFillIndex !== null}
                   aria-label={`Remove color ${color.name || index + 1}`}
                   className="rounded-lg p-1.5 text-slate-400 disabled:opacity-30"
                 >
@@ -288,6 +319,24 @@ export const AdminProductColorEditor: React.FC<Props> = ({
                     <Plus className="h-3.5 w-3.5" />
                   </button>
                 </div>
+              </div>
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={() => void autoFillDetails(index)}
+                  disabled={!images.length || autoFillIndex !== null || uploadingIndex !== null}
+                  className="inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-[10px] font-bold text-violet-900 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {autoFillIndex === index ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  {autoFillIndex === index ? 'Analyzing image…' : 'Auto-fill details from image'}
+                </button>
+                <p className="mt-1 text-[9px] leading-relaxed text-slate-500">
+                  AI-generated, please check before saving.
+                </p>
               </div>
               <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
                 <div className="flex items-center gap-2">
