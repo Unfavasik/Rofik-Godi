@@ -1663,30 +1663,6 @@ export default function App() {
               </section>
             )}
 
-            {/* Workshop Promotion Banner */}
-            <section className="px-5 mb-6">
-              <div className="bg-gradient-to-r from-red-600 via-[#D9232D] to-red-800 rounded-2xl p-4 text-white shadow-md relative overflow-hidden flex items-center justify-between">
-                <div className="relative z-10 max-w-[240px]">
-                  <span className="text-[9.5px] font-black tracking-widest uppercase bg-white/20 text-white px-2 py-0.5 rounded-full">
-                    ON-SPOT SERVICE
-                  </span>
-                  <h4 className="text-[15px] font-black mt-1 leading-tight">
-                    Need Custom Foam Cutting & Fitting?
-                  </h4>
-                  <p className="text-[11px] text-red-100 mt-1">
-                    Visit Rofik Godi workshop for 15-minute express seat fitting.
-                  </p>
-                </div>
-
-                <button
-                  onClick={openCustomBuilderPage}
-                  className="relative z-10 bg-white text-[#D9232D] hover:bg-gray-100 text-[11.5px] font-black px-3.5 py-2 rounded-xl shadow-sm transition-all active:scale-95 flex-shrink-0 cursor-pointer"
-                >
-                  Custom Fit
-                </button>
-              </div>
-            </section>
-
             {/* Full Shop / Product Catalog Section */}
             <section id="shop-section" className="px-5 mb-6">
               <div className="mb-3">

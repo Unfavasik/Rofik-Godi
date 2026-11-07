@@ -75,7 +75,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
   if (!bannersLoaded) {
     return (
       <section
-        className="px-5 mb-6"
+        className="mb-7 px-5"
         data-purpose="promotional-banner"
         aria-busy="true"
         aria-label="Loading promotions"
@@ -89,7 +89,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
   if (slides.length === 0) return null;
 
   return (
-    <section className="px-5 mb-6" data-purpose="promotional-banner" aria-roledescription="carousel">
+    <section className="mb-7 px-5" data-purpose="promotional-banner" aria-roledescription="carousel">
       {/* Admin banner: the uploaded image fills the whole card. A soft bottom scrim keeps
           the CTA readable on any artwork without covering the image itself. */}
       <div
@@ -99,7 +99,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
         aria-roledescription="slide"
         aria-label={`Slide ${currentIndex + 1} of ${slides.length}`}
       >
-        <div className="relative overflow-hidden rounded-[26px] bg-[#0E0F12] shadow-[0_24px_48px_-24px_rgba(0,0,0,0.45)] ring-1 ring-black/5">
+        <div className="relative overflow-hidden rounded-[28px] bg-[#0E0F12] shadow-[0_24px_55px_-28px_rgba(15,23,42,0.55)] ring-1 ring-black/5">
           <div className="relative aspect-[3/2] w-full sm:aspect-[16/9]">
             {imageFailed ? (
               /* Graceful fallback when the banner image cannot load. */
@@ -131,35 +131,36 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
               </AnimatePresence>
             )}
 
-            {/* Legibility scrim — bottom edge only */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+            {/* Layered scrims keep uploaded artwork expressive while preserving text contrast. */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/10" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/80 via-black/35 to-transparent" />
 
             {/* Admin title + subtitle, overlaid above the CTA */}
-            <div className="absolute inset-x-3 bottom-12 z-10 max-w-[92%] sm:inset-x-4">
-              <h2 className="text-balance text-base font-black leading-tight text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] sm:text-xl">
+            <div className="absolute inset-x-4 bottom-[3.8rem] z-10 max-w-[88%] sm:inset-x-5">
+              <h2 className="text-balance text-[17px] font-black leading-[1.1] tracking-[-.02em] text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] sm:text-xl">
                 {slide.title}
               </h2>
               {slide.subtitle && (
-                <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] sm:text-[13px]">
+                <p className="mt-1.5 line-clamp-2 text-[11px] font-medium leading-[1.35] text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] sm:text-[13px]">
                   {slide.subtitle}
                 </p>
               )}
             </div>
 
             {/* Brand chip */}
-            <div className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/35 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wider text-white ring-1 ring-white/15 backdrop-blur-md">
+            <div className="absolute left-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/35 px-3 py-1.5 text-[9px] font-extrabold uppercase tracking-[.14em] text-white ring-1 ring-white/20 backdrop-blur-md sm:left-5 sm:top-5">
               <Sparkles className="h-3 w-3 text-[#FF8A8F]" />
               <span>ROFIK GODI CENTRE</span>
             </div>
 
             {/* CTA */}
-            <div className="absolute bottom-3 left-3 z-10">
+            <div className="absolute bottom-4 left-4 z-10 sm:bottom-5 sm:left-5">
               <motion.button
                 whileTap={{ scale: 0.96 }}
                 onClick={() =>
                   slide.linkUrl.trim() ? onBannerClick(slide.linkUrl.trim()) : onExploreClick()
                 }
-                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/95 px-3.5 py-2 text-[11px] font-bold text-gray-900 shadow-lg backdrop-blur transition-all hover:bg-white active:scale-95 sm:text-[12px]"
+                className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-white px-4 py-2.5 text-[11px] font-extrabold text-gray-900 shadow-[0_8px_22px_rgba(0,0,0,0.2)] transition-all hover:bg-white/95 active:scale-95 sm:text-[12px]"
               >
                 <span>{slide.buttonLabel || 'Shop now'}</span>
                 <ArrowRight className="h-3.5 w-3.5 text-[#D9232D]" />
