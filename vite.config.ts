@@ -2,25 +2,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { fileURLToPath } from 'node:url';
-import {defineConfig, loadEnv, type Plugin} from 'vite';
-
-const omitOversizedOnnxWasm: Plugin = {
-  name: 'omit-oversized-onnx-wasm',
-  apply: 'build',
-  generateBundle(_options, bundle) {
-    // Transformers.js loads the ONNX runtime WASM from its configured CDN; this bundled fallback exceeds
-    // Cloudflare Pages' per-file limit and is not needed in the published site.
-    for (const [fileName, output] of Object.entries(bundle)) {
-      if (
-        output.type === 'asset' &&
-        fileName.startsWith('assets/ort-wasm-') &&
-        fileName.endsWith('.wasm')
-      ) {
-        delete bundle[fileName];
-      }
-    }
-  },
-};
+import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -35,7 +17,7 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY': JSON.stringify(env.VITE_SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || ''),
       'import.meta.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL': JSON.stringify(env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || ''),
     },
-    plugins: [react(), tailwindcss(), omitOversizedOnnxWasm],
+    plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
           '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.'),
@@ -52,10 +34,6 @@ export default defineConfig(({ mode }) => {
               { name: 'supabase-vendor', test: /node_modules\/@supabase\// },
               { name: 'motion-vendor', test: /node_modules\/(?:motion|framer-motion|@motion)\// },
               { name: 'icons-vendor', test: /node_modules\/lucide-react\// },
-              {
-                name: 'transformers-vendor',
-                test: /node_modules\/(?:@huggingface\/transformers|onnxruntime-web)\//,
-              },
               { name: 'vendor', test: /node_modules/ },
             ],
           },

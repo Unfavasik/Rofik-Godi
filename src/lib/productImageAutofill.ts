@@ -19,6 +19,27 @@ const cleanList = (value: unknown) =>
         .slice(0, 8)
     : [];
 
+async function getInvocationErrorMessage(error: unknown): Promise<string> {
+  const fallback =
+    error instanceof Error
+      ? error.message
+      : 'Image details could not be generated. Please try again.';
+  const context =
+    error && typeof error === 'object' ? (error as { context?: unknown }).context : undefined;
+
+  if (context instanceof Response) {
+    try {
+      const body = (await context.clone().json()) as Record<string, unknown>;
+      const message = cleanText(body.error ?? body.message, 320);
+      if (message) return message;
+    } catch {
+      // Fall back to the Supabase Functions error when the response is not JSON.
+    }
+  }
+
+  return fallback || 'Image details could not be generated. Please try again.';
+}
+
 export async function autofillProductDetailsFromImage(
   imageUrl: string,
 ): Promise<ProductImageAutofill> {
@@ -28,7 +49,7 @@ export async function autofillProductDetailsFromImage(
   const { data, error } = await supabase.functions.invoke('autofill-product-details', {
     body: { image_url: imageUrl },
   });
-  if (error) throw new Error(error.message || 'Image details could not be generated.');
+  if (error) throw new Error(await getInvocationErrorMessage(error));
 
   const result = data as Record<string, unknown> | null;
   const subtitle = cleanText(result?.subtitle, 140);

@@ -7,7 +7,7 @@
 
 ## Admin product photo details
 
-- [x] In Add product > Product details, an image-assisted action runs Transformers.js with Florence-2 in the browser to draft the subtitle and visible features from the uploaded product photo; it also extracts visible material and stitch details from the detailed photo caption, and fills either field with an explicit verify-before-listing note if the image does not make that detail clear instead of leaving it blank. It preserves already-filled fields, keeps the standard package/installation defaults, and leaves all suggestions editable for admin review before saving.
+- [x] In Add product > Product details, Gemini analyzes the uploaded primary colour image through the admin-authenticated Supabase Edge Function and drafts subtitle, features, materials and stitch patterns. It sets the standard package/installation defaults, keeps every field editable, and avoids downloading or running an image model in the browser.
 
 ## Admin order details
 

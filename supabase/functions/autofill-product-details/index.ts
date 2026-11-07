@@ -208,20 +208,64 @@ Deno.serve(async (request) => {
           ],
           generationConfig: {
             temperature: 0.2,
-            maxOutputTokens: 512,
+            maxOutputTokens: 384,
             responseMimeType: 'application/json',
           },
         }),
-        signal: AbortSignal.timeout(45_000),
+        signal: AbortSignal.timeout(75_000),
       },
     );
-  } catch {
-    return jsonResponse({ error: 'Could not reach the image analysis service. Try again.' }, 502);
+  } catch (error) {
+    const errorName = error instanceof Error ? error.name : 'UnknownError';
+    const detail =
+      error instanceof Error
+        ? error.message.replaceAll(geminiApiKey, '[REDACTED]').replace(/\s+/g, ' ').slice(0, 180)
+        : 'Unknown network error';
+    const timedOut = errorName === 'TimeoutError' || errorName === 'AbortError';
+    console.error('Gemini image request failed before receiving a response', {
+      name: errorName,
+      detail,
+    });
+    return jsonResponse(
+      {
+        error: timedOut
+          ? 'Gemini image analysis timed out. Please try again in a moment.'
+          : 'Could not connect to Gemini image analysis. Please try again.',
+        code: timedOut ? 'GEMINI_TIMEOUT' : 'GEMINI_NETWORK_ERROR',
+      },
+      timedOut ? 504 : 502,
+    );
   }
   if (!geminiResponse.ok) {
-    console.error('Gemini image detail request failed with status', geminiResponse.status);
+    let providerMessage = '';
+    try {
+      const providerBody = await geminiResponse.text();
+      const parsed = JSON.parse(providerBody) as Record<string, unknown>;
+      const providerError = parsed.error as Record<string, unknown> | undefined;
+      providerMessage =
+        typeof providerError?.message === 'string'
+          ? providerError.message
+          : typeof parsed.message === 'string'
+            ? parsed.message
+            : '';
+    } catch {
+      providerMessage = '';
+    }
+    providerMessage = providerMessage
+      .replaceAll(geminiApiKey, '[REDACTED]')
+      .replace(/\s+/g, ' ')
+      .slice(0, 240);
+    console.error('Gemini image detail request returned non-2xx', {
+      status: geminiResponse.status,
+      provider_message: providerMessage,
+    });
     return jsonResponse(
-      { error: 'Image analysis failed. Check the Gemini API key or try again later.' },
+      {
+        error: providerMessage
+          ? `Gemini API error (${geminiResponse.status}): ${providerMessage}`
+          : `Gemini API returned HTTP ${geminiResponse.status}. Check the API key or try again later.`,
+        code: 'GEMINI_API_ERROR',
+      },
       502,
     );
   }
