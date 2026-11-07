@@ -575,29 +575,34 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               (['features', 'compatibility', 'materials', 'stitchPatterns'] as const).some(
                 (key) => details[key].length > 0,
               )) && (
-              <section className="border-t border-slate-100 px-5 py-4">
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-slate-900 text-white">
-                    <FileText className="h-4 w-4" />
+              <section className="border-t border-slate-100 bg-slate-50/45 px-5 py-5">
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-950 text-white shadow-sm shadow-slate-200">
+                    <FileText className="h-[18px] w-[18px]" />
                   </span>
                   <div>
-                    <h2 className="text-[16px] font-extrabold tracking-tight">Product details</h2>
-                    <p className="text-[10px] text-slate-500">
+                    <p className="mb-0.5 text-[10px] font-black uppercase tracking-[.16em] text-[#d9232d]">
+                      At a glance
+                    </p>
+                    <h2 className="text-[17px] font-extrabold leading-tight tracking-[-.02em]">
+                      Product details
+                    </h2>
+                    <p className="mt-0.5 text-[11px] text-slate-500">
                       Everything you need before ordering
                     </p>
                   </div>
                 </div>
                 {product.subtitle && (
-                  <div className="mb-3 rounded-2xl border border-slate-200 bg-white px-3.5 py-3 shadow-sm">
-                    <p className="text-[10px] font-black uppercase tracking-[.12em] text-[#d9232d]">
+                  <div className="mb-3.5 rounded-2xl border border-slate-200/80 bg-white px-4 py-3.5 shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
+                    <p className="text-[9px] font-black uppercase tracking-[.16em] text-slate-400">
                       Short subtitle
                     </p>
-                    <p className="mt-1 text-[13px] font-semibold leading-relaxed text-slate-700">
+                    <p className="mt-1.5 text-[13px] font-bold leading-[1.45] text-slate-800">
                       {product.subtitle}
                     </p>
                   </div>
                 )}
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                   {(['features', 'compatibility', 'materials', 'stitchPatterns'] as const).map(
                     (key) => {
                       if (!details[key].length) return null;
@@ -607,27 +612,29 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           key={key}
                           type="button"
                           onClick={() => setDetailSheet(key)}
-                          className="flex min-h-[82px] items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-sm transition active:scale-[.98]"
+                          className="group flex min-h-[86px] items-start gap-3 rounded-2xl border border-slate-200/80 bg-white p-3.5 text-left shadow-[0_2px_10px_rgba(15,23,42,0.045)] transition hover:border-slate-300 hover:shadow-[0_5px_18px_rgba(15,23,42,0.08)] active:scale-[.985]"
                         >
                           <span
-                            className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${accent}`}
+                            className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${accent}`}
                           >
-                            <Icon className="h-5 w-5" />
+                            <Icon className="h-[19px] w-[19px]" />
                           </span>
                           <span className="min-w-0 flex-1">
-                            <b className="block text-[12px] font-extrabold text-slate-900">
+                            <b className="block text-[13px] font-extrabold leading-tight text-slate-900">
                               {sheetLabels[key]}
                             </b>
-                            <span className="mt-0.5 block text-[10px] font-medium text-slate-400">
+                            <span className="mt-1 block text-[10px] font-medium text-slate-400">
                               {helper}
                             </span>
-                            <span className="mt-1 block truncate text-[11px] text-slate-600">
+                            <span className="mt-1.5 block truncate text-[11px] leading-tight text-slate-600">
                               {key === 'stitchPatterns' && selectedStitch
                                 ? selectedStitch
                                 : preview(details[key])}
                             </span>
                           </span>
-                          <ChevronDown className="mt-1 h-4 w-4 shrink-0 -rotate-90 text-slate-400" />
+                          <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-slate-50 text-slate-400 transition group-hover:bg-slate-100 group-hover:text-slate-700">
+                            <ChevronDown className="h-4 w-4 -rotate-90" />
+                          </span>
                         </button>
                       );
                     },
@@ -636,17 +643,20 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               </section>
             )}
 
-            <section className="border-t border-slate-100 px-5 py-4">
-              <h2 className="mb-2 text-[16px] font-extrabold tracking-tight">Description</h2>
+            <section className="border-t border-slate-100 px-5 py-5">
+              <p className="mb-1 text-[10px] font-black uppercase tracking-[.16em] text-[#d9232d]">
+                More to know
+              </p>
+              <h2 className="mb-2.5 text-[17px] font-extrabold tracking-[-.02em]">Description</h2>
               <p
-                className={`text-[12px] leading-[1.6] text-slate-600 ${descriptionOpen ? '' : 'line-clamp-4'}`}
+                className={`text-[12px] leading-[1.7] text-slate-600 ${descriptionOpen ? '' : 'line-clamp-4'}`}
               >
                 {product.description}
               </p>
               <button
                 type="button"
                 onClick={() => setDescriptionOpen((open) => !open)}
-                className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 text-[12px] font-bold text-slate-800"
+                className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white text-[12px] font-extrabold text-slate-800 shadow-[0_2px_8px_rgba(15,23,42,0.035)] transition hover:border-slate-300 hover:bg-slate-50"
               >
                 {descriptionOpen ? 'Read less' : 'Read more'}
                 <ChevronDown
@@ -655,9 +665,19 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               </button>
             </section>
 
-            <section className="border-t border-slate-100 px-5 py-4">
-              <h2 className="mb-2 text-[16px] font-extrabold tracking-tight">Specifications</h2>
-              <div className="divide-y divide-slate-100">
+            <section className="border-t border-slate-100 px-5 py-5">
+              <div className="mb-3 flex items-end justify-between gap-3">
+                <div>
+                  <p className="mb-1 text-[10px] font-black uppercase tracking-[.16em] text-[#d9232d]">
+                    The essentials
+                  </p>
+                  <h2 className="text-[17px] font-extrabold tracking-[-.02em]">Specifications</h2>
+                </div>
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-slate-500">
+                  Details
+                </span>
+              </div>
+              <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_2px_10px_rgba(15,23,42,0.035)]">
                 {([
                   ['Material', details.materials.join(', ')],
                   ['Waterproof', product.isWaterproof ? 'Yes' : 'Breathable'],
@@ -667,9 +687,9 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 ] as const).filter(([, value]) => value.trim().length > 0).map(([label, value]) => (
                   <div
                     key={label}
-                    className="grid grid-cols-[20px_1fr_1.15fr] items-center gap-2 py-2.5 text-[11px]"
+                    className="grid grid-cols-[24px_minmax(72px,.75fr)_1.35fr] items-start gap-2.5 border-b border-slate-100 px-3.5 py-3.5 text-[11px] last:border-b-0"
                   >
-                    <span className="text-slate-500">
+                    <span className="grid h-6 w-6 place-items-center rounded-lg bg-slate-50 text-slate-500">
                       {label === 'Waterproof' ? (
                         <Droplets className="h-3.5 w-3.5" />
                       ) : label === 'Installation' ? (
@@ -678,8 +698,8 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                         <PackageCheck className="h-3.5 w-3.5" />
                       )}
                     </span>
-                    <span className="text-slate-500">{label}</span>
-                    <span className="text-right font-medium text-slate-600">{value}</span>
+                    <span className="pt-1 font-semibold leading-[1.35] text-slate-500">{label}</span>
+                    <span className="pt-1 text-right font-semibold leading-[1.45] text-slate-700">{value}</span>
                   </div>
                 ))}
               </div>
