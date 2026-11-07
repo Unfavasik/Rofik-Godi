@@ -34,6 +34,10 @@ export default defineConfig(({ mode }) => {
               { name: 'supabase-vendor', test: /node_modules\/@supabase\// },
               { name: 'motion-vendor', test: /node_modules\/(?:motion|framer-motion|@motion)\// },
               { name: 'icons-vendor', test: /node_modules\/lucide-react\// },
+              {
+                name: 'transformers-vendor',
+                test: /node_modules\/(?:@huggingface\/transformers|onnxruntime-web)\//,
+              },
               { name: 'vendor', test: /node_modules/ },
             ],
           },

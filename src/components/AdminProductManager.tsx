@@ -6,9 +6,11 @@ import {
   Copy,
   GripVertical,
   ImagePlus,
+  Loader2,
   Pencil,
   Plus,
   Search,
+  Sparkles,
   Trash2,
   X,
 } from 'lucide-react';
@@ -41,6 +43,7 @@ import {
 import { convertImageToWebP } from '../lib/imagePipeline';
 import { deriveProductImages, seedLegacyColorImages } from '../lib/productImages';
 import { notifyCatalogChanged } from '../lib/localCache';
+import { suggestProductDetailsFromImage } from '../lib/productImageDetails';
 import { BottomSheet } from './BottomSheet';
 const clearCatalogCache = () => {
   localStorage.removeItem('rofik-godi:public-catalog:v2');
@@ -909,6 +912,8 @@ const ProductEditor: React.FC<{
     packageIncludes: [...(draft.packageIncludes || [])],
     installation: draft.installation || '',
   });
+  const [imageAssistBusy, setImageAssistBusy] = useState(false);
+  const [imageAssistMessage, setImageAssistMessage] = useState('');
   const persistDraft = useCallback(() => {
     try {
       localStorage.setItem(
@@ -941,6 +946,39 @@ const ProductEditor: React.FC<{
   }, [persistDraft]);
   const set = <K extends keyof ProductDraft>(key: K, value: ProductDraft[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
+  const autoFillDetailsFromImage = async () => {
+    if (!derived.image) {
+      setImageAssistMessage('Upload a product photo in a colour first.');
+      return;
+    }
+    setImageAssistBusy(true);
+    setImageAssistMessage('Preparing the image AI model…');
+    try {
+      const suggestions = await suggestProductDetailsFromImage(derived.image, setImageAssistMessage);
+      setDetailsDraft((current) => ({
+        ...current,
+        subtitle: current.subtitle.trim() ? current.subtitle : suggestions.subtitle,
+        features: current.features.length ? current.features : suggestions.features,
+        materials: current.materials.length ? current.materials : suggestions.materials,
+        stitchPatterns: current.stitchPatterns.length
+          ? current.stitchPatterns
+          : suggestions.stitchPatterns,
+        packageIncludes: current.packageIncludes.length
+          ? current.packageIncludes
+          : [...DEFAULT_PACKAGE_INCLUDES],
+        installation: current.installation.trim() ? current.installation : DEFAULT_INSTALLATION,
+      }));
+      setImageAssistMessage(
+        'Draft suggestions added. Review them before saving; package and installation use the standard defaults.',
+      );
+    } catch (error) {
+      setImageAssistMessage(
+        error instanceof Error ? error.message : 'Could not read this product photo. Try again.',
+      );
+    } finally {
+      setImageAssistBusy(false);
+    }
+  };
   const uploadEditorImage = async (file: File) =>
     isSupabaseConfigured
       ? uploadProductImage(file)
@@ -1337,6 +1375,32 @@ const ProductEditor: React.FC<{
               Set default product details here. A colour can override each value from its own Edit
               details sheet. Compatible vehicles are picked with the dedicated vehicle picker.
             </p>
+            <div className="rounded-xl border border-violet-100 bg-violet-50 p-3">
+              <button
+                type="button"
+                onClick={() => void autoFillDetailsFromImage()}
+                disabled={imageAssistBusy || !derived.image}
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 py-2.5 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {imageAssistBusy ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                {imageAssistBusy ? 'Reading product photo…' : 'Auto-fill from product image'}
+              </button>
+              <p aria-live="polite" className="mt-2 text-[10px] leading-relaxed text-violet-900">
+                {imageAssistMessage ||
+                  (derived.image
+                    ? 'Runs in this browser with Transformers.js. The first run downloads and caches the Florence-2 model.'
+                    : 'Upload a product image first to generate suggestions.')}
+              </p>
+              <p className="mt-1 text-[10px] leading-relaxed text-violet-800">
+                AI suggestions only fill blank fields. Verify visible details; material and stitch
+                details may be unclear from a photo. Package and installation use the standard
+                defaults unless you edit them.
+              </p>
+            </div>
             <label className="block text-xs font-bold text-slate-700">
               Short subtitle
               <Input

@@ -4,6 +4,9 @@
 - [x] Product listing cards use a compact, aligned hierarchy with real catalog prices/stock and do not invent ratings or discounts; long titles are clamped without hiding key data.
 - [x] New-product notification details resolve the announced live catalog product and show its actual images, price, availability and product details in the supplied mobile mockup style.
 
+## Admin product photo details
+- [x] In Add product > Product details, an image-assisted action runs Transformers.js with Florence-2 in the browser to draft the subtitle and visible features from the uploaded product photo; it suggests material and stitch details only when the photo caption provides evidence, preserves already-filled fields, keeps the standard package/installation defaults, and leaves all suggestions editable for admin review before saving.
+
 ## Admin order details
 - [x] Admin order details have a direct `/admin/orders/:orderId` route supporting database IDs and public order numbers; the order ID sits beneath the page title and redundant store branding/duplicate completed states are removed.
 
