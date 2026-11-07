@@ -1392,7 +1392,7 @@ const ProductEditor: React.FC<{
               <p aria-live="polite" className="mt-2 text-[10px] leading-relaxed text-violet-900">
                 {imageAssistMessage ||
                   (derived.image
-                    ? 'Runs in this browser with Transformers.js. The first run downloads and caches the Florence-2 model.'
+                    ? 'Runs in a background worker with Transformers.js to keep the page responsive. The first run downloads and caches the Florence-2 model.'
                     : 'Upload a product image first to generate suggestions.')}
               </p>
               <p className="mt-1 text-[10px] leading-relaxed text-violet-800">

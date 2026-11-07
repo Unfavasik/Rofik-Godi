@@ -1,5 +1,5 @@
 const MODEL_ID = 'onnx-community/Florence-2-base';
-const CAPTION_TASK = '<MORE_DETAILED_CAPTION>';
+const CAPTION_TASK = '<CAPTION>';
 
 type ImageSize = { width: number; height: number };
 type FlorenceProcessor = ((image: unknown, prompts: unknown) => Promise<unknown>) & {
@@ -11,6 +11,13 @@ type FlorenceModel = {
   generate: (input: unknown) => Promise<unknown>;
 };
 type TransformersModule = {
+  env: {
+    backends: {
+      onnx: {
+        wasm: { proxy: boolean };
+      };
+    };
+  };
   Florence2ForConditionalGeneration: {
     from_pretrained: (
       modelId: string,
@@ -42,6 +49,8 @@ const loadTransformers = async (onProgress?: (message: string) => void) => {
     transformersPromise = (async () => {
       const transformers =
         (await import('@huggingface/transformers')) as unknown as TransformersModule;
+      // Keep CPU-bound WASM inference in a worker so mobile browsers remain responsive.
+      transformers.env.backends.onnx.wasm.proxy = true;
       const [model, processor] = await Promise.all([
         transformers.Florence2ForConditionalGeneration.from_pretrained(MODEL_ID, {
           progress_callback: (event) => {
@@ -101,11 +110,12 @@ export const suggestProductDetailsFromImage = async (
   const { model, processor, loadImage } = await loadTransformers(onProgress);
   onProgress?.('Reading product photo…');
   const image = await loadImage(imageUrl);
+  onProgress?.('Analyzing photo on this device… this may take a little while on phones.');
   const prompts = processor.construct_prompts(CAPTION_TASK);
   const inputs = await processor(image, prompts);
   const generatedIds = await model.generate({
     ...(inputs as Record<string, unknown>),
-    max_new_tokens: 128,
+    max_new_tokens: 64,
   });
   const generatedText =
     processor.batch_decode(generatedIds, { skip_special_tokens: false })[0] || '';
