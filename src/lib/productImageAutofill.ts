@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 
 export type ProductImageAutofill = {
   subtitle: string;
+  description: string;
   features: string[];
   materials: string[];
   stitch_patterns: string[];
@@ -57,6 +58,7 @@ export async function autofillProductDetailsFromImage(
 
   return {
     subtitle,
+    description: cleanText(result?.description, 700),
     features: cleanList(result?.features),
     materials: cleanList(result?.materials),
     stitch_patterns: cleanList(result?.stitch_patterns),

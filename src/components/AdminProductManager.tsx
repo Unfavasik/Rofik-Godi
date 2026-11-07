@@ -323,7 +323,9 @@ export const AdminProductManager: React.FC<{
   useEffect(() => {
     if (!focusProductId || handledFocusId.current === focusProductId) return;
     // The URL segment may be a product slug (new links) or a legacy id.
-    const product = products.find((item) => item.id === focusProductId || item.slug === focusProductId);
+    const product = products.find(
+      (item) => item.id === focusProductId || item.slug === focusProductId,
+    );
     if (!product) return;
     handledFocusId.current = focusProductId;
     setCategory('all');
@@ -962,6 +964,7 @@ const ProductEditor: React.FC<{
     setImageAssistMessage('');
     try {
       const suggestions = await autofillProductDetailsFromImage(derived.image);
+      setForm((current) => ({ ...current, description: suggestions.description }));
       setDetailsDraft({
         subtitle: suggestions.subtitle,
         features: suggestions.features,
@@ -970,9 +973,12 @@ const ProductEditor: React.FC<{
         packageIncludes: [...DEFAULT_PACKAGE_INCLUDES],
         installation: DEFAULT_INSTALLATION,
       });
-      setImageAssistMessage('Gemini suggestions are ready. Review and edit every field before saving.');
+      setImageAssistMessage(
+        'Gemini suggestions are ready. Review and edit every field before saving.',
+      );
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Could not analyze this photo. Try again.';
+      const message =
+        error instanceof Error ? error.message : 'Could not analyze this photo. Try again.';
       setImageAssistError(true);
       setImageAssistMessage(message);
       notify(`Gemini auto-fill failed: ${message}`);
@@ -1175,7 +1181,9 @@ const ProductEditor: React.FC<{
                 </button>
               </div>
               <div className="block">
-                <span className="mb-1.5 block text-[11px] font-bold text-slate-600">Compatible vehicles</span>
+                <span className="mb-1.5 block text-[11px] font-bold text-slate-600">
+                  Compatible vehicles
+                </span>
                 <button
                   type="button"
                   onClick={() => setCompatibilityPickerOpen(true)}

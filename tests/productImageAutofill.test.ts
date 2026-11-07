@@ -17,6 +17,7 @@ describe('Gemini product image autofill', () => {
     supabaseMock.functions.invoke.mockResolvedValue({
       data: {
         subtitle: 'Soft synthetic leather with diamond stitching',
+        description: 'A contoured seat cover with soft synthetic leather and diamond stitching.',
         features: ['Contoured fit', 'Contrast seams'],
         materials: ['Premium synthetic leather'],
         stitch_patterns: ['Diamond quilting'],
@@ -30,6 +31,7 @@ describe('Gemini product image autofill', () => {
       ),
     ).resolves.toEqual({
       subtitle: 'Soft synthetic leather with diamond stitching',
+      description: 'A contoured seat cover with soft synthetic leather and diamond stitching.',
       features: ['Contoured fit', 'Contrast seams'],
       materials: ['Premium synthetic leather'],
       stitch_patterns: ['Diamond quilting'],

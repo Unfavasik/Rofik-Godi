@@ -3,6 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 
 type GeminiDetails = {
   subtitle: string;
+  description: string;
   features: string[];
   materials: string[];
   stitch_patterns: string[];
@@ -22,7 +23,7 @@ const GEMINI_MODELS = [
   { name: 'gemini-3.1-flash-lite', attempts: 1 },
 ];
 const GEMINI_REQUEST_TIMEOUT_MS = 20_000;
-const GEMINI_PROMPT = `This is a bike/toto seat cover. Look at the image and return ONLY JSON: {subtitle: short string, features: string[], materials: string[], stitch_patterns: string[]}. Only describe what is visible. If unsure about material, use generic words like 'Premium synthetic leather'. Do not include markdown, code fences, or text outside the JSON object.`;
+const GEMINI_PROMPT = `This is a bike/toto seat cover. Look at the image and return ONLY JSON: {subtitle: short string, description: helpful product description string, features: string[], materials: string[], stitch_patterns: string[]}. Write the description in 2-4 natural sentences for a product page, based only on what is visible; do not invent fitment, warranty, price, or performance claims. Only describe what is visible. If unsure about material, use generic words like 'Premium synthetic leather'. Do not include markdown, code fences, or text outside the JSON object.`;
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: corsHeaders });
@@ -56,6 +57,7 @@ function parseGeminiJson(text: string): GeminiDetails {
   const parsed = JSON.parse(cleaned.slice(start, end + 1)) as Record<string, unknown>;
   const result: GeminiDetails = {
     subtitle: cleanString(parsed.subtitle, 140),
+    description: cleanString(parsed.description, 700),
     features: cleanStringList(parsed.features),
     materials: cleanStringList(parsed.materials, 6),
     stitch_patterns: cleanStringList(parsed.stitch_patterns, 6),
@@ -222,7 +224,7 @@ Deno.serve(async (request) => {
       ],
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: 384,
+        maxOutputTokens: 640,
         responseMimeType: 'application/json',
       },
     });
@@ -240,7 +242,7 @@ Deno.serve(async (request) => {
         );
         if (geminiResponse.ok || !isRetryableGeminiStatus(geminiResponse.status)) break;
         console.warn('Gemini image request is temporarily unavailable; retrying', {
-          model,
+          model: modelConfig.name,
           status: geminiResponse.status,
           attempt: attempt + 1,
         });
@@ -248,7 +250,8 @@ Deno.serve(async (request) => {
           await waitBeforeRetry(geminiResponse, attempt);
         }
       }
-      if (geminiResponse?.ok || !isRetryableGeminiStatus(geminiResponse?.status ?? 0)) break modelLoop;
+      if (geminiResponse?.ok || !isRetryableGeminiStatus(geminiResponse?.status ?? 0))
+        break modelLoop;
       console.warn('Gemini model remained unavailable; trying fallback model', {
         model: modelConfig.name,
         status: geminiResponse?.status,
