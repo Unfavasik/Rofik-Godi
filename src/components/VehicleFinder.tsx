@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { VEHICLE_BRANDS } from '../data/products';
-import { loadVehicleModels, VEHICLE_CATALOG_CHANGED_EVENT, type VehicleCatalogModel } from '../lib/supabaseVehicleCatalog';
+import { getCachedVehicleModels, loadVehicleModels, VEHICLE_CATALOG_CHANGED_EVENT, type VehicleCatalogModel } from '../lib/supabaseVehicleCatalog';
 import { CheckCircle2, ChevronDown, RotateCcw, Shield } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -21,13 +21,18 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
   activeVehicleFilter,
 }) => {
   const [selectedType, setSelectedType] = useState<FinderType>('bike');
-  const [catalogModels, setCatalogModels] = useState<VehicleCatalogModel[]>([]);
-  const [catalogLoading, setCatalogLoading] = useState(true);
+  // Seed from the in-memory cache so returning to Home (e.g. back from a
+  // product page remounts this component) renders the dropdowns instantly
+  // instead of flashing "Loading companies… / Loading models…".
+  const [catalogModels, setCatalogModels] = useState<VehicleCatalogModel[]>(() => getCachedVehicleModels());
+  const [catalogLoading, setCatalogLoading] = useState(() => getCachedVehicleModels().length === 0);
   const [selectedBrand, setSelectedBrand] = useState('');
 
   useEffect(() => {
     const refresh = () => {
-      setCatalogLoading(true);
+      // Only show the loading state when there is nothing to render yet; a
+      // background revalidation over cached data stays silent.
+      if (getCachedVehicleModels().length === 0) setCatalogLoading(true);
       void loadVehicleModels().then(({ data }) => setCatalogModels(data)).finally(() => setCatalogLoading(false));
     };
     refresh();
