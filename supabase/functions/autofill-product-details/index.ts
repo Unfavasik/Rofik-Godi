@@ -18,10 +18,10 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const IMAGE_PATH_PREFIX = '/storage/v1/object/public/product-images/';
 const GEMINI_MODELS = [
-  { name: 'gemini-flash-latest', attempts: 2 },
   { name: 'gemini-3.5-flash-lite', attempts: 1 },
+  { name: 'gemini-3.1-flash-lite', attempts: 1 },
 ];
-const GEMINI_REQUEST_TIMEOUT_MS = 15_000;
+const GEMINI_REQUEST_TIMEOUT_MS = 20_000;
 const GEMINI_PROMPT = `This is a bike/toto seat cover. Look at the image and return ONLY JSON: {subtitle: short string, features: string[], materials: string[], stitch_patterns: string[]}. Only describe what is visible. If unsure about material, use generic words like 'Premium synthetic leather'. Do not include markdown, code fences, or text outside the JSON object.`;
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
