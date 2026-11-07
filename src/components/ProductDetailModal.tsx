@@ -35,6 +35,7 @@ import { getProductAvailability, isProductSellable } from '../lib/productAvailab
 import { ProductReviews } from './ProductReviews';
 import { BottomSheet } from './BottomSheet';
 import { getColorDetails } from '../lib/productColors';
+import { getBrandInitials, getBrandLogoUrl } from '../lib/brandLogos';
 import {
   getCachedVehicleModels,
   loadVehicleModels,
@@ -92,7 +93,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = (props) => 
   if (!props.product) return null;
   // The colour is part of the key so opening the same product with a different
   // ?color= deep link re-initialises the selection.
-  return <ProductDetailPage key={`${props.product.id}:${props.initialColorName ?? ''}`} {...props} product={props.product} />;
+  return (
+    <ProductDetailPage
+      key={`${props.product.id}:${props.initialColorName ?? ''}`}
+      {...props}
+      product={props.product}
+    />
+  );
 };
 
 const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }> = ({
@@ -313,6 +320,21 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   } as const;
   const preview = (items: string[]) =>
     items.slice(0, 2).join(' · ') + (items.length > 2 ? ` +${items.length - 2} more` : '');
+  const compatibleCatalogModels = useMemo(() => {
+    const names = new Set(details.compatibility);
+    return catalog
+      .filter((model) => names.has(model.name))
+      .sort((a, b) => a.brand.localeCompare(b.brand) || a.name.localeCompare(b.name));
+  }, [catalog, details.compatibility]);
+  const compatibleModelGroups = useMemo(() => {
+    const byBrand = new Map<string, VehicleCatalogModel[]>();
+    compatibleCatalogModels.forEach((model) => {
+      const models = byBrand.get(model.brand) || [];
+      models.push(model);
+      byBrand.set(model.brand, models);
+    });
+    return Array.from(byBrand.entries()).map(([brand, models]) => ({ brand, models }));
+  }, [compatibleCatalogModels]);
 
   return (
     <AnimatePresence>
@@ -678,30 +700,38 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 </span>
               </div>
               <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_2px_10px_rgba(15,23,42,0.035)]">
-                {([
-                  ['Material', details.materials.join(', ')],
-                  ['Waterproof', product.isWaterproof ? 'Yes' : 'Breathable'],
-                  ['Suitable For', details.compatibility.join(', ')],
-                  ['Package Includes', details.packageIncludes.join(', ')],
-                  ['Installation', details.installation],
-                ] as const).filter(([, value]) => value.trim().length > 0).map(([label, value]) => (
-                  <div
-                    key={label}
-                    className="grid grid-cols-[24px_minmax(72px,.75fr)_1.35fr] items-start gap-2.5 border-b border-slate-100 px-3.5 py-3.5 text-[11px] last:border-b-0"
-                  >
-                    <span className="grid h-6 w-6 place-items-center rounded-lg bg-slate-50 text-slate-500">
-                      {label === 'Waterproof' ? (
-                        <Droplets className="h-3.5 w-3.5" />
-                      ) : label === 'Installation' ? (
-                        <Wrench className="h-3.5 w-3.5" />
-                      ) : (
-                        <PackageCheck className="h-3.5 w-3.5" />
-                      )}
-                    </span>
-                    <span className="pt-1 font-semibold leading-[1.35] text-slate-500">{label}</span>
-                    <span className="pt-1 text-right font-semibold leading-[1.45] text-slate-700">{value}</span>
-                  </div>
-                ))}
+                {(
+                  [
+                    ['Material', details.materials.join(', ')],
+                    ['Waterproof', product.isWaterproof ? 'Yes' : 'Breathable'],
+                    ['Suitable For', details.compatibility.join(', ')],
+                    ['Package Includes', details.packageIncludes.join(', ')],
+                    ['Installation', details.installation],
+                  ] as const
+                )
+                  .filter(([, value]) => value.trim().length > 0)
+                  .map(([label, value]) => (
+                    <div
+                      key={label}
+                      className="grid grid-cols-[24px_minmax(72px,.75fr)_1.35fr] items-start gap-2.5 border-b border-slate-100 px-3.5 py-3.5 text-[11px] last:border-b-0"
+                    >
+                      <span className="grid h-6 w-6 place-items-center rounded-lg bg-slate-50 text-slate-500">
+                        {label === 'Waterproof' ? (
+                          <Droplets className="h-3.5 w-3.5" />
+                        ) : label === 'Installation' ? (
+                          <Wrench className="h-3.5 w-3.5" />
+                        ) : (
+                          <PackageCheck className="h-3.5 w-3.5" />
+                        )}
+                      </span>
+                      <span className="pt-1 font-semibold leading-[1.35] text-slate-500">
+                        {label}
+                      </span>
+                      <span className="pt-1 text-right font-semibold leading-[1.45] text-slate-700">
+                        {value}
+                      </span>
+                    </div>
+                  ))}
               </div>
             </section>
 
@@ -710,34 +740,114 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               title={detailSheet ? sheetLabels[detailSheet] : ''}
               onClose={() => setDetailSheet(null)}
             >
-              {detailSheet && (
-                <div className="space-y-2">
-                  {details[detailSheet].map((item) => (
-                    <div
-                      key={item}
-                      className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-700"
-                    >
-                      <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                      {detailSheet === 'stitchPatterns' ? (
-                        <label className="flex items-center gap-3">
-                          <input
-                            type="radio"
-                            name="stitch-pattern"
-                            checked={selectedStitch === item}
-                            onChange={() => {
-                              setSelectedStitch(item);
-                              setDetailSheet(null);
-                            }}
-                          />
-                          {item}
-                        </label>
-                      ) : (
-                        <span>{item}</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+              {detailSheet &&
+                (detailSheet === 'compatibility' ? (
+                  <div className="space-y-3">
+                    {compatibleModelGroups.length > 0 ? (
+                      compatibleModelGroups.map(({ brand, models }) => {
+                        const logoUrl = getBrandLogoUrl(brand);
+                        return (
+                          <section
+                            key={brand}
+                            className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_2px_10px_rgba(15,23,42,0.04)]"
+                          >
+                            <div className="flex items-center gap-2.5 border-b border-slate-100 bg-slate-50/80 px-3.5 py-3">
+                              {logoUrl ? (
+                                <img
+                                  src={logoUrl}
+                                  alt=""
+                                  className="h-7 w-9 shrink-0 object-contain"
+                                />
+                              ) : (
+                                <span className="grid h-7 w-9 shrink-0 place-items-center rounded-lg bg-[#FCEBEB] text-[9px] font-black text-[#D9232D]">
+                                  {getBrandInitials(brand)}
+                                </span>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <h3 className="truncate text-[13px] font-extrabold text-slate-900">
+                                  {brand}
+                                </h3>
+                                <p className="text-[10px] font-medium text-slate-400">
+                                  {models.length} {models.length === 1 ? 'model' : 'models'}{' '}
+                                  compatible
+                                </p>
+                              </div>
+                              <CircleCheck className="h-4 w-4 shrink-0 text-emerald-500" />
+                            </div>
+                            <div className="divide-y divide-slate-100">
+                              {models.map((model) => (
+                                <div
+                                  key={model.id}
+                                  className="flex items-center gap-3 px-3.5 py-2.5"
+                                >
+                                  {model.image ? (
+                                    <img
+                                      src={model.image}
+                                      alt={`${model.brand} ${model.name}`}
+                                      loading="lazy"
+                                      className="h-12 w-[68px] shrink-0 rounded-xl bg-slate-50 object-cover"
+                                    />
+                                  ) : (
+                                    <span className="grid h-12 w-[68px] shrink-0 place-items-center rounded-xl bg-slate-50 text-slate-400">
+                                      <Bike className="h-5 w-5" />
+                                    </span>
+                                  )}
+                                  <div className="min-w-0">
+                                    <p className="truncate text-[13px] font-extrabold text-slate-800">
+                                      {model.name}
+                                    </p>
+                                    <p className="mt-0.5 text-[10px] font-medium capitalize text-slate-400">
+                                      {model.type}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </section>
+                        );
+                      })
+                    ) : (
+                      <div className="space-y-2">
+                        {details.compatibility.map((item) => (
+                          <div
+                            key={item}
+                            className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-700"
+                          >
+                            <CircleCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+                            <span>{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {details[detailSheet].map((item) => (
+                      <div
+                        key={item}
+                        className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-700"
+                      >
+                        <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                        {detailSheet === 'stitchPatterns' ? (
+                          <label className="flex items-center gap-3">
+                            <input
+                              type="radio"
+                              name="stitch-pattern"
+                              checked={selectedStitch === item}
+                              onChange={() => {
+                                setSelectedStitch(item);
+                                setDetailSheet(null);
+                              }}
+                            />
+                            {item}
+                          </label>
+                        ) : (
+                          <span>{item}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ))}
             </BottomSheet>
             <ProductReviews
               productId={product.id}
@@ -932,7 +1042,9 @@ const SuggestionCard: React.FC<{
                   ? `Add ${product.title} to cart`
                   : 'Notify me when in stock'
             }
-            title={isInCart ? 'Go to Cart' : isProductSellable(product) ? 'Add to cart' : 'Notify me'}
+            title={
+              isInCart ? 'Go to Cart' : isProductSellable(product) ? 'Add to cart' : 'Notify me'
+            }
             className={`grid min-h-11 ${!isProductSellable(product) && !isInCart ? 'min-w-[74px] px-2 text-[9px] font-extrabold' : 'min-w-11'} place-items-center rounded-xl text-white ${isInCart ? 'bg-emerald-600' : 'bg-[#d9232d]'}`}
           >
             {isInCart ? (
