@@ -2,7 +2,25 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { fileURLToPath } from 'node:url';
-import {defineConfig, loadEnv} from 'vite';
+import {defineConfig, loadEnv, type Plugin} from 'vite';
+
+const omitOversizedOnnxWasm: Plugin = {
+  name: 'omit-oversized-onnx-wasm',
+  apply: 'build',
+  generateBundle(_options, bundle) {
+    // Transformers.js loads the ONNX runtime WASM from its configured CDN; this bundled fallback exceeds
+    // Cloudflare Pages' per-file limit and is not needed in the published site.
+    for (const [fileName, output] of Object.entries(bundle)) {
+      if (
+        output.type === 'asset' &&
+        fileName.startsWith('assets/ort-wasm-') &&
+        fileName.endsWith('.wasm')
+      ) {
+        delete bundle[fileName];
+      }
+    }
+  },
+};
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -17,7 +35,7 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY': JSON.stringify(env.VITE_SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || ''),
       'import.meta.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL': JSON.stringify(env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || ''),
     },
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), omitOversizedOnnxWasm],
     resolve: {
       alias: {
           '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.'),
