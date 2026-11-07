@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2, Search, ChevronDown, ShoppingBag, MapPin, CreditCard, Wrench, HelpCircle, Clock3, Phone, CheckCircle2 } from 'lucide-react';
+import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2, Search, ChevronDown, ShoppingBag, MapPin, CreditCard, Wrench, HelpCircle, Clock3, Phone, CheckCircle2, Trash2 } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
@@ -9,6 +9,7 @@ import { WORKSHOP_INFO } from '../data/products';
 import { readCustomerAppPreferences, saveCustomerAppPreferences, type CustomerNotificationPreferences, type PreferredLanguage } from '../lib/customerPreferences';
 import { translate, useI18n } from '../lib/i18n';
 import type { SettingsSectionRoute } from '../lib/appRoutes';
+import { AccountDeletionView } from './AccountDeletionView';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -352,6 +353,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </button>
       </SectionPage>
     );
+  }
+
+  if (section === 'delete-account') {
+    return <AccountDeletionView onBack={closeSection} isAuthenticated={isAuthenticated} />;
   }
 
   if (section === 'coupons') {
@@ -762,6 +767,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </SettingsGroup>
 
         <SettingsGroup label="Session">
+          <SettingsRow
+            danger
+            onClick={() => openSection('delete-account')}
+            iconBg="bg-[#FFF1F2]"
+            icon={<Trash2 className="w-5 h-5 text-[#D9232D]" />}
+            title="Delete account"
+            subtitle="Schedule deletion with a 7-day grace period"
+          />
           <SettingsRow
             danger
             onClick={() => {

@@ -1,7 +1,7 @@
 export type AppPhase = 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth';
 export type RouteTab = 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart' | 'notifications';
 export type AdminSectionRoute = 'overview' | 'orders' | 'products' | 'vehicle' | 'categories' | 'customers' | 'reviews' | 'marketing' | 'banners' | 'notifications' | 'activity' | 'support' | 'reports' | 'settings';
-export type SettingsSectionRoute = 'notifications' | 'app' | 'coupons' | 'reviews' | 'about' | 'help';
+export type SettingsSectionRoute = 'notifications' | 'app' | 'coupons' | 'reviews' | 'about' | 'help' | 'delete-account';
 
 export const APP_ROUTE_PATHS = [
   '/', '/home', '/shop', '/search', '/custom', '/wishlist', '/cart', '/checkout',
@@ -11,7 +11,8 @@ export const APP_ROUTE_PATHS = [
   '/notifications', '/notification', '/notifications/settings', '/shop/products/:id', '/products/:id', '/product/:id',
   '/coupons/:couponCode',
   '/support', '/support/:requestId', '/contact-support', '/contact-support/my-support-requests', '/contact-us', '/contact-workshop',
-  '/settings', '/settings/notifications', '/settings/app', '/settings/coupons', '/settings/reviews', '/settings/about', '/settings/help',
+  '/settings', '/settings/notifications', '/settings/app', '/settings/coupons', '/settings/reviews', '/settings/about', '/settings/help', '/settings/delete-account',
+  '/account/settings/delete-account', '/account/setting/delete-account', '/account/satting/delete-accout',
   '/privacy-policy', '/privacy', '/terms-and-conditions', '/terms', '/store-map', '/store', '/store-info', '/store-map/navigation', '/store/navigation',
   '/personal-data', '/personal-data-processing',
   '/admin', '/admin/dashboard', '/admin/orders', '/admin/orders/:orderId', '/admin/products', '/admin/products/:productId', '/admin/Vehicle', '/admin/Vehicle/:modelId/edit', '/admin/categories', '/admin/customers',
@@ -81,6 +82,7 @@ const settingsSectionPaths: Record<SettingsSectionRoute, string> = {
   reviews: '/settings/reviews',
   about: '/settings/about',
   help: '/settings/help',
+  'delete-account': '/account/settings/delete-account',
 };
 const settingsSectionsBySlug: Record<string, SettingsSectionRoute> = {
   notifications: 'notifications',
@@ -90,6 +92,7 @@ const settingsSectionsBySlug: Record<string, SettingsSectionRoute> = {
   reviews: 'reviews',
   about: 'about',
   help: 'help',
+  'delete-account': 'delete-account',
 };
 
 export function getPathForSettingsSection(section: SettingsSectionRoute): string {
@@ -97,6 +100,7 @@ export function getPathForSettingsSection(section: SettingsSectionRoute): string
 }
 
 export function getSettingsSectionFromPath(pathname: string): SettingsSectionRoute | null {
+  if (/^\/account\/(?:settings|setting|satting)\/delete-(?:account|accout)$/i.test(trimPath(pathname))) return 'delete-account';
   const slug = trimPath(pathname).toLowerCase().match(/^\/settings\/([^/]+)$/)?.[1];
   return slug ? settingsSectionsBySlug[slug] || null : null;
 }
@@ -201,6 +205,8 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
   if (path === '/notifications/settings') return { kind: 'notifications-settings', tab: 'notifications', canonicalPath: '/notifications/settings' };
   if (path === '/notifications' || path === '/notification') return { kind: 'tab', tab: 'notifications', canonicalPath: '/notifications' };
   if (path === '/profile/edit') return { kind: 'profile-edit', tab: 'account', canonicalPath: '/profile/edit' };
+  const accountDeletionPath = getSettingsSectionFromPath(path);
+  if (accountDeletionPath === 'delete-account') return { kind: 'settings-section', tab: 'account', section: accountDeletionPath, canonicalPath: getPathForSettingsSection(accountDeletionPath) };
   if (path === '/profile' || path === '/account') return { kind: 'tab', tab: 'account', canonicalPath: '/profile' };
   if (path.toLowerCase() === '/contact-support/my-support-requests') {
     return { kind: 'support', tab: 'account', requestId: null, canonicalPath: '/contact-support/my-support-requests' };
@@ -309,8 +315,8 @@ export function resolveAppRoute(pathname: string): ResolvedAppRoute {
 }
 
 export function requiresCustomerAuthentication(pathname: string): boolean {
-  const kind = resolveAppRoute(pathname).kind;
-  return kind === 'checkout' || kind === 'orders' || kind === 'order-help' || kind === 'support' || kind === 'contact-support' || kind === 'profile-edit' || kind === 'coupon';
+  const route = resolveAppRoute(pathname);
+  return route.kind === 'checkout' || route.kind === 'orders' || route.kind === 'order-help' || route.kind === 'support' || route.kind === 'contact-support' || route.kind === 'profile-edit' || route.kind === 'coupon' || (route.kind === 'settings-section' && route.section === 'delete-account');
 }
 
 /** Product detail URLs use the immutable product id as their canonical key. */

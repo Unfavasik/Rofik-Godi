@@ -71,6 +71,13 @@ describe('main route preservation', () => {
     expect(getPathForPhase('main', '/contact-support')).toBe('/contact-support');
   });
 
+  it('resolves the account deletion page and keeps the legacy typo alias working', () => {
+    expect(resolveAppRoute('/account/settings/delete-account')).toMatchObject({ kind: 'settings-section', section: 'delete-account', tab: 'account' });
+    expect(resolveAppRoute('/account/satting/delete-accout')).toMatchObject({ kind: 'settings-section', section: 'delete-account', canonicalPath: '/account/settings/delete-account' });
+    expect(getPathForSettingsSection('delete-account')).toBe('/account/settings/delete-account');
+    expect(requiresCustomerAuthentication('/account/settings/delete-account')).toBe(true);
+  });
+
   it('uses /shop/products/:slug as the canonical product route and normalizes legacy paths', () => {
     expect(resolveAppRoute('/shop/products/premium-bike-seat-cover')).toMatchObject({ kind: 'product', tab: 'shop', slug: 'premium-bike-seat-cover', canonicalPath: '/shop/products/premium-bike-seat-cover' });
     expect(resolveAppRoute('/shop/products/2882')).toMatchObject({ kind: 'product', tab: 'shop', slug: '2882', canonicalPath: '/shop/products/2882' });
