@@ -43,7 +43,7 @@ import {
 import { convertImageToWebP } from '../lib/imagePipeline';
 import { deriveProductImages, seedLegacyColorImages } from '../lib/productImages';
 import { notifyCatalogChanged } from '../lib/localCache';
-import { suggestProductDetailsFromImage } from '../lib/productImageDetails';
+import { autofillProductDetailsFromImage } from '../lib/productImageAutofill';
 import { BottomSheet } from './BottomSheet';
 const clearCatalogCache = () => {
   localStorage.removeItem('rofik-godi:public-catalog:v2');
@@ -916,6 +916,7 @@ const ProductEditor: React.FC<{
   });
   const [imageAssistBusy, setImageAssistBusy] = useState(false);
   const [imageAssistMessage, setImageAssistMessage] = useState('');
+  const [imageAssistError, setImageAssistError] = useState(false);
   const persistDraft = useCallback(() => {
     try {
       localStorage.setItem(
@@ -950,33 +951,31 @@ const ProductEditor: React.FC<{
     setForm((current) => ({ ...current, [key]: value }));
   const autoFillDetailsFromImage = async () => {
     if (!derived.image) {
-      setImageAssistMessage('Upload a product photo in a colour first.');
+      const message = 'Upload a product photo in a colour first.';
+      setImageAssistError(true);
+      setImageAssistMessage(message);
+      notify(message);
       return;
     }
     setImageAssistBusy(true);
-    setImageAssistMessage('Preparing the image AI model…');
+    setImageAssistError(false);
+    setImageAssistMessage('');
     try {
-      const suggestions = await suggestProductDetailsFromImage(derived.image, setImageAssistMessage);
-      setDetailsDraft((current) => ({
-        ...current,
-        subtitle: current.subtitle.trim() ? current.subtitle : suggestions.subtitle,
-        features: current.features.length ? current.features : suggestions.features,
-        materials: current.materials.length ? current.materials : suggestions.materials,
-        stitchPatterns: current.stitchPatterns.length
-          ? current.stitchPatterns
-          : suggestions.stitchPatterns,
-        packageIncludes: current.packageIncludes.length
-          ? current.packageIncludes
-          : [...DEFAULT_PACKAGE_INCLUDES],
-        installation: current.installation.trim() ? current.installation : DEFAULT_INSTALLATION,
-      }));
-      setImageAssistMessage(
-        'Draft suggestions added. Review them before saving; package and installation use the standard defaults.',
-      );
+      const suggestions = await autofillProductDetailsFromImage(derived.image);
+      setDetailsDraft({
+        subtitle: suggestions.subtitle,
+        features: suggestions.features,
+        materials: suggestions.materials,
+        stitchPatterns: suggestions.stitch_patterns,
+        packageIncludes: [...DEFAULT_PACKAGE_INCLUDES],
+        installation: DEFAULT_INSTALLATION,
+      });
+      setImageAssistMessage('Gemini suggestions are ready. Review and edit every field before saving.');
     } catch (error) {
-      setImageAssistMessage(
-        error instanceof Error ? error.message : 'Could not read this product photo. Try again.',
-      );
+      const message = error instanceof Error ? error.message : 'Could not analyze this photo. Try again.';
+      setImageAssistError(true);
+      setImageAssistMessage(message);
+      notify(`Gemini auto-fill failed: ${message}`);
     } finally {
       setImageAssistBusy(false);
     }
@@ -1378,31 +1377,46 @@ const ProductEditor: React.FC<{
               Set default product details here. A colour can override each value from its own Edit
               details sheet. Compatible vehicles are picked with the dedicated vehicle picker.
             </p>
-            <div className="rounded-xl border border-violet-100 bg-violet-50 p-3">
-              <button
-                type="button"
-                onClick={() => void autoFillDetailsFromImage()}
-                disabled={imageAssistBusy || !derived.image}
-                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 py-2.5 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {imageAssistBusy ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="h-4 w-4" />
-                )}
-                {imageAssistBusy ? 'Reading product photo…' : 'Auto-fill from product image'}
-              </button>
-              <p aria-live="polite" className="mt-2 text-[10px] leading-relaxed text-violet-900">
-                {imageAssistMessage ||
-                  (derived.image
-                    ? 'Runs in a background worker with Transformers.js to keep the page responsive. The first run downloads and caches the Florence-2 model.'
-                    : 'Upload a product image first to generate suggestions.')}
-              </p>
-              <p className="mt-1 text-[10px] leading-relaxed text-violet-800">
-                AI suggestions only fill blank fields. Verify visible details; material and stitch
-                details may be unclear from a photo. Package and installation use the standard
-                defaults unless you edit them.
-              </p>
+            <div className="overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-indigo-50 shadow-sm">
+              <div className="flex items-start gap-3 p-4 pb-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-200">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-extrabold text-slate-900">Gemini AI autofill</p>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-slate-600">
+                    Create product details from the primary colour photo.
+                  </p>
+                </div>
+              </div>
+              <div className="px-4 pb-4">
+                <button
+                  type="button"
+                  onClick={() => void autoFillDetailsFromImage()}
+                  disabled={imageAssistBusy || !derived.image}
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 text-xs font-extrabold text-white shadow-md shadow-violet-200 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-55"
+                >
+                  {imageAssistBusy ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
+                  {imageAssistBusy ? 'Analyzing with Gemini…' : 'Generate details with Gemini'}
+                </button>
+                <p
+                  aria-live="polite"
+                  className={`mt-3 text-[11px] leading-relaxed ${imageAssistError ? 'text-rose-700' : 'text-violet-900'}`}
+                >
+                  {imageAssistMessage ||
+                    (derived.image
+                      ? 'AI-generated—please check before saving. The suggestions replace the detail fields, and you can edit them anytime.'
+                      : 'Upload a product image first to generate suggestions.')}
+                </p>
+                <p className="mt-1.5 text-[10px] leading-relaxed text-slate-500">
+                  Only visible details are suggested. Package includes and installation will use the
+                  standard defaults: 1 Seat Cover · Easy (DIY).
+                </p>
+              </div>
             </div>
             <label className="block text-xs font-bold text-slate-700">
               Short subtitle
