@@ -17,6 +17,8 @@ const corsHeaders = {
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const IMAGE_PATH_PREFIX = '/storage/v1/object/public/product-images/';
+const GEMINI_MODELS = ['gemini-flash-latest', 'gemini-2.5-flash-lite'];
+const GEMINI_MAX_ATTEMPTS_PER_MODEL = 2;
 const GEMINI_PROMPT = `This is a bike/toto seat cover. Look at the image and return ONLY JSON: {subtitle: short string, features: string[], materials: string[], stitch_patterns: string[]}. Only describe what is visible. If unsure about material, use generic words like 'Premium synthetic leather'. Do not include markdown, code fences, or text outside the JSON object.`;
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
@@ -95,6 +97,20 @@ function toBase64(bytes: Uint8Array): string {
     );
   }
   return btoa(binary);
+}
+
+function isRetryableGeminiStatus(status: number): boolean {
+  return status === 429 || status === 500 || status === 502 || status === 503 || status === 504;
+}
+
+function retryDelayMs(response: Response, attempt: number): number {
+  const retryAfter = Number(response.headers.get('retry-after') || 0);
+  if (Number.isFinite(retryAfter) && retryAfter > 0) return Math.min(retryAfter * 1000, 4000);
+  return Math.min(700 * 2 ** attempt, 3000);
+}
+
+async function waitBeforeRetry(response: Response, attempt: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, retryDelayMs(response, attempt)));
 }
 
 function validImageUrl(rawUrl: unknown, supabaseUrl: string): URL | null {
@@ -189,32 +205,53 @@ Deno.serve(async (request) => {
   }
   if (!imageBytes.length) return jsonResponse({ error: 'The uploaded image is empty.' }, 400);
 
-  let geminiResponse: Response;
+  let geminiResponse: Response | null = null;
   try {
-    geminiResponse = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-goog-api-key': geminiApiKey },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                { text: GEMINI_PROMPT },
-                { inline_data: { mime_type: contentType, data: toBase64(imageBytes) } },
-              ],
-            },
+    const requestBody = JSON.stringify({
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: GEMINI_PROMPT },
+            { inline_data: { mime_type: contentType, data: toBase64(imageBytes) } },
           ],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 384,
-            responseMimeType: 'application/json',
-          },
-        }),
-        signal: AbortSignal.timeout(75_000),
+        },
+      ],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 384,
+        responseMimeType: 'application/json',
       },
-    );
+    });
+
+    modelLoop: for (const model of GEMINI_MODELS) {
+      for (let attempt = 0; attempt < GEMINI_MAX_ATTEMPTS_PER_MODEL; attempt += 1) {
+        geminiResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-goog-api-key': geminiApiKey },
+            body: requestBody,
+            signal: AbortSignal.timeout(75_000),
+          },
+        );
+        if (geminiResponse.ok || !isRetryableGeminiStatus(geminiResponse.status)) break;
+        console.warn('Gemini image request is temporarily unavailable; retrying', {
+          model,
+          status: geminiResponse.status,
+          attempt: attempt + 1,
+        });
+        if (attempt < GEMINI_MAX_ATTEMPTS_PER_MODEL - 1) {
+          await waitBeforeRetry(geminiResponse, attempt);
+        }
+      }
+      if (geminiResponse?.ok || !isRetryableGeminiStatus(geminiResponse?.status ?? 0)) break modelLoop;
+      console.warn('Gemini model remained unavailable; trying fallback model', {
+        model,
+        status: geminiResponse?.status,
+      });
+    }
+    if (!geminiResponse) throw new Error('Gemini did not return a response');
   } catch (error) {
     const errorName = error instanceof Error ? error.name : 'UnknownError';
     const detail =
@@ -249,7 +286,7 @@ Deno.serve(async (request) => {
             ? parsed.message
             : '';
     } catch {
-      providerMessage = '';
+      // Keep the empty provider message when Gemini returns a non-JSON error body.
     }
     providerMessage = providerMessage
       .replaceAll(geminiApiKey, '[REDACTED]')
@@ -263,7 +300,9 @@ Deno.serve(async (request) => {
       {
         error: providerMessage
           ? `Gemini API error (${geminiResponse.status}): ${providerMessage}`
-          : `Gemini API returned HTTP ${geminiResponse.status}. Check the API key or try again later.`,
+          : isRetryableGeminiStatus(geminiResponse.status)
+            ? `Gemini is temporarily busy (HTTP ${geminiResponse.status}). Please try again in a moment.`
+            : `Gemini API returned HTTP ${geminiResponse.status}. Check the API key or try again later.`,
         code: 'GEMINI_API_ERROR',
       },
       502,
