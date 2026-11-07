@@ -1,5 +1,6 @@
 const MODEL_ID = 'onnx-community/Florence-2-base';
-const CAPTION_TASK = '<CAPTION>';
+const CAPTION_TASK = '<MORE_DETAILED_CAPTION>';
+const CAPTION_PROMPT = `${CAPTION_TASK} Describe the product's visible surface material and texture, then identify any visible stitch or quilt pattern. Use only visual evidence; if a material cannot be identified reliably, say it is unclear rather than guessing.`;
 
 type ImageSize = { width: number; height: number };
 type FlorenceProcessor = ((image: unknown, prompts: unknown) => Promise<unknown>) & {
@@ -21,7 +22,10 @@ type TransformersModule = {
   Florence2ForConditionalGeneration: {
     from_pretrained: (
       modelId: string,
-      options?: { progress_callback?: (event: Record<string, unknown>) => void },
+      options?: {
+        dtype?: string;
+        progress_callback?: (event: Record<string, unknown>) => void;
+      },
     ) => Promise<FlorenceModel>;
   };
   AutoProcessor: {
@@ -53,6 +57,7 @@ const loadTransformers = async (onProgress?: (message: string) => void) => {
       transformers.env.backends.onnx.wasm.proxy = true;
       const [model, processor] = await Promise.all([
         transformers.Florence2ForConditionalGeneration.from_pretrained(MODEL_ID, {
+          dtype: 'q4',
           progress_callback: (event) => {
             const progress = typeof event.progress === 'number' ? Math.round(event.progress) : null;
             if (event.status === 'progress' && progress !== null) {
@@ -80,26 +85,63 @@ const sentenceList = (caption: string) =>
     .slice(0, 4);
 
 const visibleMaterialTerms: Array<[RegExp, string]> = [
-  [/\b(denim)\b/i, 'Denim'],
-  [/\b(leather|leatherette|synthetic leather|faux leather)\b/i, 'Leather-like material'],
-  [/\b(velvet)\b/i, 'Velvet'],
-  [/\b(mesh)\b/i, 'Mesh'],
-  [/\b(cotton)\b/i, 'Cotton'],
-  [/\b(canvas)\b/i, 'Canvas'],
-  [/\b(fabric|textile|cloth)\b/i, 'Fabric'],
+  [
+    /\b(?:leather(?:ette)?|(?:synthetic|faux|vegan|artificial|pu|pvc)[- ]leather|vinyl)\b/i,
+    'Leather-like upholstery (visual estimate)',
+  ],
+  [/\b(?:suede|alcantara|microfiber|microfibre)\b/i, 'Suede or microfiber-like surface'],
+  [/\b(?:mesh|netted|breathable fabric)\b/i, 'Mesh fabric'],
+  [/\bdenim\b/i, 'Denim'],
+  [/\bvelvet\b/i, 'Velvet'],
+  [/\bcotton\b/i, 'Cotton'],
+  [/\bpolyester\b/i, 'Polyester fabric'],
+  [/\bcanvas\b/i, 'Canvas'],
+  [/\b(?:fabric|textile|cloth|woven)\b/i, 'Upholstery fabric'],
+  [/\bperforated\b/i, 'Perforated upholstery'],
 ];
 
 const visibleStitchTerms: Array<[RegExp, string]> = [
-  [/\b(diamond[- ]quilt(?:ed|ing)?)\b/i, 'Diamond quilting'],
-  [/\b(quilt(?:ed|ing))\b/i, 'Quilted stitching'],
-  [/\b(check(?:ered)?[- ](?:pattern|stitch(?:ing)?))\b/i, 'Check pattern stitching'],
-  [/\b(contrast[- ]stitch(?:ing)?)\b/i, 'Contrast stitching'],
-  [/\b(stitch(?:ed|ing)?|seam(?:ed|ing)?)\b/i, 'Visible stitched seams'],
+  [/\bdiamond[- ](?:quilt(?:ed|ing)?|stitch(?:ed|ing)?)\b/i, 'Diamond quilting'],
+  [/\bdiamond[- ]pattern\b/i, 'Diamond-pattern stitching'],
+  [/\bquilt(?:ed|ing)?\b/i, 'Quilted stitching'],
+  [
+    /\b(?:hexagonal|hexagon|honeycomb)(?:[- ](?:quilt(?:ed|ing)?|stitch(?:ed|ing)?|pattern))?\b/i,
+    'Honeycomb or hexagonal stitching',
+  ],
+  [/\bchevron(?:[- ](?:quilt(?:ed|ing)?|stitch(?:ed|ing)?|pattern))?\b/i, 'Chevron stitching'],
+  [/\bcross[- ]stitch(?:ed|ing)?\b/i, 'Cross-stitching'],
+  [/\bcheck(?:ered)?[- ](?:pattern|stitch(?:ing)?)\b/i, 'Check pattern stitching'],
+  [/\bcontrast[- ]stitch(?:ing)?\b/i, 'Contrast stitching'],
+  [
+    /\b(?:horizontal|vertical|parallel)\s+(?:channels?|ribs?|lines?|panels?)\b|\b(?:channel[- ]quilt(?:ed|ing)?|ribbed)\b/i,
+    'Channel stitching',
+  ],
+  [/\b(?:piping|piped seams?|welting)\b/i, 'Piped seams'],
+  [/\b(?:stitch(?:ed|ing)?|seam(?:ed|ing)?)\b/i, 'Visible stitched seams'],
 ];
 
 const matchingTerms = (caption: string, terms: Array<[RegExp, string]>) => [
   ...new Set(terms.flatMap(([pattern, label]) => (pattern.test(caption) ? [label] : []))),
 ];
+
+export const extractImageAttributes = (caption: string) => {
+  const materials = matchingTerms(caption, visibleMaterialTerms);
+  const detectedStitches = matchingTerms(caption, visibleStitchTerms);
+  const specificStitches = detectedStitches.filter(
+    (pattern) => pattern !== 'Quilted stitching' && pattern !== 'Visible stitched seams',
+  );
+
+  return {
+    materials: materials.length
+      ? materials
+      : ['Material unclear from photo — confirm before listing'],
+    stitchPatterns: specificStitches.length
+      ? specificStitches
+      : detectedStitches.length
+        ? detectedStitches
+        : ['Stitch pattern unclear from photo — confirm before listing'],
+  };
+};
 
 export const suggestProductDetailsFromImage = async (
   imageUrl: string,
@@ -111,11 +153,11 @@ export const suggestProductDetailsFromImage = async (
   onProgress?.('Reading product photo…');
   const image = await loadImage(imageUrl);
   onProgress?.('Analyzing photo on this device… this may take a little while on phones.');
-  const prompts = processor.construct_prompts(CAPTION_TASK);
+  const prompts = processor.construct_prompts(CAPTION_PROMPT);
   const inputs = await processor(image, prompts);
   const generatedIds = await model.generate({
     ...(inputs as Record<string, unknown>),
-    max_new_tokens: 64,
+    max_new_tokens: 128,
   });
   const generatedText =
     processor.batch_decode(generatedIds, { skip_special_tokens: false })[0] || '';
@@ -126,11 +168,11 @@ export const suggestProductDetailsFromImage = async (
 
   const sentences = sentenceList(caption);
   const subtitle = (sentences[0] || caption).replace(/[.!?]+$/, '').slice(0, 120);
+  const imageAttributes = extractImageAttributes(caption);
   return {
     caption,
     subtitle,
     features: sentences,
-    materials: matchingTerms(caption, visibleMaterialTerms),
-    stitchPatterns: matchingTerms(caption, visibleStitchTerms),
+    ...imageAttributes,
   };
 };
