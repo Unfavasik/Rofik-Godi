@@ -52,6 +52,10 @@ canvas {
   font-family: var(--font-display);
 }
 
+.font-yatra {
+  font-family: 'Yatra One', var(--font-display), serif;
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

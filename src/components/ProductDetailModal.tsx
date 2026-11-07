@@ -334,7 +334,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <span className="text-[12px] font-black tracking-[.045em] text-[#d9232d]">
+            <span className="font-yatra text-[12px] font-black tracking-[.045em] text-[#d9232d]">
               ROFIK GODI CENTRE
             </span>
             <div className="flex items-center gap-1">
