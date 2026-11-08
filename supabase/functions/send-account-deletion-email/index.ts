@@ -68,3 +68,177 @@ export function buildEmail(event: EmailEvent, nameValue: string, scheduledFor: s
   const text = `${STORE_NAME}\n\nHi ${nameValue || 'Rider'},\n\nYour account deletion request has been cancelled successfully. Your profile, saved items and account access remain active.\n\nOpen your account: ${appUrl('/profile')}\n\nNeed help? ${STORE_EMAIL} · ${STORE_PHONE}`;
   return { subject, text, html: shell(subject, topStrip, badge, content) };
 }
+const LOG_TABLE = 'account_deletion_email_logs';
+const allowedHeaders = 'authorization, x-client-info, apikey, content-type';
+
+function responseHeaders(origin: string | null) {
+  return {
+    'Access-Control-Allow-Origin': origin && ALLOWED_ORIGINS.has(origin) ? origin : APP_URL,
+    'Access-Control-Allow-Headers': allowedHeaders,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    Vary: 'Origin',
+  };
+}
+
+function jsonResponse(body: Record<string, unknown>, status: number, origin: string | null) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...responseHeaders(origin), 'Content-Type': 'application/json; charset=utf-8' },
+  });
+}
+
+function getEmailConfig() {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const publishableKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const senderEmail = Deno.env.get('ROFIK_GODI_GMAIL')?.trim() || '';
+  const appPassword = (Deno.env.get('ROFIK_GODI_GMAIL_APP_PASSWORD') || '').replace(/\s+/g, '');
+  if (!supabaseUrl || !publishableKey || !serviceRoleKey || !senderEmail || !appPassword || !validEmail(senderEmail)) return null;
+  return { supabaseUrl, publishableKey, serviceRoleKey, senderEmail, appPassword };
+}
+
+async function sendMail(
+  credentials: NonNullable<ReturnType<typeof getEmailConfig>>,
+  to: string,
+  subject: string,
+  text: string,
+  html: string,
+): Promise<boolean> {
+  let client: SMTPClient | null = null;
+  try {
+    client = new SMTPClient({
+      connection: {
+        hostname: 'smtp.gmail.com',
+        port: 465,
+        tls: true,
+        auth: { username: credentials.senderEmail, password: credentials.appPassword },
+      },
+      debug: { log: false, allowUnsecure: false },
+    });
+    await client.send({
+      from: `${STORE_NAME} <${credentials.senderEmail}>`,
+      to,
+      subject,
+      content: text,
+      html,
+    });
+    return true;
+  } catch {
+    return false;
+  } finally {
+    if (client) {
+      try { await client.close(); } catch { /* Do not expose SMTP details. */ }
+    }
+  }
+}
+
+async function claimLog(
+  serviceClient: SupabaseClient,
+  userId: string,
+  event: EmailEvent,
+  scheduledFor: string,
+): Promise<'claimed' | 'duplicate' | 'failed'> {
+  const { error: insertError } = await serviceClient.from(LOG_TABLE).insert({
+    user_id: userId,
+    event,
+    scheduled_for: scheduledFor,
+    status: 'processing',
+    attempt_count: 1,
+    last_error_code: null,
+  });
+  if (!insertError) return 'claimed';
+  if (insertError.code !== '23505') return 'failed';
+  const { data: current, error: readError } = await serviceClient
+    .from(LOG_TABLE)
+    .select('id,status,updated_at,attempt_count')
+    .eq('user_id', userId)
+    .eq('event', event)
+    .eq('scheduled_for', scheduledFor)
+    .maybeSingle();
+  if (readError || !current) return 'failed';
+  const stale = current.status === 'processing' && Date.parse(String(current.updated_at)) < Date.now() - 5 * 60 * 1000;
+  if (current.status === 'sent' || (current.status === 'processing' && !stale)) return 'duplicate';
+  if (Number(current.attempt_count || 1) >= 20) return 'duplicate';
+  const { data, error: retryError } = await serviceClient
+    .from(LOG_TABLE)
+    .update({
+      status: 'processing',
+      attempt_count: Number(current.attempt_count || 1) + 1,
+      last_error_code: null,
+      sent_at: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', current.id)
+    .eq('status', current.status)
+    .select('id')
+    .maybeSingle();
+  if (retryError) return 'failed';
+  return data ? 'claimed' : 'duplicate';
+}
+
+async function updateLog(
+  serviceClient: SupabaseClient,
+  userId: string,
+  event: EmailEvent,
+  scheduledFor: string,
+  status: 'sent' | 'failed',
+) {
+  await serviceClient
+    .from(LOG_TABLE)
+    .update({
+      status,
+      last_error_code: status === 'sent' ? null : 'SMTP_DELIVERY_FAILED',
+      sent_at: status === 'sent' ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .eq('event', event)
+    .eq('scheduled_for', scheduledFor);
+}
+
+Deno.serve(async (request: Request) => {
+  const origin = request.headers.get('origin');
+  if (request.method === 'OPTIONS') return new Response('ok', { headers: responseHeaders(origin) });
+  if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405, origin);
+  try {
+    const authorization = request.headers.get('authorization') || '';
+    if (!authorization.toLowerCase().startsWith('bearer ')) return jsonResponse({ error: 'Authentication required' }, 401, origin);
+    let body: { event?: unknown };
+    try { body = await request.json(); } catch { return jsonResponse({ error: 'Invalid request body' }, 400, origin); }
+    if (body.event !== 'scheduled' && body.event !== 'cancelled') return jsonResponse({ error: 'Invalid email event' }, 400, origin);
+    const event = body.event as EmailEvent;
+    const credentials = getEmailConfig();
+    if (!credentials) return jsonResponse({ error: 'Email service is temporarily unavailable' }, 503, origin);
+    const userClient = createClient(credentials.supabaseUrl, credentials.publishableKey, {
+      global: { headers: { Authorization: authorization } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const serviceClient = createClient(credentials.supabaseUrl, credentials.serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: authData, error: authError } = await userClient.auth.getUser();
+    if (authError || !authData.user) return jsonResponse({ error: 'Authentication required' }, 401, origin);
+    const recipient = (authData.user.email || '').trim();
+    if (!validEmail(recipient)) return jsonResponse({ ok: true, emailSent: false, reason: 'NO_VALID_CUSTOMER_EMAIL' }, 200, origin);
+    const { data: deletionRequest, error: requestError } = await serviceClient
+      .from('account_deletion_requests')
+      .select('status,scheduled_for')
+      .eq('user_id', authData.user.id)
+      .maybeSingle();
+    if (requestError || !deletionRequest) return jsonResponse({ error: 'Account deletion request not found' }, 404, origin);
+    if ((event === 'scheduled' && deletionRequest.status !== 'scheduled') || (event === 'cancelled' && deletionRequest.status !== 'cancelled')) {
+      return jsonResponse({ error: 'Account deletion state does not match email event' }, 409, origin);
+    }
+    const scheduledFor = String(deletionRequest.scheduled_for);
+    const claim = await claimLog(serviceClient, authData.user.id, event, scheduledFor);
+    if (claim === 'duplicate') return jsonResponse({ ok: true, emailSent: false, duplicate: true }, 200, origin);
+    if (claim === 'failed') return jsonResponse({ error: 'Could not queue account email' }, 503, origin);
+    const fullName = String(authData.user.user_metadata?.full_name || authData.user.user_metadata?.name || 'Rider').trim().slice(0, 120) || 'Rider';
+    const email = buildEmail(event, fullName, scheduledFor);
+    const sent = await sendMail(credentials, recipient, email.subject, email.text, email.html);
+    await updateLog(serviceClient, authData.user.id, event, scheduledFor, sent ? 'sent' : 'failed');
+    return jsonResponse({ ok: true, emailSent: sent }, 200, origin);
+  } catch {
+    return jsonResponse({ error: 'Account email service is temporarily unavailable' }, 503, request.headers.get('origin'));
+  }
+});

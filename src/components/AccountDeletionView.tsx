@@ -3,7 +3,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   CalendarDays,
-  Check,
   CheckCircle2,
   Clock3,
   Heart,
@@ -107,10 +106,11 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
         reason: reason || null,
         feedback: feedback || null,
       });
-      void sendAccountDeletionEmail('scheduled');
       setNotice(
         'Your account deletion request is scheduled. You can cancel it any time during the next 7 days.',
       );
+      const emailResult = await sendAccountDeletionEmail('scheduled');
+      if (!emailResult.sent) setError(emailResult.error);
     }
     setSaving(false);
   };
@@ -124,8 +124,9 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
     } else {
       setRequest(null);
       setUnderstood(false);
-      void sendAccountDeletionEmail('cancelled');
       setNotice('Your deletion request was cancelled. Your account is safe.');
+      const emailResult = await sendAccountDeletionEmail('cancelled');
+      if (!emailResult.sent) setError(emailResult.error);
     }
     setSaving(false);
   };

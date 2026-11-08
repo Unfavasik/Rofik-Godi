@@ -49,10 +49,19 @@ export async function cancelAccountDeletion(): Promise<{ cancelled: boolean; err
   return { cancelled: data === true, error: error?.message || '' };
 }
 
-export async function sendAccountDeletionEmail(event: 'scheduled' | 'cancelled'): Promise<void> {
-  if (!supabase) return;
-  const { error } = await supabase.functions.invoke('send-account-deletion-email', {
+export async function sendAccountDeletionEmail(
+  event: 'scheduled' | 'cancelled',
+): Promise<{ sent: boolean; error: string }> {
+  if (!supabase) return { sent: false, error: 'Email service is unavailable in demo mode.' };
+  const { data, error } = await supabase.functions.invoke('send-account-deletion-email', {
     body: { event },
   });
-  if (error) console.warn('Account deletion email request failed');
+  if (error) {
+    console.warn('Account deletion email request failed', error);
+    return { sent: false, error: error.message || 'We could not send the account email.' };
+  }
+  return {
+    sent: data?.emailSent === true,
+    error: data?.emailSent === true ? '' : 'The request was saved, but the account email could not be sent.',
+  };
 }
