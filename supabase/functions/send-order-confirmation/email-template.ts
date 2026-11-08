@@ -41,19 +41,27 @@ export interface OrderStatusEmail {
 
 const STORE_NAME = 'ROFIK GODI CENTRE';
 const STORE_SUBTITLE = 'CUSTOM SEAT COMFORT';
-const STORE_ADDRESS = 'Kadbeltal, Petrol Pump More, Raninagar, Keshobnagar, Berhampore, West Bengal 742101';
+const STORE_ADDRESS = 'Jalangi Road, Raninagar, Keshobnagar, Berhampore, West Bengal 742102';
 const STORE_PHONE = '+91 9775333555';
 const STORE_EMAIL = 'rofikgodicentre.store@gmail.com';
 const STORE_MAP_URL = 'https://maps.app.goo.gl/hRVfWHTkQ6vkrcS7A';
+const RED = '#d9232d';
+const NAVY = '#101828';
+const MUTED = '#667085';
+const LINE = '#e8edf3';
 
 function escapeHtml(value: unknown): string {
-  return String(value ?? '').replace(/[&<>"']/g, (character) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-  })[character] || character);
+  return String(value ?? '').replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[character] || character,
+  );
 }
 
 function safeHttpsUrl(value: string | null | undefined): string | null {
@@ -112,7 +120,7 @@ function validEmail(value: string): boolean {
 }
 
 function pickupInformationHtml(storeName: string): string {
-  return `<div style="padding:16px;border:1px solid #e8edf3;border-radius:14px;background:#f6f8fb"><div style="font-size:14px;font-weight:800;color:#0f172a">Pickup Information</div><div style="margin-top:8px;font-size:12px;line-height:1.7;color:#475569"><strong style="color:#1e293b">${escapeHtml(storeName)}</strong><br>${STORE_ADDRESS}</div><div style="margin-top:12px"><a href="${STORE_MAP_URL}" target="_blank" rel="noopener noreferrer" style="color:#b91c28;font-size:12px;font-weight:700;text-decoration:underline">Open store location in Google Maps</a></div><div style="margin-top:12px;padding-top:10px;border-top:1px solid #e2e8f0"><div style="font-size:11px;font-weight:700;color:#64748b">Need help?</div><div style="margin-top:7px;font-size:12px;line-height:1.8"><a href="tel:${STORE_PHONE.replace(/[^+\d]/g, '')}" style="color:#334155;text-decoration:underline;font-weight:600">${STORE_PHONE}</a><br><a href="mailto:${STORE_EMAIL}" style="color:#1a73e8;text-decoration:underline;font-weight:700;word-break:break-word">${STORE_EMAIL}</a></div></div></div>`;
+  return `<div style="padding:18px;border:1px solid ${LINE};border-radius:16px;background:#f8fafc"><div style="font-size:14px;font-weight:800;color:${NAVY}">Pickup Information</div><div style="margin-top:9px;font-size:12px;line-height:1.75;color:#475467"><strong style="color:#1d2939">${escapeHtml(storeName)}</strong><br>${STORE_ADDRESS}</div><div style="margin-top:13px"><a href="${STORE_MAP_URL}" target="_blank" rel="noopener noreferrer" style="color:#a71925;font-size:12px;font-weight:800;text-decoration:underline">Open store location in Google Maps</a></div><div style="margin-top:14px;padding-top:12px;border-top:1px solid #e4e7ec"><div style="font-size:11px;font-weight:800;color:#667085">Need help?</div><div style="margin-top:7px;font-size:12px;line-height:1.9"><a href="tel:${STORE_PHONE.replace(/[^+\d]/g, '')}" style="color:#344054;text-decoration:underline;font-weight:700">${STORE_PHONE}</a><br><a href="mailto:${STORE_EMAIL}" style="color:#1a73e8;text-decoration:underline;font-weight:800;word-break:break-word">${STORE_EMAIL}</a></div></div></div>`;
 }
 
 function pickupInformationText(storeName: string): string[] {
@@ -126,7 +134,55 @@ function pickupInformationText(storeName: string): string[] {
 }
 
 function emailShell(subject: string, content: string): string {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(subject)}</title><style>@media only screen and (max-width:600px){.container{width:100%!important}.pad{padding-left:18px!important;padding-right:18px!important}}</style></head><body style="margin:0;background:#f6f8fb;font-family:Arial,Helvetica,sans-serif;color:#0f172a"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f6f8fb;padding:24px 10px"><tr><td align="center"><table role="presentation" class="container" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #e8edf3;border-radius:16px;overflow:hidden"><tr><td class="pad" style="padding:24px 28px;background:#ffffff;border-bottom:3px solid #d9232d"><div style="font-size:18px;font-weight:800;letter-spacing:.06em;color:#0f172a">${STORE_NAME}</div><div style="margin-top:4px;font-size:10px;font-weight:700;letter-spacing:.18em;color:#d9232d">${STORE_SUBTITLE}</div></td></tr>${content}<tr><td class="pad" style="padding:22px 28px 24px;border-top:1px solid #edf0f4"><div style="font-size:12px;font-weight:800;letter-spacing:.05em;color:#0f172a">${STORE_NAME}</div><div style="margin-top:6px;font-size:12px;color:#64748b">Thank you for choosing us.</div><div style="margin-top:10px;font-size:11px;line-height:1.9"><a href="tel:${STORE_PHONE.replace(/[^+\d]/g, '')}" style="color:#334155;text-decoration:underline">Call ${STORE_PHONE}</a><br><a href="mailto:${STORE_EMAIL}" style="color:#1a73e8;text-decoration:underline;font-weight:700;word-break:break-word">${STORE_EMAIL}</a></div></td></tr></table></td></tr></table></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(subject)}</title><style>@media only screen and (max-width:600px){.outer{padding:12px 6px!important}.container{width:100%!important;border-radius:14px!important}.pad{padding-left:18px!important;padding-right:18px!important}.hero-title{font-size:26px!important}.stack{display:block!important;width:100%!important;text-align:left!important}.mobile-center{text-align:center!important}}</style></head><body style="margin:0;background:#fff7ef;font-family:Arial,Helvetica,sans-serif;color:${NAVY}"><table role="presentation" class="outer" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#fff7ef;padding:26px 10px"><tr><td align="center"><table role="presentation" class="container" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #f0e4da;border-radius:20px;overflow:hidden;box-shadow:0 8px 28px rgba(16,24,40,.06)"><tr><td class="pad" style="padding:25px 30px 22px;background:#ffffff;border-bottom:3px solid ${RED}"><div style="font-size:18px;font-weight:900;letter-spacing:.06em;color:${NAVY}">${STORE_NAME}</div><div style="margin-top:5px;font-size:10px;font-weight:800;letter-spacing:.2em;color:${RED}">${STORE_SUBTITLE}</div></td></tr>${content}<tr><td class="pad" style="padding:22px 30px 25px;border-top:1px solid #edf0f4;background:#ffffff"><div style="font-size:12px;font-weight:900;letter-spacing:.05em;color:${NAVY}">${STORE_NAME}</div><div style="margin-top:7px;font-size:12px;line-height:1.65;color:${MUTED}">Thank you for choosing us.</div><div style="margin-top:11px;font-size:11px;line-height:1.9"><a href="tel:${STORE_PHONE.replace(/[^+\d]/g, '')}" style="color:#344054;text-decoration:underline;font-weight:700">Call ${STORE_PHONE}</a><br><a href="mailto:${STORE_EMAIL}" style="color:#1769aa;text-decoration:underline;font-weight:800;word-break:break-word">${STORE_EMAIL}</a></div></td></tr></table></td></tr></table></body></html>`;
+}
+
+function statusPill(label: string, tone: 'green' | 'red' | 'blue' = 'green'): string {
+  const styles =
+    tone === 'green'
+      ? 'background:#ecfdf3;color:#087443'
+      : tone === 'red'
+        ? 'background:#fff1f2;color:#b42318'
+        : 'background:#eff8ff;color:#175cd3';
+  return `<div style="display:inline-block;padding:7px 11px;border-radius:999px;${styles};font-size:11px;font-weight:900;letter-spacing:.06em">${label}</div>`;
+}
+
+function productRows(items: ConfirmationEmailItem[]): { html: string; text: string } {
+  const text = items
+    .map((item) => {
+      const quantity = Math.max(0, Number(item.quantity) || 0);
+      const unitPrice = Math.max(0, Number(item.unit_price) || 0);
+      return `• ${item.product_name || 'Product'} — Qty: ${quantity} × ${amount(unitPrice)} = ${amount(quantity * unitPrice)}`;
+    })
+    .join('\n');
+  const html = items
+    .map((item) => {
+      const productName = escapeHtml(item.product_name || 'Product');
+      const quantity = Math.max(0, Number(item.quantity) || 0);
+      const unitPrice = Math.max(0, Number(item.unit_price) || 0);
+      const imageUrl = safeHttpsUrl(item.image_url);
+      const image = imageUrl
+        ? `<td width="58" style="padding:13px 10px 13px 0;vertical-align:top"><img src="${escapeHtml(imageUrl)}" width="50" height="50" alt="${productName}" style="display:block;width:50px;height:50px;object-fit:cover;border-radius:12px;border:1px solid #e2e8f0"></td>`
+        : '';
+      return `<tr>${image}<td style="padding:13px 7px;vertical-align:top;border-bottom:1px solid #edf0f4"><div style="font-size:13px;font-weight:800;color:${NAVY}">${productName}</div><div style="margin-top:5px;font-size:11px;color:${MUTED}">Qty: ${quantity} · ${amount(unitPrice)} each</div></td><td align="right" style="padding:13px 0 13px 7px;vertical-align:top;border-bottom:1px solid #edf0f4;white-space:nowrap;font-size:13px;font-weight:900;color:${NAVY}">${amount(quantity * unitPrice)}</td></tr>`;
+    })
+    .join('');
+  return {
+    html:
+      html ||
+      '<tr><td style="padding:13px 0;font-size:12px;color:#667085">No product details available.</td></tr>',
+    text: text || 'No product details available.',
+  };
+}
+
+function summaryTable(order: {
+  subtotal: number;
+  discount: number;
+  total: number;
+  paymentStatus: string;
+  paymentMethod: string;
+}): string {
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td style="padding:6px 0;font-size:12px;color:${MUTED}">Subtotal</td><td align="right" style="padding:6px 0;font-size:12px;color:#344054">${amount(order.subtotal)}</td></tr><tr><td style="padding:6px 0;font-size:12px;color:${MUTED}">Discount</td><td align="right" style="padding:6px 0;font-size:12px;color:#087443">−${amount(order.discount)}</td></tr><tr><td style="padding:12px 0;border-top:1px solid ${LINE};font-size:14px;font-weight:900;color:${NAVY}">Total</td><td align="right" style="padding:12px 0;border-top:1px solid ${LINE};font-size:16px;font-weight:900;color:${NAVY}">${amount(order.total)}</td></tr><tr><td style="padding:6px 0;font-size:12px;color:${MUTED}">Payment Status</td><td align="right" style="padding:6px 0;font-size:12px;font-weight:800;color:#087443">${escapeHtml(String(order.paymentStatus || 'PENDING').toUpperCase())}</td></tr><tr><td style="padding:6px 0;font-size:12px;color:${MUTED}">Payment Method</td><td align="right" style="padding:6px 0;font-size:12px;color:#344054">${escapeHtml(paymentMethodLabel(order.paymentMethod))}</td></tr></table>`;
 }
 
 export function buildOrderConfirmationEmail(order: ConfirmationEmailOrder) {
@@ -137,35 +193,13 @@ export function buildOrderConfirmationEmail(order: ConfirmationEmailOrder) {
   const store = escapeHtml(order.pickupStore || STORE_NAME);
   const date = escapeHtml(orderDate(order.createdAt));
   const status = escapeHtml(statusLabel(order.status));
-  const paymentStatus = escapeHtml(String(order.paymentStatus || 'PENDING').toUpperCase());
-  const method = escapeHtml(paymentMethodLabel(order.paymentMethod));
   const orderUrl = safeHttpsUrl(order.orderUrl);
   const subject = `Order Confirmed — #${order.orderNumber} | Rofik Godi Centre`;
-
-  const productRows = order.items.map((item) => {
-    const productName = escapeHtml(item.product_name || 'Product');
-    const quantity = Math.max(0, Number(item.quantity) || 0);
-    const unitPrice = Math.max(0, Number(item.unit_price) || 0);
-    const lineTotal = amount(quantity * unitPrice);
-    const imageUrl = safeHttpsUrl(item.image_url);
-    const image = imageUrl
-      ? `<td width="64" style="padding:12px 10px 12px 0;vertical-align:top"><img src="${escapeHtml(imageUrl)}" width="56" height="56" alt="${productName}" style="display:block;width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0"></td>`
-      : '';
-    return `<tr>${image}<td style="padding:12px 8px;vertical-align:top;border-bottom:1px solid #edf0f4"><div style="font-size:14px;font-weight:700;color:#0f172a">${productName}</div><div style="margin-top:4px;font-size:12px;color:#64748b">Qty: ${quantity} · ${amount(unitPrice)} each</div></td><td align="right" style="padding:12px 0 12px 8px;vertical-align:top;border-bottom:1px solid #edf0f4;white-space:nowrap;font-size:14px;font-weight:700;color:#0f172a">${lineTotal}</td></tr>`;
-  }).join('');
-
-  const textItems = order.items.map((item) => {
-    const quantity = Math.max(0, Number(item.quantity) || 0);
-    const unitPrice = Math.max(0, Number(item.unit_price) || 0);
-    return `• ${item.product_name || 'Product'} — Qty: ${quantity} × ${amount(unitPrice)} = ${amount(quantity * unitPrice)}`;
-  }).join('\n');
-
+  const products = productRows(order.items);
   const button = orderUrl
-    ? `<tr><td class="pad" style="padding:20px 28px 8px"><a href="${escapeHtml(orderUrl)}" style="display:inline-block;padding:13px 22px;border-radius:10px;background:#0f172a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700">View My Order</a></td></tr>`
+    ? `<tr><td class="pad" style="padding:3px 30px 25px"><a href="${escapeHtml(orderUrl)}" style="display:inline-block;padding:14px 23px;border-radius:11px;background:${RED};color:#ffffff;text-decoration:none;font-size:14px;font-weight:900">View My Order</a></td></tr>`
     : '';
-
-  const content = `<tr><td class="pad" style="padding:28px 28px 8px"><div style="display:inline-block;padding:6px 10px;border-radius:999px;background:#e8f8f0;color:#087443;font-size:11px;font-weight:700">ORDER CONFIRMED</div><h1 style="margin:15px 0 8px;font-size:24px;line-height:1.25;color:#0f172a">Thank you for your order, ${name}!</h1><p style="margin:0;font-size:14px;line-height:1.65;color:#475569">Your order has been successfully placed. We’ll keep you updated as it moves through the store-pickup process.</p></td></tr><tr><td class="pad" style="padding:20px 28px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f6f8fb;border:1px solid #e8edf3;border-radius:12px"><tr><td style="padding:14px 16px;border-bottom:1px solid #e8edf3"><div style="font-size:11px;color:#64748b">Order ID</div><div style="margin-top:4px;font-size:16px;font-weight:800;color:#0f172a">#${orderNumber}</div></td><td align="right" style="padding:14px 16px;border-bottom:1px solid #e8edf3"><div style="font-size:11px;color:#64748b">Order Date</div><div style="margin-top:4px;font-size:13px;font-weight:700;color:#0f172a">${date}</div></td></tr><tr><td style="padding:12px 16px"><div style="font-size:11px;color:#64748b">Order Status</div><div style="margin-top:4px;font-size:13px;font-weight:700;color:#087443">${status}</div></td><td align="right" style="padding:12px 16px"><div style="font-size:11px;color:#64748b">Total</div><div style="margin-top:4px;font-size:16px;font-weight:800;color:#0f172a">${amount(order.total)}</div></td></tr></table></td></tr><tr><td class="pad" style="padding:0 28px 8px"><h2 style="margin:0 0 10px;font-size:15px;color:#0f172a">Customer Information</h2><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td style="padding:7px 0;font-size:12px;color:#64748b">Name</td><td align="right" style="padding:7px 0;font-size:12px;font-weight:700;color:#0f172a">${name}</td></tr><tr><td style="padding:7px 0;font-size:12px;color:#64748b">Phone</td><td align="right" style="padding:7px 0;font-size:12px;font-weight:700;color:#0f172a">${phone}</td></tr><tr><td style="padding:7px 0;font-size:12px;color:#64748b">Email</td><td align="right" style="padding:7px 0;font-size:12px;font-weight:700;color:#0f172a;word-break:break-word">${email}</td></tr><tr><td style="padding:7px 0;font-size:12px;color:#64748b">Pickup Store</td><td align="right" style="padding:7px 0;font-size:12px;font-weight:700;color:#0f172a">${store}</td></tr></table></td></tr><tr><td class="pad" style="padding:15px 28px 6px"><h2 style="margin:0 0 10px;font-size:15px;color:#0f172a">Ordered Products</h2><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">${productRows}</table></td></tr><tr><td class="pad" style="padding:16px 28px 8px"><h2 style="margin:0 0 10px;font-size:15px;color:#0f172a">Payment Summary</h2><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td style="padding:6px 0;font-size:12px;color:#64748b">Subtotal</td><td align="right" style="padding:6px 0;font-size:12px;color:#334155">${amount(order.subtotal)}</td></tr><tr><td style="padding:6px 0;font-size:12px;color:#64748b">Discount</td><td align="right" style="padding:6px 0;font-size:12px;color:#087443">−${amount(order.discount)}</td></tr><tr><td style="padding:10px 0;border-top:1px solid #e8edf3;font-size:14px;font-weight:800;color:#0f172a">Total</td><td align="right" style="padding:10px 0;border-top:1px solid #e8edf3;font-size:15px;font-weight:800;color:#0f172a">${amount(order.total)}</td></tr><tr><td style="padding:6px 0;font-size:12px;color:#64748b">Payment Status</td><td align="right" style="padding:6px 0;font-size:12px;font-weight:700;color:#087443">${paymentStatus}</td></tr><tr><td style="padding:6px 0;font-size:12px;color:#64748b">Payment Method</td><td align="right" style="padding:6px 0;font-size:12px;color:#334155">${method}</td></tr></table></td></tr><tr><td class="pad" style="padding:16px 28px 8px">${pickupInformationHtml(store)}</td></tr>${button}`;
-
+  const content = `<tr><td class="pad" style="padding:30px 30px 8px">${statusPill('ORDER CONFIRMED', 'green')}<h1 class="hero-title" style="margin:16px 0 9px;font-size:27px;line-height:1.22;letter-spacing:-.02em;color:${NAVY}">Thank you for your order, ${name}!</h1><p style="margin:0;font-size:14px;line-height:1.72;color:#475467">Your order is safely placed. We’ll keep you updated as it moves through the store-pickup process.</p></td></tr><tr><td class="pad" style="padding:20px 30px 8px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f8fafc;border:1px solid ${LINE};border-radius:16px"><tr><td style="padding:16px 18px;border-bottom:1px solid ${LINE}"><div style="font-size:10px;font-weight:800;letter-spacing:.08em;color:${MUTED}">ORDER ID</div><div style="margin-top:6px;font-size:17px;font-weight:900;color:${NAVY}">#${orderNumber}</div></td><td align="right" style="padding:16px 18px;border-bottom:1px solid ${LINE}"><div style="font-size:10px;font-weight:800;letter-spacing:.08em;color:${MUTED}">ORDER DATE</div><div style="margin-top:6px;font-size:12px;font-weight:800;color:${NAVY}">${date}</div></td></tr><tr><td style="padding:14px 18px"><div style="font-size:10px;font-weight:800;letter-spacing:.08em;color:${MUTED}">STATUS</div><div style="margin-top:6px;font-size:13px;font-weight:900;color:#087443">${status}</div></td><td align="right" style="padding:14px 18px"><div style="font-size:10px;font-weight:800;letter-spacing:.08em;color:${MUTED}">TOTAL</div><div style="margin-top:6px;font-size:16px;font-weight:900;color:${NAVY}">${amount(order.total)}</div></td></tr></table></td></tr><tr><td class="pad" style="padding:16px 30px 6px"><h2 style="margin:0 0 10px;font-size:15px;color:${NAVY}">Customer Information</h2><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td style="padding:6px 0;font-size:12px;color:${MUTED}">Name</td><td align="right" style="padding:6px 0;font-size:12px;font-weight:800;color:${NAVY}">${name}</td></tr><tr><td style="padding:6px 0;font-size:12px;color:${MUTED}">Phone</td><td align="right" style="padding:6px 0;font-size:12px;font-weight:800;color:${NAVY}">${phone}</td></tr><tr><td style="padding:6px 0;font-size:12px;color:${MUTED}">Email</td><td align="right" style="padding:6px 0;font-size:12px;font-weight:800;word-break:break-word;color:${NAVY}">${email}</td></tr></table></td></tr><tr><td class="pad" style="padding:18px 30px 7px"><h2 style="margin:0 0 10px;font-size:15px;color:${NAVY}">Ordered Products</h2><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">${products.html}</table></td></tr><tr><td class="pad" style="padding:17px 30px 8px"><h2 style="margin:0 0 10px;font-size:15px;color:${NAVY}">Payment Summary</h2>${summaryTable(order)}</td></tr><tr><td class="pad" style="padding:17px 30px 25px">${pickupInformationHtml(store)}</td></tr>${button}`;
   const html = emailShell(subject, content);
   const text = [
     STORE_NAME,
@@ -184,7 +218,7 @@ export function buildOrderConfirmationEmail(order: ConfirmationEmailOrder) {
     `Pickup Store: ${order.pickupStore || STORE_NAME}`,
     '',
     'ORDERED PRODUCTS',
-    textItems || 'No product details available.',
+    products.text,
     '',
     'PAYMENT SUMMARY',
     `Subtotal: ${amount(order.subtotal)}`,
@@ -200,7 +234,6 @@ export function buildOrderConfirmationEmail(order: ConfirmationEmailOrder) {
     'Thank you for choosing us.',
     `${STORE_NAME} · ${STORE_EMAIL}`,
   ].join('\n');
-
   return { subject, html, text };
 }
 
@@ -210,30 +243,12 @@ export function buildOrderStatusEmail(order: OrderStatusEmail) {
   const name = escapeHtml(order.customerName || 'Rider');
   const orderUrl = safeHttpsUrl(order.orderUrl);
   const store = escapeHtml(order.pickupStore || STORE_NAME);
-  const paymentStatus = escapeHtml(String(order.paymentStatus || 'PENDING').toUpperCase());
-  const method = escapeHtml(paymentMethodLabel(order.paymentMethod));
+  const products = productRows(order.items);
   const subject = `Order completed: #${order.orderNumber} | Rofik Godi Centre`;
-  const productRows = order.items.map((item) => {
-    const productName = escapeHtml(item.product_name || 'Product');
-    const quantity = Math.max(0, Number(item.quantity) || 0);
-    const unitPrice = Math.max(0, Number(item.unit_price) || 0);
-    const lineTotal = amount(quantity * unitPrice);
-    const imageUrl = safeHttpsUrl(item.image_url);
-    const image = imageUrl
-      ? `<td width="64" style="padding:12px 10px 12px 0;vertical-align:top"><img src="${escapeHtml(imageUrl)}" width="56" height="56" alt="${productName}" style="display:block;width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0"></td>`
-      : '';
-    return `<tr>${image}<td style="padding:12px 8px;vertical-align:top;border-bottom:1px solid #edf0f4"><div style="font-size:14px;font-weight:700;color:#0f172a">${productName}</div><div style="margin-top:4px;font-size:12px;color:#64748b">Qty: ${quantity} · ${amount(unitPrice)} each</div></td><td align="right" style="padding:12px 0 12px 8px;vertical-align:top;border-bottom:1px solid #edf0f4;white-space:nowrap;font-size:14px;font-weight:700;color:#0f172a">${lineTotal}</td></tr>`;
-  }).join('');
-  const textItems = order.items.map((item) => {
-    const quantity = Math.max(0, Number(item.quantity) || 0);
-    const unitPrice = Math.max(0, Number(item.unit_price) || 0);
-    return `• ${item.product_name || 'Product'} — Qty: ${quantity} × ${amount(unitPrice)} = ${amount(quantity * unitPrice)}`;
-  }).join('\n');
-  const productRowsHtml = productRows || '<tr><td style="padding:12px 0;font-size:12px;color:#64748b">No product details available.</td></tr>';
   const button = orderUrl
-    ? `<tr><td class="pad" style="padding:8px 28px 24px"><a href="${escapeHtml(orderUrl)}" style="display:inline-block;padding:14px 22px;border-radius:10px;background:#0f172a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700">View My Orders</a></td></tr>`
+    ? `<tr><td class="pad" style="padding:3px 30px 25px"><a href="${escapeHtml(orderUrl)}" style="display:inline-block;padding:14px 23px;border-radius:11px;background:${NAVY};color:#ffffff;text-decoration:none;font-size:14px;font-weight:900">View My Orders</a></td></tr>`
     : '';
-  const content = `<tr><td class="pad" style="padding:30px 28px 8px"><div style="display:inline-block;padding:7px 11px;border-radius:999px;background:#e8f8f0;color:#087443;font-size:11px;font-weight:800;letter-spacing:.06em">✓ ORDER COMPLETED</div><h1 style="margin:16px 0 8px;font-size:25px;line-height:1.25;color:#0f172a">Your order is complete, ${name}.</h1><p style="margin:0;font-size:14px;line-height:1.7;color:#475569">Thanks for choosing Rofik Godi Centre. Your pickup has been recorded and this order is now complete.</p></td></tr><tr><td class="pad" style="padding:20px 28px 18px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px"><tr><td style="padding:16px 18px;border-bottom:1px solid #e8edf3"><div style="font-size:11px;color:#64748b">ORDER NUMBER</div><div style="margin-top:5px;font-size:18px;font-weight:800;letter-spacing:.02em;color:#0f172a">#${orderNumber}</div></td></tr><tr><td style="padding:14px 18px"><div style="font-size:11px;color:#64748b">FINAL STATUS</div><div style="margin-top:5px;font-size:14px;font-weight:800;color:#087443">${escapeHtml(status)}</div><div style="margin-top:12px;font-size:11px;color:#64748b">PICKUP STORE</div><div style="margin-top:5px;font-size:13px;font-weight:700;color:#0f172a">${store}</div></td></tr></table></td></tr><tr><td class="pad" style="padding:0 28px 8px"><h2 style="margin:0 0 10px;font-size:15px;color:#0f172a">Ordered Products</h2><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">${productRowsHtml}</table></td></tr><tr><td class="pad" style="padding:16px 28px 8px"><h2 style="margin:0 0 10px;font-size:15px;color:#0f172a">Payment Summary</h2><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td style="padding:6px 0;font-size:12px;color:#64748b">Subtotal</td><td align="right" style="padding:6px 0;font-size:12px;color:#334155">${amount(order.subtotal)}</td></tr><tr><td style="padding:6px 0;font-size:12px;color:#64748b">Discount</td><td align="right" style="padding:6px 0;font-size:12px;color:#087443">−${amount(order.discount)}</td></tr><tr><td style="padding:10px 0;border-top:1px solid #e8edf3;font-size:14px;font-weight:800;color:#0f172a">Total</td><td align="right" style="padding:10px 0;border-top:1px solid #e8edf3;font-size:15px;font-weight:800;color:#0f172a">${amount(order.total)}</td></tr><tr><td style="padding:6px 0;font-size:12px;color:#64748b">Payment Status</td><td align="right" style="padding:6px 0;font-size:12px;font-weight:700;color:#087443">${paymentStatus}</td></tr><tr><td style="padding:6px 0;font-size:12px;color:#64748b">Payment Method</td><td align="right" style="padding:6px 0;font-size:12px;color:#334155">${method}</td></tr></table></td></tr><tr><td class="pad" style="padding:16px 28px 18px"><p style="margin:0;font-size:13px;line-height:1.65;color:#475569">We hope you enjoy your purchase. You can review your order history any time in My Orders.</p></td></tr>${button}<tr><td class="pad" style="padding:0 28px 26px">${pickupInformationHtml(store)}</td></tr>`;
+  const content = `<tr><td class="pad" style="padding:30px 30px 8px">${statusPill('✓ ORDER COMPLETED', 'green')}<h1 class="hero-title" style="margin:16px 0 9px;font-size:27px;line-height:1.22;letter-spacing:-.02em;color:${NAVY}">Your order is complete, ${name}.</h1><p style="margin:0;font-size:14px;line-height:1.72;color:#475467">Your pickup has been recorded and this order is now complete. Thanks for choosing Rofik Godi Centre.</p></td></tr><tr><td class="pad" style="padding:20px 30px 8px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f8fafc;border:1px solid ${LINE};border-radius:16px"><tr><td style="padding:16px 18px;border-bottom:1px solid ${LINE}"><div style="font-size:10px;font-weight:800;letter-spacing:.08em;color:${MUTED}">ORDER NUMBER</div><div style="margin-top:6px;font-size:17px;font-weight:900;color:${NAVY}">#${orderNumber}</div></td></tr><tr><td style="padding:14px 18px"><div style="font-size:10px;font-weight:800;letter-spacing:.08em;color:${MUTED}">FINAL STATUS</div><div style="margin-top:6px;font-size:13px;font-weight:900;color:#087443">${escapeHtml(status)}</div><div style="margin-top:13px;font-size:10px;font-weight:800;letter-spacing:.08em;color:${MUTED}">PICKUP STORE</div><div style="margin-top:6px;font-size:13px;font-weight:800;color:${NAVY}">${store}</div></td></tr></table></td></tr><tr><td class="pad" style="padding:18px 30px 7px"><h2 style="margin:0 0 10px;font-size:15px;color:${NAVY}">Ordered Products</h2><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">${products.html}</table></td></tr><tr><td class="pad" style="padding:17px 30px 8px"><h2 style="margin:0 0 10px;font-size:15px;color:${NAVY}">Payment Summary</h2>${summaryTable(order)}</td></tr><tr><td class="pad" style="padding:17px 30px 25px"><div style="padding:16px 18px;border:1px solid #d1fadf;border-radius:16px;background:#f0fdf4"><div style="font-size:13px;font-weight:900;color:#087443">Ride ready, enjoy the comfort.</div><div style="margin-top:6px;font-size:12px;line-height:1.65;color:#166534">We hope you enjoy your purchase. You can review your order history any time in My Orders.</div></div></td></tr>${button}<tr><td class="pad" style="padding:0 30px 26px">${pickupInformationHtml(store)}</td></tr>`;
   const html = emailShell(subject, content);
   const text = [
     STORE_NAME,
@@ -246,7 +261,7 @@ export function buildOrderStatusEmail(order: OrderStatusEmail) {
     `Pickup store: ${order.pickupStore || STORE_NAME}`,
     '',
     'ORDERED PRODUCTS',
-    textItems || 'No product details available.',
+    products.text,
     '',
     'PAYMENT SUMMARY',
     `Subtotal: ${amount(order.subtotal)}`,
@@ -266,13 +281,15 @@ export function buildOrderStatusEmail(order: OrderStatusEmail) {
 
 export function buildWelcomeEmail(nameValue: string, storeUrl?: string | null) {
   const name = escapeHtml(nameValue || 'Rider');
-  const subjectName = String(nameValue || 'Rider').replace(/[\r\n]+/g, ' ').slice(0, 80);
+  const subjectName = String(nameValue || 'Rider')
+    .replace(/[\r\n]+/g, ' ')
+    .slice(0, 80);
   const url = safeHttpsUrl(storeUrl);
   const subject = `Welcome to Rofik Godi Centre, ${subjectName}!`;
   const button = url
-    ? `<tr><td class="pad" style="padding:18px 28px 8px"><a href="${escapeHtml(url)}" style="display:inline-block;padding:14px 22px;border-radius:10px;background:#d9232d;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700">Explore the Store</a></td></tr>`
+    ? `<tr><td class="pad" style="padding:3px 30px 25px"><a href="${escapeHtml(url)}" style="display:inline-block;padding:14px 23px;border-radius:11px;background:${RED};color:#ffffff;text-decoration:none;font-size:14px;font-weight:900">Explore the Store</a></td></tr>`
     : '';
-  const content = `<tr><td class="pad" style="padding:30px 28px 8px"><div style="display:inline-block;padding:7px 11px;border-radius:999px;background:#fff1f2;color:#b91c28;font-size:11px;font-weight:800;letter-spacing:.06em">WELCOME ABOARD</div><h1 style="margin:16px 0 8px;font-size:26px;line-height:1.25;color:#0f172a">Welcome to Rofik Godi Centre, ${name}.</h1><p style="margin:0;font-size:14px;line-height:1.7;color:#475569">Thanks for creating an account. Your riding essentials, saved favourites and store-pickup orders are now easy to keep together.</p></td></tr><tr><td class="pad" style="padding:20px 28px 8px"><div style="padding:18px;border:1px solid #e8edf3;border-radius:14px;background:#f8fafc"><div style="font-size:13px;font-weight:800;color:#0f172a">A smoother way to shop</div><div style="margin-top:12px;font-size:12px;line-height:1.8;color:#475569"><strong style="color:#b91c28">01</strong> &nbsp;Explore seat comfort and ride essentials<br><strong style="color:#b91c28">02</strong> &nbsp;Save products you love for later<br><strong style="color:#b91c28">03</strong> &nbsp;Keep track of store-pickup orders in My Orders</div></div></td></tr>${button}<tr><td class="pad" style="padding:12px 28px 26px">${pickupInformationHtml(STORE_NAME)}</td></tr>`;
+  const content = `<tr><td class="pad" style="padding:30px 30px 8px">${statusPill('WELCOME ABOARD', 'red')}<h1 class="hero-title" style="margin:16px 0 9px;font-size:27px;line-height:1.22;letter-spacing:-.02em;color:${NAVY}">Welcome to Rofik Godi Centre, ${name}.</h1><p style="margin:0;font-size:14px;line-height:1.72;color:#475467">Thanks for creating an account. Your riding essentials, saved favourites and store-pickup orders are now easy to keep together.</p></td></tr><tr><td class="pad" style="padding:20px 30px 8px"><div style="padding:18px;border:1px solid ${LINE};border-radius:16px;background:#f8fafc"><div style="font-size:14px;font-weight:900;color:${NAVY}">A smoother way to shop</div><div style="margin-top:13px;font-size:12px;line-height:1.9;color:#475467"><strong style="color:#b42318">01</strong> &nbsp;Explore seat comfort and ride essentials<br><strong style="color:#b42318">02</strong> &nbsp;Save products you love for later<br><strong style="color:#b42318">03</strong> &nbsp;Keep track of store-pickup orders in My Orders</div></div></td></tr>${button}<tr><td class="pad" style="padding:12px 30px 26px">${pickupInformationHtml(STORE_NAME)}</td></tr>`;
   const html = emailShell(subject, content);
   const text = [
     `${STORE_NAME} — ${STORE_SUBTITLE}`,
@@ -295,4 +312,9 @@ export function buildWelcomeEmail(nameValue: string, storeUrl?: string | null) {
 }
 
 export const isValidCustomerEmail = validEmail;
-export const STORE_CONTACT = { name: STORE_NAME, phone: STORE_PHONE, email: STORE_EMAIL, mapUrl: STORE_MAP_URL };
+export const STORE_CONTACT = {
+  name: STORE_NAME,
+  phone: STORE_PHONE,
+  email: STORE_EMAIL,
+  mapUrl: STORE_MAP_URL,
+};
