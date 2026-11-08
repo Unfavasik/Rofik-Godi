@@ -104,7 +104,7 @@ describe('order confirmation email', () => {
       new URL('../supabase/functions/send-order-confirmation/email-template.ts', import.meta.url),
     );
     expect(createHash('sha256').update(templateSource).digest('hex')).toBe(
-      'a28e12c9ddce9c9be24fa2e1573eec898aa6078ba2f9878149ad04bf7fe2d745',
+      'fd45f305e7478ac1df329e830d94396ece0d2f21b4956f0311425e20446a73fd',
     );
 
     const email = buildWelcomeEmail('<Rider>', 'https://shop.example.com/home');
