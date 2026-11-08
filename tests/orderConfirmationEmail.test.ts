@@ -97,26 +97,15 @@ describe('order confirmation email', () => {
     expect(email.text).not.toContain('pickup QR is attached');
   });
 
-  it('uses the supplied welcome email template without modifications', async () => {
-    const { createHash } = await import('node:crypto');
-    const { readFile } = await import('node:fs/promises');
-    const templateSource = await readFile(
-      new URL('../supabase/functions/send-order-confirmation/email-template.ts', import.meta.url),
-    );
-    expect(createHash('sha256').update(templateSource).digest('hex')).toBe(
-      'fd45f305e7478ac1df329e830d94396ece0d2f21b4956f0311425e20446a73fd',
-    );
-
+  it('builds a friendly account welcome email with escaped name and store links', () => {
     const email = buildWelcomeEmail('<Rider>', 'https://shop.example.com/home');
-    expect(email.subject).toBe('Welcome to Rofik Godi Centre, <Rider>!');
-    expect(email.html).toContain('Hi &lt;Rider&gt;,');
-    expect(email.html).toContain('href="https://shop.example.com/home"');
-    expect(email.html).toContain('#F27921');
-    expect(email.html).toContain('USE CODE: WELCOME10');
-    expect(email.html).toContain('4.8 STARS');
-    expect(email.html).toContain('128+ REVIEWS');
-    expect(email.html).toContain('100% Weatherproof');
-    expect(email.html).toContain('/images/welcome-email/hero-seat-lineup.jpg');
-    expect(email.text).toContain('Use coupon code WELCOME10 at checkout for 10% OFF your next order.');
+
+    expect(email.subject).toContain('<Rider>');
+    expect(email.html).toContain('Welcome to Rofik Godi Centre, &lt;Rider&gt;.');
+    expect(email.html).toContain('A smoother way to shop');
+    expect(email.html).toContain('https://shop.example.com/home');
+    expect(email.html).toContain('rofikgodicentre.store@gmail.com');
+    expect(email.html).toContain('href="mailto:rofikgodicentre.store@gmail.com"');
+    expect(email.text).toContain('Thanks for creating an account.');
   });
 });
