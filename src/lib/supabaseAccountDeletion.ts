@@ -48,3 +48,11 @@ export async function cancelAccountDeletion(): Promise<{ cancelled: boolean; err
   const { data, error } = await supabase.rpc('cancel_account_deletion');
   return { cancelled: data === true, error: error?.message || '' };
 }
+
+export async function sendAccountDeletionEmail(event: 'scheduled' | 'cancelled'): Promise<void> {
+  if (!supabase) return;
+  const { error } = await supabase.functions.invoke('send-account-deletion-email', {
+    body: { event },
+  });
+  if (error) console.warn('Account deletion email request failed');
+}

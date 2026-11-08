@@ -17,6 +17,7 @@ import {
   cancelAccountDeletion,
   getMyAccountDeletionRequest,
   requestAccountDeletion,
+  sendAccountDeletionEmail,
   type AccountDeletionRequest,
 } from '../lib/supabaseAccountDeletion';
 
@@ -106,6 +107,7 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
         reason: reason || null,
         feedback: feedback || null,
       });
+      void sendAccountDeletionEmail('scheduled');
       setNotice(
         'Your account deletion request is scheduled. You can cancel it any time during the next 7 days.',
       );
@@ -122,6 +124,7 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
     } else {
       setRequest(null);
       setUnderstood(false);
+      void sendAccountDeletionEmail('cancelled');
       setNotice('Your deletion request was cancelled. Your account is safe.');
     }
     setSaving(false);
