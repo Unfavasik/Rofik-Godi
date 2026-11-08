@@ -137,6 +137,16 @@ function emailShell(subject: string, content: string): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(subject)}</title><style>@media only screen and (max-width:600px){.outer{padding:12px 6px!important}.container{width:100%!important;border-radius:14px!important}.pad{padding-left:18px!important;padding-right:18px!important}.hero-title{font-size:26px!important}.stack{display:block!important;width:100%!important;text-align:left!important}.mobile-center{text-align:center!important}}</style></head><body style="margin:0;background:#fff7ef;font-family:Arial,Helvetica,sans-serif;color:${NAVY}"><table role="presentation" class="outer" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#fff7ef;padding:36px 10px"><tr><td align="center"><table role="presentation" class="container" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #f0e4da;border-radius:20px;overflow:hidden;box-shadow:0 12px 34px rgba(16,24,40,.08)"><tr><td style="height:5px;background:${RED};font-size:0;line-height:0">&nbsp;</td></tr><tr><td class="pad" style="padding:22px 30px 21px;background:#ffffff;border-bottom:1px solid #f0e4da"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td style="width:38px;height:38px;border-radius:11px;background:${RED};color:#ffffff;text-align:center;vertical-align:middle;font-size:15px;font-weight:900">RG</td><td style="padding-left:12px;vertical-align:middle"><div style="font-size:17px;font-weight:900;letter-spacing:.05em;color:${NAVY}">${STORE_NAME}</div><div style="margin-top:4px;font-size:9px;font-weight:900;letter-spacing:.2em;color:${RED}">${STORE_SUBTITLE}</div></td></tr></table></td></tr>${content}<tr><td class="pad" style="padding:22px 30px 25px;border-top:1px solid #edf0f4;background:#ffffff"><div style="font-size:12px;font-weight:900;letter-spacing:.05em;color:${NAVY}">${STORE_NAME}</div><div style="margin-top:7px;font-size:12px;line-height:1.65;color:${MUTED}">Thoughtfully made for more comfortable rides.</div><div style="margin-top:11px;font-size:11px;line-height:1.9"><a href="tel:${STORE_PHONE.replace(/[^+\d]/g, '')}" style="color:#344054;text-decoration:underline;font-weight:700">Call ${STORE_PHONE}</a><br><a href="mailto:${STORE_EMAIL}" style="color:#1a73e8;text-decoration:underline;font-weight:800;word-break:break-word">${STORE_EMAIL}</a></div></td></tr></table></td></tr></table></body></html>`;
 }
 
+function statusPill(label: string, tone: 'green' | 'red' | 'blue' = 'green'): string {
+  const styles =
+    tone === 'green'
+      ? 'background:#ecfdf3;color:#087443'
+      : tone === 'red'
+        ? 'background:#fff1f2;color:#b42318'
+        : 'background:#eff8ff;color:#175cd3';
+  return `<div style="display:inline-block;padding:7px 11px;border-radius:999px;${styles};font-size:11px;font-weight:900;letter-spacing:.06em">${label}</div>`;
+}
+
 function productRows(items: ConfirmationEmailItem[]): { html: string; text: string } {
   const text = items
     .map((item) => {
@@ -270,81 +280,31 @@ export function buildOrderStatusEmail(order: OrderStatusEmail) {
   return { subject, html, text };
 }
 
-export function buildWelcomeEmail(
-  nameValue: string,
-  storeUrl?: string | null,
-  promotion?: { code: string; discountPercent: number } | null,
-) {
-  const displayName = String(nameValue || 'Rider').replace(/[\r\n]+/g, ' ').slice(0, 120) || 'Rider';
-  const name = escapeHtml(displayName);
-  const subjectName = displayName.slice(0, 80);
+export function buildWelcomeEmail(nameValue: string, storeUrl?: string | null) {
+  const name = escapeHtml(nameValue || 'Rider');
+  const subjectName = String(nameValue || 'Rider')
+    .replace(/[\r\n]+/g, ' ')
+    .slice(0, 80);
   const url = safeHttpsUrl(storeUrl) || 'https://rofik-godi.pages.dev/home';
   const assetBase = 'https://rofik-godi.pages.dev/images/welcome-email';
-  const offer = promotion
-    && /^[A-Z0-9_-]{3,40}$/i.test(promotion.code)
-    && Number.isFinite(promotion.discountPercent)
-    && promotion.discountPercent > 0
-    && promotion.discountPercent <= 100
-    ? { code: promotion.code.toUpperCase(), discountPercent: Number(promotion.discountPercent.toFixed(2)) }
-    : null;
-  const percentLabel = offer ? String(offer.discountPercent) : '';
+  const accent = '#F27921';
   const subject = `Welcome to Rofik Godi Centre, ${subjectName}!`;
-  const offerHero = offer
-    ? `<div style="font-size:13px;font-weight:700;letter-spacing:.06em;color:#1F2937">${percentLabel}% OFF Your Next Order</div><div style="display:inline-block;margin-top:11px;background:#FFFFFF;color:${RED};padding:7px 18px;font-size:12px;font-weight:900;letter-spacing:.06em">USE CODE: ${escapeHtml(offer.code)}</div>`
-    : '<div style="font-size:13px;font-weight:700;letter-spacing:.06em;color:#1F2937">Seat covers, cushions &amp; ride essentials</div>';
-  const offerCard = offer
-    ? `<div style="width:220px;margin:16px auto 8px;padding:11px 18px;background:#FDEBEC;border:1.5px dashed ${RED};font-size:14px;font-weight:900;letter-spacing:.06em;color:${RED}">${escapeHtml(offer.code)}</div><div style="font-size:12px;color:#374151;margin-bottom:14px">Use code at checkout for ${percentLabel}% off</div>`
-    : '';
-  const intro = offer
-    ? `Welcome to Rofik Godi Centre, ${name}. We're glad you're here. Use the welcome code below for ${percentLabel}% off your next order while the offer is active.`
-    : `Welcome to Rofik Godi Centre, ${name}. Explore seat covers, cushions and ride essentials, with store pickup available.`;
-  const reasons = [
-    ['01', 'COMFORT FOR EVERYDAY RIDES', 'Explore comfort-focused seat covers and cushions for your everyday journeys.'],
-    ['02', 'QUALITY OPTIONS', 'Compare materials, features and stitch details on each product before ordering.'],
-    ['03', 'FIND YOUR MODEL', 'Browse bike, scooter and toto options, then check compatible models.'],
-    ['04', 'EASY STORE PICKUP', 'Order online and collect your purchase from Rofik Godi Centre.'],
-  ].map(([number, title, description]) =>
-    `<div style="background:#F7EEE8;border-radius:10px;padding:15px 17px;margin-bottom:11px"><strong style="color:${RED};font-size:12px">${number} · ${title}</strong><div style="font-size:12px;line-height:1.6;color:#374151;margin-top:5px">${description}</div></div>`,
-  ).join('');
-  const productCard = (image: string, title: string) =>
-    `<td width="50%" valign="top" style="padding:6px"><div style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;padding:12px 10px;text-align:center"><img src="${assetBase}/${image}" alt="${escapeHtml(title)}" width="210" style="width:100%;max-width:210px;height:auto;display:block;margin:0 auto 9px;border:0"><div style="font-size:12px;font-weight:800;color:#18181B">${escapeHtml(title)}</div><a href="${escapeHtml(url)}" style="display:inline-block;background:${RED};color:#FFFFFF;text-decoration:none;padding:8px 18px;margin-top:11px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase">SHOP NOW</a></div></td>`;
-  const products = [
-    ['premium-bike-seat-cover.jpg', 'Premium Bike Seat Cover'],
-    ['sport-bike-seat-cover.jpg', 'Sport Bike Seat Cover'],
-    ['toto-comfort-godi-set.jpg', 'Toto Comfort Seat Set'],
-    ['gel-seat-cushion.jpg', 'Gel Seat Cushion'],
-  ] as const;
-  const productRows = [
-    `<tr>${productCard(...products[0])}${productCard(...products[1])}</tr>`,
-    `<tr>${productCard(...products[2])}${productCard(...products[3])}</tr>`,
-  ].join('');
-  const content = [
-    `<tr><td align="center" style="background:#FDEBEC;padding:10px 16px;font-size:11px;font-weight:900;letter-spacing:.08em;color:${RED};text-transform:uppercase">MADE FOR COMFORTABLE EVERYDAY RIDES</td></tr>`,
-    `<tr><td align="center" style="background:#ACCBE0;padding:0"><div style="background:#B8D3E3;padding:23px 20px 17px;text-align:center"><div style="font-size:13px;font-weight:700;letter-spacing:.08em;color:#1F2937">Welcome to</div><h1 class="hero-title" style="margin:4px 0 8px;font-size:32px;font-weight:900;color:#0A0A0A">ROFIK GODI</h1>${offerHero}<div style="margin-top:12px"><a href="${escapeHtml(url)}" style="display:inline-block;background:${RED};color:#FFFFFF;text-decoration:none;padding:10px 25px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase">SHOP NOW</a></div></div><img src="${assetBase}/hero-seat-lineup.jpg" alt="Rofik Godi seat covers and riding comfort products" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0"></td></tr>`,
-    `<tr><td class="pad" style="background:#FFFFFF;padding:27px 26px 25px;text-align:center"><div style="font-size:14px;font-weight:800;color:#1F2937">Hi ${name},</div><p style="margin:10px auto 0;max-width:420px;font-size:13px;line-height:1.7;color:#374151">${intro}</p>${offerCard}<a href="${escapeHtml(url)}" style="display:inline-block;background:${RED};color:#FFFFFF;text-decoration:none;padding:10px 28px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase">EXPLORE THE STORE</a></td></tr>`,
-    `<tr><td class="pad" style="background:#F7F7F7;padding:25px 22px 24px"><div style="text-align:center;font-size:11px;font-weight:900;color:${RED};letter-spacing:.08em;text-transform:uppercase">A smoother way to shop</div><div style="text-align:center;font-size:19px;font-weight:900;line-height:1.3;color:#1F2937;margin:5px 0 18px;text-transform:uppercase">RIDE COMFORT, MADE SIMPLE</div>${reasons}<div style="text-align:center"><a href="${escapeHtml(url)}" style="display:inline-block;background:${RED};color:#FFFFFF;text-decoration:none;padding:10px 28px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase">BROWSE PRODUCTS</a></div></td></tr>`,
-    `<tr><td class="pad" style="background:#EFEFEF;padding:24px 16px 25px;text-align:center"><div style="font-size:19px;font-weight:900;color:#18181B">Shop the Comfort Collection</div><div style="font-size:11px;color:#4B5563;margin:6px 0 13px">Seat covers, cushions and toto comfort essentials</div><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">${productRows}</table><div style="margin:18px 0 4px;font-size:13px;font-weight:800;color:${RED}">Comfort for the ride ahead</div><div style="font-size:11px;color:#374151">Easy store pickup at Rofik Godi Centre</div></td></tr>`,
-    `<tr><td class="pad" style="padding:14px 26px 24px">${pickupInformationHtml(STORE_NAME)}</td></tr>`,
-  ].join('');
+
+  const content = `<tr><td align="center" style="background:#F5E2D3;padding:9px 16px;font-size:11px;font-weight:800;letter-spacing:.06em;color:#231F20;text-transform:uppercase">RATED <span style="color:${accent}">4.8 STARS</span> BASED ON <span style="color:${accent}">128+ REVIEWS</span></td></tr><tr><td align="center" style="background:#ACCBE0;padding:0"><div style="background:linear-gradient(180deg,#9EC1D6 0%,#BBD2E1 100%);padding:24px 20px 14px;text-align:center"><div style="font-size:13px;font-weight:600;letter-spacing:.08em;color:#1F2937;margin-top:2px">Welcome To</div><h1 class="hero-title" style="margin:4px 0;font-size:32px;font-weight:900;color:#0A0A0A">ROFIK GODI</h1><div style="font-size:13px;font-weight:600;letter-spacing:.06em;color:#1F2937">10% OFF Your Next Order</div><div style="display:inline-block;margin-top:12px;background:#FFFFFF;color:#111827;padding:7px 20px;font-size:12px;font-weight:800;letter-spacing:.06em">USE CODE: WELCOME10</div><div style="margin-top:10px"><a href="${escapeHtml(url)}" style="display:inline-block;background:#09090B;color:#FFFFFF;text-decoration:none;padding:9px 26px;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">SHOP NOW</a></div></div><img src="${assetBase}/hero-seat-lineup.jpg" alt="Rofik Godi Seat Covers" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0"></td></tr><tr><td class="pad" style="background:#FFFFFF;padding:28px 30px 26px;text-align:center"><div style="font-size:14px;font-weight:800;color:#1F2937">Hi ${name},</div><p style="margin:10px auto 0;max-width:380px;font-size:13px;line-height:1.68;color:#374151">Welcome to Rofik Godi Centre, ${name}. We're so glad to have you on board. To say thank you, here's a coupon code for <strong>10% OFF</strong> your next order.</p><div style="width:220px;margin:16px auto 8px;padding:11px 18px;background:#F3DEC9;border:1.5px dashed #C89E78;font-size:14px;font-weight:800;letter-spacing:.06em;color:#1F2937">WELCOME10</div><div style="font-size:12px;color:#374151;margin-bottom:14px">Use code at checkout</div><a href="${escapeHtml(url)}" style="display:inline-block;background:${accent};color:#FFFFFF;text-decoration:none;padding:10px 28px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-radius:2px">SHOP NOW</a></td></tr><tr><td class="pad" style="background:#F4F4F4;border-radius:32px 32px 0 0;padding:28px 22px 24px"><div style="text-align:center;font-size:11px;font-weight:800;color:#6B7280;letter-spacing:.08em;text-transform:uppercase">A smoother way to shop</div><div style="text-align:center;font-size:19px;font-weight:800;font-style:italic;line-height:1.3;color:#1F2937;margin:4px 0 18px;text-transform:uppercase">4 REASONS TO<br>RIDE WITH ROFIK GODI:</div><div style="background:#F2E4D7;border-radius:10px;padding:16px 18px;margin-bottom:12px"><strong style="color:${accent};font-size:12px">01 · RIDE FATIGUE-FREE</strong><div style="font-size:15px;font-weight:800;color:#18181B;margin-top:3px">Heavy-Duty Comfort</div><div style="font-size:12px;line-height:1.55;color:#374151;margin-top:4px">For every Rofik Godi seat cover ordered, we craft HIGH-DENSITY MEMORY FOAM &amp; anti-slip diamond quilting for all-day comfort.</div></div><div style="background:#F2E4D7;border-radius:10px;padding:16px 18px;margin-bottom:12px"><strong style="color:${accent};font-size:12px">02 · ZERO-RISK</strong><div style="font-size:15px;font-weight:800;color:#18181B;margin-top:3px">Zero-Risk Quality</div><div style="font-size:12px;line-height:1.55;color:#374151;margin-top:4px">PREMIUM PERFORMANCE &amp; materials that'll never let you down. 100% Waterproof, UV-Treated &amp; Tear-Proof Rexine.</div></div><div style="background:#F2E4D7;border-radius:10px;padding:16px 18px;margin-bottom:12px"><strong style="color:${accent};font-size:12px">03 · PERFECT MODEL FIT</strong><div style="font-size:15px;font-weight:800;color:#18181B;margin-top:3px">Perfect Model Fit</div><div style="font-size:12px;line-height:1.55;color:#374151;margin-top:4px">Find ready-made seat covers &amp; cushions matched to your Bike, Scooter, or Toto with easy store pickup.</div></div><div style="background:#F2E4D7;border-radius:10px;padding:16px 18px;margin-bottom:16px"><strong style="color:${accent};font-size:12px">04 · OUR STORY</strong><div style="font-size:15px;font-weight:800;color:#18181B;margin-top:3px">Our Story</div><div style="font-size:12px;line-height:1.55;color:#374151;margin-top:4px">We're a Berhampore-based seat workshop. Rofik Godi Centre brings ready-to-fit comfort for bikes, scooters &amp; totos with easy store pickup.</div></div><div style="text-align:center"><a href="${escapeHtml(url)}" style="display:inline-block;background:#09090B;color:#FFFFFF;text-decoration:none;padding:10px 30px;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">SHOP NOW</a></div></td></tr><tr><td class="pad" style="background:#EFEFEF;padding:24px 18px 26px;text-align:center"><div style="font-size:20px;font-weight:800;font-style:italic;color:#18181B">Shop The Comfort Heroes</div><div style="font-size:10px;font-weight:800;letter-spacing:.05em;color:#374151;text-transform:uppercase;margin:5px 0 16px">RATED <span style="color:#2E9E5B">4.8 STARS</span> BASED ON <span style="color:#2E9E5B">128+ REVIEWS</span></div><table role="presentation" width="100%" cellspacing="0" cellpadding="6" border="0"><tr><td width="50%" valign="top"><div style="background:#FFFFFF;border-radius:6px;padding:12px 10px;text-align:center"><img src="${assetBase}/premium-bike-seat-cover.jpg" alt="Premium Bike Seat Cover" width="210" style="width:100%;max-width:210px;height:auto;display:block;margin:0 auto 8px"><div style="font-size:12px;font-weight:800;color:#18181B">Premium Bike Seat Cover</div><div style="font-size:11px;color:#374151;margin:4px 0 10px"><span style="color:${accent}">★★★★★</span> <em>128 reviews</em></div><a href="${escapeHtml(url)}" style="display:inline-block;background:${accent};color:#FFFFFF;text-decoration:none;padding:8px 18px;font-size:10px;font-weight:800;text-transform:uppercase">SHOP NOW</a></div></td><td width="50%" valign="top"><div style="background:#FFFFFF;border-radius:6px;padding:12px 10px;text-align:center"><img src="${assetBase}/sport-bike-seat-cover.jpg" alt="Sport Bike Seat Cover" width="210" style="width:100%;max-width:210px;height:auto;display:block;margin:0 auto 8px"><div style="font-size:12px;font-weight:800;color:#18181B">Sport Bike Seat Cover</div><div style="font-size:11px;color:#374151;margin:4px 0 10px"><span style="color:${accent}">★★★★★</span> <em>96 reviews</em></div><a href="${escapeHtml(url)}" style="display:inline-block;background:${accent};color:#FFFFFF;text-decoration:none;padding:8px 18px;font-size:10px;font-weight:800;text-transform:uppercase">SHOP NOW</a></div></td></tr><tr><td width="50%" valign="top"><div style="background:#FFFFFF;border-radius:6px;padding:12px 10px;text-align:center"><img src="${assetBase}/toto-comfort-godi-set.jpg" alt="Toto Comfort Godi Set" width="210" style="width:100%;max-width:210px;height:auto;display:block;margin:0 auto 8px"><div style="font-size:12px;font-weight:800;color:#18181B">Toto Comfort Godi Set</div><div style="font-size:11px;color:#374151;margin:4px 0 10px"><span style="color:${accent}">★★★★★</span> <em>84 reviews</em></div><a href="${escapeHtml(url)}" style="display:inline-block;background:${accent};color:#FFFFFF;text-decoration:none;padding:8px 18px;font-size:10px;font-weight:800;text-transform:uppercase">SHOP NOW</a></div></td><td width="50%" valign="top"><div style="background:#FFFFFF;border-radius:6px;padding:12px 10px;text-align:center"><img src="${assetBase}/gel-seat-cushion.jpg" alt="3D Gel Seat Cushion" width="210" style="width:100%;max-width:210px;height:auto;display:block;margin:0 auto 8px"><div style="font-size:12px;font-weight:800;color:#18181B">3D Gel Seat Cushion</div><div style="font-size:11px;color:#374151;margin:4px 0 10px"><span style="color:${accent}">★★★★★</span> <em>64 reviews</em></div><a href="${escapeHtml(url)}" style="display:inline-block;background:${accent};color:#FFFFFF;text-decoration:none;padding:8px 18px;font-size:10px;font-weight:800;text-transform:uppercase">SHOP NOW</a></div></td></tr></table><div style="margin:20px 0 10px;font-size:19px;font-weight:600;font-style:italic;color:#18181B">Crafted Ride Comfort</div><div style="background:#B8DCF0;border-radius:999px;padding:8px 16px;max-width:420px;margin:0 auto;font-size:11px;font-weight:800;color:#1F2937">100% Weatherproof &nbsp;•&nbsp; Easy Store Pickup</div></td></tr><tr><td class="pad" style="padding:16px 30px 26px">${pickupInformationHtml(STORE_NAME)}</td></tr>`;
+
   const html = emailShell(subject, content);
   const text = [
     `${STORE_NAME} — ${STORE_SUBTITLE}`,
     '',
-    `Welcome, ${displayName}!`,
-    'Thanks for creating an account. Explore seat covers, cushions and ride essentials, with store pickup available.',
-    ...(offer ? [`Use coupon code ${offer.code} at checkout for ${percentLabel}% off your next order while the offer is active.`] : []),
+    `Welcome, ${nameValue || 'Rider'}!`,
+    'Thanks for creating an account. Your riding essentials, saved favourites and store-pickup orders are now easy to keep together.',
+    'Use coupon code WELCOME10 at checkout for 10% OFF your next order.',
     '',
-    'A SMOOTHER WAY TO SHOP',
-    '• Comfort-focused seat covers and cushions for everyday journeys',
-    '• Compare materials, features and stitching on each product',
-    '• Browse bike, scooter and toto options and check compatible models',
-    '• Order online and collect from Rofik Godi Centre',
-    '',
-    'SHOP THE COMFORT COLLECTION',
-    '• Premium Bike Seat Cover',
-    '• Sport Bike Seat Cover',
-    '• Toto Comfort Seat Set',
-    '• Gel Seat Cushion',
+    'A SMOOTHER WAY TO SHOP — 4 REASONS TO RIDE WITH ROFIK GODI',
+    '• Ride Fatigue-Free: High-density memory foam & anti-slip diamond quilting',
+    '• Zero-Risk Quality: 100% Waterproof, UV-Treated & Tear-Proof Rexine',
+    '• Perfect Model Fit: Ready-made seat covers & cushions for Bike, Scooter & Toto with easy store pickup',
+    '• Our Story: Crafted at our Berhampore workshop with store pickup',
     ...(url ? ['', `Explore the store: ${url}`] : []),
     '',
     'STORE INFORMATION',
@@ -354,6 +314,7 @@ export function buildWelcomeEmail(
   ].join('\n');
   return { subject, html, text };
 }
+
 export const isValidCustomerEmail = validEmail;
 export const STORE_CONTACT = {
   name: STORE_NAME,

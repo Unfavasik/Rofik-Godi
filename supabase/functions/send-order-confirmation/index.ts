@@ -233,36 +233,7 @@ async function handleWelcomeEmail(
   if (claim === 'failed') return jsonResponse({ error: 'Welcome email could not be queued' }, 503, origin);
 
   const fullName = String(user.user_metadata?.full_name || user.user_metadata?.name || 'Rider').trim().slice(0, 120) || 'Rider';
-  const { data: coupon, error: couponError } = await serviceClient
-    .from('coupons')
-    .select('code,discount_type,discount_value,minimum_order_value,max_discount,starts_at,expires_at,is_enabled,usage_limit,used_count,eligibility,apply_to')
-    .eq('code', 'WELCOME10')
-    .eq('is_enabled', true)
-    .limit(1)
-    .maybeSingle();
-  if (couponError) console.warn('Welcome offer lookup failed');
-  const now = Date.now();
-  const startsAt = coupon?.starts_at ? Date.parse(String(coupon.starts_at)) : 0;
-  const expiresAt = coupon?.expires_at ? Date.parse(String(coupon.expires_at)) : Number.POSITIVE_INFINITY;
-  const usageLimit = coupon?.usage_limit == null ? Number.POSITIVE_INFINITY : Number(coupon.usage_limit);
-  const usedCount = Number(coupon?.used_count || 0);
-  const discountPercent = Number(coupon?.discount_value);
-  const offerIsActive = !couponError
-    && Boolean(coupon)
-    && coupon.discount_type === 'PERCENTAGE'
-    && coupon.eligibility === 'EVERYONE'
-    && coupon.apply_to === 'ALL_PRODUCTS'
-    && Number(coupon.minimum_order_value || 0) <= 0
-    && coupon.max_discount == null
-    && Number.isFinite(discountPercent)
-    && discountPercent > 0
-    && discountPercent <= 100
-    && Number.isFinite(startsAt)
-    && startsAt <= now
-    && expiresAt > now
-    && usedCount < usageLimit;
-  const promotion = offerIsActive ? { code: String(coupon.code), discountPercent } : null;
-  const email = buildWelcomeEmail(fullName, accountUrl(origin, '/home'), promotion);
+  const email = buildWelcomeEmail(fullName, accountUrl(origin, '/home'));
   const sent = await sendMail(credentials, recipient, email.subject, email.text, email.html);
   await setLogStatus(serviceClient, WELCOME_LOG_TABLE, { user_id: user.id }, sent ? 'sent' : 'failed', sent ? null : 'SMTP_DELIVERY_FAILED');
   if (!sent) {

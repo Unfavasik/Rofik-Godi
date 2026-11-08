@@ -97,34 +97,26 @@ describe('order confirmation email', () => {
     expect(email.text).not.toContain('pickup QR is attached');
   });
 
-  it('builds a Rofik-red welcome email with safe promo copy, photos and escaped customer text', () => {
-    const email = buildWelcomeEmail('<Rider>', 'https://shop.example.com/home', {
-      code: 'WELCOME10',
-      discountPercent: 10,
-    });
+  it('uses the supplied welcome email template without modifications', async () => {
+    const { createHash } = await import('node:crypto');
+    const { readFile } = await import('node:fs/promises');
+    const templateSource = await readFile(
+      new URL('../supabase/functions/send-order-confirmation/email-template.ts', import.meta.url),
+    );
+    expect(createHash('sha256').update(templateSource).digest('hex')).toBe(
+      'a28e12c9ddce9c9be24fa2e1573eec898aa6078ba2f9878149ad04bf7fe2d745',
+    );
 
-    expect(email.subject).toContain('<Rider>');
-    expect(email.html).toContain('Welcome to Rofik Godi Centre, &lt;Rider&gt;.');
-    expect(email.html).toContain('A smoother way to shop');
-    expect(email.html).toContain('https://shop.example.com/home');
+    const email = buildWelcomeEmail('<Rider>', 'https://shop.example.com/home');
+    expect(email.subject).toBe('Welcome to Rofik Godi Centre, <Rider>!');
+    expect(email.html).toContain('Hi &lt;Rider&gt;,');
+    expect(email.html).toContain('href="https://shop.example.com/home"');
+    expect(email.html).toContain('#F27921');
+    expect(email.html).toContain('USE CODE: WELCOME10');
+    expect(email.html).toContain('4.8 STARS');
+    expect(email.html).toContain('128+ REVIEWS');
+    expect(email.html).toContain('100% Weatherproof');
     expect(email.html).toContain('/images/welcome-email/hero-seat-lineup.jpg');
-    expect(email.html).toContain('/images/welcome-email/premium-bike-seat-cover.jpg');
-    expect(email.html).toContain('WELCOME10');
-    expect(email.html).toContain('10% OFF');
-    expect(email.html).toContain('#d9232d');
-    expect(email.html).not.toContain('128+ REVIEWS');
-    expect(email.html).not.toContain('128 reviews');
-    expect(email.html).toContain('rofikgodicentre.store@gmail.com');
-    expect(email.html).toContain('href="mailto:rofikgodicentre.store@gmail.com"');
-    expect(email.text).toContain('Thanks for creating an account.');
-    expect(email.text).toContain('Use coupon code WELCOME10 at checkout for 10% off');
-  });
-
-  it('omits the welcome offer when no active coupon is provided', () => {
-    const email = buildWelcomeEmail('Rider');
-
-    expect(email.html).not.toContain('WELCOME10');
-    expect(email.text).not.toContain('WELCOME10');
-    expect(email.html).toContain('Seat covers, cushions');
+    expect(email.text).toContain('Use coupon code WELCOME10 at checkout for 10% OFF your next order.');
   });
 });
