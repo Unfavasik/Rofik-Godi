@@ -137,16 +137,6 @@ function emailShell(subject: string, content: string): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(subject)}</title><style>@media only screen and (max-width:600px){.outer{padding:12px 6px!important}.container{width:100%!important;border-radius:14px!important}.pad{padding-left:18px!important;padding-right:18px!important}.hero-title{font-size:26px!important}.stack{display:block!important;width:100%!important;text-align:left!important}.mobile-center{text-align:center!important}}</style></head><body style="margin:0;background:#fff7ef;font-family:Arial,Helvetica,sans-serif;color:${NAVY}"><table role="presentation" class="outer" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#fff7ef;padding:36px 10px"><tr><td align="center"><table role="presentation" class="container" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #f0e4da;border-radius:20px;overflow:hidden;box-shadow:0 12px 34px rgba(16,24,40,.08)"><tr><td style="height:5px;background:${RED};font-size:0;line-height:0">&nbsp;</td></tr><tr><td class="pad" style="padding:22px 30px 21px;background:#ffffff;border-bottom:1px solid #f0e4da"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td style="width:38px;height:38px;border-radius:11px;background:${RED};color:#ffffff;text-align:center;vertical-align:middle;font-size:15px;font-weight:900">RG</td><td style="padding-left:12px;vertical-align:middle"><div style="font-size:17px;font-weight:900;letter-spacing:.05em;color:${NAVY}">${STORE_NAME}</div><div style="margin-top:4px;font-size:9px;font-weight:900;letter-spacing:.2em;color:${RED}">${STORE_SUBTITLE}</div></td></tr></table></td></tr>${content}<tr><td class="pad" style="padding:22px 30px 25px;border-top:1px solid #edf0f4;background:#ffffff"><div style="font-size:12px;font-weight:900;letter-spacing:.05em;color:${NAVY}">${STORE_NAME}</div><div style="margin-top:7px;font-size:12px;line-height:1.65;color:${MUTED}">Thoughtfully made for more comfortable rides.</div><div style="margin-top:11px;font-size:11px;line-height:1.9"><a href="tel:${STORE_PHONE.replace(/[^+\d]/g, '')}" style="color:#344054;text-decoration:underline;font-weight:700">Call ${STORE_PHONE}</a><br><a href="mailto:${STORE_EMAIL}" style="color:#1a73e8;text-decoration:underline;font-weight:800;word-break:break-word">${STORE_EMAIL}</a></div></td></tr></table></td></tr></table></body></html>`;
 }
 
-function statusPill(label: string, tone: 'green' | 'red' | 'blue' = 'green'): string {
-  const styles =
-    tone === 'green'
-      ? 'background:#ecfdf3;color:#087443'
-      : tone === 'red'
-        ? 'background:#fff1f2;color:#b42318'
-        : 'background:#eff8ff;color:#175cd3';
-  return `<div style="display:inline-block;padding:7px 11px;border-radius:999px;${styles};font-size:11px;font-weight:900;letter-spacing:.06em">${label}</div>`;
-}
-
 function productRows(items: ConfirmationEmailItem[]): { html: string; text: string } {
   const text = items
     .map((item) => {
@@ -280,28 +270,81 @@ export function buildOrderStatusEmail(order: OrderStatusEmail) {
   return { subject, html, text };
 }
 
-export function buildWelcomeEmail(nameValue: string, storeUrl?: string | null) {
-  const name = escapeHtml(nameValue || 'Rider');
-  const subjectName = String(nameValue || 'Rider')
-    .replace(/[\r\n]+/g, ' ')
-    .slice(0, 80);
-  const url = safeHttpsUrl(storeUrl);
+export function buildWelcomeEmail(
+  nameValue: string,
+  storeUrl?: string | null,
+  promotion?: { code: string; discountPercent: number } | null,
+) {
+  const displayName = String(nameValue || 'Rider').replace(/[\r\n]+/g, ' ').slice(0, 120) || 'Rider';
+  const name = escapeHtml(displayName);
+  const subjectName = displayName.slice(0, 80);
+  const url = safeHttpsUrl(storeUrl) || 'https://rofik-godi.pages.dev/home';
+  const assetBase = 'https://rofik-godi.pages.dev/images/welcome-email';
+  const offer = promotion
+    && /^[A-Z0-9_-]{3,40}$/i.test(promotion.code)
+    && Number.isFinite(promotion.discountPercent)
+    && promotion.discountPercent > 0
+    && promotion.discountPercent <= 100
+    ? { code: promotion.code.toUpperCase(), discountPercent: Number(promotion.discountPercent.toFixed(2)) }
+    : null;
+  const percentLabel = offer ? String(offer.discountPercent) : '';
   const subject = `Welcome to Rofik Godi Centre, ${subjectName}!`;
-  const button = url
-    ? `<tr><td class="pad" style="padding:3px 30px 25px"><a href="${escapeHtml(url)}" style="display:inline-block;padding:14px 23px;border-radius:11px;background:${RED};color:#ffffff;text-decoration:none;font-size:14px;font-weight:900">Explore the Store</a></td></tr>`
+  const offerHero = offer
+    ? `<div style="font-size:13px;font-weight:700;letter-spacing:.06em;color:#1F2937">${percentLabel}% OFF Your Next Order</div><div style="display:inline-block;margin-top:11px;background:#FFFFFF;color:${RED};padding:7px 18px;font-size:12px;font-weight:900;letter-spacing:.06em">USE CODE: ${escapeHtml(offer.code)}</div>`
+    : '<div style="font-size:13px;font-weight:700;letter-spacing:.06em;color:#1F2937">Seat covers, cushions &amp; ride essentials</div>';
+  const offerCard = offer
+    ? `<div style="width:220px;margin:16px auto 8px;padding:11px 18px;background:#FDEBEC;border:1.5px dashed ${RED};font-size:14px;font-weight:900;letter-spacing:.06em;color:${RED}">${escapeHtml(offer.code)}</div><div style="font-size:12px;color:#374151;margin-bottom:14px">Use code at checkout for ${percentLabel}% off</div>`
     : '';
-  const content = `<tr><td class="pad" style="padding:30px 30px 8px">${statusPill('WELCOME ABOARD', 'red')}<h1 class="hero-title" style="margin:16px 0 9px;font-size:27px;line-height:1.22;letter-spacing:-.02em;color:${NAVY}">Welcome to Rofik Godi Centre, ${name}.</h1><p style="margin:0;font-size:14px;line-height:1.72;color:#475467">Thanks for creating an account. Your riding essentials, saved favourites and store-pickup orders are now easy to keep together.</p></td></tr><tr><td class="pad" style="padding:20px 30px 8px"><div style="padding:18px;border:1px solid ${LINE};border-radius:16px;background:#f8fafc"><div style="font-size:14px;font-weight:900;color:${NAVY}">A smoother way to shop</div><div style="margin-top:13px;font-size:12px;line-height:1.9;color:#475467"><strong style="color:#b42318">01</strong> &nbsp;Explore seat comfort and ride essentials<br><strong style="color:#b42318">02</strong> &nbsp;Save products you love for later<br><strong style="color:#b42318">03</strong> &nbsp;Keep track of store-pickup orders in My Orders</div></div></td></tr>${button}<tr><td class="pad" style="padding:12px 30px 26px">${pickupInformationHtml(STORE_NAME)}</td></tr>`;
+  const intro = offer
+    ? `Welcome to Rofik Godi Centre, ${name}. We're glad you're here. Use the welcome code below for ${percentLabel}% off your next order while the offer is active.`
+    : `Welcome to Rofik Godi Centre, ${name}. Explore seat covers, cushions and ride essentials, with store pickup available.`;
+  const reasons = [
+    ['01', 'COMFORT FOR EVERYDAY RIDES', 'Explore comfort-focused seat covers and cushions for your everyday journeys.'],
+    ['02', 'QUALITY OPTIONS', 'Compare materials, features and stitch details on each product before ordering.'],
+    ['03', 'FIND YOUR MODEL', 'Browse bike, scooter and toto options, then check compatible models.'],
+    ['04', 'EASY STORE PICKUP', 'Order online and collect your purchase from Rofik Godi Centre.'],
+  ].map(([number, title, description]) =>
+    `<div style="background:#F7EEE8;border-radius:10px;padding:15px 17px;margin-bottom:11px"><strong style="color:${RED};font-size:12px">${number} · ${title}</strong><div style="font-size:12px;line-height:1.6;color:#374151;margin-top:5px">${description}</div></div>`,
+  ).join('');
+  const productCard = (image: string, title: string) =>
+    `<td width="50%" valign="top" style="padding:6px"><div style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;padding:12px 10px;text-align:center"><img src="${assetBase}/${image}" alt="${escapeHtml(title)}" width="210" style="width:100%;max-width:210px;height:auto;display:block;margin:0 auto 9px;border:0"><div style="font-size:12px;font-weight:800;color:#18181B">${escapeHtml(title)}</div><a href="${escapeHtml(url)}" style="display:inline-block;background:${RED};color:#FFFFFF;text-decoration:none;padding:8px 18px;margin-top:11px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase">SHOP NOW</a></div></td>`;
+  const products = [
+    ['premium-bike-seat-cover.jpg', 'Premium Bike Seat Cover'],
+    ['sport-bike-seat-cover.jpg', 'Sport Bike Seat Cover'],
+    ['toto-comfort-godi-set.jpg', 'Toto Comfort Seat Set'],
+    ['gel-seat-cushion.jpg', 'Gel Seat Cushion'],
+  ] as const;
+  const productRows = [
+    `<tr>${productCard(...products[0])}${productCard(...products[1])}</tr>`,
+    `<tr>${productCard(...products[2])}${productCard(...products[3])}</tr>`,
+  ].join('');
+  const content = [
+    `<tr><td align="center" style="background:#FDEBEC;padding:10px 16px;font-size:11px;font-weight:900;letter-spacing:.08em;color:${RED};text-transform:uppercase">MADE FOR COMFORTABLE EVERYDAY RIDES</td></tr>`,
+    `<tr><td align="center" style="background:#ACCBE0;padding:0"><div style="background:#B8D3E3;padding:23px 20px 17px;text-align:center"><div style="font-size:13px;font-weight:700;letter-spacing:.08em;color:#1F2937">Welcome to</div><h1 class="hero-title" style="margin:4px 0 8px;font-size:32px;font-weight:900;color:#0A0A0A">ROFIK GODI</h1>${offerHero}<div style="margin-top:12px"><a href="${escapeHtml(url)}" style="display:inline-block;background:${RED};color:#FFFFFF;text-decoration:none;padding:10px 25px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase">SHOP NOW</a></div></div><img src="${assetBase}/hero-seat-lineup.jpg" alt="Rofik Godi seat covers and riding comfort products" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0"></td></tr>`,
+    `<tr><td class="pad" style="background:#FFFFFF;padding:27px 26px 25px;text-align:center"><div style="font-size:14px;font-weight:800;color:#1F2937">Hi ${name},</div><p style="margin:10px auto 0;max-width:420px;font-size:13px;line-height:1.7;color:#374151">${intro}</p>${offerCard}<a href="${escapeHtml(url)}" style="display:inline-block;background:${RED};color:#FFFFFF;text-decoration:none;padding:10px 28px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase">EXPLORE THE STORE</a></td></tr>`,
+    `<tr><td class="pad" style="background:#F7F7F7;padding:25px 22px 24px"><div style="text-align:center;font-size:11px;font-weight:900;color:${RED};letter-spacing:.08em;text-transform:uppercase">A smoother way to shop</div><div style="text-align:center;font-size:19px;font-weight:900;line-height:1.3;color:#1F2937;margin:5px 0 18px;text-transform:uppercase">RIDE COMFORT, MADE SIMPLE</div>${reasons}<div style="text-align:center"><a href="${escapeHtml(url)}" style="display:inline-block;background:${RED};color:#FFFFFF;text-decoration:none;padding:10px 28px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase">BROWSE PRODUCTS</a></div></td></tr>`,
+    `<tr><td class="pad" style="background:#EFEFEF;padding:24px 16px 25px;text-align:center"><div style="font-size:19px;font-weight:900;color:#18181B">Shop the Comfort Collection</div><div style="font-size:11px;color:#4B5563;margin:6px 0 13px">Seat covers, cushions and toto comfort essentials</div><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">${productRows}</table><div style="margin:18px 0 4px;font-size:13px;font-weight:800;color:${RED}">Comfort for the ride ahead</div><div style="font-size:11px;color:#374151">Easy store pickup at Rofik Godi Centre</div></td></tr>`,
+    `<tr><td class="pad" style="padding:14px 26px 24px">${pickupInformationHtml(STORE_NAME)}</td></tr>`,
+  ].join('');
   const html = emailShell(subject, content);
   const text = [
     `${STORE_NAME} — ${STORE_SUBTITLE}`,
     '',
-    `Welcome, ${nameValue || 'Rider'}!`,
-    'Thanks for creating an account. Your riding essentials, saved favourites and store-pickup orders are now easy to keep together.',
+    `Welcome, ${displayName}!`,
+    'Thanks for creating an account. Explore seat covers, cushions and ride essentials, with store pickup available.',
+    ...(offer ? [`Use coupon code ${offer.code} at checkout for ${percentLabel}% off your next order while the offer is active.`] : []),
     '',
     'A SMOOTHER WAY TO SHOP',
-    '• Explore seat comfort and ride essentials',
-    '• Save products you love for later',
-    '• Track store-pickup orders in My Orders',
+    '• Comfort-focused seat covers and cushions for everyday journeys',
+    '• Compare materials, features and stitching on each product',
+    '• Browse bike, scooter and toto options and check compatible models',
+    '• Order online and collect from Rofik Godi Centre',
+    '',
+    'SHOP THE COMFORT COLLECTION',
+    '• Premium Bike Seat Cover',
+    '• Sport Bike Seat Cover',
+    '• Toto Comfort Seat Set',
+    '• Gel Seat Cushion',
     ...(url ? ['', `Explore the store: ${url}`] : []),
     '',
     'STORE INFORMATION',
@@ -311,7 +354,6 @@ export function buildWelcomeEmail(nameValue: string, storeUrl?: string | null) {
   ].join('\n');
   return { subject, html, text };
 }
-
 export const isValidCustomerEmail = validEmail;
 export const STORE_CONTACT = {
   name: STORE_NAME,
