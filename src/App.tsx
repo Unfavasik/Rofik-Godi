@@ -991,8 +991,12 @@ export default function App() {
     selectedStitch: string,
     selectedThickness: { label: string; extraPrice: number },
     quantity: number,
+    customEmbroideryText?: string,
   ) => {
     if (!product.inStock) return;
+    const trimmedEmbroidery = product.isCustomizable
+      ? customEmbroideryText?.trim().slice(0, 12) || undefined
+      : undefined;
     const item: CartItem = {
       cartItemId: `buy-now-${product.id}-${Date.now()}`,
       product,
@@ -1000,7 +1004,8 @@ export default function App() {
       selectedColor,
       selectedStitch,
       selectedThickness,
-      unitPrice: getCartItemUnitPrice(product, selectedThickness),
+      customEmbroideryText: trimmedEmbroidery,
+      unitPrice: getCartItemUnitPrice(product, selectedThickness, trimmedEmbroidery),
     };
     setCheckoutItems([item]);
     setCheckoutReturnPath(location.pathname);
@@ -2167,20 +2172,25 @@ export default function App() {
 
         {/* 📜 Privacy Policy Modal / Slide-over */}
         {isPrivacyPolicyOpen && (
-          <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+          <div className="fixed inset-0 z-50 bg-[#F8FAFC] overflow-y-auto">
             <PrivacyPolicyView
               onBack={() => navigateBackToPage('/home')}
               onOpenStoreInfo={() => openPageRoute('/store-map')}
+              onOpenTerms={() => openPageRoute('/terms-and-conditions')}
+              onOpenPersonalData={() => openPageRoute('/personal-data')}
+              onOpenDeleteAccount={() => navigate(getPathForSettingsSection('delete-account'))}
             />
           </div>
         )}
 
         {/* ⚖️ Terms & Conditions Modal / Slide-over */}
         {isTermsConditionsOpen && (
-          <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+          <div className="fixed inset-0 z-50 bg-[#F8FAFC] overflow-y-auto">
             <TermsConditionsView
               onBack={() => navigateBackToPage('/home')}
               onOpenStoreInfo={() => openPageRoute('/store-map')}
+              onOpenPrivacy={() => openPageRoute('/privacy-policy')}
+              onOpenDeleteAccount={() => navigate(getPathForSettingsSection('delete-account'))}
             />
           </div>
         )}

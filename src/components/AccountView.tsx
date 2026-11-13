@@ -655,6 +655,16 @@ export const AccountView: React.FC<AccountViewProps> = ({
       <PrivacyPolicyView
         onBack={closeRoutedPage}
         onOpenStoreInfo={onOpenStoreInfo}
+        onOpenTerms={() => (onOpenTermsPage ? onOpenTermsPage() : setActiveModal('terms'))}
+        onOpenPersonalData={onOpenPersonalData}
+        onOpenDeleteAccount={
+          onOpenSettingsSection
+            ? () => {
+                closeRoutedPage();
+                onOpenSettingsSection('delete-account');
+              }
+            : undefined
+        }
       />
     );
   }
@@ -664,6 +674,15 @@ export const AccountView: React.FC<AccountViewProps> = ({
       <TermsConditionsView
         onBack={closeRoutedPage}
         onOpenStoreInfo={onOpenStoreInfo}
+        onOpenPrivacy={() => (onOpenPrivacyPage ? onOpenPrivacyPage() : setActiveModal('privacy'))}
+        onOpenDeleteAccount={
+          onOpenSettingsSection
+            ? () => {
+                closeRoutedPage();
+                onOpenSettingsSection('delete-account');
+              }
+            : undefined
+        }
       />
     );
   }

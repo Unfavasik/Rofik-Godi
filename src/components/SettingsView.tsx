@@ -867,6 +867,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <PrivacyPolicyView
               onBack={() => setActiveDialog(null)}
               onOpenStoreInfo={onOpenStoreInfo}
+              onOpenTerms={() => (onOpenTermsPage ? onOpenTermsPage() : setActiveDialog('terms'))}
+              onOpenPersonalData={onOpenPersonalData}
+              onOpenDeleteAccount={() => {
+                setActiveDialog(null);
+                openSection('delete-account');
+              }}
             />
           </motion.div>
         )}
@@ -879,11 +885,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
             transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-            className="fixed inset-0 z-50 overflow-y-auto bg-[#F7F9FC]"
+            className="fixed inset-0 z-50 overflow-y-auto bg-[#F8FAFC]"
           >
             <TermsConditionsView
               onBack={() => setActiveDialog(null)}
               onOpenStoreInfo={onOpenStoreInfo}
+              onOpenPrivacy={() => (onOpenPrivacyPage ? onOpenPrivacyPage() : setActiveDialog('privacy'))}
+              onOpenDeleteAccount={() => {
+                setActiveDialog(null);
+                openSection('delete-account');
+              }}
             />
           </motion.div>
         )}

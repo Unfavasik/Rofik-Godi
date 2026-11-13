@@ -157,4 +157,11 @@ describe('catalog feedback', () => {
     expect(html).toContain('role="alert"');
     expect(html).not.toContain('service_role');
   });
+
+  it.each(['grid', 'shelf'] as const)('renders 1:1 square (800x800 ratio) image containers on %s product cards', (layoutMode) => {
+    const html = renderCard(sampleProduct, layoutMode);
+    expect(html).toContain('aspect-square');
+    expect(html).not.toContain('h-[112px]');
+    expect(html).not.toContain('h-[132px]');
+  });
 });

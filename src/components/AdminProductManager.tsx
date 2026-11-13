@@ -1317,7 +1317,7 @@ const ProductEditor: React.FC<{
               </div>
               {derived.image ? (
                 <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-                  <div className="relative aspect-[4/3]">
+                  <div className="relative aspect-square">
                     <img
                       src={derived.image}
                       alt="Storefront cover preview"
@@ -1329,7 +1329,7 @@ const ProductEditor: React.FC<{
                   </div>
                 </div>
               ) : (
-                <div className="grid aspect-[4/3] place-items-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+                <div className="grid aspect-square place-items-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
                   <div>
                     <ImagePlus className="mx-auto h-8 w-8 text-slate-300" />
                     <p className="mt-2 text-xs font-bold text-slate-500">

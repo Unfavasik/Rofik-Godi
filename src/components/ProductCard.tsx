@@ -245,8 +245,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       } bg-white rounded-2xl p-2 border border-gray-100 shadow-[0_3px_12px_rgba(0,0,0,0.035)] hover:border-rose-200/80 md:hover:-translate-y-1.5 md:hover:scale-[1.025] md:hover:shadow-[0_18px_36px_-10px_rgba(15,23,42,0.14),0_6px_16px_-4px_rgba(217,35,45,0.09)] flex flex-col justify-between relative group cursor-pointer transition-all duration-300 ease-out will-change-transform select-none`}
     >
       <ProductCardOpenButton product={product} onSelectProduct={onSelectProduct} />
-      {/* Card Image & Badges Container */}
-      <div className="relative z-10 pointer-events-none w-full h-[112px] sm:h-[132px] bg-[#F4F4F6] rounded-xl overflow-hidden flex items-center justify-center mb-1.5">
+      {/* Card Image & Badges Container (1:1 800x800 ratio) */}
+      <div className="relative z-10 pointer-events-none w-full aspect-square bg-[#F4F4F6] rounded-xl overflow-hidden flex items-center justify-center mb-1.5">
         <ProductImage src={product.image} alt={product.title} variant="grid" />
 
         {/* Dynamic Badge (Bestseller, New, Gel, Waterproof, etc.) */}
