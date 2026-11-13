@@ -1,5 +1,6 @@
 export type CustomerNotificationCategory = 'Orders' | 'Offers' | 'Support' | 'System';
 export type CustomerNotificationFilter = 'All' | CustomerNotificationCategory;
+export type NotificationCategoryToggleFilter = 'All' | 'Orders' | 'Promotions' | 'Support' | 'System';
 
 export type NotificationLike = {
   kind: string;
@@ -41,6 +42,16 @@ export function matchesCustomerNotificationFilter(
   filter: CustomerNotificationFilter,
 ): boolean {
   return filter === 'All' || getCustomerNotificationCategory(notification) === filter;
+}
+
+export function matchesNotificationCategoryToggle(
+  notification: NotificationLike,
+  filter: NotificationCategoryToggleFilter | CustomerNotificationFilter,
+): boolean {
+  if (filter === 'All') return true;
+  const resolved = getCustomerNotificationCategory(notification);
+  if (filter === 'Promotions' || filter === 'Offers') return resolved === 'Offers';
+  return resolved === filter;
 }
 
 export function getNotificationRowSurfaceClass(isUnread: boolean): string {

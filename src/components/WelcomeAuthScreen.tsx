@@ -127,7 +127,7 @@ export const WelcomeAuthScreen: React.FC<WelcomeAuthScreenProps> = ({
         {/* 1. Continue with Google */}
         <button
           onClick={onContinueGoogle}
-          className="w-full h-12 bg-[#D9232D] hover:bg-[#C01B24] active:scale-[0.98] text-white rounded-2xl flex items-center justify-center space-x-3 shadow-[0_4px_14px_rgba(217,35,45,0.3)] transition-all font-semibold text-[14.5px]"
+          className="banner-cta-shine group/cta w-full h-12 bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] hover:brightness-105 hover:shadow-[0_8px_20px_rgba(217,35,45,0.38)] active:scale-[0.98] text-white rounded-2xl flex items-center justify-center space-x-3 shadow-[0_4px_14px_rgba(217,35,45,0.3)] transition-all font-semibold text-[14.5px]"
         >
           <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center flex-shrink-0">
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">

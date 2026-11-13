@@ -70,14 +70,14 @@ export const SignupProfilePage: React.FC<SignupProfilePageProps> = ({ user, onCo
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col overflow-hidden bg-[#fdeff1] font-sans antialiased text-[#0f1a3a]">
+    <div className="relative flex min-h-dvh w-full flex-col overflow-x-hidden bg-[#fdeff1] font-sans antialiased text-[#0f1a3a]">
       {/* Header with illustration */}
       <div className="relative px-5 pt-[calc(env(safe-area-inset-top,0px)+18px)]">
         <button
           type="button"
           onClick={onSkip}
           aria-label="Go back"
-          className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-sm transition-transform active:scale-95"
+          className="relative z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/80 shadow-sm transition-transform active:scale-95"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
@@ -97,7 +97,7 @@ export const SignupProfilePage: React.FC<SignupProfilePageProps> = ({ user, onCo
       </div>
 
       {/* Form card */}
-      <div className="relative -mt-6 flex-1 rounded-t-[44px] bg-white px-4 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] pt-6 shadow-[0_-6px_30px_rgba(224,24,45,0.08)]">
+      <div className="relative -mt-6 min-w-0 flex-1 rounded-t-[44px] bg-white px-4 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] pt-6 shadow-[0_-6px_30px_rgba(224,24,45,0.08)]">
         {/* Avatar picker */}
         <div className="flex flex-col items-center">
           <button
@@ -148,7 +148,7 @@ export const SignupProfilePage: React.FC<SignupProfilePageProps> = ({ user, onCo
               onChange={(event) => setName(event.target.value)}
               autoComplete="name"
               placeholder="Enter your full name"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium text-[#0f1a3a] outline-none transition-all placeholder:text-slate-400 focus:border-[#e0182d] focus:bg-white focus:ring-4 focus:ring-[#e0182d]/10"
+              className="min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base sm:text-sm font-medium text-[#0f1a3a] outline-none transition-all placeholder:text-slate-400 focus:border-[#e0182d] focus:bg-white focus:ring-4 focus:ring-[#e0182d]/10"
             />
             {errors.full_name && <p className="mt-1 text-[11px] font-semibold text-[#e0182d]">{errors.full_name}</p>}
           </div>
@@ -165,7 +165,7 @@ export const SignupProfilePage: React.FC<SignupProfilePageProps> = ({ user, onCo
               autoComplete="tel"
               inputMode="tel"
               placeholder="e.g. +91 98765 43210"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium text-[#0f1a3a] outline-none transition-all placeholder:text-slate-400 focus:border-[#e0182d] focus:bg-white focus:ring-4 focus:ring-[#e0182d]/10"
+              className="min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base sm:text-sm font-medium text-[#0f1a3a] outline-none transition-all placeholder:text-slate-400 focus:border-[#e0182d] focus:bg-white focus:ring-4 focus:ring-[#e0182d]/10"
             />
             {errors.phone && <p className="mt-1 text-[11px] font-semibold text-[#e0182d]">{errors.phone}</p>}
           </div>
@@ -180,7 +180,7 @@ export const SignupProfilePage: React.FC<SignupProfilePageProps> = ({ user, onCo
               value={vehicle}
               onChange={(event) => setVehicle(event.target.value)}
               placeholder="e.g. Hero Splendor Plus"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium text-[#0f1a3a] outline-none transition-all placeholder:text-slate-400 focus:border-[#e0182d] focus:bg-white focus:ring-4 focus:ring-[#e0182d]/10"
+              className="min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base sm:text-sm font-medium text-[#0f1a3a] outline-none transition-all placeholder:text-slate-400 focus:border-[#e0182d] focus:bg-white focus:ring-4 focus:ring-[#e0182d]/10"
             />
             {errors.vehicle_model && <p className="mt-1 text-[11px] font-semibold text-[#e0182d]">{errors.vehicle_model}</p>}
           </div>
@@ -195,7 +195,7 @@ export const SignupProfilePage: React.FC<SignupProfilePageProps> = ({ user, onCo
           type="button"
           onClick={() => void handleSave()}
           disabled={saving || uploading}
-          className="mt-6 flex min-h-13 w-full items-center justify-center rounded-full bg-[#e0182d] py-4 text-sm font-bold text-white shadow-[0_8px_20px_rgba(224,24,45,0.3)] transition-all active:scale-[0.98] disabled:opacity-60"
+          className="banner-cta-shine group/cta mt-6 flex min-h-12 w-full items-center justify-center rounded-full bg-gradient-to-r from-[#D9232D] via-[#e0182d] to-[#B91822] py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(224,24,45,0.3)] transition-all hover:brightness-105 hover:shadow-[0_10px_24px_rgba(224,24,45,0.4)] active:scale-[0.98] disabled:opacity-60"
         >
           {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Save & continue'}
         </button>
@@ -203,7 +203,7 @@ export const SignupProfilePage: React.FC<SignupProfilePageProps> = ({ user, onCo
           type="button"
           onClick={onSkip}
           disabled={saving || uploading}
-          className="mt-3 w-full py-2 text-center text-[13px] font-bold text-[#0f1a3a]/60 transition-colors disabled:opacity-60"
+          className="mt-2 min-h-11 w-full py-2.5 text-center text-[13px] font-bold text-[#0f1a3a]/60 transition-colors disabled:opacity-60"
         >
           Skip for now
         </button>

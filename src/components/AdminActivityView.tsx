@@ -390,16 +390,16 @@ export const AdminActivityView: React.FC<{
   };
 
   return (
-    <main className="mx-auto max-w-[1180px] pb-12">
-      <header className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#D9232D]">
-            <Activity className="h-4 w-4" /> {supportOnly ? 'Admin support' : mode === 'log' ? 'Admin activity' : 'Admin notifications'}
+    <main className="mx-auto w-full max-w-[1180px] overflow-x-hidden pb-12">
+      <header className="mb-6 flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-[0_12px_36px_-16px_rgba(15,23,42,0.06)] backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div className="min-w-0">
+          <div className="inline-flex items-center gap-2 rounded-full bg-red-50/90 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#D9232D] ring-1 ring-inset ring-red-100">
+            <Activity className="h-3.5 w-3.5" /> {supportOnly ? 'Admin support' : mode === 'log' ? 'Admin activity' : 'Admin notifications'}
           </div>
-          <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900 md:text-3xl">
+          <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900 md:text-[28px]">
             {supportOnly ? 'Support conversations' : mode === 'log' ? 'Activity log' : 'All notifications'}
           </h2>
-          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-500">
             {supportOnly
               ? 'Open a customer conversation, reply, attach images and update its status.'
               : mode === 'log'
@@ -408,13 +408,13 @@ export const AdminActivityView: React.FC<{
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-bold text-[#C51F2A]">
+          <span className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-bold tabular-nums text-[#C51F2A] ring-1 ring-inset ring-rose-200/80">
             {unreadCount} unread
           </span>
           <button
             type="button"
             onClick={() => void refresh()}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-50"
             aria-label="Refresh activity"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
@@ -423,7 +423,7 @@ export const AdminActivityView: React.FC<{
             type="button"
             onClick={() => void handleMarkAllRead()}
             disabled={busy || unreadCount === 0}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-3 py-2.5 text-xs font-bold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <CheckCheck className="h-4 w-4" /> Mark all read
           </button>
@@ -431,13 +431,13 @@ export const AdminActivityView: React.FC<{
       </header>
 
       {!supportOnly && (
-        <div className="mb-4 inline-flex rounded-2xl border border-slate-200 bg-white p-1 shadow-sm" role="tablist" aria-label="Switch between notifications and activity log">
+        <div className="mb-4 inline-flex max-w-full flex-wrap rounded-2xl border border-slate-200/80 bg-white/95 p-1 shadow-[0_8px_28px_-14px_rgba(15,23,42,0.06)] backdrop-blur-md" role="tablist" aria-label="Switch between notifications and activity log">
           <button
             type="button"
             role="tab"
             aria-selected={mode === 'notifications'}
             onClick={() => switchMode('notifications')}
-            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${mode === 'notifications' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${mode === 'notifications' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             <BellRing className="h-4 w-4" /> Notifications
           </button>
@@ -446,14 +446,14 @@ export const AdminActivityView: React.FC<{
             role="tab"
             aria-selected={mode === 'log'}
             onClick={() => switchMode('log')}
-            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${mode === 'log' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${mode === 'log' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             <History className="h-4 w-4" /> Activity log
           </button>
         </div>
       )}
 
-      <section className="mb-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+      <section className="mb-5 rounded-2xl border border-slate-200/80 bg-white/95 p-3 shadow-[0_8px_28px_-14px_rgba(15,23,42,0.06)] backdrop-blur-md sm:p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter activity type">
             {!supportOnly && filterOptions.map((option) => (
@@ -463,25 +463,25 @@ export const AdminActivityView: React.FC<{
                 role="tab"
                 aria-selected={filter === option.id}
                 onClick={() => setFilter(option.id)}
-                className={`rounded-xl px-3 py-2 text-xs font-bold transition ${filter === option.id ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                className={`min-h-10 rounded-xl px-3 py-2 text-xs font-bold transition ${filter === option.id ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-50/90 text-slate-600 ring-1 ring-inset ring-slate-200/70 hover:bg-slate-100'}`}
               >
                 {option.label}
                 <span
-                  className={`ml-2 ${filter === option.id ? 'text-white/70' : 'text-slate-400'}`}
+                  className={`ml-2 tabular-nums ${filter === option.id ? 'text-white/70' : 'text-slate-400'}`}
                 >
                   {counts[option.id]}
                 </span>
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-2">
-            <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:w-64 sm:flex-none">
+          <div className="flex min-w-0 items-center gap-2">
+            <label className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50/90 px-3 py-2 focus-within:border-red-200 focus-within:bg-white sm:w-64 sm:flex-none">
               <Search className="h-4 w-4 shrink-0 text-slate-400" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search activity…"
-                className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-slate-400"
+                className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-slate-400 sm:text-xs"
                 aria-label="Search activity"
               />
             </label>
@@ -489,7 +489,7 @@ export const AdminActivityView: React.FC<{
               type="button"
               aria-pressed={unreadOnly}
               onClick={() => setUnreadOnly((value) => !value)}
-              className={`rounded-xl border px-3 py-2.5 text-xs font-bold ${unreadOnly ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
+              className={`min-h-11 shrink-0 rounded-xl border px-3 py-2.5 text-xs font-bold transition ${unreadOnly ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50'}`}
             >
               Unread
             </button>
@@ -510,8 +510,25 @@ export const AdminActivityView: React.FC<{
       )}
 
       {loading ? (
-        <div className="flex min-h-48 items-center justify-center gap-2 text-sm font-semibold text-slate-500">
-          <LoaderCircle className="h-5 w-5 animate-spin" /> Loading activity…
+        <div className="space-y-3">
+          <div className="flex items-center justify-center gap-2 py-4 text-sm font-semibold text-slate-500">
+            <LoaderCircle className="h-5 w-5 animate-spin text-[#D9232D]" /> Loading activity…
+          </div>
+          {[0, 1, 2].map((row) => (
+            <div
+              key={row}
+              className="animate-pulse rounded-2xl border border-slate-200/80 bg-white/95 p-5 shadow-xs"
+            >
+              <div className="flex gap-4">
+                <div className="h-11 w-11 shrink-0 rounded-2xl bg-slate-200/80" />
+                <div className="flex-1 space-y-2.5">
+                  <div className="h-3.5 w-28 rounded-full bg-slate-200/70" />
+                  <div className="h-4 w-56 rounded-full bg-slate-200/80" />
+                  <div className="h-3 w-full max-w-md rounded-full bg-slate-100" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : visibleEvents.length ? (
         <div className="space-y-3">
@@ -533,7 +550,7 @@ export const AdminActivityView: React.FC<{
             return (
               <article
                 key={event.id}
-                className={`rounded-2xl border bg-white p-4 shadow-sm transition sm:p-5 ${event.read_at ? 'border-slate-200' : 'border-rose-200 ring-1 ring-rose-100'}`}
+                className={`rounded-2xl border bg-white/95 p-4 shadow-[0_8px_28px_-14px_rgba(15,23,42,0.06)] backdrop-blur-md transition sm:p-5 ${event.read_at ? 'border-slate-200/80 hover:border-slate-300' : 'border-rose-200 ring-1 ring-rose-100'}`}
               >
                 <div className="flex gap-3 sm:gap-4">
                   <div
@@ -703,7 +720,7 @@ export const AdminActivityView: React.FC<{
                       <button
                         type="button"
                         onClick={() => void handleView(event)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-[#D9232D] px-3.5 py-2.5 text-xs font-bold text-white hover:bg-[#B91C1C]"
+                        className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#D9232D] px-3.5 py-2.5 text-xs font-bold text-white hover:bg-[#B91C1C]"
                       >
                         {isOrder
                           ? 'View order'
@@ -724,7 +741,7 @@ export const AdminActivityView: React.FC<{
                         <button
                           type="button"
                           onClick={() => void markRead(event.id)}
-                          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-800 sm:text-[11px]"
                         >
                           <Check className="h-4 w-4" /> Mark read
                         </button>
@@ -765,7 +782,7 @@ export const AdminActivityView: React.FC<{
 
       {selectedSupport && (
         <div
-          className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/45 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          className="fixed inset-0 z-[90] flex items-end justify-center overflow-hidden bg-slate-950/45 p-0 backdrop-blur-sm sm:items-center sm:p-4"
           role="presentation"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setSelectedSupport(null);
@@ -775,14 +792,14 @@ export const AdminActivityView: React.FC<{
             role="dialog"
             aria-modal="true"
             aria-labelledby="support-detail-title"
-            className="max-h-[94vh] w-full max-w-4xl overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"
+            className="flex max-h-[92dvh] w-full max-w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:max-w-4xl sm:rounded-3xl"
           >
-            <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 p-5 backdrop-blur sm:p-6">
+            <header className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-100 bg-white/95 px-4 py-4 backdrop-blur sm:px-6 sm:py-5">
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#D9232D]">
                   Customer support · {formatDate(selectedSupport.created_at)}
                 </p>
-                <h2 id="support-detail-title" className="mt-1 text-xl font-black text-slate-900">
+                <h2 id="support-detail-title" className="mt-1 break-words text-lg font-black text-slate-900 sm:text-xl">
                   {textValue(selectedSupport.details.subject, 'Support request')}
                 </h2>
               </div>
@@ -790,26 +807,26 @@ export const AdminActivityView: React.FC<{
                 type="button"
                 onClick={() => setSelectedSupport(null)}
                 aria-label="Close support request"
-                className="rounded-xl p-2 text-slate-500 hover:bg-slate-100"
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-slate-500 hover:bg-slate-100"
               >
                 <X className="h-5 w-5" />
               </button>
             </header>
-            <div className="space-y-5 p-5 sm:p-6">
-              <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 sm:grid-cols-2">
-                <div>
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overflow-x-hidden p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-6">
+              <div className="grid grid-cols-1 gap-3 rounded-2xl bg-slate-50 p-4 sm:grid-cols-2">
+                <div className="min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
                     Customer
                   </p>
-                  <p className="mt-1 text-sm font-bold text-slate-900">
+                  <p className="mt-1 break-words text-sm font-bold text-slate-900">
                     {selectedSupport.customer_name}
                   </p>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
                     Category
                   </p>
-                  <p className="mt-1 text-sm font-bold text-slate-900">
+                  <p className="mt-1 break-words text-sm font-bold text-slate-900">
                     {textValue(selectedSupport.details.category)}
                   </p>
                 </div>
@@ -821,7 +838,7 @@ export const AdminActivityView: React.FC<{
                     {selectedSupport.customer_email || '—'}
                   </p>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
                     Phone
                   </p>
@@ -830,7 +847,7 @@ export const AdminActivityView: React.FC<{
                   </p>
                 </div>
               </div>
-              <div className="min-h-[360px]">
+              <div className="min-h-[280px] sm:min-h-[340px]">
                 <SupportConversation
                   requestId={selectedSupport.entity_id}
                   currentUserId={adminUserId}
@@ -848,7 +865,7 @@ export const AdminActivityView: React.FC<{
                     onChange={(event) =>
                       void handleSupportStatusChange(event.target.value as SupportRequestStatus)
                     }
-                    className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 py-3 pr-9 text-sm font-semibold text-slate-800 outline-none focus:border-[#D9232D] disabled:opacity-50"
+                    className="min-h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 py-3 pr-9 text-base font-semibold text-slate-800 outline-none focus:border-[#D9232D] disabled:opacity-50 sm:text-sm"
                   >
                     <option value="open">Open</option>
                     <option value="in_progress">In progress</option>

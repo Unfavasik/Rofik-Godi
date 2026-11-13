@@ -47,9 +47,9 @@ export const Header: React.FC<HeaderProps> = ({
           type="button"
           onClick={onOpenAccount}
           aria-label={`Open account profile for ${currentUser?.name || 'Rider'}`}
-          className="flex min-w-0 max-w-[calc(100%-5.5rem)] items-center gap-2.5 cursor-pointer group select-none"
+          className="flex min-h-11 min-w-0 max-w-[calc(100%-6.75rem)] items-center gap-2.5 cursor-pointer group select-none"
         >
-          <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 shadow-2xs group-hover:border-[#D9232D]/40 transition-all overflow-hidden relative">
+          <div className="w-9 h-9 shrink-0 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 shadow-2xs group-hover:border-[#D9232D]/40 transition-all overflow-hidden relative">
             {currentUser?.avatar ? (
               <img src={currentUser.avatar} alt={`${currentUser.name || 'Rider'} profile photo`} className="w-full h-full object-cover" />
             ) : (
@@ -77,11 +77,11 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onOpenNotifications}
               aria-label="Notifications"
-              className="relative w-9 h-9 rounded-full bg-white hover:bg-red-50 border border-slate-200 shadow-2xs flex items-center justify-center text-slate-800 active:scale-95 transition-all"
+              className="relative w-11 h-11 rounded-full bg-white hover:bg-red-50 border border-slate-200 shadow-2xs flex items-center justify-center text-slate-800 active:scale-95 transition-all"
               title="Notifications"
             >
               <Bell className="w-[18px] h-[18px] text-slate-900" />
-              {notificationCount > 0 && <span aria-label={`${notificationCount} unread notifications`} className="absolute -top-1 -right-1 min-w-4 h-4 px-0.5 bg-[#D9232D] text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">{notificationCount > 9 ? '9+' : notificationCount}</span>}
+              {notificationCount > 0 && <span aria-label={`${notificationCount} unread notifications`} className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-0.5 bg-[#D9232D] text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">{notificationCount > 9 ? '9+' : notificationCount}</span>}
             </button>
 
           </div>
@@ -90,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onOpenCart}
             aria-label="Cart"
-            className="relative w-9 h-9 rounded-full bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs flex items-center justify-center text-slate-800 active:scale-95 transition-all"
+            className="relative w-11 h-11 rounded-full bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs flex items-center justify-center text-slate-800 active:scale-95 transition-all"
             title="Shopping Cart"
           >
             <ShoppingBag className="w-4 h-4 text-slate-900" />
@@ -110,8 +110,8 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Instant Search Bar */}
       {setSearchQuery && !hideSearchInput && (
-        <div className="px-4 pb-2.5 bg-white">
-          <div className="relative flex items-center">
+        <div className="px-3 pb-2.5 bg-white sm:px-4">
+          <div className="relative flex min-w-0 items-center">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 pointer-events-none" />
             <input
               ref={searchInputRef}
@@ -122,7 +122,7 @@ export const Header: React.FC<HeaderProps> = ({
               }}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search bike, toto seat covers, gel cushions..."
-              className="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-[#D9232D] rounded-xl pl-9 pr-8 py-2 text-[12.5px] font-medium text-slate-900 placeholder:text-gray-400 focus:outline-hidden transition-all shadow-2xs cursor-pointer"
+              className="min-h-11 w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-[#D9232D] rounded-xl pl-9 pr-11 py-2 text-base sm:text-[13px] font-medium text-slate-900 placeholder:text-gray-400 focus:outline-hidden transition-all shadow-2xs cursor-pointer"
             />
             <AnimatePresence>
               {searchQuery && (
@@ -134,7 +134,7 @@ export const Header: React.FC<HeaderProps> = ({
                     setSearchQuery('');
                     searchInputRef.current?.focus();
                   }}
-                  className="absolute right-2.5 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-slate-200/60 transition-all"
+                  className="absolute right-1 flex h-9 w-9 items-center justify-center text-gray-400 hover:text-gray-600 rounded-full hover:bg-slate-200/60 transition-all"
                   title="Clear search"
                 >
                   <X className="w-3.5 h-3.5" />

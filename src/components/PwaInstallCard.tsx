@@ -36,7 +36,7 @@ export const PwaInstallCard: React.FC<PwaInstallCardProps> = ({
         </p>
         {installError && <p role="alert" className="mt-1 text-[11px] font-semibold text-rose-800">{installError}</p>}
         <div className="mt-2 flex flex-wrap gap-2">
-          {canInstall && <button type="button" disabled={isInstalling} aria-busy={isInstalling} onClick={() => void onInstall()} className="min-h-11 rounded-xl bg-[#D9232D] px-3.5 text-[11px] font-extrabold text-white disabled:opacity-60">
+          {canInstall && <button type="button" disabled={isInstalling} aria-busy={isInstalling} onClick={() => void onInstall()} className="banner-cta-shine min-h-11 rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-3.5 text-[11px] font-extrabold text-white shadow-xs hover:brightness-105 active:scale-95 disabled:opacity-60">
             {isInstalling ? t('pwa.opening') : t('pwa.install')}
           </button>}
           <button type="button" onClick={onDismiss} aria-label={t('pwa.dismiss')} className="min-h-11 rounded-xl px-3 text-[11px] font-bold text-slate-600 hover:bg-slate-100">{t('pwa.notNow')}</button>

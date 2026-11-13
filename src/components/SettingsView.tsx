@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2, Search, ChevronDown, ShoppingBag, MapPin, CreditCard, Wrench, HelpCircle, Clock3, Phone, CheckCircle2, Trash2 } from 'lucide-react';
+import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2, Search, ChevronDown, ShoppingBag, MapPin, CreditCard, Wrench, HelpCircle, Clock3, Phone, CheckCircle2, Trash2, Sparkles } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
@@ -10,6 +10,7 @@ import { readCustomerAppPreferences, saveCustomerAppPreferences, type CustomerNo
 import { translate, useI18n } from '../lib/i18n';
 import type { SettingsSectionRoute } from '../lib/appRoutes';
 import { AccountDeletionView } from './AccountDeletionView';
+import { SettingsCouponsSkeleton, SettingsPageSkeleton } from './AccountPageSkeleton';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -31,17 +32,18 @@ interface SettingsViewProps {
   /** Return from a sub-section to the /settings hub. */
   onCloseSection?: () => void;
   isAuthenticated: boolean;
+  isLoading?: boolean;
   pwaInstallCard?: React.ReactNode;
 }
 
 const ChevronRight = () => (
-  <svg className="w-4 h-4 text-gray-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg className="w-4 h-4 text-slate-400 stroke-[2.5] transition-transform group-hover/row:translate-x-0.5 group-hover/row:text-[#D9232D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const BackArrow = () => (
-  <svg className="w-6 h-6 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg className="w-5 h-5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
@@ -51,23 +53,31 @@ interface SettingsRowProps {
   iconBg: string;
   title: string;
   subtitle: string;
+  badge?: string;
   onClick: () => void;
   danger?: boolean;
 }
 
-const SettingsRow: React.FC<SettingsRowProps> = ({ icon, iconBg, title, subtitle, onClick, danger }) => (
+const SettingsRow: React.FC<SettingsRowProps> = ({ icon, iconBg, title, subtitle, badge, onClick, danger }) => (
   <button
     onClick={onClick}
     type="button"
-    className={`w-full flex items-center justify-between p-3.5 bg-white rounded-2xl shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04),0_1px_3px_-1px_rgba(0,0,0,0.02)] border border-gray-100/75 hover:bg-gray-50 active:scale-[0.99] transition-all duration-150 text-left ${
-      danger ? 'hover:bg-red-50/40' : ''
+    className={`group/row w-full flex items-center justify-between p-3.5 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_8px_24px_-14px_rgba(15,23,42,0.06)] border border-slate-200/80 hover:border-rose-200/80 hover:bg-white active:scale-[0.99] transition-all duration-150 text-left ${
+      danger ? 'hover:bg-rose-50/40 hover:border-rose-200' : ''
     }`}
   >
-    <div className="flex items-center space-x-3.5">
-      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>{icon}</div>
-      <div>
-        <h2 className="text-[14.5px] font-bold text-gray-900 leading-snug">{title}</h2>
-        <p className="text-[12px] text-gray-500 font-normal">{subtitle}</p>
+    <div className="flex items-center space-x-3.5 min-w-0 pr-2">
+      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 ring-1 ring-inset ring-black/[0.04] transition-transform group-hover/row:scale-105 ${iconBg}`}>{icon}</div>
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <h2 className={`text-[14px] font-extrabold leading-snug truncate ${danger ? 'text-[#D9232D]' : 'text-slate-900'}`}>{title}</h2>
+          {badge && (
+            <span className="shrink-0 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-extrabold text-[#D9232D] ring-1 ring-inset ring-rose-200/70">
+              {badge}
+            </span>
+          )}
+        </div>
+        <p className="text-[11.5px] text-slate-500 font-medium truncate mt-0.5">{subtitle}</p>
       </div>
     </div>
     <ChevronRight />
@@ -76,36 +86,45 @@ const SettingsRow: React.FC<SettingsRowProps> = ({ icon, iconBg, title, subtitle
 
 const SettingsGroup: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
   <div className="space-y-2.5">
-    <h2 className="px-1 pt-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</h2>
-    {children}
+    <div className="flex items-center gap-2 px-1 pt-1">
+      <span className="h-1.5 w-1.5 rounded-full bg-[#D9232D]" />
+      <h2 className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{label}</h2>
+    </div>
+    <div className="space-y-2">{children}</div>
   </div>
 );
 
 interface SectionPageProps {
   title: string;
   subtitle: string;
+  eyebrow?: string;
   onBack: () => void;
   children: React.ReactNode;
 }
 
-/** Full-screen shell for routed settings sub-sections, matching the app's page header pattern. */
-const SectionPage: React.FC<SectionPageProps> = ({ title, subtitle, onBack, children }) => (
-  <div className="w-full flex-1 bg-[#F7F8FA] min-h-full flex flex-col animate-fade-in font-sans">
-    <section className="px-5 pt-3 pb-3" data-purpose="page-header">
-      <div className="flex items-center space-x-3 mb-1">
+/** Full-screen shell for routed settings sub-sections, matching the app's glassmorphic page header pattern. */
+const SectionPage: React.FC<SectionPageProps> = ({ title, subtitle, eyebrow = 'Workspace · Settings', onBack, children }) => (
+  <div className="w-full max-w-full flex-1 overflow-x-hidden bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] min-h-full flex flex-col animate-fade-in font-sans">
+    <section className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/90 px-4 py-3.5 backdrop-blur-md shadow-[0_4px_20px_-10px_rgba(15,23,42,0.05)]" data-purpose="page-header">
+      <div className="flex items-center gap-3">
         <button
           onClick={onBack}
           aria-label="Back to settings"
-          className="p-1 -ml-1 text-gray-900 hover:opacity-75 transition-opacity active:scale-95"
+          className="h-11 w-11 rounded-2xl bg-slate-100/90 hover:bg-rose-50 hover:text-[#D9232D] text-slate-800 flex items-center justify-center transition-all active:scale-95 shrink-0"
           type="button"
         >
           <BackArrow />
         </button>
-        <h1 className="text-[25px] font-bold text-gray-900 tracking-tight">{title}</h1>
+        <div className="min-w-0 flex-1">
+          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50/90 px-2 py-0.5 text-[9.5px] font-black uppercase tracking-[0.16em] text-[#D9232D] ring-1 ring-inset ring-rose-100">
+            {eyebrow}
+          </span>
+          <h1 className="mt-0.5 text-[21px] font-black text-slate-900 tracking-tight leading-tight truncate">{title}</h1>
+          <p className="text-[12px] text-slate-500 font-medium truncate">{subtitle}</p>
+        </div>
       </div>
-      <p className="text-[13.5px] text-[#64748B] font-normal pl-0.5">{subtitle}</p>
     </section>
-    <div className="flex-1 px-4 pb-10 pt-1 space-y-3">{children}</div>
+    <div className="flex-1 px-4 pb-[max(3rem,env(safe-area-inset-bottom))] pt-4 space-y-3.5">{children}</div>
   </div>
 );
 
@@ -125,6 +144,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onOpenSection,
   onCloseSection,
   isAuthenticated,
+  isLoading = false,
   pwaInstallCard,
 }) => {
   const { t } = useI18n();
@@ -186,6 +206,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     });
     return () => { active = false; };
   }, [section]);
+
+  if (isLoading) {
+    return <SettingsPageSkeleton />;
+  }
 
   const handleCopyCoupon = async (code: string) => {
     setCopyError('');
@@ -253,46 +277,57 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     return parts.filter(Boolean).join(' · ');
   };
 
+  const enabledNotificationsCount = Object.values(notificationState).filter(Boolean).length;
+  const languageLabel = language === 'bn' ? 'বাংলা' : language === 'hi' ? 'हिन्दी' : 'English';
+
   /* ------------------------------ Section pages ------------------------------ */
 
   if (section === 'notifications') {
     return (
-      <SectionPage title={t('settings.notifications')} subtitle="Choose what appears in your in-app inbox" onBack={closeSection}>
-        {settingsNotice && <p role="status" className="rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-medium leading-relaxed text-emerald-800">{settingsNotice}</p>}
+      <SectionPage title={t('settings.notifications')} subtitle="Choose what appears in your in-app inbox" eyebrow="Inbox & Alerts" onBack={closeSection}>
+        {settingsNotice && <p role="status" className="rounded-2xl border border-emerald-200/80 bg-emerald-50/90 px-3.5 py-2.5 text-[11px] font-bold leading-relaxed text-emerald-800">{settingsNotice}</p>}
         <div className="space-y-3">
           {[
             { key: 'offers', label: 'Festival Discounts & Coupons', desc: 'Alerts about seasonal flash sales & discounts', icon: <Tag className="h-5 w-5 fill-current text-[#E51E2B]" />, tone: 'bg-red-50' },
             { key: 'orderUpdates', label: 'Order Status & Tracking', desc: 'Realtime updates when stitching starts or completes', icon: <Truck className="h-5 w-5 text-[#E51E2B]" />, tone: 'bg-rose-50' },
             { key: 'workshopAlerts', label: 'Support & Workshop Replies', desc: 'Responses to your support requests', icon: <MessageCircle className="h-5 w-5 text-[#E51E2B]" />, tone: 'bg-rose-50' },
             { key: 'systemUpdates', label: 'Product & Account Updates', desc: 'New products, profile and service notices', icon: <Package className="h-5 w-5 text-purple-600" />, tone: 'bg-purple-50' },
-          ].map((item) => (
-            <div key={item.key} className="flex justify-between items-center p-3.5 bg-white rounded-2xl border border-gray-100/75 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)]">
-              <div className="flex min-w-0 items-center gap-3.5">
-                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${item.tone}`}>{item.icon}</div>
-                <div className="min-w-0 pr-2">
-                  <div className="text-[13px] font-bold text-gray-900">{item.label}</div>
-                  <div className="text-[11px] text-gray-500">{item.desc}</div>
+          ].map((item) => {
+            const checked = notificationState[item.key as keyof typeof notificationState];
+            return (
+              <div key={item.key} className="flex justify-between items-center p-3.5 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.06)] transition hover:border-rose-200/80">
+                <div className="flex min-w-0 items-center gap-3.5">
+                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ring-1 ring-inset ring-black/[0.04] ${item.tone}`}>{item.icon}</div>
+                  <div className="min-w-0 pr-2">
+                    <div className="flex items-center gap-2">
+                      <div className="text-[13px] font-extrabold text-slate-900 truncate">{item.label}</div>
+                      <span className={`rounded-full px-2 py-0.5 text-[9.5px] font-black uppercase ${checked ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/70' : 'bg-slate-100 text-slate-500'}`}>
+                        {checked ? 'Active' : 'Muted'}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">{item.desc}</div>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-label={item.label}
+                  aria-checked={checked}
+                  onClick={() => setNotificationState({ ...notificationState, [item.key]: !checked })}
+                  className={`relative ml-3 h-6 w-12 shrink-0 rounded-full transition-colors ${checked ? 'bg-[#E51E2B]' : 'bg-slate-200'}`}
+                >
+                  <span className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform ${checked ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                </button>
               </div>
-              <button
-                type="button"
-                role="switch"
-                aria-label={item.label}
-                aria-checked={notificationState[item.key as keyof typeof notificationState]}
-                onClick={() => setNotificationState({ ...notificationState, [item.key]: !notificationState[item.key as keyof typeof notificationState] })}
-                className={`relative ml-3 h-6 w-12 shrink-0 rounded-full transition-colors ${notificationState[item.key as keyof typeof notificationState] ? 'bg-[#E51E2B]' : 'bg-gray-200'}`}
-              >
-                <span className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform ${notificationState[item.key as keyof typeof notificationState] ? 'translate-x-6' : 'translate-x-0.5'}`} />
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        <p className="text-[10px] leading-relaxed text-gray-500 px-1">These preferences filter your in-app inbox, unread badge, and push notifications. WhatsApp delivery is not affected.</p>
+        <p className="text-[10.5px] leading-relaxed text-slate-500 px-1">These preferences filter your in-app inbox, unread badge, and push notifications. WhatsApp delivery is not affected.</p>
 
         <button
           onClick={saveNotifications}
-          className="w-full py-3 bg-[#D9232D] text-white text-xs font-bold rounded-2xl shadow-sm hover:bg-red-700 transition-colors"
+          className="w-full py-3.5 bg-gradient-to-r from-[#D9232D] to-[#B91822] text-white text-xs font-black rounded-2xl shadow-md shadow-red-600/20 hover:brightness-105 active:scale-[0.99] transition-all"
         >
           Save Preferences
         </button>
@@ -302,15 +337,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   if (section === 'app') {
     return (
-      <SectionPage title={t('settings.appPreferences')} subtitle={t('settings.appSettingsHint')} onBack={closeSection}>
-        {settingsNotice && <p role="status" className="rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-medium leading-relaxed text-emerald-800">{settingsNotice}</p>}
+      <SectionPage title={t('settings.appPreferences')} subtitle={t('settings.appSettingsHint')} eyebrow="Language & Haptics" onBack={closeSection}>
+        {settingsNotice && <p role="status" className="rounded-2xl border border-emerald-200/80 bg-emerald-50/90 px-3.5 py-2.5 text-[11px] font-bold leading-relaxed text-emerald-800">{settingsNotice}</p>}
 
-        <div className="p-4 bg-white rounded-2xl border border-gray-100/75 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] space-y-3">
-          <label className="text-xs font-bold text-gray-700 block flex items-center gap-1.5">
-            <Globe className="w-3.5 h-3.5 text-blue-600" />
+        <div className="p-4 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.06)] space-y-3">
+          <label className="text-xs font-extrabold text-slate-800 flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <Globe className="w-3.5 h-3.5" />
+            </span>
             <span>{t('settings.language')}</span>
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="flex flex-wrap gap-2 sm:grid sm:grid-cols-3">
             {[
               { id: 'en', label: 'English' },
               { id: 'bn', label: 'বাংলা' },
@@ -319,21 +356,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <button
                 key={l.id}
                 onClick={() => setLanguage(l.id as PreferredLanguage)}
-                className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${
-                  language === l.id ? 'border-[#D9232D] bg-[#FEECEC] text-[#D9232D]' : 'border-gray-200 text-gray-700'
+                className={`min-h-11 min-w-[92px] flex-1 py-2.5 px-2.5 rounded-xl text-xs font-extrabold border transition-all flex items-center justify-center gap-1.5 ${
+                  language === l.id
+                    ? 'border-[#D9232D] bg-gradient-to-br from-[#FFF1F2] to-[#FFE4E6] text-[#D9232D] shadow-2xs'
+                    : 'border-slate-200/80 bg-slate-50/70 text-slate-700 hover:bg-slate-100'
                 }`}
               >
-                {l.label}
+                <span>{l.label}</span>
+                {language === l.id && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
               </button>
             ))}
           </div>
-          <p className="text-[10px] leading-relaxed text-gray-500">{language === 'hi' ? t('settings.hindiHint') : t('settings.banglaHint')}</p>
+          <p className="text-[10.5px] leading-relaxed text-slate-500">{language === 'hi' ? t('settings.hindiHint') : t('settings.banglaHint')}</p>
         </div>
 
-        <label className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-gray-100/75 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] text-xs font-semibold text-gray-700">
-          <span>
-            <span className="block">{t('settings.haptic')}</span>
-            <span className="mt-0.5 block text-[10px] font-normal text-gray-500">{t('settings.hapticHint')}</span>
+        <label className="flex items-center justify-between p-4 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.06)] text-xs font-extrabold text-slate-800 cursor-pointer">
+          <span className="pr-3">
+            <span className="block text-[13px]">{t('settings.haptic')}</span>
+            <span className="mt-0.5 block text-[11px] font-medium text-slate-500">{t('settings.hapticHint')}</span>
           </span>
           <input
             type="checkbox"
@@ -341,13 +381,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             aria-label={t('settings.haptic')}
             checked={hapticFeedback}
             onChange={(event) => setHapticFeedback(event.target.checked)}
-            className="h-5 w-5 cursor-pointer rounded text-[#D9232D] focus:ring-[#D9232D]"
+            className="h-5 w-5 cursor-pointer rounded accent-[#D9232D] text-[#D9232D] focus:ring-[#D9232D]"
           />
         </label>
 
         <button
           onClick={saveAppPreferences}
-          className="w-full py-3 bg-[#D9232D] text-white text-xs font-bold rounded-2xl shadow-sm hover:bg-red-700 transition-colors"
+          className="w-full py-3.5 bg-gradient-to-r from-[#D9232D] to-[#B91822] text-white text-xs font-black rounded-2xl shadow-md shadow-red-600/20 hover:brightness-105 active:scale-[0.99] transition-all"
         >
           {t('settings.savePreferences')}
         </button>
@@ -374,22 +414,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       );
     }
     return (
-      <SectionPage title={t('settings.coupons')} subtitle="Tap an offer for details or copy its code" onBack={closeSection}>
-        {couponOffersLoading ? <p className="py-10 text-center text-xs font-semibold text-gray-400">Loading active offers…</p>
-          : couponOffersError ? <p role="status" className="rounded-xl bg-amber-50 p-4 text-center text-xs font-semibold text-amber-800">{couponOffersError}</p>
-          : couponOffers.length === 0 ? <p className="py-10 text-center text-xs font-semibold text-gray-400">No active coupon offers right now. Please check back later.</p>
+      <SectionPage title={t('settings.coupons')} subtitle="Tap an offer for details or copy its code" eyebrow="Exclusive Rewards" onBack={closeSection}>
+        {couponOffersLoading ? <SettingsCouponsSkeleton />
+          : couponOffersError ? <p role="status" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-center text-xs font-semibold text-amber-800">{couponOffersError}</p>
+          : couponOffers.length === 0 ? <div className="rounded-3xl border border-slate-200/80 bg-white/95 py-12 px-5 text-center shadow-2xs"><div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-[#D9232D]"><Tag className="h-5 w-5" /></div><p className="text-xs font-bold text-slate-600">No active coupon offers right now. Please check back later.</p></div>
           : couponOffers.map((offer) => (
-            <div key={offer.code} className="rounded-2xl border border-red-200/70 bg-gradient-to-r from-red-50 to-orange-50 p-3.5">
-              <div className="flex items-center justify-between gap-3">
+            <div key={offer.code} className="relative overflow-hidden rounded-2xl border border-rose-200/80 bg-gradient-to-r from-[#FFF5F5] via-white to-[#FFF7ED] p-4 shadow-[0_10px_28px_-14px_rgba(217,35,45,0.12)] transition hover:border-rose-300">
+              <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
                 <button type="button" onClick={() => setSelectedCouponOffer(offer)} className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] focus-visible:ring-offset-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-sm font-black tracking-wide text-[#D9232D]">{offer.code}</span>
-                    <span className="rounded bg-[#D9232D] px-1.5 py-0.5 text-[9px] font-extrabold text-white">{couponBenefit(offer)}</span>
+                    <span className="rounded-lg border border-dashed border-rose-300 bg-rose-50/80 px-2.5 py-0.5 font-mono text-sm font-black tracking-wider text-[#D9232D]">{offer.code}</span>
+                    <span className="rounded-full bg-[#D9232D] px-2 py-0.5 text-[9.5px] font-extrabold text-white shadow-2xs">{couponBenefit(offer)}</span>
                   </div>
-                  <p className="mt-1 text-[11.5px] text-gray-600">{couponDetails(offer)}</p>
-                  <p className="mt-1 text-[10px] font-semibold text-gray-400">Valid until {new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }).format(new Date(offer.expires_at))}</p>
+                  <p className="mt-1.5 break-words text-[11.5px] font-medium text-slate-600">{couponDetails(offer)}</p>
+                  <p className="mt-1 text-[10px] font-bold text-slate-400">Valid until {new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }).format(new Date(offer.expires_at))}</p>
                 </button>
-                <button type="button" onClick={() => handleCopyCoupon(offer.code)} className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${copiedCoupon === offer.code ? 'bg-emerald-600 text-white' : 'border border-gray-200 bg-white text-gray-900 shadow-xs'}`}>
+                <button type="button" onClick={() => handleCopyCoupon(offer.code)} className={`min-h-11 shrink-0 rounded-xl px-4 py-2 text-xs font-extrabold transition-all active:scale-95 ${copiedCoupon === offer.code ? 'bg-emerald-600 text-white shadow-xs' : 'border border-slate-200 bg-white text-slate-900 shadow-2xs hover:border-[#D9232D] hover:text-[#D9232D]'}`}>
                   {copiedCoupon === offer.code ? 'Copied!' : 'Copy'}
                 </button>
               </div>
@@ -402,17 +442,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   if (section === 'reviews') {
     return (
-      <SectionPage title={t('settings.reviews')} subtitle="Help other riders with your feedback" onBack={closeSection}>
-        <div className="space-y-3 py-6 text-center bg-white rounded-2xl border border-gray-100/75 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)] p-5">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-500">
-            <Star className="h-6 w-6 fill-current" />
+      <SectionPage title={t('settings.reviews')} subtitle="Help other riders with your feedback" eyebrow="Verified Reviews" onBack={closeSection}>
+        <div className="space-y-3.5 py-7 text-center bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200/80 shadow-[0_12px_32px_-16px_rgba(15,23,42,0.07)] p-5">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 ring-1 ring-inset ring-amber-200/70">
+            <Star className="h-7 w-7 fill-current" />
           </div>
-          <h2 className="text-sm font-bold text-gray-900">Verified product reviews</h2>
-          <p className="text-xs leading-relaxed text-gray-500 max-w-[300px] mx-auto">Reviews are tied to products in a completed order. Open your order history to choose a purchased product and submit a verified review.</p>
+          <h2 className="text-base font-black text-slate-900">Verified product reviews</h2>
+          <p className="text-xs leading-relaxed text-slate-500 max-w-[300px] mx-auto">Reviews are tied to products in a completed order. Open your order history to choose a purchased product and submit a verified review.</p>
           <button
             type="button"
             onClick={() => onOpenOrders?.()}
-            className="w-full rounded-2xl bg-[#D9232D] py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-700"
+            className="w-full rounded-2xl bg-gradient-to-r from-[#D9232D] to-[#B91822] py-3.5 text-xs font-black text-white shadow-md shadow-red-600/20 transition-all hover:brightness-105"
           >
             {isAuthenticated ? 'Open order history' : 'Sign in to review a purchase'}
           </button>
@@ -423,7 +463,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   if (section === 'about') {
     return (
-      <SectionPage title={t('settings.about')} subtitle="The people and craft behind your ride comfort" onBack={closeSection}>
+      <SectionPage title={t('settings.about')} subtitle="The people and craft behind your ride comfort" eyebrow="Our Workshop" onBack={closeSection}>
         <section className="relative overflow-hidden rounded-[26px] bg-[#17223B] shadow-[0_10px_26px_rgba(23,34,59,0.2)]">
           <img src="/images/rofik-godi-store.webp" alt="Rofik Godi Centre workshop" className="h-40 w-full object-cover opacity-75" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#17223B] via-[#17223B]/35 to-transparent" />
@@ -433,18 +473,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </section>
 
-        <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)]">
+        <section className="rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.06)]">
           <p className="text-[13px] leading-[1.7] text-slate-600"><strong className="text-slate-900">Local craftsmanship, made for Indian roads.</strong> We create comfortable, durable seat covers and custom seat solutions for motorcycles, scooters and Toto e-rickshaws across Murshidabad.</p>
           <p className="mt-3 text-[13px] leading-[1.7] text-slate-600">From a quick fitment to a fully customized finish, our workshop combines practical materials, careful stitching and hands-on service so every ride feels better.</p>
         </section>
 
         <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-2xl border border-slate-100 bg-white p-3 text-center shadow-sm"><p className="text-lg font-black text-[#D9232D]">4.8</p><p className="mt-0.5 text-[9px] font-bold text-slate-400">CUSTOMER RATING</p></div>
-          <div className="rounded-2xl border border-slate-100 bg-white p-3 text-center shadow-sm"><p className="text-lg font-black text-[#D9232D]">12+</p><p className="mt-0.5 text-[9px] font-bold text-slate-400">YEARS OF CRAFT</p></div>
-          <div className="rounded-2xl border border-slate-100 bg-white p-3 text-center shadow-sm"><p className="text-lg font-black text-[#D9232D]">4</p><p className="mt-0.5 text-[9px] font-bold text-slate-400">CORE SERVICES</p></div>
+          <div className="rounded-2xl border border-slate-200/80 bg-white/95 p-3 text-center shadow-2xs"><p className="text-lg font-black text-[#D9232D]">4.8</p><p className="mt-0.5 text-[9px] font-bold text-slate-400">CUSTOMER RATING</p></div>
+          <div className="rounded-2xl border border-slate-200/80 bg-white/95 p-3 text-center shadow-2xs"><p className="text-lg font-black text-[#D9232D]">12+</p><p className="mt-0.5 text-[9px] font-bold text-slate-400">YEARS OF CRAFT</p></div>
+          <div className="rounded-2xl border border-slate-200/80 bg-white/95 p-3 text-center shadow-2xs"><p className="text-lg font-black text-[#D9232D]">4</p><p className="mt-0.5 text-[9px] font-bold text-slate-400">CORE SERVICES</p></div>
         </div>
 
-        <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)]">
+        <section className="rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.06)]">
           <div className="flex items-center gap-2"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-[#D9232D]"><Wrench className="h-4 w-4" /></span><div><h2 className="text-sm font-black text-slate-900">What we do</h2><p className="text-[10px] text-slate-500">Workshop services for your vehicle</p></div></div>
           <div className="mt-3 space-y-2">{WORKSHOP_INFO.services.map((service) => <div key={service} className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2.5 text-[11px] font-medium leading-snug text-slate-600"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />{service}</div>)}</div>
         </section>
@@ -453,10 +493,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="flex items-start gap-2.5"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" /><div><h2 className="text-sm font-black text-slate-900">Built for everyday riding</h2><p className="mt-1 text-[11px] leading-relaxed text-slate-600">We use durable rexine, high-tensile thread and comfort-focused foam options selected for local weather and road conditions.</p></div></div>
         </section>
 
-        <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+        <section className="rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-2xs">
           <h2 className="text-sm font-black text-slate-900">Visit the workshop</h2>
           <div className="mt-3 space-y-2 text-[11px] font-medium text-slate-600"><p className="flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#D9232D]" />{WORKSHOP_INFO.address}</p><p className="flex items-center gap-2"><Clock3 className="h-4 w-4 shrink-0 text-blue-600" />{WORKSHOP_INFO.workingHours}</p><p className="flex items-center gap-2"><Phone className="h-4 w-4 shrink-0 text-emerald-600" />{WORKSHOP_INFO.phone} · {WORKSHOP_INFO.phoneAlt}</p></div>
-          {onOpenStoreInfo && <button type="button" onClick={() => onOpenStoreInfo()} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#D9232D] py-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-700"><MapPin className="h-4 w-4" />Open store map</button>}
+          {onOpenStoreInfo && <button type="button" onClick={() => onOpenStoreInfo()} className="banner-cta-shine group/cta mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#D9232D] py-3 text-xs font-bold text-white shadow-sm shadow-red-600/20 transition-all hover:bg-red-700 hover:shadow-md active:scale-[0.98]"><MapPin className="h-4 w-4 transition-transform duration-200 group-hover/cta:scale-110" />Open store map</button>}
         </section>
       </SectionPage>
     );
@@ -513,15 +553,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     })).filter((group) => group.items.length > 0);
 
     return (
-      <SectionPage title={t('settings.help')} subtitle="Answers for shopping, pickup, fitment and support" onBack={closeSection}>
+      <SectionPage title={t('settings.help')} subtitle="Answers for shopping, pickup, fitment and support" eyebrow="Help & FAQ" onBack={closeSection}>
         <div className="rounded-[26px] bg-gradient-to-br from-[#17223B] to-[#293A63] p-4 text-white shadow-[0_10px_24px_rgba(23,34,59,0.18)]">
           <div className="flex items-start gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10"><HelpCircle className="h-6 w-6" /></div>
             <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-200">Rofik Godi Centre</p><h2 className="mt-1 text-base font-black">How can we help?</h2><p className="mt-1 text-[11px] leading-relaxed text-slate-300">Search answers about your order, vehicle fitment or workshop visit.</p></div>
           </div>
-          <label className="mt-4 flex items-center gap-2 rounded-2xl bg-white px-3 py-3 text-slate-400 shadow-sm">
+          <label className="mt-4 flex min-h-11 items-center gap-2 rounded-2xl bg-white px-3 py-2 text-slate-400 shadow-sm">
             <Search className="h-4 w-4 shrink-0" />
-            <input value={faqQuery} onChange={(event) => setFaqQuery(event.target.value)} placeholder="Search help topics" aria-label="Search help topics" className="min-w-0 flex-1 bg-transparent text-xs font-medium text-slate-800 outline-none placeholder:text-slate-400" />
+            <input value={faqQuery} onChange={(event) => setFaqQuery(event.target.value)} placeholder="Search help topics" aria-label="Search help topics" className="min-w-0 flex-1 bg-transparent text-base sm:text-xs font-medium text-slate-800 outline-none placeholder:text-slate-400" />
           </label>
         </div>
 
@@ -530,7 +570,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           return (
             <section key={group.label} className="space-y-2">
               <div className="flex items-center gap-2 px-1 pt-2"><span className={`flex h-8 w-8 items-center justify-center rounded-xl ${group.tone}`}><GroupIcon className="h-4 w-4" /></span><h2 className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">{group.label}</h2></div>
-              <div className="overflow-hidden rounded-2xl border border-gray-100/80 bg-white shadow-[0_2px_8px_-1px_rgba(0,0,0,0.04)]">
+              <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.06)]">
                 {group.items.map((faq, index) => {
                   const faqKey = `${group.label}:${faq.q}`;
                   const isOpen = openFaq === faqKey;
@@ -548,7 +588,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           );
         }) : <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center"><Search className="mx-auto h-7 w-7 text-slate-300" /><p className="mt-2 text-xs font-bold text-slate-700">No matching help topics</p><button type="button" onClick={() => setFaqQuery('')} className="mt-2 text-[11px] font-bold text-[#D9232D] underline">Clear search</button></div>}
 
-        <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-center"><p className="text-xs font-bold text-slate-800">Still need help?</p><p className="mt-1 text-[11px] text-slate-500">Our workshop team can help with a specific order or fitment.</p>{onOpenContactSupport && <button type="button" onClick={() => onOpenContactSupport()} className="mt-3 rounded-xl bg-[#D9232D] px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-700">Contact support</button>}</div>
+        <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-center"><p className="text-xs font-bold text-slate-800">Still need help?</p><p className="mt-1 text-[11px] text-slate-500">Our workshop team can help with a specific order or fitment.</p>{onOpenContactSupport && <button type="button" onClick={() => onOpenContactSupport()} className="banner-cta-shine mt-3 rounded-xl bg-[#D9232D] px-5 py-2.5 text-xs font-bold text-white shadow-sm shadow-red-600/20 transition-all hover:bg-red-700 hover:shadow-md active:scale-[0.98]">Contact support</button>}</div>
       </SectionPage>
     );
   }
@@ -556,32 +596,44 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   /* -------------------------------- Settings hub ------------------------------- */
 
   return (
-    <div className="w-full flex-1 bg-[#F7F8FA] min-h-full flex flex-col animate-fade-in font-sans">
+    <div className="w-full max-w-full flex-1 overflow-x-hidden bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] min-h-full flex flex-col animate-fade-in font-sans">
       {/* BEGIN: NavigationHeader */}
-      {/* Top back button, Settings title, and subtitle description */}
-      <section className="px-5 pt-3 pb-3" data-purpose="page-header">
-        <div className="flex items-center space-x-3 mb-1">
-          <button
-            onClick={onBack}
-            aria-label={t('common.back')}
-            className="p-1 -ml-1 text-gray-900 hover:opacity-75 transition-opacity active:scale-95"
-            type="button"
-          >
-            <BackArrow />
-          </button>
-          <h1 className="text-[25px] font-bold text-gray-900 tracking-tight">{t('settings.title')}</h1>
+      <section className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/90 px-4 py-3.5 backdrop-blur-md shadow-[0_4px_20px_-10px_rgba(15,23,42,0.05)]" data-purpose="page-header">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={onBack}
+              aria-label={t('common.back')}
+              className="h-11 w-11 rounded-2xl bg-slate-100/90 hover:bg-rose-50 hover:text-[#D9232D] text-slate-800 flex items-center justify-center transition-all active:scale-95 shrink-0"
+              type="button"
+            >
+              <BackArrow />
+            </button>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[9.5px] font-black uppercase tracking-[0.16em] text-[#D9232D] ring-1 ring-inset ring-rose-100">
+                  <Sparkles className="h-2.5 w-2.5" /> Rider Controls
+                </span>
+              </div>
+              <h1 className="mt-0.5 text-[22px] font-black text-slate-900 tracking-tight leading-tight truncate">{t('settings.title')}</h1>
+              <p className="text-[12px] text-slate-500 font-medium truncate">
+                {t('settings.subtitle')}
+              </p>
+            </div>
+          </div>
+          <div className="hidden xs:flex flex-col items-end gap-1 shrink-0">
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-extrabold text-slate-700">
+              {languageLabel}
+            </span>
+          </div>
         </div>
-        <p className="text-[13.5px] text-[#64748B] font-normal pl-0.5">
-          {t('settings.subtitle')}
-        </p>
       </section>
       {/* END: NavigationHeader */}
 
-      {pwaInstallCard && <div className="px-4 pt-1">{pwaInstallCard}</div>}
+      {pwaInstallCard && <div className="px-4 pt-3">{pwaInstallCard}</div>}
 
       {/* BEGIN: SettingsMenuList */}
-      {/* Settings hub organised into labelled groups; every entry is a routed page. */}
-      <nav aria-label={t('settings.title')} className="flex-1 px-4 space-y-5 mt-1 pb-10">
+      <nav aria-label={t('settings.title')} className="flex-1 px-4 space-y-5 mt-3 pb-10">
         <SettingsGroup label="Preferences">
           <SettingsRow
             onClick={() => openSection('notifications')}
@@ -589,6 +641,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             icon={<Bell className="w-5 h-5 text-[#EF4444]" />}
             title={t('settings.notifications')}
             subtitle={t('settings.offersUpdates')}
+            badge={`${enabledNotificationsCount}/4 on`}
           />
           <SettingsRow
             onClick={() => openSection('app')}
@@ -604,6 +657,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             }
             title={t('settings.appSettings')}
             subtitle={t('settings.appSettingsHint')}
+            badge={languageLabel}
           />
           <SettingsRow
             onClick={() => void handleShareApp()}
@@ -837,9 +891,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       <AnimatePresence>
         {activeDialog === 'logout' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveDialog(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
-            <motion.div initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }} className="relative w-full max-w-[380px] bg-white rounded-[28px] shadow-2xl p-5 z-10 space-y-4 text-center">
+            <motion.div initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }} className="relative z-10 w-full max-w-full sm:max-w-[380px] overflow-x-hidden rounded-t-3xl sm:rounded-[28px] bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl space-y-4 text-center">
               <div className="w-12 h-12 rounded-2xl bg-[#FEECEC] text-[#EF4444] mx-auto flex items-center justify-center">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                   <path d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" strokeLinecap="round" strokeLinejoin="round" />
@@ -854,7 +908,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="grid grid-cols-2 gap-2.5 pt-2">
                 <button
                   onClick={() => setActiveDialog(null)}
-                  className="py-2.5 bg-gray-100 text-gray-700 text-xs font-bold rounded-xl"
+                  className="min-h-11 py-2.5 bg-gray-100 text-gray-700 text-xs font-bold rounded-xl"
                 >
                   Cancel
                 </button>
@@ -874,7 +928,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       setLogoutError('Could not sign out. Please try again.');
                     }
                   }}
-                  className="py-2.5 bg-[#EF4444] text-white text-xs font-bold rounded-xl"
+                  className="min-h-11 py-2.5 bg-[#EF4444] text-white text-xs font-bold rounded-xl"
                 >
                   {logoutConfirmed ? 'Signing out...' : 'Sign Out'}
                 </button>

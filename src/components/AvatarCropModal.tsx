@@ -212,13 +212,13 @@ export function AvatarCropModal({ file, onCancel, onConfirm }: AvatarCropModalPr
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col bg-black" role="dialog" aria-modal="true" aria-label={t('account.cropTitle')}>
-      <div className="flex items-center justify-between gap-2 px-3 py-3">
-        <button type="button" aria-label={t('account.cropCancel')} onClick={onCancel} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-white transition-colors hover:bg-white/10 active:scale-95">
+    <div className="fixed inset-0 z-[70] flex flex-col overflow-x-hidden bg-black" role="dialog" aria-modal="true" aria-label={t('account.cropTitle')}>
+      <div className="flex items-center justify-between gap-2 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+        <button type="button" aria-label={t('account.cropCancel')} onClick={onCancel} className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-white transition-colors hover:bg-white/10 active:scale-95">
           <X className="h-5 w-5" aria-hidden="true" />
         </button>
-        <h2 className="truncate text-[13px] font-bold text-white">{t('account.cropTitle')}</h2>
-        <button type="button" onClick={confirm} disabled={!dims || exporting} className="min-h-9 shrink-0 rounded-full px-3.5 text-[13px] font-bold text-white transition-colors hover:bg-white/10 disabled:opacity-40">
+        <h2 className="min-w-0 truncate text-[13px] font-bold text-white">{t('account.cropTitle')}</h2>
+        <button type="button" onClick={confirm} disabled={!dims || exporting} className="min-h-11 shrink-0 rounded-full px-3.5 text-[13px] font-bold text-white transition-colors hover:bg-white/10 disabled:opacity-40">
           {t('account.cropSave')}
         </button>
       </div>
@@ -256,8 +256,8 @@ export function AvatarCropModal({ file, onCancel, onConfirm }: AvatarCropModalPr
             <p className="mt-4 text-center text-[10px] font-medium text-white/40">{t('account.cropHint')}</p>
           </div>
 
-          <div className="flex items-center gap-4 px-5 pb-9 pt-2">
-            <button type="button" aria-label={t('account.cropRotate')} onClick={rotate} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 active:scale-95">
+          <div className="flex items-center gap-4 px-5 pb-[max(2.25rem,env(safe-area-inset-bottom))] pt-2">
+            <button type="button" aria-label={t('account.cropRotate')} onClick={rotate} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 active:scale-95">
               <RotateCw className="h-5 w-5" aria-hidden="true" />
             </button>
             <input

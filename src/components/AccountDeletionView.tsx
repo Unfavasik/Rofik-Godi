@@ -132,25 +132,25 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
   };
 
   return (
-    <div className="min-h-full flex-1 bg-[#FBFCFE] font-sans text-slate-900">
-      <header className="flex items-center gap-3 border-b border-slate-100 bg-white px-5 py-4">
+    <div className="min-h-full w-full max-w-full flex-1 overflow-x-hidden bg-[#FBFCFE] font-sans text-slate-900">
+      <header className="flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3.5 sm:px-5">
         <button
           type="button"
           onClick={onBack}
           aria-label="Back to settings"
-          className="grid h-10 w-10 place-items-center rounded-full bg-slate-50 text-slate-800 transition hover:bg-slate-100 active:scale-95"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-50 text-slate-800 transition hover:bg-slate-100 active:scale-95"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div>
+        <div className="min-w-0">
           <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#D9232D]">
             Account settings
           </p>
-          <h1 className="text-lg font-black tracking-tight">Delete account</h1>
+          <h1 className="truncate text-lg font-black tracking-tight">Delete account</h1>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[520px] space-y-4 px-4 pb-10 pt-5">
+      <main className="mx-auto w-full max-w-[520px] space-y-4 px-4 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-5">
         {!isAuthenticated ? (
           <section className="rounded-[26px] border border-slate-100 bg-white p-6 text-center shadow-[0_8px_30px_-20px_rgba(15,23,42,0.3)]">
             <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-rose-50 text-[#D9232D]">
@@ -195,7 +195,7 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
               type="button"
               disabled={saving}
               onClick={() => void handleCancel()}
-              className="w-full rounded-2xl border border-[#D9232D] bg-white py-3.5 text-sm font-extrabold text-[#D9232D] transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="min-h-12 w-full rounded-2xl border border-[#D9232D] bg-white py-3.5 text-sm font-extrabold text-[#D9232D] transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {saving ? 'Cancelling…' : 'Cancel deletion request'}
             </button>
@@ -274,7 +274,7 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
                 <select
                   value={reason}
                   onChange={(event) => setReason(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition focus:border-[#D9232D] focus:ring-2 focus:ring-rose-100"
+                  className="mt-2 min-h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base sm:text-sm font-medium text-slate-700 outline-none transition focus:border-[#D9232D] focus:ring-2 focus:ring-rose-100"
                 >
                   <option value="">Select a reason</option>
                   {REASONS.map((item) => (
@@ -290,7 +290,7 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
                   onChange={(event) => setFeedback(event.target.value)}
                   rows={3}
                   placeholder="Tell us how we can improve"
-                  className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#D9232D] focus:ring-2 focus:ring-rose-100"
+                  className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base sm:text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#D9232D] focus:ring-2 focus:ring-rose-100"
                 />
                 <span className="mt-1 block text-right text-[10px] font-medium text-slate-400">
                   {feedback.length}/300
@@ -303,7 +303,7 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
                 type="checkbox"
                 checked={understood}
                 onChange={(event) => setUnderstood(event.target.checked)}
-                className="mt-0.5 h-5 w-5 rounded border-slate-300 text-[#D9232D] focus:ring-[#D9232D]"
+                className="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-300 text-[#D9232D] focus:ring-[#D9232D]"
               />
               <span className="text-xs leading-relaxed text-slate-600">
                 I understand that this will schedule my account for deletion after 7 days.
@@ -313,7 +313,7 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
               type="button"
               disabled={saving}
               onClick={() => void handleRequest()}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#D9232D] py-3.5 text-sm font-extrabold text-white shadow-[0_10px_22px_-12px_rgba(217,35,45,0.75)] transition hover:bg-[#b91c27] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#D9232D] py-3.5 text-sm font-extrabold text-white shadow-[0_10px_22px_-12px_rgba(217,35,45,0.75)] transition hover:bg-[#b91c27] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {saving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

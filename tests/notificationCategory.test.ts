@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { getCustomerNotificationCategory, getSupportRequestIdFromNotification, getNotificationRowSurfaceClass, matchesCustomerNotificationFilter } from '../src/lib/notificationCategory';
+import {
+  getCustomerNotificationCategory,
+  getNotificationRowSurfaceClass,
+  getSupportRequestIdFromNotification,
+  matchesCustomerNotificationFilter,
+  matchesNotificationCategoryToggle,
+} from '../src/lib/notificationCategory';
 
 describe('customer notification categories', () => {
   it('classifies the database support reply trigger under Support even when kind is update', () => {
@@ -16,8 +22,11 @@ describe('customer notification categories', () => {
   });
 
   it('classifies order, offer and system notifications into their own filters', () => {
+    const promo = { kind: 'promotion', title: 'Special offer just for you', body: 'Use coupon RGC20.' };
     expect(getCustomerNotificationCategory({ kind: 'order', title: 'Your order is confirmed', body: 'Order #RGC-1042 is being prepared.' })).toBe('Orders');
-    expect(getCustomerNotificationCategory({ kind: 'promotion', title: 'Special offer just for you', body: 'Use coupon RGC20.' })).toBe('Offers');
+    expect(getCustomerNotificationCategory(promo)).toBe('Offers');
+    expect(matchesNotificationCategoryToggle(promo, 'Promotions')).toBe(true);
+    expect(matchesNotificationCategoryToggle(promo, 'Orders')).toBe(false);
     expect(getCustomerNotificationCategory({ kind: 'update', title: 'Profile updated', body: 'Your profile was updated successfully.' })).toBe('System');
     expect(getCustomerNotificationCategory({ kind: 'security', title: '🔐 Important account update', body: 'Updated: Password.' })).toBe('System');
   });

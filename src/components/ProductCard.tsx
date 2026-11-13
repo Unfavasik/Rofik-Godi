@@ -63,7 +63,7 @@ const ProductImage: React.FC<{ src: string | null | undefined; alt: string; vari
           setIsLoaded(true);
         }}
         onError={() => setHasFailed(true)}
-        className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
         loading="lazy"
         decoding="async"
       />
@@ -136,7 +136,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   if (layoutMode === 'list') {
     return (
       <article
-        className="w-full bg-white rounded-2xl p-2.5 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.06)] hover:border-gray-200 flex items-center justify-between gap-2.5 relative group cursor-pointer transition-all duration-200 select-none"
+        className="w-full bg-white rounded-2xl p-2.5 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:border-rose-200/80 md:hover:-translate-y-1 md:hover:scale-[1.015] md:hover:shadow-[0_14px_30px_-8px_rgba(15,23,42,0.12),0_4px_12px_-2px_rgba(217,35,45,0.08)] flex items-center justify-between gap-2.5 relative group cursor-pointer transition-all duration-300 ease-out will-change-transform select-none"
       >
         <ProductCardOpenButton product={product} onSelectProduct={onSelectProduct} />
         {/* Left: Thumbnail with Badge */}
@@ -220,8 +220,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             title={isInCart ? t('product.goToCart') : sellable ? t('product.addToCart') : t('product.notifyMe')}
             className={`pointer-events-auto ${!sellable && !isInCart ? 'min-h-11 min-w-[78px] px-2 text-[9px] font-extrabold' : 'h-11 w-11'} rounded-xl flex items-center justify-center transition-all shadow-sm ${
               isInCart
-                ? 'bg-emerald-600 text-white'
-                : 'bg-[#D9232D] text-white hover:bg-red-700 active:scale-95'
+                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                : 'banner-cta-shine bg-gradient-to-br from-[#D9232D] to-[#B91822] text-white hover:brightness-110 hover:shadow-md active:scale-95'
             }`}
           >
             {isInCart ? (
@@ -242,7 +242,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <article
       className={`${
         layoutMode === 'shelf' ? 'flex-shrink-0 w-[148px] sm:w-[160px]' : 'w-full'
-      } bg-white rounded-2xl p-2 border border-gray-100 shadow-[0_3px_12px_rgba(0,0,0,0.035)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-gray-200 flex flex-col justify-between relative group cursor-pointer transition-all duration-200 select-none`}
+      } bg-white rounded-2xl p-2 border border-gray-100 shadow-[0_3px_12px_rgba(0,0,0,0.035)] hover:border-rose-200/80 md:hover:-translate-y-1.5 md:hover:scale-[1.025] md:hover:shadow-[0_18px_36px_-10px_rgba(15,23,42,0.14),0_6px_16px_-4px_rgba(217,35,45,0.09)] flex flex-col justify-between relative group cursor-pointer transition-all duration-300 ease-out will-change-transform select-none`}
     >
       <ProductCardOpenButton product={product} onSelectProduct={onSelectProduct} />
       {/* Card Image & Badges Container */}
@@ -320,8 +320,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           title={isInCart ? t('product.goToCart') : sellable ? t('product.addToCart') : t('product.notifyMe')}
           className={`pointer-events-auto ${!sellable && !isInCart ? 'min-h-11 min-w-[82px] px-1.5 text-[9px] font-extrabold' : 'h-11 w-11'} rounded-lg flex items-center justify-center transition-all shadow-xs ${
             isInCart
-              ? 'bg-emerald-600 text-white'
-              : 'bg-[#D9232D] text-white hover:bg-red-700 active:scale-95'
+              ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+              : 'banner-cta-shine bg-gradient-to-br from-[#D9232D] to-[#B91822] text-white hover:brightness-110 hover:shadow-md active:scale-95'
           }`}
         >
           {isInCart ? (

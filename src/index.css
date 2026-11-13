@@ -17,7 +17,10 @@
   body,
   #root {
     width: 100%;
+    max-width: 100%;
     min-height: 100%;
+    overflow-x: hidden;
+    overflow-x: clip;
     background-color: #D9232D;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
@@ -25,7 +28,6 @@
 
   body {
     min-height: 100vh;
-    overflow-x: hidden;
     font-family: var(--font-sans);
     background-color: #D9232D;
     color: #13161B;
@@ -52,6 +54,26 @@ canvas {
   font-family: var(--font-display);
 }
 
+.font-banner-outfit {
+  font-family: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-banner-syne {
+  font-family: 'Syne', 'Outfit', 'Plus Jakarta Sans', sans-serif;
+}
+
+.font-banner-serif {
+  font-family: 'Playfair Display', Georgia, Cambria, 'Times New Roman', serif;
+}
+
+.font-banner-tech {
+  font-family: 'Space Grotesk', 'Outfit', 'Plus Jakarta Sans', sans-serif;
+}
+
+.font-banner-subtitle {
+  font-family: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -65,25 +87,103 @@ canvas {
   100% { transform: translateX(100%); }
 }
 
-.skeleton-shimmer {
+.skeleton-shimmer,
+.skeleton-shimmer-dark {
   position: relative;
   overflow: hidden;
 }
-.skeleton-shimmer::after {
+.skeleton-shimmer::after,
+.skeleton-shimmer-dark::after {
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
+  animation: skeletonShimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  content: "";
+  pointer-events: none;
+}
+.skeleton-shimmer::after {
   background-image: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.25) 20%,
-    rgba(255, 255, 255, 0.6) 50%,
-    rgba(255, 255, 255, 0.25) 80%,
+    rgba(255, 255, 255, 0.28) 25%,
+    rgba(255, 255, 255, 0.65) 50%,
+    rgba(255, 255, 255, 0.28) 75%,
     rgba(255, 255, 255, 0) 100%
   );
-  animation: skeletonShimmer 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.skeleton-shimmer-dark::after {
+  background-image: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.04) 30%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0.04) 70%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer::after,
+  .skeleton-shimmer-dark::after,
+  .banner-cta-shine::after,
+  .banner-ambient-pulse {
+    animation: none !important;
+  }
+}
+
+@keyframes bannerCtaShine {
+  0%, 18% {
+    transform: translateX(-130%) skewX(-22deg);
+  }
+  42%, 100% {
+    transform: translateX(220%) skewX(-22deg);
+  }
+}
+
+@keyframes bannerAmbientPulse {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.08);
+  }
+}
+
+.banner-cta-shine {
+  position: relative;
+  overflow: hidden;
+  transition-property: transform, box-shadow, filter, background-color, opacity;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.banner-cta-shine::after {
   content: "";
+  position: absolute;
+  inset: 0;
+  width: 55%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.65) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-130%) skewX(-22deg);
+  animation: bannerCtaShine 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   pointer-events: none;
+}
+
+.banner-cta-shine:disabled::after,
+.banner-cta-shine[aria-disabled='true']::after {
+  animation: none;
+  opacity: 0;
+  display: none;
+}
+
+.banner-ambient-pulse {
+  animation: bannerAmbientPulse 5s ease-in-out infinite;
 }
 
 /* Classic Glass Styles */

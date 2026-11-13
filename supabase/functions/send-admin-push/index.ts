@@ -235,6 +235,12 @@ Deno.serve(async (request) => {
       return { sent: false };
     }
   }));
-  for (const result of sendResults) result.sent ? sent += 1 : failed += 1;
+  for (const result of sendResults) {
+    if (result.sent) {
+      sent += 1;
+    } else {
+      failed += 1;
+    }
+  }
   return Response.json({ sent, failed });
 });

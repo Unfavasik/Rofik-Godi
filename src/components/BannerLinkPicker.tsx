@@ -122,7 +122,7 @@ export const BannerLinkPicker: React.FC<{
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-3">
       {/* Mode switcher */}
-      <div className="flex gap-1 rounded-xl bg-white p-1 ring-1 ring-slate-200" role="tablist" aria-label="Banner link destination">
+      <div className="flex flex-wrap sm:flex-nowrap gap-1 rounded-xl bg-white p-1 ring-1 ring-slate-200" role="tablist" aria-label="Banner link destination">
         {MODE_OPTIONS.map((option) => (
           <button
             key={option.id}
@@ -130,7 +130,7 @@ export const BannerLinkPicker: React.FC<{
             role="tab"
             aria-selected={mode === option.id}
             onClick={() => switchMode(option.id)}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[10.5px] font-bold transition-colors ${
+            className={`flex min-h-10 min-w-[90px] flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-bold transition-colors ${
               mode === option.id
                 ? 'bg-[#D9232D] text-white shadow-sm'
                 : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
@@ -157,7 +157,7 @@ export const BannerLinkPicker: React.FC<{
               value={value}
               onChange={(event) => onChange(event.target.value)}
               placeholder="https://example.com/page"
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-normal"
+              className="mt-1 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-base sm:text-xs font-normal"
             />
             <span className="mt-1 block text-[10px] font-normal text-slate-400">
               Opens in a new tab. Must start with https://
@@ -175,9 +175,9 @@ export const BannerLinkPicker: React.FC<{
                     type="button"
                     onClick={() => setPendingProduct(null)}
                     aria-label="Back to product list"
-                    className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                   >
-                    <ChevronLeft className="h-3.5 w-3.5" />
+                    <ChevronLeft className="h-4 w-4" />
                   </button>
                   <img
                     src={pendingProduct.image}
@@ -195,7 +195,7 @@ export const BannerLinkPicker: React.FC<{
                       key={color.name}
                       type="button"
                       onClick={() => handleColorTap(pendingProduct, color.name)}
-                      className="flex w-full items-center gap-2.5 border-b border-slate-100 p-2 text-left transition-colors last:border-b-0 hover:bg-red-50/60"
+                      className="flex min-h-11 w-full items-center gap-2.5 border-b border-slate-100 p-2 text-left transition-colors last:border-b-0 hover:bg-red-50/60"
                     >
                       <span
                         className="h-5 w-5 shrink-0 rounded-full ring-1 ring-slate-200"
@@ -215,7 +215,7 @@ export const BannerLinkPicker: React.FC<{
               </div>
             ) : selectedProduct ? (
               /* Selected product summary */
-              <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-2.5">
+              <div className="flex flex-wrap items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-2.5">
                 <img
                   src={selectedProduct.image}
                   alt=""
@@ -244,7 +244,7 @@ export const BannerLinkPicker: React.FC<{
                   <button
                     type="button"
                     onClick={() => setPendingProduct(selectedProduct)}
-                    className="shrink-0 rounded-lg bg-white px-2 py-1 text-[10px] font-bold text-[#D9232D] ring-1 ring-emerald-200"
+                    className="min-h-10 shrink-0 rounded-lg bg-white px-2.5 py-1.5 text-[10.5px] font-bold text-[#D9232D] ring-1 ring-emerald-200"
                   >
                     Change colour
                   </button>
@@ -253,9 +253,9 @@ export const BannerLinkPicker: React.FC<{
                   type="button"
                   onClick={() => onChange('')}
                   aria-label="Clear selected product"
-                  className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-white hover:text-slate-600"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-white hover:text-slate-600"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
             ) : (
@@ -266,7 +266,7 @@ export const BannerLinkPicker: React.FC<{
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Search products by name or category…"
-                    className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-xs font-normal"
+                    className="min-h-11 w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-base sm:text-xs font-normal"
                     aria-label="Search products"
                   />
                 </div>

@@ -344,27 +344,27 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 24, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="relative flex h-[100dvh] w-full max-w-[440px] flex-col overflow-hidden bg-[#fdfdfd] text-slate-950 shadow-2xl sm:h-[calc(100dvh-24px)] sm:rounded-[28px]"
+          className="relative flex h-[100dvh] w-full max-w-full sm:max-w-[440px] flex-col overflow-hidden overflow-x-hidden bg-[#fdfdfd] text-slate-950 shadow-2xl sm:h-[calc(100dvh-24px)] sm:rounded-[28px]"
           aria-label={`${product.title} product details`}
         >
-          <header className="z-30 flex h-[58px] shrink-0 items-center justify-between border-b border-slate-100 bg-white px-4">
+          <header className="z-30 flex h-[58px] shrink-0 items-center justify-between gap-2 border-b border-slate-100 bg-white px-3 sm:px-4">
             <button
               type="button"
               onClick={onClose}
               aria-label="Go back"
-              className="grid h-9 w-9 place-items-center rounded-full hover:bg-slate-100"
+              className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-full hover:bg-slate-100"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <span className="text-[12px] font-black tracking-[.045em] text-[#d9232d]">
+            <span className="min-w-0 truncate text-[12px] font-black tracking-[.045em] text-[#d9232d]">
               ROFIK GODI CENTRE
             </span>
-            <div className="flex items-center gap-1">
+            <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
               <button
                 type="button"
                 aria-label="Search products"
                 onClick={onOpenSearch}
-                className="grid h-9 w-9 place-items-center rounded-full hover:bg-slate-100"
+                className="grid min-h-11 min-w-11 place-items-center rounded-full hover:bg-slate-100"
               >
                 <Search className="h-[21px] w-[21px]" />
               </button>
@@ -372,11 +372,11 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 type="button"
                 aria-label={`Open cart, ${cartCount} items`}
                 onClick={onOpenCart}
-                className="relative grid h-9 w-9 place-items-center rounded-full hover:bg-slate-100"
+                className="relative grid min-h-11 min-w-11 place-items-center rounded-full hover:bg-slate-100"
               >
                 <ShoppingCart className="h-[21px] w-[21px]" />
                 {cartCount > 0 && (
-                  <span className="absolute right-0 top-0 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#d9232d] px-1 text-[10px] font-bold text-white">
+                  <span className="absolute right-0.5 top-0.5 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#d9232d] px-1 text-[10px] font-bold text-white">
                     {cartCount}
                   </span>
                 )}
@@ -384,7 +384,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
             </div>
           </header>
 
-          <main className="product-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain pb-5">
+          <main className="product-scroll min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pb-5">
             <section className="relative">
               <div
                 className="relative h-[340px] touch-pan-y bg-[#f1f1f2] sm:h-[365px]"
@@ -501,7 +501,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 <h2 className="text-[16px] font-extrabold tracking-tight">Color Options</h2>
                 <span className="text-[11px] text-slate-500">{selectedColor.name}</span>
               </div>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
                 {product.colors.map((color) => (
                   <button
                     key={color.name}
@@ -572,7 +572,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                   <select
                     value={selectedModel}
                     onChange={(event) => setSelectedModel(event.target.value)}
-                    className="h-[48px] w-full appearance-none rounded-xl border border-slate-200 bg-white pl-12 pr-10 text-[13px] text-slate-600"
+                    className="h-[48px] w-full appearance-none rounded-xl border border-slate-200 bg-white pl-12 pr-10 text-base sm:text-[13px] text-slate-600"
                   >
                     <option value="">
                       Choose your {vehicleType === 'scooter' ? 'scooter' : 'bike'} model
@@ -713,7 +713,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                   .map(([label, value]) => (
                     <div
                       key={label}
-                      className="grid grid-cols-[24px_minmax(72px,.75fr)_1.35fr] items-start gap-2.5 border-b border-slate-100 px-3.5 py-3.5 text-[11px] last:border-b-0"
+                      className="grid grid-cols-[24px_minmax(68px,.75fr)_minmax(0,1.35fr)] items-start gap-2.5 border-b border-slate-100 px-3.5 py-3.5 text-[11px] last:border-b-0"
                     >
                       <span className="grid h-6 w-6 place-items-center rounded-lg bg-slate-50 text-slate-500">
                         {label === 'Waterproof' ? (
@@ -724,10 +724,10 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           <PackageCheck className="h-3.5 w-3.5" />
                         )}
                       </span>
-                      <span className="pt-1 font-semibold leading-[1.35] text-slate-500">
+                      <span className="min-w-0 pt-1 font-semibold leading-[1.35] text-slate-500 break-words">
                         {label}
                       </span>
-                      <span className="pt-1 text-right font-semibold leading-[1.45] text-slate-700">
+                      <span className="min-w-0 pt-1 text-right font-semibold leading-[1.45] text-slate-700 break-words">
                         {value}
                       </span>
                     </div>
@@ -948,9 +948,9 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 <button
                   type="button"
                   onClick={() => addToCart(true)}
-                  className="flex h-[50px] items-center justify-center gap-2 rounded-xl bg-[#d9232d] text-[13px] font-extrabold text-white shadow-sm active:scale-[.98]"
+                  className="banner-cta-shine group/cta flex h-[50px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] text-[13px] font-extrabold text-white shadow-[0_8px_18px_-4px_rgba(217,35,45,0.38)] transition-all hover:brightness-105 hover:shadow-[0_10px_22px_-4px_rgba(217,35,45,0.48)] active:scale-[.97]"
                 >
-                  <Zap className="h-4 w-4 fill-current" />
+                  <Zap className="h-4 w-4 fill-current transition-transform duration-200 group-hover/cta:translate-x-0.5" />
                   Buy Now
                 </button>
               </>
@@ -960,9 +960,9 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 disabled={!onNotifyMe || notifySubmitting}
                 onClick={() => void handleNotifyMe(product)}
                 aria-label="Notify me when this product is back in stock"
-                className="flex h-[50px] items-center justify-center gap-2 rounded-xl bg-[#d9232d] text-[13px] font-extrabold text-white shadow-sm disabled:opacity-50"
+                className="banner-cta-shine group/cta flex h-[50px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91822] text-[13px] font-extrabold text-white shadow-sm transition-all hover:brightness-105 hover:shadow-md active:scale-[.97] disabled:opacity-50"
               >
-                <Clock3 className={`h-4 w-4 ${notifySubmitting ? 'animate-spin' : ''}`} />
+                <Clock3 className={`h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5 ${notifySubmitting ? 'animate-spin' : ''}`} />
                 {notifySubmitting ? 'Setting up…' : 'Notify me'}
               </button>
             )}
@@ -998,7 +998,7 @@ const SuggestionCard: React.FC<{
     }
   };
   return (
-    <article className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_3px_14px_rgba(15,23,42,.045)]">
+    <article className="min-w-0 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_3px_14px_rgba(15,23,42,.045)]">
       <button type="button" onClick={onSelect} className="block h-[112px] w-full bg-slate-100">
         <img
           src={localProductImages[product.id]?.[0] ?? product.image}

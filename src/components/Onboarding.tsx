@@ -198,12 +198,12 @@ export default function Onboarding({ onFinish }: Props) {
         <button
           type="button"
           onClick={next}
-          className={`relative h-[58px] rounded-full bg-[linear-gradient(180deg,#EF3040,#C60F20)] text-[17px] font-bold text-white shadow-[0_12px_24px_-10px_rgba(225,29,46,0.7)] transition-all duration-[400ms] active:scale-[0.97] ${
+          className={`banner-cta-shine group/cta relative h-[58px] rounded-full bg-[linear-gradient(180deg,#EF3040,#C60F20)] text-[17px] font-bold text-white shadow-[0_12px_24px_-10px_rgba(225,29,46,0.7)] transition-all duration-[400ms] hover:brightness-105 hover:shadow-[0_14px_28px_-8px_rgba(225,29,46,0.75)] active:scale-[0.97] ${
             i === 0 ? "w-full" : "w-3/5"
           }`}
         >
           {SLIDES[i].cta}
-          <Arrow className="absolute right-[22px] top-[19px] h-5 w-5" />
+          <Arrow className="absolute right-[22px] top-[19px] h-5 w-5 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
         </button>
       </div>
     </main>

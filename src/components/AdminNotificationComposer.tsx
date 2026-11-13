@@ -110,39 +110,39 @@ export function AdminNotificationComposer({
         </div>
       </div>
 
-      <form onSubmit={(event) => void submit(event)} className="grid gap-5 p-5 sm:p-6 xl:grid-cols-[minmax(0,1fr)_minmax(260px,.8fr)]">
-        <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block text-[11px] font-bold text-slate-600">
+      <form onSubmit={(event) => void submit(event)} className="grid grid-cols-1 gap-5 p-4 sm:p-6 xl:grid-cols-[minmax(0,1fr)_minmax(260px,.8fr)]">
+        <div className="min-w-0 space-y-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="block min-w-0 text-[11px] font-bold text-slate-600">
               Notification type
-              <select value={kind} onChange={(event) => setKind(event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold outline-none focus:border-[#D9232D]">
+              <select value={kind} onChange={(event) => setKind(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-base font-semibold outline-none focus:border-[#D9232D] sm:text-xs">
                 {kinds.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
               </select>
             </label>
-            <label className="block text-[11px] font-bold text-slate-600">
+            <label className="block min-w-0 text-[11px] font-bold text-slate-600">
               Action link <span className="font-normal text-slate-400">(optional)</span>
               <span className="relative mt-1.5 block">
                 <Link2 className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-                <input value={actionUrl} onChange={(event) => setActionUrl(event.target.value)} maxLength={2048} placeholder="/shop" className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-xs outline-none focus:border-[#D9232D]" />
+                <input value={actionUrl} onChange={(event) => setActionUrl(event.target.value)} maxLength={2048} placeholder="/shop" className="min-h-11 w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-base outline-none focus:border-[#D9232D] sm:text-xs" />
               </span>
             </label>
           </div>
           <label className="block text-[11px] font-bold text-slate-600">
             Title
-            <input required maxLength={120} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="A fresh arrival for your ride" className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs outline-none focus:border-[#D9232D]" />
+            <input required maxLength={120} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="A fresh arrival for your ride" className="mt-1.5 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-base outline-none focus:border-[#D9232D] sm:text-xs" />
             <span className="mt-1 block text-right text-[10px] font-normal text-slate-400">{title.length}/120</span>
           </label>
           <label className="block text-[11px] font-bold text-slate-600">
             Message
-            <textarea required rows={4} maxLength={1000} value={body} onChange={(event) => setBody(event.target.value)} placeholder="Write the message customers will see in their notification inbox..." className="mt-1.5 w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs leading-relaxed outline-none focus:border-[#D9232D]" />
+            <textarea required rows={4} maxLength={1000} value={body} onChange={(event) => setBody(event.target.value)} placeholder="Write the message customers will see in their notification inbox..." className="mt-1.5 w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-base leading-relaxed outline-none focus:border-[#D9232D] sm:text-xs" />
             <span className="mt-1 block text-right text-[10px] font-normal text-slate-400">{body.length}/1000</span>
           </label>
           <div>
             <label className="mb-1.5 block text-[11px] font-bold text-slate-600">Notification image <span className="font-normal text-slate-400">(optional)</span></label>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <input type="url" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="Paste an https:// image URL" className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs outline-none focus:border-[#D9232D]" />
+              <input type="url" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="Paste an https:// image URL" className="min-h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-base outline-none focus:border-[#D9232D] sm:text-xs" />
               <input ref={imageInput} type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={(event) => void uploadImage(event.target.files?.[0])} />
-              <button type="button" onClick={() => imageInput.current?.click()} disabled={uploading || sending} className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2.5 text-[11px] font-bold text-slate-600 disabled:opacity-50">
+              <button type="button" onClick={() => imageInput.current?.click()} disabled={uploading || sending} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-600 disabled:opacity-50 sm:text-[11px]">
                 {uploading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
                 {uploading ? 'Uploading…' : 'Upload image'}
               </button>
@@ -160,15 +160,15 @@ export function AdminNotificationComposer({
           {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-[11px] font-semibold text-red-700">{error}</p>}
           <div className="flex flex-col justify-between gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center">
             <p className="text-[10px] leading-relaxed text-slate-400">In-app only · Notifications expire after 7 days · No SMS or email is sent.</p>
-            <button type="submit" disabled={sending || uploading || !title.trim() || !body.trim() || (audience === 'SELECTED' && !selectedUserIds.length)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#D9232D] px-5 py-2.5 text-xs font-black text-white shadow-sm transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50">
-              {sending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            <button type="submit" disabled={sending || uploading || !title.trim() || !body.trim() || (audience === 'SELECTED' && !selectedUserIds.length)} className="banner-cta-shine group/cta inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#D9232D] px-5 py-2.5 text-xs font-black text-white shadow-sm shadow-red-600/20 transition hover:bg-red-700 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50">
+              {sending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />}
               {sending ? 'Sending…' : 'Send notification'}
             </button>
           </div>
         </div>
 
-        <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <div className="mb-3 flex items-center justify-between">
+        <aside className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Live preview</p>
             <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-bold text-slate-500 ring-1 ring-slate-200">{audience === 'ALL' ? `All ${customers.length} accounts` : `${selectedUserIds.length} selected`}</span>
           </div>
@@ -176,12 +176,12 @@ export function AdminNotificationComposer({
             {imageUrl ? <img src={imageUrl} alt="Notification preview" className="h-36 w-full object-cover" /> : <div className="grid h-24 place-items-center bg-gradient-to-br from-red-50 to-orange-50 text-[#D9232D]"><BellRing className="h-7 w-7" /></div>}
             <div className="p-4">
               <p className="text-[9px] font-bold uppercase tracking-wider text-[#D9232D]">{kinds.find((item) => item.value === kind)?.label}</p>
-              <h4 className="mt-1.5 text-sm font-black text-slate-900">{title || 'Your notification title'}</h4>
-              <p className="mt-1.5 whitespace-pre-wrap text-[11px] leading-relaxed text-slate-600">{body || 'Your custom message will appear here.'}</p>
+              <h4 className="mt-1.5 break-words text-sm font-black text-slate-900">{title || 'Your notification title'}</h4>
+              <p className="mt-1.5 break-words whitespace-pre-wrap text-[11px] leading-relaxed text-slate-600">{body || 'Your custom message will appear here.'}</p>
               {actionUrl && <div className="mt-3 inline-flex items-center gap-1 text-[10px] font-black text-[#D9232D]">View details <Link2 className="h-3 w-3" /></div>}
             </div>
           </article>
-          {imageUrl && <button type="button" onClick={() => setImageUrl('')} className="mt-3 inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 hover:text-red-600"><X className="h-3 w-3" />Remove image</button>}
+          {imageUrl && <button type="button" onClick={() => setImageUrl('')} className="mt-3 inline-flex min-h-10 items-center gap-1 px-2 text-xs font-bold text-slate-500 hover:text-red-600"><X className="h-3.5 w-3.5" />Remove image</button>}
         </aside>
       </form>
     </section>

@@ -176,29 +176,29 @@ export const PersonalDataView: React.FC<PersonalDataViewProps> = ({
     : sections.filter((s) => s.id === activeSection);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24 text-slate-800">
+    <div className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#F8FAFC] pb-[max(6rem,env(safe-area-inset-bottom))] text-slate-800">
       {/* Top Sticky Header */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] px-4 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] px-4 py-3.5 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
           <button
             onClick={onBack}
-            className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center text-slate-700"
+            className="w-11 h-11 shrink-0 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center text-slate-700"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5 stroke-[2.2]" />
           </button>
-          <div>
-            <h1 className="text-base font-extrabold text-slate-900 leading-tight">Personal Data Processing</h1>
-            <p className="text-[11px] font-semibold text-[#e0182d] flex items-center gap-1">
-              <UserCheck className="w-3.5 h-3.5" />
-              <span>ROFIK GODI CENTRE · Sign up consent</span>
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-extrabold text-slate-900 leading-tight">Personal Data Processing</h1>
+            <p className="truncate text-[11px] font-semibold text-[#e0182d] flex items-center gap-1">
+              <UserCheck className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">ROFIK GODI CENTRE · Sign up consent</span>
             </p>
           </div>
         </div>
 
         <button
           onClick={handleShare}
-          className="w-9 h-9 rounded-full bg-slate-50 border border-slate-200/80 hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center text-slate-600 relative"
+          className="w-11 h-11 shrink-0 rounded-full bg-slate-50 border border-slate-200/80 hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center text-slate-600 relative"
           title="Share"
           aria-label="Share Personal Data Processing page"
         >
@@ -220,7 +220,7 @@ export const PersonalDataView: React.FC<PersonalDataViewProps> = ({
           <div className="absolute bottom-0 left-1/3 -mb-8 w-44 h-44 bg-rose-300/15 rounded-full blur-2xl pointer-events-none" />
 
           <div className="relative z-10 space-y-3.5">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[11px] font-bold tracking-wide uppercase">
                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                 Sign up Consent Notice
@@ -295,12 +295,12 @@ export const PersonalDataView: React.FC<PersonalDataViewProps> = ({
                 transition={{ duration: 0.2 }}
                 className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-3"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     <div className="w-10 h-10 rounded-2xl bg-rose-50 text-[#e0182d] flex items-center justify-center flex-shrink-0 border border-rose-100/60">
                       <Icon className="w-5 h-5" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <h3 className="text-[14.5px] font-bold text-slate-900 leading-snug">{sec.title}</h3>
                       <p className="text-[11.5px] text-slate-500 mt-0.5">{sec.summary}</p>
                     </div>

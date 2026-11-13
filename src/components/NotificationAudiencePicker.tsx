@@ -46,7 +46,7 @@ export function NotificationAudiencePicker({
   return (
     <fieldset disabled={disabled} className="space-y-3 disabled:opacity-60">
       <legend className="text-xs font-black text-slate-800">Who should receive it?</legend>
-      <div className={`grid gap-2 ${allowNone ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+      <div className={`grid grid-cols-1 gap-2 ${allowNone ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
         {allowNone && (
           <AudienceOption
             checked={audience === 'NONE'}
@@ -70,20 +70,20 @@ export function NotificationAudiencePicker({
       </div>
 
       {audience === 'SELECTED' && (
-        <div className="rounded-xl border border-slate-200 bg-white p-3">
+        <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-3">
           <div className="flex flex-col gap-2 sm:flex-row">
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search by name, email or phone"
               aria-label="Search customers"
-              className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs outline-none focus:border-[#D9232D]"
+              className="min-h-11 min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-base outline-none focus:border-[#D9232D] sm:text-xs"
             />
             <button
               type="button"
               onClick={selectVisible}
               disabled={!visibleCustomers.length}
-              className="rounded-lg border border-slate-200 px-3 py-2 text-[10px] font-bold text-slate-600 disabled:opacity-40"
+              className="min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 disabled:opacity-40 sm:text-[10px]"
             >
               Select visible
             </button>
@@ -91,16 +91,16 @@ export function NotificationAudiencePicker({
               type="button"
               onClick={() => onSelectedUserIdsChange([])}
               disabled={!selectedUserIds.length}
-              className="rounded-lg border border-slate-200 px-3 py-2 text-[10px] font-bold text-slate-600 disabled:opacity-40"
+              className="min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 disabled:opacity-40 sm:text-[10px]"
             >
               Clear
             </button>
           </div>
-          <div className="mt-2 max-h-48 space-y-1 overflow-y-auto">
+          <div className="mt-2 max-h-48 space-y-1 overflow-y-auto overflow-x-hidden">
             {visibleCustomers.map((customer) => (
               <label
                 key={customer.id}
-                className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 hover:bg-slate-50"
+                className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 hover:bg-slate-50"
               >
                 <input
                   type="checkbox"

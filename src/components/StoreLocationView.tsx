@@ -839,8 +839,8 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
   const BannerIcon = banner ? maneuverIcon(banner.type) : ArrowUp;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#F8FAFC] font-sans" role="dialog" aria-modal="true" aria-label="Visit our store">
-      <header className="flex shrink-0 items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
+    <div className="fixed inset-0 z-50 flex flex-col overflow-x-hidden bg-[#F8FAFC] font-sans" role="dialog" aria-modal="true" aria-label="Visit our store">
+      <header className="flex shrink-0 items-center gap-3 border-b border-slate-100 bg-white px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
         <button
           type="button"
           onClick={() => {
@@ -851,7 +851,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
             onClose();
           }}
           aria-label="Go back"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100/80 text-slate-700 transition-transform hover:bg-slate-200/80 active:scale-95"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100/80 text-slate-700 transition-transform hover:bg-slate-200/80 active:scale-95"
         >
           <ArrowLeft className="h-5 w-5" strokeWidth={2.2} />
         </button>
@@ -944,7 +944,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
       </div>
 
       {navigating ? (
-        <section className="relative z-10 shrink-0 rounded-t-[28px] bg-white px-4 pb-5 pt-3 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
+        <section className="relative z-10 shrink-0 rounded-t-[28px] bg-white px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
           <div className="mx-auto flex w-full max-w-[440px] items-center justify-between gap-3">
             <button
               type="button"
@@ -975,7 +975,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
           </div>
         </section>
       ) : (
-        <section className="relative z-10 -mt-5 shrink-0 rounded-t-[28px] bg-white px-4 pb-5 pt-4 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
+        <section className="relative z-10 -mt-5 shrink-0 rounded-t-[28px] bg-white px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
           <div className="mx-auto w-full max-w-[440px]">
             <div className="flex items-start gap-3">
               <img src={STORE_IMAGE} alt="Rofik Godi Centre storefront" className="h-16 w-16 shrink-0 rounded-2xl border border-slate-100 object-cover" />
@@ -1047,10 +1047,10 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
               type="button"
               onClick={() => void handleGetDirections()}
               disabled={routeLoading}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#E51E2B] py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(229,30,43,0.3)] transition-colors hover:bg-[#C81E28] active:scale-[0.99] disabled:opacity-70"
+              className="banner-cta-shine group/cta mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] via-[#E51E2B] to-[#B91822] py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(229,30,43,0.3)] transition-all hover:brightness-105 hover:shadow-[0_10px_24px_rgba(229,30,43,0.4)] active:scale-[0.98] disabled:opacity-70"
             >
               {routeLoading ? 'Finding route…' : 'Get Directions'}
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
             </button>
           </div>
         </section>

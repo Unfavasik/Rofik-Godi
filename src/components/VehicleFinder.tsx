@@ -132,7 +132,7 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
           ))}
         </div>
 
-        <div className="relative z-10 mb-2.5 grid grid-cols-2 gap-2">
+        <div className="relative z-10 mb-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
           <label className="relative block min-w-0">
             <span className="sr-only">Select company</span>
             <select
@@ -142,7 +142,7 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
                 setSelectedBrand(event.target.value);
                 setSelectedModel('');
               }}
-              className="w-full cursor-pointer appearance-none rounded-xl border border-gray-700/80 bg-gray-800/90 py-2 pl-3 pr-8 text-[12px] font-semibold text-white focus:border-[#D9232D] focus:outline-none"
+              className="min-h-11 w-full cursor-pointer appearance-none rounded-xl border border-gray-700/80 bg-gray-800/90 py-2 pl-3 pr-8 text-base sm:text-[12px] font-semibold text-white focus:border-[#D9232D] focus:outline-none"
             >
               <option value="">{catalogLoading ? 'Loading companies…' : 'Select Company'}</option>
               {currentBrands.map((brand) => (
@@ -161,7 +161,7 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
               value={selectedModel}
               onChange={(event) => setSelectedModel(event.target.value)}
               disabled={!selectedBrand}
-              className={`w-full appearance-none rounded-xl border border-gray-700/80 bg-gray-800/90 py-2 pl-3 pr-8 text-[12px] font-semibold text-white focus:border-[#D9232D] focus:outline-none ${
+              className={`min-h-11 w-full appearance-none rounded-xl border border-gray-700/80 bg-gray-800/90 py-2 pl-3 pr-8 text-base sm:text-[12px] font-semibold text-white focus:border-[#D9232D] focus:outline-none ${
                 !selectedBrand ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
               }`}
             >
@@ -179,7 +179,7 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
         {selectedVehicle && (
           <div className="relative z-10 mb-2.5 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-2.5">
             {selectedVehicle.image ? (
-              <div className="flex h-[76px] w-32 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white">
+              <div className="flex h-[76px] w-24 sm:w-32 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white">
                 <img
                   src={selectedVehicle.image}
                   alt={`${selectedVehicle.name} vehicle`}
@@ -188,7 +188,7 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
                 />
               </div>
             ) : (
-              <div className="flex h-[76px] w-32 shrink-0 items-center justify-center rounded-lg bg-gray-800 text-3xl">
+              <div className="flex h-[76px] w-24 sm:w-32 shrink-0 items-center justify-center rounded-lg bg-gray-800 text-3xl">
                 {selectedType === 'toto' ? '🛺' : '🏍️'}
               </div>
             )}
@@ -214,12 +214,13 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
 
           <motion.button
             type="button"
-            whileTap={{ scale: 0.95 }}
+            whileHover={selectedBrand ? { scale: 1.03 } : undefined}
+            whileTap={selectedBrand ? { scale: 0.95 } : undefined}
             disabled={!selectedBrand}
             onClick={handleApplyFilter}
             className={`shrink-0 rounded-xl px-4 py-1.5 text-[11.5px] font-bold shadow-sm transition-all ${
               selectedBrand
-                ? 'cursor-pointer bg-[#D9232D] text-white hover:bg-[#c01d26]'
+                ? 'banner-cta-shine cursor-pointer bg-gradient-to-r from-[#D9232D] to-[#B91822] text-white shadow-[0_6px_16px_-4px_rgba(217,35,45,0.45)] hover:brightness-105'
                 : 'cursor-not-allowed bg-gray-800 text-gray-500'
             }`}
           >

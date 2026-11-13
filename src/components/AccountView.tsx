@@ -26,6 +26,8 @@ import {
   SlidersHorizontal,
   ExternalLink,
   Bike,
+  Mail,
+  CheckCircle2,
 } from 'lucide-react';
 import { CustomerOrderRecord, Product, UserProfile } from '../types';
 import { getMyOrderBySlug, listMyOrders } from '../lib/supabaseOrders';
@@ -45,8 +47,16 @@ import {
   getCheckoutVehicleCompanies,
   getCheckoutVehicleModels,
   parseVehicleFitmentValue,
+  resolveVehicleFitment,
   type CheckoutVehicleType,
 } from '../lib/checkoutVehicleFitment';
+import {
+  getCachedVehicleModels,
+  loadVehicleModels,
+  slugifyVehicleModelName,
+  VEHICLE_CATALOG_CHANGED_EVENT,
+  type VehicleCatalogModel,
+} from '../lib/supabaseVehicleCatalog';
 import { deleteMyAvatar, getMyAuthEmail, getMyProfile, saveMyProfile, uploadMyAvatar } from '../lib/supabaseCustomer';
 import { getInitials, validateProfileFields } from '../lib/profileValidation';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -54,10 +64,11 @@ import { PhoneNumberField } from './PhoneNumberField';
 import { VehicleModelPicker } from './VehicleModelPicker';
 import { getPhoneCountry, validatePhoneNumber, type CountryCode } from '../utils/phoneValidation';
 import { useI18n } from '../lib/i18n';
-import { CloudLoader } from './CloudLoader';
+import { AccountPageSkeleton, AccountProfileEditorSkeleton } from './AccountPageSkeleton';
 
 interface AccountViewProps {
   currentUser?: UserProfile;
+  isLoading?: boolean;
   isAdmin?: boolean;
   onOpenAdminPanel?: () => void;
   onOpenLogin?: () => void;
@@ -66,6 +77,8 @@ interface AccountViewProps {
   onBackToHome?: () => void;
   onOpenWishlist: () => void;
   wishlistCount?: number;
+  notificationCount?: number;
+  onOpenNotifications?: () => void;
   onOpenProduct?: (p: Product) => void;
   onOpenStoreInfo?: () => void;
   onOpenCustomBuilder?: () => void;
@@ -102,12 +115,15 @@ interface AccountViewProps {
 
 export const AccountView: React.FC<AccountViewProps> = ({
   currentUser,
+  isLoading = false,
   isAdmin = false,
   onOpenAdminPanel,
   onOpenLogin,
   onLogout,
   onOpenWishlist,
   wishlistCount = 0,
+  notificationCount = 0,
+  onOpenNotifications,
   onOpenStoreInfo,
   onOpenShop,
   onOpenCustomBuilder,
@@ -175,7 +191,31 @@ export const AccountView: React.FC<AccountViewProps> = ({
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState('');
   const [myReviews, setMyReviews] = useState<ProductReviewRecord[]>([]);
+  const [summaryLoading, setSummaryLoading] = useState(() => Boolean(currentUser && !currentUser.isGuest));
+  const [heroAvatarLoaded, setHeroAvatarLoaded] = useState(false);
+  const [vehicleCatalog, setVehicleCatalog] = useState<VehicleCatalogModel[]>(() => getCachedVehicleModels());
+  const [garageImgError, setGarageImgError] = useState(false);
   const [reviewComposer, setReviewComposer] = useState<{ productId: string; orderId: string; orderNumber: string; productTitle: string; review?: ProductReviewRecord } | null>(null);
+
+  useEffect(() => {
+    setHeroAvatarLoaded(false);
+  }, [currentUser?.avatar]);
+
+  useEffect(() => {
+    let active = true;
+    const syncCatalog = () => {
+      void loadVehicleModels().then(({ data }) => {
+        if (active && data.length) setVehicleCatalog(data);
+      });
+    };
+    syncCatalog();
+    if (typeof window === 'undefined') return () => { active = false; };
+    window.addEventListener(VEHICLE_CATALOG_CHANGED_EVENT, syncCatalog);
+    return () => {
+      active = false;
+      window.removeEventListener(VEHICLE_CATALOG_CHANGED_EVENT, syncCatalog);
+    };
+  }, []);
   useEffect(() => {
     let active = true;
     if (activeModal !== 'orders') return () => { active = false; };
@@ -239,18 +279,28 @@ export const AccountView: React.FC<AccountViewProps> = ({
     }
   }, []);
 
-  // Load the review count for the account page summary; the orders modal
-  // refreshes the same list again when it opens.
+  // Load live order and review counts for the account page summary; the orders
+  // modal refreshes the same lists again when it opens.
   useEffect(() => {
     let active = true;
-    const reviewsUser = currentUserRef.current;
-    if (!reviewsUser || reviewsUser.isGuest) {
+    const summaryUser = currentUserRef.current;
+    if (!summaryUser || summaryUser.isGuest) {
+      setCustomerOrders([]);
       setMyReviews([]);
+      setSummaryLoading(false);
       return () => { active = false; };
     }
-    void listMyProductReviews(reviewsUser.id).then((reviews) => {
-      if (active) setMyReviews(reviews);
-    }).catch(() => { /* The count simply stays at zero. */ });
+    setSummaryLoading(true);
+    void Promise.all([
+      listMyOrders(summaryUser.id).catch(() => null),
+      listMyProductReviews(summaryUser.id).catch(() => null),
+    ]).then(([orders, reviews]) => {
+      if (!active) return;
+      if (orders) setCustomerOrders(orders);
+      if (reviews) setMyReviews(reviews);
+    }).finally(() => {
+      if (active) setSummaryLoading(false);
+    });
     return () => { active = false; };
   }, [currentUser?.id, currentUser?.isGuest]);
 
@@ -276,20 +326,38 @@ export const AccountView: React.FC<AccountViewProps> = ({
   const profileSavingRef = useRef(false);
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
   const profileVehicleCompanies = useMemo(
-    () => getCheckoutVehicleCompanies(profileVehicleType),
-    [profileVehicleType],
+    () => getCheckoutVehicleCompanies(profileVehicleType, vehicleCatalog),
+    [profileVehicleType, vehicleCatalog],
   );
   const profileVehicleModels = useMemo(
-    () => getCheckoutVehicleModels(profileVehicleType, profileVehicleCompany),
-    [profileVehicleType, profileVehicleCompany],
+    () => getCheckoutVehicleModels(profileVehicleType, profileVehicleCompany, vehicleCatalog),
+    [profileVehicleType, profileVehicleCompany, vehicleCatalog],
   );
   const hydrateProfileVehicle = useCallback((value: string) => {
-    const parsed = parseVehicleFitmentValue(value);
+    const parsed = parseVehicleFitmentValue(value, vehicleCatalog);
     setProfileVehicle(value);
     setProfileVehicleType(parsed.type);
     setProfileVehicleCompany(parsed.company);
     setProfileVehicleModel(parsed.model);
-  }, []);
+  }, [vehicleCatalog]);
+  const garageFitment = useMemo(
+    () => (currentUser?.vehicle?.trim() ? resolveVehicleFitment(currentUser.vehicle, vehicleCatalog) : null),
+    [currentUser?.vehicle, vehicleCatalog],
+  );
+  const garageImageSrc = useMemo(() => {
+    if (garageFitment?.image) return garageFitment.image;
+    const raw = currentUser?.vehicle?.trim();
+    if (!raw) return '';
+    const parts = raw.split('·').map((part) => part.trim()).filter(Boolean);
+    const firstLower = parts[0]?.toLowerCase() || '';
+    if (firstLower === 'car' || firstLower === 'toto / e-rickshaw' || firstLower === 'other') return '';
+    const modelText = garageFitment?.model || (parts.length > 1 ? parts[parts.length - 1] : parts[0]) || '';
+    const slug = slugifyVehicleModelName(modelText);
+    return slug ? `/vehicle-models/${slug}.webp` : '';
+  }, [currentUser?.vehicle, garageFitment]);
+  useEffect(() => {
+    setGarageImgError(false);
+  }, [garageImageSrc]);
   const profileDirty = profileName !== profileSnapshot.name
     || profilePhone !== profileSnapshot.phone
     || profilePhoneCountry !== profileSnapshot.phoneCountry
@@ -300,6 +368,37 @@ export const AccountView: React.FC<AccountViewProps> = ({
   const profileFieldErrors = validateProfileFields({ full_name: profileName, phone: profilePhone, vehicle_model: profileVehicle, phoneCountry: profilePhoneCountry });
   const profilePhoneChanged = profilePhone.trim() !== profileSnapshot.phone.trim() || profilePhoneCountry !== profileSnapshot.phoneCountry;
   const profilePhoneError = profilePhoneTouched && profilePhoneChanged ? profileFieldErrors.phone : undefined;
+
+  const accountProfileCompletion = useMemo(() => {
+    if (!currentUser || currentUser.isGuest) {
+      return { percent: 0, missingLabel: 'Sign in to sync your garage & orders' };
+    }
+    const hasName = Boolean(currentUser.name?.trim());
+    const hasPhone = Boolean(currentUser.phone?.trim());
+    const hasVehicle = Boolean(currentUser.vehicle?.trim());
+    const hasAvatar = Boolean(currentUser.avatar?.trim());
+    const completed = [hasName, hasPhone, hasVehicle, hasAvatar].filter(Boolean).length;
+    const percent = Math.round((completed / 4) * 100);
+    const missingLabel = !hasVehicle
+      ? 'Add your bike or toto model for exact seat fitment'
+      : !hasPhone
+        ? 'Add your mobile number for faster delivery updates'
+        : !hasAvatar
+          ? 'Add a profile photo to personalize your rider card'
+          : !hasName
+            ? 'Add your full name'
+            : 'Profile & fitment garage complete';
+    return { percent, missingLabel };
+  }, [currentUser]);
+
+  const editorProfileCompletion = useMemo(() => {
+    const hasName = Boolean(profileName.trim());
+    const hasPhone = Boolean(profilePhone.trim());
+    const hasVehicle = Boolean(profileVehicle.trim());
+    const hasAvatar = Boolean(profileAvatarUrl || profileAvatarFile);
+    const completed = [hasName, hasPhone, hasVehicle, hasAvatar].filter(Boolean).length;
+    return Math.round((completed / 4) * 100);
+  }, [profileName, profilePhone, profileVehicle, profileAvatarUrl, profileAvatarFile]);
 
   useEffect(() => {
     let active = true;
@@ -485,7 +584,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
   const handleProtectedAction = (modalType: 'orders' | 'pickupStore' | 'settings' | 'profile' | 'privacy' | 'terms') => {
     if (modalType === 'profile' && onOpenProfileEditPage) return onOpenProfileEditPage();
-    if (isGuest && (modalType === 'orders' || modalType === 'pickupStore' || modalType === 'profile')) {
+    if (isGuest && (modalType === 'orders' || modalType === 'profile')) {
       if (modalType === 'orders' && onOpenOrdersPage) return onOpenOrdersPage();
       if (onOpenLogin) onOpenLogin();
       else if (modalType !== 'profile') setActiveModal(modalType);
@@ -532,6 +631,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
         onBack={closeRoutedPage}
         onLogout={onLogout}
         isAuthenticated={Boolean(currentUser && !currentUser.isGuest)}
+        isLoading={isLoading}
         onOpenOrders={onOpenOrdersPage ?? (() => setActiveModal('orders'))}
         currentUserId={currentUser?.id}
         onOpenSupportRequests={() => onOpenSupportPage?.()}
@@ -568,407 +668,656 @@ export const AccountView: React.FC<AccountViewProps> = ({
     );
   }
 
+  if (activeModal === null && isLoading) {
+    return <AccountPageSkeleton />;
+  }
+
   return (
-    <div className="w-full flex-1 flex flex-col space-y-5 pb-12 animate-fade-in text-slate-800 bg-white">
-      {/* Account Page Title & Avatar */}
-      <section className="px-5 pt-4 pb-1 flex justify-between items-start" data-purpose="account-header">
+    <div className="w-full max-w-full flex-1 flex flex-col space-y-4 pb-12 overflow-x-hidden animate-fade-in text-slate-800 bg-[#F8FAFC]">
+      {/* Account Page Title & Top Actions */}
+      <section className="px-4 sm:px-5 pt-4 pb-1 flex justify-between items-center gap-2" data-purpose="account-header">
         <div>
-          <h1 className="text-[32px] font-black tracking-tight text-slate-900 leading-tight">{t('account.title')}</h1>
-          <p className="text-xs text-slate-500 font-medium mt-1 tracking-tight">
+          <h1 className="text-[28px] sm:text-[30px] font-black tracking-tight text-slate-900 leading-none">{t('account.title')}</h1>
+          <p className="text-xs text-slate-500 font-medium mt-1.5 tracking-tight">
             {isGuest ? t('account.guestSubtitle') : t('account.subtitle')}
           </p>
         </div>
-        <div className="flex items-center gap-2.5 pt-1.5">
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => onOpenSupportPage?.()}
+            onClick={() => (onOpenNotifications ? onOpenNotifications() : onOpenSupportPage?.())}
             aria-label={t('account.supportRequests')}
-            className="relative min-h-11 min-w-11 h-11 w-11 rounded-full bg-white flex items-center justify-center text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.05)] transition-transform active:scale-95"
+            className="relative min-h-11 min-w-11 h-11 w-11 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-700 shadow-2xs transition-all active:scale-95"
           >
             <Bell className="h-5 w-5" />
-            <span aria-hidden="true" className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-[#D9232D] ring-2 ring-white" />
+            {notificationCount > 0 && (
+              <span
+                aria-hidden="true"
+                className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-[#D9232D] ring-2 ring-white"
+              />
+            )}
           </button>
           <button
             type="button"
             onClick={() => handleProtectedAction('settings')}
             aria-label={t('account.settings')}
-            className="min-h-11 min-w-11 h-11 w-11 rounded-full bg-white flex items-center justify-center text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.05)] transition-transform active:scale-95"
+            className="min-h-11 min-w-11 h-11 w-11 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-700 shadow-2xs transition-all active:scale-95"
           >
             <Settings className="h-5 w-5" />
           </button>
         </div>
       </section>
 
-      {/* Guest Mode Banner */}
-      {isGuest && (
-        <div className="mx-4 p-4 rounded-2xl bg-gradient-to-r from-red-50 via-[#FDF2F0] to-rose-50 border border-red-200/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-[#D9232D] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-[14px] font-extrabold text-gray-950 leading-tight">
-                {t('account.unlock')}
-              </h4>
-              <p className="text-[11.5px] text-gray-600 font-medium mt-0.5">
-                {t('account.loginHint')}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onOpenLogin}
-            className="min-h-11 w-full sm:w-auto px-4 py-2 bg-[#D9232D] hover:bg-[#C01B24] active:scale-95 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center justify-center space-x-1.5 flex-shrink-0"
-          >
-            <span>{t('account.login')}</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
       <main className="px-4 space-y-4">
         {/* BEGIN: ProfileHeroCard */}
         <section
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FCE7E9] via-[#FDF1F3] to-[#F8E5EE] border border-[#F6DCE3] shadow-[0_4px_16px_rgba(0,0,0,0.04)] p-4"
+          className="group relative overflow-hidden rounded-3xl bg-white border border-slate-200/90 shadow-[0_10px_30px_-14px_rgba(15,23,42,0.08)] transition-all duration-200"
           data-purpose="profile-hero-card"
         >
-          <button
-            type="button"
-            onClick={() => handleProtectedAction('profile')}
-            aria-label={t('account.editProfile')}
-            className="relative flex w-full items-center gap-4 text-left"
-          >
-            <div className="relative h-20 w-20 shrink-0">
-              <div className="h-20 w-20 rounded-full bg-[#FCE6E1] ring-2 ring-white shadow-sm flex items-center justify-center overflow-hidden">
-                {currentUser?.avatar ? (
-                  <img src={currentUser.avatar} alt={`${currentUser.name || 'Rider'} avatar`} className="h-full w-full object-cover" />
+          {/* Subtle Top Ambient Workshop Accent Band */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-br from-[#FFF0F2] via-[#FFF7F8] to-transparent"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#D9232D]/[0.06] blur-2xl"
+          />
+
+          <div className="relative p-4 sm:p-5 space-y-3.5">
+            {/* Top Row: Avatar + Name + Primary Action */}
+            <div className="flex items-center gap-3.5">
+              {/* Interactive Avatar with Dual Ring & Camera Badge */}
+              <button
+                type="button"
+                onClick={() => (isGuest && onOpenLogin ? onOpenLogin() : handleProtectedAction('profile'))}
+                aria-label={isGuest ? t('account.login') : t('account.editProfile')}
+                className="relative h-[68px] w-[68px] sm:h-[74px] sm:w-[74px] shrink-0 rounded-full text-left transition-transform active:scale-95 focus:outline-none"
+              >
+                <div className="h-full w-full rounded-full bg-gradient-to-br from-[#D9232D] via-[#F43F5E] to-[#FDA4AF] p-[2.5px] shadow-[0_6px_16px_rgba(217,35,45,0.18)]">
+                  <div className="relative h-full w-full rounded-full bg-[#FFF5F6] ring-2 ring-white flex items-center justify-center overflow-hidden">
+                    {currentUser?.avatar ? (
+                      <>
+                        {!heroAvatarLoaded && (
+                          <span
+                            aria-hidden="true"
+                            className="skeleton-shimmer absolute inset-0 rounded-full bg-rose-100/80"
+                          />
+                        )}
+                        <img
+                          ref={(node) => {
+                            if (node?.complete && node.naturalWidth > 0) {
+                              setHeroAvatarLoaded(true);
+                            }
+                          }}
+                          src={currentUser.avatar}
+                          alt={`${currentUser.name || 'Rider'} avatar`}
+                          referrerPolicy="no-referrer"
+                          onLoad={() => setHeroAvatarLoaded(true)}
+                          className={`h-full w-full object-cover transition-opacity duration-300 ${
+                            heroAvatarLoaded ? 'opacity-100' : 'opacity-0'
+                          }`}
+                        />
+                      </>
+                    ) : (
+                      <span
+                        aria-hidden="true"
+                        className="text-xl font-black tracking-tight text-[#D9232D]"
+                      >
+                        {getInitials(currentUser?.name || '')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <span
+                  aria-hidden="true"
+                  className="absolute -bottom-0.5 -right-0.5 grid h-6 w-6 place-items-center rounded-full bg-[#D9232D] text-white ring-2 ring-white shadow-xs transition-transform group-hover:scale-105"
+                >
+                  <Camera className="h-3 w-3" />
+                </span>
+              </button>
+
+              {/* Identity Headline */}
+              <div className="min-w-0 flex-1">
+                <h2 className="truncate text-[19px] sm:text-[21px] font-black tracking-tight text-slate-900 leading-tight">
+                  {currentUser?.name?.trim() || (isGuest ? t('account.guestTitle') : 'Rider')}
+                </h2>
+              </div>
+
+              {/* Primary Top-Right Action Button */}
+              <div className="shrink-0">
+                {isGuest ? (
+                  <button
+                    type="button"
+                    onClick={onOpenLogin}
+                    className="banner-cta-shine group/cta inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#D9232D] hover:bg-[#C01B24] active:scale-95 px-3.5 py-2 text-xs font-bold text-white shadow-xs transition-all"
+                  >
+                    <span>{t('account.login')}</span>
+                    <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover/cta:translate-x-0.5" aria-hidden="true" />
+                  </button>
                 ) : (
-                  <span aria-hidden="true" className="text-xl font-black text-[#D9232D]">{getInitials(currentUser?.name || '')}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleProtectedAction('profile')}
+                    aria-label={t('account.editProfile')}
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl bg-white hover:bg-[#D9232D] text-slate-700 hover:text-white border border-slate-200/90 hover:border-[#D9232D] px-3 py-1.5 text-xs font-bold shadow-2xs transition-all active:scale-95"
+                  >
+                    <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span className="hidden sm:inline">{t('account.editProfile')}</span>
+                  </button>
                 )}
               </div>
-              <span aria-hidden="true" className="absolute bottom-0 right-0 grid h-6 w-6 place-items-center rounded-full bg-[#D9232D] text-white ring-2 ring-white">
-                <Pencil className="h-3 w-3" />
-              </span>
             </div>
-            <div className="min-w-0 flex-1">
-              <h2 className="truncate text-[17px] font-extrabold tracking-tight text-slate-900 leading-tight">
-                {currentUser?.name?.trim() || (isGuest ? t('account.guestTitle') : 'Rider')}
-              </h2>
-              <p className="mt-0.5 truncate text-xs font-medium text-slate-500">
-                {currentUser?.email?.trim() || currentUser?.phone?.trim() || t('account.subtitle')}
-              </p>
-              {currentUser?.vehicle?.trim() && (
-                <span className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full bg-[#EFEAFD] px-2.5 py-1 text-[10.5px] font-bold text-[#6D28D9]">
-                  <Bike className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{currentUser.vehicle.trim()}</span>
-                </span>
-              )}
+
+            {/* Clean Full-Width Contact Details Strip (Never Cramped Beside Avatar) */}
+            {(currentUser?.email?.trim() || currentUser?.phone?.trim() || !isGuest || isGuest) && (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] font-medium text-slate-600">
+                {currentUser?.email?.trim() && (
+                  <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-slate-600">
+                    <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+                    <span className="break-all sm:truncate">{currentUser.email.trim()}</span>
+                  </span>
+                )}
+                {currentUser?.phone?.trim() ? (
+                  <span className="inline-flex items-center gap-1.5 tabular-nums font-semibold text-slate-800 whitespace-nowrap">
+                    <Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+                    <span>{currentUser.phone.trim()}</span>
+                  </span>
+                ) : !isGuest ? (
+                  <button
+                    type="button"
+                    onClick={() => handleProtectedAction('profile')}
+                    className="inline-flex min-h-9 items-center gap-1 text-xs font-bold text-[#D9232D] hover:underline"
+                  >
+                    <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <span>+ Add phone</span>
+                  </button>
+                ) : (
+                  <span className="text-xs text-slate-500">{t('account.loginHint')}</span>
+                )}
+              </div>
+            )}
+
+            {/* Profile Completeness Nudge (when signed in & < 100%) OR Guest Sign-in Callout */}
+            {isGuest ? (
+              <div className="rounded-2xl bg-gradient-to-r from-rose-50/90 via-rose-50/50 to-slate-50 border border-rose-200/70 p-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-extrabold text-slate-900 truncate">{t('account.unlock')}</p>
+                  <p className="text-[11px] font-medium text-slate-500 truncate mt-0.5">
+                    Save your bike model, track live orders &amp; get custom seat recommendations
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onOpenLogin}
+                  className="shrink-0 min-h-11 rounded-xl bg-white border border-rose-200 px-3.5 py-2 text-xs font-extrabold text-[#D9232D] hover:bg-rose-50 transition-colors"
+                >
+                  Sign in
+                </button>
+              </div>
+            ) : (
+              accountProfileCompletion.percent < 100 && (
+                <button
+                  type="button"
+                  onClick={() => handleProtectedAction('profile')}
+                  className="w-full rounded-2xl bg-slate-50/90 hover:bg-rose-50/40 border border-slate-200/70 hover:border-rose-200/80 px-3.5 py-2.5 text-left transition-colors group/complete"
+                >
+                  <div className="flex items-center justify-between gap-2 text-[11px]">
+                    <span className="font-bold text-slate-700 truncate">
+                      {accountProfileCompletion.missingLabel}
+                    </span>
+                    <span className="shrink-0 font-extrabold text-[#D9232D] tabular-nums">
+                      {accountProfileCompletion.percent}%
+                    </span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-200/80">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[#D9232D] to-[#FB7185] transition-all duration-300"
+                      style={{ width: `${accountProfileCompletion.percent}%` }}
+                    />
+                  </div>
+                </button>
+              )
+            )}
+
+            {/* Interactive "My Fitment Garage" Sub-Card with Vehicle Photo */}
+            <div className="rounded-2xl bg-[#F8FAFC] border border-slate-200/80 p-3.5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                onClick={() => handleProtectedAction('profile')}
+                className="flex items-center gap-3 min-w-0 flex-1 text-left group/garage"
+              >
+                <div className="h-16 w-24 sm:h-[72px] sm:w-28 rounded-xl bg-white border border-slate-200/85 text-[#D9232D] flex items-center justify-center shrink-0 overflow-hidden shadow-2xs group-hover/garage:border-rose-200 transition-colors">
+                  {garageImageSrc && !garageImgError ? (
+                    <img
+                      src={garageImageSrc}
+                      alt={currentUser?.vehicle?.trim() || 'Saved vehicle'}
+                      referrerPolicy="no-referrer"
+                      onError={() => setGarageImgError(true)}
+                      className="h-full w-full object-contain p-1"
+                    />
+                  ) : (
+                    <Bike className="h-6 w-6" aria-hidden="true" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-500 leading-tight whitespace-nowrap">
+                    My Fitment Garage
+                  </p>
+                  {currentUser?.vehicle?.trim() ? (
+                    <p className="mt-1 break-words text-[13.5px] sm:text-[14.5px] font-black leading-snug text-slate-900">
+                      {currentUser.vehicle.trim()}
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-xs font-semibold leading-snug text-slate-500">
+                      Add your bike, scooter or toto model
+                    </p>
+                  )}
+                </div>
+              </button>
+
+              <div className="grid grid-cols-2 gap-2 border-t border-slate-200/70 pt-2.5 sm:flex sm:items-center sm:shrink-0 sm:border-t-0 sm:pt-0">
+                {currentUser?.vehicle?.trim() && onOpenShop && (
+                  <button
+                    type="button"
+                    onClick={onOpenShop}
+                    className="banner-cta-shine group/cta inline-flex min-h-11 items-center justify-center gap-1 rounded-xl bg-rose-50 hover:bg-rose-100 px-3.5 py-2 text-xs font-extrabold text-[#D9232D] transition-all active:scale-[0.98] whitespace-nowrap"
+                  >
+                    <span>Browse seats</span>
+                    <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover/cta:translate-x-0.5" aria-hidden="true" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleProtectedAction('profile')}
+                  className={`inline-flex min-h-11 items-center justify-center rounded-xl bg-white hover:bg-slate-100 border border-slate-200/90 px-3.5 py-2 text-xs font-extrabold text-slate-700 transition-colors active:scale-[0.98] whitespace-nowrap ${
+                    !(currentUser?.vehicle?.trim() && onOpenShop) ? 'col-span-2 sm:col-span-1' : ''
+                  }`}
+                >
+                  {currentUser?.vehicle?.trim() ? 'Change' : '+ Add vehicle'}
+                </button>
+              </div>
             </div>
-            <ChevronRight className="h-5 w-5 shrink-0 text-slate-700" />
-          </button>
+          </div>
+
+          {/* Interactive 3-Column Live Metrics Footer */}
+          <div className="grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100 bg-slate-50/50">
+            <button
+              type="button"
+              onClick={() => handleProtectedAction('orders')}
+              className="py-2.5 px-2 flex flex-col items-center justify-center hover:bg-white active:bg-slate-100/70 transition-colors"
+            >
+              <div className="flex items-center gap-1 text-slate-900">
+                <Package className="h-3.5 w-3.5 text-[#D9232D]" aria-hidden="true" />
+                {summaryLoading ? (
+                  <span
+                    aria-hidden="true"
+                    data-testid="account-orders-metric-skeleton"
+                    className="skeleton-shimmer inline-block h-4 w-6 rounded bg-slate-200/85"
+                  />
+                ) : (
+                  <span className="text-[15px] font-black tabular-nums leading-none">{customerOrders.length}</span>
+                )}
+              </div>
+              <span className="mt-1 text-[10.5px] font-semibold text-slate-500">Orders</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onOpenWishlist}
+              className="py-2.5 px-2 flex flex-col items-center justify-center hover:bg-white active:bg-slate-100/70 transition-colors"
+            >
+              <div className="flex items-center gap-1 text-slate-900">
+                <Heart className="h-3.5 w-3.5 text-[#7C3AED]" aria-hidden="true" />
+                <span className="text-[15px] font-black tabular-nums leading-none">{wishlistCount}</span>
+              </div>
+              <span className="mt-1 text-[10.5px] font-semibold text-slate-500">Saved</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleProtectedAction('orders')}
+              className="py-2.5 px-2 flex flex-col items-center justify-center hover:bg-white active:bg-slate-100/70 transition-colors"
+            >
+              <div className="flex items-center gap-1 text-slate-900">
+                <Star className="h-3.5 w-3.5 text-[#D97706]" aria-hidden="true" />
+                {summaryLoading ? (
+                  <span
+                    aria-hidden="true"
+                    data-testid="account-reviews-metric-skeleton"
+                    className="skeleton-shimmer inline-block h-4 w-6 rounded bg-slate-200/85"
+                  />
+                ) : (
+                  <span className="text-[15px] font-black tabular-nums leading-none">{myReviews.length}</span>
+                )}
+              </div>
+              <span className="mt-1 text-[10.5px] font-semibold text-slate-500">Reviews</span>
+            </button>
+          </div>
         </section>
         {/* END: ProfileHeroCard */}
 
         {/* BEGIN: QuickActionsGrid */}
-        <section className="space-y-3 pt-1" data-purpose="account-categories">
+        <section className="space-y-2.5" data-purpose="account-categories">
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-base font-bold tracking-tight text-slate-900">{t('account.yourAccount')}</h2>
+            <h2 className="text-sm font-extrabold tracking-tight text-slate-900">{t('account.yourAccount')}</h2>
             <p className="text-[11px] font-medium text-slate-400">{t('account.manageExperience')}</p>
           </div>
-          <div className="grid grid-cols-2 gap-3" data-purpose="quick-navigation-grid">
-          {/* 1. My Orders */}
-          <button
-            type="button"
-            onClick={() => handleProtectedAction('orders')}
-            className="bg-white rounded-2xl p-3 flex items-center gap-2 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] active:scale-[0.98] transition-transform text-left"
-          >
-            <div className="h-9 w-9 rounded-xl bg-[#FDECE9] flex items-center justify-center text-[#E55845] shrink-0">
-              <Package className="w-5 h-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.myOrders')}</h3>
-              <p className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">{t('account.ordersHint')}</p>
-            </div>
-            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300" />
-          </button>
+          <div className="grid grid-cols-2 gap-2.5" data-purpose="quick-navigation-grid">
+            {/* 1. My Orders */}
+            <button
+              type="button"
+              onClick={() => handleProtectedAction('orders')}
+              className="min-h-14 bg-white rounded-2xl p-3 flex items-center gap-2.5 border border-slate-200/80 shadow-2xs hover:border-slate-300 active:scale-[0.98] transition-all text-left"
+            >
+              <div className="h-9 w-9 rounded-xl bg-rose-50 flex items-center justify-center text-[#D9232D] shrink-0">
+                <Package className="w-4.5 h-4.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.myOrders')}</h3>
+                {summaryLoading ? (
+                  <span
+                    aria-hidden="true"
+                    className="skeleton-shimmer mt-1 block h-3 w-20 rounded bg-slate-200/75"
+                  />
+                ) : (
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5 truncate tabular-nums">
+                    {customerOrders.length > 0 ? `${customerOrders.length} ${customerOrders.length === 1 ? 'order' : 'orders'}` : t('account.ordersHint')}
+                  </p>
+                )}
+              </div>
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+            </button>
 
-          {/* 2. Wishlist */}
-          <button
-            type="button"
-            onClick={onOpenWishlist}
-            className="bg-white rounded-2xl p-3 flex items-center gap-2 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] active:scale-[0.98] transition-transform text-left"
-          >
-            <div className="h-9 w-9 rounded-xl bg-[#F3EEFD] flex items-center justify-center text-[#7C3AED] shrink-0">
-              <Heart className="w-5 h-5 fill-current" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.wishlist')}</h3>
-              <p className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">
-                {wishlistCount > 0 ? t('account.savedCount', { count: wishlistCount }) : t('account.savedItems')}
-              </p>
-            </div>
-            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300" />
-          </button>
+            {/* 2. Wishlist */}
+            <button
+              type="button"
+              onClick={onOpenWishlist}
+              className="min-h-14 bg-white rounded-2xl p-3 flex items-center gap-2.5 border border-slate-200/80 shadow-2xs hover:border-slate-300 active:scale-[0.98] transition-all text-left"
+            >
+              <div className="h-9 w-9 rounded-xl bg-[#F3EEFD] flex items-center justify-center text-[#7C3AED] shrink-0">
+                <Heart className="w-4.5 h-4.5 fill-current" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.wishlist')}</h3>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5 truncate tabular-nums">
+                  {wishlistCount > 0 ? t('account.savedCount', { count: wishlistCount }) : t('account.savedItems')}
+                </p>
+              </div>
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+            </button>
 
-          {/* 3. Coupons */}
-          <button
-            type="button"
-            onClick={() => (onOpenCouponsPage ? onOpenCouponsPage() : handleProtectedAction('settings'))}
-            aria-label={t('account.coupons')}
-            className="bg-white rounded-2xl p-3 flex items-center gap-2 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] active:scale-[0.98] transition-transform text-left"
-          >
-            <div className="h-9 w-9 rounded-xl bg-[#FFF4E0] flex items-center justify-center text-[#F59E0B] shrink-0">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  clipRule="evenodd"
-                  d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2.5a1.5 1.5 0 0 0 0 3V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2.5a1.5 1.5 0 0 0 0-3V6zm5.5 3a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-5.2 2.7a.75.75 0 0 1 0-1.06l5-5a.75.75 0 1 1 1.06 1.06l-5 5a.75.75 0 0 1-1.06 0z"
-                  fillRule="evenodd"
-                />
-              </svg>
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.coupons')}</h3>
-              <p className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">{t('account.couponsHint')}</p>
-            </div>
-            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300" />
-          </button>
+            {/* 3. Coupons */}
+            <button
+              type="button"
+              onClick={() => (onOpenCouponsPage ? onOpenCouponsPage() : handleProtectedAction('settings'))}
+              aria-label={t('account.coupons')}
+              className="min-h-14 bg-white rounded-2xl p-3 flex items-center gap-2.5 border border-slate-200/80 shadow-2xs hover:border-slate-300 active:scale-[0.98] transition-all text-left"
+            >
+              <div className="h-9 w-9 rounded-xl bg-[#FFF4E0] flex items-center justify-center text-[#D97706] shrink-0">
+                <svg className="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    clipRule="evenodd"
+                    d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2.5a1.5 1.5 0 0 0 0 3V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2.5a1.5 1.5 0 0 0 0-3V6zm5.5 3a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-5.2 2.7a.75.75 0 0 1 0-1.06l5-5a.75.75 0 1 1 1.06 1.06l-5 5a.75.75 0 0 1-1.06 0z"
+                    fillRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.coupons')}</h3>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5 truncate">{t('account.couponsHint')}</p>
+              </div>
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+            </button>
 
-          {/* 4. Settings */}
-          <button
-            type="button"
-            onClick={() => handleProtectedAction('settings')}
-            className="bg-white rounded-2xl p-3 flex items-center gap-2 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] active:scale-[0.98] transition-transform text-left"
-          >
-            <div className="h-9 w-9 rounded-xl bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] shrink-0">
-              <SlidersHorizontal className="w-5 h-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.settings')}</h3>
-              <p className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">{t('account.preferences')}</p>
-            </div>
-            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300" />
-          </button>
+            {/* 4. Settings */}
+            <button
+              type="button"
+              onClick={() => handleProtectedAction('settings')}
+              className="min-h-14 bg-white rounded-2xl p-3 flex items-center gap-2.5 border border-slate-200/80 shadow-2xs hover:border-slate-300 active:scale-[0.98] transition-all text-left"
+            >
+              <div className="h-9 w-9 rounded-xl bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] shrink-0">
+                <SlidersHorizontal className="w-4.5 h-4.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.settings')}</h3>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5 truncate">{t('account.preferences')}</p>
+              </div>
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+            </button>
           </div>
         </section>
         {/* END: QuickActionsGrid */}
 
-        {/* BEGIN: ActivityServicesSection */}
-        <section className="pt-2 space-y-2.5" data-purpose="activity-services">
-          <h2 className="px-1 text-base font-bold tracking-tight text-slate-900">{t('account.activityServices')}</h2>
+        {/* BEGIN: ActivityServicesSection (Minimal Clean Grouped List) */}
+        <section className="space-y-2" data-purpose="activity-services">
+          <h2 className="px-1 text-sm font-extrabold tracking-tight text-slate-900">{t('account.activityServices')}</h2>
 
-          {/* My reviews */}
-          <button
-            type="button"
-            onClick={() => handleProtectedAction('orders')}
-            className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-[#FFF7E6] flex items-center justify-center text-[#B45309] flex-shrink-0">
-                <Star className="w-5 h-5 fill-current" />
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs divide-y divide-slate-100 overflow-hidden">
+            {/* My reviews */}
+            <button
+              type="button"
+              onClick={() => handleProtectedAction('orders')}
+              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-[#FFF7E6] flex items-center justify-center text-[#B45309] shrink-0">
+                  <Star className="w-4.5 h-4.5 fill-current" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">{t('account.myReviews')}</h3>
+                  {summaryLoading ? (
+                    <span
+                      aria-hidden="true"
+                      className="skeleton-shimmer mt-1 block h-3 w-24 rounded bg-slate-200/75"
+                    />
+                  ) : (
+                    <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate tabular-nums">
+                      {myReviews.length > 0 ? t('account.reviewsCount', { count: myReviews.length }) : t('account.reviewsHint')}
+                    </p>
+                  )}
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 leading-tight">{t('account.myReviews')}</h3>
-                <p className="text-[11px] text-slate-500 font-normal mt-0.5">
-                  {myReviews.length > 0 ? t('account.reviewsCount', { count: myReviews.length }) : t('account.reviewsHint')}
-                </p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
-          </button>
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+            </button>
 
-          {/* Rating store — opens the Google review page */}
-          <button
-            type="button"
-            onClick={() => window.open('https://g.page/r/CUiStgroG6BfEAE/review', '_blank', 'noopener,noreferrer')}
-            className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-[#EAF7EF] flex items-center justify-center text-[#15803D] flex-shrink-0">
-                <Star className="w-5 h-5 fill-current" />
+            {/* Rating store — iframe-safe external anchor link */}
+            <a
+              href="https://g.page/r/CUiStgroG6BfEAE/review"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-[#EAF7EF] flex items-center justify-center text-[#15803D] shrink-0">
+                  <Star className="w-4.5 h-4.5 fill-current" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">{t('account.ratingStore')}</h3>
+                  <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">{t('account.ratingStoreHint')}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 leading-tight">{t('account.ratingStore')}</h3>
-                <p className="text-[11px] text-slate-500 font-normal mt-0.5">{t('account.ratingStoreHint')}</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
-          </button>
+              <ExternalLink className="w-4 h-4 text-slate-400 shrink-0" />
+            </a>
 
-          {/* Support requests */}
-          <button
-            type="button"
-            onClick={() => onOpenSupportPage?.()}
-            className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] flex-shrink-0">
-                <MessageCircle className="w-5 h-5" />
+            {/* Support requests */}
+            <button
+              type="button"
+              onClick={() => onOpenSupportPage?.()}
+              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] shrink-0">
+                  <MessageCircle className="w-4.5 h-4.5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">{t('account.supportRequests')}</h3>
+                  <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">{t('account.supportRequestsHint')}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 leading-tight">{t('account.supportRequests')}</h3>
-                <p className="text-[11px] text-slate-500 font-normal mt-0.5">{t('account.supportRequestsHint')}</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
-          </button>
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+            </button>
 
-          {/* Custom seat builder */}
-          <button
-            type="button"
-            onClick={onOpenCustomBuilder}
-            className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-[#F3EEFD] flex items-center justify-center text-[#7C3AED] flex-shrink-0">
-                <Sparkles className="w-5 h-5" />
+            {/* Custom seat builder */}
+            <button
+              type="button"
+              onClick={onOpenCustomBuilder}
+              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-[#F3EEFD] flex items-center justify-center text-[#7C3AED] shrink-0">
+                  <Sparkles className="w-4.5 h-4.5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">{t('account.customSeat')}</h3>
+                  <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">{t('account.customSeatHint')}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 leading-tight">{t('account.customSeat')}</h3>
-                <p className="text-[11px] text-slate-500 font-normal mt-0.5">{t('account.customSeatHint')}</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
-          </button>
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+            </button>
 
-          {/* Browse shop */}
-          <button
-            type="button"
-            onClick={onOpenShop}
-            className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-[#FDECE9] flex items-center justify-center text-[#E55845] flex-shrink-0">
-                <ShoppingBag className="w-5 h-5" />
+            {/* Browse shop */}
+            <button
+              type="button"
+              onClick={onOpenShop}
+              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center text-[#D9232D] shrink-0">
+                  <ShoppingBag className="w-4.5 h-4.5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">{t('account.browseShop')}</h3>
+                  <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">{t('account.browseShopHint')}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 leading-tight">{t('account.browseShop')}</h3>
-                <p className="text-[11px] text-slate-500 font-normal mt-0.5">{t('account.browseShopHint')}</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
-          </button>
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+            </button>
+          </div>
         </section>
         {/* END: ActivityServicesSection */}
 
-        {/* BEGIN: NeedHelpSection */}
-        <section className="pt-2" data-purpose="help-section">
-          <div className="flex justify-between items-center px-1 mb-2.5">
-            <h2 className="text-base font-bold text-slate-900 tracking-tight">{t('account.needHelp')}</h2>
+        {/* BEGIN: NeedHelpSection (Streamlined Single-Card Support & Quick Contact Bar) */}
+        <section className="space-y-2" data-purpose="help-section">
+          <div className="flex justify-between items-center px-1">
+            <h2 className="text-sm font-extrabold text-slate-900 tracking-tight">{t('account.needHelp')}</h2>
             <button
               type="button"
               onClick={() => onOpenContactSupport?.()}
-              className="text-xs font-semibold text-slate-500 hover:text-slate-700 flex items-center"
+              className="text-xs font-semibold text-slate-500 hover:text-slate-700 flex items-center gap-0.5"
             >
-              {t('account.getSupport')}
-              <svg className="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <span>{t('account.getSupport')}</span>
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          {/* Contact Support Card */}
-          <div className="bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
-            <div className="flex items-center space-x-3">
-              <div className="w-11 h-11 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm flex-shrink-0 overflow-hidden">
-                <img src="/images/chat-support-bubbles.webp" alt="" className="h-11 w-11 object-contain" loading="lazy" />
+          <div className="bg-white rounded-2xl p-3.5 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden">
+                <img src="/images/chat-support-bubbles.webp" alt="" className="h-9 w-9 object-contain" loading="lazy" />
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 leading-tight">{t('account.contactSupportTitle')}</h3>
-                <p className="text-[11px] text-slate-500 font-normal mt-0.5">{t('account.quickAnswers')}</p>
+              <div className="min-w-0">
+                <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">{t('account.contactSupportTitle')}</h3>
+                <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">{t('account.quickAnswers')}</p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => onOpenContactSupport?.()}
-              className="min-h-11 bg-[#D9232D] hover:bg-[#B91C1C] text-white text-xs font-semibold px-4 py-2 rounded-full flex items-center space-x-1.5 transition-colors flex-shrink-0 shadow-sm"
-            >
-              <span>{t('account.chatNow')}</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </button>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href={`tel:${WORKSHOP_INFO.phone.replace(/[^+\d]/g, '')}`}
+                aria-label="Call workshop support"
+                className="min-h-10 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors flex-1 sm:flex-initial whitespace-nowrap"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                <span>Call us</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => onOpenContactSupport?.()}
+                className="min-h-10 bg-[#D9232D] hover:bg-[#B91C1C] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors flex-1 sm:flex-initial shadow-2xs whitespace-nowrap"
+              >
+                <span>{t('account.chatNow')}</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </section>
         {/* END: NeedHelpSection */}
 
-        {/* BEGIN: VisitOurStoreSection */}
+        {/* BEGIN: VisitOurStoreSection (Interactive Store Location Card) */}
         <section
-          className="bg-white rounded-3xl p-4 border border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.03)] relative overflow-hidden"
+          className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs relative overflow-hidden"
           data-purpose="store-locator-card"
         >
-          <div className="grid grid-cols-12 gap-3 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
             {/* Left details column */}
-            <div className="col-span-7 space-y-2">
-              {/* Pin Badge & Name */}
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-full bg-[#FEE5DF] flex items-center justify-center text-[#E55845] flex-shrink-0">
-                  <MapPin className="w-5 h-5 fill-current" />
+            <div className="min-w-0 sm:col-span-7 space-y-2">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-xl bg-rose-50 flex items-center justify-center text-[#D9232D] flex-shrink-0">
+                  <MapPin className="w-4.5 h-4.5" />
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 leading-tight">Visit our store</h3>
-                  <p className="text-[11px] text-slate-600 font-medium leading-none mt-0.5">Rofik Godi Centre</p>
+                <div className="min-w-0">
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">Visit our store</h3>
+                  <p className="text-[11px] text-slate-500 font-medium leading-none mt-0.5 truncate">Rofik Godi Centre</p>
                 </div>
               </div>
-              {/* Description */}
-              <p className="text-[11px] text-slate-500 font-normal leading-tight">
+
+              <p className="text-[11px] text-slate-500 font-normal leading-snug">
                 Local automotive accessories &amp; fitting service
               </p>
-              {/* Timing and Location Specs */}
-              <div className="space-y-1 pt-1 text-[11px] text-slate-600 font-medium">
+
+              <div className="space-y-1 pt-0.5 text-[11px] text-slate-600 font-medium">
                 <div className="flex items-center space-x-1.5">
-                  <Clock className="w-3.5 h-3.5 text-slate-700 flex-shrink-0" />
-                  <span>{WORKSHOP_INFO.workingHours}</span>
+                  <Clock className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                  <span className="truncate">{WORKSHOP_INFO.workingHours}</span>
                 </div>
                 <div className="flex items-center space-x-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-slate-700 flex-shrink-0" />
-                  <span>{WORKSHOP_INFO.address}</span>
+                  <MapPin className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                  <span className="line-clamp-2 break-words">{WORKSHOP_INFO.address}</span>
                 </div>
               </div>
-              {/* Get directions pill button */}
-              <div className="pt-2 flex flex-wrap items-center gap-2">
+
+              <div className="pt-1.5 flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => handleProtectedAction('pickupStore')}
-                  className="inline-flex items-center space-x-1.5 bg-[#FEE5DF] hover:bg-[#FCD8CF] text-[#C83F2D] text-xs font-semibold px-4 py-1.5 rounded-full transition-colors"
+                  className="min-h-11 inline-flex items-center space-x-1 bg-rose-50 hover:bg-rose-100 text-[#D9232D] text-xs font-bold px-3.5 py-2 rounded-xl transition-colors whitespace-nowrap"
                 >
                   <span>Get directions</span>
-                  <svg className="w-3 h-3 text-[#C83F2D]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                    <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleProtectedAction('pickupStore')}
-                  className="inline-flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-1.5 rounded-full transition-colors"
+                  onClick={() => setActiveModal('pickupStore')}
+                  className="min-h-11 inline-flex items-center space-x-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3.5 py-2 rounded-xl transition-colors whitespace-nowrap"
                 >
                   <span>Pickup details</span>
-                  <ChevronRight className="h-3 w-3" />
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
 
-            {/* Right 3D Isometric Map / Store Preview Graphic */}
-            <div className="col-span-5 h-full min-h-[140px] rounded-2xl overflow-hidden relative shadow-inner bg-[#E7F0FA] flex items-center justify-center p-2">
+            {/* Right Isometric Map / Store Preview Graphic */}
+            <div
+              onClick={() => handleProtectedAction('pickupStore')}
+              role="presentation"
+              className="min-w-0 sm:col-span-5 h-full min-h-[136px] rounded-xl overflow-hidden relative bg-[#E7F0FA] flex items-center justify-center p-1.5 cursor-pointer"
+            >
               <svg className="w-full h-full" fill="none" viewBox="0 0 140 140">
-                {/* Map terrain base */}
                 <rect fill="#E8F4E8" height="140" rx="16" width="140" />
-                {/* Road network */}
                 <path d="M-10 60 L150 110" stroke="#FFFFFF" strokeLinecap="round" strokeWidth="18" />
                 <path d="M-10 60 L150 110" stroke="#D1E2F0" strokeLinecap="round" strokeWidth="12" />
                 <path d="M90 -10 L40 150" stroke="#FFFFFF" strokeWidth="14" />
                 <path d="M90 -10 L40 150" stroke="#D1E2F0" strokeWidth="8" />
-                {/* Subtle green zones */}
                 <circle cx="20" cy="25" fill="#D3EDD8" r="14" />
                 <circle cx="125" cy="40" fill="#D3EDD8" r="18" />
                 <circle cx="120" cy="120" fill="#D3EDD8" r="16" />
-                {/* 3D Mini Storefront */}
                 <g transform="translate(42, 45)">
-                  {/* Base / Shadow */}
                   <ellipse cx="28" cy="42" fill="#000000" opacity="0.12" rx="22" ry="7" />
-                  {/* Store Body */}
                   <rect fill="#E2E8F0" height="24" rx="2" stroke="#94A3B8" strokeWidth="1" width="36" x="10" y="16" />
-                  {/* Window & Door */}
                   <rect fill="#7DD3FC" height="12" rx="1" width="12" x="14" y="24" />
                   <rect fill="#64748B" height="18" rx="1" width="12" x="30" y="22" />
                   <rect fill="#94A3B8" height="16" width="8" x="32" y="24" />
-                  {/* Striped Store Awning */}
                   <path d="M 6,16 L 10,7 L 46,7 L 50,16 Z" fill="#EF4444" />
                   <path d="M 14,16 L 16.5,7 L 22.5,7 L 20,16 Z" fill="#FFFFFF" />
                   <path d="M 28,16 L 29.5,7 L 35.5,7 L 34,16 Z" fill="#FFFFFF" />
@@ -980,7 +1329,6 @@ export const AccountView: React.FC<AccountViewProps> = ({
                     strokeWidth="2"
                   />
                 </g>
-                {/* Map Pin on Store Location */}
                 <g transform="translate(90, 80)">
                   <ellipse cx="12" cy="27" fill="#1E293B" opacity="0.2" rx="6" ry="2.5" />
                   <path
@@ -995,89 +1343,86 @@ export const AccountView: React.FC<AccountViewProps> = ({
         </section>
         {/* END: VisitOurStoreSection */}
 
-        {/* BEGIN: MoreOptionsSection */}
-        <section className="pt-1 space-y-2.5" data-purpose="more-options-section">
-          <h2 className="text-base font-bold text-slate-900 tracking-tight px-1 mb-1">More options</h2>
-          {isAdmin && onOpenAdminPanel && <button type="button" onClick={onOpenAdminPanel} className="w-full bg-[#FFF3E8] rounded-2xl p-3.5 flex items-center justify-between border border-orange-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-orange-50 transition-colors text-left cursor-pointer"><div className="flex items-center space-x-3"><div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 flex-shrink-0"><ShieldCheck className="w-5 h-5" /></div><div><h3 className="text-sm font-bold text-slate-900 leading-tight">Go to admin panel</h3><p className="text-[11px] text-slate-500 font-normal mt-0.5">Manage products, orders and support</p></div></div><ChevronRight className="w-4 h-4 text-slate-400" /></button>}
+        {/* BEGIN: MoreOptionsSection (Minimal Clean Grouped List) */}
+        <section className="space-y-2" data-purpose="more-options-section">
+          <h2 className="text-sm font-extrabold text-slate-900 tracking-tight px-1">More options</h2>
 
-          {/* Privacy Policy Card */}
-          <button
-            type="button"
-            onClick={() => handleProtectedAction('privacy')}
-            className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left cursor-pointer"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-[#E8F8F0] flex items-center justify-center text-[#10B981] flex-shrink-0">
-                <ShieldCheck className="w-5 h-5 fill-current" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 leading-tight">Privacy Policy</h3>
-                <p className="text-[11px] text-slate-500 font-normal mt-0.5">Your data & vehicle specs protection</p>
-              </div>
-            </div>
-            <svg className="w-4 h-4 text-slate-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs divide-y divide-slate-100 overflow-hidden">
+            {isAdmin && onOpenAdminPanel && (
+              <button
+                type="button"
+                onClick={onOpenAdminPanel}
+                className="w-full min-h-14 bg-[#FFF8F1] hover:bg-orange-50/80 px-3.5 py-3 flex items-center justify-between transition-colors text-left cursor-pointer"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center text-orange-700 shrink-0">
+                    <ShieldCheck className="w-4.5 h-4.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">Go to admin panel</h3>
+                    <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">Manage products, orders and support</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+              </button>
+            )}
 
-          {/* Terms & Conditions Card */}
-          <button
-            type="button"
-            onClick={() => handleProtectedAction('terms')}
-            className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors text-left cursor-pointer"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] flex-shrink-0">
-                <FileText className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 leading-tight">Terms &amp; Conditions</h3>
-                <p className="text-[11px] text-slate-500 font-normal mt-0.5">Rules for using Rofik Godi Centre app</p>
-              </div>
-            </div>
-            <svg className="w-4 h-4 text-slate-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-
-          {/* Call us Card */}
-          <a
-            className="bg-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-slate-50 transition-colors"
-            href={`tel:${WORKSHOP_INFO.phone.replace(/[^+\d]/g, '')}`}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-[#EAF2FE] flex items-center justify-center text-[#2563EB] flex-shrink-0">
-                <Phone className="w-5 h-5 fill-current" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 leading-tight">Call us</h3>
-                <p className="text-[11px] text-slate-500 font-normal mt-0.5">Speak with our master craftsmen</p>
-              </div>
-            </div>
-            <svg className="w-4 h-4 text-slate-400 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </a>
-
-          {/* Log out Card */}
-          {!isGuest && onLogout && (
+            {/* Privacy Policy Row */}
             <button
               type="button"
-              onClick={() => setConfirmLogout(true)}
-              className="w-full bg-white rounded-2xl p-3.5 flex items-center justify-between border border-red-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:bg-red-50 transition-colors text-left"
+              onClick={() => handleProtectedAction('privacy')}
+              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left cursor-pointer"
             >
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-[#FDECE9] flex items-center justify-center text-[#D9232D] flex-shrink-0">
-                  <LogOut className="w-5 h-5" />
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-[#E8F8F0] flex items-center justify-center text-[#10B981] shrink-0">
+                  <ShieldCheck className="w-4.5 h-4.5 fill-current" />
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 leading-tight">{t('account.logout')}</h3>
-                  <p className="text-[11px] text-slate-500 font-normal mt-0.5">{t('account.logoutHint')}</p>
+                <div className="min-w-0">
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">Privacy Policy</h3>
+                  <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">Your data &amp; vehicle specs protection</p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400" />
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
             </button>
-          )}
+
+            {/* Terms & Conditions Row */}
+            <button
+              type="button"
+              onClick={() => handleProtectedAction('terms')}
+              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left cursor-pointer"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] shrink-0">
+                  <FileText className="w-4.5 h-4.5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">Terms &amp; Conditions</h3>
+                  <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">Rules for using Rofik Godi Centre app</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+            </button>
+
+            {/* Log out Row */}
+            {!isGuest && onLogout && (
+              <button
+                type="button"
+                onClick={() => setConfirmLogout(true)}
+                className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-red-50/60 active:bg-red-50 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center text-[#D9232D] shrink-0">
+                    <LogOut className="w-4.5 h-4.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-[13.5px] font-bold text-[#D9232D] leading-tight truncate">{t('account.logout')}</h3>
+                    <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">{t('account.logoutHint')}</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+              </button>
+            )}
+          </div>
         </section>
         {/* END: MoreOptionsSection */}
       </main>
@@ -1136,34 +1481,58 @@ export const AccountView: React.FC<AccountViewProps> = ({
       {/* 2. Pickup Store Modal */}
       <AnimatePresence>
         {activeModal === 'pickupStore' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
-            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="relative w-full max-w-[440px] max-h-[85vh] bg-white rounded-[28px] shadow-2xl flex flex-col z-10 overflow-hidden">
-              <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100 bg-white">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-[#ECF8F1] flex items-center justify-center text-[#16A34A]">
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="relative w-full max-w-full sm:max-w-[440px] max-h-[92dvh] bg-white rounded-t-3xl sm:rounded-[28px] shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              <div className="flex justify-between items-center gap-2 px-5 py-4 border-b border-gray-100 bg-white">
+                <div className="flex min-w-0 items-center gap-2">
+                  <div className="w-8 h-8 shrink-0 rounded-full bg-[#ECF8F1] flex items-center justify-center text-[#16A34A]">
                     <MapPin className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h3 className="text-[15px] font-black text-gray-900">Pickup Store</h3>
-                    <p className="text-[11px] text-gray-400">Store pickup location and hours</p>
+                  <div className="min-w-0">
+                    <h3 className="text-[15px] font-black text-gray-900 truncate">Pickup Store</h3>
+                    <p className="text-[11px] text-gray-400 truncate">Store pickup location and hours</p>
                   </div>
                 </div>
-                <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
+                <button type="button" onClick={() => setActiveModal(null)} aria-label="Close pickup store details" className="w-11 h-11 shrink-0 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="overflow-y-auto px-5 py-4 space-y-3 flex-1 no-scrollbar">
-                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-3.5 space-y-1 relative">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#16A34A]">PICKUP LOCATION</span>
-                      <span className="text-[9.5px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">Store</span>
-                    </div>
-                    <div className="text-[12.5px] font-bold text-gray-900">{WORKSHOP_INFO.name} ({WORKSHOP_INFO.phone})</div>
-                    <p className="text-[11.5px] text-gray-600">{WORKSHOP_INFO.address}</p>
-                    <p className="text-[11px] text-gray-500 font-medium">{WORKSHOP_INFO.workingHours}</p>
+              <div className="overflow-y-auto overflow-x-hidden px-5 py-4 space-y-3 flex-1 no-scrollbar">
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2 relative">
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="text-[11px] font-extrabold tracking-wide text-[#16A34A]">Pickup Location</span>
+                    <span className="text-[10px] font-semibold text-emerald-700">Free store pickup</span>
                   </div>
+                  <div className="text-[13px] font-bold text-slate-900 break-words">{WORKSHOP_INFO.name} ({WORKSHOP_INFO.phone})</div>
+                  <p className="text-xs text-slate-600 break-words">{WORKSHOP_INFO.address}</p>
+                  <p className="text-[11px] text-slate-500 font-medium">{WORKSHOP_INFO.workingHours}</p>
+                  <div className="pt-2 flex flex-wrap gap-2">
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${WORKSHOP_INFO.lat},${WORKSHOP_INFO.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-[#D9232D] px-3.5 py-2 text-xs font-bold text-white shadow-2xs hover:bg-[#B91C1C] transition-colors"
+                    >
+                      <MapPin className="h-3.5 w-3.5" />
+                      <span>Open in Google Maps</span>
+                    </a>
+                    {onOpenStoreInfo && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveModal(null);
+                          onOpenStoreInfo();
+                        }}
+                        className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+                      >
+                        <span>Store details</span>
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </motion.div>
           </div>
@@ -1173,93 +1542,357 @@ export const AccountView: React.FC<AccountViewProps> = ({
       {/* 4. Profile Modal */}
       <AnimatePresence>
         {activeModal === 'profile' && (
-          <motion.div role="dialog" aria-modal="true" aria-labelledby="profile-modal-title" initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'tween', duration: 0.28, ease: 'easeOut' }} className="fixed inset-0 z-50 flex flex-col bg-white overflow-hidden">
-              <div className="flex items-center gap-2.5 px-4 py-3.5 border-b border-gray-100 bg-white">
-                <button type="button" onClick={requestCloseProfile} disabled={profileSaving} aria-label="Close profile editor" className="rounded-full p-1.5 text-gray-700 hover:bg-gray-100 disabled:opacity-50">
-                  <ArrowLeft className="h-5 w-5" />
-                </button>
-                <div className="w-8 h-8 rounded-full bg-[#FCE6E1] flex items-center justify-center text-[#E55845]">
-                  <User className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 id="profile-modal-title" className="text-[15px] font-black text-gray-900">Rider Profile</h3>
-                  <p className="text-[11px] text-gray-400">Your Supabase customer profile</p>
-                </div>
-                <button
-                  type="button"
-                  aria-label="Save profile changes"
-                  disabled={profileSaving || profileLoading || !profileDirty || Object.keys(profileFieldErrors).length > 0}
-                  onClick={() => void handleSaveProfile()}
-                  className="ml-auto shrink-0 rounded-full bg-[#D9232D] px-4 py-2 text-[11px] font-bold text-white shadow-sm transition-all hover:bg-[#C01B24] active:scale-95 disabled:opacity-50"
-                >
-                  {profileSaving ? 'Saving…' : profileLoading ? 'Loading…' : 'Save'}
-                </button>
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-modal-title"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
+            className="fixed inset-0 z-50 flex w-full max-w-full flex-col bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] overflow-hidden"
+          >
+            {/* Top Sticky Glassmorphic App Bar */}
+            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-200/80 bg-white/90 backdrop-blur-md shadow-[0_4px_20px_-10px_rgba(15,23,42,0.05)]">
+              <button
+                type="button"
+                onClick={requestCloseProfile}
+                disabled={profileSaving}
+                aria-label="Close profile editor"
+                className="min-h-11 min-w-11 rounded-2xl bg-slate-100/90 hover:bg-rose-50 hover:text-[#D9232D] active:scale-95 transition-all flex items-center justify-center text-slate-700 disabled:opacity-50"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FFE4E6] to-[#FECDD3] flex items-center justify-center text-[#D9232D] shrink-0 ring-1 ring-inset ring-rose-200/70 shadow-2xs">
+                <User className="w-4.5 h-4.5" />
               </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#D9232D] ring-1 ring-inset ring-rose-100">
+                    <Sparkles className="h-2.5 w-2.5" /> Rider ID
+                  </span>
+                </div>
+                <h3 id="profile-modal-title" className="text-[16px] font-black tracking-tight text-slate-900 leading-tight truncate">
+                  Rider Profile
+                </h3>
+                <p className="text-[11px] font-medium text-slate-500 truncate">
+                  Personal details &amp; fitment garage
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Save profile changes"
+                disabled={profileSaving || profileLoading || !profileDirty || Object.keys(profileFieldErrors).length > 0}
+                onClick={() => void handleSaveProfile()}
+                className="banner-cta-shine ml-auto min-h-11 shrink-0 rounded-2xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-5 py-2 text-xs font-black text-white shadow-[0_6px_16px_rgba(217,35,45,0.25)] transition-all hover:brightness-105 hover:shadow-md active:scale-95 disabled:opacity-45 disabled:shadow-none"
+              >
+                {profileSaving ? 'Saving…' : profileLoading ? 'Loading…' : 'Save'}
+              </button>
+            </div>
 
-              <div className="overflow-y-auto flex-1 no-scrollbar text-gray-800">
-                <div className="mx-auto w-full max-w-[560px] px-5 py-4 space-y-3">
-                {profileLoading && <CloudLoader label="Loading profile…" className="rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-3" />}
-                <div className="flex items-center gap-4 rounded-2xl border border-rose-100 bg-rose-50/60 p-3">
-                  <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-white bg-[#FCE6E1] text-lg font-black text-[#D9232D] shadow-sm">
-                    {profileAvatarUrl
-                      ? <img src={profileAvatarUrl} alt={`${profileName || 'Rider'} profile photo`} className="h-full w-full object-cover" />
-                      : <span aria-label={`${getInitials(profileName)} initials`}>{getInitials(profileName)}</span>}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-extrabold text-gray-900">Profile photo</p>
-                    <p className="mt-0.5 text-[10px] leading-relaxed text-gray-500">Image files up to 5 MB. Saved as a square WebP.</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <input ref={avatarFileInputRef} type="file" accept="image/*" aria-label="Choose profile photo" className="sr-only" onChange={handleAvatarFile} />
-                      {pendingCropFile && (
-                        <AvatarCropModal file={pendingCropFile} onCancel={() => setPendingCropFile(null)} onConfirm={handleCroppedAvatar} />
-                      )}
-                      <button type="button" aria-label="Upload profile photo" disabled={profileSaving || profileLoading} onClick={() => avatarFileInputRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-lg bg-[#D9232D] px-3 py-2 text-[10px] font-bold text-white disabled:opacity-50">
-                        <Camera className="h-3.5 w-3.5" aria-hidden="true" /> Change photo
+            <div className="overflow-y-auto overflow-x-hidden flex-1 no-scrollbar text-slate-800">
+              <div className="mx-auto w-full max-w-[560px] px-4 sm:px-5 py-5 space-y-4 pb-6">
+                {profileLoading ? (
+                  <AccountProfileEditorSkeleton />
+                ) : (
+                  <>
+                {/* Glassmorphic Live Rider ID Card Preview Banner */}
+                <div className="relative overflow-hidden rounded-3xl border border-rose-200/80 bg-gradient-to-br from-[#FFF4F5] via-white to-[#FCECEF] p-4 sm:p-5 shadow-[0_12px_32px_-14px_rgba(217,35,45,0.14)] space-y-4">
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#D9232D]/[0.07] blur-2xl"
+                  />
+
+                  <div className="relative flex items-start gap-4">
+                    <div className="relative shrink-0">
+                      <button
+                        type="button"
+                        disabled={profileSaving || profileLoading}
+                        onClick={() => avatarFileInputRef.current?.click()}
+                        aria-label="Choose profile photo"
+                        className="group/avatar relative grid h-20 w-20 place-items-center overflow-hidden rounded-full border-[3px] border-white bg-gradient-to-br from-[#FFE4E6] to-[#FECDD3] text-xl font-black text-[#D9232D] shadow-[0_8px_20px_rgba(217,35,45,0.18)] transition-transform active:scale-95 disabled:opacity-60"
+                      >
+                        {profileAvatarUrl ? (
+                          <img
+                            src={profileAvatarUrl}
+                            alt={`${profileName || 'Rider'} profile photo`}
+                            referrerPolicy="no-referrer"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span aria-label={`${getInitials(profileName)} initials`}>
+                            {getInitials(profileName)}
+                          </span>
+                        )}
+                        <span
+                          aria-hidden="true"
+                          className="absolute inset-0 flex items-center justify-center bg-slate-900/35 opacity-0 transition-opacity group-hover/avatar:opacity-100"
+                        >
+                          <Camera className="h-5 w-5 text-white" />
+                        </span>
                       </button>
-                      {(profileAvatarUrl || profileAvatarFile) && <button type="button" aria-label="Remove profile photo" disabled={profileSaving || profileLoading} onClick={() => { setProfileAvatarFile(null); setProfileAvatarUrl(null); setProfileMessage(''); }} className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-[10px] font-bold text-[#D9232D] disabled:opacity-50">
-                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" /> Remove photo
-                      </button>}
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute -bottom-0.5 -right-0.5 grid h-6 w-6 place-items-center rounded-full bg-[#D9232D] text-white ring-2 ring-white shadow-2xs"
+                      >
+                        <Camera className="h-3 w-3" />
+                      </span>
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[15px] font-black text-slate-900 truncate">
+                          {profileName.trim() || 'Rider Profile Photo'}
+                        </p>
+                        <span className="shrink-0 rounded-full bg-white/95 border border-rose-200/80 px-2.5 py-0.5 text-[10.5px] font-extrabold text-[#D9232D] tabular-nums shadow-2xs">
+                          {editorProfileCompletion}% complete
+                        </span>
+                      </div>
+
+                      {/* Live Identity & Fitment Preview Chips */}
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                        {profilePhone.trim() && (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-white/90 border border-rose-100 px-2 py-0.5 text-[10.5px] font-bold text-slate-700 tabular-nums">
+                            <Phone className="h-2.5 w-2.5 text-[#D9232D]" />
+                            {profilePhone.trim()}
+                          </span>
+                        )}
+                        {profileVehicle.trim() && (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-white/90 border border-rose-100 px-2 py-0.5 text-[10.5px] font-bold text-[#D9232D] truncate max-w-full">
+                            <Bike className="h-2.5 w-2.5 shrink-0" />
+                            <span className="truncate">{profileVehicle.trim()}</span>
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                        Square WebP photo up to 5 MB. Tap photo or button below to update.
+                      </p>
+
+                      <div className="mt-2.5 flex flex-wrap gap-2">
+                        <input
+                          ref={avatarFileInputRef}
+                          type="file"
+                          accept="image/*"
+                          aria-label="Choose profile photo"
+                          className="sr-only"
+                          onChange={handleAvatarFile}
+                        />
+                        {pendingCropFile && (
+                          <AvatarCropModal
+                            file={pendingCropFile}
+                            onCancel={() => setPendingCropFile(null)}
+                            onConfirm={handleCroppedAvatar}
+                          />
+                        )}
+                        <button
+                          type="button"
+                          aria-label="Upload profile photo"
+                          disabled={profileSaving || profileLoading}
+                          onClick={() => avatarFileInputRef.current?.click()}
+                          className="banner-cta-shine inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91822] hover:brightness-105 px-3.5 py-2 text-[11px] font-black text-white shadow-xs transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          <Camera className="h-3.5 w-3.5" aria-hidden="true" /> Change photo
+                        </button>
+                        {(profileAvatarUrl || profileAvatarFile) && (
+                          <button
+                            type="button"
+                            aria-label="Remove profile photo"
+                            disabled={profileSaving || profileLoading}
+                            onClick={() => {
+                              setProfileAvatarFile(null);
+                              setProfileAvatarUrl(null);
+                              setProfileMessage('');
+                            }}
+                            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-rose-200 bg-white/90 hover:bg-rose-50 px-3.5 py-2 text-[11px] font-bold text-[#D9232D] transition-all active:scale-95 disabled:opacity-50"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" /> Remove photo
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Live Completeness Bar & Checklist */}
+                  <div className="rounded-2xl bg-white/80 backdrop-blur-xs border border-rose-100/90 p-3 space-y-2">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-rose-100/90">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-[#D9232D] to-[#FB7185] transition-all duration-300"
+                        style={{ width: `${editorProfileCompletion}%` }}
+                      />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                      {[
+                        { label: 'Name', done: Boolean(profileName.trim()) },
+                        { label: 'Photo', done: Boolean(profileAvatarUrl || profileAvatarFile) },
+                        { label: 'Phone', done: Boolean(profilePhone.trim()) },
+                        { label: 'Vehicle', done: Boolean(profileVehicle.trim()) },
+                      ].map((step) => (
+                        <span
+                          key={step.label}
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            step.done
+                              ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/70'
+                              : 'bg-slate-100 text-slate-500'
+                          }`}
+                        >
+                          <CheckCircle2 className={`h-2.5 w-2.5 ${step.done ? 'text-emerald-600' : 'text-slate-400'}`} />
+                          {step.label}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 </div>
-                <div>
-                  <label htmlFor="profile-name" className="text-[11px] font-bold text-gray-700 block mb-1">Your Name</label>
-                  <input
-                    id="profile-name"
-                    type="text"
-                    required
-                    minLength={2}
-                    maxLength={50}
-                    autoComplete="name"
-                    value={profileName}
-                    onChange={(e) => { setProfileName(e.target.value); setProfileMessage(''); }}
-                    aria-invalid={Boolean(profileFieldErrors.full_name)}
-                    aria-describedby={profileFieldErrors.full_name ? 'profile-name-error' : undefined}
-                    disabled={profileLoading || profileSaving}
-                    className="w-full bg-gray-50 text-[12.5px] rounded-xl px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#D9232D]"
-                  />
-                  {profileFieldErrors.full_name && <p id="profile-name-error" role="alert" className="mt-1 text-[10px] font-medium text-red-600">{profileFieldErrors.full_name}</p>}
-                </div>
-                <div>
-                  <PhoneNumberField
-                    id="profile-phone"
-                    label="Phone Number (optional)"
-                    value={profilePhone}
-                    country={profilePhoneCountry}
-                    onChange={(value) => { setProfilePhone(value); setProfileMessage(''); }}
-                    onCountryChange={setProfilePhoneCountry}
-                    onBlur={() => setProfilePhoneTouched(true)}
-                    error={profilePhoneError}
-                    placeholder="Enter phone number"
-                    disabled={profileLoading || profileSaving}
-                  />
-                </div>
-                <section className="space-y-3 rounded-2xl border border-gray-200 bg-white p-3" aria-label="Vehicle fitment">
-                  <div>
-                    <p className="text-[11px] font-bold text-gray-700">Vehicle for fitment <span className="font-normal text-gray-400">(optional)</span></p>
-                    <p className="mt-1 text-[10px] leading-relaxed text-gray-500">Choose a company first to see its models and photo.</p>
+
+                {/* Personal Information Card */}
+                <div className="rounded-3xl border border-slate-200/80 bg-white/95 backdrop-blur-md p-4 sm:p-5 shadow-[0_8px_28px_-14px_rgba(15,23,42,0.06)] space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                      <h4 className="text-[13.5px] font-black text-slate-900">Personal Details</h4>
+                      <p className="text-[11px] text-slate-500">Used on invoices, order pickup &amp; support</p>
+                    </div>
+                    <div className="h-9 w-9 rounded-xl bg-rose-50 text-[#D9232D] flex items-center justify-center shrink-0">
+                      <User className="h-4 w-4" aria-hidden="true" />
+                    </div>
                   </div>
-                  <label htmlFor="profile-vehicle-type" className="block text-[10px] font-semibold text-gray-600">{t('checkout.vehicleType')}
+
+                  <div>
+                    <label htmlFor="profile-name" className="text-xs font-extrabold text-slate-700 block mb-1.5">
+                      Your Name
+                    </label>
+                    <input
+                      id="profile-name"
+                      type="text"
+                      required
+                      minLength={2}
+                      maxLength={50}
+                      autoComplete="name"
+                      value={profileName}
+                      onChange={(e) => {
+                        setProfileName(e.target.value);
+                        setProfileMessage('');
+                      }}
+                      aria-invalid={Boolean(profileFieldErrors.full_name)}
+                      aria-describedby={profileFieldErrors.full_name ? 'profile-name-error' : undefined}
+                      disabled={profileLoading || profileSaving}
+                      className="min-h-11 w-full bg-slate-50/90 text-base sm:text-[13px] font-semibold text-slate-900 rounded-xl px-3.5 py-2.5 border border-slate-200/90 transition-all focus:bg-white focus:outline-none focus:border-[#D9232D] focus:ring-2 focus:ring-rose-100"
+                    />
+                    {profileFieldErrors.full_name && (
+                      <p id="profile-name-error" role="alert" className="mt-1 text-[11px] font-medium text-red-600">
+                        {profileFieldErrors.full_name}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <PhoneNumberField
+                      id="profile-phone"
+                      label="Phone Number (optional)"
+                      value={profilePhone}
+                      country={profilePhoneCountry}
+                      onChange={(value) => {
+                        setProfilePhone(value);
+                        setProfileMessage('');
+                      }}
+                      onCountryChange={setProfilePhoneCountry}
+                      onBlur={() => setProfilePhoneTouched(true)}
+                      error={profilePhoneError}
+                      placeholder="Enter phone number"
+                      disabled={profileLoading || profileSaving}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="profile-email" className="text-xs font-extrabold text-slate-700 block mb-1.5">
+                      Email
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="profile-email"
+                        type="email"
+                        value={profileEmail}
+                        readOnly
+                        disabled
+                        aria-describedby="profile-email-hint"
+                        className="min-h-11 w-full rounded-xl border border-slate-200/90 bg-slate-100/80 px-3.5 py-2.5 pr-9 text-base sm:text-[13px] font-medium text-slate-500 disabled:cursor-not-allowed"
+                      />
+                      <LockKeyhole className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+                    </div>
+                    <p id="profile-email-hint" className="mt-1 text-[10.5px] text-slate-400">
+                      Email is linked to your login account and cannot be changed
+                    </p>
+                  </div>
+                </div>
+
+                {/* Vehicle Fitment Card */}
+                <section
+                  className="space-y-3.5 rounded-3xl border border-slate-200/80 bg-white/95 backdrop-blur-md p-4 sm:p-5 shadow-[0_8px_28px_-14px_rgba(15,23,42,0.06)]"
+                  aria-label="Vehicle fitment"
+                >
+                  <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+                    <div className="flex items-start gap-3">
+                      <div className="h-9 w-9 rounded-xl bg-rose-50 text-[#D9232D] flex items-center justify-center shrink-0 mt-0.5">
+                        <Bike className="h-4.5 w-4.5" aria-hidden="true" />
+                      </div>
+                      <div>
+                        <p className="text-[13.5px] font-black text-slate-900">
+                          Vehicle for fitment <span className="font-normal text-slate-400">(optional)</span>
+                        </p>
+                        <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
+                          Choose your vehicle type and brand to match compatible seat covers.
+                        </p>
+                      </div>
+                    </div>
+                    {profileVehicle.trim() && (
+                      <button
+                        type="button"
+                        disabled={profileLoading || profileSaving}
+                        onClick={() => {
+                          setProfileVehicleCompany('');
+                          setProfileVehicleModel('');
+                          setProfileVehicle('');
+                          setProfileMessage('');
+                        }}
+                        className="shrink-0 min-h-9 rounded-lg bg-rose-50 hover:bg-rose-100 px-3 py-1.5 text-[11px] font-bold text-[#D9232D] transition-colors"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Quick Vehicle Category Pills */}
+                  <div className="flex flex-wrap gap-1.5 sm:grid sm:grid-cols-5" role="group" aria-label="Quick vehicle category selector">
+                    {(['Bike', 'Scooter', 'Toto / E-rickshaw', 'Car', 'Other'] as CheckoutVehicleType[]).map((type) => {
+                      const active = profileVehicleType === type;
+                      const shortLabel =
+                        type === 'Toto / E-rickshaw' ? 'Toto' : type;
+                      return (
+                        <button
+                          key={type}
+                          type="button"
+                          disabled={profileLoading || profileSaving}
+                          onClick={() => {
+                            if (profileVehicleType === type) return;
+                            setProfileVehicleType(type);
+                            setProfileVehicleCompany('');
+                            setProfileVehicleModel('');
+                            setProfileVehicle('');
+                            setProfileMessage('');
+                          }}
+                          className={`min-h-11 min-w-[calc(33%-4px)] flex-1 sm:min-w-0 rounded-xl border px-2 py-2 text-xs sm:text-[11px] font-extrabold transition-all ${
+                            active
+                              ? 'border-[#D9232D] bg-gradient-to-r from-[#D9232D] to-[#B91822] text-white shadow-2xs'
+                              : 'border-slate-200/80 bg-slate-50/90 text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
+                          {shortLabel}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <label htmlFor="profile-vehicle-type" className="block text-xs font-extrabold text-slate-700">
+                    {t('checkout.vehicleType')}
                     <select
                       id="profile-vehicle-type"
                       value={profileVehicleType}
@@ -1271,16 +1904,28 @@ export const AccountView: React.FC<AccountViewProps> = ({
                         setProfileMessage('');
                       }}
                       disabled={profileLoading || profileSaving}
-                      className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-[12px] font-semibold text-gray-900 outline-none focus:border-[#D9232D]"
+                      className="mt-1.5 min-h-11 w-full rounded-xl border border-slate-200/90 bg-slate-50/90 px-3.5 py-2.5 text-base sm:text-[13px] font-semibold text-slate-900 outline-none focus:bg-white focus:border-[#D9232D]"
                     >
                       {(['Bike', 'Scooter', 'Toto / E-rickshaw', 'Car', 'Other'] as CheckoutVehicleType[]).map((type) => (
-                        <option key={type} value={type}>{type === 'Bike' ? t('checkout.vehicleBike') : type === 'Scooter' ? t('checkout.vehicleScooter') : type === 'Toto / E-rickshaw' ? t('checkout.vehicleToto') : type === 'Car' ? t('checkout.vehicleCar') : t('checkout.vehicleOther')}</option>
+                        <option key={type} value={type}>
+                          {type === 'Bike'
+                            ? t('checkout.vehicleBike')
+                            : type === 'Scooter'
+                              ? t('checkout.vehicleScooter')
+                              : type === 'Toto / E-rickshaw'
+                                ? t('checkout.vehicleToto')
+                                : type === 'Car'
+                                  ? t('checkout.vehicleCar')
+                                  : t('checkout.vehicleOther')}
+                        </option>
                       ))}
                     </select>
                   </label>
+
                   {profileVehicleCompanies.length > 0 ? (
-                    <div className="grid gap-3">
-                      <label htmlFor="profile-vehicle-company" className="block text-[10px] font-semibold text-gray-600">{t('checkout.vehicleCompany')}
+                    <div className="grid gap-3.5">
+                      <label htmlFor="profile-vehicle-company" className="block min-w-0 text-xs font-extrabold text-slate-700">
+                        {t('checkout.vehicleCompany')}
                         <select
                           id="profile-vehicle-company"
                           value={profileVehicleCompany}
@@ -1291,16 +1936,24 @@ export const AccountView: React.FC<AccountViewProps> = ({
                             setProfileMessage('');
                           }}
                           disabled={profileLoading || profileSaving}
-                          className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-[12px] font-semibold text-gray-900 outline-none focus:border-[#D9232D]"
+                          className="mt-1.5 min-h-11 w-full rounded-xl border border-slate-200/90 bg-slate-50/90 px-3.5 py-2.5 text-base sm:text-[13px] font-semibold text-slate-900 outline-none focus:bg-white focus:border-[#D9232D]"
                         >
                           <option value="">{t('checkout.chooseCompany')}</option>
-                          {profileVehicleCompanies.map((company) => <option key={company} value={company}>{company}</option>)}
+                          {profileVehicleCompanies.map((company) => (
+                            <option key={company} value={company}>
+                              {company}
+                            </option>
+                          ))}
                         </select>
                       </label>
-                      <div className="block min-w-0 text-[10px] font-semibold text-gray-600">
-                        <span>{t('checkout.vehicleModel')} <span className="font-normal text-gray-400">(optional)</span></span>
+                      <div className="block min-w-0 text-xs font-extrabold text-slate-700">
+                        <span>
+                          {t('checkout.vehicleModel')} <span className="font-normal text-slate-400">(optional)</span>
+                        </span>
                         {!profileVehicleCompany ? (
-                          <p className="mt-1 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-3 py-3 text-[11px] font-medium text-gray-400">{t('checkout.chooseCompany')}</p>
+                          <p className="mt-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-3.5 py-3 text-xs font-medium text-slate-400">
+                            {t('checkout.chooseCompany')}
+                          </p>
                         ) : (
                           <VehicleModelPicker
                             models={profileVehicleModels}
@@ -1320,36 +1973,79 @@ export const AccountView: React.FC<AccountViewProps> = ({
                     </div>
                   ) : (
                     <div>
-                      <label htmlFor="profile-vehicle" className="mb-1 block text-[10px] font-semibold text-gray-600">Vehicle Model <span className="font-normal text-gray-400">(optional)</span></label>
+                      <label htmlFor="profile-vehicle" className="mb-1.5 block text-xs font-extrabold text-slate-700">
+                        Vehicle Model <span className="font-normal text-slate-400">(optional)</span>
+                      </label>
                       <input
                         id="profile-vehicle"
                         type="text"
                         maxLength={60}
                         value={profileVehicle}
-                        onChange={(event) => { setProfileVehicle(event.target.value); setProfileMessage(''); }}
+                        onChange={(event) => {
+                          setProfileVehicle(event.target.value);
+                          setProfileMessage('');
+                        }}
                         aria-invalid={Boolean(profileFieldErrors.vehicle_model)}
                         aria-describedby={profileFieldErrors.vehicle_model ? 'profile-vehicle-error' : undefined}
                         disabled={profileLoading || profileSaving}
                         placeholder={t('checkout.exampleVehicle')}
-                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-[12px] text-gray-900 outline-none focus:border-[#D9232D]"
+                        className="min-h-11 w-full rounded-xl border border-slate-200/90 bg-slate-50/90 px-3.5 py-2.5 text-base sm:text-[13px] text-slate-900 outline-none focus:bg-white focus:border-[#D9232D]"
                       />
                     </div>
                   )}
-                  {profileFieldErrors.vehicle_model && <p id="profile-vehicle-error" role="alert" className="text-[10px] font-medium text-red-600">{profileFieldErrors.vehicle_model}</p>}
+                  {profileFieldErrors.vehicle_model && (
+                    <p id="profile-vehicle-error" role="alert" className="text-[11px] font-medium text-red-600">
+                      {profileFieldErrors.vehicle_model}
+                    </p>
+                  )}
                 </section>
-                <div>
-                  <label htmlFor="profile-email" className="text-[11px] font-bold text-gray-700 block mb-1">Email</label>
-                  <div className="relative">
-                    <input id="profile-email" type="email" value={profileEmail} readOnly disabled aria-describedby="profile-email-hint" className="w-full rounded-xl border border-gray-200 bg-gray-100 px-3 py-2 pr-9 text-[12.5px] text-gray-500 disabled:cursor-not-allowed" />
-                    <LockKeyhole className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
-                  </div>
-                  <p id="profile-email-hint" className="mt-1 text-[10px] text-gray-500">Email cannot be changed</p>
-                </div>
 
-                {profileMessage && <p role="status" className={`text-center text-[11px] font-semibold ${profileMessage.toLowerCase().includes('saved') && !profileMessage.toLowerCase().includes('could not') ? 'text-emerald-700' : 'text-red-600'}`}>{profileMessage}</p>}
+                {profileMessage && (
+                  <p
+                    role="status"
+                    className={`rounded-2xl px-4 py-3 text-center text-xs font-bold ${
+                      profileMessage.toLowerCase().includes('saved') && !profileMessage.toLowerCase().includes('could not')
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/70'
+                        : 'bg-red-50 text-red-600 border border-red-200/70'
+                    }`}
+                  >
+                    {profileMessage}
+                  </p>
+                )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Sticky Bottom Action Bar for Mobile & Desktop */}
+            {!profileLoading && (
+              <div className="border-t border-slate-200/85 bg-white/92 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.08)]">
+                <div className="mx-auto flex max-w-[560px] flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 sm:gap-3">
+                  <span className="min-w-0 text-xs font-bold text-slate-600 truncate">
+                    {profileDirty ? 'Unsaved profile changes' : 'All changes up to date'}
+                  </span>
+                  <div className="flex items-center gap-2 shrink-0 ml-auto">
+                    <button
+                      type="button"
+                      disabled={profileSaving}
+                      onClick={requestCloseProfile}
+                      className="min-h-11 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-700 transition-colors whitespace-nowrap disabled:opacity-50"
+                    >
+                      {profileDirty ? 'Discard' : 'Close'}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={profileSaving || profileLoading || !profileDirty || Object.keys(profileFieldErrors).length > 0}
+                      onClick={() => void handleSaveProfile()}
+                      className="banner-cta-shine min-h-11 rounded-xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] hover:brightness-105 hover:shadow-md px-4 py-2 text-xs font-black text-white shadow-sm shadow-red-600/20 transition-all active:scale-95 whitespace-nowrap disabled:opacity-45"
+                    >
+                      {profileSaving ? 'Saving…' : 'Save changes'}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </motion.div>
+            )}
+          </motion.div>
         )}
       </AnimatePresence>
       <ConfirmDialog

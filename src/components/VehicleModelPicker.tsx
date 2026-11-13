@@ -25,8 +25,8 @@ export const VehicleModelPicker: React.FC<VehicleModelPickerProps> = ({
 
   if (selectedFitment) {
     return (
-      <div className="mt-1.5 grid gap-3 rounded-[22px] border border-emerald-200 bg-emerald-50/70 p-3 shadow-[0_8px_24px_rgba(16,185,129,.08)] sm:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] sm:items-center sm:gap-4 sm:p-4">
-        <span className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-emerald-100 bg-white sm:aspect-square">
+      <div className="mt-1.5 grid grid-cols-1 gap-3 rounded-[22px] border border-emerald-200 bg-emerald-50/70 p-3 shadow-[0_8px_24px_rgba(16,185,129,.08)] sm:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] sm:items-center sm:gap-4 sm:p-4">
+        <span className="relative aspect-[16/9] w-full min-w-0 overflow-hidden rounded-2xl border border-emerald-100 bg-white sm:aspect-square">
           {selectedFitment.image ? (
             <img src={selectedFitment.image} alt={`${selectedFitment.brand} ${selectedFitment.name}`} className="h-full w-full object-contain p-2 sm:p-3" />
           ) : (
@@ -45,15 +45,15 @@ export const VehicleModelPicker: React.FC<VehicleModelPickerProps> = ({
   }
 
   return (
-    <div role="group" aria-label={ariaLabel} className="no-scrollbar mt-1.5 max-h-[min(42vh,360px)] space-y-2 overflow-y-auto rounded-2xl">
+    <div role="group" aria-label={ariaLabel} className="no-scrollbar mt-1.5 max-h-[min(42vh,360px)] space-y-2 overflow-x-hidden overflow-y-auto rounded-2xl">
       {models.map((model) => (
-        <button key={`${model.brand}-${model.name}`} type="button" aria-pressed={false} disabled={disabled} onClick={() => onSelect(model.name)} className="flex min-h-[104px] w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-2.5 text-left transition hover:border-slate-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] disabled:cursor-not-allowed disabled:opacity-60">
+        <button key={`${model.brand}-${model.name}`} type="button" aria-pressed={false} disabled={disabled} onClick={() => onSelect(model.name)} className="flex min-h-[104px] w-full min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-2.5 text-left transition hover:border-slate-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] disabled:cursor-not-allowed disabled:opacity-60">
           {model.image ? (
-            <span className="h-[86px] w-[42%] shrink-0 overflow-hidden rounded-xl bg-white"><img src={model.image} alt="" loading="lazy" className="h-full w-full object-cover" /></span>
+            <span className="h-[80px] w-[36%] max-w-[128px] shrink-0 overflow-hidden rounded-xl bg-white sm:h-[86px] sm:w-[42%] sm:max-w-none"><img src={model.image} alt="" loading="lazy" className="h-full w-full object-cover" /></span>
           ) : (
-            <span className="grid h-[86px] w-[42%] shrink-0 place-items-center rounded-xl bg-white text-slate-300"><Truck className="h-8 w-8" /></span>
+            <span className="grid h-[80px] w-[36%] max-w-[128px] shrink-0 place-items-center rounded-xl bg-white text-slate-300 sm:h-[86px] sm:w-[42%] sm:max-w-none"><Truck className="h-8 w-8" /></span>
           )}
-          <span className="min-w-0 flex-1"><span className="block text-sm font-black leading-snug text-slate-900">{model.name}</span><span className="mt-1 block text-xs font-medium leading-snug text-slate-500">{model.brand}</span></span>
+          <span className="min-w-0 flex-1"><span className="block break-words text-sm font-black leading-snug text-slate-900">{model.name}</span><span className="mt-1 block truncate text-xs font-medium leading-snug text-slate-500">{model.brand}</span></span>
           <span aria-hidden="true" className="h-6 w-6 shrink-0 rounded-full border-2 border-slate-400" />
         </button>
       ))}

@@ -8,7 +8,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { WORKSHOP_INFO } from './data/products';
-import { Product, CartItem, CustomerOrderRecord, VehicleCategory, UserProfile } from './types';
+import { Product, CartItem, CustomerOrderRecord, UserProfile } from './types';
 import { Header } from './components/Header';
 import { HeroBanner } from './components/HeroBanner';
 import { CategorySection, type CategoryFilter } from './components/CategorySection';
@@ -27,6 +27,13 @@ const TermsConditionsView = lazy(() => import('./components/TermsConditionsView'
 const PersonalDataView = lazy(() => import('./components/PersonalDataView').then((module) => ({ default: module.PersonalDataView })));
 const CouponDetailsView = lazy(() => import('./components/CouponDetailsView').then((module) => ({ default: module.CouponDetailsView })));
 const AccountView = lazy(() => import('./components/AccountView').then((module) => ({ default: module.AccountView })));
+import {
+  AccountPageSkeleton,
+  AccountProfileEditorSkeleton,
+  ContactSupportPageSkeleton,
+  SettingsPageSkeleton,
+  SupportCenterPageSkeleton,
+} from './components/AccountPageSkeleton';
 const CustomerReviews = lazy(() => import('./components/CustomerReviews').then((module) => ({ default: module.CustomerReviews })));
 import { BottomNav } from './components/BottomNav';
 import { SplashScreen } from './components/SplashScreen';
@@ -1048,9 +1055,11 @@ export default function App() {
         item.cartItemId === cartItemId ? { ...item, quantity } : item,
       ) ?? null);
     }
-    setCheckoutDiscount(0);
-    setCheckoutCoupon('');
-    setCheckoutQuote(null);
+    if (!isCheckoutOpen) {
+      setCheckoutDiscount(0);
+      setCheckoutCoupon('');
+      setCheckoutQuote(null);
+    }
   };
 
   const handleRemoveCartItem = (cartItemId: string) => {
@@ -1425,7 +1434,29 @@ export default function App() {
           )}
 
         {/* View Switcher: Search View / Account View / Home & Shop Experience */}
-        <Suspense fallback={<main className="flex min-h-[40vh] flex-1 items-center justify-center"><CloudLoader label="Loading view…" /></main>}>
+        <Suspense
+          fallback={
+            activeTab === 'account' ? (
+              <main className="flex-1 flex flex-col">
+                {resolvedRoute.kind === 'settings' || resolvedRoute.kind === 'settings-section' ? (
+                  <SettingsPageSkeleton />
+                ) : resolvedRoute.kind === 'profile-edit' ? (
+                  <AccountProfileEditorSkeleton />
+                ) : resolvedRoute.kind === 'contact-support' ? (
+                  <ContactSupportPageSkeleton />
+                ) : resolvedRoute.kind === 'support' ? (
+                  <SupportCenterPageSkeleton />
+                ) : (
+                  <AccountPageSkeleton />
+                )}
+              </main>
+            ) : (
+              <main className="flex min-h-[40vh] flex-1 items-center justify-center">
+                <CloudLoader label="Loading view…" />
+              </main>
+            )
+          }
+        >
         {activeTab === 'notifications' ? (
           <NotificationsView
             userId={currentUser.id}
@@ -1521,6 +1552,13 @@ export default function App() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               onOpenWishlist={openWishlistPage}
+              wishlistCount={wishlist.length}
+              notificationCount={notificationCount}
+              onOpenNotifications={() => {
+                refreshNotificationCount();
+                setActiveTab('notifications');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               routeModal={resolvedRoute.kind === 'profile-edit' ? 'profile' : resolvedRoute.kind === 'orders' || resolvedRoute.kind === 'order-help' ? 'orders' : resolvedRoute.kind === 'settings' || resolvedRoute.kind === 'settings-section' ? 'settings' : resolvedRoute.kind === 'support' ? 'support' : resolvedRoute.kind === 'contact-support' ? 'contact-support' : null}
               settingsSection={resolvedRoute.kind === 'settings-section' ? resolvedRoute.section : null}
               onOpenSettingsSection={(section) => navigate(getPathForSettingsSection(section))}
@@ -1643,7 +1681,7 @@ export default function App() {
                 ) : catalogProducts.length === 0 ? (
                   <CatalogStatus state="empty" compact />
                 ) : (
-                  <div className="flex space-x-3.5 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-5 px-5">
+                  <div className="flex space-x-3.5 overflow-x-auto no-scrollbar pb-4 pt-2 -mx-5 px-5">
                     {catalogProducts.slice(0, 4).map((prod) => (
                       <ProductCard
                         key={prod.id}
@@ -2095,11 +2133,17 @@ export default function App() {
           couponCode={checkoutCoupon}
           couponSubtotal={checkoutQuote?.subtotal}
           couponTotal={checkoutQuote?.total}
+          onCouponChange={(nextDiscount, nextCoupon, nextQuote) => {
+            setCheckoutDiscount(nextDiscount);
+            setCheckoutCoupon(nextCoupon);
+            setCheckoutQuote(nextQuote ?? null);
+          }}
           onClearCart={checkoutItems === null ? clearCart : () => undefined}
         />}
 
         {(isWishlistOpen || activeTab === 'wishlist') && <WishlistModal
           isOpen={isWishlistOpen || activeTab === 'wishlist'}
+          isLoading={!catalogLoaded && catalogLoading}
           onClose={() => {
             setIsWishlistOpen(false);
             setActiveTab('home');

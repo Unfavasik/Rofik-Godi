@@ -126,6 +126,17 @@ export async function markNotificationRead(id: string, expectedUserId?: string) 
   return supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id).eq('user_id', userData.user.id);
 }
 
+export async function markAllNotificationsRead(expectedUserId?: string) {
+  if (!supabase) return { error: new Error('Service configuration unavailable. Please try again.') };
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return { error: new Error('Sign in required') };
+  return supabase
+    .from('notifications')
+    .update({ read_at: new Date().toISOString() })
+    .eq('user_id', userData.user.id)
+    .is('read_at', null);
+}
+
 export async function deleteMyNotification(id: string, expectedUserId?: string) {
   if (!supabase) return { error: new Error('Service configuration unavailable. Please try again.') };
   const { data: userData } = await supabase.auth.getUser();

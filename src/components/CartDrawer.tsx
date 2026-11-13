@@ -140,10 +140,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           aria-modal="true"
           aria-labelledby="cart-dialog-title"
           tabIndex={-1}
-          className="relative w-full max-w-[420px] bg-white h-full shadow-2xl flex flex-col z-10 overflow-hidden"
+          className="relative w-full max-w-full sm:max-w-[420px] bg-white h-full shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden"
         >
           {/* Header */}
-          <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100 bg-white">
+          <div className="flex shrink-0 justify-between items-center px-4 py-3.5 sm:px-5 sm:py-4 border-b border-gray-100 bg-white">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-[#FEECEC] flex items-center justify-center text-[#D9232D]">
                 <ShoppingBag className="w-4 h-4" />
@@ -177,7 +177,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           </div>}
 
           {/* Items List / Empty State */}
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 no-scrollbar">
+          <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-4 space-y-3 no-scrollbar sm:px-5">
             {items.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-12">
                 <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mb-3">
@@ -189,7 +189,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </p>
                 <button
                   onClick={onClose}
-                  className="min-h-11 bg-[#D9232D] text-white text-[12px] font-bold px-5 py-2.5 rounded-full shadow-md hover:bg-[#c01d26] transition-all"
+                  className="banner-cta-shine group/cta min-h-11 bg-[#D9232D] text-white text-[12px] font-bold px-5 py-2.5 rounded-full shadow-md hover:bg-[#c01d26] hover:shadow-lg active:scale-95 transition-all"
                 >
                   {t('cart.explore')}
                 </button>
@@ -257,8 +257,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     </div>
 
                     {/* Price & Quantity Stepper */}
-                    <div className="flex justify-between items-center mt-2 pt-1 border-t border-gray-50">
-                      <div className="text-[13px] font-black text-[#D9232D]">
+                    <div className="flex flex-wrap justify-between items-center gap-2 mt-2 pt-1 border-t border-gray-50">
+                      <div className="text-[13px] font-black text-[#D9232D] shrink-0">
                         {formatMoney(item.unitPrice * item.quantity)}
                       </div>
 
@@ -316,18 +316,18 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     <span>-{formatMoney(appliedCoupon.discount)}</span>
                   </div>
                 ) : (
-                  <div className="flex gap-2">
+                  <div className="flex min-w-0 gap-2">
                     <input
                       type="text"
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                       placeholder={t('cart.enterCoupon')}
-                      className="min-h-11 flex-1 bg-white text-[12px] font-bold uppercase rounded-xl px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#D9232D]"
+                      className="min-h-11 min-w-0 flex-1 bg-white text-base sm:text-xs font-bold uppercase rounded-xl px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#D9232D]"
                     />
                     <button
                       disabled={isApplyingCoupon}
                       onClick={() => void handleApplyCoupon()}
-                      className="min-h-11 bg-gray-900 text-white text-[11.5px] font-bold px-3.5 py-2 rounded-xl hover:bg-black transition-colors disabled:opacity-60"
+                      className="banner-cta-shine min-h-11 shrink-0 bg-gray-900 text-white text-xs font-bold px-3.5 py-2 rounded-xl hover:bg-black hover:shadow-sm active:scale-95 transition-all disabled:opacity-60"
                     >
                       {isApplyingCoupon ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t('cart.apply')}
                     </button>
@@ -381,7 +381,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
           {/* Bottom Billing Breakdown & Checkout CTA */}
           {items.length > 0 && (
-            <div className="p-4 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] space-y-3">
+            <div className="shrink-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] space-y-3">
               <div className="space-y-1 text-[11.5px]">
                 <div className="flex justify-between text-gray-600">
                   <span>{t('cart.subtotal')}</span>
@@ -404,12 +404,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
 
               <motion.button
-                whileTap={{ scale: 0.97 }}
+                whileHover={hasUnavailableItems ? undefined : { scale: 1.015 }}
+                whileTap={hasUnavailableItems ? undefined : { scale: 0.97 }}
                 onClick={() => onProceedToCheckout(discount, appliedCoupon?.code || '', appliedCoupon ? { subtotal: appliedCoupon.subtotal, total: appliedCoupon.total } : undefined)} disabled={hasUnavailableItems}
-                className="w-full py-3.5 bg-[#D9232D] hover:bg-[#c01d26] text-white rounded-xl text-[13px] font-black shadow-md flex items-center justify-center gap-2 transition-all"
+                className="banner-cta-shine group/cta w-full min-h-12 py-3.5 bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91C1C] hover:brightness-105 text-white rounded-xl text-[13px] font-black shadow-[0_8px_20px_-4px_rgba(217,35,45,0.4)] hover:shadow-[0_10px_24px_-4px_rgba(217,35,45,0.5)] flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:shadow-none"
               >
                 <span>{hasUnavailableItems ? t('cart.removeUnavailable') : t('cart.proceedCheckout')}</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
               </motion.button>
 
               <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-400">

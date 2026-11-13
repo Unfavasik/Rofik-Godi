@@ -175,7 +175,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           </button>
 
           {/* Title & Subtitle */}
-          <h1 className={`relative z-10 max-w-[220px] whitespace-nowrap font-bold tracking-tight leading-[1.08] text-[#0f1a3a] ${mode === 'signup' ? 'mt-[38px] text-[clamp(28px,8.4vw,36px)]' : 'mt-[54px] text-[clamp(25px,7.3vw,31px)]'}`}>
+          <h1 className={`relative z-10 max-w-full font-bold tracking-tight leading-[1.08] text-[#0f1a3a] ${mode === 'signup' ? 'mt-[38px] text-[clamp(26px,8.2vw,36px)]' : 'mt-[54px] text-[clamp(24px,7.2vw,31px)]'}`}>
             {mode === 'signup' ? (
               <>
                 Get <span className="text-[#e0182d]">Started</span>
@@ -230,7 +230,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Full Name"
                     autoComplete="name"
-                    className="w-full min-w-0 border-0 bg-transparent text-[14px] font-medium text-[#0f1a3a] placeholder:text-[#3d4358] focus:outline-none"
+                    className="w-full min-w-0 border-0 bg-transparent text-base sm:text-[14px] font-medium text-[#0f1a3a] placeholder:text-[#3d4358] focus:outline-none"
                   />
                 </label>
                 <div className="ml-3 mt-1 text-[13px] text-[#9aa0ad]">Enter Full Name</div>
@@ -260,7 +260,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
                   autoComplete="email"
-                  className="w-full min-w-0 border-0 bg-transparent text-[14px] font-medium text-[#0f1a3a] placeholder:text-[#3d4358] focus:outline-none"
+                  className="w-full min-w-0 border-0 bg-transparent text-base sm:text-[14px] font-medium text-[#0f1a3a] placeholder:text-[#3d4358] focus:outline-none"
                 />
               </label>
               <div className="ml-3 mt-1 text-[13px] text-[#9aa0ad]">Enter Email</div>
@@ -290,13 +290,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
                   autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                  className="w-full min-w-0 border-0 bg-transparent text-[14px] font-medium text-[#0f1a3a] placeholder:text-[#3d4358] focus:outline-none"
+                  className="w-full min-w-0 border-0 bg-transparent text-base sm:text-[14px] font-medium text-[#0f1a3a] placeholder:text-[#3d4358] focus:outline-none"
                 />
                 <button
                   type="button"
                   aria-label="Show password"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="cursor-pointer border-0 bg-transparent p-0 text-[#6b7080] focus:outline-none"
+                  className="-mr-2 flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-[#6b7080] focus:outline-none"
                 >
                   <svg
                     width="26"
@@ -342,7 +342,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 </span>
               </label>
             ) : (
-              <div className="mx-1 mb-4 mt-2 flex items-center justify-between text-[14px] font-medium">
+              <div className="mx-1 mb-4 mt-2 flex flex-wrap items-center justify-between gap-2 text-[14px] font-medium">
                 <label className="flex cursor-pointer items-center gap-2.5 text-[#0f1a3a]">
                   <input
                     type="checkbox"
@@ -374,7 +374,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               type="submit"
               id="go"
               disabled={isSubmitting}
-              className="relative flex h-14 w-full cursor-pointer items-center justify-center overflow-hidden rounded-[28px] border-0 bg-[linear-gradient(180deg,#ea2a3d_0%,#d0132a_100%)] text-[19px] font-semibold text-white shadow-[0_10px_22px_rgba(224,24,45,0.32)] transition-transform active:scale-[0.985] disabled:cursor-wait disabled:opacity-70"
+              className="banner-cta-shine group/cta relative flex h-14 w-full cursor-pointer items-center justify-center overflow-hidden rounded-[28px] border-0 bg-[linear-gradient(180deg,#ea2a3d_0%,#d0132a_100%)] text-[19px] font-semibold text-white shadow-[0_10px_22px_rgba(224,24,45,0.32)] transition-all hover:brightness-105 hover:shadow-[0_12px_26px_rgba(224,24,45,0.42)] active:scale-[0.985] disabled:cursor-wait disabled:opacity-70"
             >
               <span>{isSubmitting ? 'Connecting…' : mode === 'signup' ? 'Sign up' : 'Sign in'}</span>
               <i className="absolute bottom-0 right-0 top-0 flex w-[66px] items-center justify-center rounded-l-[28px] bg-white/10">
@@ -387,6 +387,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  className="transition-transform duration-200 group-hover/cta:translate-x-0.5"
                 >
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>

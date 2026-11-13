@@ -8,6 +8,14 @@ const { supabaseMock } = vi.hoisted(() => ({
 vi.mock('../src/lib/supabase', () => ({ supabase: supabaseMock }));
 
 import { CustomerSupportRequestForm } from '../src/components/CustomerSupportRequestForm';
+import { ContactSupportView } from '../src/components/ContactSupportView';
+import { SupportCenter } from '../src/components/SupportCenter';
+import {
+  ContactSupportPageSkeleton,
+  SupportCenterPageSkeleton,
+  SupportConversationSkeleton,
+  SupportTicketListSkeleton,
+} from '../src/components/AccountPageSkeleton';
 import { createCustomerSupportRequest, validateSupportFiles } from '../src/lib/supabaseSupport';
 
 describe('customer support request', () => {
@@ -78,6 +86,7 @@ describe('customer support request', () => {
     expect(html).toContain('কার্ড বা পেমেন্টের তথ্য দেবেন না');
     expect(html).toContain('aria-label="Support category"');
     expect(html).toContain('aria-label="Support message"');
+    expect(html).toContain('aria-label="Quick topic selection"');
   });
 
   it('renders the compact Contact Support form with optional order, image upload and a 500-character limit', () => {
@@ -103,5 +112,47 @@ describe('customer support request', () => {
     expect(validateSupportFiles([png], 3)).toMatch(/up to 3 attachments/i);
     expect(validateSupportFiles([invalid])).toMatch(/JPEG, PNG, WebP or PDF/i);
     expect(validateSupportFiles([large])).toMatch(/5 MB or smaller/i);
+  });
+
+  it('renders ContactSupportView with direct channels and ticket shortcut', () => {
+    const html = renderToStaticMarkup(
+      <ContactSupportView
+        currentUserId="customer-1"
+        isAuthenticated
+        onBack={() => undefined}
+        onOpenSupportRequests={() => undefined}
+      />,
+    );
+    expect(html).toContain('Contact Workshop Team');
+    expect(html).toContain('Direct workshop channels');
+    expect(html).toContain('WhatsApp Direct Support');
+    expect(html).toContain('View my support requests');
+  });
+
+  it('renders SupportCenter with status filter tabs and shimmer ticket list skeleton while loading', () => {
+    const html = renderToStaticMarkup(
+      <SupportCenter
+        currentUserId="customer-1"
+        isAuthenticated
+        onBack={() => undefined}
+        onSelectRequest={() => undefined}
+      />,
+    );
+    expect(html).toContain('Filter support requests by status');
+    expect(html).toContain('In Progress');
+    expect(html).toContain('Resolved');
+    expect(html).toContain('data-testid="support-ticket-list-skeleton"');
+  });
+
+  it('renders dedicated shimmer skeletons for contact support, ticket list, and conversation', () => {
+    const contactHtml = renderToStaticMarkup(<ContactSupportPageSkeleton />);
+    const centerHtml = renderToStaticMarkup(<SupportCenterPageSkeleton />);
+    const listHtml = renderToStaticMarkup(<SupportTicketListSkeleton />);
+    const convoHtml = renderToStaticMarkup(<SupportConversationSkeleton />);
+
+    expect(contactHtml).toContain('data-testid="contact-support-page-skeleton"');
+    expect(centerHtml).toContain('data-testid="support-center-page-skeleton"');
+    expect(listHtml).toContain('Loading requests…');
+    expect(convoHtml).toContain('data-testid="support-conversation-skeleton"');
   });
 });

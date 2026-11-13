@@ -104,19 +104,19 @@ export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }:
   const selectedNames = Array.from(picked).sort((a, b) => a.localeCompare(b));
 
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col bg-white" role="dialog" aria-modal="true" aria-label="Compatible vehicles picker">
+    <div className="fixed inset-0 z-[70] flex w-full max-w-full flex-col overflow-x-hidden bg-white" role="dialog" aria-modal="true" aria-label="Compatible vehicles picker">
       <header className="flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#FCEBEB] text-[#D9232D]"><Bike className="h-5 w-5" /></span>
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-[17px] font-extrabold tracking-tight text-slate-900">Compatible vehicles</h2>
           <p className="truncate text-[11px] font-medium text-slate-500">Choose the bikes this seat cover fits</p>
         </div>
-        <button type="button" onClick={onClose} aria-label="Close compatible vehicles picker" className="rounded-full p-1.5 text-slate-500 transition hover:bg-slate-100">
+        <button type="button" onClick={onClose} aria-label="Close compatible vehicles picker" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100">
           <X className="h-5 w-5" />
         </button>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-4 pt-4">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -124,11 +124,11 @@ export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }:
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search bike or scooter..."
             aria-label="Search bike or scooter"
-            className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-[13px] font-semibold text-slate-700 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#D9232D] focus:bg-white focus:ring-2 focus:ring-red-50"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-base sm:text-[13px] font-semibold text-slate-700 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#D9232D] focus:bg-white focus:ring-2 focus:ring-red-50"
           />
         </div>
 
-        <div className="mt-3 grid grid-cols-3 gap-2 rounded-xl bg-slate-100 p-1">
+        <div className="mt-3 grid grid-cols-3 gap-1.5 rounded-xl bg-slate-100 p-1">
           {([
             ['all', 'All vehicles', null],
             ['bike', 'Bike', Bike],
@@ -138,9 +138,9 @@ export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }:
               key={value}
               type="button"
               onClick={() => setTab(value)}
-              className={`flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-2 text-[12px] font-extrabold transition ${tab === value ? 'bg-[#D9232D] text-white shadow-sm' : 'text-slate-700 hover:bg-white'}`}
+              className={`flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-lg px-1.5 text-[11px] sm:text-[12px] font-extrabold transition ${tab === value ? 'bg-[#D9232D] text-white shadow-sm' : 'text-slate-700 hover:bg-white'}`}
             >
-              {Icon && <Icon className="h-4 w-4" />}{label}
+              {Icon && <Icon className="h-4 w-4 shrink-0" />}<span className="truncate">{label}</span>
             </button>
           ))}
         </div>
@@ -189,7 +189,7 @@ export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }:
                     {group.items.map((model) => {
                       const checked = picked.has(model.name);
                       return (
-                        <label key={model.id} className="flex cursor-pointer items-center gap-3 px-3.5 py-2.5 transition hover:bg-slate-50">
+                        <label key={model.id} className="flex min-h-12 cursor-pointer items-center gap-3 px-3.5 py-2.5 transition hover:bg-slate-50">
                           <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 transition ${checked ? 'border-[#D9232D] bg-[#D9232D] text-white' : 'border-slate-300 bg-white'}`}>
                             {checked && <Check className="h-3.5 w-3.5 stroke-[3]" />}
                           </span>

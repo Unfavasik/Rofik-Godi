@@ -35,7 +35,7 @@ export const LoginRequiredModal: React.FC<LoginRequiredModalProps> = ({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-          className="relative w-full max-w-[440px] bg-white rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl z-10 overflow-hidden font-sans"
+          className="relative max-h-[92dvh] w-full max-w-full sm:max-w-[440px] bg-white rounded-t-[32px] sm:rounded-[32px] p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-2xl z-10 overflow-x-hidden overflow-y-auto font-sans"
         >
           {/* Close button */}
           <button
@@ -78,9 +78,9 @@ export const LoginRequiredModal: React.FC<LoginRequiredModalProps> = ({
             {/* New customer: begin with the dedicated signup onboarding. */}
             <button
               onClick={() => onOpenAuth('signup')}
-              className="w-full h-12 bg-[#D9232D] hover:bg-[#C01B24] active:scale-[0.98] text-white rounded-2xl flex items-center justify-center space-x-3 shadow-[0_4px_14px_rgba(217,35,45,0.3)] transition-all font-bold text-[14.5px]"
+              className="banner-cta-shine group/cta w-full h-12 bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] hover:brightness-105 hover:shadow-[0_8px_20px_rgba(217,35,45,0.38)] active:scale-[0.98] text-white rounded-2xl flex items-center justify-center space-x-3 shadow-[0_4px_14px_rgba(217,35,45,0.3)] transition-all font-bold text-[14.5px]"
             >
-              <Sparkles className="h-5 w-5" />
+              <Sparkles className="h-5 w-5 transition-transform duration-200 group-hover/cta:scale-105" />
               <span>Create an account</span>
             </button>
 
