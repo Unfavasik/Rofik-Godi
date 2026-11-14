@@ -150,6 +150,17 @@ export function normalizeSearchText(value: string): string {
     .trim();
 }
 
+function doesCorpusMatchToken(corpus: string, token: string): boolean {
+  if (corpus.includes(token)) return true;
+  if (token.length > 4 && token.endsWith('ies')) {
+    return corpus.includes(`${token.slice(0, -3)}y`);
+  }
+  if (token.length > 3 && token.endsWith('s') && !token.endsWith('ss')) {
+    return corpus.includes(token.slice(0, -1));
+  }
+  return false;
+}
+
 /**
  * Computes a relevance score (>= 0) for a product against a search query.
  * Returns 0 if the product does not match the query.
@@ -190,7 +201,7 @@ export function scoreProductSearchMatch(product: Product, rawQuery: string): num
 
   // Every token in the user's query must match somewhere in the product's searchable corpus
   for (const token of tokens) {
-    if (!searchableCorpus.includes(token)) {
+    if (!doesCorpusMatchToken(searchableCorpus, token)) {
       return 0;
     }
   }

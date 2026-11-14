@@ -7,6 +7,7 @@ import type { PreferredLanguage } from '../lib/customerPreferences';
 import { useVoiceSearch } from '../hooks/useVoiceSearch';
 import { saveRecentSearchTerm } from '../lib/voiceSearch';
 import { VoiceSearchBanner } from './VoiceSearchBanner';
+import { VoiceSearchHint } from './VoiceSearchHint';
 
 interface HeaderProps {
   cartCount: number;
@@ -84,6 +85,8 @@ export const Header: React.FC<HeaderProps> = ({
 
   const activePrompt = promptTerms[promptIndex % promptTerms.length] ?? DEFAULT_PROMPT_TERMS[0]!;
   const hasSearchQuery = searchQuery.trim().length > 0;
+  const voiceHintId = 'home-voice-search-hint';
+  const showVoiceHint = !voiceSearch.isListening && !voiceSearch.error && !voiceSearch.isHintDismissed;
 
   return (
     <header className="w-full flex flex-col bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-[0_1px_6px_rgba(0,0,0,0.03)] sticky top-0 z-40 transition-all">
@@ -238,6 +241,7 @@ export const Header: React.FC<HeaderProps> = ({
               }}
               aria-label={voiceSearch.isListening ? 'Stop voice search' : 'Start voice search'}
               aria-pressed={voiceSearch.isListening}
+              aria-describedby={showVoiceHint ? voiceHintId : undefined}
               title={
                 voiceSearch.isListening
                   ? 'Stop voice search'
@@ -254,6 +258,12 @@ export const Header: React.FC<HeaderProps> = ({
               <Mic className="w-4 h-4" />
             </button>
           </div>
+
+          <VoiceSearchHint
+            id={voiceHintId}
+            visible={showVoiceHint}
+            onDismiss={voiceSearch.dismissHint}
+          />
 
           <VoiceSearchBanner
             isListening={voiceSearch.isListening}

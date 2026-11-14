@@ -396,7 +396,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   }
 
   if (section === 'delete-account') {
-    return <AccountDeletionView onBack={closeSection} isAuthenticated={isAuthenticated} />;
+    return (
+      <AccountDeletionView
+        onBack={closeSection}
+        isAuthenticated={isAuthenticated}
+        onOpenContactSupport={onOpenContactSupport}
+        onOpenNotificationSettings={() => openSection('notifications')}
+        onOpenPrivacyPage={onOpenPrivacyPage}
+        onOpenOrders={onOpenOrders}
+      />
+    );
   }
 
   if (section === 'coupons') {

@@ -48,6 +48,8 @@ interface WindowWithSpeechRecognition {
 }
 
 export const RECENT_SEARCHES_KEY = 'rofik_godi_recent_searches';
+export const VOICE_HINT_DISMISSED_KEY = 'rofik_godi_voice_hint_dismissed';
+export const VOICE_HINT_DISMISSED_EVENT = 'rofik-godi:voice-hint-dismissed';
 
 export function mapLanguageToSpeechLocale(language?: PreferredLanguage | string): string {
   if (language === 'bn') return 'bn-IN';
@@ -61,6 +63,16 @@ export function cleanVoiceSearchTranscript(raw: string): string {
     .trim()
     .replace(/[.,!?;:।۔]+$/g, '')
     .trim();
+}
+
+const VOICE_COMMAND_PREFIX_RE =
+  /^(?:please\s+)?(?:show\s+me|find\s+me|find|search\s+for|search|look\s+for|looking\s+for|i\s+want|i\s+need|give\s+me|get\s+me)\s+/i;
+
+export function extractVoiceSearchQuery(raw: string): string {
+  const cleaned = cleanVoiceSearchTranscript(raw);
+  if (!cleaned) return '';
+  const stripped = cleaned.replace(VOICE_COMMAND_PREFIX_RE, '').trim();
+  return stripped || cleaned;
 }
 
 export function getVoiceSearchErrorMessage(errorCode: string): string {
@@ -105,6 +117,25 @@ export function isVoiceSearchSupported(
 
 const canUseLocalStorage = (): boolean =>
   typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+
+export function isVoiceSearchHintDismissed(): boolean {
+  if (!canUseLocalStorage()) return false;
+  try {
+    return window.localStorage.getItem(VOICE_HINT_DISMISSED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function dismissVoiceSearchHint(): void {
+  if (!canUseLocalStorage()) return;
+  try {
+    window.localStorage.setItem(VOICE_HINT_DISMISSED_KEY, '1');
+    window.dispatchEvent(new CustomEvent(VOICE_HINT_DISMISSED_EVENT));
+  } catch {
+    // Non-fatal in private browsing or restricted storage.
+  }
+}
 
 export function readRecentSearchTerms(fallback: string[] = []): string[] {
   if (!canUseLocalStorage()) return fallback;

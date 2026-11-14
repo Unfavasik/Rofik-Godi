@@ -2,10 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PreferredLanguage } from '../lib/customerPreferences';
 import {
   cleanVoiceSearchTranscript,
+  dismissVoiceSearchHint,
+  extractVoiceSearchQuery,
   getSpeechRecognitionConstructor,
   getVoiceSearchErrorMessage,
+  isVoiceSearchHintDismissed,
   isVoiceSearchSupported,
   mapLanguageToSpeechLocale,
+  VOICE_HINT_DISMISSED_EVENT,
   type SpeechRecognitionInstance,
 } from '../lib/voiceSearch';
 
@@ -20,10 +24,12 @@ export interface UseVoiceSearchResult {
   interimTranscript: string;
   error: string | null;
   locale: string;
+  isHintDismissed: boolean;
   startListening: () => void;
   stopListening: () => void;
   toggleListening: () => void;
   clearError: () => void;
+  dismissHint: () => void;
 }
 
 export function useVoiceSearch({
@@ -34,6 +40,7 @@ export function useVoiceSearch({
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isHintDismissed, setIsHintDismissed] = useState<boolean>(() => isVoiceSearchHintDismissed());
 
   const locale = mapLanguageToSpeechLocale(language);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
@@ -46,6 +53,32 @@ export function useVoiceSearch({
 
   useEffect(() => {
     setIsSupported(isVoiceSearchSupported());
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const syncHintState = () => setIsHintDismissed(isVoiceSearchHintDismissed());
+    window.addEventListener(VOICE_HINT_DISMISSED_EVENT, syncHintState);
+    return () => window.removeEventListener(VOICE_HINT_DISMISSED_EVENT, syncHintState);
+  }, []);
+
+  const dismissHint = useCallback(() => {
+    setIsHintDismissed(true);
+    dismissVoiceSearchHint();
+  }, []);
+
+  const submitVoiceQuery = useCallback((rawText: string) => {
+    const query = extractVoiceSearchQuery(rawText);
+    if (!query) return false;
+    hasSubmittedFinalRef.current = true;
+    recognitionRef.current = null;
+    setIsListening(false);
+    setInterimTranscript('');
+    setError(null);
+    setIsHintDismissed(true);
+    dismissVoiceSearchHint();
+    onResultRef.current(query);
+    return true;
   }, []);
 
   const stopListening = useCallback(() => {
@@ -121,14 +154,8 @@ export function useVoiceSearch({
         latestInterimRef.current = cleanedInterim;
         setInterimTranscript(cleanedInterim);
 
-        const cleanedFinal = cleanVoiceSearchTranscript(finalRaw);
-        if (cleanedFinal && !hasSubmittedFinalRef.current) {
-          hasSubmittedFinalRef.current = true;
-          recognitionRef.current = null;
-          setIsListening(false);
-          setInterimTranscript('');
-          setError(null);
-          onResultRef.current(cleanedFinal);
+        if (finalRaw.trim() && !hasSubmittedFinalRef.current) {
+          submitVoiceQuery(finalRaw);
         }
       };
 
@@ -148,13 +175,10 @@ export function useVoiceSearch({
         recognitionRef.current = null;
         setIsListening(false);
 
-        const fallbackTranscript = cleanVoiceSearchTranscript(latestInterimRef.current);
-        if (!hasSubmittedFinalRef.current && !hadErrorRef.current && fallbackTranscript) {
-          hasSubmittedFinalRef.current = true;
-          setInterimTranscript('');
-          setError(null);
-          onResultRef.current(fallbackTranscript);
-          return;
+        if (!hasSubmittedFinalRef.current && !hadErrorRef.current && latestInterimRef.current) {
+          if (submitVoiceQuery(latestInterimRef.current)) {
+            return;
+          }
         }
 
         setInterimTranscript('');
@@ -169,7 +193,7 @@ export function useVoiceSearch({
       setInterimTranscript('');
       setError(getVoiceSearchErrorMessage('unknown'));
     }
-  }, [locale]);
+  }, [locale, submitVoiceQuery]);
 
   const toggleListening = useCallback(() => {
     if (isListening) {
@@ -203,9 +227,11 @@ export function useVoiceSearch({
     interimTranscript,
     error,
     locale,
+    isHintDismissed,
     startListening,
     stopListening,
     toggleListening,
     clearError,
+    dismissHint,
   };
 }

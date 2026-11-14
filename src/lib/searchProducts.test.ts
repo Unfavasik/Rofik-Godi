@@ -21,6 +21,7 @@ test('scoreProductSearchMatch matches multi-word queries across title, compatibi
 
   const score = scoreProductSearchMatch(product, multiWordQuery);
   assert.equal(score > 0, true);
+  assert.equal(scoreProductSearchMatch(product, 'bike covers') > 0, true);
   assert.equal(scoreProductSearchMatch(product, 'nonexistentxyz987'), 0);
 });
 

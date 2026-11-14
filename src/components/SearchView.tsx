@@ -26,6 +26,7 @@ import { ProductCard } from './ProductCard';
 import { CatalogStatus } from './CatalogStatus';
 import { FilterSortModal } from './FilterSortModal';
 import { VoiceSearchBanner } from './VoiceSearchBanner';
+import { VoiceSearchHint } from './VoiceSearchHint';
 import type { PreferredLanguage } from '../lib/customerPreferences';
 import { useVoiceSearch } from '../hooks/useVoiceSearch';
 import { persistRecentSearchTerms, readRecentSearchTerms } from '../lib/voiceSearch';
@@ -119,6 +120,13 @@ export const SearchView: React.FC<SearchViewProps> = ({
       searchInputRef.current?.blur();
     },
   });
+
+  const voiceHintId = 'search-voice-search-hint';
+  const showVoiceHint =
+    !voiceSearch.isListening &&
+    !voiceSearch.error &&
+    !voiceSearch.isHintDismissed &&
+    !searchQuery.trim();
 
   // Remove a single recent search
   const removeRecentSearch = (termToRemove: string, e: React.MouseEvent) => {
@@ -294,6 +302,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                 onClick={voiceSearch.toggleListening}
                 aria-label={voiceSearch.isListening ? 'Stop voice search' : 'Start voice search'}
                 aria-pressed={voiceSearch.isListening}
+                aria-describedby={showVoiceHint ? voiceHintId : undefined}
                 title={
                   voiceSearch.isListening
                     ? 'Stop voice search'
@@ -331,6 +340,13 @@ export const SearchView: React.FC<SearchViewProps> = ({
               )}
             </button>
           </div>
+
+          <VoiceSearchHint
+            id={voiceHintId}
+            visible={showVoiceHint}
+            onDismiss={voiceSearch.dismissHint}
+            alignClassName="pr-12 sm:pr-24"
+          />
 
           <VoiceSearchBanner
             isListening={voiceSearch.isListening}

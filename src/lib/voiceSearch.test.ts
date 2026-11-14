@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   cleanVoiceSearchTranscript,
+  extractVoiceSearchQuery,
   getSpeechRecognitionConstructor,
   getVoiceSearchErrorMessage,
   isVoiceSearchSupported,
@@ -22,6 +23,13 @@ test('cleanVoiceSearchTranscript trims extra whitespace and trailing punctuation
   assert.equal(cleanVoiceSearchTranscript('Activa 6G cover?'), 'Activa 6G cover');
   assert.equal(cleanVoiceSearchTranscript('টোটো সিট কভার।'), 'টোটো সিট কভার');
   assert.equal(cleanVoiceSearchTranscript('   '), '');
+});
+
+test('extractVoiceSearchQuery strips spoken command prefixes like "Show me" cleanly', () => {
+  assert.equal(extractVoiceSearchQuery('Show me bike covers.'), 'bike covers');
+  assert.equal(extractVoiceSearchQuery('Please find Activa seat cover'), 'Activa seat cover');
+  assert.equal(extractVoiceSearchQuery('Search for waterproof toto cushion'), 'waterproof toto cushion');
+  assert.equal(extractVoiceSearchQuery('Show me'), 'Show me');
 });
 
 test('getVoiceSearchErrorMessage maps Web Speech error codes to readable user messages', () => {

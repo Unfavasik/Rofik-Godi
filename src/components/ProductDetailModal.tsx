@@ -263,8 +263,63 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
 
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [notifySubmitting, setNotifySubmitting] = useState(false);
+  const [colorPreviewHighlight, setColorPreviewHighlight] = useState(false);
   const notifyRequestLock = useRef(false);
   const scrollContainerRef = useRef<HTMLElement | null>(null);
+  const gallerySectionRef = useRef<HTMLElement | null>(null);
+  const colorHighlightTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (colorHighlightTimerRef.current !== null) {
+        window.clearTimeout(colorHighlightTimerRef.current);
+      }
+    };
+  }, []);
+
+  const scrollToProductImage = () => {
+    const container = scrollContainerRef.current;
+    const gallery = gallerySectionRef.current;
+    if (!gallery) return;
+
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const behavior: ScrollBehavior = prefersReducedMotion ? 'auto' : 'smooth';
+
+    if (container && typeof container.scrollTo === 'function') {
+      const containerRect = container.getBoundingClientRect();
+      const galleryRect = gallery.getBoundingClientRect();
+      const isGalleryFullyVisible =
+        galleryRect.top >= containerRect.top - 4 &&
+        galleryRect.bottom <= containerRect.bottom + 4;
+
+      if (!isGalleryFullyVisible) {
+        const targetTop = Math.max(
+          0,
+          container.scrollTop + (galleryRect.top - containerRect.top) - 12,
+        );
+        container.scrollTo({ top: targetTop, behavior });
+      }
+    } else if (typeof gallery.scrollIntoView === 'function') {
+      gallery.scrollIntoView({ behavior, block: 'start' });
+    }
+  };
+
+  const handleSelectColor = (color: Product['colors'][number]) => {
+    setSelectedColor(color);
+    setActiveImageIndex(0);
+    setColorPreviewHighlight(true);
+    if (colorHighlightTimerRef.current !== null) {
+      window.clearTimeout(colorHighlightTimerRef.current);
+    }
+    if (typeof window !== 'undefined') {
+      colorHighlightTimerRef.current = window.setTimeout(() => {
+        setColorPreviewHighlight(false);
+      }, 700);
+    }
+    scrollToProductImage();
+  };
 
   const normalizedEmbroidery = product.isCustomizable
     ? customEmbroideryText.trim().slice(0, MAX_EMBROIDERY_CHARS)
@@ -429,16 +484,16 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[60] flex w-full max-w-full flex-col overflow-hidden overflow-x-hidden bg-[#F8FAFC] text-slate-900">
-        {/* Top Sticky Header */}
-        <header className="z-30 shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
+      <div className="fixed inset-0 z-[60] flex w-full max-w-full flex-col overflow-hidden overflow-x-hidden bg-[#F8FAFC] bg-[radial-gradient(circle_at_top_left,_rgba(217,35,45,0.085),_transparent_42%),radial-gradient(circle_at_top_right,_rgba(59,130,246,0.075),_transparent_44%)] text-slate-900">
+        {/* Classic Glass Top Sticky Header */}
+        <header className="classic-glass z-30 shrink-0 border-b border-white/80 bg-white/75 shadow-[0_6px_24px_-16px_rgba(15,23,42,0.14)]">
           <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-2 px-3 sm:px-6">
             <div className="flex min-w-0 items-center gap-2.5">
               <button
                 type="button"
                 onClick={onClose}
                 aria-label="Go back"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-800 transition-colors hover:bg-rose-50 hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/90 bg-white/80 text-slate-800 shadow-2xs backdrop-blur-md transition-colors hover:border-rose-200/80 hover:bg-rose-50/90 hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95"
               >
                 <ArrowLeft className="h-5 w-5 stroke-[2.2]" />
               </button>
@@ -446,7 +501,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 <p className="truncate text-xs font-black tracking-wide text-[#D9232D]">
                   ROFIK GODI CENTRE
                 </p>
-                <p className="hidden truncate text-[11px] font-medium text-slate-500 sm:block">
+                <p className="hidden truncate text-[11px] font-medium text-slate-600 sm:block">
                   {product.categoryLabel || 'Seat Covers'} · {product.title}
                 </p>
               </div>
@@ -457,7 +512,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 type="button"
                 aria-label="Share product"
                 onClick={() => void shareProduct()}
-                className="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-2xl border border-slate-200/80 bg-white px-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D]"
+                className="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-2xl border border-white/90 bg-white/80 px-2.5 text-xs font-bold text-slate-700 shadow-2xs backdrop-blur-md transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D]"
               >
                 {copiedShareLink ? (
                   <>
@@ -474,7 +529,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                   type="button"
                   aria-label="Search products"
                   onClick={onOpenSearch}
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D]"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/90 bg-white/80 text-slate-700 shadow-2xs backdrop-blur-md transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D]"
                 >
                   <Search className="h-5 w-5" />
                 </button>
@@ -484,7 +539,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 type="button"
                 aria-label={`Open cart, ${cartCount} items`}
                 onClick={onOpenCart}
-                className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white text-slate-800 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D]"
+                className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/90 bg-white/80 text-slate-800 shadow-2xs backdrop-blur-md transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D]"
               >
                 <ShoppingCart className="h-5 w-5" />
                 {cartCount > 0 && (
@@ -511,12 +566,19 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start lg:gap-8">
               {/* Left Gallery Column */}
               <section
+                ref={gallerySectionRef}
                 aria-label="Product gallery"
                 className="space-y-3 lg:sticky lg:top-6 lg:col-span-7"
               >
-                <div className="rounded-3xl border border-slate-200/80 bg-white p-2.5 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.14)] sm:p-3.5">
+                <div
+                  className={`classic-glass rounded-3xl bg-gradient-to-br from-white/92 via-white/82 to-rose-50/40 p-2.5 shadow-[0_18px_44px_-20px_rgba(15,23,42,0.18),inset_0_1px_0_rgba(255,255,255,0.95)] transition-all duration-300 sm:p-3.5 ${
+                    colorPreviewHighlight
+                      ? 'ring-2 ring-[#D9232D]/40'
+                      : 'ring-1 ring-white/90'
+                  }`}
+                >
                   <div
-                    className="group relative aspect-square w-full touch-pan-y overflow-hidden rounded-2xl bg-slate-100"
+                    className="group relative aspect-square w-full touch-pan-y overflow-hidden rounded-2xl bg-gradient-to-b from-slate-100/90 to-slate-200/55 ring-1 ring-inset ring-slate-900/[0.05]"
                     onTouchStart={handleGalleryTouchStart}
                     onTouchEnd={handleGalleryTouchEnd}
                   >
@@ -537,7 +599,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                       />
                     </AnimatePresence>
 
-                    {/* Desktop Left/Right Gallery Arrows (hover-revealed to keep image clear) */}
+                    {/* Desktop Left/Right Gallery Arrows (hover-revealed frosted glass) */}
                     {images.length > 1 && (
                       <>
                         <button
@@ -545,7 +607,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           aria-label="Previous image"
                           disabled={activeImageIndex === 0}
                           onClick={() => setActiveImageIndex((idx) => Math.max(0, idx - 1))}
-                          className="absolute left-3 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-sm backdrop-blur-xs transition hover:bg-white disabled:opacity-30 lg:flex lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
+                          className="classic-glass absolute left-3 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-slate-800 shadow-sm transition hover:bg-white disabled:opacity-30 lg:flex lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
                         >
                           <ChevronLeft className="h-4.5 w-4.5" />
                         </button>
@@ -556,7 +618,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           onClick={() =>
                             setActiveImageIndex((idx) => Math.min(images.length - 1, idx + 1))
                           }
-                          className="absolute right-3 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-sm backdrop-blur-xs transition hover:bg-white disabled:opacity-30 lg:flex lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
+                          className="classic-glass absolute right-3 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-slate-800 shadow-sm transition hover:bg-white disabled:opacity-30 lg:flex lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
                         >
                           <ChevronRight className="h-4.5 w-4.5" />
                         </button>
@@ -564,18 +626,23 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                     )}
                   </div>
 
-                  {/* Clean Gallery Utility Bar (keeps product image 100% unobstructed) */}
-                  <div className="mt-2.5 flex items-center justify-between gap-2 px-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex h-8 items-center rounded-xl bg-slate-100 px-2.5 text-[11px] font-extrabold text-slate-600 tabular-nums">
+                  {/* Clean Glass Gallery Utility Bar */}
+                  <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 px-0.5">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="inline-flex h-8 shrink-0 items-center rounded-xl border border-white/90 bg-white/80 px-2.5 text-[11px] font-extrabold text-slate-700 shadow-2xs backdrop-blur-xs tabular-nums">
                         {activeImageIndex + 1} / {images.length}
                       </span>
-                      <span className="hidden text-[11px] font-medium text-slate-400 sm:inline">
-                        Tap photo to expand
+                      <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-slate-600">
+                        <span
+                          aria-hidden="true"
+                          className="h-2.5 w-2.5 shrink-0 rounded-full border border-white shadow-2xs"
+                          style={{ backgroundColor: selectedColor.hex }}
+                        />
+                        <span className="truncate">{selectedColor.name}</span>
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex shrink-0 items-center gap-1.5">
                       <button
                         type="button"
                         aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
@@ -586,10 +653,10 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           }
                           onToggleWishlist(product);
                         }}
-                        className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+                        className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold backdrop-blur-xs transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
                           isWishlisted
-                            ? 'border-rose-200 bg-rose-50 text-[#D9232D]'
-                            : 'border-slate-200/90 bg-slate-50/90 text-slate-700 hover:border-rose-200 hover:bg-rose-50/60 hover:text-[#D9232D]'
+                            ? 'border-rose-200 bg-rose-50/90 text-[#D9232D]'
+                            : 'border-white/90 bg-white/80 text-slate-700 shadow-2xs hover:border-rose-200 hover:bg-rose-50/70 hover:text-[#D9232D]'
                         }`}
                       >
                         <Heart
@@ -605,7 +672,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                         type="button"
                         aria-label="Zoom product image"
                         onClick={() => setIsLightboxOpen(true)}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200/90 bg-slate-50/90 px-3 text-xs font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D]"
+                        className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-white/90 bg-white/80 px-3 text-xs font-bold text-slate-700 shadow-2xs backdrop-blur-xs transition hover:bg-white active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D]"
                       >
                         <Expand className="h-3.5 w-3.5 shrink-0" />
                         <span>Zoom</span>
@@ -613,7 +680,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                     </div>
                   </div>
 
-                  {/* Thumbnail Rail */}
+                  {/* Frosted Thumbnail Rail */}
                   {images.length > 1 && (
                     <div className="mt-2.5 flex gap-2.5 overflow-x-auto no-scrollbar pb-0.5">
                       {images.map((image, index) => (
@@ -623,10 +690,10 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           onClick={() => setActiveImageIndex(index)}
                           aria-label={`View product image ${index + 1}`}
                           aria-current={activeImageIndex === index ? 'true' : undefined}
-                          className={`h-16 w-16 shrink-0 overflow-hidden rounded-2xl border-2 bg-slate-100 transition sm:h-[72px] sm:w-[72px] ${
+                          className={`h-16 w-16 shrink-0 overflow-hidden rounded-2xl border-2 bg-white/70 backdrop-blur-xs transition sm:h-[72px] sm:w-[72px] ${
                             activeImageIndex === index
-                              ? 'border-[#D9232D] ring-2 ring-rose-100'
-                              : 'border-transparent opacity-80 hover:opacity-100'
+                              ? 'border-[#D9232D] ring-2 ring-rose-200/70 shadow-xs'
+                              : 'border-white/80 opacity-80 hover:opacity-100'
                           }`}
                         >
                           <img src={image} alt="" className="h-full w-full object-cover" />
@@ -637,12 +704,12 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 </div>
               </section>
 
-              {/* Right Column: Contiguous Purchase & Customization Module */}
+              {/* Right Column: Contiguous Classic Glass Purchase & Customization Module */}
               <section
                 aria-label="Configure and buy product"
                 className="lg:col-span-5"
               >
-                <div className="space-y-5 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.16)] sm:p-6">
+                <div className="classic-glass space-y-5 rounded-3xl bg-gradient-to-br from-white/92 via-white/84 to-slate-50/75 p-5 shadow-[0_16px_40px_-22px_rgba(15,23,42,0.15),inset_0_1px_0_rgba(255,255,255,0.95)] sm:p-6">
                   {/* Product Identity & Rating */}
                   <div>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-slate-500">
@@ -684,7 +751,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                     )}
 
                     {/* Live Pricing & Availability */}
-                    <div className="mt-4 rounded-2xl border border-slate-100 bg-[#F8FAFC] p-4">
+                    <div className="mt-4 rounded-2xl border border-white/90 bg-white/75 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xs">
                       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                         <strong className="text-3xl font-black tracking-tight text-slate-950 tabular-nums">
                           ₹{totalPrice}
@@ -738,10 +805,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                             key={color.name}
                             type="button"
                             aria-pressed={isSelected}
-                            onClick={() => {
-                              setSelectedColor(color);
-                              setActiveImageIndex(0);
-                            }}
+                            onClick={() => handleSelectColor(color)}
                             className="group min-w-0 text-center focus-visible:outline-none"
                           >
                             <span
@@ -854,8 +918,8 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
 
                   {/* 4. Custom Name Embroidery Input */}
                   {product.isCustomizable && (
-                    <div className="border-t border-slate-100 pt-4">
-                      <div className="rounded-2xl border border-slate-200/80 bg-[#F8FAFC] p-3.5">
+                    <div className="border-t border-slate-100/90 pt-4">
+                      <div className="rounded-2xl border border-white/90 bg-white/75 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xs">
                         <div className="flex items-center justify-between gap-2">
                           <label
                             htmlFor="pdp-custom-embroidery"
@@ -1066,7 +1130,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 <section
                   id="pdp-section-description"
                   aria-labelledby="pdp-heading-description"
-                  className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.12)] sm:p-6"
+                  className="classic-glass rounded-3xl bg-white/82 p-5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-6"
                 >
                   <div className="mb-4">
                     <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#D9232D]">
@@ -1147,7 +1211,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 <section
                   id="pdp-section-embroidery"
                   aria-labelledby="pdp-heading-embroidery"
-                  className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.12)] sm:p-6"
+                  className="classic-glass rounded-3xl bg-white/82 p-5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-6"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -1225,7 +1289,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 <section
                   id="pdp-section-specifications"
                   aria-labelledby="pdp-heading-specifications"
-                  className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.12)] sm:p-6"
+                  className="classic-glass rounded-3xl bg-white/82 p-5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-6"
                 >
                   <div className="mb-3">
                     <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#D9232D]">
@@ -1316,7 +1380,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
             {/* Verified Customer Reviews */}
             <div
               id="pdp-section-reviews"
-              className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_8px_24px_-18px_rgba(15,23,42,0.12)]"
+              className="classic-glass overflow-hidden rounded-3xl bg-white/82 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)]"
             >
               <ProductReviews
                 productId={product.id}
@@ -1333,7 +1397,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               <section
                 id="pdp-section-related"
                 aria-label="You may also like"
-                className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.12)] sm:p-6"
+                className="classic-glass rounded-3xl bg-white/82 p-5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-6"
               >
                 <div className="mb-4 flex items-center justify-between gap-2">
                   <div>
@@ -1366,8 +1430,8 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
           </div>
         </motion.main>
 
-        {/* Mobile Sticky Bottom Action Bar */}
-        <footer className="z-40 shrink-0 border-t border-slate-200/80 bg-white/95 px-4 py-2.5 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur-md shadow-[0_-4px_20px_rgba(15,23,42,0.06)] lg:hidden">
+        {/* Classic Glass Mobile Sticky Bottom Action Bar */}
+        <footer className="classic-glass z-40 shrink-0 border-t border-white/85 bg-white/80 px-4 py-2.5 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-8px_28px_-10px_rgba(15,23,42,0.1)] lg:hidden">
           {sellable ? (
             <div className="mx-auto flex max-w-2xl items-center gap-2.5">
               <div className="min-w-0 pr-1">
@@ -1615,7 +1679,7 @@ const SuggestionCard: React.FC<{
     }
   };
   return (
-    <article className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_4px_16px_-12px_rgba(15,23,42,0.1)] transition hover:border-slate-300">
+    <article className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/90 bg-white/80 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.14)] backdrop-blur-md transition hover:border-rose-200/80 hover:bg-white">
       <button
         type="button"
         onClick={onSelect}

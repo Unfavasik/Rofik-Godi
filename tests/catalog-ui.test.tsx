@@ -194,6 +194,9 @@ describe('catalog feedback', () => {
     expect(discoveryHtml).toContain('All');
     expect(discoveryHtml).toContain('Bike');
     expect(discoveryHtml).toContain('aria-label="Start voice search"');
+    expect(discoveryHtml).toContain('aria-describedby="search-voice-search-hint"');
+    expect(discoveryHtml).toContain('Show me bike covers');
+    expect(discoveryHtml).toContain('Activa seat cover');
     expect(discoveryHtml).not.toContain('Toto</span><span');
 
     const emptyMatchHtml = renderToStaticMarkup(
@@ -216,9 +219,10 @@ describe('catalog feedback', () => {
     expect(emptyMatchHtml).toContain('No exact matches found');
     expect(emptyMatchHtml).toContain('Reset Search &amp; Filters');
     expect(emptyMatchHtml).toContain('Popular Seat Covers You Might Like');
+    expect(emptyMatchHtml).not.toContain('data-purpose="voice-search-hint"');
   });
 
-  it('renders Header with a rotating product prompt search trigger, voice mic button, and independent clear button', () => {
+  it('renders Header with a rotating product prompt search trigger, voice mic button, voice command tip, and independent clear button', () => {
     const idleHeader = renderToStaticMarkup(
       <Header
         cartCount={1}
@@ -233,6 +237,8 @@ describe('catalog feedback', () => {
     expect(idleHeader).toContain('Search');
     expect(idleHeader).toContain('Bike Seat Cover');
     expect(idleHeader).toContain('aria-label="Start voice search"');
+    expect(idleHeader).toContain('aria-describedby="home-voice-search-hint"');
+    expect(idleHeader).toContain('Show me bike covers');
     expect(idleHeader).toContain('aria-pressed="false"');
     expect(idleHeader).not.toContain('aria-label="Clear search"');
 

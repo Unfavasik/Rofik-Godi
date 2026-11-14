@@ -33,9 +33,10 @@ describe('product availability awareness and product detail page UI/UX', () => {
     expect(html).not.toContain('Buy Now');
   });
 
-  it('renders desktop split-view layout, mobile sticky bar, and light-slate crimson shine theme', () => {
+  it('renders desktop split-view layout, mobile sticky bar, and classic-glass theme', () => {
     const html = renderDetails(PRODUCTS[0]!);
     expect(html).toContain('bg-[#F8FAFC]');
+    expect(html).toContain('classic-glass');
     expect(html).toContain('lg:grid-cols-12');
     expect(html).toContain('lg:col-span-7');
     expect(html).toContain('lg:col-span-5');

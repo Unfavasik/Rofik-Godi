@@ -323,12 +323,15 @@ export default function App() {
       protectedRouteAfterAuth.current = null;
       return;
     }
-    const kind = resolveAppRoute(pendingPath).kind;
+    const resolved = resolveAppRoute(pendingPath);
+    const kind = resolved.kind;
     setLoginModalReason(kind === 'orders'
       ? 'Sign in to view your orders.'
       : kind === 'support' || kind === 'contact-support'
         ? 'Sign in to continue to customer support.'
-        : 'Please sign in to place your order.');
+        : kind === 'settings-section' && resolved.section === 'delete-account'
+          ? 'Sign in to manage account deletion.'
+          : 'Please sign in to place your order.');
     if (kind === 'checkout') setPendingCheckoutAfterLogin(true);
     setIsLoginModalOpen(true);
   };
@@ -489,12 +492,15 @@ export default function App() {
 
     if (requiresCustomerAuthentication(route)) {
       protectedRouteAfterAuth.current = location.pathname;
-      const kind = resolveAppRoute(route).kind;
+      const resolved = resolveAppRoute(route);
+      const kind = resolved.kind;
       setLoginModalReason(kind === 'orders'
         ? 'Sign in to view your orders.'
         : kind === 'support' || kind === 'contact-support'
           ? 'Sign in to continue to customer support.'
-          : 'Please sign in to place your order.');
+          : kind === 'settings-section' && resolved.section === 'delete-account'
+            ? 'Sign in to manage account deletion.'
+            : 'Please sign in to place your order.');
       if (kind === 'checkout') setPendingCheckoutAfterLogin(true);
       setIsLoginModalOpen(true);
       navigate('/home', { replace: true });

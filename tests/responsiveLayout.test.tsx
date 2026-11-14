@@ -17,6 +17,7 @@ import { CustomerOrdersModal } from '../src/components/CustomerOrdersModal';
 import { ContactSupportView } from '../src/components/ContactSupportView';
 import { SupportCenter } from '../src/components/SupportCenter';
 import { SettingsView } from '../src/components/SettingsView';
+import { AccountDeletionView } from '../src/components/AccountDeletionView';
 import { SearchView } from '../src/components/SearchView';
 import { CouponManagement } from '../src/components/CouponManagement';
 import { BannersView, NotificationsView, ReportsView } from '../src/components/AdminSections';
@@ -262,6 +263,24 @@ describe('Storefront & Checkout mobile-first responsive markup', () => {
       </I18nProvider>,
     );
     expect(settingsHtml).toContain('overflow-x-hidden');
+
+    const guestDeletionHtml = renderToStaticMarkup(
+      <AccountDeletionView onBack={() => undefined} isAuthenticated={false} />,
+    );
+    expect(guestDeletionHtml).toContain('overflow-x-hidden');
+    expect(guestDeletionHtml).toContain('Sign in to manage account deletion');
+    expect(guestDeletionHtml).toContain('Back to settings');
+
+    const authDeletionHtml = renderToStaticMarkup(
+      <AccountDeletionView
+        onBack={() => undefined}
+        isAuthenticated
+        onOpenContactSupport={() => undefined}
+        onOpenNotificationSettings={() => undefined}
+      />,
+    );
+    expect(authDeletionHtml).toContain('overflow-x-hidden');
+    expect(authDeletionHtml).toContain('Delete account');
 
     const searchHtml = renderToStaticMarkup(
       <SearchView
