@@ -1960,7 +1960,7 @@ export default function App() {
             </section>
 
             {/* Customer Reviews */}
-            <CustomerReviews />
+            <CustomerReviews onOpenOrderHistory={() => openPageRoute('/my-orders')} />
 
             {/* Footer Brand Info */}
             <footer className="px-5 pt-6 pb-4 bg-gray-900 text-gray-300 rounded-t-[32px] mt-auto">
@@ -2086,6 +2086,12 @@ export default function App() {
           onRequestLogin={() => {
             setLoginModalReason('Sign in to review products you have purchased.');
             setIsLoginModalOpen(true);
+          }}
+          onOpenOrderHistory={(orderNumber) => {
+            setSelectedProduct(null);
+            openPageRoute(
+              orderNumber ? getPathForCustomerOrder(orderNumber.toLowerCase()) : '/my-orders',
+            );
           }}
           initialColorName={selectedProductColor ?? undefined}
         />}

@@ -15,6 +15,17 @@ export interface ProductReviewRecord {
   product_name?: string;
 }
 
+export function isVerifiedProductReview(
+  review: Pick<ProductReviewRecord, 'is_verified_purchase' | 'product_id' | 'order_id'>,
+  productId?: string,
+  verifiedOrderIds?: ReadonlySet<string>,
+): boolean {
+  const matchesProduct = !productId || !review.product_id || review.product_id === productId;
+  if (!matchesProduct) return false;
+  if (review.is_verified_purchase) return true;
+  return Boolean(verifiedOrderIds && review.order_id && verifiedOrderIds.has(review.order_id));
+}
+
 export interface ProductRatingSummary {
   product_id: string;
   average_rating: number;

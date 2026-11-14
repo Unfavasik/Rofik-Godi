@@ -2,6 +2,8 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { ProductDetailModal } from '../src/components/ProductDetailModal';
+import { ProductReviews } from '../src/components/ProductReviews';
+import { CustomerReviews } from '../src/components/CustomerReviews';
 import { PRODUCTS } from '../src/data/products';
 import { getCartItemUnitPrice } from '../src/lib/cart';
 import type { Product } from '../src/types';
@@ -79,21 +81,99 @@ describe('product availability awareness and product detail page UI/UX', () => {
     expect(withEmbroidery - withoutEmbroidery).toBe(150);
   });
 
-  it('renders sticky Product Highlights navigation tabs linked to Description, Specifications, Embroidery Details, and Reviews', () => {
+  it('removes the sticky Product Highlights navigation mode while retaining product info sections', () => {
     const customizableProduct = PRODUCTS.find((p) => p.isCustomizable) ?? PRODUCTS[0]!;
     const html = renderDetails(customizableProduct);
-    expect(html).toContain('aria-label="Product Highlights navigation"');
-    expect(html).toContain('Product Highlights');
-    expect(html).toContain('sticky top-2');
-    expect(html).toContain('role="tablist"');
-    expect(html).toContain('role="tab"');
-    expect(html).toContain('aria-controls="pdp-section-description"');
-    expect(html).toContain('aria-controls="pdp-section-specifications"');
-    expect(html).toContain('aria-controls="pdp-section-embroidery"');
-    expect(html).toContain('aria-controls="pdp-section-reviews"');
-    expect(html).toContain('id="pdp-section-description"');
-    expect(html).toContain('id="pdp-section-specifications"');
-    expect(html).toContain('id="pdp-section-embroidery"');
+    expect(html).not.toContain('aria-label="Product Highlights navigation"');
+    expect(html).not.toContain('role="tablist"');
+    expect(html).toContain('Description');
+    expect(html).toContain('Specifications');
     expect(html).toContain('Embroidery Details');
+  });
+
+  it('shows Verified Customer badge linking to order history only for verified purchases of the specific product', () => {
+    const product = PRODUCTS[0]!;
+    const html = renderToStaticMarkup(
+      <ProductReviews
+        productId={product.id}
+        productTitle={product.title}
+        isAuthenticated={true}
+        customerId="cust-1"
+        onRequestLogin={() => {}}
+        initialOrders={[
+          {
+            id: 'ord-1',
+            order_number: 'RGC-1042',
+            status: 'COMPLETED',
+            order_items: [{ product_id: product.id }],
+          },
+        ]}
+        initialReviews={[
+          {
+            id: 'rev-own-verified',
+            product_id: product.id,
+            order_id: 'ord-1',
+            customer_id: 'cust-1',
+            author_name: 'Ayan Mondal',
+            rating: 5,
+            review_text: 'Perfect fit on my bike seat.',
+            is_verified_purchase: true,
+            is_published: true,
+            created_at: '2026-11-10T10:00:00Z',
+          },
+          {
+            id: 'rev-other-verified',
+            product_id: product.id,
+            order_id: 'ord-2',
+            customer_id: 'cust-2',
+            author_name: 'Rabiul Sk',
+            rating: 5,
+            review_text: 'Great grip and finish.',
+            is_verified_purchase: true,
+            is_published: true,
+            created_at: '2026-11-09T10:00:00Z',
+          },
+          {
+            id: 'rev-unverified',
+            product_id: product.id,
+            order_id: '',
+            customer_id: 'cust-3',
+            author_name: 'Guest Reviewer',
+            rating: 4,
+            review_text: 'Looks nice.',
+            is_verified_purchase: false,
+            is_published: true,
+            created_at: '2026-11-08T10:00:00Z',
+          },
+        ]}
+      />,
+    );
+
+    expect(html).toContain('Verified Customer');
+    expect(html).toContain('href="/my-order/order/rgc-1042"');
+    expect(html).toContain('href="/my-orders"');
+    expect((html.match(/>Verified Customer</g) || []).length).toBe(2);
+
+    const homeReviewsHtml = renderToStaticMarkup(
+      <CustomerReviews
+        initialReviews={[
+          {
+            id: 'home-rev-1',
+            product_id: product.id,
+            order_id: 'ord-9',
+            customer_id: 'cust-9',
+            author_name: 'Imran Ali',
+            rating: 5,
+            review_text: 'Sturdy stitching.',
+            is_verified_purchase: true,
+            is_published: true,
+            created_at: '2026-11-11T10:00:00Z',
+            product_name: product.title,
+          },
+        ]}
+      />,
+    );
+    expect(homeReviewsHtml).toContain('Verified Customer');
+    expect(homeReviewsHtml).toContain('href="/my-orders"');
   });
 });

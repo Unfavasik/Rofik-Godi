@@ -83,6 +83,7 @@ interface ProductDetailModalProps {
   isAuthenticated?: boolean;
   customerId?: string;
   onRequestLogin?: () => void;
+  onOpenOrderHistory?: (orderNumber?: string) => void;
   /** Colour name from a deep link (?color=…) to preselect when the page opens. */
   initialColorName?: string;
 }
@@ -130,6 +131,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   isAuthenticated = false,
   customerId,
   onRequestLogin,
+  onOpenOrderHistory,
   initialColorName,
 }) => {
   const [selectedColor, setSelectedColor] = useState(
@@ -261,11 +263,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [notifySubmitting, setNotifySubmitting] = useState(false);
   const notifyRequestLock = useRef(false);
-
-  type HighlightTabId = 'description' | 'specifications' | 'embroidery' | 'reviews' | 'related';
-  const [activeHighlightTab, setActiveHighlightTab] = useState<HighlightTabId>('description');
   const scrollContainerRef = useRef<HTMLElement | null>(null);
-  const sectionRefs = useRef<Partial<Record<HighlightTabId, HTMLElement | null>>>({});
 
   const normalizedEmbroidery = product.isCustomizable
     ? customEmbroideryText.trim().slice(0, MAX_EMBROIDERY_CHARS)
@@ -346,78 +344,6 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   };
 
   const suggested = products.filter((item) => item.id !== product.id).slice(0, 4);
-
-  const highlightTabs = useMemo(
-    () =>
-      [
-        { id: 'description' as const, label: 'Description', Icon: Sparkles },
-        { id: 'specifications' as const, label: 'Specifications', Icon: PackageCheck },
-        { id: 'embroidery' as const, label: 'Embroidery Details', Icon: Scissors },
-        { id: 'reviews' as const, label: 'Reviews', Icon: Star },
-        ...(suggested.length > 0
-          ? [{ id: 'related' as const, label: 'Related', Icon: Store }]
-          : []),
-      ],
-    [suggested.length],
-  );
-
-  useEffect(() => {
-    if (typeof IntersectionObserver === 'undefined') return;
-    const root = scrollContainerRef.current;
-    if (!root) return;
-
-    const observed = highlightTabs
-      .map((tab) => ({ id: tab.id, el: sectionRefs.current[tab.id] }))
-      .filter((entry): entry is { id: HighlightTabId; el: HTMLElement } => Boolean(entry.el));
-
-    if (!observed.length) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        const topEntry = visible[0];
-        if (!topEntry) return;
-        const matched = observed.find((item) => item.el === topEntry.target);
-        if (matched) setActiveHighlightTab(matched.id);
-      },
-      {
-        root,
-        rootMargin: '-18% 0px -62% 0px',
-        threshold: [0, 0.15, 0.4],
-      },
-    );
-
-    observed.forEach(({ el }) => observer.observe(el));
-    return () => observer.disconnect();
-  }, [highlightTabs, product.id]);
-
-  const scrollToHighlightSection = (tabId: HighlightTabId) => {
-    setActiveHighlightTab(tabId);
-    if (tabId === 'description') {
-      setDescriptionOpen(true);
-    }
-    const target = sectionRefs.current[tabId];
-    if (!target) return;
-    const container = scrollContainerRef.current;
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    const behavior: ScrollBehavior = prefersReducedMotion ? 'auto' : 'smooth';
-
-    if (container) {
-      const containerRect = container.getBoundingClientRect();
-      const targetRect = target.getBoundingClientRect();
-      const top = Math.max(
-        0,
-        container.scrollTop + (targetRect.top - containerRect.top) - 82,
-      );
-      container.scrollTo({ top, behavior });
-    } else {
-      target.scrollIntoView({ behavior, block: 'start' });
-    }
-  };
 
   const focusEmbroideryInput = () => {
     const container = scrollContainerRef.current;
@@ -1126,59 +1052,14 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               </section>
             </div>
 
-            {/* Sticky Product Highlights Navigation Tabs */}
-            <nav
-              aria-label="Product Highlights navigation"
-              className="sticky top-2 z-20 rounded-2xl border border-slate-200/90 bg-white/95 p-2 shadow-[0_10px_28px_-16px_rgba(15,23,42,0.16)] backdrop-blur-md"
-            >
-              <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                <div className="flex items-center gap-2 px-1.5">
-                  <span className="h-2 w-2 shrink-0 rounded-full bg-[#D9232D]" aria-hidden="true" />
-                  <span className="shrink-0 text-[11px] font-extrabold uppercase tracking-wider text-slate-600">
-                    Product Highlights
-                  </span>
-                </div>
-                <div
-                  role="tablist"
-                  aria-label="Product Highlights"
-                  className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 sm:pb-0"
-                >
-                  {highlightTabs.map(({ id, label, Icon }) => {
-                    const isActive = activeHighlightTab === id;
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        role="tab"
-                        aria-selected={isActive}
-                        aria-controls={`pdp-section-${id}`}
-                        onClick={() => scrollToHighlightSection(id)}
-                        className={`inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border px-3 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-[0.98] ${
-                          isActive
-                            ? 'border-rose-200 bg-rose-50 font-extrabold text-[#D9232D] shadow-2xs'
-                            : 'border-transparent bg-slate-50/90 font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                        }`}
-                      >
-                        <Icon className="h-3.5 w-3.5 shrink-0" />
-                        <span>{label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </nav>
-
             {/* Below-the-Fold Storefront Information Grid */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
               {/* Left Info Column: Highlights Cards, Description & Embroidery Details */}
               <div className="space-y-6 lg:col-span-7">
                 <section
                   id="pdp-section-description"
-                  ref={(el) => {
-                    sectionRefs.current.description = el;
-                  }}
                   aria-labelledby="pdp-heading-description"
-                  className="scroll-mt-24 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.12)] sm:p-6"
+                  className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.12)] sm:p-6"
                 >
                   <div className="mb-4">
                     <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#D9232D]">
@@ -1258,11 +1139,8 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 {/* Dedicated Embroidery & Craft Details Section */}
                 <section
                   id="pdp-section-embroidery"
-                  ref={(el) => {
-                    sectionRefs.current.embroidery = el;
-                  }}
                   aria-labelledby="pdp-heading-embroidery"
-                  className="scroll-mt-24 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.12)] sm:p-6"
+                  className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.12)] sm:p-6"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -1339,11 +1217,8 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               <div className="space-y-6 lg:col-span-5">
                 <section
                   id="pdp-section-specifications"
-                  ref={(el) => {
-                    sectionRefs.current.specifications = el;
-                  }}
                   aria-labelledby="pdp-heading-specifications"
-                  className="scroll-mt-24 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.12)] sm:p-6"
+                  className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.12)] sm:p-6"
                 >
                   <div className="mb-3">
                     <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#D9232D]">
@@ -1434,10 +1309,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
             {/* Verified Customer Reviews */}
             <div
               id="pdp-section-reviews"
-              ref={(el) => {
-                sectionRefs.current.reviews = el;
-              }}
-              className="scroll-mt-24 overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_8px_24px_-18px_rgba(15,23,42,0.12)]"
+              className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_8px_24px_-18px_rgba(15,23,42,0.12)]"
             >
               <ProductReviews
                 productId={product.id}
@@ -1445,6 +1317,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 isAuthenticated={isAuthenticated}
                 customerId={customerId}
                 onRequestLogin={onRequestLogin || (() => undefined)}
+                onOpenOrderHistory={onOpenOrderHistory}
               />
             </div>
 
@@ -1452,11 +1325,8 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
             {suggested.length > 0 && (
               <section
                 id="pdp-section-related"
-                ref={(el) => {
-                  sectionRefs.current.related = el;
-                }}
                 aria-label="You may also like"
-                className="scroll-mt-24 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.12)] sm:p-6"
+                className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.12)] sm:p-6"
               >
                 <div className="mb-4 flex items-center justify-between gap-2">
                   <div>
