@@ -105,7 +105,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         : t('product.inStock');
   const availabilityClass = availability.state === 'in-stock' ? 'text-emerald-700' : 'text-amber-700';
   const [notifySubmitting, setNotifySubmitting] = useState(false);
+  const [heartPulseKey, setHeartPulseKey] = useState(0);
   const notifyRequestLock = useRef(false);
+  const handleWishlistClick = (event: React.MouseEvent) => {
+    if (!isWishlisted) {
+      setHeartPulseKey((key) => key + 1);
+    }
+    onToggleWishlist(product, event);
+  };
   const handleNotifyMe = async (event: React.MouseEvent) => {
     event.stopPropagation();
     if (notifyRequestLock.current || !onNotifyMe) return;
@@ -194,14 +201,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <div className="relative z-10 pointer-events-none flex flex-col items-center justify-between self-stretch py-0.5 flex-shrink-0">
           <button
             type="button"
-            onClick={(e) => onToggleWishlist(product, e)}
+            onClick={handleWishlistClick}
             aria-label={isWishlisted ? t('product.removeFromWishlist') : t('product.addToWishlist')}
             aria-pressed={isWishlisted}
             className="pointer-events-auto grid min-h-11 min-w-11 place-items-center rounded-full text-gray-400 hover:text-red-500 transition-colors active:scale-90"
           >
             <Heart
+              key={heartPulseKey}
               className={`w-4 h-4 transition-colors ${
-                isWishlisted ? 'text-[#D9232D] fill-[#D9232D]' : 'text-gray-400'
+                isWishlisted
+                  ? 'wishlist-heartbeat text-[#D9232D] fill-[#D9232D]'
+                  : 'text-gray-400'
               }`}
             />
           </button>
@@ -261,14 +271,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Wishlist Heart */}
         <button
           type="button"
-          onClick={(e) => onToggleWishlist(product, e)}
+          onClick={handleWishlistClick}
           aria-label={isWishlisted ? t('product.removeFromWishlist') : t('product.addToWishlist')}
           aria-pressed={isWishlisted}
           className="pointer-events-auto absolute top-1 right-1 z-10 grid min-h-11 min-w-11 place-items-center rounded-full bg-white/90 backdrop-blur-xs text-gray-600 hover:text-red-500 shadow-xs transition-colors active:scale-90"
         >
           <Heart
+            key={heartPulseKey}
             className={`w-3.5 h-3.5 transition-colors ${
-              isWishlisted ? 'text-[#D9232D] fill-[#D9232D]' : 'text-gray-600'
+              isWishlisted
+                ? 'wishlist-heartbeat text-[#D9232D] fill-[#D9232D]'
+                : 'text-gray-600'
             }`}
           />
         </button>

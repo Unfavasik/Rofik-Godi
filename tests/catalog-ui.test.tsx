@@ -102,14 +102,16 @@ describe('catalog feedback', () => {
     expect(html).not.toContain('role="button"');
   });
 
-  it.each(['grid', 'list', 'shelf'] as const)('announces the wishlist toggle state in %s product cards', (layoutMode) => {
+  it.each(['grid', 'list', 'shelf'] as const)('announces the wishlist toggle state and heart-beat pulse class in %s product cards', (layoutMode) => {
     const added = renderCard(sampleProduct, layoutMode, true);
     const notAdded = renderCard(sampleProduct, layoutMode, false);
 
     expect(added).toContain('aria-label="Remove from Wishlist"');
     expect(added).toContain('aria-pressed="true"');
+    expect(added).toContain('wishlist-heartbeat');
     expect(notAdded).toContain('aria-label="Add to Wishlist"');
     expect(notAdded).toContain('aria-pressed="false"');
+    expect(notAdded).not.toContain('wishlist-heartbeat');
   });
 
   it('does not invent a zero-star score and formats catalog pricing with a real savings badge', () => {

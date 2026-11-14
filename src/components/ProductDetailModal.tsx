@@ -158,6 +158,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [copiedShareLink, setCopiedShareLink] = useState(false);
+  const [heartPulseKey, setHeartPulseKey] = useState(0);
 
   const swipeStartX = useRef<number | null>(null);
   const swipeStartY = useRef<number | null>(null);
@@ -579,7 +580,12 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                         type="button"
                         aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
                         aria-pressed={isWishlisted}
-                        onClick={() => onToggleWishlist(product)}
+                        onClick={() => {
+                          if (!isWishlisted) {
+                            setHeartPulseKey((key) => key + 1);
+                          }
+                          onToggleWishlist(product);
+                        }}
                         className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
                           isWishlisted
                             ? 'border-rose-200 bg-rose-50 text-[#D9232D]'
@@ -587,8 +593,9 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                         }`}
                       >
                         <Heart
+                          key={heartPulseKey}
                           className={`h-3.5 w-3.5 shrink-0 ${
-                            isWishlisted ? 'fill-[#D9232D] text-[#D9232D]' : ''
+                            isWishlisted ? 'wishlist-heartbeat fill-[#D9232D] text-[#D9232D]' : ''
                           }`}
                         />
                         <span>{isWishlisted ? 'Liked' : 'Like'}</span>

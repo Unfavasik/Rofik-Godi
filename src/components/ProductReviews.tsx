@@ -1,13 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BadgeCheck, ChevronRight, Star } from 'lucide-react';
 import {
+  filterAndSortReviews,
   getMyReviewContext,
   getProductRatingSummary,
   isVerifiedProductReview,
   listPublishedReviews,
+  REVIEW_FILTER_OPTIONS,
   type ProductRatingSummary,
   type ProductReviewRecord,
   type ReviewEligibleOrder,
+  type ReviewFilterMode,
 } from '../lib/supabaseReviews';
 import { getPathForCustomerOrder } from '../lib/appRoutes';
 import { ReviewComposer } from './ReviewComposer';
@@ -22,6 +25,7 @@ interface ProductReviewsProps {
   initialReviews?: ProductReviewRecord[];
   initialOrders?: ReviewEligibleOrder[];
   initialSummary?: ProductRatingSummary | null;
+  initialFilter?: ReviewFilterMode;
 }
 
 const summaryCounts = (summary: ProductRatingSummary) => [
@@ -42,6 +46,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
   initialReviews,
   initialOrders,
   initialSummary = null,
+  initialFilter = 'most-recent',
 }) => {
   const hasInitialData = initialReviews !== undefined || initialOrders !== undefined;
   const [summary, setSummary] = useState<ProductRatingSummary | null>(initialSummary);
@@ -51,12 +56,13 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
   const [loading, setLoading] = useState(!hasInitialData);
   const [composer, setComposer] = useState<{ order: ReviewEligibleOrder; review?: ProductReviewRecord } | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<ReviewFilterMode>(initialFilter);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     const [nextSummary, nextReviews, context] = await Promise.all([
       getProductRatingSummary(productId),
-      listPublishedReviews(productId, showAll ? 100 : 5),
+      listPublishedReviews(productId, showAll ? 100 : 25),
       isAuthenticated ? getMyReviewContext(productId, customerId) : Promise.resolve({ orders: [], reviews: [] }),
     ]);
     setSummary(nextSummary);
@@ -82,6 +88,11 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
           .map((order) => order.id),
       ),
     [orders, productId],
+  );
+
+  const filteredReviews = useMemo(
+    () => filterAndSortReviews(reviews, activeFilter, productId, verifiedOwnOrderIds),
+    [reviews, activeFilter, productId, verifiedOwnOrderIds],
   );
 
   const navigateToOrderHistory = (
@@ -139,11 +150,41 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
         </div>
       </div>
 
+      {/* Review Filter & Sort Bar */}
+      <div
+        role="group"
+        aria-label="Filter and sort customer reviews"
+        className="mt-3 flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"
+      >
+        {REVIEW_FILTER_OPTIONS.map((option) => {
+          const isSelected = activeFilter === option.id;
+          return (
+            <button
+              key={option.id}
+              type="button"
+              aria-pressed={isSelected}
+              onClick={() => setActiveFilter(option.id)}
+              className={`inline-flex min-h-9 shrink-0 items-center gap-1 rounded-xl border px-3 text-[11px] font-bold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+                isSelected
+                  ? 'border-rose-200 bg-rose-50 text-[#D9232D] shadow-2xs'
+                  : 'border-slate-200/90 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              {option.id === 'verified-only' && <BadgeCheck className="h-3.5 w-3.5 shrink-0" />}
+              {option.id === 'highest-rating' && (
+                <Star className="h-3 w-3 shrink-0 fill-current" />
+              )}
+              <span>{option.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
       <div className="mt-3 space-y-2.5">
         {loading ? (
           <p className="py-5 text-center text-xs text-slate-500">Loading reviews…</p>
-        ) : reviews.length ? (
-          reviews.map((review) => {
+        ) : filteredReviews.length ? (
+          filteredReviews.map((review) => {
             const isVerifiedCustomer = isVerifiedProductReview(
               review,
               productId,
@@ -216,6 +257,10 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
               </article>
             );
           })
+        ) : reviews.length > 0 ? (
+          <p className="rounded-xl border border-dashed border-slate-200 px-3 py-5 text-center text-xs text-slate-500">
+            No reviews match the selected filter yet.
+          </p>
         ) : (
           <p className="rounded-xl border border-dashed border-slate-200 px-3 py-5 text-center text-xs text-slate-500">
             No published reviews yet. Be the first verified customer to share your experience.

@@ -15,6 +15,14 @@ export interface ProductReviewRecord {
   product_name?: string;
 }
 
+export type ReviewFilterMode = 'most-recent' | 'highest-rating' | 'verified-only';
+
+export const REVIEW_FILTER_OPTIONS: ReadonlyArray<{ id: ReviewFilterMode; label: string }> = [
+  { id: 'most-recent', label: 'Most Recent' },
+  { id: 'highest-rating', label: 'Highest Rating' },
+  { id: 'verified-only', label: 'Verified Purchases Only' },
+];
+
 export function isVerifiedProductReview(
   review: Pick<ProductReviewRecord, 'is_verified_purchase' | 'product_id' | 'order_id'>,
   productId?: string,
@@ -24,6 +32,29 @@ export function isVerifiedProductReview(
   if (!matchesProduct) return false;
   if (review.is_verified_purchase) return true;
   return Boolean(verifiedOrderIds && review.order_id && verifiedOrderIds.has(review.order_id));
+}
+
+export function filterAndSortReviews(
+  reviews: readonly ProductReviewRecord[],
+  mode: ReviewFilterMode,
+  productId?: string,
+  verifiedOrderIds?: ReadonlySet<string>,
+): ProductReviewRecord[] {
+  const base =
+    mode === 'verified-only'
+      ? reviews.filter((review) =>
+          isVerifiedProductReview(review, productId || review.product_id, verifiedOrderIds),
+        )
+      : [...reviews];
+
+  return base.sort((a, b) => {
+    if (mode === 'highest-rating' && b.rating !== a.rating) {
+      return b.rating - a.rating;
+    }
+    const timeA = Date.parse(a.created_at) || 0;
+    const timeB = Date.parse(b.created_at) || 0;
+    return timeB - timeA;
+  });
 }
 
 export interface ProductRatingSummary {

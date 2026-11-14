@@ -6,9 +6,10 @@ import { ProductReviews } from '../src/components/ProductReviews';
 import { CustomerReviews } from '../src/components/CustomerReviews';
 import { PRODUCTS } from '../src/data/products';
 import { getCartItemUnitPrice } from '../src/lib/cart';
+import { filterAndSortReviews } from '../src/lib/supabaseReviews';
 import type { Product } from '../src/types';
 
-const renderDetails = (product: Product, initialColorName?: string) =>
+const renderDetails = (product: Product, initialColorName?: string, isWishlisted = false) =>
   renderToStaticMarkup(
     <ProductDetailModal
       products={PRODUCTS}
@@ -16,7 +17,7 @@ const renderDetails = (product: Product, initialColorName?: string) =>
       onClose={() => {}}
       onAddToCart={() => {}}
       onBuyNow={() => {}}
-      isWishlisted={false}
+      isWishlisted={isWishlisted}
       onToggleWishlist={() => {}}
       onNotifyMe={() => {}}
       initialColorName={initialColorName}
@@ -50,6 +51,16 @@ describe('product availability awareness and product detail page UI/UX', () => {
     expect(html).not.toContain('pointer-events-none absolute inset-x-0 top-0');
     expect(html).not.toContain('w-screen');
     expect(html).not.toContain('w-[100vw]');
+  });
+
+  it('applies the wishlist heart-beat pulse animation class in ProductDetailModal when wishlisted', () => {
+    const notWishlistedHtml = renderDetails(PRODUCTS[0]!, undefined, false);
+    const wishlistedHtml = renderDetails(PRODUCTS[0]!, undefined, true);
+
+    expect(notWishlistedHtml).not.toContain('wishlist-heartbeat');
+    expect(wishlistedHtml).toContain('wishlist-heartbeat');
+    expect(wishlistedHtml).toContain('Remove from wishlist');
+    expect(wishlistedHtml).toContain('>Liked<');
   });
 
   it('exposes inline thickness, stitch, embroidery, vehicle fitment, and quantity controls', () => {
@@ -175,5 +186,76 @@ describe('product availability awareness and product detail page UI/UX', () => {
     );
     expect(homeReviewsHtml).toContain('Verified Customer');
     expect(homeReviewsHtml).toContain('href="/my-orders"');
+  });
+
+  it('filters and sorts CustomerReviews and ProductReviews by Most Recent, Highest Rating, and Verified Purchases Only', () => {
+    const product = PRODUCTS[0]!;
+    const sampleReviews = [
+      {
+        id: 'rev-recent-low',
+        product_id: product.id,
+        order_id: '',
+        customer_id: 'cust-10',
+        author_name: 'Newest Unverified',
+        rating: 3,
+        review_text: 'Decent cover.',
+        is_verified_purchase: false,
+        is_published: true,
+        created_at: '2026-11-12T10:00:00Z',
+        product_name: product.title,
+      },
+      {
+        id: 'rev-older-high-verified',
+        product_id: product.id,
+        order_id: 'ord-55',
+        customer_id: 'cust-11',
+        author_name: 'Top Rated Verified',
+        rating: 5,
+        review_text: 'Superb cushioning and waterproof stitch.',
+        is_verified_purchase: true,
+        is_published: true,
+        created_at: '2026-11-05T10:00:00Z',
+        product_name: product.title,
+      },
+    ];
+
+    const byRecent = filterAndSortReviews(sampleReviews, 'most-recent', product.id);
+    expect(byRecent.map((r) => r.id)).toEqual(['rev-recent-low', 'rev-older-high-verified']);
+
+    const byHighest = filterAndSortReviews(sampleReviews, 'highest-rating', product.id);
+    expect(byHighest.map((r) => r.id)).toEqual(['rev-older-high-verified', 'rev-recent-low']);
+
+    const verifiedOnly = filterAndSortReviews(sampleReviews, 'verified-only', product.id);
+    expect(verifiedOnly.map((r) => r.id)).toEqual(['rev-older-high-verified']);
+
+    const customerReviewsHighestHtml = renderToStaticMarkup(
+      <CustomerReviews initialReviews={sampleReviews} initialFilter="highest-rating" />,
+    );
+    expect(customerReviewsHighestHtml).toContain('aria-label="Filter and sort customer reviews"');
+    expect(customerReviewsHighestHtml).toContain('>Most Recent<');
+    expect(customerReviewsHighestHtml).toContain('>Highest Rating<');
+    expect(customerReviewsHighestHtml).toContain('>Verified Purchases Only<');
+    expect(customerReviewsHighestHtml.indexOf('Top Rated Verified')).toBeLessThan(
+      customerReviewsHighestHtml.indexOf('Newest Unverified'),
+    );
+
+    const customerReviewsVerifiedHtml = renderToStaticMarkup(
+      <CustomerReviews initialReviews={sampleReviews} initialFilter="verified-only" />,
+    );
+    expect(customerReviewsVerifiedHtml).toContain('Top Rated Verified');
+    expect(customerReviewsVerifiedHtml).not.toContain('Newest Unverified');
+
+    const productReviewsVerifiedHtml = renderToStaticMarkup(
+      <ProductReviews
+        productId={product.id}
+        productTitle={product.title}
+        isAuthenticated={false}
+        onRequestLogin={() => {}}
+        initialReviews={sampleReviews}
+        initialFilter="verified-only"
+      />,
+    );
+    expect(productReviewsVerifiedHtml).toContain('Top Rated Verified');
+    expect(productReviewsVerifiedHtml).not.toContain('Newest Unverified');
   });
 });

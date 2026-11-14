@@ -126,9 +126,33 @@ canvas {
   .skeleton-shimmer::after,
   .skeleton-shimmer-dark::after,
   .banner-cta-shine::after,
-  .banner-ambient-pulse {
+  .banner-ambient-pulse,
+  .wishlist-heartbeat {
     animation: none !important;
   }
+}
+
+@keyframes wishlistHeartbeat {
+  0% {
+    transform: scale(1);
+  }
+  22% {
+    transform: scale(1.24);
+  }
+  44% {
+    transform: scale(0.94);
+  }
+  68% {
+    transform: scale(1.14);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.wishlist-heartbeat {
+  animation: wishlistHeartbeat 540ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: center;
 }
 
 @keyframes bannerCtaShine {

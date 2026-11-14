@@ -242,7 +242,9 @@ export default function App() {
   // Keep this flag in React memory only. A website reload/new app launch must show
   // the guest welcome flow again, while completing it still unlocks guest browsing
   // for the rest of the current app session.
-  const [guestWelcomeComplete, setGuestWelcomeComplete] = useState(false);
+  const [guestWelcomeComplete, setGuestWelcomeComplete] = useState(
+    () => new URLSearchParams(location.search).get('autostart') === '1',
+  );
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   // Tracks whether the signed-in user still needs the personal-details setup step.
   const [, setPendingProfileSetup] = useState(false);
@@ -1526,6 +1528,9 @@ export default function App() {
               onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
               onBackToHome={() => {
                 setActiveTab('home');
+                if (location.pathname === '/search') {
+                  navigate('/');
+                }
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
             />
