@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { INITIAL_FILTERS, SORT_LABELS } from '../data/filterOptions';
 import type { FilterState, SortOption } from '../data/filterOptions';
+import type { Product } from '../types';
+import { filterAndSortSearchProducts } from '../lib/searchProducts';
 export { INITIAL_FILTERS, SORT_LABELS } from '../data/filterOptions';
 export type { FilterState, SortOption } from '../data/filterOptions';
 
@@ -29,6 +31,8 @@ interface FilterSortModalProps {
   onUpdateFilters: (filters: FilterState) => void;
   onResetFilters: () => void;
   matchingCount: number;
+  products?: Product[];
+  searchQuery?: string;
 }
 
 export const FilterSortModal: React.FC<FilterSortModalProps> = ({
@@ -41,6 +45,9 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
   filters,
   onUpdateFilters,
   onResetFilters,
+  matchingCount,
+  products,
+  searchQuery = '',
 }) => {
   // Temporary state for the filter modal before applying
   const [draftFilters, setDraftFilters] = React.useState<FilterState>(filters);
@@ -51,6 +58,11 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
       setDraftFilters(filters);
     }
   }, [isFilterOpen, filters]);
+
+  const draftMatchingCount = React.useMemo(() => {
+    if (!products) return matchingCount;
+    return filterAndSortSearchProducts(products, searchQuery, draftFilters, currentSort).length;
+  }, [products, searchQuery, draftFilters, currentSort, matchingCount]);
 
   const handleApply = () => {
     onUpdateFilters(draftFilters);
@@ -278,7 +290,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                       Price Range
                     </label>
                     <span className="text-[11.5px] font-bold text-[#D9232D]">
-                      {draftFilters.priceRange === 'all'
+                      {draftFilters.priceRange === 'all' || draftFilters.priceRange === 'custom'
                         ? `Up to ₹${draftFilters.maxPrice}`
                         : draftFilters.priceRange === 'under_300'
                         ? 'Under ₹300'
@@ -559,10 +571,12 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                 <button
                   type="button"
                   onClick={handleApply}
-                  className="min-h-11 flex-[2] py-3 px-4 rounded-xl bg-[#D9232D] hover:bg-red-700 text-white font-black text-[13px] shadow-sm transition-all active:scale-98 cursor-pointer text-center flex items-center justify-center gap-1.5 whitespace-nowrap"
+                  className="min-h-11 flex-[2] py-3 px-4 rounded-xl bg-[#D9232D] hover:bg-red-700 text-white font-black text-[13px] shadow-sm transition-all active:scale-98 cursor-pointer text-center flex items-center justify-center gap-1.5 whitespace-nowrap tabular-nums"
                 >
                   <Sparkles className="w-4 h-4 shrink-0" />
-                  <span>Apply Filters</span>
+                  <span>
+                    Show {draftMatchingCount} {draftMatchingCount === 1 ? 'Result' : 'Results'}
+                  </span>
                 </button>
               </div>
             </motion.div>

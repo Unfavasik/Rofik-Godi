@@ -127,7 +127,8 @@ canvas {
   .skeleton-shimmer-dark::after,
   .banner-cta-shine::after,
   .banner-ambient-pulse,
-  .wishlist-heartbeat {
+  .wishlist-heartbeat,
+  .voice-mic-pulse {
     animation: none !important;
   }
 }
@@ -153,6 +154,21 @@ canvas {
 .wishlist-heartbeat {
   animation: wishlistHeartbeat 540ms cubic-bezier(0.22, 1, 0.36, 1);
   transform-origin: center;
+}
+
+@keyframes voiceMicPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(217, 35, 45, 0.45);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(217, 35, 45, 0);
+    transform: scale(1.06);
+  }
+}
+
+.voice-mic-pulse {
+  animation: voiceMicPulse 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes bannerCtaShine {

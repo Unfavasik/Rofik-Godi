@@ -6,8 +6,11 @@ import {
   countActiveSearchFilters,
   filterAndSortSearchProducts,
   getActiveFilterChips,
+  getCatalogTrendingSearches,
   getContextualCategoryCounts,
+  getHomeSearchPromptTerms,
   getLiveSearchSuggestions,
+  getQuickVehicleBrandsWithCounts,
   scoreProductSearchMatch,
 } from './searchProducts';
 
@@ -63,4 +66,28 @@ test('getLiveSearchSuggestions returns matching recent, vehicle model, and produ
   const suggestions = getLiveSearchSuggestions('splendor', ['splendor seat cover'], PRODUCTS, 5);
   assert.equal(suggestions.length > 0, true);
   assert.equal(suggestions[0]?.kind, 'recent');
+});
+
+test('getQuickVehicleBrandsWithCounts and getCatalogTrendingSearches only return catalog-backed entries', () => {
+  const brands = getQuickVehicleBrandsWithCounts(PRODUCTS);
+  assert.equal(brands.length > 0, true);
+  assert.equal(
+    brands.every((b) => b.matchCount > 0),
+    true,
+  );
+
+  const trending = getCatalogTrendingSearches(PRODUCTS, 6);
+  assert.equal(trending.length > 0, true);
+  assert.equal(trending.length <= 6, true);
+});
+
+test('getHomeSearchPromptTerms interleaves core vehicle categories with live catalog products without duplicates', () => {
+  const prompts = getHomeSearchPromptTerms(PRODUCTS, 8);
+  assert.equal(prompts.includes('Bike Seat Cover'), true);
+  assert.equal(prompts.includes('Scooty Seat Cover'), true);
+  assert.equal(prompts.includes('Toto Seat Cover'), true);
+  assert.equal(prompts.includes('Gel Seat Cushion'), true);
+  assert.equal(prompts.includes(PRODUCTS[0]!.title), true);
+  assert.equal(new Set(prompts.map((p) => p.toLowerCase())).size, prompts.length);
+  assert.equal(prompts.length <= 8, true);
 });

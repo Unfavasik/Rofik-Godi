@@ -18,6 +18,13 @@ export const SEARCH_CATEGORY_FILTERS: Array<{ id: 'all' | VehicleCategory; label
   { id: 'accessory', label: 'Accessories' },
 ];
 
+export interface VehicleBrandSummary {
+  id: string;
+  label: string;
+  subtitle: string;
+  matchCount: number;
+}
+
 export const QUICK_VEHICLE_BRANDS: Array<{ id: string; label: string; subtitle: string }> = [
   { id: 'Hero', label: 'Hero', subtitle: 'Splendor, HF Deluxe, Glamour' },
   { id: 'Honda', label: 'Honda', subtitle: 'Shine, SP 125, Activa' },
@@ -25,8 +32,112 @@ export const QUICK_VEHICLE_BRANDS: Array<{ id: string; label: string; subtitle: 
   { id: 'Royal Enfield', label: 'Royal Enfield', subtitle: 'Classic 350, Bullet, Hunter' },
   { id: 'TVS', label: 'TVS', subtitle: 'Apache, Raider, Jupiter' },
   { id: 'Yamaha', label: 'Yamaha', subtitle: 'FZ, MT-15, RayZR' },
-  { id: 'Toto', label: 'Toto / E-Rickshaw', subtitle: 'Full driver & passenger sets' },
+  { id: 'Suzuki', label: 'Suzuki', subtitle: 'Access 125, Burgman, Gixxer' },
+  { id: 'Toto', label: 'Toto / E-Rickshaw', subtitle: 'Driver & passenger sets' },
 ];
+
+/**
+ * Returns quick vehicle brands that actually match at least 1 product in the catalog,
+ * sorted by match count descending.
+ */
+export function getQuickVehicleBrandsWithCounts(products: Product[]): VehicleBrandSummary[] {
+  return QUICK_VEHICLE_BRANDS.map((brand) => {
+    const brandQuery = brand.id.toLowerCase();
+    const matchCount = products.filter(
+      (p) =>
+        p.compatibility.some((c) => c.toLowerCase().includes(brandQuery)) ||
+        p.title.toLowerCase().includes(brandQuery) ||
+        p.category.toLowerCase().includes(brandQuery) ||
+        p.categoryLabel.toLowerCase().includes(brandQuery),
+    ).length;
+    return {
+      ...brand,
+      matchCount,
+    };
+  }).filter((brand) => brand.matchCount > 0);
+}
+
+/**
+ * Derives high-signal trending search terms backed by real products and compatible models
+ * in the catalog so clicking a trending suggestion returns real results.
+ */
+export function getCatalogTrendingSearches(products: Product[], limit = 8): string[] {
+  const candidates: string[] = [];
+  const seen = new Set<string>();
+
+  const pushUnique = (value: string | undefined) => {
+    const clean = value?.trim();
+    if (!clean || clean.length < 3) return;
+    const key = clean.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    candidates.push(clean);
+  };
+
+  for (const product of products) {
+    pushUnique(product.title);
+    if (candidates.length >= limit) return candidates.slice(0, limit);
+  }
+  for (const product of products) {
+    for (const model of product.compatibility || []) {
+      pushUnique(model);
+      if (candidates.length >= limit) return candidates.slice(0, limit);
+    }
+  }
+  for (const product of products) {
+    pushUnique(product.categoryLabel);
+    if (candidates.length >= limit) return candidates.slice(0, limit);
+  }
+
+  if (candidates.length === 0) {
+    return [
+      'Bike Seat Cover',
+      'Toto Seat Cover',
+      'Gel Seat Cushion',
+      'Waterproof Cover',
+      'Splendor Plus',
+      'Activa 6G',
+    ].slice(0, limit);
+  }
+
+  return candidates.slice(0, limit);
+}
+
+const HOME_SEARCH_STAPLE_TERMS = [
+  'Bike Seat Cover',
+  'Scooty Seat Cover',
+  'Toto Seat Cover',
+  'Gel Seat Cushion',
+];
+
+/**
+ * Builds an interleaved, deduplicated list of rotating search bar prompt examples
+ * combining core categories (bike, scooty, toto, cushion) with live catalog product names.
+ */
+export function getHomeSearchPromptTerms(products: Product[], limit = 10): string[] {
+  const seen = new Set<string>();
+  const productTerms: string[] = [];
+
+  for (const product of products) {
+    const clean = product.title?.trim();
+    if (!clean) continue;
+    const key = clean.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    productTerms.push(clean);
+  }
+
+  const stapleTerms = HOME_SEARCH_STAPLE_TERMS.filter((term) => !seen.has(term.toLowerCase()));
+  const merged: string[] = [];
+  const maxLen = Math.max(stapleTerms.length, productTerms.length);
+
+  for (let i = 0; i < maxLen && merged.length < limit; i += 1) {
+    if (i < stapleTerms.length) merged.push(stapleTerms[i]!);
+    if (merged.length < limit && i < productTerms.length) merged.push(productTerms[i]!);
+  }
+
+  return merged.length > 0 ? merged.slice(0, limit) : [...HOME_SEARCH_STAPLE_TERMS];
+}
 
 /**
  * Normalizes a text string for case-insensitive token matching.

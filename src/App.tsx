@@ -4,6 +4,7 @@
  */
 
 import React, { lazy, Suspense, useState, useMemo, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { motion, MotionConfig } from 'motion/react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
@@ -41,9 +42,10 @@ const Onboarding = lazy(() => import('./components/Onboarding'));
 const RofikOnboarding = lazy(() => import('./components/RofikOnboarding'));
 const AuthScreen = lazy(() => import('./components/AuthScreen').then((module) => ({ default: module.AuthScreen })));
 const LoginRequiredModal = lazy(() => import('./components/LoginRequiredModal').then((module) => ({ default: module.LoginRequiredModal })));
-const SearchView = lazy(() => import('./components/SearchView').then((module) => ({ default: module.SearchView })));
+import { SearchView } from './components/SearchView';
 const NotificationsView = lazy(() => import('./components/NotificationsView').then((module) => ({ default: module.NotificationsView })));
 import { ShopView } from './components/ShopView';
+import { getHomeSearchPromptTerms } from './lib/searchProducts';
 import { buildReorderCartItems, createDefaultCartItem, getCartItemUnitPrice, hasMatchingCartItem, MAX_ORDER_ITEM_QUANTITY, refreshCartFromCatalog, toggleCartItem } from './lib/cart';
 import { isOrderComplete } from './lib/orderPresentation';
 import { createMyStockAlert } from './lib/supabaseStockAlerts';
@@ -530,6 +532,7 @@ export default function App() {
   }, [location.pathname, location.search]);
 
   const [shopLayoutMode, setShopLayoutMode] = useState<'grid' | 'list'>('grid');
+  const searchOriginTabRef = useRef<'home' | 'shop'>('home');
   // Use the full responsive shell by default. The old 440px phone frame made
   // the website look squeezed on tablets and desktop browsers.
   const [isMobileFrameMode, setIsMobileFrameMode] = useState<boolean>(false);
@@ -949,6 +952,11 @@ export default function App() {
         }
       });
   }, [catalogProducts, selectedCategory, vehicleFilter, searchQuery, sortBy, homeFilters]);
+
+  const homeSearchPromptTerms = useMemo(
+    () => getHomeSearchPromptTerms(catalogProducts, 10),
+    [catalogProducts],
+  );
 
   // Quick cart actions toggle the default product configuration.
   const handleToggleDefaultCartItem = (p: Product) => {
@@ -1392,6 +1400,7 @@ export default function App() {
   const hidesBottomNavigation = isNotificationPage || isShopPage || isSupportPage;
 
   return (
+    <MotionConfig reducedMotion="user">
     <I18nProvider language={uiLanguage}>
     <div className="min-h-screen w-full overflow-x-hidden bg-[#F0F2F5] flex justify-center selection:bg-[#D9232D] selection:text-white font-sans antialiased text-[#1E232A]">
       {/* App Container (Mobile Frame or Full Width based on toggle) */}
@@ -1424,16 +1433,19 @@ export default function App() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               onOpenSearch={() => {
+                searchOriginTabRef.current = 'home';
                 setActiveTab('search');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               searchQuery={searchQuery}
               setSearchQuery={(q) => {
                 setSearchQuery(q);
                 if (q.trim()) {
+                  searchOriginTabRef.current = 'home';
                   setActiveTab('search');
                 }
               }}
+              searchPromptTerms={homeSearchPromptTerms}
+              language={uiLanguage}
               hideSearchInput={false}
               isMobileFrameMode={isMobileFrameMode}
               setIsMobileFrameMode={setIsMobileFrameMode}
@@ -1496,6 +1508,7 @@ export default function App() {
             onRetry={retryCatalog}
             onBack={() => setActiveTab('home')}
             onSearch={(value) => {
+              searchOriginTabRef.current = 'shop';
               setSearchQuery(value);
               setActiveTab('search');
             }}
@@ -1511,7 +1524,12 @@ export default function App() {
             onOpenFilter={() => setIsHomeFilterOpen(true)}
           />
         ) : activeTab === 'search' ? (
-          <main className="flex-1 flex flex-col">
+          <motion.main
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+            className="flex-1 flex flex-col"
+          >
             <SearchView
               products={catalogProducts}
               isCatalogLoading={catalogLoading}
@@ -1526,15 +1544,16 @@ export default function App() {
               onOpenCart={handleOpenCart}
               wishlist={wishlist}
               onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
+              language={uiLanguage}
               onBackToHome={() => {
-                setActiveTab('home');
+                const returnTab = searchOriginTabRef.current;
+                setActiveTab(returnTab);
                 if (location.pathname === '/search') {
-                  navigate('/');
+                  navigate(returnTab === 'shop' ? '/shop' : '/home');
                 }
-                window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
             />
-          </main>
+          </motion.main>
         ) : activeTab === 'account' ? (
           <main className="flex-1 flex flex-col">
           <AccountView
@@ -2300,5 +2319,6 @@ export default function App() {
       </div>
     </div>
     </I18nProvider>
+    </MotionConfig>
   );
 }

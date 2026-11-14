@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { CatalogStatus } from '../src/components/CatalogStatus';
 import { ProductCard } from '../src/components/ProductCard';
 import { ShopView } from '../src/components/ShopView';
+import { SearchView } from '../src/components/SearchView';
+import { Header } from '../src/components/Header';
 import { PRODUCTS } from '../src/data/products';
 import type { Product } from '../src/types';
 
@@ -165,5 +167,87 @@ describe('catalog feedback', () => {
     expect(html).toContain('aspect-square');
     expect(html).not.toContain('h-[112px]');
     expect(html).not.toContain('h-[132px]');
+  });
+
+  it('renders SearchView discovery state, hides zero-count category tabs, and recovers gracefully on zero matches', () => {
+    const bikeOnly = { ...sampleProduct, id: 'bike-1', category: 'bike' as const, title: 'Apex Grid Bike Cover' };
+    const discoveryHtml = renderToStaticMarkup(
+      <SearchView
+        products={[bikeOnly]}
+        isCatalogLoading={false}
+        catalogError={null}
+        onRetryCatalog={() => {}}
+        searchQuery=""
+        setSearchQuery={() => {}}
+        onSelectProduct={() => {}}
+        onQuickAddToCart={() => {}}
+        isQuickAddInCart={() => false}
+        onOpenCart={() => {}}
+        wishlist={[]}
+        onToggleWishlist={() => {}}
+        onBackToHome={() => {}}
+      />,
+    );
+    expect(discoveryHtml).toContain('Recent Searches');
+    expect(discoveryHtml).toContain('Popular Searches');
+    expect(discoveryHtml).toContain('Popular Seat Covers &amp; Cushions');
+    expect(discoveryHtml).toContain('All');
+    expect(discoveryHtml).toContain('Bike');
+    expect(discoveryHtml).toContain('aria-label="Start voice search"');
+    expect(discoveryHtml).not.toContain('Toto</span><span');
+
+    const emptyMatchHtml = renderToStaticMarkup(
+      <SearchView
+        products={[bikeOnly]}
+        isCatalogLoading={false}
+        catalogError={null}
+        onRetryCatalog={() => {}}
+        searchQuery="zzzzunknown999"
+        setSearchQuery={() => {}}
+        onSelectProduct={() => {}}
+        onQuickAddToCart={() => {}}
+        isQuickAddInCart={() => false}
+        onOpenCart={() => {}}
+        wishlist={[]}
+        onToggleWishlist={() => {}}
+        onBackToHome={() => {}}
+      />,
+    );
+    expect(emptyMatchHtml).toContain('No exact matches found');
+    expect(emptyMatchHtml).toContain('Reset Search &amp; Filters');
+    expect(emptyMatchHtml).toContain('Popular Seat Covers You Might Like');
+  });
+
+  it('renders Header with a rotating product prompt search trigger, voice mic button, and independent clear button', () => {
+    const idleHeader = renderToStaticMarkup(
+      <Header
+        cartCount={1}
+        onOpenCart={() => {}}
+        onOpenSearch={() => {}}
+        searchQuery=""
+        setSearchQuery={() => {}}
+        searchPromptTerms={['Bike Seat Cover', 'Apex Grid Dual-Tone', 'Scooty Seat Cover']}
+      />,
+    );
+    expect(idleHeader).toContain('Search products, try Bike Seat Cover');
+    expect(idleHeader).toContain('Search');
+    expect(idleHeader).toContain('Bike Seat Cover');
+    expect(idleHeader).toContain('aria-label="Start voice search"');
+    expect(idleHeader).toContain('aria-pressed="false"');
+    expect(idleHeader).not.toContain('aria-label="Clear search"');
+
+    const activeHeader = renderToStaticMarkup(
+      <Header
+        cartCount={1}
+        onOpenCart={() => {}}
+        onOpenSearch={() => {}}
+        searchQuery="Splendor"
+        setSearchQuery={() => {}}
+        searchPromptTerms={['Bike Seat Cover']}
+      />,
+    );
+    expect(activeHeader).toContain('Search products, current query Splendor');
+    expect(activeHeader).toContain('aria-label="Clear search"');
+    expect(activeHeader).toContain('aria-label="Start voice search"');
   });
 });
