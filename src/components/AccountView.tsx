@@ -153,6 +153,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
   initialSupportOrderId,
   onProfileChange,
   onBuyAgain,
+  products = [],
   pwaInstallCard,
 }) => {
   const { t } = useI18n();
@@ -1464,6 +1465,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
         {activeModal === 'orders' && (
           <CustomerOrdersModal
             orders={customerOrders}
+            products={products}
             reviews={myReviews}
             loading={ordersLoading}
             error={ordersError}

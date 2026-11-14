@@ -45,6 +45,7 @@ import { deriveProductImages, seedLegacyColorImages } from '../lib/productImages
 import { notifyCatalogChanged } from '../lib/localCache';
 import { autofillProductDetailsFromImage } from '../lib/productImageAutofill';
 import { BottomSheet } from './BottomSheet';
+import { AdminGuaranteePolicyCard } from './AdminGuaranteePolicyCard';
 const clearCatalogCache = () => {
   localStorage.removeItem('rofik-godi:public-catalog:v2');
   notifyCatalogChanged();
@@ -519,6 +520,9 @@ export const AdminProductManager: React.FC<{
         </button>
       </div>
       <AdminConnectionPanel notify={notify} />
+      <div className="mb-5">
+        <AdminGuaranteePolicyCard notify={notify} compact />
+      </div>
       {loadState === 'ready' && products.length > 1 && (
         <ProductOrderList products={filtered} saving={savingOrder} onMove={moveProduct} />
       )}
@@ -1192,6 +1196,16 @@ const ProductEditor: React.FC<{
                       event.target.value === '' ? null : Math.max(0, Number(event.target.value)),
                     )
                   }
+                />
+              </Field>
+              <Field
+                label="Product guarantee expiry date (optional)"
+                hint="Leave blank to follow the All-Products Guarantee Date."
+              >
+                <Input
+                  type="date"
+                  value={form.guaranteeValidUntil || ''}
+                  onChange={(event) => set('guaranteeValidUntil', event.target.value || null)}
                 />
               </Field>
               <div className="block min-w-0">

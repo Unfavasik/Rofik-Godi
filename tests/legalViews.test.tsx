@@ -146,6 +146,10 @@ describe('Privacy Policy & Terms & Conditions content and UI/UX upgrade', () => 
     expect(termsSrc).toContain('Murshidabad, West Bengal');
     expect(termsSrc).toContain('3–5 working banking days');
     expect(termsSrc).toContain('up to 12 characters');
+    expect(termsSrc).toContain('rexine/leatherette surface peeling');
+    expect(termsSrc).toContain('cat or animal claw scratches');
+    expect(termsSrc).toContain('blade or knife cuts');
+    expect(termsSrc).toContain('fire or burn marks');
 
     // Layout accessibility, persistent sticky Quick Jump, & smooth scroll checks
     expect(layoutSrc).toContain('Collapse all');

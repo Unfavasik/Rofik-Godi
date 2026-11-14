@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { PRODUCTS } from '../data/products';
 import { loadPublicProducts } from '../lib/supabaseProducts';
+import { fetchPublicProductGuaranteePolicy } from '../lib/productGuarantee';
 import { CATALOG_CHANGED_EVENT, readPublicCatalogCache, writePublicCatalogCache } from '../lib/localCache';
 import { supabase } from '../lib/supabase';
 import type { Product } from '../types';
@@ -23,6 +24,7 @@ export function useCatalog(pathname = '/') {
     if (throttled) lastThrottledRefreshRef.current = now;
     const requestId = ++requestIdRef.current;
     setIsLoading(false);
+    void fetchPublicProductGuaranteePolicy();
     void loadPublicProducts().then((loadedProducts) => {
       if (requestId !== requestIdRef.current) return;
       setProducts(loadedProducts); productsRef.current = loadedProducts; writePublicCatalogCache(loadedProducts); setError(null);

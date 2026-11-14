@@ -39,6 +39,7 @@ import {
   resolveStitchPatternSelection,
 } from '../lib/cart';
 import { getProductAvailability, isProductSellable } from '../lib/productAvailability';
+import { resolveProductGuarantee, useProductGuaranteePolicy } from '../lib/productGuarantee';
 import { ProductReviews } from './ProductReviews';
 import { BottomSheet } from './BottomSheet';
 import { getColorDetails } from '../lib/productColors';
@@ -328,6 +329,14 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   const totalPrice = unitPrice * quantity;
   const availability = getProductAvailability(product);
   const sellable = isProductSellable(product);
+  const guaranteePolicy = useProductGuaranteePolicy();
+  const guaranteeInfo = useMemo(
+    () =>
+      resolveProductGuarantee(guaranteePolicy, {
+        productOverrideDate: product.guaranteeValidUntil,
+      }),
+    [guaranteePolicy, product.guaranteeValidUntil],
+  );
 
   const handleNotifyMe = async (target: Product) => {
     if (notifyRequestLock.current || !onNotifyMe) return;
@@ -1311,6 +1320,12 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                         ['Suitable For', details.compatibility.join(', ')],
                         ['Package Includes', details.packageIncludes.join(', ')],
                         ['Installation', details.installation],
+                        [
+                          'Guarantee',
+                          guaranteeInfo.enabled
+                            ? `Valid until ${guaranteeInfo.validUntilLabel} (Normal-use replacement)`
+                            : '',
+                        ],
                       ] as const
                     )
                       .filter(([, value]) => value.trim().length > 0)
@@ -1352,6 +1367,15 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                       '7-Day Defect Replacement',
                       'Unused standard covers with stitching issues replaced hassle-free',
                     ],
+                    ...(guaranteeInfo.enabled
+                      ? [
+                          [
+                            ShieldCheck,
+                            `Product Replacement Guarantee (${guaranteeInfo.validUntilLabel})`,
+                            `Valid until ${guaranteeInfo.validUntilLabel}: natural splitting, seam tearing or rexine peeling under normal use is replaced. Cat/animal scratches, blade cuts, fire burns & intentional damage are excluded.`,
+                          ] as const,
+                        ]
+                      : []),
                     [
                       ShieldCheck,
                       'Razorpay Online or Pay at Workshop',

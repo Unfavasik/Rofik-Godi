@@ -44,11 +44,13 @@ import { AdminVehicleModelEdit } from './AdminVehicleModelEdit';
 import { CouponManagement } from './CouponManagement';
 import { AdminReviewsView } from './AdminReviewsView';
 import { InvoiceTemplate } from './InvoiceTemplate';
+import { AdminGuaranteePolicyCard } from './AdminGuaranteePolicyCard';
 import { AdminOrderDetails } from './AdminOrderDetails';
 import { PickupVerification } from './PickupVerification';
 import { BannersView, NotificationsView, ReportsView } from './AdminSections';
 import { AdminCategoriesManager } from './AdminCategoriesManager';
 import { AdminCustomerProfile } from './AdminCustomerProfile';
+import { AdminCustomerAvatar } from './AdminCustomerAvatar';
 import {
   loadAdminOrderById,
   loadAdminOrders,
@@ -1246,6 +1248,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
         <div className="fixed inset-0 z-[60] overflow-y-auto overflow-x-hidden">
           <InvoiceTemplate
             order={toCustomerOrderRecord(invoiceOrder)}
+            products={products}
             onClose={() => setInvoiceOrder(null)}
           />
         </div>
@@ -1601,9 +1604,13 @@ function Overview({
                 className="group flex w-full min-w-0 items-center justify-between gap-3 rounded-2xl px-2.5 py-3 text-left transition hover:bg-slate-50/90"
               >
                 <span className="flex min-w-0 items-center gap-3">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-slate-100 font-mono text-[11px] font-black text-slate-700 group-hover:bg-red-50 group-hover:text-[#D9232D]">
-                    {order.initials || 'RG'}
-                  </span>
+                  <AdminCustomerAvatar
+                    name={order.customer}
+                    initials={order.initials || 'RG'}
+                    avatarUrl={order.customerAvatarUrl}
+                    className="h-9 w-9 rounded-xl bg-slate-100 text-slate-700 ring-1 ring-slate-200/70 group-hover:bg-red-50 group-hover:text-[#D9232D]"
+                    textClassName="font-mono text-[11px] font-black"
+                  />
                   <span className="min-w-0">
                     <b className="block truncate text-xs font-extrabold text-slate-900">
                       <span className="font-mono">{order.id}</span> · {order.customer}
@@ -1949,9 +1956,13 @@ function OrdersView({
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 font-mono text-xs font-black text-white shadow-2xs">
-                    {order.initials || 'RG'}
-                  </span>
+                  <AdminCustomerAvatar
+                    name={order.customer}
+                    initials={order.initials || 'RG'}
+                    avatarUrl={order.customerAvatarUrl}
+                    className="h-11 w-11 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 text-white shadow-2xs ring-1 ring-slate-200/80"
+                    textClassName="font-mono text-xs font-black"
+                  />
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <b className="font-mono text-[13px] font-black text-[#0F172A]">{order.id}</b>
@@ -2444,6 +2455,9 @@ function SettingsAdmin({
           </button>
         }
       />
+      <div className="mb-5">
+        <AdminGuaranteePolicyCard notify={notify} />
+      </div>
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
         <section className="min-w-0 rounded-3xl border border-slate-200/85 bg-white p-5 shadow-2xs sm:p-6">
           <div className="flex items-center gap-3">

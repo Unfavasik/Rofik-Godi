@@ -188,6 +188,10 @@ export const TermsConditionsView: React.FC<TermsConditionsViewProps> = ({
           label: 'Personalized Items & Refund Processing',
           text: 'Custom name-embroidered items cannot be returned unless there is a verifiable workshop manufacturing defect. Approved refunds for Razorpay online payments are returned to the original payment source within 3–5 working banking days.',
         },
+        {
+          label: 'Product Replacement Guarantee (Normal Use)',
+          text: 'Every product carries an active workshop guarantee valid until the guarantee expiry date set by Rofik Godi Centre on your invoice. If natural splitting, seam tearing, or rexine/leatherette surface peeling occurs during normal everyday use before that guarantee date, the item qualifies for replacement.',
+        },
       ],
     },
     {
@@ -246,8 +250,8 @@ export const TermsConditionsView: React.FC<TermsConditionsViewProps> = ({
           text: 'While we keep catalog pricing, material stock, and pickup queues updated in real time, occasional raw-material shortages or maintenance windows may affect preparation timing.',
         },
         {
-          label: 'Care & Normal Wear',
-          text: 'Normal fading from prolonged sun exposure, sharp-object tears, or improper DIY stapling are not covered as manufacturing defects. Contact the workshop for care recommendations.',
+          label: 'Care, Exclusions & Intentional Damage',
+          text: 'Guarantee claims do not cover external, accidental, or self-inflicted damage—including cat or animal claw scratches, blade or knife cuts, fire or burn marks, chemical damage, improper DIY stapling, or intentional misuse. Normal fading from prolonged sun exposure is also excluded.',
         },
         {
           label: 'Maximum Liability Cap',

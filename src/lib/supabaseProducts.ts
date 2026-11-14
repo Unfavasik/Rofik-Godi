@@ -152,6 +152,10 @@ export const mapSupabaseProduct = (row: ProductRow): Product => {
         : [{ label: 'Standard', extraPrice: 0 }],
     badge: row.badge ? String(row.badge) : bundled?.badge,
     badgeColor: (row.badge_color || bundled?.badgeColor) as Product['badgeColor'] | undefined,
+    guaranteeValidUntil:
+      typeof row.guarantee_valid_until === 'string' && row.guarantee_valid_until.trim()
+        ? row.guarantee_valid_until.trim()
+        : null,
   };
 };
 const mapProductsWithReviewSummaries = async (rows: ProductRow[]): Promise<Product[]> => {
@@ -254,6 +258,7 @@ const toRow = (product: Product) => {
     in_stock: Boolean(product.inStock),
     stock_quantity: product.stockQuantity ?? null,
     low_stock_threshold: product.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD,
+    guarantee_valid_until: product.guaranteeValidUntil || null,
     is_active: true,
     display_order: product.displayOrder ?? 0,
   };
@@ -268,9 +273,9 @@ export const reorderSupabaseProducts = async (productIds: string[]) => {
   return { error };
 };
 
-// Columns added by migration 20261107120000; older databases without them are
+// Columns added by later migrations; older databases without them are
 // detected via the 42703 "undefined column" error and retried without them.
-const SPEC_COLUMNS = ['package_includes', 'installation'] as const;
+const SPEC_COLUMNS = ['package_includes', 'installation', 'guarantee_valid_until'] as const;
 
 export const upsertSupabaseProduct = async (product: Product) => {
   if (!supabase) return { product, synced: false, error: null };

@@ -11,6 +11,7 @@ export type AdminOrderRecord = {
   userId: string;
   orderNumber: string;
   customer: string;
+  customerAvatarUrl?: string | null;
   phone: string;
   initials: string;
   product: string;
@@ -162,9 +163,37 @@ export async function loadAdminOrders(orderId?: string, matchOrderNumber = false
   const { data, error } = response;
   if (error) return { data: [], error };
   if (!data) return { data: [], error: new Error('No order data returned') };
+
+  const avatarByUserId = new Map<string, string>();
+  const userIds = Array.from(
+    new Set(
+      data
+        .map((row) => String(row.user_id || '').trim())
+        .filter(Boolean),
+    ),
+  );
+  if (userIds.length) {
+    try {
+      const { data: profileRows } = await supabase
+        .from('profiles')
+        .select('id,avatar_url')
+        .in('id', userIds);
+      if (Array.isArray(profileRows)) {
+        profileRows.forEach((profile) => {
+          const id = String((profile as { id?: unknown }).id || '').trim();
+          const avatarUrl = String((profile as { avatar_url?: unknown }).avatar_url || '').trim();
+          if (id && avatarUrl) avatarByUserId.set(id, avatarUrl);
+        });
+      }
+    } catch {
+      // Avatar hydration is best-effort; orders fall back cleanly to customer initials.
+    }
+  }
+
   return {
     data: data.map((row) => {
       const customer = String(row.customer_name || 'Customer');
+      const rowUserId = String(row.user_id || '').trim();
       const items = Array.isArray(row.order_items)
         ? (row.order_items as Array<{
             product_id?: string | null;
@@ -203,6 +232,7 @@ export async function loadAdminOrders(orderId?: string, matchOrderNumber = false
         userId: String(row.user_id || ''),
         orderNumber: String(row.order_number),
         customer,
+        customerAvatarUrl: rowUserId ? avatarByUserId.get(rowUserId) || null : null,
         phone: String(row.customer_phone || ''),
         initials: customer
           .split(' ')

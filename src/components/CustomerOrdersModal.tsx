@@ -21,7 +21,7 @@ import {
   Truck,
   X,
 } from 'lucide-react';
-import type { CustomerOrderRecord } from '../types';
+import type { CustomerOrderRecord, Product } from '../types';
 import { WORKSHOP_INFO } from '../data/products';
 import type { ProductReviewRecord } from '../lib/supabaseReviews';
 import { canCancelCustomerOrder, getCustomerOrderTimeline, getOrderPreviewItems, isOrderComplete } from '../lib/orderPresentation';
@@ -35,6 +35,7 @@ import type { PreferredLanguage } from '../lib/customerPreferences';
 
 interface CustomerOrdersModalProps {
   orders: CustomerOrderRecord[];
+  products?: Product[];
   reviews: ProductReviewRecord[];
   loading: boolean;
   error?: string;
@@ -153,7 +154,7 @@ const OrderTimeline = ({ orderId, status, createdAt }: { orderId: string; status
   );
 };
 
-export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders, reviews, loading, error, customerName, currentUserId, initialOrderSlug, onInitialOrderOpened, onSelectOrderRoute, onBackToOrdersRoute, onClose, onRefresh, onNeedHelp, onReview, onBuyAgain }) => {
+export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders, products = [], reviews, loading, error, customerName, currentUserId, initialOrderSlug, onInitialOrderOpened, onSelectOrderRoute, onBackToOrdersRoute, onClose, onRefresh, onNeedHelp, onReview, onBuyAgain }) => {
   const { t } = useI18n();
   const [filter, setFilter] = useState<OrderFilter>('all');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -323,7 +324,7 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
     </div>
     {invoiceOrder && (
       <div className="fixed inset-0 z-[80] overflow-y-auto bg-slate-200">
-        <InvoiceTemplate order={invoiceOrder} onClose={() => setInvoiceOrder(null)} />
+        <InvoiceTemplate order={invoiceOrder} products={products} onClose={() => setInvoiceOrder(null)} />
       </div>
     )}
     </>

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import type { Product } from '../types';
 import { InvoiceTemplate } from './InvoiceTemplate';
+import { AdminCustomerAvatar } from './AdminCustomerAvatar';
 import {
   completePickupOrderManually,
   getAdminOrderTimelineEvents,
@@ -233,7 +234,7 @@ export function AdminOrderDetails({
         </section>
       )}
       <section aria-label="Order information" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <InformationCard icon={UserRound} label="Customer" value={order.customer || '—'} />
+        <CustomerInformationCard order={order} />
         <InformationCard icon={Phone} label="Phone" value={order.phone || '—'} />
         <VehicleInformationCard order={order} />
         <InformationCard icon={Store} label="Pickup store" value={order.pickupStore || '—'} />
@@ -430,7 +431,11 @@ export function AdminOrderDetails({
 
       {showInvoice && (
         <div className="fixed inset-0 z-[80] overflow-y-auto bg-slate-200">
-          <InvoiceTemplate order={toCustomerOrderRecord(order)} onClose={() => setShowInvoice(false)} />
+          <InvoiceTemplate
+            order={toCustomerOrderRecord(order)}
+            products={products}
+            onClose={() => setShowInvoice(false)}
+          />
         </div>
       )}
     </>
@@ -464,6 +469,29 @@ function InformationCard({ icon: Icon, label, value, strong = false }: { icon: R
     <article className="min-w-0 rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4">
       <div className="flex items-center gap-2 text-slate-400"><Icon className="h-3.5 w-3.5 shrink-0" /><p className="text-[10px] font-bold uppercase tracking-[0.08em]">{label}</p></div>
       <p className={`mt-2 break-words text-xs leading-snug ${strong ? 'text-base font-black text-[#0F172A]' : 'font-bold text-slate-800'}`}>{value}</p>
+    </article>
+  );
+}
+
+function CustomerInformationCard({ order }: { order: AdminOrderRecord }) {
+  return (
+    <article className="min-w-0 rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4">
+      <div className="flex items-center gap-2 text-slate-400">
+        <UserRound className="h-3.5 w-3.5 shrink-0" />
+        <p className="text-[10px] font-bold uppercase tracking-[0.08em]">Customer</p>
+      </div>
+      <div className="mt-2 flex items-center gap-3">
+        <AdminCustomerAvatar
+          name={order.customer || 'Customer'}
+          initials={order.initials || 'RG'}
+          avatarUrl={order.customerAvatarUrl}
+          className="h-10 w-10 rounded-xl bg-gradient-to-br from-slate-900 to-slate-700 text-white shadow-2xs ring-1 ring-slate-200/80"
+          textClassName="font-mono text-[11px] font-black"
+        />
+        <p className="min-w-0 break-words text-xs font-bold leading-snug text-slate-800">
+          {order.customer || '—'}
+        </p>
+      </div>
     </article>
   );
 }

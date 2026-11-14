@@ -66,4 +66,17 @@ describe('admin order details drawer', () => {
     expect(renderDetails({ ...order, paymentStatus: 'PENDING' })).toContain('Verify Payment');
     expect(renderDetails(order)).not.toContain('Verify Payment');
   });
+
+  it('renders the customer profile avatar image when present and initials fallback otherwise', () => {
+    const withAvatar = renderDetails({
+      ...order,
+      customerAvatarUrl: 'https://cdn.example.com/avatars/user-1.jpg',
+    });
+    expect(withAvatar).toContain('https://cdn.example.com/avatars/user-1.jpg');
+    expect(withAvatar).toContain(`${order.customer} avatar`);
+
+    const withoutAvatar = renderDetails(order);
+    expect(withoutAvatar).not.toContain('<img src="https://cdn.example.com/avatars/user-1.jpg"');
+    expect(withoutAvatar).toContain(order.initials);
+  });
 });

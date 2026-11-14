@@ -77,10 +77,13 @@ describe('product availability awareness and product detail page UI/UX', () => {
     expect(html).toContain('Increase quantity');
   });
 
-  it('displays accurate workshop pickup and Razorpay/counter trust guarantees without delivery claims', () => {
+  it('displays accurate workshop pickup, replacement guarantee exclusions, and Razorpay/counter trust guarantees without delivery claims', () => {
     const html = renderDetails(PRODUCTS[0]!);
     expect(html).toContain('Workshop Pickup &amp; Free Fitment');
     expect(html).toContain('7-Day Defect Replacement');
+    expect(html).toContain('Product Replacement Guarantee');
+    expect(html).toContain('natural splitting, seam tearing or rexine peeling under normal use');
+    expect(html).toContain('Cat/animal scratches, blade cuts, fire burns &amp; intentional damage are excluded');
     expect(html).toContain('Razorpay Online or Pay at Workshop');
     expect(html).not.toContain('Free Delivery');
   });

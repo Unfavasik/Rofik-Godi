@@ -245,8 +245,8 @@ export const SearchView: React.FC<SearchViewProps> = ({
           <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={onBackToHome}
-              aria-label="Back to Home"
-              title="Back to Home"
+              aria-label="Go back"
+              title="Go back"
               type="button"
               className="min-h-11 min-w-11 rounded-full border border-slate-200/80 bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-800 transition-colors active:scale-95 shrink-0 cursor-pointer"
             >

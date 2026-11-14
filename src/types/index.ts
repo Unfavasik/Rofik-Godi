@@ -38,6 +38,7 @@ export interface Product {
   packageIncludes?: string[];
   installation?: string;
   thicknessOptions: { label: string; extraPrice: number }[];
+  guaranteeValidUntil?: string | null;
 }
 
 export interface CartItem {

@@ -539,6 +539,7 @@ export default function App() {
 
   const [shopLayoutMode, setShopLayoutMode] = useState<'grid' | 'list'>('grid');
   const searchOriginTabRef = useRef<'home' | 'shop'>('home');
+  const searchOriginPathRef = useRef<string | null>(null);
   // Use the full responsive shell by default. The old 440px phone frame made
   // the website look squeezed on tablets and desktop browsers.
   const [isMobileFrameMode, setIsMobileFrameMode] = useState<boolean>(false);
@@ -665,7 +666,8 @@ export default function App() {
     if (appPhase !== 'main' || authStatus === 'AUTH_LOADING') return;
     const route = resolveAppRoute(location.pathname);
     const publicInfoPath = route.kind === 'privacy' || route.kind === 'terms' || route.kind === 'store' || route.kind === 'store-navigation' || route.kind === 'personal-data';
-    if (authStatus === 'UNAUTHENTICATED' && !publicInfoPath) return;
+    if (authStatus === 'UNAUTHENTICATED' && !guestWelcomeComplete && !publicInfoPath) return;
+    if (authStatus === 'UNAUTHENTICATED' && requiresCustomerAuthentication(location.pathname)) return;
     if (route.kind === 'not-found') {
       navigate('/home', { replace: true });
       return;
@@ -701,7 +703,7 @@ export default function App() {
     // Wait for the live catalog before giving up: a just-listed product is not in
     // the cached/bundled catalog yet, so only redirect once the fetch has finished.
     else if (catalogFresh) navigate('/shop', { replace: true });
-  }, [appPhase, authStatus, catalogLoaded, catalogFresh, catalogProducts, location.pathname, location.search, location.state, navigate]);
+  }, [appPhase, authStatus, guestWelcomeComplete, catalogLoaded, catalogFresh, catalogProducts, location.pathname, location.search, location.state, navigate]);
 
   useEffect(() => {
     if (!couponRouteCode) return;
@@ -740,7 +742,15 @@ export default function App() {
     const routeState = location.state as { returnTo?: unknown } | null;
     const returnTo = typeof routeState?.returnTo === 'string' ? routeState.returnTo : '/shop';
     const returnRoute = resolveAppRoute(returnTo);
-    navigate(returnRoute.kind === 'not-found' ? '/shop' : returnRoute.canonicalPath);
+    if (returnRoute.kind === 'not-found') {
+      navigate('/shop');
+      return;
+    }
+    if (returnRoute.canonicalPath === '/search' && searchOriginPathRef.current) {
+      navigate('/search', { state: { returnTo: searchOriginPathRef.current } });
+      return;
+    }
+    navigate(returnRoute.canonicalPath);
   }, [location.pathname, location.state, navigate]);
   const openPageRoute = useCallback((path: string) => {
     navigate(path, { state: { returnTo: location.pathname } });
@@ -1440,6 +1450,7 @@ export default function App() {
               }}
               onOpenSearch={() => {
                 searchOriginTabRef.current = 'home';
+                searchOriginPathRef.current = null;
                 setActiveTab('search');
               }}
               searchQuery={searchQuery}
@@ -1447,6 +1458,7 @@ export default function App() {
                 setSearchQuery(q);
                 if (q.trim()) {
                   searchOriginTabRef.current = 'home';
+                  searchOriginPathRef.current = null;
                   setActiveTab('search');
                 }
               }}
@@ -1515,6 +1527,7 @@ export default function App() {
             onBack={() => setActiveTab('home')}
             onSearch={(value) => {
               searchOriginTabRef.current = 'shop';
+              searchOriginPathRef.current = null;
               setSearchQuery(value);
               setActiveTab('search');
             }}
@@ -1552,6 +1565,33 @@ export default function App() {
               onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
               language={uiLanguage}
               onBackToHome={() => {
+                const routeState = location.state as {
+                  returnTo?: unknown;
+                  fromProductSearch?: unknown;
+                } | null;
+                const stateReturnTo =
+                  typeof routeState?.returnTo === 'string' && routeState.returnTo.startsWith('/')
+                    ? routeState.returnTo
+                    : null;
+                const candidateReturnTo = stateReturnTo || searchOriginPathRef.current;
+                searchOriginPathRef.current = null;
+                if (candidateReturnTo && candidateReturnTo !== '/search') {
+                  const targetRoute = resolveAppRoute(candidateReturnTo.split('?')[0]);
+                  if (targetRoute.kind !== 'not-found') {
+                    const routerState = window.history.state as { idx?: unknown } | null;
+                    if (
+                      routeState?.fromProductSearch === true &&
+                      stateReturnTo === candidateReturnTo &&
+                      typeof routerState?.idx === 'number' &&
+                      routerState.idx > 0
+                    ) {
+                      navigate(-1);
+                    } else {
+                      navigate(candidateReturnTo);
+                    }
+                    return;
+                  }
+                }
                 const returnTab = searchOriginTabRef.current;
                 setActiveTab(returnTab);
                 if (location.pathname === '/search') {
@@ -2078,6 +2118,7 @@ export default function App() {
                 setActiveTab('shop');
               }}
               onOpenSearch={() => {
+                searchOriginPathRef.current = null;
                 setActiveTab('search');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
@@ -2102,9 +2143,11 @@ export default function App() {
           cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
           onOpenCart={handleOpenCart}
           onOpenSearch={() => {
+            const returnToPath = `${location.pathname}${location.search}`;
+            searchOriginPathRef.current = returnToPath;
             setSelectedProduct(null);
             setActiveTab('search');
-            navigate('/search');
+            navigate('/search', { state: { returnTo: returnToPath, fromProductSearch: true } });
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           onBuyNow={handleDetailBuyNow}
