@@ -524,6 +524,7 @@ export const OrderDetails = ({ order: sourceOrder, products = [], customerName, 
 
       {guaranteeTarget && (
         <GuaranteeTerms
+          variant="compact"
           productId={guaranteeTarget.productId}
           productSlug={guaranteeTarget.productSlug}
           guaranteeDate={guaranteeTarget.guaranteeDate}

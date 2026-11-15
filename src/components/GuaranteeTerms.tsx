@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Calendar, CheckCircle2, ShieldAlert, ShieldCheck, XCircle } from 'lucide-react';
+import { Calendar, CheckCircle2, ChevronDown, ShieldAlert, ShieldCheck, XCircle } from 'lucide-react';
 import {
   fetchProductGuaranteeDateFromDb,
   getLocalProductGuaranteeDate,
@@ -12,6 +12,7 @@ export interface GuaranteeTermsProps {
   productId?: string | null;
   productSlug?: string | null;
   guaranteeDate?: string | null;
+  variant?: 'default' | 'compact';
   className?: string;
 }
 
@@ -32,12 +33,14 @@ export const GuaranteeTerms: React.FC<GuaranteeTermsProps> = ({
   productId,
   productSlug,
   guaranteeDate,
+  variant = 'default',
   className = '',
 }) => {
   const propDate = normalizeGuaranteeDate(guaranteeDate);
   const [fetchedDate, setFetchedDate] = useState<string | null | undefined>(() =>
     getLocalProductGuaranteeDate(productId, productSlug),
   );
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     setFetchedDate(getLocalProductGuaranteeDate(productId, productSlug));
@@ -81,6 +84,108 @@ export const GuaranteeTerms: React.FC<GuaranteeTermsProps> = ({
 
   if (!guarantee) {
     return null;
+  }
+
+  if (variant === 'compact') {
+    return (
+      <section
+        aria-label="Product replacement guarantee terms"
+        data-testid="product-guarantee-terms"
+        data-variant="compact"
+        className={`overflow-hidden rounded-[20px] border border-emerald-200/85 bg-gradient-to-r from-emerald-50/70 via-white to-slate-50/80 px-3.5 py-3 shadow-2xs ${className}`}
+      >
+        <div className="flex items-center justify-between gap-2.5">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-emerald-600 text-white shadow-2xs">
+              <ShieldCheck className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                <h3 className="text-[12px] font-black tracking-tight text-slate-900">
+                  Official Product Guarantee
+                </h3>
+                <span aria-hidden="true" className="text-slate-300">
+                  ·
+                </span>
+                <span
+                  className={`text-[10px] font-extrabold ${
+                    guarantee.isActive ? 'text-emerald-700' : 'text-slate-500'
+                  }`}
+                >
+                  {guarantee.isActive ? 'Active' : 'Expired'}
+                </span>
+              </div>
+              <p className="mt-0.5 text-[11px] font-semibold text-slate-600 tabular-nums">
+                Valid until{' '}
+                <strong className="font-extrabold text-emerald-800">
+                  {guarantee.validUntilLabel}
+                </strong>
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            data-testid="guarantee-terms-toggle"
+            onClick={() => setExpanded((prev) => !prev)}
+            aria-expanded={expanded}
+            className="inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border border-emerald-200/90 bg-white px-2.5 text-[10px] font-extrabold text-emerald-800 transition hover:bg-emerald-50 active:scale-95"
+          >
+            <span>{expanded ? 'Hide' : 'Terms'}</span>
+            <ChevronDown
+              className={`h-3 w-3 transition-transform ${expanded ? 'rotate-180' : ''}`}
+            />
+          </button>
+        </div>
+
+        <p className="mt-2 border-t border-emerald-100/90 pt-2 text-[10.5px] leading-snug text-slate-600">
+          <strong className="font-bold text-emerald-800">Covered:</strong> Natural cracking, seam
+          tearing &amp; rexine peeling under normal use ·{' '}
+          <strong className="font-bold text-[#D9232D]">Void:</strong> Cat scratches, bilet/blade
+          cuts, fire &amp; self-damage.
+        </p>
+
+        {expanded && (
+          <div className="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div className="rounded-xl border border-emerald-200/75 bg-white/95 p-2.5">
+              <p className="flex items-center gap-1.5 text-[10.5px] font-extrabold text-emerald-800">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                <span>Covered (Normal Use)</span>
+              </p>
+              <ul className="mt-1.5 space-y-1 text-[10px] leading-snug text-slate-600">
+                {COVERED_DEFECTS.map((item) => (
+                  <li key={item} className="flex items-start gap-1.5">
+                    <span
+                      aria-hidden="true"
+                      className="mt-1 h-1 w-1 shrink-0 rounded-full bg-emerald-500"
+                    />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-xl border border-rose-200/75 bg-white/95 p-2.5">
+              <p className="flex items-center gap-1.5 text-[10.5px] font-extrabold text-rose-800">
+                <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-[#D9232D]" />
+                <span>Guarantee Void (Not Covered)</span>
+              </p>
+              <ul className="mt-1.5 space-y-1 text-[10px] leading-snug text-slate-600">
+                {VOID_EXCLUSIONS.map((item) => (
+                  <li key={item} className="flex items-start gap-1.5">
+                    <XCircle
+                      aria-hidden="true"
+                      className="mt-0.5 h-3 w-3 shrink-0 text-[#D9232D]"
+                    />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+      </section>
+    );
   }
 
   return (
@@ -174,3 +279,4 @@ export const GuaranteeTerms: React.FC<GuaranteeTermsProps> = ({
 };
 
 export default GuaranteeTerms;
+

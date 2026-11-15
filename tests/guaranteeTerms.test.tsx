@@ -26,4 +26,19 @@ describe('GuaranteeTerms component', () => {
     expect(html).toContain('Fire, cigarette, exhaust heat, or burn damage');
     expect(html).toContain('Intentional, self-inflicted, or accidental external misuse');
   });
+
+  it('renders a compact summary card with expandable Terms toggle for Order Details', () => {
+    const html = renderToStaticMarkup(
+      <GuaranteeTerms guaranteeDate="2028-06-30" variant="compact" />,
+    );
+
+    expect(html).toContain('data-testid="product-guarantee-terms"');
+    expect(html).toContain('data-variant="compact"');
+    expect(html).toContain('Official Product Guarantee');
+    expect(html).toContain('30 Jun 2028');
+    expect(html).toContain('data-testid="guarantee-terms-toggle"');
+    expect(html).toContain('Natural cracking, seam tearing');
+    expect(html).toContain('Cat scratches, bilet/blade cuts');
+  });
 });
+

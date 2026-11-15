@@ -872,6 +872,7 @@ export function OrderHelpSupportView({
 
           {guaranteeTarget && (
             <GuaranteeTerms
+              variant="compact"
               productId={guaranteeTarget.productId}
               productSlug={guaranteeTarget.productSlug}
               guaranteeDate={guaranteeTarget.guaranteeDate}
