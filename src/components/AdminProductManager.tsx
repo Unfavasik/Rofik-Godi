@@ -10,6 +10,7 @@ import {
   Pencil,
   Plus,
   Search,
+  ShieldCheck,
   Sparkles,
   Trash2,
   X,
@@ -45,7 +46,11 @@ import { deriveProductImages, seedLegacyColorImages } from '../lib/productImages
 import { notifyCatalogChanged } from '../lib/localCache';
 import { autofillProductDetailsFromImage } from '../lib/productImageAutofill';
 import { BottomSheet } from './BottomSheet';
-import { AdminGuaranteePolicyCard } from './AdminGuaranteePolicyCard';
+import {
+  addMonthsToIsoDate,
+  formatGuaranteeDateLabel,
+  normalizeGuaranteeDate,
+} from '../lib/productGuarantee';
 const clearCatalogCache = () => {
   localStorage.removeItem('rofik-godi:public-catalog:v2');
   notifyCatalogChanged();
@@ -520,9 +525,6 @@ export const AdminProductManager: React.FC<{
         </button>
       </div>
       <AdminConnectionPanel notify={notify} />
-      <div className="mb-5">
-        <AdminGuaranteePolicyCard notify={notify} compact />
-      </div>
       {loadState === 'ready' && products.length > 1 && (
         <ProductOrderList products={filtered} saving={savingOrder} onMove={moveProduct} />
       )}
@@ -596,6 +598,7 @@ export const AdminProductManager: React.FC<{
                 <th className="py-3.5">Category</th>
                 <th className="py-3.5">Price</th>
                 <th className="py-3.5">Stock</th>
+                <th className="py-3.5">Guarantee</th>
                 <th className="py-3.5">Status</th>
                 <th className="py-3.5 pr-5 text-right">Actions</th>
               </tr>
@@ -616,6 +619,7 @@ export const AdminProductManager: React.FC<{
                       <td className="py-3.5"><div className="h-3 w-20 rounded-full bg-slate-200/70" /></td>
                       <td className="py-3.5"><div className="h-3.5 w-16 rounded-full bg-slate-200/80" /></td>
                       <td className="py-3.5"><div className="h-3 w-16 rounded-full bg-slate-100" /></td>
+                      <td className="py-3.5"><div className="h-5 w-24 rounded-full bg-slate-100" /></td>
                       <td className="py-3.5"><div className="h-6 w-20 rounded-full bg-slate-200/70" /></td>
                       <td className="py-3.5 pr-5"><div className="ml-auto h-7 w-24 rounded-lg bg-slate-100" /></td>
                     </tr>
@@ -657,6 +661,16 @@ export const AdminProductManager: React.FC<{
                   </td>
                   <td className="py-3.5 font-semibold text-slate-600">
                     {product.inStock ? 'Available' : 'Hidden'}
+                  </td>
+                  <td className="py-3.5">
+                    {normalizeGuaranteeDate(product.guaranteeValidUntil) ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-200/80 tabular-nums">
+                        <ShieldCheck className="h-3 w-3 shrink-0" />
+                        Until {formatGuaranteeDateLabel(normalizeGuaranteeDate(product.guaranteeValidUntil)!)}
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-medium text-slate-400">Not set</span>
+                    )}
                   </td>
                   <td className="py-3.5">
                     <button
@@ -1200,13 +1214,57 @@ const ProductEditor: React.FC<{
               </Field>
               <Field
                 label="Product guarantee expiry date (optional)"
-                hint="Leave blank to follow the All-Products Guarantee Date."
+                hint="Set a date to display Guarantee & Terms on this product page. Leave blank to hide guarantee."
+                className="sm:col-span-2"
               >
-                <Input
-                  type="date"
-                  value={form.guaranteeValidUntil || ''}
-                  onChange={(event) => set('guaranteeValidUntil', event.target.value || null)}
-                />
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Input
+                      type="date"
+                      value={form.guaranteeValidUntil || ''}
+                      onChange={(event) => set('guaranteeValidUntil', event.target.value || null)}
+                      className="min-w-[180px] flex-1"
+                    />
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {[
+                        { label: '+6M', months: 6 },
+                        { label: '+1Y', months: 12 },
+                        { label: '+2Y', months: 24 },
+                      ].map((preset) => (
+                        <button
+                          key={preset.label}
+                          type="button"
+                          onClick={() =>
+                            set('guaranteeValidUntil', addMonthsToIsoDate(new Date(), preset.months))
+                          }
+                          className="min-h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-[11px] font-bold text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800"
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                      {form.guaranteeValidUntil && (
+                        <button
+                          type="button"
+                          onClick={() => set('guaranteeValidUntil', null)}
+                          className="min-h-10 rounded-xl border border-rose-200 bg-rose-50 px-3 text-[11px] font-bold text-[#D9232D] transition hover:bg-rose-100"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {normalizeGuaranteeDate(form.guaranteeValidUntil) ? (
+                    <p className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      Active guarantee preview: Valid until{' '}
+                      {formatGuaranteeDateLabel(normalizeGuaranteeDate(form.guaranteeValidUntil)!)}
+                    </p>
+                  ) : (
+                    <p className="text-[11px] font-medium text-slate-400">
+                      No guarantee will be shown on this product page.
+                    </p>
+                  )}
+                </div>
               </Field>
               <div className="block min-w-0">
                 <span className="mb-1.5 block text-[11px] font-bold text-slate-600">Badge</span>

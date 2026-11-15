@@ -139,26 +139,53 @@ describe('InvoiceTemplate', () => {
     expect(html).toContain('Authorised signature');
   });
 
-  it('displays the admin-set guarantee valid-until date and updated normal-use & exclusion terms', () => {
-    const html = renderToStaticMarkup(
+  it('displays per-product guarantee date from matching catalog product and keeps terms clean when no date is set', () => {
+    const htmlWithProductDate = renderToStaticMarkup(
       <InvoiceTemplate
         order={toCustomerOrderRecord(adminOrder)}
-        guaranteePolicy={{
-          enabled: true,
-          mode: 'fixed_date',
-          validUntilDate: '2028-06-30',
-          durationMonths: 12,
-        }}
+        products={[
+          {
+            id: 'product-1',
+            title: 'Bike seat cover',
+            subtitle: '',
+            slug: 'bike-seat-cover',
+            category: 'bike',
+            categoryLabel: 'Bike Covers',
+            price: 1500,
+            originalPrice: 1800,
+            image: '',
+            additionalImages: [],
+            description: '',
+            features: [],
+            isBestseller: false,
+            isNew: false,
+            isWaterproof: true,
+            isCustomizable: false,
+            inStock: true,
+            materials: [],
+            colors: [],
+            stitchPatterns: [],
+            compatibility: [],
+            thicknessOptions: [],
+            rating: 5,
+            reviewCount: 1,
+            guaranteeValidUntil: '2028-09-15',
+          },
+        ]}
       />,
     );
 
-    expect(html).toContain('Replacement Guarantee:');
-    expect(html).toContain('30 Jun 2028');
-    expect(html).toContain('Terms &amp; Guarantee Policy');
-    expect(html).toContain('natural splitting/cracking, seam tearing, or rexine/leatherette surface peeling');
-    expect(html).toContain('cat or animal scratches');
-    expect(html).toContain('blade or sharp-object cuts');
-    expect(html).toContain('fire or burn damage');
-    expect(html).toContain('intentional misuse');
+    expect(htmlWithProductDate).toContain('Replacement Guarantee:');
+    expect(htmlWithProductDate).toContain('15 Sept 2028');
+    expect(htmlWithProductDate).toContain('natural splitting/cracking, seam tearing, or rexine/leatherette surface peeling');
+    expect(htmlWithProductDate).toContain('cat or animal scratches');
+    expect(htmlWithProductDate).toContain('blade or sharp-object cuts');
+    expect(htmlWithProductDate).toContain('fire or burn damage');
+    expect(htmlWithProductDate).toContain('intentional misuse');
+
+    const htmlWithoutDate = renderToStaticMarkup(
+      <InvoiceTemplate order={toCustomerOrderRecord(adminOrder)} />,
+    );
+    expect(htmlWithoutDate).not.toContain('Replacement Guarantee:');
   });
 });

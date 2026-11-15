@@ -3,6 +3,11 @@ import { PRODUCTS } from '../data/products';
 import { supabase } from './supabase';
 import { convertImageToWebP } from './imagePipeline';
 import { DEFAULT_LOW_STOCK_THRESHOLD } from './productAvailability';
+import {
+  getLocalProductGuaranteeDate,
+  normalizeGuaranteeDate,
+  saveLocalProductGuaranteeDate,
+} from './productGuarantee';
 
 const categoryLabels: Record<VehicleCategory, string> = {
   bike: 'Bike Covers',
@@ -152,10 +157,14 @@ export const mapSupabaseProduct = (row: ProductRow): Product => {
         : [{ label: 'Standard', extraPrice: 0 }],
     badge: row.badge ? String(row.badge) : bundled?.badge,
     badgeColor: (row.badge_color || bundled?.badgeColor) as Product['badgeColor'] | undefined,
-    guaranteeValidUntil:
-      typeof row.guarantee_valid_until === 'string' && row.guarantee_valid_until.trim()
-        ? row.guarantee_valid_until.trim()
-        : null,
+    guaranteeValidUntil: (() => {
+      const id = String(row.id || bundled?.id || `rg-prod-${slug}`);
+      const fromRow = normalizeGuaranteeDate(row.guarantee_valid_until);
+      if (fromRow) return fromRow;
+      const fromLocal = getLocalProductGuaranteeDate(id, slug);
+      if (fromLocal !== undefined) return fromLocal;
+      return normalizeGuaranteeDate(bundled?.guaranteeValidUntil) ?? null;
+    })(),
   };
 };
 const mapProductsWithReviewSummaries = async (rows: ProductRow[]): Promise<Product[]> => {
@@ -278,8 +287,19 @@ export const reorderSupabaseProducts = async (productIds: string[]) => {
 const SPEC_COLUMNS = ['package_includes', 'installation', 'guarantee_valid_until'] as const;
 
 export const upsertSupabaseProduct = async (product: Product) => {
-  if (!supabase) return { product, synced: false, error: null };
-  const payload = toRow(product);
+  const normalizedGuarantee = normalizeGuaranteeDate(product.guaranteeValidUntil);
+  saveLocalProductGuaranteeDate(
+    { id: product.id, slug: product.slug },
+    normalizedGuarantee,
+  );
+  if (!supabase) {
+    return {
+      product: { ...product, guaranteeValidUntil: normalizedGuarantee },
+      synced: false,
+      error: null,
+    };
+  }
+  const payload = toRow({ ...product, guaranteeValidUntil: normalizedGuarantee });
   let { data, error } = await supabase
     .from('products')
     .upsert(payload, { onConflict: 'slug' })
@@ -296,7 +316,16 @@ export const upsertSupabaseProduct = async (product: Product) => {
       .single());
   }
   if (error) return { product, synced: false, error };
-  const savedProduct = mapSupabaseProduct(data);
+  const savedProduct = {
+    ...mapSupabaseProduct(data),
+    guaranteeValidUntil:
+      normalizeGuaranteeDate((data as Record<string, unknown>)?.guarantee_valid_until) ??
+      normalizedGuarantee,
+  };
+  saveLocalProductGuaranteeDate(
+    { id: savedProduct.id, slug: savedProduct.slug },
+    savedProduct.guaranteeValidUntil,
+  );
   const gallery = [savedProduct.image, ...(savedProduct.additionalImages || [])]
     .filter(Boolean)
     .filter((url, index, items) => items.indexOf(url) === index);

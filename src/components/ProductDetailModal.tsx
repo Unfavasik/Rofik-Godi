@@ -39,7 +39,8 @@ import {
   resolveStitchPatternSelection,
 } from '../lib/cart';
 import { getProductAvailability, isProductSellable } from '../lib/productAvailability';
-import { resolveProductGuarantee, useProductGuaranteePolicy } from '../lib/productGuarantee';
+import { useProductGuaranteeDate } from '../lib/productGuarantee';
+import { GuaranteeTerms } from './GuaranteeTerms';
 import { ProductReviews } from './ProductReviews';
 import { BottomSheet } from './BottomSheet';
 import { getColorDetails } from '../lib/productColors';
@@ -329,13 +330,10 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   const totalPrice = unitPrice * quantity;
   const availability = getProductAvailability(product);
   const sellable = isProductSellable(product);
-  const guaranteePolicy = useProductGuaranteePolicy();
-  const guaranteeInfo = useMemo(
-    () =>
-      resolveProductGuarantee(guaranteePolicy, {
-        productOverrideDate: product.guaranteeValidUntil,
-      }),
-    [guaranteePolicy, product.guaranteeValidUntil],
+  const guaranteeInfo = useProductGuaranteeDate(
+    product.id,
+    product.slug,
+    product.guaranteeValidUntil,
   );
 
   const handleNotifyMe = async (target: Product) => {
@@ -796,6 +794,18 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                         )}
                       </div>
                     </div>
+
+                    {guaranteeInfo && (
+                      <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-emerald-200/80 bg-emerald-50/75 px-3 py-2 text-xs font-semibold text-emerald-800">
+                        <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+                        <span>
+                          Guarantee valid until{' '}
+                          <strong className="font-extrabold">
+                            {guaranteeInfo.validUntilLabel}
+                          </strong>
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* 1. Color Swatches */}
@@ -1216,6 +1226,13 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                   </div>
                 </section>
 
+                {/* Conditional Product-Specific Guarantee & Replacement Terms */}
+                <GuaranteeTerms
+                  productId={product.id}
+                  productSlug={product.slug}
+                  guaranteeDate={product.guaranteeValidUntil}
+                />
+
                 {/* Dedicated Embroidery & Craft Details Section */}
                 <section
                   id="pdp-section-embroidery"
@@ -1322,7 +1339,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                         ['Installation', details.installation],
                         [
                           'Guarantee',
-                          guaranteeInfo.enabled
+                          guaranteeInfo
                             ? `Valid until ${guaranteeInfo.validUntilLabel} (Normal-use replacement)`
                             : '',
                         ],
@@ -1367,7 +1384,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                       '7-Day Defect Replacement',
                       'Unused standard covers with stitching issues replaced hassle-free',
                     ],
-                    ...(guaranteeInfo.enabled
+                    ...(guaranteeInfo
                       ? [
                           [
                             ShieldCheck,

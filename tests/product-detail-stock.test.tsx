@@ -77,15 +77,28 @@ describe('product availability awareness and product detail page UI/UX', () => {
     expect(html).toContain('Increase quantity');
   });
 
-  it('displays accurate workshop pickup, replacement guarantee exclusions, and Razorpay/counter trust guarantees without delivery claims', () => {
-    const html = renderDetails(PRODUCTS[0]!);
-    expect(html).toContain('Workshop Pickup &amp; Free Fitment');
-    expect(html).toContain('7-Day Defect Replacement');
-    expect(html).toContain('Product Replacement Guarantee');
-    expect(html).toContain('natural splitting, seam tearing or rexine peeling under normal use');
-    expect(html).toContain('Cat/animal scratches, blade cuts, fire burns &amp; intentional damage are excluded');
-    expect(html).toContain('Razorpay Online or Pay at Workshop');
-    expect(html).not.toContain('Free Delivery');
+  it('hides product replacement guarantee when admin has not set a date, and renders GuaranteeTerms when a date is set', () => {
+    const unsetProduct: Product = { ...PRODUCTS[0]!, guaranteeValidUntil: null };
+    const unsetHtml = renderDetails(unsetProduct);
+    expect(unsetHtml).toContain('Workshop Pickup &amp; Free Fitment');
+    expect(unsetHtml).toContain('7-Day Defect Replacement');
+    expect(unsetHtml).toContain('Razorpay Online or Pay at Workshop');
+    expect(unsetHtml).not.toContain('Free Delivery');
+    expect(unsetHtml).not.toContain('data-testid="product-guarantee-terms"');
+    expect(unsetHtml).not.toContain('Product Replacement Guarantee');
+
+    const guaranteedProduct: Product = {
+      ...PRODUCTS[0]!,
+      guaranteeValidUntil: '2028-06-30',
+    };
+    const guaranteedHtml = renderDetails(guaranteedProduct);
+    expect(guaranteedHtml).toContain('data-testid="product-guarantee-terms"');
+    expect(guaranteedHtml).toContain('Official Product Guarantee');
+    expect(guaranteedHtml).toContain('30 Jun 2028');
+    expect(guaranteedHtml).toContain('Rexine or leatherette top-coat peeling');
+    expect(guaranteedHtml).toContain('Blade (bilet)');
+    expect(guaranteedHtml).toContain('Fire, cigarette, exhaust heat, or burn damage');
+    expect(guaranteedHtml).toContain('Product Replacement Guarantee (30 Jun 2028)');
   });
 
   it('computes custom embroidery unit pricing consistently for Add to Cart and Buy Now', () => {

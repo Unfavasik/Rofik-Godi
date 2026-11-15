@@ -44,7 +44,6 @@ import { AdminVehicleModelEdit } from './AdminVehicleModelEdit';
 import { CouponManagement } from './CouponManagement';
 import { AdminReviewsView } from './AdminReviewsView';
 import { InvoiceTemplate } from './InvoiceTemplate';
-import { AdminGuaranteePolicyCard } from './AdminGuaranteePolicyCard';
 import { AdminOrderDetails } from './AdminOrderDetails';
 import { PickupVerification } from './PickupVerification';
 import { BannersView, NotificationsView, ReportsView } from './AdminSections';
@@ -2455,9 +2454,6 @@ function SettingsAdmin({
           </button>
         }
       />
-      <div className="mb-5">
-        <AdminGuaranteePolicyCard notify={notify} />
-      </div>
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
         <section className="min-w-0 rounded-3xl border border-slate-200/85 bg-white p-5 shadow-2xs sm:p-6">
           <div className="flex items-center gap-3">

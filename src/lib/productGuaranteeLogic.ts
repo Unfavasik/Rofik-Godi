@@ -18,11 +18,12 @@ export interface ResolvedGuaranteeInfo {
 }
 
 export const GUARANTEE_POLICY_STORAGE_KEY = 'rofik-godi:product-guarantee-policy:v1';
+export const PRODUCT_GUARANTEE_MAP_STORAGE_KEY = 'rofik-godi:product-guarantee-dates:v1';
 export const PRODUCT_GUARANTEE_CHANGED_EVENT = 'rofik-godi:product-guarantee-changed';
 
 export const DEFAULT_PRODUCT_GUARANTEE_POLICY: ProductGuaranteePolicy = {
-  enabled: true,
-  mode: 'duration_months',
+  enabled: false,
+  mode: 'fixed_date',
   validUntilDate: null,
   durationMonths: 12,
 };
@@ -46,6 +47,12 @@ export function isValidIsoDateString(value: unknown): value is string {
   );
 }
 
+export function normalizeGuaranteeDate(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim().slice(0, 10);
+  return isValidIsoDateString(trimmed) ? trimmed : null;
+}
+
 export function normalizeProductGuaranteePolicy(raw: unknown): ProductGuaranteePolicy {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
     return { ...DEFAULT_PRODUCT_GUARANTEE_POLICY };
@@ -53,7 +60,7 @@ export function normalizeProductGuaranteePolicy(raw: unknown): ProductGuaranteeP
   const obj = raw as Record<string, unknown>;
   const enabled = typeof obj.enabled === 'boolean' ? obj.enabled : true;
   const rawDate = obj.validUntilDate ?? obj.valid_until_date;
-  const validUntilDate = isValidIsoDateString(rawDate) ? rawDate.trim() : null;
+  const validUntilDate = normalizeGuaranteeDate(rawDate);
 
   const rawMonths = Number(obj.durationMonths ?? obj.duration_months);
   const durationMonths =
@@ -108,8 +115,9 @@ export function addMonthsToIsoDate(baseDateInput: string | Date, months: number)
 }
 
 export function formatGuaranteeDateLabel(isoDate: string): string {
-  if (!isValidIsoDateString(isoDate)) return 'Date unavailable';
-  const [yearStr, monthStr, dayStr] = isoDate.split('-');
+  const normalized = normalizeGuaranteeDate(isoDate);
+  if (!normalized) return 'Date unavailable';
+  const [yearStr, monthStr, dayStr] = normalized.split('-');
   const utcDate = new Date(Date.UTC(Number(yearStr), Number(monthStr) - 1, Number(dayStr)));
   return utcDate.toLocaleDateString('en-IN', {
     day: 'numeric',
@@ -127,39 +135,67 @@ export function formatDurationLabel(months: number): string {
   return `${months}-Month`;
 }
 
+export function resolveSpecificProductGuarantee(
+  guaranteeDate: unknown,
+  now: Date = new Date(),
+): ResolvedGuaranteeInfo | null {
+  const validUntilIso = normalizeGuaranteeDate(guaranteeDate);
+  if (!validUntilIso) return null;
+
+  const todayIso = now.toISOString().slice(0, 10);
+  const validUntilLabel = formatGuaranteeDateLabel(validUntilIso);
+  const isActive = validUntilIso >= todayIso;
+
+  return {
+    enabled: true,
+    validUntilIso,
+    validUntilLabel,
+    coverageBadgeLabel: `Guarantee until ${validUntilLabel}`,
+    summaryText: `Valid until ${validUntilLabel} under normal everyday use`,
+    isActive,
+  };
+}
+
 export function resolveProductGuarantee(
-  policy: ProductGuaranteePolicy,
+  policy?: ProductGuaranteePolicy | null,
   options?: {
     referenceDate?: string | Date;
     productOverrideDate?: string | null;
     now?: Date;
   },
 ): ResolvedGuaranteeInfo {
-  const normalized = normalizeProductGuaranteePolicy(policy);
   const now = options?.now ?? new Date();
   const todayIso = now.toISOString().slice(0, 10);
-  const overrideDate = isValidIsoDateString(options?.productOverrideDate)
-    ? options!.productOverrideDate!.trim()
-    : null;
+  const overrideDate = normalizeGuaranteeDate(options?.productOverrideDate);
 
-  if (!normalized.enabled && !overrideDate) {
+  if (overrideDate) {
+    const validUntilLabel = formatGuaranteeDateLabel(overrideDate);
+    return {
+      enabled: true,
+      validUntilIso: overrideDate,
+      validUntilLabel,
+      coverageBadgeLabel: `Guarantee until ${validUntilLabel}`,
+      summaryText: `Valid until ${validUntilLabel} under normal use`,
+      isActive: overrideDate >= todayIso,
+    };
+  }
+
+  if (!policy || !policy.enabled) {
     return {
       enabled: false,
       validUntilIso: null,
-      validUntilLabel: 'Not applicable',
-      coverageBadgeLabel: 'Standard Workshop Check',
+      validUntilLabel: 'Not set',
+      coverageBadgeLabel: 'No Guarantee Set',
       summaryText: 'Standard 7-day unused defect check applies.',
       isActive: false,
     };
   }
 
+  const normalized = normalizeProductGuaranteePolicy(policy);
   let validUntilIso: string;
   let coverageBadgeLabel: string;
 
-  if (overrideDate) {
-    validUntilIso = overrideDate;
-    coverageBadgeLabel = `Guarantee until ${formatGuaranteeDateLabel(validUntilIso)}`;
-  } else if (normalized.mode === 'fixed_date' && normalized.validUntilDate) {
+  if (normalized.mode === 'fixed_date' && normalized.validUntilDate) {
     validUntilIso = normalized.validUntilDate;
     coverageBadgeLabel = `Guarantee until ${formatGuaranteeDateLabel(validUntilIso)}`;
   } else {
@@ -171,7 +207,7 @@ export function resolveProductGuarantee(
   const validUntilLabel = formatGuaranteeDateLabel(validUntilIso);
   const isActive = validUntilIso >= todayIso;
   const summaryText =
-    overrideDate || (normalized.mode === 'fixed_date' && normalized.validUntilDate)
+    normalized.mode === 'fixed_date' && normalized.validUntilDate
       ? `Valid until ${validUntilLabel} under normal use`
       : `${formatDurationLabel(normalized.durationMonths)} guarantee (valid until ${validUntilLabel})`;
 
@@ -185,7 +221,7 @@ export function resolveProductGuarantee(
   };
 }
 
-export function buildInvoiceTermsText(guaranteeInfo: ResolvedGuaranteeInfo): {
+export function buildInvoiceTermsText(guaranteeInfo?: ResolvedGuaranteeInfo | null): {
   returnPolicyText: string;
   guaranteePolicyText: string;
 } {
@@ -193,11 +229,11 @@ export function buildInvoiceTermsText(guaranteeInfo: ResolvedGuaranteeInfo): {
     'Standard, non-customised items may be replaced within 7 days for stitching defects, incorrect fitment or transit damage if unused, uninstalled and returned with original packaging and tags. Personalised items are not returnable except for verified manufacturing defects. Approved refunds go to the original payment method within 3–5 working banking days.';
 
   const guaranteeWindow =
-    guaranteeInfo.enabled && guaranteeInfo.validUntilIso
-      ? `until ${guaranteeInfo.validUntilLabel}`
-      : 'under standard workshop terms';
+    guaranteeInfo?.enabled && guaranteeInfo.validUntilIso
+      ? `valid until ${guaranteeInfo.validUntilLabel}`
+      : 'applicable only on products with an admin-issued guarantee date';
 
-  const guaranteePolicyText = `Product Replacement Guarantee (valid ${guaranteeWindow}): Under normal everyday use before the guarantee expiry date, products with natural splitting/cracking, seam tearing, or rexine/leatherette surface peeling qualify for workshop replacement. External, accidental, or self-inflicted damage—including cat or animal scratches, blade or sharp-object cuts, fire or burn damage, and intentional misuse—is strictly excluded from guarantee coverage.`;
+  const guaranteePolicyText = `Product Replacement Guarantee (${guaranteeWindow}): Under normal everyday use before the product's guarantee expiry date, items developing natural splitting/cracking, seam tearing, or rexine/leatherette surface peeling qualify for workshop replacement. External, accidental, or self-inflicted damage—including cat or animal scratches, blade or sharp-object cuts, fire or burn damage, and intentional misuse—is strictly excluded from guarantee coverage.`;
 
   return {
     returnPolicyText,
