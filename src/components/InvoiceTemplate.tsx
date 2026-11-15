@@ -18,10 +18,12 @@ import {
   Wrench,
   XCircle,
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import type { CustomerOrderRecord, Product } from '../types';
 import { WORKSHOP_INFO } from '../data/products';
 import { downloadOrderInvoice } from '../lib/orderInvoice';
 import {
+  buildGuaranteeVerificationUrl,
   buildInvoiceTermsText,
   fetchProductGuaranteeDateFromDb,
   getLocalProductGuaranteeDate,
@@ -315,6 +317,15 @@ export const InvoiceTemplate: React.FC<{
   );
 
   const invoiceTerms = useMemo(() => buildInvoiceTermsText(guaranteeInfo), [guaranteeInfo]);
+  const guaranteeVerificationUrl = useMemo(
+    () =>
+      buildGuaranteeVerificationUrl({
+        orderNumber: order.order_number,
+        orderSlug: order.order_slug,
+        validUntilIso: guaranteeInfo.validUntilIso,
+      }),
+    [order.order_number, order.order_slug, guaranteeInfo.validUntilIso],
+  );
 
   const handleCopyOrderNumber = async () => {
     try {
@@ -667,77 +678,110 @@ export const InvoiceTemplate: React.FC<{
                 </div>
               </div>
 
-              {/* Covered vs. Excluded Certificate Comparison Panels */}
-              <div className="grid grid-cols-1 gap-2.5 bg-slate-50/45 p-3 sm:grid-cols-2 sm:gap-3 sm:p-3.5">
-                {/* Covered Panel */}
-                <div className="flex flex-col justify-between rounded-xl border border-emerald-200/85 border-l-4 border-l-emerald-600 bg-white p-3 shadow-2xs">
-                  <div>
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="flex items-center gap-1.5 text-[11px] font-black text-emerald-900">
-                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                        <span>Covered Under Normal Everyday Use</span>
+              {/* Covered vs. Excluded + Dynamic QR Verification Seal */}
+              <div className="grid grid-cols-1 gap-2.5 bg-slate-50/45 p-3 sm:grid-cols-12 sm:gap-3 sm:p-3.5">
+                <div className="grid grid-cols-1 gap-2.5 sm:col-span-9 sm:grid-cols-2 sm:gap-3">
+                  {/* Covered Panel */}
+                  <div className="flex flex-col justify-between rounded-xl border border-emerald-200/85 border-l-4 border-l-emerald-600 bg-white p-3 shadow-2xs">
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="flex items-center gap-1.5 text-[11px] font-black text-emerald-900">
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                          <span>Covered Under Normal Everyday Use</span>
+                        </p>
+                        <span className="shrink-0 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-emerald-700">
+                          Free Replace
+                        </span>
+                      </div>
+                      <p className="mt-1.5 text-[10.5px] leading-relaxed text-slate-600">
+                        Free workshop replacement before{' '}
+                        <strong className="font-extrabold text-slate-900">
+                          {guaranteeInfo.validUntilLabel}
+                        </strong>{' '}
+                        for natural splitting/cracking, seam tearing, or rexine/leatherette surface
+                        peeling.
                       </p>
-                      <span className="shrink-0 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-emerald-700">
-                        Free Replace
-                      </span>
                     </div>
-                    <p className="mt-1.5 text-[10.5px] leading-relaxed text-slate-600">
-                      Free workshop replacement before{' '}
-                      <strong className="font-extrabold text-slate-900">
-                        {guaranteeInfo.validUntilLabel}
-                      </strong>{' '}
-                      for natural splitting/cracking, seam tearing, or rexine/leatherette surface
-                      peeling.
-                    </p>
+
+                    <div className="mt-2.5 flex flex-wrap gap-1 border-t border-emerald-100/80 pt-2">
+                      {['Natural Cracking', 'Seam Tearing', 'Rexine Peeling'].map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center gap-1 rounded-md border border-emerald-200/70 bg-emerald-50/70 px-1.5 py-0.5 text-[9.5px] font-bold text-emerald-800"
+                        >
+                          <Check className="h-2.5 w-2.5 text-emerald-600" />
+                          <span>{tag}</span>
+                        </span>
+                      ))}
+                    </div>
                   </div>
 
-                  <div className="mt-2.5 flex flex-wrap gap-1 border-t border-emerald-100/80 pt-2">
-                    {['Natural Cracking', 'Seam Tearing', 'Rexine Peeling'].map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center gap-1 rounded-md border border-emerald-200/70 bg-emerald-50/70 px-1.5 py-0.5 text-[9.5px] font-bold text-emerald-800"
-                      >
-                        <Check className="h-2.5 w-2.5 text-emerald-600" />
-                        <span>{tag}</span>
-                      </span>
-                    ))}
+                  {/* Void / Excluded Panel */}
+                  <div className="flex flex-col justify-between rounded-xl border border-rose-200/85 border-l-4 border-l-[#D9232D] bg-white p-3 shadow-2xs">
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="flex items-center gap-1.5 text-[11px] font-black text-rose-900">
+                          <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-[#D9232D]" />
+                          <span>Guarantee Void / Strictly Excluded</span>
+                        </p>
+                        <span className="shrink-0 rounded-md bg-rose-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-[#D9232D]">
+                          Not Covered
+                        </span>
+                      </div>
+                      <p className="mt-1.5 text-[10.5px] leading-relaxed text-slate-600">
+                        <XCircle
+                          aria-hidden="true"
+                          className="mr-1 inline h-3 w-3 align-text-bottom text-[#D9232D]"
+                        />
+                        Not valid for cat or animal scratches, bilet / blade or sharp-object cuts,
+                        fire or burn damage, or intentional misuse.
+                      </p>
+                    </div>
+
+                    <div className="mt-2.5 flex flex-wrap gap-1 border-t border-rose-100/80 pt-2">
+                      {['Cat Scratches', 'Bilet / Blade Cuts', 'Fire / Burn', 'Self-Damage'].map(
+                        (tag) => (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center gap-1 rounded-md border border-rose-200/70 bg-rose-50/60 px-1.5 py-0.5 text-[9.5px] font-bold text-rose-800"
+                          >
+                            <XCircle className="h-2.5 w-2.5 text-[#D9232D]" />
+                            <span>{tag}</span>
+                          </span>
+                        ),
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Void / Excluded Panel */}
-                <div className="flex flex-col justify-between rounded-xl border border-rose-200/85 border-l-4 border-l-[#D9232D] bg-white p-3 shadow-2xs">
-                  <div>
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="flex items-center gap-1.5 text-[11px] font-black text-rose-900">
-                        <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-[#D9232D]" />
-                        <span>Guarantee Void / Strictly Excluded</span>
-                      </p>
-                      <span className="shrink-0 rounded-md bg-rose-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-[#D9232D]">
-                        Not Covered
-                      </span>
-                    </div>
-                    <p className="mt-1.5 text-[10.5px] leading-relaxed text-slate-600">
-                      <XCircle
-                        aria-hidden="true"
-                        className="mr-1 inline h-3 w-3 align-text-bottom text-[#D9232D]"
-                      />
-                      Not valid for cat or animal scratches, bilet / blade or sharp-object cuts,
-                      fire or burn damage, or intentional misuse.
-                    </p>
+                {/* Dynamic QR Verification Seal */}
+                <div
+                  data-testid="guarantee-certificate-qr"
+                  className="flex flex-row items-center justify-between gap-3 rounded-xl border border-emerald-200/85 bg-white p-2.5 shadow-2xs sm:col-span-3 sm:flex-col sm:justify-center sm:p-3 sm:text-center"
+                >
+                  <div className="shrink-0 rounded-xl border border-emerald-200/90 bg-white p-2 shadow-2xs">
+                    <QRCodeSVG
+                      value={guaranteeVerificationUrl}
+                      size={64}
+                      level="M"
+                      includeMargin={false}
+                      title={`Verify guarantee and invoice for order ${order.order_number}`}
+                    />
                   </div>
-
-                  <div className="mt-2.5 flex flex-wrap gap-1 border-t border-rose-100/80 pt-2">
-                    {['Cat Scratches', 'Bilet / Blade Cuts', 'Fire / Burn', 'Self-Damage'].map(
-                      (tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center gap-1 rounded-md border border-rose-200/70 bg-rose-50/60 px-1.5 py-0.5 text-[9.5px] font-bold text-rose-800"
-                        >
-                          <XCircle className="h-2.5 w-2.5 text-[#D9232D]" />
-                          <span>{tag}</span>
-                        </span>
-                      ),
-                    )}
+                  <div className="min-w-0 flex-1 sm:flex-initial">
+                    <p className="text-[9.5px] font-black uppercase tracking-wider text-emerald-800">
+                      Scan to Verify
+                    </p>
+                    <p className="mt-0.5 text-[9px] font-medium leading-tight text-slate-500">
+                      Original Invoice &amp; Guarantee
+                    </p>
+                    <a
+                      href={guaranteeVerificationUrl}
+                      data-testid="guarantee-verification-link"
+                      className="mt-1 inline-flex items-center gap-1 rounded-md border border-emerald-200/80 bg-emerald-50/70 px-1.5 py-0.5 font-mono text-[9px] font-bold text-emerald-900 tabular-nums transition hover:bg-emerald-100"
+                    >
+                      <span className="truncate">#{order.order_number}</span>
+                    </a>
                   </div>
                 </div>
               </div>

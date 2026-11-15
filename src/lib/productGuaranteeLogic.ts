@@ -281,3 +281,30 @@ export function buildInvoiceTermsText(guaranteeInfo?: ResolvedGuaranteeInfo | nu
   };
 }
 
+export function buildGuaranteeVerificationUrl(params: {
+  orderNumber: string;
+  orderSlug?: string | null;
+  validUntilIso?: string | null;
+  origin?: string | null;
+}): string {
+  const defaultOrigin =
+    typeof window !== 'undefined' &&
+    window.location?.origin &&
+    window.location.origin !== 'null'
+      ? window.location.origin
+      : 'https://rofikgodi.com';
+  const baseOrigin = (params.origin?.trim() || defaultOrigin).replace(/\/+$/, '');
+  const cleanOrderNumber = String(params.orderNumber || '').trim().replace(/^#/, '') || 'ORDER';
+  const cleanSlug = String(params.orderSlug || '').trim().toLowerCase();
+  const path = cleanSlug ? `/my-order/order/${encodeURIComponent(cleanSlug)}` : '/my-orders';
+
+  const search = new URLSearchParams();
+  search.set('verify', cleanOrderNumber);
+  search.set('view', 'invoice');
+  const normalizedDate = normalizeGuaranteeDate(params.validUntilIso);
+  if (normalizedDate) {
+    search.set('guarantee', normalizedDate);
+  }
+  return `${baseOrigin}${path}?${search.toString()}`;
+}
+

@@ -192,10 +192,17 @@ describe('InvoiceTemplate', () => {
     expect(htmlWithProductDate).toContain('blade or sharp-object cuts');
     expect(htmlWithProductDate).toContain('fire or burn damage');
     expect(htmlWithProductDate).toContain('intentional misuse');
+    expect(htmlWithProductDate).toContain('data-testid="guarantee-certificate-qr"');
+    expect(htmlWithProductDate).toContain('Verify guarantee and invoice for order RGC-TEST123');
+    expect(htmlWithProductDate).toContain('Scan to Verify');
+    expect(htmlWithProductDate).toContain('data-testid="guarantee-verification-link"');
+    expect(htmlWithProductDate).toContain('verify=RGC-TEST123&amp;view=invoice&amp;guarantee=2028-09-15');
 
     const htmlWithoutDate = renderToStaticMarkup(
       <InvoiceTemplate order={toCustomerOrderRecord(adminOrder)} />,
     );
     expect(htmlWithoutDate).not.toContain('Replacement Guarantee:');
+    expect(htmlWithoutDate).not.toContain('data-testid="guarantee-certificate-qr"');
   });
 });
+

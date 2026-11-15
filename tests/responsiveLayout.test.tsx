@@ -385,4 +385,29 @@ describe('Storefront & Checkout mobile-first responsive markup', () => {
     expect(html).toContain('/vehicle-models/bsa-scrambler-650.webp');
     expect(html).toContain('Browse seats');
   });
+
+  it('renders Edit Profile with a clean classic-glass top bar and hides the bottom save bar until changes are made', () => {
+    const html = renderToStaticMarkup(
+      <AccountView
+        currentUser={{
+          id: 'user-admin',
+          name: 'ASIK',
+          email: 'ayatulsekh3037@gmail.com',
+          phone: '+919434851618',
+          vehicle: 'Bike · Honda · Honda CB350C',
+          avatar: '/images/avatar-sample.webp',
+          isGuest: false,
+        }}
+        routeModal="profile"
+        onOpenWishlist={() => undefined}
+        onOpenShop={() => undefined}
+      />,
+    );
+
+    expect(html).toContain('aria-label="Close profile editor"');
+    expect(html).not.toContain('Personal details &amp; fitment garage');
+    expect(html).not.toContain('All changes up to date');
+    expect(html).not.toContain('data-testid="profile-unsaved-bar"');
+  });
 });
+

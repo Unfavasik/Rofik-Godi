@@ -157,8 +157,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
   pwaInstallCard,
 }) => {
   const { t } = useI18n();
-  const [activeModal, setActiveModal] = useState<'orders' | 'pickupStore' | 'settings' | 'support' | 'contact-support' | 'profile' | 'privacy' | 'terms' | null>(null);
-  const previousRouteModal = useRef<'orders' | 'settings' | 'support' | 'contact-support' | 'profile' | null>(null);
+  const [activeModal, setActiveModal] = useState<'orders' | 'pickupStore' | 'settings' | 'support' | 'contact-support' | 'profile' | 'privacy' | 'terms' | null>(routeModal);
+  const previousRouteModal = useRef<'orders' | 'settings' | 'support' | 'contact-support' | 'profile' | null>(routeModal);
   const [initialOrderSlugForModal, setInitialOrderSlugForModal] = useState<string | null>(null);
   const [helpOrder, setHelpOrder] = useState<CustomerOrderRecord | null>(null);
   const [helpOrderLoading, setHelpOrderLoading] = useState(false);
@@ -1606,65 +1606,55 @@ export const AccountView: React.FC<AccountViewProps> = ({
             transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
             className="fixed inset-0 z-50 flex w-full max-w-full flex-col bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] overflow-hidden"
           >
-            {/* Top Sticky Glassmorphic App Bar */}
-            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-200/80 bg-white/90 backdrop-blur-md shadow-[0_4px_20px_-10px_rgba(15,23,42,0.05)]">
-              <button
-                type="button"
-                onClick={requestCloseProfile}
-                disabled={profileSaving}
-                aria-label="Close profile editor"
-                className="min-h-11 min-w-11 rounded-2xl bg-slate-100/90 hover:bg-rose-50 hover:text-[#D9232D] active:scale-95 transition-all flex items-center justify-center text-slate-700 disabled:opacity-50"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FFE4E6] to-[#FECDD3] flex items-center justify-center text-[#D9232D] shrink-0 ring-1 ring-inset ring-rose-200/70 shadow-2xs">
-                <User className="w-4.5 h-4.5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#D9232D] ring-1 ring-inset ring-rose-100">
-                    <Sparkles className="h-2.5 w-2.5" /> Rider ID
-                  </span>
-                </div>
-                <h3 id="profile-modal-title" className="text-[16px] font-black tracking-tight text-slate-900 leading-tight truncate">
-                  Rider Profile
+            {/* Clean Classic Glass Top Bar */}
+            <div className="sticky top-0 z-20 px-3.5 pt-2.5 pb-2 sm:px-5">
+              <div className="mx-auto flex max-w-[560px] items-center justify-between gap-2.5">
+                <button
+                  type="button"
+                  onClick={requestCloseProfile}
+                  disabled={profileSaving}
+                  aria-label="Close profile editor"
+                  className="classic-glass inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/85 bg-white/85 text-slate-800 shadow-[0_8px_22px_-10px_rgba(15,23,42,0.18)] backdrop-blur-xl transition-all hover:bg-white hover:text-[#D9232D] active:scale-95 disabled:opacity-50"
+                >
+                  <ArrowLeft className="h-4.5 w-4.5" />
+                </button>
+                <h3 id="profile-modal-title" className="sr-only">
+                  Edit Profile
                 </h3>
-                <p className="text-[11px] font-medium text-slate-500 truncate">
-                  Personal details &amp; fitment garage
-                </p>
+                {profileDirty && !profileLoading && (
+                  <span className="classic-glass inline-flex items-center gap-1.5 rounded-xl border border-amber-200/85 bg-amber-50/90 px-2.5 py-1 text-[10.5px] font-extrabold text-amber-800 shadow-2xs backdrop-blur-md">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    <span>Editing</span>
+                  </span>
+                )}
               </div>
-              <button
-                type="button"
-                aria-label="Save profile changes"
-                disabled={profileSaving || profileLoading || !profileDirty || Object.keys(profileFieldErrors).length > 0}
-                onClick={() => void handleSaveProfile()}
-                className="banner-cta-shine ml-auto min-h-11 shrink-0 rounded-2xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-5 py-2 text-xs font-black text-white shadow-[0_6px_16px_rgba(217,35,45,0.25)] transition-all hover:brightness-105 hover:shadow-md active:scale-95 disabled:opacity-45 disabled:shadow-none"
-              >
-                {profileSaving ? 'Saving…' : profileLoading ? 'Loading…' : 'Save'}
-              </button>
             </div>
 
             <div className="overflow-y-auto overflow-x-hidden flex-1 no-scrollbar text-slate-800">
-              <div className="mx-auto w-full max-w-[560px] px-4 sm:px-5 py-5 space-y-4 pb-6">
+              <div
+                className={`mx-auto w-full max-w-[560px] px-4 sm:px-5 pt-1.5 space-y-4 ${
+                  profileDirty || profileSaving ? 'pb-24' : 'pb-8'
+                }`}
+              >
                 {profileLoading ? (
                   <AccountProfileEditorSkeleton />
                 ) : (
                   <>
-                {/* Glassmorphic Live Rider ID Card Preview Banner */}
-                <div className="relative overflow-hidden rounded-3xl border border-rose-200/80 bg-gradient-to-br from-[#FFF4F5] via-white to-[#FCECEF] p-4 sm:p-5 shadow-[0_12px_32px_-14px_rgba(217,35,45,0.14)] space-y-4">
+                {/* Sleek Live Rider Profile Card */}
+                <div className="relative overflow-hidden rounded-[26px] border border-rose-200/75 bg-gradient-to-br from-white via-[#FFF9FA] to-[#FFF1F3] p-4 sm:p-5 shadow-[0_14px_34px_-18px_rgba(217,35,45,0.16)] space-y-3.5">
                   <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#D9232D]/[0.07] blur-2xl"
+                    className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[#D9232D]/[0.06] blur-2xl"
                   />
 
-                  <div className="relative flex items-start gap-4">
+                  <div className="relative flex items-center gap-3.5">
                     <div className="relative shrink-0">
                       <button
                         type="button"
                         disabled={profileSaving || profileLoading}
                         onClick={() => avatarFileInputRef.current?.click()}
                         aria-label="Choose profile photo"
-                        className="group/avatar relative grid h-20 w-20 place-items-center overflow-hidden rounded-full border-[3px] border-white bg-gradient-to-br from-[#FFE4E6] to-[#FECDD3] text-xl font-black text-[#D9232D] shadow-[0_8px_20px_rgba(217,35,45,0.18)] transition-transform active:scale-95 disabled:opacity-60"
+                        className="group/avatar relative grid h-18 w-18 sm:h-20 sm:w-20 place-items-center overflow-hidden rounded-full border-[3px] border-white bg-gradient-to-br from-[#FFE4E6] to-[#FECDD3] text-lg font-black text-[#D9232D] shadow-[0_8px_20px_rgba(217,35,45,0.16)] transition-transform active:scale-95 disabled:opacity-60"
                       >
                         {profileAvatarUrl ? (
                           <img
@@ -1682,7 +1672,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                           aria-hidden="true"
                           className="absolute inset-0 flex items-center justify-center bg-slate-900/35 opacity-0 transition-opacity group-hover/avatar:opacity-100"
                         >
-                          <Camera className="h-5 w-5 text-white" />
+                          <Camera className="h-4.5 w-4.5 text-white" />
                         </span>
                       </button>
                       <span
@@ -1695,10 +1685,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-[15px] font-black text-slate-900 truncate">
+                        <p className="text-base font-black tracking-tight text-slate-950 truncate">
                           {profileName.trim() || 'Rider Profile Photo'}
                         </p>
-                        <span className="shrink-0 rounded-full bg-white/95 border border-rose-200/80 px-2.5 py-0.5 text-[10.5px] font-extrabold text-[#D9232D] tabular-nums shadow-2xs">
+                        <span className="shrink-0 rounded-lg bg-rose-50 border border-rose-200/80 px-2 py-0.5 text-[10px] font-extrabold text-[#D9232D] tabular-nums">
                           {editorProfileCompletion}% complete
                         </span>
                       </div>
@@ -1706,24 +1696,20 @@ export const AccountView: React.FC<AccountViewProps> = ({
                       {/* Live Identity & Fitment Preview Chips */}
                       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                         {profilePhone.trim() && (
-                          <span className="inline-flex items-center gap-1 rounded-lg bg-white/90 border border-rose-100 px-2 py-0.5 text-[10.5px] font-bold text-slate-700 tabular-nums">
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-white border border-slate-200/80 px-2 py-0.5 text-[10.5px] font-bold text-slate-700 tabular-nums shadow-2xs">
                             <Phone className="h-2.5 w-2.5 text-[#D9232D]" />
                             {profilePhone.trim()}
                           </span>
                         )}
                         {profileVehicle.trim() && (
-                          <span className="inline-flex items-center gap-1 rounded-lg bg-white/90 border border-rose-100 px-2 py-0.5 text-[10.5px] font-bold text-[#D9232D] truncate max-w-full">
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-white border border-rose-200/75 px-2 py-0.5 text-[10.5px] font-bold text-[#D9232D] truncate max-w-full shadow-2xs">
                             <Bike className="h-2.5 w-2.5 shrink-0" />
                             <span className="truncate">{profileVehicle.trim()}</span>
                           </span>
                         )}
                       </div>
 
-                      <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                        Square WebP photo up to 5 MB. Tap photo or button below to update.
-                      </p>
-
-                      <div className="mt-2.5 flex flex-wrap gap-2">
+                      <div className="mt-2.5 flex flex-wrap items-center gap-2">
                         <input
                           ref={avatarFileInputRef}
                           type="file"
@@ -1744,7 +1730,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                           aria-label="Upload profile photo"
                           disabled={profileSaving || profileLoading}
                           onClick={() => avatarFileInputRef.current?.click()}
-                          className="banner-cta-shine inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91822] hover:brightness-105 px-3.5 py-2 text-[11px] font-black text-white shadow-xs transition-all active:scale-95 disabled:opacity-50"
+                          className="banner-cta-shine inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91822] hover:brightness-105 px-3 py-1.5 text-[11px] font-extrabold text-white shadow-2xs transition-all active:scale-95 disabled:opacity-50"
                         >
                           <Camera className="h-3.5 w-3.5" aria-hidden="true" /> Change photo
                         </button>
@@ -1758,7 +1744,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                               setProfileAvatarUrl(null);
                               setProfileMessage('');
                             }}
-                            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-rose-200 bg-white/90 hover:bg-rose-50 px-3.5 py-2 text-[11px] font-bold text-[#D9232D] transition-all active:scale-95 disabled:opacity-50"
+                            className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-rose-200/90 bg-white hover:bg-rose-50 px-3 py-1.5 text-[11px] font-bold text-[#D9232D] transition-all active:scale-95 disabled:opacity-50"
                           >
                             <Trash2 className="h-3.5 w-3.5" aria-hidden="true" /> Remove photo
                           </button>
@@ -1767,15 +1753,15 @@ export const AccountView: React.FC<AccountViewProps> = ({
                     </div>
                   </div>
 
-                  {/* Live Completeness Bar & Checklist */}
-                  <div className="rounded-2xl bg-white/80 backdrop-blur-xs border border-rose-100/90 p-3 space-y-2">
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-rose-100/90">
+                  {/* Compact Completeness Bar & Checklist */}
+                  <div className="rounded-2xl bg-white/90 border border-rose-100/90 px-3 py-2.5 space-y-2">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-rose-100/90">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-[#D9232D] to-[#FB7185] transition-all duration-300"
                         style={{ width: `${editorProfileCompletion}%` }}
                       />
                     </div>
-                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       {[
                         { label: 'Name', done: Boolean(profileName.trim()) },
                         { label: 'Photo', done: Boolean(profileAvatarUrl || profileAvatarFile) },
@@ -1784,7 +1770,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                       ].map((step) => (
                         <span
                           key={step.label}
-                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-bold ${
                             step.done
                               ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/70'
                               : 'bg-slate-100 text-slate-500'
@@ -2071,34 +2057,50 @@ export const AccountView: React.FC<AccountViewProps> = ({
               </div>
             </div>
 
-            {/* Sticky Bottom Action Bar for Mobile & Desktop */}
-            {!profileLoading && (
-              <div className="border-t border-slate-200/85 bg-white/92 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.08)]">
-                <div className="mx-auto flex max-w-[560px] flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 sm:gap-3">
-                  <span className="min-w-0 text-xs font-bold text-slate-600 truncate">
-                    {profileDirty ? 'Unsaved profile changes' : 'All changes up to date'}
-                  </span>
-                  <div className="flex items-center gap-2 shrink-0 ml-auto">
-                    <button
-                      type="button"
-                      disabled={profileSaving}
-                      onClick={requestCloseProfile}
-                      className="min-h-11 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-700 transition-colors whitespace-nowrap disabled:opacity-50"
-                    >
-                      {profileDirty ? 'Discard' : 'Close'}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={profileSaving || profileLoading || !profileDirty || Object.keys(profileFieldErrors).length > 0}
-                      onClick={() => void handleSaveProfile()}
-                      className="banner-cta-shine min-h-11 rounded-xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] hover:brightness-105 hover:shadow-md px-4 py-2 text-xs font-black text-white shadow-sm shadow-red-600/20 transition-all active:scale-95 whitespace-nowrap disabled:opacity-45"
-                    >
-                      {profileSaving ? 'Saving…' : 'Save changes'}
-                    </button>
+            {/* Conditional Bottom Save Bar — Only visible when user edits profile */}
+            <AnimatePresence>
+              {!profileLoading && (profileDirty || profileSaving) && (
+                <motion.div
+                  initial={{ y: 28, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 28, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  data-testid="profile-unsaved-bar"
+                  className="border-t border-slate-200/85 bg-white/95 backdrop-blur-xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-10px_28px_-12px_rgba(15,23,42,0.12)]"
+                >
+                  <div className="mx-auto flex max-w-[560px] flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 sm:gap-3">
+                    <span className="inline-flex min-w-0 items-center gap-2 text-xs font-extrabold text-slate-800 truncate">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-[#D9232D] animate-pulse" />
+                      <span className="truncate">Unsaved profile changes</span>
+                    </span>
+                    <div className="flex items-center gap-2 shrink-0 ml-auto">
+                      <button
+                        type="button"
+                        disabled={profileSaving}
+                        onClick={requestCloseProfile}
+                        className="min-h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-700 transition-colors whitespace-nowrap disabled:opacity-50"
+                      >
+                        Discard
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Save profile changes"
+                        disabled={
+                          profileSaving ||
+                          profileLoading ||
+                          !profileDirty ||
+                          Object.keys(profileFieldErrors).length > 0
+                        }
+                        onClick={() => void handleSaveProfile()}
+                        className="banner-cta-shine min-h-10 rounded-xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] hover:brightness-105 hover:shadow-md px-4 py-2 text-xs font-black text-white shadow-sm shadow-red-600/20 transition-all active:scale-95 whitespace-nowrap disabled:opacity-45"
+                      >
+                        {profileSaving ? 'Saving…' : 'Save changes'}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>

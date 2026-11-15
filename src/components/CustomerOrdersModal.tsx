@@ -207,6 +207,12 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
     if (loading || !currentUserId) return;
     // Prefer the already-loaded list: on slow connections the direct fetch can
     // take seconds, but the target order usually arrives with the list first.
+    const shouldAutoOpenInvoice = () => {
+      if (typeof window === 'undefined') return false;
+      const params = new URLSearchParams(window.location.search);
+      return params.get('view') === 'invoice' || Boolean(params.get('verify'));
+    };
+
     const targetOrder = orders.find((order) => order.order_slug?.toLowerCase() === initialOrderSlug.toLowerCase());
     if (targetOrder) {
       const alreadyOpen = selectedOrderId === targetOrder.id;
@@ -216,6 +222,9 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
       if (!alreadyOpen) {
         setDirectOrder(null);
         setSelectedOrderId(targetOrder.id);
+        if (shouldAutoOpenInvoice()) {
+          setInvoiceOrder(targetOrder);
+        }
         onInitialOrderOpened?.();
       }
       return;
@@ -236,6 +245,9 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
         }
         setDirectOrder(result);
         setSelectedOrderId(result.id);
+        if (shouldAutoOpenInvoice()) {
+          setInvoiceOrder(result);
+        }
         onInitialOrderOpened?.();
       })
       .catch(() => { if (active) setDirectOrderNotFound(true); })
