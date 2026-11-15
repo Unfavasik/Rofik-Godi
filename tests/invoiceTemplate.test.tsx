@@ -86,6 +86,11 @@ describe('InvoiceTemplate', () => {
     expect(html).toContain('PENDING');
     expect(html).toContain('Balance due at store');
     expect(html).toContain('RGCPICKUP123');
+    expect(html).toContain('Workshop Terms &amp; Guarantee Policy');
+    expect(html).toContain('Workshop Pickup Only (No Online Delivery)');
+    expect(html).toContain('We do not provide online, home, or courier delivery');
+    expect(html).toContain('Standard Vehicle Fitment (No Custom Name Writing)');
+    expect(html).toContain('We do not write, print, or embroider custom names, numbers, or logos on seat covers');
     expect(html).toContain('7 days');
     expect(html).toContain('Two Thousand Five Hundred Rupees Only');
   });
@@ -175,7 +180,12 @@ describe('InvoiceTemplate', () => {
       />,
     );
 
+    expect(htmlWithProductDate).toContain('data-testid="invoice-guarantee-card"');
+    expect(htmlWithProductDate).toContain('Official Workshop Guarantee Certificate');
+    expect(htmlWithProductDate).toContain('Covered Under Normal Everyday Use');
+    expect(htmlWithProductDate).toContain('Guarantee Void / Strictly Excluded');
     expect(htmlWithProductDate).toContain('Replacement Guarantee:');
+    expect(htmlWithProductDate).toContain('Guarantee until 15 Sept 2028');
     expect(htmlWithProductDate).toContain('15 Sept 2028');
     expect(htmlWithProductDate).toContain('natural splitting/cracking, seam tearing, or rexine/leatherette surface peeling');
     expect(htmlWithProductDate).toContain('cat or animal scratches');

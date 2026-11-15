@@ -221,22 +221,63 @@ export function resolveProductGuarantee(
   };
 }
 
+export interface InvoiceTermsClause {
+  number: string;
+  title: string;
+  body: string;
+}
+
 export function buildInvoiceTermsText(guaranteeInfo?: ResolvedGuaranteeInfo | null): {
+  pickupAndCraftPolicyText: string;
   returnPolicyText: string;
   guaranteePolicyText: string;
+  clauses: InvoiceTermsClause[];
 } {
+  const pickupAndCraftPolicyText =
+    'Store Pickup Only & Craftsmanship Scope: We do not provide online, home, or courier delivery—all orders must be collected in person at Rofik Godi Centre (Berhampore) with your Order ID or Pickup QR code for complimentary on-spot workshop fitment. Seat covers are tailored strictly to the selected vehicle model, colour, foam thickness, and stitch pattern; we do not write, print, or embroider custom names or text on seat covers.';
+
   const returnPolicyText =
-    'Standard, non-customised items may be replaced within 7 days for stitching defects, incorrect fitment or transit damage if unused, uninstalled and returned with original packaging and tags. Personalised items are not returnable except for verified manufacturing defects. Approved refunds go to the original payment method within 3–5 working banking days.';
+    '7-Day Workshop Defect Check & Refunds: Unused and uninstalled seat covers in original condition may be replaced at our workshop within 7 days of pickup solely for verified stitching defects or vehicle fitment mismatches. Approved refunds for cancelled online payments (Razorpay / UPI) are credited back to the original payment method within 3–5 working banking days.';
 
   const guaranteeWindow =
     guaranteeInfo?.enabled && guaranteeInfo.validUntilIso
       ? `valid until ${guaranteeInfo.validUntilLabel}`
       : 'applicable only on products with an admin-issued guarantee date';
 
-  const guaranteePolicyText = `Product Replacement Guarantee (${guaranteeWindow}): Under normal everyday use before the product's guarantee expiry date, items developing natural splitting/cracking, seam tearing, or rexine/leatherette surface peeling qualify for workshop replacement. External, accidental, or self-inflicted damage—including cat or animal scratches, blade or sharp-object cuts, fire or burn damage, and intentional misuse—is strictly excluded from guarantee coverage.`;
+  const guaranteePolicyText = `Product Replacement Guarantee (${guaranteeWindow}): Under normal everyday use before the product's guarantee expiry date, items developing natural splitting/cracking, seam tearing, or rexine/leatherette surface peeling qualify for workshop replacement. External, accidental, or self-inflicted damage—including cat or animal scratches, bilet / blade or sharp-object cuts, fire or burn damage, and intentional misuse—is strictly excluded from guarantee coverage.`;
+
+  const clauses: InvoiceTermsClause[] = [
+    {
+      number: '01',
+      title: 'Workshop Pickup Only (No Online Delivery)',
+      body: 'We do not provide online, home, or courier delivery. Every order is prepared for in-person collection at Rofik Godi Centre, Berhampore with Order ID / Pickup QR verification and complimentary on-spot seat installation.',
+    },
+    {
+      number: '02',
+      title: 'Standard Vehicle Fitment (No Custom Name Writing)',
+      body: 'Seat covers are crafted strictly per your selected vehicle model, colour variant, foam cushioning thickness, and stitch pattern. We do not write, print, or embroider custom names, numbers, or logos on seat covers.',
+    },
+    {
+      number: '03',
+      title: '7-Day Defect Replacement & Refund Rules',
+      body: 'Unused, uninstalled covers in original condition qualify for workshop replacement within 7 days for verified stitching flaws or fitment mismatches. Approved online payment refunds are processed to the original source within 3–5 working banking days.',
+    },
+    {
+      number: '04',
+      title: `Replacement Guarantee (${
+        guaranteeInfo?.enabled && guaranteeInfo.validUntilIso
+          ? `Valid until ${guaranteeInfo.validUntilLabel}`
+          : 'Admin-Issued Date Only'
+      })`,
+      body: 'Covers natural splitting/cracking, seam tearing, or rexine/leatherette surface peeling under normal everyday use before the guarantee expiry date. Strictly void for cat or animal scratches, bilet / blade or sharp-object cuts, fire or burn damage, chemical spills, and intentional misuse.',
+    },
+  ];
 
   return {
+    pickupAndCraftPolicyText,
     returnPolicyText,
     guaranteePolicyText,
+    clauses,
   };
 }
+

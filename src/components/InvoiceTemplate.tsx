@@ -1,11 +1,27 @@
-import React, { useMemo, useState } from 'react';
-import { ArrowLeft, Check, Download, Package, Printer } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  ArrowLeft,
+  Calendar,
+  Check,
+  CheckCircle2,
+  Download,
+  Package,
+  Printer,
+  ShieldAlert,
+  ShieldCheck,
+  XCircle,
+} from 'lucide-react';
 import type { CustomerOrderRecord, Product } from '../types';
 import { WORKSHOP_INFO } from '../data/products';
 import { downloadOrderInvoice } from '../lib/orderInvoice';
 import {
   buildInvoiceTermsText,
+  fetchProductGuaranteeDateFromDb,
+  getLocalProductGuaranteeDate,
+  normalizeGuaranteeDate,
+  PRODUCT_GUARANTEE_CHANGED_EVENT,
   resolveProductGuarantee,
+  resolveSpecificProductGuarantee,
   useProductGuaranteePolicy,
   type ProductGuaranteePolicy,
 } from '../lib/productGuarantee';
@@ -179,27 +195,107 @@ export const InvoiceTemplate: React.FC<{
   const items = useMemo(() => order.order_items || [], [order.order_items]);
   const lineTotal = (i: CustomerOrderRecord['order_items'][number]) => i.unit_price * i.quantity;
 
-  const productsById = useMemo(
-    () => new Map(products.map((product) => [product.id, product])),
-    [products],
-  );
+  const productsById = useMemo(() => {
+    const map = new Map<string, Product>();
+    for (const product of products) {
+      if (product.id) map.set(product.id, product);
+      if (product.slug) map.set(product.slug, product);
+    }
+    return map;
+  }, [products]);
+
+  const findMatchingProduct = useMemo(() => {
+    return (item: CustomerOrderRecord['order_items'][number]): Product | undefined => {
+      if (item.product_id && productsById.has(item.product_id)) {
+        return productsById.get(item.product_id);
+      }
+      const normalizedName = String(item.product_name || '').trim().toLowerCase();
+      if (!normalizedName) return undefined;
+      return products.find(
+        (product) => String(product.title || '').trim().toLowerCase() === normalizedName,
+      );
+    };
+  }, [products, productsById]);
+
+  const [dbGuaranteeByKey, setDbGuaranteeByKey] = useState<Record<string, string | null>>({});
+
+  useEffect(() => {
+    let active = true;
+    const syncLocalAndDbGuarantees = async () => {
+      const nextMap: Record<string, string | null> = {};
+      await Promise.all(
+        items.map(async (item, idx) => {
+          const matched = findMatchingProduct(item);
+          const productId = matched?.id || item.product_id || null;
+          const productSlug = matched?.slug || null;
+          const fallbackDate = normalizeGuaranteeDate(matched?.guaranteeValidUntil);
+          const key = `${productId || productSlug || item.product_name || idx}`;
+          const localVal = getLocalProductGuaranteeDate(productId, productSlug);
+          if (localVal !== undefined) {
+            nextMap[key] = localVal;
+          }
+          const dbDate = await fetchProductGuaranteeDateFromDb({
+            productId,
+            productSlug,
+            fallbackDate,
+          });
+          nextMap[key] = dbDate;
+        }),
+      );
+      if (active) {
+        setDbGuaranteeByKey(nextMap);
+      }
+    };
+
+    void syncLocalAndDbGuarantees();
+
+    const handleChanged = () => {
+      void syncLocalAndDbGuarantees();
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener(PRODUCT_GUARANTEE_CHANGED_EVENT, handleChanged);
+      window.addEventListener('storage', handleChanged);
+    }
+    return () => {
+      active = false;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener(PRODUCT_GUARANTEE_CHANGED_EVENT, handleChanged);
+        window.removeEventListener('storage', handleChanged);
+      }
+    };
+  }, [items, findMatchingProduct]);
 
   const enrichedItems = useMemo(
     () =>
-      items.map((item) => ({
-        ...item,
-        resolvedImage: resolveOrderItemImage(item, productsById),
-      })),
-    [items, productsById],
+      items.map((item, idx) => {
+        const matched = findMatchingProduct(item);
+        const productId = matched?.id || item.product_id || null;
+        const productSlug = matched?.slug || null;
+        const key = `${productId || productSlug || item.product_name || idx}`;
+        const localOverride = getLocalProductGuaranteeDate(productId, productSlug);
+        const rawGuaranteeDate =
+          Object.prototype.hasOwnProperty.call(dbGuaranteeByKey, key)
+            ? dbGuaranteeByKey[key]
+            : localOverride !== undefined
+              ? localOverride
+              : normalizeGuaranteeDate(matched?.guaranteeValidUntil);
+
+        return {
+          ...item,
+          resolvedImage: resolveOrderItemImage(item, productsById),
+          itemGuarantee: resolveSpecificProductGuarantee(rawGuaranteeDate),
+          rawGuaranteeDate: normalizeGuaranteeDate(rawGuaranteeDate),
+        };
+      }),
+    [items, findMatchingProduct, dbGuaranteeByKey, productsById],
   );
 
   const productOverrideDate = useMemo(() => {
-    for (const item of items) {
-      const matched = item.product_id ? productsById.get(item.product_id) : undefined;
-      if (matched?.guaranteeValidUntil) return matched.guaranteeValidUntil;
+    for (const item of enrichedItems) {
+      if (item.rawGuaranteeDate) return item.rawGuaranteeDate;
     }
     return null;
-  }, [items, productsById]);
+  }, [enrichedItems]);
 
   const guaranteeInfo = useMemo(
     () =>
@@ -218,9 +314,9 @@ export const InvoiceTemplate: React.FC<{
     try {
       const orderWithImages: CustomerOrderRecord = {
         ...order,
-        order_items: enrichedItems.map(({ resolvedImage, ...rest }) => ({
-          ...rest,
-          image_url: resolvedImage,
+        order_items: items.map((item, idx) => ({
+          ...item,
+          image_url: enrichedItems[idx]?.resolvedImage ?? item.image_url,
         })),
       };
       const exported = await downloadOrderInvoice(orderWithImages, order.customer_name, {
@@ -378,14 +474,14 @@ export const InvoiceTemplate: React.FC<{
             </div>
 
             <div className="min-w-0 border-t border-slate-200/70 pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
-              <p className="text-[11px] font-semibold text-slate-400">Store pickup</p>
+              <p className="text-[11px] font-semibold text-slate-400">Workshop pickup (No online delivery)</p>
               <p className="mt-1 text-sm font-extrabold text-slate-900 break-words">
                 {order.pickup_store || store.name}
               </p>
               <p className="mt-1 text-[11px] leading-relaxed text-slate-600">
                 {pickupToken
-                  ? 'Collect in person and show your pickup code'
-                  : 'Collect in person at the pickup store'}
+                  ? 'Collect in person with your pickup code · Free on-spot seat fitment'
+                  : 'Collect in person at the pickup store · Free on-spot seat fitment'}
               </p>
             </div>
 
@@ -409,29 +505,75 @@ export const InvoiceTemplate: React.FC<{
           {guaranteeInfo.enabled && (
             <section
               aria-label="Product guarantee validity"
-              className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200/80 bg-emerald-50/55 px-4 py-2.5 text-xs"
+              data-testid="invoice-guarantee-card"
+              className="mt-5 overflow-hidden rounded-2xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50/80 via-white to-rose-50/35 p-4 text-xs shadow-2xs sm:p-5"
             >
-              <div className="min-w-0">
-                <p className="font-extrabold text-slate-900">
-                  Replacement Guarantee:{' '}
-                  <span className="text-emerald-800">
-                    Valid until {guaranteeInfo.validUntilLabel}
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-emerald-200/60 pb-3.5">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-600 text-white shadow-2xs">
+                    <ShieldCheck className="h-4.5 w-4.5" />
                   </span>
-                </p>
-                <p className="mt-0.5 text-[10.5px] font-medium text-slate-600">
-                  Covers normal-use splitting, seam tearing &amp; rexine peeling before expiry ·
-                  Excludes cat/animal scratches, blade cuts, fire &amp; intentional damage
-                </p>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">
+                      Official Workshop Guarantee Certificate
+                    </p>
+                    <p className="mt-0.5 text-sm font-black tracking-tight text-slate-950">
+                      Replacement Guarantee:{' '}
+                      <span className="text-emerald-800">
+                        Valid until {guaranteeInfo.validUntilLabel}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-2.5 py-1 text-[10.5px] font-extrabold text-emerald-800 tabular-nums">
+                    <Calendar className="h-3 w-3 text-emerald-600" />
+                    <span>Expires {guaranteeInfo.validUntilLabel}</span>
+                  </span>
+                  <span
+                    className={`shrink-0 rounded-lg border px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide ${
+                      guaranteeInfo.isActive
+                        ? 'border-emerald-300 bg-emerald-100/80 text-emerald-800'
+                        : 'border-slate-300 bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {guaranteeInfo.isActive ? 'Guarantee Active' : 'Guarantee Expired'}
+                  </span>
+                </div>
               </div>
-              <span
-                className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide ${
-                  guaranteeInfo.isActive
-                    ? 'border-emerald-300 bg-white text-emerald-700'
-                    : 'border-slate-300 bg-white text-slate-500'
-                }`}
-              >
-                {guaranteeInfo.isActive ? 'Guarantee Active' : 'Guarantee Expired'}
-              </span>
+
+              <div className="mt-3.5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-emerald-200/80 bg-white/95 p-3">
+                  <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-emerald-800">
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                    <span>Covered Under Normal Everyday Use</span>
+                  </div>
+                  <p className="mt-1.5 text-[10.5px] leading-relaxed text-slate-600">
+                    Free workshop replacement before{' '}
+                    <strong className="font-bold text-slate-900">
+                      {guaranteeInfo.validUntilLabel}
+                    </strong>{' '}
+                    for natural splitting/cracking, seam tearing, or rexine/leatherette surface
+                    peeling during regular riding use.
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-rose-200/80 bg-white/95 p-3">
+                  <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-rose-800">
+                    <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-[#D9232D]" />
+                    <span>Guarantee Void / Strictly Excluded</span>
+                  </div>
+                  <p className="mt-1.5 text-[10.5px] leading-relaxed text-slate-600">
+                    <XCircle
+                      aria-hidden="true"
+                      className="mr-1 inline h-3 w-3 align-text-bottom text-[#D9232D]"
+                    />
+                    Not valid for cat or animal scratches, bilet / blade or sharp-object cuts, fire
+                    or burn damage, chemical spills, or intentional misuse.
+                  </p>
+                </div>
+              </div>
             </section>
           )}
 
@@ -474,6 +616,16 @@ export const InvoiceTemplate: React.FC<{
                               <p className="mt-0.5 text-[11px] text-slate-500">
                                 {specs.join(' · ')}
                               </p>
+                            ) : null}
+                            {item.itemGuarantee ? (
+                              <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                                <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50/90 px-2 py-0.5 text-[10px] font-extrabold text-emerald-800">
+                                  <ShieldCheck className="h-3 w-3 text-emerald-600" />
+                                  <span>
+                                    Guarantee until {item.itemGuarantee.validUntilLabel}
+                                  </span>
+                                </span>
+                              </div>
                             ) : null}
                           </div>
                         </div>
@@ -547,12 +699,45 @@ export const InvoiceTemplate: React.FC<{
         </div>
 
         {/* Receipt Terms & Authorised Signature Footer */}
-        <footer className="border-t border-slate-200 bg-slate-50/40 px-5 py-5 text-[10.5px] leading-relaxed text-slate-500 sm:px-9 sm:py-6">
-          <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-end sm:justify-between">
-            <div className="max-w-[400px] min-w-0">
-              <p className="font-bold text-slate-700">Terms &amp; Guarantee Policy</p>
-              <p className="mt-1">{invoiceTerms.returnPolicyText}</p>
-              <p className="mt-1.5 font-medium text-slate-600">{invoiceTerms.guaranteePolicyText}</p>
+        <footer className="border-t border-slate-200 bg-slate-50/55 px-5 py-5 text-[10.5px] leading-relaxed text-slate-600 sm:px-9 sm:py-6">
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-extrabold tracking-tight text-slate-900">
+                Workshop Terms &amp; Guarantee Policy
+              </p>
+              <span className="inline-flex items-center rounded-md border border-rose-200/80 bg-rose-50/80 px-2 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wider text-[#D9232D]">
+                Store Pickup Only · No Online Delivery
+              </span>
+            </div>
+
+            <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              {invoiceTerms.clauses.map((clause) => (
+                <div
+                  key={clause.number}
+                  className="rounded-xl border border-slate-200/85 bg-white p-3 shadow-2xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-900 font-mono text-[9.5px] font-extrabold text-white">
+                      {clause.number}
+                    </span>
+                    <p className="text-[11px] font-extrabold text-slate-900">{clause.title}</p>
+                  </div>
+                  <p className="mt-1.5 text-[10.5px] leading-relaxed text-slate-600">
+                    {clause.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-col items-start justify-between gap-4 border-t border-slate-200/80 pt-4 sm:flex-row sm:items-end">
+            <div className="min-w-0 text-[11px] text-slate-500">
+              <p className="font-bold text-slate-800">
+                Thank you for shopping with {store.name}
+              </p>
+              <p className="mt-0.5 text-[10.5px] text-slate-500">
+                Visit our Berhampore workshop with this receipt or your Order ID for pickup &amp; complimentary seat installation.
+              </p>
             </div>
             <div className="shrink-0 text-left sm:text-right">
               <div className="mb-1.5 flex h-14 w-44 items-end justify-start border-b border-slate-400 pb-1.5 sm:justify-end">
@@ -569,9 +754,6 @@ export const InvoiceTemplate: React.FC<{
               <p className="text-[10px] text-slate-400">For {store.name}</p>
             </div>
           </div>
-          <p className="mt-5 border-t border-slate-200/80 pt-3.5 text-center text-[11px] font-semibold text-slate-600">
-            Thank you for shopping with {store.name}
-          </p>
         </footer>
       </article>
     </div>

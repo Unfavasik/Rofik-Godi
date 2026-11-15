@@ -22,6 +22,7 @@ import {
   PackageOpen,
   Paperclip,
   Phone,
+  Printer,
   Send,
   ShieldCheck,
   Sparkles,
@@ -30,8 +31,11 @@ import {
   X,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
-import type { CustomerOrderRecord } from '../types';
+import type { CustomerOrderRecord, Product } from '../types';
 import { WORKSHOP_INFO } from '../data/products';
+import { isOrderComplete } from '../lib/orderPresentation';
+import { GuaranteeTerms } from './GuaranteeTerms';
+import { InvoiceTemplate } from './InvoiceTemplate';
 import { StoreLocationView } from './StoreLocationView';
 import {
   ORDER_HELP_TOPICS,
@@ -52,6 +56,7 @@ import {
 
 export interface OrderHelpSupportViewProps {
   order?: CustomerOrderRecord | null;
+  products?: Product[];
   loading?: boolean;
   currentUserId?: string;
   isAuthenticated?: boolean;
@@ -157,6 +162,7 @@ const ticketStatusBadge = (status: SupportRequestRecord['status']) => {
 
 export function OrderHelpSupportView({
   order,
+  products = [],
   loading = false,
   currentUserId,
   isAuthenticated = true,
@@ -184,6 +190,7 @@ export function OrderHelpSupportView({
   const [orderTickets, setOrderTickets] = useState<SupportRequestRecord[]>([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
   const [isInternalStoreMapOpen, setIsInternalStoreMapOpen] = useState(false);
+  const [isInternalInvoiceOpen, setIsInternalInvoiceOpen] = useState(false);
 
   const resolutionPanelRef = useRef<HTMLElement | null>(null);
   const messageTextareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -191,6 +198,28 @@ export function OrderHelpSupportView({
   const items = useMemo(() => safeOrder.order_items || [], [safeOrder.order_items]);
   const firstImage = items.find((item) => item.image_url)?.image_url || null;
   const statusGuidance = useMemo(() => getOrderHelpStatusGuidance(safeOrder), [safeOrder]);
+  const canViewInvoice = useMemo(
+    () => isOrderComplete(safeOrder.status) || statusGuidance.isPaid,
+    [safeOrder.status, statusGuidance.isPaid],
+  );
+  const guaranteeTarget = useMemo(() => {
+    for (const item of items) {
+      const matched = products.find(
+        (p) =>
+          (item.product_id && (p.id === item.product_id || p.slug === item.product_id)) ||
+          String(p.title || '').trim().toLowerCase() ===
+            String(item.product_name || '').trim().toLowerCase(),
+      );
+      if (matched?.guaranteeValidUntil || matched?.id || item.product_id) {
+        return {
+          productId: matched?.id || item.product_id || null,
+          productSlug: matched?.slug || null,
+          guaranteeDate: matched?.guaranteeValidUntil || null,
+        };
+      }
+    }
+    return null;
+  }, [items, products]);
   const progressSteps = useMemo(() => getOrderStepProgress(safeOrder.status), [safeOrder.status]);
   const resolution = useMemo(
     () => getTopicResolutionGuide(selectedTopicId, safeOrder),
@@ -627,6 +656,18 @@ export function OrderHelpSupportView({
                 >
                   {statusGuidance.badgeLabel}
                 </span>
+                {canViewInvoice && (
+                  <button
+                    type="button"
+                    data-testid="order-help-view-invoice"
+                    onClick={() => setIsInternalInvoiceOpen(true)}
+                    className="inline-flex h-7 items-center gap-1 rounded-xl border border-rose-200/85 bg-rose-50/90 px-2.5 text-[11px] font-extrabold text-[#D9232D] transition hover:bg-rose-100/80 sm:h-8"
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                    <span>Invoice</span>
+                  </button>
+                )}
+
                 {items.length > 0 && (
                   <button
                     type="button"
@@ -828,6 +869,14 @@ export function OrderHelpSupportView({
               </div>
             </div>
           </section>
+
+          {guaranteeTarget && (
+            <GuaranteeTerms
+              productId={guaranteeTarget.productId}
+              productSlug={guaranteeTarget.productSlug}
+              guaranteeDate={guaranteeTarget.guaranteeDate}
+            />
+          )}
 
           {/* Responsive 12-Column Support Studio Grid */}
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-start">
@@ -1411,7 +1460,17 @@ export function OrderHelpSupportView({
       {isInternalStoreMapOpen && (
         <StoreLocationView onClose={() => setIsInternalStoreMapOpen(false)} />
       )}
+      {isInternalInvoiceOpen && order && (
+        <div className="fixed inset-0 z-[95] overflow-y-auto bg-[#EEF2F6]">
+          <InvoiceTemplate
+            order={order}
+            products={products}
+            onClose={() => setIsInternalInvoiceOpen(false)}
+          />
+        </div>
+      )}
     </motion.div>
   );
 }
+
 

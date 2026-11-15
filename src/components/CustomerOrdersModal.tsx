@@ -28,6 +28,7 @@ import { canCancelCustomerOrder, getCustomerOrderTimeline, getOrderPreviewItems,
 import { getCustomerOrderDeepLinkLookupKey } from '../lib/customerOrderDeepLink';
 import { cancelMyOrder, getMyOrderBySlug, listMyOrderStatusHistory } from '../lib/supabaseOrders';
 import { InvoiceTemplate } from './InvoiceTemplate';
+import { GuaranteeTerms } from './GuaranteeTerms';
 import { PickupQrCard } from './PickupQrCard';
 import { ConfirmDialog } from './ConfirmDialog';
 import { formatInr, useI18n, type TranslationKey } from '../lib/i18n';
@@ -279,7 +280,7 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
         <AnimatePresence mode="wait" initial={false}>
           {selectedOrder ? (
             <motion.div key="details" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.16 }} className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-4 sm:px-7 sm:py-5">
-              <OrderDetails order={selectedOrder} customerName={customerName} reviews={reviews} onRefresh={onRefresh} onInvoice={() => openInvoice(selectedOrder)} onReview={onReview} onBuyAgain={onBuyAgain} onNeedHelp={onNeedHelp ? () => onNeedHelp(selectedOrder) : undefined} />
+              <OrderDetails order={selectedOrder} products={products} customerName={customerName} reviews={reviews} onRefresh={onRefresh} onInvoice={() => openInvoice(selectedOrder)} onReview={onReview} onBuyAgain={onBuyAgain} onNeedHelp={onNeedHelp ? () => onNeedHelp(selectedOrder) : undefined} />
             </motion.div>
           ) : (
             <motion.div key="list" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} transition={{ duration: 0.16 }} className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-4 sm:px-7 sm:py-5">
@@ -372,7 +373,7 @@ const OrderCard = ({ order, index, onOpen, onInvoice }: { order: CustomerOrderRe
   );
 };
 
-export const OrderDetails = ({ order: sourceOrder, customerName, reviews, onRefresh, onInvoice, onReview, onBuyAgain, onNeedHelp }: { order: CustomerOrderRecord; customerName: string; reviews: ProductReviewRecord[]; onRefresh?: CustomerOrdersModalProps['onRefresh']; onInvoice: () => void; onReview: CustomerOrdersModalProps['onReview']; onBuyAgain?: CustomerOrdersModalProps['onBuyAgain']; onNeedHelp?: () => void }) => {
+export const OrderDetails = ({ order: sourceOrder, products = [], customerName, reviews, onRefresh, onInvoice, onReview, onBuyAgain, onNeedHelp }: { order: CustomerOrderRecord; products?: Product[]; customerName: string; reviews: ProductReviewRecord[]; onRefresh?: CustomerOrdersModalProps['onRefresh']; onInvoice: () => void; onReview: CustomerOrdersModalProps['onReview']; onBuyAgain?: CustomerOrdersModalProps['onBuyAgain']; onNeedHelp?: () => void }) => {
   const { t, language } = useI18n();
   const [cancelledAfterSuccess, setCancelledAfterSuccess] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -394,7 +395,7 @@ export const OrderDetails = ({ order: sourceOrder, customerName, reviews, onRefr
   }, [sourceOrder.id, sourceOrder.status]);
   const order = cancelledAfterSuccess ? { ...sourceOrder, status: 'CANCELLED' } : sourceOrder;
   const complete = isOrderComplete(order.status);
-  const items = order.order_items || [];
+  const items = useMemo(() => order.order_items || [], [order.order_items]);
   const isPaid = order.payment_status?.toLowerCase() === 'paid';
   const cancelledUnpaid = order.status === 'CANCELLED' && !isPaid;
   const displayedPaymentStatus = isPaid ? t('orders.paid') : cancelledUnpaid ? t('orders.cancelledUnpaid') : t('orders.paymentPending');
@@ -403,6 +404,23 @@ export const OrderDetails = ({ order: sourceOrder, customerName, reviews, onRefr
   const phoneHref = `tel:${WORKSHOP_INFO.phone.replace(/[^+\d]/g, '')}`;
   const mapHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${WORKSHOP_INFO.name}, ${WORKSHOP_INFO.address}`)}`;
   const units = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const guaranteeTarget = useMemo(() => {
+    for (const item of items) {
+      const matched = products.find(
+        (p) =>
+          (item.product_id && (p.id === item.product_id || p.slug === item.product_id)) ||
+          String(p.title || '').trim().toLowerCase() === String(item.product_name || '').trim().toLowerCase(),
+      );
+      if (matched?.guaranteeValidUntil || matched?.id || item.product_id) {
+        return {
+          productId: matched?.id || item.product_id || null,
+          productSlug: matched?.slug || null,
+          guaranteeDate: matched?.guaranteeValidUntil || null,
+        };
+      }
+    }
+    return null;
+  }, [items, products]);
   const handleCancelOrder = async () => {
     if (cancelRequestLock.current || cancelSubmitting) return;
     cancelRequestLock.current = true;
@@ -503,6 +521,14 @@ export const OrderDetails = ({ order: sourceOrder, customerName, reviews, onRefr
           {!items.length && <p className="py-7 text-center text-xs text-slate-500">{t('orders.noItems')}</p>}
         </div>
       </section>
+
+      {guaranteeTarget && (
+        <GuaranteeTerms
+          productId={guaranteeTarget.productId}
+          productSlug={guaranteeTarget.productSlug}
+          guaranteeDate={guaranteeTarget.guaranteeDate}
+        />
+      )}
 
       <section className="rounded-[22px] border border-slate-100 bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="flex items-center gap-2 text-[13px] font-black"><span className="grid h-8 w-8 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><CreditCard className="h-4 w-4" /></span>{t('orders.paymentDetails')}</h3><span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-extrabold ${isPaid ? 'bg-emerald-50 text-emerald-700' : cancelledUnpaid ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'}`}>{isPaid ? <CheckCircle2 className="h-3 w-3" /> : cancelledUnpaid ? <X className="h-3 w-3" /> : <Clock3 className="h-3 w-3" />}{isPaid ? t('orders.paymentConfirmed') : cancelledUnpaid ? t('orders.cancelledUnpaid') : t('orders.paymentPending')}</span></div>

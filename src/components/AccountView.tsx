@@ -1472,6 +1472,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
         {activeModal === 'orders' && (helpOrder || helpOrderSlug) && (
           <OrderHelpSupportView
             order={helpOrder}
+            products={products}
             loading={helpOrderLoading || !helpOrder}
             currentUserId={currentUser?.id || ''}
             isAuthenticated={Boolean(currentUser && !currentUser.isGuest)}

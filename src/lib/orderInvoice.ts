@@ -4,6 +4,9 @@ import { WORKSHOP_INFO } from '../data/products';
 import { isOrderComplete } from './orderPresentation';
 import {
   buildInvoiceTermsText,
+  fetchProductGuaranteeDateFromDb,
+  getLocalProductGuaranteeDate,
+  normalizeGuaranteeDate,
   readCachedProductGuaranteePolicy,
   resolveProductGuarantee,
   type ProductGuaranteePolicy,
@@ -89,14 +92,31 @@ export const downloadOrderInvoice = async (
 ): Promise<boolean> => {
   if (!options?.allowAnyStatus && !isOrderComplete(order.status)) return false;
 
+  const items = order.order_items || [];
+  let resolvedOverrideDate = normalizeGuaranteeDate(options?.productOverrideDate);
+  if (!resolvedOverrideDate) {
+    for (const item of items) {
+      const localDate = getLocalProductGuaranteeDate(item.product_id, null);
+      if (localDate) {
+        resolvedOverrideDate = localDate;
+        break;
+      }
+      if (item.product_id) {
+        const dbDate = await fetchProductGuaranteeDateFromDb({ productId: item.product_id });
+        if (dbDate) {
+          resolvedOverrideDate = dbDate;
+          break;
+        }
+      }
+    }
+  }
+
   const activePolicy = options?.guaranteePolicy ?? readCachedProductGuaranteePolicy();
   const guaranteeInfo = resolveProductGuarantee(activePolicy, {
     referenceDate: order.created_at,
-    productOverrideDate: options?.productOverrideDate,
+    productOverrideDate: resolvedOverrideDate,
   });
   const invoiceTerms = buildInvoiceTermsText(guaranteeInfo);
-
-  const items = order.order_items || [];
   const [signatureAsset, itemThumbAssets] = await Promise.all([
     loadImageAsDataUrl(AUTHORISED_SIGNATURE_PATH, 'PNG'),
     Promise.all(
@@ -155,7 +175,7 @@ export const downloadOrderInvoice = async (
   pdf.setTextColor(97, 103, 113);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(8);
-  pdf.text('PICKUP LOCATION', margin + 4, 80);
+  pdf.text('WORKSHOP PICKUP (NO ONLINE DELIVERY)', margin + 4, 80);
   if (guaranteeInfo.enabled) {
     pdf.text('GUARANTEE VALID UNTIL', 120, 80);
   }
@@ -168,6 +188,34 @@ export const downloadOrderInvoice = async (
   }
 
   let y = 102;
+  if (guaranteeInfo.enabled) {
+    pdf.setFillColor(236, 253, 245);
+    pdf.setDrawColor(167, 243, 208);
+    pdf.roundedRect(margin, 93, right - margin, 18, 2, 2, 'FD');
+    pdf.setTextColor(6, 95, 70);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7.8);
+    pdf.text(
+      `OFFICIAL REPLACEMENT GUARANTEE · VALID UNTIL ${guaranteeInfo.validUntilLabel.toUpperCase()} (${guaranteeInfo.isActive ? 'ACTIVE' : 'EXPIRED'})`,
+      margin + 4,
+      98.5,
+    );
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(51, 65, 85);
+    pdf.setFontSize(7);
+    pdf.text(
+      'Covered (Normal Use): Natural splitting/cracking, seam tearing & rexine/leatherette surface peeling before expiry.',
+      margin + 4,
+      103.5,
+    );
+    pdf.setTextColor(159, 18, 57);
+    pdf.text(
+      'Void (Not Covered): Cat/animal scratches, bilet/blade cuts, fire/burn damage & intentional misuse.',
+      margin + 4,
+      108,
+    );
+    y = 120;
+  }
   const drawTableHeader = () => {
     pdf.setFillColor(31, 34, 39);
     pdf.roundedRect(margin, y - 6, right - margin, 11, 2, 2, 'F');
@@ -254,9 +302,12 @@ export const downloadOrderInvoice = async (
   y += 11;
 
   const termsWidth = right - margin;
-  const returnLines = pdf.splitTextToSize(invoiceTerms.returnPolicyText, termsWidth) as string[];
-  const guaranteeLines = pdf.splitTextToSize(invoiceTerms.guaranteePolicyText, termsWidth) as string[];
-  const termsBlockHeight = 8 + (returnLines.length + guaranteeLines.length) * 3.4 + 6;
+  const formattedClauses = invoiceTerms.clauses.map((clause) => {
+    const lineText = `${clause.number}. ${clause.title}: ${clause.body}`;
+    return pdf.splitTextToSize(lineText, termsWidth) as string[];
+  });
+  const totalTermLines = formattedClauses.reduce((sum, lines) => sum + lines.length, 0);
+  const termsBlockHeight = 8 + totalTermLines * 3.3 + formattedClauses.length * 1.4 + 6;
 
   if (y + termsBlockHeight + 28 > 280) {
     pdf.addPage();
@@ -269,16 +320,16 @@ export const downloadOrderInvoice = async (
   pdf.setTextColor(51, 65, 85);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(8);
-  pdf.text('TERMS & GUARANTEE POLICY', margin, y);
+  pdf.text('WORKSHOP TERMS & GUARANTEE POLICY (STORE PICKUP ONLY · NO ONLINE DELIVERY)', margin, y);
   y += 4.5;
   pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(100, 116, 139);
-  pdf.setFontSize(7.2);
-  pdf.text(returnLines, margin, y);
-  y += returnLines.length * 3.4 + 2;
   pdf.setTextColor(71, 85, 105);
-  pdf.text(guaranteeLines, margin, y);
-  y += guaranteeLines.length * 3.4 + 7;
+  pdf.setFontSize(7.1);
+  for (const lines of formattedClauses) {
+    pdf.text(lines, margin, y);
+    y += lines.length * 3.3 + 1.4;
+  }
+  y += 4.5;
 
   if (y > 246) {
     pdf.addPage();

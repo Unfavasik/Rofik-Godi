@@ -259,7 +259,7 @@ export function getTopicResolutionGuide(
           : 'This order is already completed, ready, or cancelled. Message us below if you need special post-order assistance.',
         bullets: [
           'Colour finish, foam thickness, or stitch pattern changes can be requested before final cutting.',
-          'Custom name embroidery items cannot be cancelled once stitching has started.',
+          'All orders are for in-person workshop pickup only (no online/courier delivery), and we do not write custom names or text on seat covers.',
           'Need to update your vehicle model? Mention the exact bike/scooter model below.',
         ],
         quickPrompts: [
