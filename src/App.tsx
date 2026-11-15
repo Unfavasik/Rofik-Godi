@@ -22,7 +22,7 @@ const CustomSeatBuilder = lazy(() => import('./components/CustomSeatBuilder').th
 const CartDrawer = lazy(() => import('./components/CartDrawer').then((module) => ({ default: module.CartDrawer })));
 const CheckoutModal = lazy(() => import('./components/CheckoutModal').then((module) => ({ default: module.CheckoutModal })));
 const WishlistModal = lazy(() => import('./components/WishlistModal').then((module) => ({ default: module.WishlistModal })));
-const StoreLocationView = lazy(() => import('./components/StoreLocationView').then((module) => ({ default: module.StoreLocationView })));
+import { StoreLocationView } from './components/StoreLocationView';
 const PrivacyPolicyView = lazy(() => import('./components/PrivacyPolicyView').then((module) => ({ default: module.PrivacyPolicyView })));
 const TermsConditionsView = lazy(() => import('./components/TermsConditionsView').then((module) => ({ default: module.TermsConditionsView })));
 const PersonalDataView = lazy(() => import('./components/PersonalDataView').then((module) => ({ default: module.PersonalDataView })));
@@ -109,7 +109,27 @@ export default function App() {
     routerNavigate(to as To, options);
   }) as NavigateFunction, [routerNavigate]);
   const resolvedRoute = resolveAppRoute(location.pathname);
-  const initialSupportOrderId = resolvedRoute.kind === 'contact-support'
+  const backgroundRoute = useMemo(() => {
+    const isOverlayRoute =
+      resolvedRoute.kind === 'store' ||
+      resolvedRoute.kind === 'store-navigation' ||
+      resolvedRoute.kind === 'privacy' ||
+      resolvedRoute.kind === 'terms' ||
+      resolvedRoute.kind === 'personal-data';
+    if (isOverlayRoute) {
+      const state = location.state as { returnTo?: unknown } | null;
+      const returnTo =
+        typeof state?.returnTo === 'string' && state.returnTo.startsWith('/')
+          ? state.returnTo.split('?')[0]
+          : null;
+      if (returnTo) {
+        const candidate = resolveAppRoute(returnTo);
+        if (candidate.kind !== 'not-found') return candidate;
+      }
+    }
+    return resolvedRoute;
+  }, [resolvedRoute, location.state]);
+  const initialSupportOrderId = backgroundRoute.kind === 'contact-support'
     ? new URLSearchParams(location.search).get('order')
     : null;
   // Route flow: /Onboarding -> /home, and account creation opens at /signup.
@@ -431,13 +451,12 @@ export default function App() {
   }, [currentUser.id, currentUser.isGuest]);
 
   // Navigation & View State
-  const routeToTab = useCallback((pathname: string): RouteTab => resolveAppRoute(pathname).tab, []);
   const tabToRoute = useCallback((tab: RouteTab) => getPathForTab(tab), []);
-  const [activeTab, setActiveTab] = useState<RouteTab>(() => routeToTab(location.pathname));
+  const [activeTab, setActiveTab] = useState<RouteTab>(() => backgroundRoute.tab);
   useEffect(() => {
     setAppPhase(phaseFromPath(location.pathname));
-    setActiveTab(routeToTab(location.pathname));
-  }, [location.pathname, routeToTab]);
+    setActiveTab(backgroundRoute.tab);
+  }, [location.pathname, backgroundRoute.tab]);
 
   useEffect(() => {
     const route = location.pathname.replace(/\/$/, '') || '/';
@@ -1634,15 +1653,15 @@ export default function App() {
                 setActiveTab('notifications');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              routeModal={resolvedRoute.kind === 'profile-edit' ? 'profile' : resolvedRoute.kind === 'orders' || resolvedRoute.kind === 'order-help' ? 'orders' : resolvedRoute.kind === 'settings' || resolvedRoute.kind === 'settings-section' ? 'settings' : resolvedRoute.kind === 'support' ? 'support' : resolvedRoute.kind === 'contact-support' ? 'contact-support' : null}
-              settingsSection={resolvedRoute.kind === 'settings-section' ? resolvedRoute.section : null}
+              routeModal={backgroundRoute.kind === 'profile-edit' ? 'profile' : backgroundRoute.kind === 'orders' || backgroundRoute.kind === 'order-help' ? 'orders' : backgroundRoute.kind === 'settings' || backgroundRoute.kind === 'settings-section' ? 'settings' : backgroundRoute.kind === 'support' ? 'support' : backgroundRoute.kind === 'contact-support' ? 'contact-support' : null}
+              settingsSection={backgroundRoute.kind === 'settings-section' ? backgroundRoute.section : null}
               onOpenSettingsSection={(section) => navigate(getPathForSettingsSection(section))}
               onCloseSettingsSection={() => navigateBackToPage('/settings')}
-              initialOrderSlug={resolvedRoute.kind === 'orders' || resolvedRoute.kind === 'order-help' ? resolvedRoute.orderSlug : null}
-              helpOrderSlug={resolvedRoute.kind === 'order-help' ? resolvedRoute.orderSlug : null}
+              initialOrderSlug={backgroundRoute.kind === 'orders' || backgroundRoute.kind === 'order-help' ? backgroundRoute.orderSlug : null}
+              helpOrderSlug={backgroundRoute.kind === 'order-help' ? backgroundRoute.orderSlug : null}
               onOpenOrderHelp={(order) => navigate(getPathForOrderHelp(order.order_slug))}
               onCloseOrderHelp={(orderSlug) => navigate(getPathForCustomerOrder(orderSlug), { replace: true })}
-              initialSupportRequestId={resolvedRoute.kind === 'support' ? resolvedRoute.requestId : null}
+              initialSupportRequestId={backgroundRoute.kind === 'support' ? backgroundRoute.requestId : null}
               initialSupportOrderId={initialSupportOrderId}
               onOpenOrdersPage={() => openPageRoute('/my-orders')}
               onOpenProfileEditPage={() => openPageRoute('/profile/edit')}
@@ -2244,12 +2263,15 @@ export default function App() {
           onOpenCart={handleOpenCart}
         />}
 
-        {isStoreInfoOpen && (
+        {(isStoreInfoOpen || resolvedRoute.kind === 'store' || resolvedRoute.kind === 'store-navigation') && (
           <StoreLocationView
             startInNavigation={resolvedRoute.kind === 'store-navigation'}
-            onStartNavigation={() => navigate(getPathForStoreNavigation())}
-            onExitNavigation={() => navigate('/store-map', { replace: true })}
-            onClose={() => navigateBackToPage(resolvedRoute.kind === 'store-navigation' ? '/store-map' : '/home')}
+            onStartNavigation={() => navigate(getPathForStoreNavigation(), { state: location.state })}
+            onExitNavigation={() => navigate('/store-map', { replace: true, state: location.state })}
+            onClose={() => {
+              setIsStoreInfoOpen(false);
+              navigateBackToPage(resolvedRoute.kind === 'store-navigation' ? '/store-map' : '/home');
+            }}
           />
         )}
 

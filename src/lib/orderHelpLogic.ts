@@ -148,6 +148,46 @@ export function getOrderHelpStatusGuidance(order: CustomerOrderRecord): OrderHel
   };
 }
 
+export interface OrderHelpStep {
+  key: 'placed' | 'preparing' | 'ready' | 'completed';
+  label: string;
+  state: 'done' | 'current' | 'upcoming' | 'cancelled';
+}
+
+export function getOrderStepProgress(status: string): OrderHelpStep[] {
+  const raw = (status || 'NEW').toUpperCase();
+  if (raw === 'CANCELLED') {
+    return [
+      { key: 'placed', label: 'Order Placed', state: 'done' },
+      { key: 'preparing', label: 'Cancelled', state: 'cancelled' },
+      { key: 'ready', label: 'Ready at Store', state: 'upcoming' },
+      { key: 'completed', label: 'Picked Up', state: 'upcoming' },
+    ];
+  }
+  if (isOrderComplete(raw)) {
+    return [
+      { key: 'placed', label: 'Order Placed', state: 'done' },
+      { key: 'preparing', label: 'Crafting', state: 'done' },
+      { key: 'ready', label: 'Ready at Store', state: 'done' },
+      { key: 'completed', label: 'Picked Up', state: 'done' },
+    ];
+  }
+  if (raw === 'READY_FOR_PICKUP') {
+    return [
+      { key: 'placed', label: 'Order Placed', state: 'done' },
+      { key: 'preparing', label: 'Crafting', state: 'done' },
+      { key: 'ready', label: 'Ready at Store', state: 'current' },
+      { key: 'completed', label: 'Picked Up', state: 'upcoming' },
+    ];
+  }
+  return [
+    { key: 'placed', label: 'Order Placed', state: 'done' },
+    { key: 'preparing', label: 'Crafting', state: 'current' },
+    { key: 'ready', label: 'Ready at Store', state: 'upcoming' },
+    { key: 'completed', label: 'Picked Up', state: 'upcoming' },
+  ];
+}
+
 export interface TopicResolutionGuide {
   topic: OrderHelpTopicMeta;
   heading: string;

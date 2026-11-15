@@ -839,7 +839,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
   const BannerIcon = banner ? maneuverIcon(banner.type) : ArrowUp;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-x-hidden bg-[#F8FAFC] font-sans" role="dialog" aria-modal="true" aria-label="Visit our store">
+    <div className="fixed inset-0 z-[95] flex flex-col overflow-x-hidden bg-[#F8FAFC] font-sans" role="dialog" aria-modal="true" aria-label="Visit our store">
       <header className="flex shrink-0 items-center gap-3 border-b border-slate-100 bg-white px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
         <button
           type="button"

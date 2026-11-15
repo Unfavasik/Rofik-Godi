@@ -161,9 +161,13 @@ export const AccountView: React.FC<AccountViewProps> = ({
   const previousRouteModal = useRef<'orders' | 'settings' | 'support' | 'contact-support' | 'profile' | null>(null);
   const [initialOrderSlugForModal, setInitialOrderSlugForModal] = useState<string | null>(null);
   const [helpOrder, setHelpOrder] = useState<CustomerOrderRecord | null>(null);
+  const [helpOrderLoading, setHelpOrderLoading] = useState(false);
 
   useEffect(() => {
-    if (activeModal !== 'orders' && helpOrder) setHelpOrder(null);
+    if (activeModal !== 'orders' && helpOrder) {
+      setHelpOrder(null);
+      setHelpOrderLoading(false);
+    }
   }, [activeModal, helpOrder]);
 
   useEffect(() => {
@@ -247,22 +251,38 @@ export const AccountView: React.FC<AccountViewProps> = ({
   useEffect(() => {
     if (!helpOrderSlug) {
       setHelpOrder((current) => (current ? null : current));
+      setHelpOrderLoading(false);
       return;
     }
     const normalizedSlug = helpOrderSlug.toLowerCase();
-    if (helpOrder?.order_slug?.toLowerCase() === normalizedSlug) return;
+    if (helpOrder?.order_slug?.toLowerCase() === normalizedSlug) {
+      if (!helpOrderLoading) return;
+      const timer = window.setTimeout(() => setHelpOrderLoading(false), 220);
+      return () => window.clearTimeout(timer);
+    }
     const fromList = customerOrders.find((order) => order.order_slug?.toLowerCase() === normalizedSlug);
     if (fromList) {
       setHelpOrder(fromList);
+      setHelpOrderLoading(true);
+      const timer = window.setTimeout(() => setHelpOrderLoading(false), 220);
+      return () => window.clearTimeout(timer);
+    }
+    if (!currentUser || currentUser.isGuest) {
+      setHelpOrderLoading(false);
       return;
     }
-    if (!currentUser || currentUser.isGuest) return;
     let active = true;
+    setHelpOrderLoading(true);
     void getMyOrderBySlug(currentUser.id, normalizedSlug)
-      .then((order) => { if (active && order) setHelpOrder(order); })
-      .catch(() => undefined);
+      .then((order) => {
+        if (active && order) setHelpOrder(order);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setHelpOrderLoading(false);
+      });
     return () => { active = false; };
-  }, [helpOrderSlug, helpOrder, customerOrders, currentUser]);
+  }, [helpOrderSlug, helpOrder, helpOrderLoading, customerOrders, currentUser]);
 
   const refreshCustomerOrders = useCallback(async () => {
     const ordersUser = currentUserRef.current;
@@ -1449,18 +1469,25 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
       {/* Sub-Modals for Account Features */}
       <AnimatePresence>
-        {activeModal === 'orders' && helpOrder && (
+        {activeModal === 'orders' && (helpOrder || helpOrderSlug) && (
           <OrderHelpSupportView
             order={helpOrder}
+            loading={helpOrderLoading || !helpOrder}
             currentUserId={currentUser?.id || ''}
             isAuthenticated={Boolean(currentUser && !currentUser.isGuest)}
             onBack={() => {
+              const targetSlug = helpOrder?.order_slug || helpOrderSlug || '';
               setHelpOrder(null);
-              onCloseOrderHelp?.(helpOrder.order_slug);
+              setHelpOrderLoading(false);
+              if (targetSlug) onCloseOrderHelp?.(targetSlug);
             }}
-            onOpenLiveChat={(orderId) => onOpenContactSupport?.(helpOrder.order_slug, orderId)}
+            onOpenLiveChat={(orderId) => {
+              const targetSlug = helpOrder?.order_slug || helpOrderSlug || '';
+              if (targetSlug) onOpenContactSupport?.(targetSlug, orderId);
+            }}
             onOpenSupportRequest={(requestId) => onSelectSupportRequest?.(requestId)}
             onOpenSupportRequests={() => onOpenSupportPage?.()}
+            onOpenStoreMap={onOpenStoreInfo}
           />
         )}
       </AnimatePresence>
@@ -1482,6 +1509,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             onRefresh={refreshCustomerOrders}
             onNeedHelp={(order) => {
               setHelpOrder(order);
+              setHelpOrderLoading(true);
               onOpenOrderHelp?.(order);
             }}
             onBuyAgain={onBuyAgain}

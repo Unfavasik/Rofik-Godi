@@ -67,5 +67,26 @@ describe('OrderHelpSupportView UI & Resolution Flow', () => {
     expect(html).toContain('Send Tracked Support Request');
     expect(html).toContain('WhatsApp with Order Details');
     expect(html).toContain(encodeURIComponent('#RGC-554433'));
+
+    // Internal store-map button under Store Working Hours
+    expect(html).toContain('data-testid="order-help-open-store-map"');
+    expect(html).toContain('Open in Maps');
+  });
+
+  it('renders Classic Glass skeleton loading layout when loading is true or order is pending', () => {
+    const html = renderToStaticMarkup(
+      <OrderHelpSupportView
+        order={null}
+        loading={true}
+        isAuthenticated={true}
+        onBack={vi.fn()}
+        onOpenLiveChat={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain('data-testid="order-help-topbar"');
+    expect(html).toContain('data-testid="order-help-skeleton"');
+    expect(html).toContain('skeleton-shimmer');
+    expect(html).toContain('aria-busy="true"');
   });
 });
