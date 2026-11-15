@@ -493,38 +493,70 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
     <AnimatePresence>
       <div className="fixed inset-0 z-[60] flex w-full max-w-full flex-col overflow-hidden overflow-x-hidden bg-[#F8FAFC] bg-[radial-gradient(circle_at_top_left,_rgba(217,35,45,0.085),_transparent_42%),radial-gradient(circle_at_top_right,_rgba(59,130,246,0.075),_transparent_44%)] text-slate-900">
         {/* Classic Glass Top Sticky Header */}
-        <header className="classic-glass z-30 shrink-0 border-b border-white/80 bg-white/75 shadow-[0_6px_24px_-16px_rgba(15,23,42,0.14)]">
-          <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-2 px-3 sm:px-6">
-            <div className="flex min-w-0 items-center gap-2.5">
+        <header
+          data-testid="pdp-classic-glass-topbar"
+          className="classic-glass relative z-30 shrink-0 border-b border-white/85 bg-gradient-to-r from-white/88 via-white/80 to-rose-50/55 shadow-[0_10px_30px_-16px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl"
+        >
+          <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-2.5 px-3 sm:px-6">
+            {/* Left: Frosted Back Button + Glass Product Identity Capsule */}
+            <div className="flex min-w-0 flex-1 items-center gap-2.5">
               <button
                 type="button"
                 onClick={onClose}
                 aria-label="Go back"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/90 bg-white/80 text-slate-800 shadow-2xs backdrop-blur-md transition-colors hover:border-rose-200/80 hover:bg-rose-50/90 hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95"
+                className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/95 bg-white/85 text-slate-800 shadow-[0_6px_16px_-6px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.98)] backdrop-blur-md transition-all duration-200 hover:-translate-x-0.5 hover:border-rose-200/90 hover:bg-rose-50/90 hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95"
               >
-                <ArrowLeft className="h-5 w-5 stroke-[2.2]" />
+                <ArrowLeft className="h-5 w-5 stroke-[2.25] transition-transform duration-200 group-hover:-translate-x-0.5" />
               </button>
-              <div className="min-w-0">
-                <p className="truncate text-xs font-black tracking-wide text-[#D9232D]">
-                  ROFIK GODI CENTRE
-                </p>
-                <p className="hidden truncate text-[11px] font-medium text-slate-600 sm:block">
-                  {product.categoryLabel || 'Seat Covers'} · {product.title}
-                </p>
+
+              <div className="flex min-w-0 items-center gap-2.5 rounded-2xl border border-white/90 bg-white/70 py-1.5 pl-1.5 pr-3 shadow-[0_4px_16px_-8px_rgba(15,23,42,0.1),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md">
+                <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-xl border border-white/95 bg-slate-100 shadow-2xs">
+                  <img
+                    src={images[activeImageIndex] ?? product.image}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    onError={(event) => {
+                      event.currentTarget.src = product.image;
+                    }}
+                  />
+                </span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-[10px] font-extrabold uppercase tracking-wider text-[#D9232D]">
+                      {product.categoryLabel || 'Seat Covers'}
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="hidden h-1 w-1 shrink-0 rounded-full bg-slate-300 sm:inline-block"
+                    />
+                    <span className="hidden items-center gap-0.5 text-[10px] font-bold text-slate-600 tabular-nums sm:inline-flex">
+                      <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                      {reviewsValue}
+                    </span>
+                  </div>
+                  <p className="truncate text-xs font-extrabold leading-tight text-slate-900 sm:text-[13px]">
+                    {product.title}
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-1.5">
+            {/* Right: Classic Glass Action Dock */}
+            <div className="flex shrink-0 items-center gap-1 rounded-2xl border border-white/90 bg-white/65 p-1 shadow-[0_6px_20px_-8px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md">
               <button
                 type="button"
                 aria-label="Share product"
                 onClick={() => void shareProduct()}
-                className="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-2xl border border-white/90 bg-white/80 px-2.5 text-xs font-bold text-slate-700 shadow-2xs backdrop-blur-md transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D]"
+                className={`inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-xl border px-2.5 text-xs font-bold transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] sm:h-10 sm:min-w-10 ${
+                  copiedShareLink
+                    ? 'border-emerald-200/90 bg-emerald-50/95 text-emerald-700 shadow-2xs'
+                    : 'border-white/90 bg-white/85 text-slate-700 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.08)] hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D]'
+                }`}
               >
                 {copiedShareLink ? (
                   <>
                     <Check className="h-4 w-4 text-emerald-600" />
-                    <span className="text-emerald-700">Copied</span>
+                    <span className="text-[11px] font-extrabold text-emerald-700">Copied</span>
                   </>
                 ) : (
                   <Share2 className="h-4 w-4" />
@@ -536,9 +568,9 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                   type="button"
                   aria-label="Search products"
                   onClick={onOpenSearch}
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/90 bg-white/80 text-slate-700 shadow-2xs backdrop-blur-md transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D]"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/90 bg-white/85 text-slate-700 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.08)] transition-all duration-150 hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95 sm:h-10 sm:w-10"
                 >
-                  <Search className="h-5 w-5" />
+                  <Search className="h-4.5 w-4.5" />
                 </button>
               )}
 
@@ -546,11 +578,11 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 type="button"
                 aria-label={`Open cart, ${cartCount} items`}
                 onClick={onOpenCart}
-                className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/90 bg-white/80 text-slate-800 shadow-2xs backdrop-blur-md transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D]"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/90 bg-white/85 text-slate-800 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.08)] transition-all duration-150 hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95 sm:h-10 sm:w-10"
               >
-                <ShoppingCart className="h-5 w-5" />
+                <ShoppingCart className="h-4.5 w-4.5" />
                 {cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#D9232D] px-1 text-[10px] font-extrabold text-white tabular-nums shadow-xs">
+                  <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full border border-white bg-gradient-to-r from-[#D9232D] to-[#B91822] px-1 text-[10px] font-extrabold text-white tabular-nums shadow-xs">
                     {cartCount}
                   </span>
                 )}

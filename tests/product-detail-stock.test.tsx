@@ -49,7 +49,9 @@ describe('product availability awareness and product detail page UI/UX', () => {
     expect(html).toContain('Add to wishlist');
     expect(html).toContain('>Like<');
     expect(html).toContain('>Zoom<');
+    expect(html).toContain('data-testid="pdp-classic-glass-topbar"');
     expect(html).not.toContain('pointer-events-none absolute inset-x-0 top-0');
+    expect(html).not.toContain('ROFIK GODI CENTRE');
     expect(html).not.toContain('w-screen');
     expect(html).not.toContain('w-[100vw]');
   });
