@@ -1452,11 +1452,15 @@ export const AccountView: React.FC<AccountViewProps> = ({
         {activeModal === 'orders' && helpOrder && (
           <OrderHelpSupportView
             order={helpOrder}
+            currentUserId={currentUser?.id || ''}
+            isAuthenticated={Boolean(currentUser && !currentUser.isGuest)}
             onBack={() => {
               setHelpOrder(null);
               onCloseOrderHelp?.(helpOrder.order_slug);
             }}
             onOpenLiveChat={(orderId) => onOpenContactSupport?.(helpOrder.order_slug, orderId)}
+            onOpenSupportRequest={(requestId) => onSelectSupportRequest?.(requestId)}
+            onOpenSupportRequests={() => onOpenSupportPage?.()}
           />
         )}
       </AnimatePresence>

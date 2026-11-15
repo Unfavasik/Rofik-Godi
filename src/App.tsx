@@ -1655,7 +1655,11 @@ export default function App() {
               onOpenContactSupport={(orderSlug, relatedOrderId) => {
                 if (orderSlug) {
                   const orderQuery = relatedOrderId ? `&order=${encodeURIComponent(relatedOrderId)}` : '';
-                  navigate(`/contact-support?from=orders${orderQuery}`, { state: { returnTo: getPathForCustomerOrder(orderSlug.toLowerCase()) } });
+                  const returnPath =
+                    resolvedRoute.kind === 'order-help'
+                      ? getPathForOrderHelp(orderSlug.toLowerCase())
+                      : getPathForCustomerOrder(orderSlug.toLowerCase());
+                  navigate(`/contact-support?from=orders${orderQuery}`, { state: { returnTo: returnPath } });
                   return;
                 }
                 const from = resolvedRoute.kind === 'settings' || resolvedRoute.kind === 'settings-section' ? 'settings' : 'profile';
