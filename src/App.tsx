@@ -83,6 +83,7 @@ import { usePushNotifications } from './hooks/usePushNotifications';
 import { listMyNotifications, listMyWishlist, toggleWishlist } from './lib/supabaseCustomer';
 import { readCustomerNotificationCountCache, writeCustomerNotificationCountCache } from './lib/localCache';
 import { CloudLoader } from './components/CloudLoader';
+import { applyDocumentSeo, resolveSeoPayload } from './lib/seoManager';
 const FilterSortModal = lazy(() => import('./components/FilterSortModal').then((module) => ({ default: module.FilterSortModal })));
 const LAST_ROUTE_KEY = 'rofik-godi:last-route:v1';
 const SCROLL_KEY = 'rofik-godi:scroll:v1';
@@ -723,6 +724,37 @@ export default function App() {
     // the cached/bundled catalog yet, so only redirect once the fetch has finished.
     else if (catalogFresh) navigate('/shop', { replace: true });
   }, [appPhase, authStatus, guestWelcomeComplete, catalogLoaded, catalogFresh, catalogProducts, location.pathname, location.search, location.state, navigate]);
+
+  useEffect(() => {
+    const activeOverlay = isStoreInfoOpen
+      ? 'store'
+      : isPrivacyPolicyOpen
+        ? 'privacy'
+        : isTermsConditionsOpen
+          ? 'terms'
+          : isPersonalDataOpen
+            ? 'personal-data'
+            : isCustomBuilderOpen
+              ? 'custom'
+              : null;
+    applyDocumentSeo(
+      resolveSeoPayload({
+        pathname: location.pathname,
+        selectedProduct,
+        catalogProducts,
+        activeOverlay,
+      }),
+    );
+  }, [
+    location.pathname,
+    selectedProduct,
+    catalogProducts,
+    isStoreInfoOpen,
+    isPrivacyPolicyOpen,
+    isTermsConditionsOpen,
+    isPersonalDataOpen,
+    isCustomBuilderOpen,
+  ]);
 
   useEffect(() => {
     if (!couponRouteCode) return;
@@ -1414,7 +1446,7 @@ export default function App() {
   if (appPhase === 'auth') {
     return (
       <Suspense fallback={<SplashScreen />}>
-      <div className="min-h-screen bg-[#f7d9de] flex justify-center selection:bg-[#e0182d] selection:text-white font-sans antialiased text-[#0f1a3a]">
+      <div className="min-h-screen bg-[#F4E6D8] flex justify-center selection:bg-[#FFF1A6] selection:text-[#6B352A] font-sans antialiased text-[#2B1611]">
         <AuthScreen
           initialMode={authInitialMode}
           onSuccess={handleLoginSuccess}
@@ -1437,11 +1469,11 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
     <I18nProvider language={uiLanguage}>
-    <div className="min-h-screen w-full overflow-x-hidden bg-[#F0F2F5] flex justify-center selection:bg-[#D9232D] selection:text-white font-sans antialiased text-[#1E232A]">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[#F5EDE1] flex justify-center selection:bg-[#FFF1A6] selection:text-[#6B352A] font-sans antialiased text-[#2B1611]">
       {/* App Container (Mobile Frame or Full Width based on toggle) */}
       <div
         onClickCapture={handleAppHapticTap}
-        className={`w-full min-w-0 overflow-x-hidden bg-[#FDFDFD] min-h-screen flex flex-col relative shadow-2xl transition-all duration-300 ${
+        className={`w-full min-w-0 overflow-x-hidden bg-[#FFFCF4] min-h-screen flex flex-col relative shadow-2xl transition-all duration-300 ${
           hidesBottomNavigation ? '' : 'pb-28'
         } ${isMobileFrameMode ? 'max-w-[440px]' : 'max-w-7xl'}`}
       >
@@ -1718,7 +1750,7 @@ export default function App() {
             />
           </main>
         ) : activeTab === 'cart' || activeTab === 'wishlist' || activeTab === 'custom' ? (
-          <main className="min-h-screen flex-1 bg-[#FDFDFD]" aria-label={`${activeTab} view`} />
+          <main className="min-h-screen flex-1 bg-[#FFFCF4]" aria-label={`${activeTab} view`} />
         ) : (
           <main className="flex-1 flex flex-col">
             {/* Hero Section Banner */}
@@ -1752,19 +1784,19 @@ export default function App() {
               <section className="px-5 mb-6" data-purpose="popular-picks">
                 <div className="flex justify-between items-baseline mb-3">
                   <div className="flex items-center gap-1.5">
-                    <Flame className="w-4 h-4 text-[#D9232D]" />
+                    <Flame className="w-4 h-4 text-[#6B352A]" />
                     <div>
-                      <h3 className="text-[17px] font-black text-gray-900 tracking-tight">
+                      <h3 className="text-[17px] font-black text-[#2B1611] tracking-tight">
                         {translate(uiLanguage, 'home.popularPicks')}
                       </h3>
-                      <p className="text-[11.5px] text-gray-400 font-medium">
+                      <p className="text-[11.5px] text-[#8A6C63] font-medium">
                         {translate(uiLanguage, 'home.favourites')}
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={scrollToShop}
-                    className="text-[12px] font-bold text-[#D9232D] hover:text-red-700 flex items-center space-x-1 cursor-pointer"
+                    className="text-[12px] font-bold text-[#6B352A] hover:text-[#53271E] flex items-center space-x-1 cursor-pointer"
                   >
                     <span>{translate(uiLanguage, 'home.seeAll')}</span>
                     <span className="text-xs">→</span>
@@ -1803,12 +1835,12 @@ export default function App() {
             <section id="shop-section" className="px-5 mb-6">
               <div className="mb-3">
                 <div>
-                  <h3 className="text-[17px] font-black text-gray-900 tracking-tight">
+                  <h3 className="text-[17px] font-black text-[#2B1611] tracking-tight">
                     {selectedCategory === 'all'
                       ? 'All Seat Covers & Essentials'
                       : `${selectedCategory.toUpperCase()} COLLECTION`}
                   </h3>
-                  <p className="text-[11.5px] text-gray-400 font-medium">
+                  <p className="text-[11.5px] text-[#8A6C63] font-medium">
                     {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}{' '}
                     available
                   </p>
@@ -1822,19 +1854,19 @@ export default function App() {
                       type="button"
                       onClick={() => setIsHomeSortOpen(true)}
                       aria-label="Sort products"
-                      className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold"
+                      className="flex items-center gap-1 rounded-full border border-[#E8D8C4] bg-white px-3 py-1.5 text-xs font-semibold text-[#2B1611] hover:border-[#6B352A]/40"
                     >
-                      <ArrowUpDown className="h-3.5 w-3.5" /> {SORT_LABELS[sortBy]?.label || 'Sort'}
+                      <ArrowUpDown className="h-3.5 w-3.5 text-[#6B352A]" /> {SORT_LABELS[sortBy]?.label || 'Sort'}
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsHomeFilterOpen(true)}
                       aria-label="Filter products"
-                      className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold"
+                      className="flex items-center gap-1 rounded-full border border-[#E8D8C4] bg-white px-3 py-1.5 text-xs font-semibold text-[#2B1611] hover:border-[#6B352A]/40"
                     >
-                      <SlidersHorizontal className="h-3.5 w-3.5" /> Filter
+                      <SlidersHorizontal className="h-3.5 w-3.5 text-[#6B352A]" /> Filter
                       {activeHomeFiltersCount > 0 && (
-                        <span className="grid h-4 min-w-4 place-items-center rounded-full bg-[#e61e25] px-1 text-[9px] font-extrabold text-white">
+                        <span className="grid h-4 min-w-4 place-items-center rounded-full bg-[#6B352A] px-1 text-[9px] font-extrabold text-[#FFF1A6]">
                           {activeHomeFiltersCount}
                         </span>
                       )}
@@ -1845,7 +1877,7 @@ export default function App() {
                       onClick={() => setShopLayoutMode('grid')}
                       aria-label="Grid view"
                       aria-pressed={shopLayoutMode === 'grid'}
-                      className={`rounded-lg p-1.5 ${shopLayoutMode === 'grid' ? 'bg-[#e61e25] text-white' : 'text-slate-500'}`}
+                      className={`rounded-lg p-1.5 ${shopLayoutMode === 'grid' ? 'bg-[#6B352A] text-[#FFFCF4]' : 'text-[#6B4C44]'}`}
                     >
                       <LayoutGrid className="h-4 w-4" />
                     </button>
@@ -1853,7 +1885,7 @@ export default function App() {
                       onClick={() => setShopLayoutMode('list')}
                       aria-label="List view"
                       aria-pressed={shopLayoutMode === 'list'}
-                      className={`rounded-lg p-1.5 ${shopLayoutMode === 'list' ? 'bg-[#e61e25] text-white' : 'text-slate-500'}`}
+                      className={`rounded-lg p-1.5 ${shopLayoutMode === 'list' ? 'bg-[#6B352A] text-[#FFFCF4]' : 'text-[#6B4C44]'}`}
                     >
                       <List className="h-4 w-4" />
                     </button>
@@ -1866,7 +1898,7 @@ export default function App() {
                 searchQuery ||
                 activeHomeFiltersCount > 0) && (
                 <div className="flex flex-wrap items-center gap-1.5 mb-3">
-                  <span className="text-[10.5px] font-semibold text-gray-400">Active filters:</span>
+                  <span className="text-[10.5px] font-semibold text-[#8A6C63]">Active filters:</span>
 
                   {(selectedCategory !== 'all' || homeFilters.category !== 'all') && (
                     <button
@@ -1874,7 +1906,7 @@ export default function App() {
                         setSelectedCategory('all');
                         setHomeFilters((prev) => ({ ...prev, category: 'all' }));
                       }}
-                      className="bg-red-50 text-[#D9232D] border border-red-200 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
+                      className="bg-[#FFF1A6] text-[#6B352A] border border-[#E6CE73] text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
                     >
                       <span>
                         Category:{' '}
@@ -1890,7 +1922,7 @@ export default function App() {
                         setVehicleFilter(null);
                         setHomeFilters((prev) => ({ ...prev, vehicleBrand: 'all' }));
                       }}
-                      className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
+                      className="bg-[#F6EAE4] text-[#6B352A] border border-[#DFC6B8] text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
                     >
                       <span>Vehicle: {vehicleFilter || homeFilters.vehicleBrand}</span>
                       <span>✕</span>
@@ -1900,13 +1932,13 @@ export default function App() {
                   {homeFilters.priceRange !== 'all' && (
                     <button
                       onClick={() => setHomeFilters((prev) => ({ ...prev, priceRange: 'all' }))}
-                      className="bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
+                      className="bg-[#FFF8D6] text-[#6B352A] border border-[#E6CE73] text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
                     >
                       <span>
                         {homeFilters.priceRange === 'under_300' && 'Under ৳300'}
                         {homeFilters.priceRange === '300_600' && '৳300 - ৳600'}
                         {homeFilters.priceRange === '600_1000' && '৳600 - ৳1000'}
-                        {homeFilters.priceRange === 'above_1000' && 'Above ��1000'}
+                        {homeFilters.priceRange === 'above_1000' && 'Above ৳1000'}
                       </span>
                       <span>✕</span>
                     </button>
@@ -1915,7 +1947,7 @@ export default function App() {
                   {homeFilters.maxPrice < 2000 && (
                     <button
                       onClick={() => setHomeFilters((prev) => ({ ...prev, maxPrice: 2000 }))}
-                      className="bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
+                      className="bg-[#FFF8D6] text-[#6B352A] border border-[#E6CE73] text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
                     >
                       <span>Max ৳{homeFilters.maxPrice}</span>
                       <span>✕</span>
@@ -1925,7 +1957,7 @@ export default function App() {
                   {homeFilters.waterproofOnly && (
                     <button
                       onClick={() => setHomeFilters((prev) => ({ ...prev, waterproofOnly: false }))}
-                      className="bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
+                      className="bg-[#FFF8D6] text-[#6B352A] border border-[#E6CE73] text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
                     >
                       <span>Waterproof</span>
                       <span>✕</span>
@@ -1935,7 +1967,7 @@ export default function App() {
                   {homeFilters.bestsellerOnly && (
                     <button
                       onClick={() => setHomeFilters((prev) => ({ ...prev, bestsellerOnly: false }))}
-                      className="bg-orange-50 text-orange-700 border border-orange-200 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
+                      className="bg-[#FFF1A6] text-[#6B352A] border border-[#E6CE73] text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
                     >
                       <span>Bestseller</span>
                       <span>✕</span>
@@ -1945,7 +1977,7 @@ export default function App() {
                   {homeFilters.inStockOnly && (
                     <button
                       onClick={() => setHomeFilters((prev) => ({ ...prev, inStockOnly: false }))}
-                      className="bg-green-50 text-green-700 border border-green-200 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
+                      className="bg-[#F6EAE4] text-[#6B352A] border border-[#DFC6B8] text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
                     >
                       <span>In Stock</span>
                       <span>✕</span>
@@ -1957,7 +1989,7 @@ export default function App() {
                       onClick={() =>
                         setHomeFilters((prev) => ({ ...prev, customizableOnly: false }))
                       }
-                      className="bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
+                      className="bg-[#FFF8D6] text-[#6B352A] border border-[#E6CE73] text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
                     >
                       <span>Custom Fit</span>
                       <span>✕</span>
@@ -1967,7 +1999,7 @@ export default function App() {
                   {homeFilters.minRating > 0 && (
                     <button
                       onClick={() => setHomeFilters((prev) => ({ ...prev, minRating: 0 }))}
-                      className="bg-yellow-50 text-yellow-800 border border-yellow-200 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
+                      className="bg-[#FFF1A6] text-[#6B352A] border border-[#E6CE73] text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
                     >
                       <span>{homeFilters.minRating}+ Stars</span>
                       <span>✕</span>
@@ -1977,7 +2009,7 @@ export default function App() {
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="bg-gray-100 text-gray-700 border border-gray-200 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
+                      className="bg-[#F6EAE4] text-[#2B1611] border border-[#E8D8C4] text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
                     >
                       <span>Search: "{searchQuery}"</span>
                       <span>✕</span>
@@ -1991,7 +2023,7 @@ export default function App() {
                       setSearchQuery('');
                       setHomeFilters(INITIAL_FILTERS);
                     }}
-                    className="text-[10px] font-bold text-gray-500 hover:text-[#D9232D] underline ml-1 cursor-pointer"
+                    className="text-[10px] font-bold text-[#6B4C44] hover:text-[#6B352A] underline ml-1 cursor-pointer"
                   >
                     Clear all
                   </button>
@@ -2000,8 +2032,8 @@ export default function App() {
 
               {/* Product Grid / List Display */}
               {filteredProducts.length === 0 ? (
-                <div className="bg-white rounded-2xl p-8 text-center border border-gray-100 shadow-xs">
-                  <p className="text-gray-500 text-sm font-semibold mb-2">
+                <div className="bg-white rounded-2xl p-8 text-center border border-[#E8D8C4] shadow-xs">
+                  <p className="text-[#6B4C44] text-sm font-semibold mb-2">
                     No seat covers found matching your filter.
                   </p>
                   <button
@@ -2010,7 +2042,7 @@ export default function App() {
                       setVehicleFilter(null);
                       setSearchQuery('');
                     }}
-                    className="bg-[#D9232D] text-white text-xs font-bold px-4 py-2 rounded-full cursor-pointer"
+                    className="bg-[#6B352A] text-[#FFFCF4] text-xs font-bold px-4 py-2 rounded-full cursor-pointer hover:bg-[#53271E]"
                   >
                     Reset Filters
                   </button>
@@ -2056,15 +2088,15 @@ export default function App() {
             <CustomerReviews onOpenOrderHistory={() => openPageRoute('/my-orders')} />
 
             {/* Footer Brand Info */}
-            <footer className="px-5 pt-6 pb-4 bg-gray-900 text-gray-300 rounded-t-[32px] mt-auto">
+            <footer className="px-5 pt-6 pb-4 bg-[#4A221A] text-[#F5E6DC] rounded-t-[32px] mt-auto">
               <div className="space-y-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h4 className="text-lg font-black text-white flex items-center">
+                    <h4 className="text-lg font-black text-[#FFFCF4] flex items-center">
                       <span>ROFIK</span>
-                      <span className="text-[#D9232D] ml-1.5">GODI</span>
+                      <span className="text-[#FFF1A6] ml-1.5">GODI</span>
                     </h4>
-                    <p className="text-[10px] text-gray-400 mt-0.5 tracking-wider uppercase">
+                    <p className="text-[10px] text-[#E6CDBD] mt-0.5 tracking-wider uppercase">
                       CENTRE · LOCAL RIDE ESSENTIALS
                     </p>
                   </div>
@@ -2072,7 +2104,7 @@ export default function App() {
                   <div className="flex gap-2">
                     <a
                       href={`tel:${WORKSHOP_INFO.phone}`}
-                      className="w-8 h-8 rounded-full bg-gray-800 text-white hover:bg-[#D9232D] flex items-center justify-center transition-colors"
+                      className="w-8 h-8 rounded-full bg-[#6B352A] text-[#FFF1A6] hover:bg-[#53271E] flex items-center justify-center transition-colors"
                       title="Call Us"
                     >
                       <PhoneCall className="w-3.5 h-3.5" />
@@ -2081,7 +2113,7 @@ export default function App() {
                       href={`https://wa.me/${WORKSHOP_INFO.whatsapp.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-700 transition-colors"
+                      className="w-8 h-8 rounded-full bg-[#FF6115] text-[#1F0E0A] flex items-center justify-center hover:bg-[#E5520D] transition-colors shadow-xs"
                       title="WhatsApp"
                     >
                       <MessageCircle className="w-3.5 h-3.5" />
@@ -2089,27 +2121,27 @@ export default function App() {
                   </div>
                 </div>
 
-                <p className="text-[11.5px] text-gray-400 leading-relaxed">
+                <p className="text-[11.5px] text-[#E6CDBD] leading-relaxed">
                   Leading seat cover manufacturer for bikes, toto e-rickshaws, and scooters.
                   Handcrafted with Japanese stitching cords, anti-fatigue memory foam, and
                   weather-proof rexine.
                 </p>
 
-                <div className="border-t border-gray-800 pt-3 flex flex-wrap justify-between items-center text-[10.5px] text-gray-500 gap-2">
+                <div className="border-t border-[#6B352A] pt-3 flex flex-wrap justify-between items-center text-[10.5px] text-[#D4B8A8] gap-2">
                   <span>© 2026 ROFIK GODI CENTRE</span>
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
                       onClick={() => openPageRoute('/privacy-policy')}
-                      className="hover:text-white transition-colors underline-offset-2 hover:underline"
+                      className="hover:text-[#FFF1A6] transition-colors underline-offset-2 hover:underline"
                     >
                       Privacy Policy
                     </button>
-                    <span className="text-gray-700">·</span>
+                    <span className="text-[#8C5245]">·</span>
                     <button
                       type="button"
                       onClick={() => openPageRoute('/terms-and-conditions')}
-                      className="hover:text-white transition-colors underline-offset-2 hover:underline"
+                      className="hover:text-[#FFF1A6] transition-colors underline-offset-2 hover:underline"
                     >
                       Terms & Conditions
                     </button>
@@ -2277,7 +2309,7 @@ export default function App() {
 
         {/* 📜 Privacy Policy Modal / Slide-over */}
         {isPrivacyPolicyOpen && (
-          <div className="fixed inset-0 z-50 bg-[#F8FAFC] overflow-y-auto">
+          <div className="fixed inset-0 z-50 bg-[#FFFCF4] overflow-y-auto">
             <PrivacyPolicyView
               onBack={() => navigateBackToPage('/home')}
               onOpenStoreInfo={() => openPageRoute('/store-map')}
@@ -2290,7 +2322,7 @@ export default function App() {
 
         {/* ⚖️ Terms & Conditions Modal / Slide-over */}
         {isTermsConditionsOpen && (
-          <div className="fixed inset-0 z-50 bg-[#F8FAFC] overflow-y-auto">
+          <div className="fixed inset-0 z-50 bg-[#FFFCF4] overflow-y-auto">
             <TermsConditionsView
               onBack={() => navigateBackToPage('/home')}
               onOpenStoreInfo={() => openPageRoute('/store-map')}
@@ -2302,7 +2334,7 @@ export default function App() {
 
         {/* 🔐 Personal Data Processing Modal / Slide-over (signup consent) */}
         {isPersonalDataOpen && (
-          <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+          <div className="fixed inset-0 z-50 bg-[#FFFCF4] overflow-y-auto">
             <Suspense fallback={<SplashScreen />}>
               <PersonalDataView
                 onBack={() => navigateBackToPage('/signup')}
@@ -2314,7 +2346,7 @@ export default function App() {
 
         {/* 🎟️ Coupon details route (/coupons/<code>) */}
         {couponRouteCode && (
-          <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+          <div className="fixed inset-0 z-50 bg-[#FFFCF4] overflow-y-auto">
             {couponRouteOffer ? (
               <Suspense fallback={null}>
                 <CouponDetailsView
@@ -2324,15 +2356,15 @@ export default function App() {
                 />
               </Suspense>
             ) : (
-              <main className="min-h-screen w-full bg-white font-sans text-slate-800">
-                <header className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
-                  <button onClick={() => navigateBackToPage('/profile')} aria-label="Back" className="rounded-full p-1 text-slate-700">←</button>
+              <main className="min-h-screen w-full bg-[#FFFCF4] font-sans text-[#2B1611]">
+                <header className="flex items-center gap-3 border-b border-[#E8D8C4] bg-[#6B352A] px-5 py-4 text-[#FFFCF4]">
+                  <button onClick={() => navigateBackToPage('/profile')} aria-label="Back" className="rounded-full p-1 text-[#FFFCF4] hover:bg-white/10">←</button>
                   <h1 className="text-[22px] font-extrabold tracking-tight">Coupon Details</h1>
                 </header>
                 <section className="mx-auto max-w-xl px-5 py-12 text-center">
-                  <h2 className="mt-4 text-lg font-extrabold text-slate-900">{couponRouteLoading ? 'Loading offer details…' : 'Offer details unavailable'}</h2>
-                  {!couponRouteLoading && <p role="status" className="mt-2 text-sm leading-relaxed text-slate-600">This coupon is no longer active.</p>}
-                  {!couponRouteLoading && <button type="button" onClick={() => navigate('/shop')} className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#E51E35] px-6 py-3.5 text-sm font-extrabold text-white">Shop Now</button>}
+                  <h2 className="mt-4 text-lg font-extrabold text-[#2B1611]">{couponRouteLoading ? 'Loading offer details…' : 'Offer details unavailable'}</h2>
+                  {!couponRouteLoading && <p role="status" className="mt-2 text-sm leading-relaxed text-[#6B4C44]">This coupon is no longer active.</p>}
+                  {!couponRouteLoading && <button type="button" onClick={() => navigate('/shop')} className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#6B352A] px-6 py-3.5 text-sm font-extrabold text-[#FFFCF4] hover:bg-[#53271E]">Shop Now</button>}
                 </section>
               </main>
             )}
@@ -2381,7 +2413,7 @@ export default function App() {
           }}
         /></Suspense>}
         {stockAlertFeedback && <div className="pointer-events-none fixed inset-x-3 top-3 z-[90] flex justify-center pt-[env(safe-area-inset-top)]">
-          <div role={stockAlertFeedback.tone === 'error' ? 'alert' : 'status'} aria-live={stockAlertFeedback.tone === 'error' ? 'assertive' : 'polite'} className={`pointer-events-auto flex w-full max-w-[440px] items-center gap-3 rounded-2xl border px-4 py-3 text-xs font-bold shadow-xl ${stockAlertFeedback.tone === 'error' ? 'border-rose-200 bg-rose-50 text-rose-950' : 'border-emerald-200 bg-emerald-50 text-emerald-950'}`}>
+          <div role={stockAlertFeedback.tone === 'error' ? 'alert' : 'status'} aria-live={stockAlertFeedback.tone === 'error' ? 'assertive' : 'polite'} className={`pointer-events-auto flex w-full max-w-[440px] items-center gap-3 rounded-2xl border px-4 py-3 text-xs font-bold shadow-xl ${stockAlertFeedback.tone === 'error' ? 'border-[#E9C2B5] bg-[#FDF2EE] text-[#9E2A2B]' : 'border-[#E6CE73] bg-[#FFF1A6] text-[#6B352A]'}`}>
             <p className="min-w-0 flex-1 leading-relaxed">{stockAlertFeedback.message}</p>
             <button type="button" aria-label="Dismiss restock alert message" onClick={() => {
               if (stockAlertFeedbackTimerRef.current !== null) window.clearTimeout(stockAlertFeedbackTimerRef.current);

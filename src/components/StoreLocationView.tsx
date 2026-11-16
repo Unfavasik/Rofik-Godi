@@ -229,16 +229,16 @@ const ARRIVAL_SPEECH: Record<SpeechLanguage, string> = {
 // the marker element on the coordinate, so the spacer keeps the pin tip on it.
 const storeMarkerHtml = () => `
   <div style="display:flex;flex-direction:column;align-items:center;">
-    <div style="display:flex;align-items:center;gap:8px;background:#ffffff;border-radius:14px;padding:7px 12px;box-shadow:0 4px 16px rgba(0,0,0,0.22);white-space:nowrap;">
+    <div style="display:flex;align-items:center;gap:8px;background:#FFFCF4;border:1px solid #E8D8C4;border-radius:14px;padding:7px 12px;box-shadow:0 4px 16px rgba(43,22,17,0.22);white-space:nowrap;">
       <img src="${BRAND_ICON}" alt="" style="width:28px;height:28px;border-radius:8px;object-fit:cover;" />
       <div>
-        <div style="font-size:12px;font-weight:800;color:#0f172a;line-height:1.25;">Rofik Godi Centre</div>
-        <div style="font-size:8px;font-weight:700;letter-spacing:0.12em;color:#94a3b8;">BIKE &bull; TOTO &bull; SEAT COVERS</div>
+        <div style="font-size:12px;font-weight:800;color:#2B1611;line-height:1.25;">Rofik Godi Centre</div>
+        <div style="font-size:8px;font-weight:700;letter-spacing:0.12em;color:#8A6C63;">BIKE &bull; TOTO &bull; SEAT COVERS</div>
       </div>
     </div>
-    <svg width="26" height="34" viewBox="0 0 24 32" style="margin-top:2px;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.3));">
-      <path d="M12 0C5.4 0 0 5.2 0 11.6 0 20.3 12 32 12 32s12-11.7 12-20.4C24 5.2 18.6 0 12 0z" fill="#E51E2B"/>
-      <circle cx="12" cy="11.5" r="4.5" fill="#ffffff"/>
+    <svg width="26" height="34" viewBox="0 0 24 32" style="margin-top:2px;filter:drop-shadow(0 2px 3px rgba(43,22,17,0.35));">
+      <path d="M12 0C5.4 0 0 5.2 0 11.6 0 20.3 12 32 12 32s12-11.7 12-20.4C24 5.2 18.6 0 12 0z" fill="#6B352A"/>
+      <circle cx="12" cy="11.5" r="4.5" fill="#FFF1A6"/>
     </svg>
     <div style="height:80px;" aria-hidden="true"></div>
   </div>`;
@@ -839,8 +839,8 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
   const BannerIcon = banner ? maneuverIcon(banner.type) : ArrowUp;
 
   return (
-    <div className="fixed inset-0 z-[95] flex flex-col overflow-x-hidden bg-[#F8FAFC] font-sans" role="dialog" aria-modal="true" aria-label="Visit our store">
-      <header className="flex shrink-0 items-center gap-3 border-b border-slate-100 bg-white px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+    <div className="fixed inset-0 z-[95] flex flex-col overflow-x-hidden bg-[#FFFCF4] font-sans" role="dialog" aria-modal="true" aria-label="Visit our store">
+      <header className="flex shrink-0 items-center gap-3 border-b border-[#E8D8C4] bg-[#FFFCF4] px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
         <button
           type="button"
           onClick={() => {
@@ -851,40 +851,40 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
             onClose();
           }}
           aria-label="Go back"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100/80 text-slate-700 transition-transform hover:bg-slate-200/80 active:scale-95"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FAF4EA] border border-[#E8D8C4] text-[#4A2B23] transition-transform hover:bg-[#EFE2D2] active:scale-95"
         >
           <ArrowLeft className="h-5 w-5" strokeWidth={2.2} />
         </button>
         <img src={BRAND_ICON} alt="" className="h-9 w-9 rounded-lg object-cover" />
         <div className="min-w-0">
-          <h1 className="truncate text-base font-black leading-tight tracking-tight text-slate-900">ROFIK GODI CENTRE</h1>
-          <p className="text-[9px] font-bold tracking-[0.18em] text-slate-400">BIKE &bull; TOTO &bull; SEAT COVERS</p>
+          <h1 className="truncate text-base font-black leading-tight tracking-tight text-[#2B1611]">ROFIK GODI CENTRE</h1>
+          <p className="text-[9px] font-bold tracking-[0.18em] text-[#8A6C63]">BIKE &bull; TOTO &bull; SEAT COVERS</p>
         </div>
       </header>
 
       <div className="relative min-h-0 flex-1">
         <div ref={hostWrapperRef} className="absolute inset-0" />
         {mapError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#E8EDF3] px-6 text-center">
-            <MapPin className="h-10 w-10 text-[#D9232D]" />
-            <p className="text-sm font-bold text-slate-800">The map could not be loaded</p>
-            <p className="max-w-[280px] text-xs leading-relaxed text-slate-500">{mapError}. Please check your connection and try again.</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#FAF4EA] px-6 text-center">
+            <MapPin className="h-10 w-10 text-[#6B352A]" />
+            <p className="text-sm font-bold text-[#2B1611]">The map could not be loaded</p>
+            <p className="max-w-[280px] text-xs leading-relaxed text-[#6B4C44]">{mapError}. Please check your connection and try again.</p>
           </div>
         )}
 
         {navigating && banner && !arrived && (
           <div className="absolute left-3 right-3 top-3 z-20" role="status" aria-live="assertive">
-            <div className="flex items-center gap-3 rounded-2xl bg-slate-900/95 p-3.5 shadow-xl">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
+            <div className="flex items-center gap-3 rounded-2xl bg-[#2B1611]/95 p-3.5 shadow-xl border border-[#6B352A]/40">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FFF1A6]/15 text-[#FFF1A6]">
                 <BannerIcon className="h-6 w-6" strokeWidth={2.4} />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-lg font-black leading-none text-white">{banner.distance}</p>
-                <p className="mt-1 truncate text-[13px] font-medium text-white/90">{banner.instruction}</p>
+                <p className="mt-1 truncate text-[13px] font-medium text-[#F5EDE1]">{banner.instruction}</p>
               </div>
             </div>
             {thenManeuver && (
-              <div className="mt-2 inline-flex items-center gap-2 rounded-xl bg-slate-900/85 px-3 py-1.5 text-[11px] font-bold text-white shadow-lg">
+              <div className="mt-2 inline-flex items-center gap-2 rounded-xl bg-[#2B1611]/90 px-3 py-1.5 text-[11px] font-bold text-[#FFF1A6] shadow-lg">
                 Then
                 {(() => {
                   const ThenIcon = maneuverIcon(thenManeuver.type);
@@ -897,24 +897,24 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
 
         {navigating && arrived && (
           <div className="absolute left-3 right-3 top-3 z-20" role="status">
-            <div className="flex items-center gap-3 rounded-2xl bg-emerald-600 p-4 shadow-xl">
-              <Flag className="h-6 w-6 shrink-0 text-white" />
-              <p className="text-sm font-black text-white">You have arrived — Rofik Godi Centre</p>
+            <div className="flex items-center gap-3 rounded-2xl bg-[#6B352A] border border-[#E6CE73] p-4 shadow-xl">
+              <Flag className="h-6 w-6 shrink-0 text-[#FFF1A6]" />
+              <p className="text-sm font-black text-[#FFF1A6]">You have arrived — Rofik Godi Centre</p>
             </div>
           </div>
         )}
 
         {navigating && (
-          <div className="absolute bottom-3 left-3 z-10 flex items-baseline gap-1 rounded-xl bg-white px-3 py-2 shadow-lg" role="status" aria-label="Current speed">
-            <span className="text-lg font-black leading-none text-slate-900">{liveSpeedKmh !== null ? Math.round(liveSpeedKmh) : '--'}</span>
-            <span className="text-[10px] font-bold text-slate-500">km/h</span>
+          <div className="absolute bottom-3 left-3 z-10 flex items-baseline gap-1 rounded-xl bg-[#FFFCF4] border border-[#E8D8C4] px-3 py-2 shadow-lg" role="status" aria-label="Current speed">
+            <span className="text-lg font-black leading-none text-[#2B1611]">{liveSpeedKmh !== null ? Math.round(liveSpeedKmh) : '--'}</span>
+            <span className="text-[10px] font-bold text-[#6B4C44]">km/h</span>
           </div>
         )}
 
         {navigating && offRoute && !arrived && (
           <div className="absolute bottom-20 left-3 right-3 z-20" role="alert">
-            <div className="flex items-center gap-2.5 rounded-2xl bg-amber-500 p-3 shadow-xl">
-              <TriangleAlert className="h-5 w-5 shrink-0 text-white" />
+            <div className="flex items-center gap-2.5 rounded-2xl bg-[#9A4D16] p-3 shadow-xl">
+              <TriangleAlert className="h-5 w-5 shrink-0 text-[#FFF1A6]" />
               <p className="text-xs font-bold text-white">Off route — finding a new way…</p>
             </div>
           </div>
@@ -922,8 +922,8 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
 
         {navigating && speedAnomaly && !arrived && !offRoute && (
           <div className="absolute bottom-20 left-3 right-3 z-20" role="alert">
-            <div className="flex flex-col gap-2 rounded-2xl bg-blue-600 p-3.5 shadow-xl">
-              <p className="text-xs font-bold text-white">You are moving fast for walking mode. Switch to bike or car?</p>
+            <div className="flex flex-col gap-2 rounded-2xl bg-[#6B352A] p-3.5 shadow-xl border border-[#E6CE73]/40">
+              <p className="text-xs font-bold text-[#FFF1A6]">You are moving fast for walking mode. Switch to bike or car?</p>
               <div className="flex gap-2">
                 <button type="button" onClick={() => switchModeDuringNavigation('bike')} className="flex-1 rounded-xl bg-white/15 py-2 text-[11px] font-bold text-white transition-colors hover:bg-white/25">Use bike</button>
                 <button type="button" onClick={() => switchModeDuringNavigation('drive')} className="flex-1 rounded-xl bg-white/15 py-2 text-[11px] font-bold text-white transition-colors hover:bg-white/25">Use car</button>
@@ -937,26 +937,26 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
           type="button"
           onClick={handleLocate}
           aria-label="Show my location"
-          className="absolute bottom-5 right-3 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-lg transition-transform active:scale-95"
+          className="absolute bottom-5 right-3 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-[#E8D8C4] bg-[#FFFCF4] text-[#6B352A] shadow-lg transition-transform active:scale-95"
         >
           <Crosshair className="h-5 w-5" />
         </button>
       </div>
 
       {navigating ? (
-        <section className="relative z-10 shrink-0 rounded-t-[28px] bg-white px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
+        <section className="relative z-10 shrink-0 rounded-t-[28px] border-t border-[#E8D8C4] bg-[#FFFCF4] px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(43,22,17,0.14)]">
           <div className="mx-auto flex w-full max-w-[440px] items-center justify-between gap-3">
             <button
               type="button"
               onClick={exitNavigation}
               aria-label="Exit navigation"
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-800 transition-transform active:scale-95"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#FAF4EA] border border-[#E8D8C4] text-[#2B1611] transition-transform active:scale-95"
             >
               <X className="h-5 w-5" strokeWidth={2.4} />
             </button>
             <div className="min-w-0 flex-1 text-center">
-              <p className="text-xl font-black leading-none text-emerald-600">{navRoute ? formatDuration(navRoute.durationSeconds, navRoute.durationText) : '--'}</p>
-              <p className="mt-1 truncate text-[11px] font-medium text-slate-500">
+              <p className="text-xl font-black leading-none text-[#6B352A]">{navRoute ? formatDuration(navRoute.durationSeconds, navRoute.durationText) : '--'}</p>
+              <p className="mt-1 truncate text-[11px] font-medium text-[#6B4C44]">
                 {navRoute?.distanceText || '--'}{arrivalTime ? ` • ${arrivalTime}` : ''}
               </p>
             </div>
@@ -968,41 +968,41 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
                 if (!next) window.speechSynthesis?.cancel();
               }}
               aria-label={voiceEnabled ? 'Mute voice guidance' : 'Unmute voice guidance'}
-              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors ${voiceEnabled ? 'bg-[#E51E2B]/10 text-[#E51E2B]' : 'bg-slate-100 text-slate-500'}`}
+              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors ${voiceEnabled ? 'bg-[#FFF8D6] border border-[#E6CE73] text-[#6B352A]' : 'bg-[#FAF4EA] text-[#8A6C63]'}`}
             >
               {voiceEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
             </button>
           </div>
         </section>
       ) : (
-        <section className="relative z-10 -mt-5 shrink-0 rounded-t-[28px] bg-white px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
+        <section className="relative z-10 -mt-5 shrink-0 rounded-t-[28px] border-t border-[#E8D8C4] bg-[#FFFCF4] px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(43,22,17,0.14)]">
           <div className="mx-auto w-full max-w-[440px]">
             <div className="flex items-start gap-3">
-              <img src={STORE_IMAGE} alt="Rofik Godi Centre storefront" className="h-16 w-16 shrink-0 rounded-2xl border border-slate-100 object-cover" />
+              <img src={STORE_IMAGE} alt="Rofik Godi Centre storefront" className="h-16 w-16 shrink-0 rounded-2xl border border-[#E8D8C4] object-cover" />
               <div className="min-w-0">
-                <h2 className="text-base font-black tracking-tight text-slate-900">Rofik Godi Centre</h2>
-                <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-600">
-                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                  <span className="font-bold text-slate-900">{WORKSHOP_INFO.rating}</span>
-                  <span className="text-slate-400">({WORKSHOP_INFO.reviewCount} reviews)</span>
+                <h2 className="text-base font-black tracking-tight text-[#2B1611]">Rofik Godi Centre</h2>
+                <p className="mt-0.5 flex items-center gap-1 text-xs text-[#6B4C44]">
+                  <Star className="h-3.5 w-3.5 fill-[#FF6115] text-[#FF6115]" />
+                  <span className="font-bold text-[#2B1611]">{WORKSHOP_INFO.rating}</span>
+                  <span className="text-[#8A6C63]">({WORKSHOP_INFO.reviewCount} reviews)</span>
                 </p>
-                <p className="mt-1 flex items-start gap-1 text-[11px] leading-snug text-slate-500">
-                  <MapPin className="mt-0.5 h-3 w-3 shrink-0" />
+                <p className="mt-1 flex items-start gap-1 text-[11px] leading-snug text-[#6B4C44]">
+                  <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-[#6B352A]" />
                   <span>{WORKSHOP_INFO.address}</span>
                 </p>
               </div>
             </div>
 
             {(locationNeeded || routeError) && (
-              <div role="alert" className="mt-3 flex items-start gap-2.5 rounded-2xl border border-amber-200 bg-amber-50 p-3">
-                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+              <div role="alert" className="mt-3 flex items-start gap-2.5 rounded-2xl border border-[#E6CE73] bg-[#FFF8D6] p-3">
+                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-[#9A4D16]" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-bold leading-snug text-amber-900">{routeError || 'Location is needed for turn-by-turn directions.'}</p>
+                  <p className="text-[11px] font-bold leading-snug text-[#2B1611]">{routeError || 'Location is needed for turn-by-turn directions.'}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => void handleGetDirections()}
-                      className="rounded-full bg-amber-600 px-3 py-1.5 text-[10px] font-bold text-white"
+                      className="rounded-full bg-[#6B352A] px-3 py-1.5 text-[10px] font-bold text-[#FFF1A6]"
                     >
                       Try again
                     </button>
@@ -1010,7 +1010,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
                       href={googleDirectionsUrl(activeMode, STORE_POS)}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-full border border-amber-300 bg-white px-3 py-1.5 text-[10px] font-bold text-amber-800"
+                      className="rounded-full border border-[#E8D8C4] bg-white px-3 py-1.5 text-[10px] font-bold text-[#6B352A]"
                     >
                       Open in Google Maps
                     </a>
@@ -1030,14 +1030,14 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
                     role="tab"
                     aria-selected={selected}
                     onClick={() => setActiveMode(key)}
-                    className={`flex min-h-[76px] flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2.5 text-center transition-colors ${selected ? 'bg-[#E51E2B] text-white shadow-[0_6px_16px_rgba(229,30,43,0.3)]' : 'border border-slate-200 bg-white text-slate-800'}`}
+                    className={`flex min-h-[76px] flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2.5 text-center transition-colors ${selected ? 'bg-[#6B352A] text-[#FFF1A6] shadow-[0_6px_16px_rgba(107,53,42,0.28)]' : 'border border-[#E8D8C4] bg-white text-[#2B1611]'}`}
                   >
                     <span className="flex items-center gap-1">
-                      <Icon className={`h-4 w-4 ${selected ? 'text-white' : 'text-[#E51E2B]'}`} />
+                      <Icon className={`h-4 w-4 ${selected ? 'text-[#FFF1A6]' : 'text-[#6B352A]'}`} />
                       <span className="text-[11px] font-bold">{label}</span>
                     </span>
-                    <span className={`text-[11px] font-bold ${selected ? 'text-white' : 'text-slate-900'}`}>{leg?.durationText || '--'}</span>
-                    <span className={`text-[10px] ${selected ? 'text-white/85' : 'text-slate-400'}`}>{leg?.distanceText || '--'}</span>
+                    <span className={`text-[11px] font-bold ${selected ? 'text-white' : 'text-[#2B1611]'}`}>{leg?.durationText || '--'}</span>
+                    <span className={`text-[10px] ${selected ? 'text-[#FFF1A6]/85' : 'text-[#8A6C63]'}`}>{leg?.distanceText || '--'}</span>
                   </button>
                 );
               })}
@@ -1047,7 +1047,7 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
               type="button"
               onClick={() => void handleGetDirections()}
               disabled={routeLoading}
-              className="banner-cta-shine group/cta mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] via-[#E51E2B] to-[#B91822] py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(229,30,43,0.3)] transition-all hover:brightness-105 hover:shadow-[0_10px_24px_rgba(229,30,43,0.4)] active:scale-[0.98] disabled:opacity-70"
+              className="banner-cta-shine group/cta mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#FF6115] hover:bg-[#E5520D] py-3.5 text-sm font-extrabold text-[#1F0E0A] shadow-[0_8px_20px_rgba(255,97,21,0.28)] transition-all hover:shadow-[0_10px_24px_rgba(255,97,21,0.38)] active:scale-[0.98] disabled:opacity-70"
             >
               {routeLoading ? 'Finding route…' : 'Get Directions'}
               <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />

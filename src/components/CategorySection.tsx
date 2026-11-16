@@ -15,10 +15,10 @@ interface CategorySectionProps {
 }
 
 const SCHEMES = [
-  { bgClass: 'bg-[#FFF1F1]/80 hover:bg-[#FFE8E8]', activeBgClass: 'ring-2 ring-[#D9232D] bg-[#FFE8E8]', buttonBg: 'bg-[#FEE2E2]', buttonText: 'text-[#D9232D]' },
-  { bgClass: 'bg-[#EBFBF3]/90 hover:bg-[#E2F7EC]', activeBgClass: 'ring-2 ring-[#059669] bg-[#E2F7EC]', buttonBg: 'bg-[#D1FAE5]', buttonText: 'text-[#059669]' },
-  { bgClass: 'bg-[#EEF6FF]/90 hover:bg-[#E3EFFF]', activeBgClass: 'ring-2 ring-[#2563EB] bg-[#E3EFFF]', buttonBg: 'bg-[#DBEAFE]', buttonText: 'text-[#2563EB]' },
-  { bgClass: 'bg-[#FFF8E7]/90 hover:bg-[#FEF1D4]', activeBgClass: 'ring-2 ring-[#D97706] bg-[#FEF1D4]', buttonBg: 'bg-[#FEF3C7]', buttonText: 'text-[#D97706]' },
+  { bgClass: 'bg-[#FFF1A6]/75 hover:bg-[#FFF1A6]', activeBgClass: 'ring-2 ring-[#6B352A] bg-[#FFF1A6]', buttonBg: 'bg-[#6B352A]', buttonText: 'text-[#FFFCF4]' },
+  { bgClass: 'bg-[#FFF8DC] hover:bg-[#FFF1B8]', activeBgClass: 'ring-2 ring-[#6B352A] bg-[#FFF1B8]', buttonBg: 'bg-[#F3DFC8]', buttonText: 'text-[#6B352A]' },
+  { bgClass: 'bg-[#F7EAE3] hover:bg-[#EFE0D7]', activeBgClass: 'ring-2 ring-[#6B352A] bg-[#EFE0D7]', buttonBg: 'bg-[#E6CFC2]', buttonText: 'text-[#6B352A]' },
+  { bgClass: 'bg-[#FDF3DB] hover:bg-[#FAE7B6]', activeBgClass: 'ring-2 ring-[#9A4D16] bg-[#FAE7B6]', buttonBg: 'bg-[#FDE68A]', buttonText: 'text-[#6B352A]' },
 ];
 
 type CategoryCard = {
@@ -72,13 +72,13 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
     <section className="px-5 mb-6" data-purpose="category-list">
       <div className="flex justify-between items-baseline mb-3">
         <div>
-          <h3 className="text-[17px] font-black text-gray-900 tracking-tight">{t('home.shopByCategory')}</h3>
-          <p className="text-[11.5px] text-gray-400 font-medium">{t('home.categoryHint')}</p>
+          <h3 className="text-[17px] font-black text-[#6B352A] tracking-tight">{t('home.shopByCategory')}</h3>
+          <p className="text-[11.5px] text-[#7A5B52] font-medium">{t('home.categoryHint')}</p>
         </div>
         <button
           onClick={() => onSelectCategory('all')}
           className={`text-[12px] font-bold flex items-center space-x-1 transition-colors ${
-            selectedCategory === 'all' ? 'text-[#D9232D]' : 'text-gray-500 hover:text-[#D9232D]'
+            selectedCategory === 'all' ? 'text-[#6B352A]' : 'text-[#7A5B52] hover:text-[#6B352A]'
           }`}
         >
           <span>{selectedCategory === 'all' ? t('home.showingAll') : t('home.viewAll')}</span>
@@ -94,7 +94,7 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
               key={cat.id}
               type="button"
               onClick={() => onSelectCategory(isActive ? 'all' : cat.id)}
-              className={`w-full rounded-2xl p-2 sm:p-2.5 pb-2.5 flex flex-col items-center justify-between text-center transition-all cursor-pointer shadow-xs group select-none active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+              className={`w-full rounded-2xl border border-[#E8D8C4]/70 p-2 sm:p-2.5 pb-2.5 flex flex-col items-center justify-between text-center transition-all cursor-pointer shadow-xs group select-none active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6B352A] ${
                 isActive ? cat.scheme.activeBgClass : cat.scheme.bgClass
               }`}
             >
@@ -113,7 +113,7 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
                 )}
               </div>
 
-              <span className="text-[10px] sm:text-[11px] font-bold text-gray-900 leading-tight mb-1.5 text-center break-words w-full px-0.5">
+              <span className="text-[10px] sm:text-[11px] font-bold text-[#2B1611] leading-tight mb-1.5 text-center break-words w-full px-0.5">
                 {cat.title}
               </span>
 

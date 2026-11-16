@@ -140,17 +140,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           aria-modal="true"
           aria-labelledby="cart-dialog-title"
           tabIndex={-1}
-          className="relative w-full max-w-full sm:max-w-[420px] bg-white h-full shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden"
+          className="relative w-full max-w-full sm:max-w-[420px] bg-[#FFFCF4] h-full shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden"
         >
           {/* Header */}
-          <div className="flex shrink-0 justify-between items-center px-4 py-3.5 sm:px-5 sm:py-4 border-b border-gray-100 bg-white">
+          <div className="flex shrink-0 justify-between items-center px-4 py-3.5 sm:px-5 sm:py-4 border-b border-[#E8D8C4] bg-[#6B352A] text-[#FFFCF4]">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-[#FEECEC] flex items-center justify-center text-[#D9232D]">
+              <div className="w-8 h-8 rounded-full bg-[#FFF1A6] flex items-center justify-center text-[#6B352A]">
                 <ShoppingBag className="w-4 h-4" />
               </div>
               <div>
-                <h3 id="cart-dialog-title" className="text-[15px] font-black text-gray-900 leading-tight">{t('cart.title')}</h3>
-                <p className="text-[11px] text-gray-400 font-medium">
+                <h3 id="cart-dialog-title" className="text-[15px] font-black text-[#FFFCF4] leading-tight">{t('cart.title')}</h3>
+                <p className="text-[11px] text-[#FFF1A6]/90 font-medium">
                   {t('cart.selectedItems', { count: items.length })}
                 </p>
               </div>
@@ -159,37 +159,37 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               type="button"
               onClick={onClose}
               aria-label={t('common.close')}
-              className="min-h-11 min-w-11 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center transition-colors"
+              className="min-h-11 min-w-11 rounded-full bg-white/15 hover:bg-white/25 text-[#FFFCF4] flex items-center justify-center transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Store Pickup Banner */}
-          <div className="border-b border-gray-100 bg-red-50 px-5 py-3">
-            <div className="flex items-center gap-2 text-[11.5px] font-bold text-gray-800"><Store className="h-4 w-4 text-[#D9232D]" />🏪 {t('cart.pickupTitle')}</div>
-            <p className="mt-1 pl-6 text-[10px] text-gray-500">{t('cart.pickupHint')}</p>
+          <div className="border-b border-[#E8D8C4] bg-[#FFF8D6] px-5 py-3">
+            <div className="flex items-center gap-2 text-[11.5px] font-bold text-[#6B352A]"><Store className="h-4 w-4 text-[#6B352A]" />🏪 {t('cart.pickupTitle')}</div>
+            <p className="mt-1 pl-6 text-[10px] text-[#6B4C44]">{t('cart.pickupHint')}</p>
           </div>
 
-          {reorderNotice && <div role="status" aria-live="polite" className="mx-4 mt-3 flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-semibold leading-relaxed text-amber-950">
+          {reorderNotice && <div role="status" aria-live="polite" className="mx-4 mt-3 flex items-start gap-2 rounded-2xl border border-[#E6CE73] bg-[#FFF1A6] px-3 py-2.5 text-xs font-semibold leading-relaxed text-[#2B1611]">
             <p className="min-w-0 flex-1">{reorderNotice}</p>
-            {onDismissReorderNotice && <button type="button" onClick={onDismissReorderNotice} aria-label={t('cart.dismissReorder')} className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-xl text-amber-900 hover:bg-amber-100"><X className="h-4 w-4" aria-hidden="true" /></button>}
+            {onDismissReorderNotice && <button type="button" onClick={onDismissReorderNotice} aria-label={t('cart.dismissReorder')} className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-xl text-[#6B352A] hover:bg-[#FCE883]"><X className="h-4 w-4" aria-hidden="true" /></button>}
           </div>}
 
           {/* Items List / Empty State */}
           <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-4 space-y-3 no-scrollbar sm:px-5">
             {items.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-12">
-                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mb-3">
+                <div className="w-16 h-16 rounded-full bg-[#FFF8D6] flex items-center justify-center text-[#6B352A] mb-3 border border-[#E8D8C4]">
                   <ShoppingBag className="w-8 h-8" />
                 </div>
-                <h4 className="text-[15px] font-black text-gray-800 mb-1">{t('cart.emptyTitle')}</h4>
-                <p className="text-[12px] text-gray-500 max-w-[220px] mb-4">
+                <h4 className="text-[15px] font-black text-[#2B1611] mb-1">{t('cart.emptyTitle')}</h4>
+                <p className="text-[12px] text-[#6B4C44] max-w-[220px] mb-4">
                   {t('cart.emptyBody')}
                 </p>
                 <button
                   onClick={onClose}
-                  className="banner-cta-shine group/cta min-h-11 bg-[#D9232D] text-white text-[12px] font-bold px-5 py-2.5 rounded-full shadow-md hover:bg-[#c01d26] hover:shadow-lg active:scale-95 transition-all"
+                  className="banner-cta-shine group/cta min-h-11 bg-[#6B352A] text-[#FFFCF4] text-[12px] font-bold px-5 py-2.5 rounded-full shadow-md hover:bg-[#53271E] hover:shadow-lg active:scale-95 transition-all"
                 >
                   {t('cart.explore')}
                 </button>
@@ -198,10 +198,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               items.map((item) => (
                 <div
                   key={item.cartItemId}
-                  className="bg-white rounded-2xl p-3 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.03)] flex gap-3 relative"
+                  className="bg-white rounded-2xl p-3 border border-[#E8D8C4] shadow-[0_2px_8px_rgba(107,53,42,0.04)] flex gap-3 relative"
                 >
                   {/* Thumbnail */}
-                  <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-100">
+                  <div className="w-16 h-16 rounded-xl bg-[#FFF8D6]/60 overflow-hidden flex-shrink-0 border border-[#E8D8C4]">
                     <img
                       src={item.selectedColor?.images?.[0] ?? item.product.image}
                       alt={item.product.title}
@@ -213,12 +213,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <div className="flex-1 flex flex-col justify-between min-w-0">
                     <div>
                       <div className="flex justify-between items-start gap-1">
-                        <h4 className="min-w-0 pr-1 text-[12px] font-black text-gray-900 leading-tight break-words">
+                        <h4 className="min-w-0 pr-1 text-[12px] font-black text-[#2B1611] leading-tight break-words">
                           {item.product.title}
                         </h4>
                         <button
                           onClick={() => onRemoveItem(item.cartItemId)}
-                          className="grid min-h-11 min-w-11 place-items-center text-gray-400 hover:text-red-500 transition-colors"
+                          className="grid min-h-11 min-w-11 place-items-center text-[#8A6C63] hover:text-[#9E2A2B] transition-colors"
                           aria-label={t('cart.removeItem')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -227,28 +227,28 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                       {/* Custom Tags (Color, stitch, embroidery) */}
                       <div className="flex flex-wrap gap-1 mt-1">
-                        <span className="inline-flex items-center gap-1 text-[9.5px] font-semibold bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">
+                        <span className="inline-flex items-center gap-1 text-[9.5px] font-semibold bg-[#F6EAE4] text-[#6B352A] px-1.5 py-0.5 rounded">
                           <span
-                            className="w-2 h-2 rounded-full border border-gray-300"
+                            className="w-2 h-2 rounded-full border border-[#D4C0AE]"
                             style={{ backgroundColor: item.selectedColor.hex }}
                           />
                           {item.selectedColor.name}
                         </span>
 
                         {item.selectedStitch && (
-                          <span className="text-[9.5px] font-semibold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                          <span className="text-[9.5px] font-semibold bg-[#FFF8D6] text-[#6B352A] px-1.5 py-0.5 rounded">
                             {item.selectedStitch}
                           </span>
                         )}
 
                         {item.selectedThickness && item.selectedThickness.extraPrice > 0 && (
-                          <span className="text-[9.5px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded">
+                          <span className="text-[9.5px] font-semibold bg-[#FFF1A6] text-[#6B352A] border border-[#E6CE73] px-1.5 py-0.5 rounded">
                             {item.selectedThickness.label}
                           </span>
                         )}
 
                         {item.customEmbroideryText && (
-                          <span className="text-[9.5px] font-black bg-black text-amber-300 px-1.5 py-0.5 rounded uppercase flex items-center gap-0.5">
+                          <span className="text-[9.5px] font-black bg-[#2B1611] text-[#FFF1A6] px-1.5 py-0.5 rounded uppercase flex items-center gap-0.5">
                             <Sparkles className="w-2 h-2" />
                             "{item.customEmbroideryText}"
                           </span>
@@ -257,28 +257,28 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     </div>
 
                     {/* Price & Quantity Stepper */}
-                    <div className="flex flex-wrap justify-between items-center gap-2 mt-2 pt-1 border-t border-gray-50">
-                      <div className="text-[13px] font-black text-[#D9232D] shrink-0">
+                    <div className="flex flex-wrap justify-between items-center gap-2 mt-2 pt-1 border-t border-[#F4EAE0]">
+                      <div className="text-[13px] font-black text-[#6B352A] shrink-0">
                         {formatMoney(item.unitPrice * item.quantity)}
                       </div>
 
-                      <div className="flex items-center border border-gray-200 rounded-lg bg-gray-50 p-0.5">
+                      <div className="flex items-center border border-[#E8D8C4] rounded-lg bg-[#FFFCF4] p-0.5">
                         <button
                           type="button"
                           onClick={() => onUpdateQuantity(item.cartItemId, item.quantity - 1)}
                           aria-label={t('cart.decreaseQuantity', { title: item.product.title })}
-                          className="min-h-11 min-w-11 rounded bg-white shadow-2xs text-gray-700 text-xs font-bold flex items-center justify-center hover:bg-gray-100"
+                          className="min-h-11 min-w-11 rounded bg-white shadow-2xs text-[#6B352A] text-xs font-bold flex items-center justify-center hover:bg-[#FFF8D6]"
                         >
                           -
                         </button>
-                        <span className="w-6 text-center text-[11px] font-bold text-gray-900">
+                        <span className="w-6 text-center text-[11px] font-bold text-[#2B1611]">
                           {item.quantity}
                         </span>
                         <button
                           type="button"
                           onClick={() => onUpdateQuantity(item.cartItemId, item.quantity + 1)} disabled={!item.product.inStock || item.quantity >= MAX_ORDER_ITEM_QUANTITY}
                           aria-label={item.quantity >= MAX_ORDER_ITEM_QUANTITY ? t('cart.maxQuantity', { title: item.product.title }) : t('cart.increaseQuantity', { title: item.product.title })}
-                          className="min-h-11 min-w-11 rounded bg-white shadow-2xs text-gray-700 text-xs font-bold flex items-center justify-center hover:bg-gray-100"
+                          className="min-h-11 min-w-11 rounded bg-white shadow-2xs text-[#6B352A] text-xs font-bold flex items-center justify-center hover:bg-[#FFF8D6]"
                         >
                           +
                         </button>
@@ -291,16 +291,16 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
             {/* Coupons Section */}
             {items.length > 0 && (
-              <div className="bg-gray-50 rounded-2xl p-3.5 border border-gray-100 mt-3">
+              <div className="bg-[#FFF8D6]/60 rounded-2xl p-3.5 border border-[#E8D8C4] mt-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11.5px] font-black text-gray-900 flex items-center gap-1">
-                    <Tag className="w-3.5 h-3.5 text-[#D9232D]" />
+                  <span className="text-[11.5px] font-black text-[#2B1611] flex items-center gap-1">
+                    <Tag className="w-3.5 h-3.5 text-[#6B352A]" />
                     <span>🎟️ {t('cart.haveCoupon')}</span>
                   </span>
                   {appliedCoupon && (
                     <button
                       onClick={handleRemoveCoupon}
-                      className="min-h-11 px-2 text-[10px] font-bold text-red-600 hover:underline"
+                      className="min-h-11 px-2 text-[10px] font-bold text-[#9E2A2B] hover:underline"
                     >
                       {t('cart.remove')}
                     </button>
@@ -308,9 +308,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
 
                 {appliedCoupon ? (
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2 flex items-center justify-between text-emerald-800 text-[11.5px] font-bold">
+                  <div className="bg-[#FFF1A6] border border-[#E6CE73] rounded-xl p-2 flex items-center justify-between text-[#6B352A] text-[11.5px] font-bold">
                     <span className="flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <Check className="w-3.5 h-3.5 text-[#6B352A]" />
                       {t('cart.applied', { code: appliedCoupon.code })}
                     </span>
                     <span>-{formatMoney(appliedCoupon.discount)}</span>
@@ -322,12 +322,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                       placeholder={t('cart.enterCoupon')}
-                      className="min-h-11 min-w-0 flex-1 bg-white text-base sm:text-xs font-bold uppercase rounded-xl px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#D9232D]"
+                      className="min-h-11 min-w-0 flex-1 bg-white text-base sm:text-xs font-bold uppercase rounded-xl px-3 py-2 border border-[#E8D8C4] text-[#2B1611] focus:outline-none focus:border-[#6B352A]"
                     />
                     <button
                       disabled={isApplyingCoupon}
                       onClick={() => void handleApplyCoupon()}
-                      className="banner-cta-shine min-h-11 shrink-0 bg-gray-900 text-white text-xs font-bold px-3.5 py-2 rounded-xl hover:bg-black hover:shadow-sm active:scale-95 transition-all disabled:opacity-60"
+                      className="banner-cta-shine min-h-11 shrink-0 bg-[#6B352A] text-[#FFFCF4] text-xs font-bold px-3.5 py-2 rounded-xl hover:bg-[#53271E] hover:shadow-sm active:scale-95 transition-all disabled:opacity-60"
                     >
                       {isApplyingCoupon ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t('cart.apply')}
                     </button>
@@ -335,20 +335,20 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 )}
 
                 {couponError && (
-                  <p className="text-[10px] font-semibold text-red-600 mt-1.5">{couponError}</p>
+                  <p className="text-[10px] font-semibold text-[#9E2A2B] mt-1.5">{couponError}</p>
                 )}
 
-                {!(appliedCoupon && !couponOffersLoading && !couponOffersError && eligibleCouponOffers.length === 0) && <div className="mt-3 border-t border-gray-200 pt-3">
+                {!(appliedCoupon && !couponOffersLoading && !couponOffersError && eligibleCouponOffers.length === 0) && <div className="mt-3 border-t border-[#E8D8C4] pt-3">
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-gray-500">{t('cart.eligibleOffers')}</p>
-                    {eligibleCouponOffers.length > 0 && <span className="text-[10px] font-semibold text-emerald-600">{t('cart.available', { count: eligibleCouponOffers.length })}</span>}
+                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#6B4C44]">{t('cart.eligibleOffers')}</p>
+                    {eligibleCouponOffers.length > 0 && <span className="text-[10px] font-bold text-[#6B352A]">{t('cart.available', { count: eligibleCouponOffers.length })}</span>}
                   </div>
                   {couponOffersLoading ? (
-                    <p className="rounded-xl bg-white px-3 py-2 text-[10px] font-semibold text-gray-400">{t('cart.loadingCoupons')}</p>
+                    <p className="rounded-xl bg-white px-3 py-2 text-[10px] font-semibold text-[#8A6C63]">{t('cart.loadingCoupons')}</p>
                   ) : couponOffersError ? (
-                    <p className="rounded-xl bg-amber-50 px-3 py-2 text-[10px] font-semibold text-amber-800">{couponOffersError}</p>
+                    <p className="rounded-xl bg-[#FDF2EE] px-3 py-2 text-[10px] font-semibold text-[#9A3412]">{couponOffersError}</p>
                   ) : eligibleCouponOffers.length === 0 ? (
-                    <p className="rounded-xl bg-white px-3 py-2 text-[10px] font-semibold text-gray-400">{t('cart.noEligibleCoupons')}</p>
+                    <p className="rounded-xl bg-white px-3 py-2 text-[10px] font-semibold text-[#8A6C63]">{t('cart.noEligibleCoupons')}</p>
                   ) : (
                     <div className="space-y-2">
                       {eligibleCouponOffers.map((offer) => (
@@ -357,18 +357,18 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                           type="button"
                           onClick={() => void handleApplyCoupon(offer.code)}
                           disabled={isApplyingCoupon}
-                          className="w-full rounded-xl border border-red-100 bg-gradient-to-r from-red-50 to-orange-50 p-2.5 text-left transition hover:border-red-200 hover:shadow-sm disabled:opacity-60"
+                          className="w-full rounded-xl border border-[#E6CE73] bg-gradient-to-r from-[#FFF1A6] to-[#FFF8D6] p-2.5 text-left transition hover:border-[#6B352A]/40 hover:shadow-sm disabled:opacity-60"
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <span className="font-mono text-[11px] font-black tracking-wide text-[#D9232D]">{offer.code}</span>
-                            <span className="rounded bg-[#D9232D] px-1.5 py-0.5 text-[9px] font-extrabold text-white">
+                            <span className="font-mono text-[11px] font-black tracking-wide text-[#6B352A]">{offer.code}</span>
+                            <span className="rounded bg-[#6B352A] px-1.5 py-0.5 text-[9px] font-extrabold text-[#FFF1A6]">
                               {offer.discount_type === 'PERCENTAGE' ? `${offer.discount_value}% ${t('cart.off')}` : `${formatMoney(offer.discount_value)} ${t('cart.off')}`}
                             </span>
                           </div>
-                          <p className="mt-1 text-[10px] font-medium text-gray-600">
+                          <p className="mt-1 text-[10px] font-medium text-[#6B4C44]">
                             {offer.minimum_order_value > 0 ? t('cart.minimumOrder', { amount: formatMoney(offer.minimum_order_value) }) : t('cart.noMinimum')} · {t('cart.validUntil', { date: new Intl.DateTimeFormat(language === 'bn' ? 'bn-IN' : 'en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' }).format(new Date(offer.expires_at)) })}
                           </p>
-                          <p className="mt-1 text-[9.5px] font-bold text-[#D9232D]">{t('cart.tapToApply')}</p>
+                          <p className="mt-1 text-[9.5px] font-bold text-[#6B352A]">{t('cart.tapToApply')}</p>
                         </button>
                       ))}
                     </div>
@@ -381,25 +381,25 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
           {/* Bottom Billing Breakdown & Checkout CTA */}
           {items.length > 0 && (
-            <div className="shrink-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] space-y-3">
+            <div className="shrink-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-white border-t border-[#E8D8C4] shadow-[0_-4px_20px_rgba(107,53,42,0.06)] space-y-3">
               <div className="space-y-1 text-[11.5px]">
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-[#6B4C44]">
                   <span>{t('cart.subtotal')}</span>
                   <span>{formatMoney(displayedSubtotal)}</span>
                 </div>
                 {appliedCoupon && (
-                  <div className="flex justify-between text-emerald-600 font-semibold">
+                  <div className="flex justify-between text-[#6B352A] font-semibold">
                     <span>{t('cart.coupon', { code: appliedCoupon.code })}</span>
                     <span>-{formatMoney(discount)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-emerald-600">
+                <div className="flex justify-between text-[#6B352A]">
                   <span>{t('cart.storePickup')}</span>
                   <strong>{t('cart.free')}</strong>
                 </div>
-                <div className="flex justify-between text-[14px] font-black text-gray-900 pt-1 border-t border-gray-100">
+                <div className="flex justify-between text-[14px] font-black text-[#2B1611] pt-1 border-t border-[#F4EAE0]">
                   <span>{t('cart.grandTotal')}</span>
-                  <span className="text-[#D9232D]">{formatMoney(grandTotal)}</span>
+                  <span className="text-[#6B352A]">{formatMoney(grandTotal)}</span>
                 </div>
               </div>
 
@@ -407,14 +407,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 whileHover={hasUnavailableItems ? undefined : { scale: 1.015 }}
                 whileTap={hasUnavailableItems ? undefined : { scale: 0.97 }}
                 onClick={() => onProceedToCheckout(discount, appliedCoupon?.code || '', appliedCoupon ? { subtotal: appliedCoupon.subtotal, total: appliedCoupon.total } : undefined)} disabled={hasUnavailableItems}
-                className="banner-cta-shine group/cta w-full min-h-12 py-3.5 bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91C1C] hover:brightness-105 text-white rounded-xl text-[13px] font-black shadow-[0_8px_20px_-4px_rgba(217,35,45,0.4)] hover:shadow-[0_10px_24px_-4px_rgba(217,35,45,0.5)] flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:shadow-none"
+                className="banner-cta-shine group/cta w-full min-h-12 py-3.5 bg-[#FF6115] hover:bg-[#E5520D] text-[#1F0E0A] rounded-xl text-[13px] font-black shadow-[0_8px_20px_-4px_rgba(255,97,21,0.38)] hover:shadow-[0_10px_24px_-4px_rgba(255,97,21,0.48)] flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:shadow-none"
               >
                 <span>{hasUnavailableItems ? t('cart.removeUnavailable') : t('cart.proceedCheckout')}</span>
                 <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
               </motion.button>
 
-              <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-400">
-                <ShieldCheck className="w-3 h-3 text-emerald-600" />
+              <div className="flex items-center justify-center gap-1.5 text-[10px] text-[#8A6C63]">
+                <ShieldCheck className="w-3 h-3 text-[#6B352A]" />
                 <span>{t('cart.secureOrder')}</span>
               </div>
             </div>

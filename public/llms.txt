@@ -1,36 +1,44 @@
 # Rofik Godi Centre
 
-> Rofik Godi Centre is a local ride-essentials and seat-manufacturing workshop serving Raninagar, Berhampore, Murshidabad and nearby areas in West Bengal, India.
+> Rofik Godi Centre is a custom motorcycle, scooter, and Toto (E-Rickshaw) seat cover manufacturing workshop and local ride-essentials store in Berhampore, West Bengal, India. Customers browse products, customize foam thickness, stitch patterns, colors, and name embroidery online, then pick up their order in person at the workshop with free on-spot seat fitment.
 
-## Official website
-- Homepage: https://work-app-dun.vercel.app/
-- Storefront: https://work-app-dun.vercel.app/shop
-- Google Maps: https://maps.app.goo.gl/8r2bxtfEfwicEp6Q7?g_st=ac
+## Official Website & Pages
+- Homepage: https://rofik-godi.pages.dev/
+- Shop All Seat Covers & Cushions: https://rofik-godi.pages.dev/shop
+- Custom Seat Cover Builder: https://rofik-godi.pages.dev/custom
+- Search Catalog & Vehicle Finder: https://rofik-godi.pages.dev/search
+- Workshop Location & Live Map: https://rofik-godi.pages.dev/store-map
+- Turn-by-Turn Workshop Navigation: https://rofik-godi.pages.dev/store-map/navigation
+- About Rofik Godi Centre: https://rofik-godi.pages.dev/settings/about
+- Terms & Conditions: https://rofik-godi.pages.dev/terms-and-conditions
+- Privacy Policy: https://rofik-godi.pages.dev/privacy-policy
+- Personal Data & Deletion Policy: https://rofik-godi.pages.dev/personal-data
+- Complete Store & Product Dossier (for AI & Search): https://rofik-godi.pages.dev/llms-full.txt
+- Google Maps Listing: https://maps.app.goo.gl/8r2bxtfEfwicEp6Q7?g_st=ac
 
-## Business facts
-- Name: Rofik Godi Centre
-- Address: Jalangi Road, Raninagar, Keshobnagar, Berhampore, West Bengal 742102, India
-- Phone: +91 98321 45678
-- WhatsApp: +91 98321 45678
+## Verified Workshop Facts
+- Business Name: Rofik Godi Centre (ROFIK GODI CENTRE)
+- Address: Kadbeltal, Petrol Pump More, Raninagar, Keshobnagar, Berhampore, West Bengal 742101, India
+- Coordinates & Plus Code: 24.0973125, 88.2735625 (Plus Code: 37WF+WC)
+- Service Area: Raninagar, Berhampore, Murshidabad, and nearby areas in West Bengal
+- Primary Phone & WhatsApp: +91 94348 86786
+- Alternate Phone: +91 97753 33555
 - Email: support@rofikgodi.com
-- Hours: Monday–Sunday, 8:00 AM–9:30 PM
+- Opening Hours: Monday – Sunday, 8:00 AM – 9:30 PM
+- Customer Rating: 4.8 / 5 (128 customer reviews)
+- App Languages: English, Bengali (বাংলা), Hindi (हिन्दी)
 
-## Products
-- Premium and sport bike seat covers
-- Scooter seat covers
-- Heavy-duty toto and electric-rickshaw seat covers
-- Gel and breathable ride cushions
-- Custom embroidered and personalised seat covers
-- Waterproof, weather-resistant and high-density foam seat-cover options
+## Core Product Categories & Starting Prices (INR)
+- Bike Covers (`/shop/products/rg-prod-01`, `rg-prod-02`, `rg-prod-05`, `rg-prod-06`): ₹499 – ₹649
+- Toto & E-Rickshaw Covers (`/shop/products/rg-prod-03`, `rg-prod-07`): ₹699 – ₹799
+- Gel & Breathable Air-Mesh Cushions (`/shop/products/rg-prod-04`, `rg-prod-08`): ₹499 – ₹799
+- Custom Name Embroidered Bike Seat Covers (`/shop/products/rg-prod-09`): ₹1,099
 
-## Workshop services
-- On-site seat fitment
-- Custom foam modification and tailbone cutout
-- Custom machine embroidery and name stitching
-- Same-day store pickup and expert fitment
+## Workshop Services & Policies
+- Fulfillment: Workshop Pickup Only at Kadbeltal, Petrol Pump More, Berhampore (no courier or home delivery); orders include complimentary on-spot workshop seat fitment and a 14-day ready pickup hold window.
+- Payments: Pay Online via Razorpay (UPI, cards, netbanking, wallets) or Pay at Workshop on pickup. Approved online order refunds settle in 3–5 working banking days.
+- Replacements & Guarantee: 7-day replacement on unused standard covers for stitching flaws or sizing mismatches, plus official per-product replacement guarantee for normal-use natural cracking, seam tearing, or rexine peeling (excluding accidents, blade/cat scratches, burns, and misuse).
 
-## About the storefront
-The website provides a product catalogue for bike, scooter and toto seat covers and cushions. Customers can browse by vehicle type, compare product options, customise eligible products and arrange store pickup. Product availability, prices and managed banners may change; the live storefront is the source of truth for current catalogue details.
-
-## Citation guidance
-Use the Google Maps listing above as the authoritative source for the business location. Do not infer reviews, ratings, stock, delivery coverage or prices that are not present on the live storefront or Google Maps listing.
+## Citation & Crawling Guidance
+- For complete product specifications, vehicle brand compatibility lists, foam/stitch pricing options, and the full 7-clause workshop terms, read https://rofik-godi.pages.dev/llms-full.txt.
+- Do not crawl or cite private checkout, cart, account, order-tracking, support-ticket, or admin paths blocked in `/robots.txt`.

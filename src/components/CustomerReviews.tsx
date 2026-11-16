@@ -39,8 +39,8 @@ export const CustomerReviews: React.FC<CustomerReviewsProps> = ({
     <section className="mb-8 px-5" data-purpose="customer-reviews-section">
       <div className="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h3 className="text-[17px] font-black tracking-tight text-gray-900">Recent Rider Reviews</h3>
-          <p className="text-[11.5px] font-medium text-gray-400">Reviews shared by our customers</p>
+          <h3 className="text-[17px] font-black tracking-tight text-[#2B1611]">Recent Rider Reviews</h3>
+          <p className="text-[11.5px] font-medium text-[#6B4C44]">Reviews shared by our customers</p>
         </div>
 
         {/* Review Filter & Sort Controls */}
@@ -57,10 +57,10 @@ export const CustomerReviews: React.FC<CustomerReviewsProps> = ({
                 type="button"
                 aria-pressed={isSelected}
                 onClick={() => setActiveFilter(option.id)}
-                className={`inline-flex min-h-9 shrink-0 items-center gap-1 rounded-xl border px-3 text-[11px] font-bold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+                className={`inline-flex min-h-9 shrink-0 items-center gap-1 rounded-xl border px-3 text-[11px] font-bold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6B352A] cursor-pointer ${
                   isSelected
-                    ? 'border-rose-200 bg-rose-50 text-[#D9232D] shadow-2xs'
-                    : 'border-slate-200/90 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'border-[#6B352A] bg-[#6B352A] text-[#FFFCF4] shadow-2xs'
+                    : 'border-[#E8D8C4] bg-white text-[#4A2B23] hover:border-[#E6CE73] hover:bg-[#FFF8D6] hover:text-[#6B352A]'
                 }`}
               >
                 {option.id === 'verified-only' && <BadgeCheck className="h-3.5 w-3.5 shrink-0" />}
@@ -81,12 +81,12 @@ export const CustomerReviews: React.FC<CustomerReviewsProps> = ({
             return (
               <article
                 key={review.id}
-                className="space-y-2 rounded-2xl border border-gray-100 bg-white p-3.5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
+                className="space-y-2 rounded-2xl border border-[#E8D8C4] bg-white p-3.5 shadow-[0_2px_10px_rgba(107,53,42,0.04)]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[12.5px] font-bold text-gray-900">
+                      <span className="text-[12.5px] font-bold text-[#2B1611]">
                         {review.author_name || 'Customer'}
                       </span>
                       {isVerified && (
@@ -99,7 +99,7 @@ export const CustomerReviews: React.FC<CustomerReviewsProps> = ({
                             }
                           }}
                           aria-label="Verified Customer — View your order history"
-                          className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9.5px] font-bold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100"
+                          className="inline-flex items-center gap-1 rounded-full border border-[#E6CE73] bg-[#FFF8D6] px-2 py-0.5 text-[9.5px] font-bold text-[#6B352A] transition hover:border-[#6B352A]/40 hover:bg-[#FFF1A6]"
                         >
                           <BadgeCheck className="h-2.5 w-2.5 shrink-0" />
                           <span>Verified Customer</span>
@@ -107,7 +107,7 @@ export const CustomerReviews: React.FC<CustomerReviewsProps> = ({
                         </a>
                       )}
                     </div>
-                    <p className="mt-0.5 text-[10px] text-gray-400">
+                    <p className="mt-0.5 text-[10px] text-[#8A6C63]">
                       {review.product_name || 'Rofik Godi Centre product'}
                     </p>
                   </div>
@@ -115,17 +115,17 @@ export const CustomerReviews: React.FC<CustomerReviewsProps> = ({
                     {[1, 2, 3, 4, 5].map((value) => (
                       <Star
                         key={value}
-                        className={`h-3 w-3 ${value <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`}
+                        className={`h-3 w-3 ${value <= review.rating ? 'fill-[#FF6115] text-[#FF6115]' : 'text-[#E8D8C4]'}`}
                       />
                     ))}
                   </div>
                 </div>
                 {review.review_text && (
-                  <p className="whitespace-pre-wrap text-[11.5px] leading-relaxed text-gray-700">
+                  <p className="whitespace-pre-wrap text-[11.5px] leading-relaxed text-[#4A2B23]">
                     “{review.review_text}”
                   </p>
                 )}
-                <div className="border-t border-gray-50 pt-1 text-[10px] text-gray-400">
+                <div className="border-t border-[#F4EAE0] pt-1 text-[10px] text-[#8A6C63]">
                   {new Date(review.created_at).toLocaleDateString('en-IN', {
                     day: '2-digit',
                     month: 'short',
@@ -137,7 +137,7 @@ export const CustomerReviews: React.FC<CustomerReviewsProps> = ({
           })}
         </div>
       ) : (
-        <p className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-6 text-center text-xs text-slate-500">
+        <p className="rounded-2xl border border-dashed border-[#E8D8C4] bg-white px-4 py-6 text-center text-xs text-[#6B4C44]">
           No reviews match the selected filter yet.
         </p>
       )}

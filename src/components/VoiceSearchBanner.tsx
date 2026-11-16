@@ -24,20 +24,20 @@ export const VoiceSearchBanner: React.FC<VoiceSearchBannerProps> = ({
         role="status"
         aria-live="polite"
         data-purpose="voice-listening-banner"
-        className="mt-2 flex items-center justify-between gap-2.5 rounded-xl border border-rose-200 bg-rose-50/95 px-3 py-2 text-xs"
+        className="mt-2 flex items-center justify-between gap-2.5 rounded-xl border border-[#E6CE73] bg-[#FFF8D6] px-3 py-2 text-xs"
       >
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <span
             aria-hidden="true"
-            className="voice-mic-pulse flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#D9232D] text-white"
+            className="voice-mic-pulse flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#6B352A] text-[#FFFCF4]"
           >
             <Mic className="h-3.5 w-3.5" />
           </span>
-          <p className="min-w-0 flex-1 truncate font-semibold text-slate-900">
+          <p className="min-w-0 flex-1 truncate font-semibold text-[#2B1611]">
             {interimTranscript ? (
               <span>&ldquo;{interimTranscript}&rdquo;</span>
             ) : (
-              <span className="text-[#D9232D]">
+              <span className="text-[#6B352A]">
                 Listening… Speak a seat cover or bike model
               </span>
             )}
@@ -47,7 +47,7 @@ export const VoiceSearchBanner: React.FC<VoiceSearchBannerProps> = ({
         <button
           type="button"
           onClick={onStop}
-          className="min-h-8 shrink-0 rounded-lg border border-rose-200 bg-white px-2.5 py-1 text-[11px] font-bold text-[#D9232D] hover:bg-rose-100/70 transition-colors cursor-pointer"
+          className="min-h-8 shrink-0 rounded-lg border border-[#E6CE73] bg-white px-2.5 py-1 text-[11px] font-bold text-[#6B352A] hover:bg-[#FFF1A6] transition-colors cursor-pointer"
         >
           Stop
         </button>
@@ -59,11 +59,11 @@ export const VoiceSearchBanner: React.FC<VoiceSearchBannerProps> = ({
     <div
       role="alert"
       data-purpose="voice-error-banner"
-      className="mt-2 flex items-center justify-between gap-2.5 rounded-xl border border-amber-200 bg-amber-50/95 px-3 py-2 text-xs"
+      className="mt-2 flex items-center justify-between gap-2.5 rounded-xl border border-[#E6CE73] bg-[#FFF8D6] px-3 py-2 text-xs"
     >
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <AlertCircle className="h-4 w-4 shrink-0 text-amber-700" />
-        <p className="min-w-0 flex-1 font-medium text-amber-950">{error}</p>
+        <AlertCircle className="h-4 w-4 shrink-0 text-[#9A4D16]" />
+        <p className="min-w-0 flex-1 font-medium text-[#6B352A]">{error}</p>
       </div>
 
       <button
@@ -71,7 +71,7 @@ export const VoiceSearchBanner: React.FC<VoiceSearchBannerProps> = ({
         onClick={onDismissError}
         aria-label="Dismiss voice search notice"
         title="Dismiss"
-        className="flex min-h-8 min-w-8 shrink-0 items-center justify-center rounded-lg text-amber-700 hover:bg-amber-100 transition-colors cursor-pointer"
+        className="flex min-h-8 min-w-8 shrink-0 items-center justify-center rounded-lg text-[#9A4D16] hover:bg-[#FFF1A6] transition-colors cursor-pointer"
       >
         <X className="h-3.5 w-3.5" />
       </button>

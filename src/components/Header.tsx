@@ -89,9 +89,9 @@ export const Header: React.FC<HeaderProps> = ({
   const showVoiceHint = !voiceSearch.isListening && !voiceSearch.error && !voiceSearch.isHintDismissed;
 
   return (
-    <header className="w-full flex flex-col bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-[0_1px_6px_rgba(0,0,0,0.03)] sticky top-0 z-40 transition-all">
+    <header className="w-full flex flex-col bg-[#6B352A] text-[#FFFCF4] border-b border-[#53271E] shadow-[0_4px_18px_rgba(43,22,17,0.14)] sticky top-0 z-40 transition-all">
       {/* Top Main Bar */}
-      <div className="flex min-w-0 items-center justify-between gap-2 bg-white px-3 pt-3 pb-2 sm:px-4">
+      <div className="flex min-w-0 items-center justify-between gap-2 bg-[#6B352A] px-3 pt-3 pb-2 sm:px-4">
         {/* Left: User Avatar & Welcome greeting */}
         <button
           type="button"
@@ -99,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({
           aria-label={`Open account profile for ${currentUser?.name || 'Rider'}`}
           className="flex min-h-11 min-w-0 max-w-[calc(100%-6.75rem)] items-center gap-2.5 cursor-pointer group select-none"
         >
-          <div className="w-9 h-9 shrink-0 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 shadow-2xs group-hover:border-[#D9232D]/40 transition-all overflow-hidden relative">
+          <div className="w-9 h-9 shrink-0 rounded-full bg-[#FFF8D6] border border-[#FFF1A6]/60 flex items-center justify-center text-[#6B352A] shadow-2xs group-hover:border-[#FFF1A6] transition-all overflow-hidden relative">
             {currentUser?.avatar ? (
               <img
                 src={currentUser.avatar}
@@ -107,23 +107,23 @@ export const Header: React.FC<HeaderProps> = ({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span aria-hidden="true" className="text-xs font-black text-[#D9232D]">
+              <span aria-hidden="true" className="text-xs font-black text-[#6B352A]">
                 {getInitials(currentUser?.name || '')}
               </span>
             )}
             {currentUser?.isGuest && (
               <span
-                className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-amber-400 border border-white rounded-full"
+                className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#FFF1A6] border border-[#6B352A] rounded-full"
                 title="Guest Mode"
               />
             )}
           </div>
-          <div className="min-w-0 flex flex-col">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-none flex items-center gap-1">
+          <div className="min-w-0 flex flex-col text-left">
+            <span className="text-[10px] font-bold text-[#FFF1A6] uppercase tracking-wider leading-none flex items-center gap-1">
               {greeting}
-              <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+              <Sparkles className="w-2.5 h-2.5 text-[#FFF1A6]" />
             </span>
-            <h1 className="truncate text-[15px] font-black tracking-tight flex items-center leading-tight mt-0.5 text-slate-900 group-hover:text-[#D9232D] transition-colors">
+            <h1 className="truncate text-[15px] font-black tracking-tight flex items-center leading-tight mt-0.5 text-[#FFFCF4] group-hover:text-[#FFF1A6] transition-colors">
               {currentUser?.isGuest ? 'Guest' : currentUser?.name?.trim() || 'Rider'}
             </h1>
           </div>
@@ -136,14 +136,14 @@ export const Header: React.FC<HeaderProps> = ({
               type="button"
               onClick={onOpenNotifications}
               aria-label="Notifications"
-              className="relative w-11 h-11 rounded-full bg-white hover:bg-red-50 border border-slate-200 shadow-2xs flex items-center justify-center text-slate-800 active:scale-95 transition-all cursor-pointer"
+              className="relative w-11 h-11 rounded-full bg-[#53271E]/85 hover:bg-[#421E16] border border-[#FFFCF4]/20 shadow-2xs flex items-center justify-center text-[#FFFCF4] active:scale-95 transition-all cursor-pointer"
               title="Notifications"
             >
-              <Bell className="w-[18px] h-[18px] text-slate-900" />
+              <Bell className="w-[18px] h-[18px] text-[#FFFCF4]" />
               {notificationCount > 0 && (
                 <span
                   aria-label={`${notificationCount} unread notifications`}
-                  className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-0.5 bg-[#D9232D] text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white"
+                  className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-0.5 bg-[#FFF1A6] text-[#6B352A] text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#6B352A]"
                 >
                   {notificationCount > 9 ? '9+' : notificationCount}
                 </span>
@@ -155,16 +155,16 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onOpenCart}
             aria-label="Cart"
-            className="relative w-11 h-11 rounded-full bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs flex items-center justify-center text-slate-800 active:scale-95 transition-all cursor-pointer"
+            className="relative w-11 h-11 rounded-full bg-[#53271E]/85 hover:bg-[#421E16] border border-[#FFFCF4]/20 shadow-2xs flex items-center justify-center text-[#FFFCF4] active:scale-95 transition-all cursor-pointer"
             title="Shopping Cart"
           >
-            <ShoppingBag className="w-4 h-4 text-slate-900" />
+            <ShoppingBag className="w-4 h-4 text-[#FFFCF4]" />
             {cartCount > 0 && (
               <motion.span
                 key={cartCount}
                 initial={{ scale: 0.5 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 w-4 h-4 bg-[#D9232D] text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs"
+                className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF6115] text-[#1F0E0A] text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#6B352A] shadow-xs"
               >
                 {cartCount}
               </motion.span>
@@ -175,7 +175,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Interactive Home Search Trigger with Smooth Vertical-Roll Product Prompt */}
       {setSearchQuery && !hideSearchInput && (
-        <div className="px-3 pb-2.5 bg-white sm:px-4">
+        <div className="px-3 pb-3 bg-[#6B352A] sm:px-4">
           <div className="relative flex min-w-0 items-center">
             <button
               type="button"
@@ -185,18 +185,18 @@ export const Header: React.FC<HeaderProps> = ({
                   ? `Search products, current query ${searchQuery}`
                   : `Search products, try ${activePrompt}`
               }
-              className={`min-h-11 w-full bg-slate-50 hover:bg-slate-100/80 border border-slate-200 hover:border-slate-300 focus-visible:border-[#D9232D] focus-visible:ring-2 focus-visible:ring-[#D9232D]/15 rounded-xl pl-3.5 ${
+              className={`min-h-11 w-full bg-[#FFFCF4] hover:bg-[#FFFDF8] border border-[#E8D8C4] hover:border-[#FFF1A6] focus-visible:border-[#FFF1A6] focus-visible:ring-2 focus-visible:ring-[#FFF1A6]/40 rounded-xl pl-3.5 ${
                 hasSearchQuery ? 'pr-22' : 'pr-12'
-              } py-2 flex items-center gap-2 text-left transition-all shadow-2xs cursor-pointer focus-visible:outline-hidden`}
+              } py-2 flex items-center gap-2 text-left transition-all shadow-xs cursor-pointer focus-visible:outline-hidden`}
             >
-              <Search className="w-4 h-4 text-slate-400 shrink-0" />
+              <Search className="w-4 h-4 text-[#6B352A]/75 shrink-0" />
               {hasSearchQuery ? (
-                <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-slate-900">
+                <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#2B1611]">
                   {searchQuery}
                 </span>
               ) : (
                 <div className="min-w-0 flex-1 flex items-center gap-1.5 text-[13px] leading-5">
-                  <span className="text-slate-500 font-medium shrink-0">Search</span>
+                  <span className="text-[#7A5B52] font-medium shrink-0">Search</span>
                   <div
                     aria-live="off"
                     className="relative h-5 min-w-0 flex-1 overflow-hidden"
@@ -208,7 +208,7 @@ export const Header: React.FC<HeaderProps> = ({
                         animate={{ y: 0, opacity: 1 }}
                         exit={isReducedMotion ? { opacity: 0 } : { y: -12, opacity: 0 }}
                         transition={{ duration: isReducedMotion ? 0.01 : 0.24, ease: [0.16, 1, 0.3, 1] }}
-                        className="block truncate font-semibold text-slate-700"
+                        className="block truncate font-semibold text-[#6B352A]"
                       >
                         &ldquo;{activePrompt}&rdquo;
                       </motion.span>
@@ -227,7 +227,7 @@ export const Header: React.FC<HeaderProps> = ({
                 }}
                 aria-label="Clear search"
                 title="Clear search"
-                className="absolute right-10 flex h-9 w-9 items-center justify-center text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-200/70 transition-all cursor-pointer"
+                className="absolute right-10 flex h-9 w-9 items-center justify-center text-[#7A5B52] hover:text-[#6B352A] rounded-full hover:bg-[#FFF1A6]/50 transition-all cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -251,8 +251,8 @@ export const Header: React.FC<HeaderProps> = ({
               }
               className={`absolute right-1 flex h-9 w-9 items-center justify-center rounded-xl transition-all cursor-pointer ${
                 voiceSearch.isListening
-                  ? 'voice-mic-pulse bg-[#D9232D] text-white shadow-xs'
-                  : 'text-slate-500 hover:text-[#D9232D] hover:bg-rose-50'
+                  ? 'voice-mic-pulse bg-[#6B352A] text-[#FFFCF4] shadow-xs'
+                  : 'text-[#6B352A] hover:text-[#53271E] hover:bg-[#FFF1A6]/70'
               }`}
             >
               <Mic className="w-4 h-4" />

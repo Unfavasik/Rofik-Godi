@@ -449,22 +449,22 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
   const detailMeta = {
     features: {
       Icon: Sparkles,
-      accent: 'bg-amber-50 text-amber-600',
+      accent: 'bg-[#FFF1A6] text-[#6B352A]',
       helper: 'What makes it special',
     },
     compatibility: {
       Icon: CarFront,
-      accent: 'bg-blue-50 text-blue-600',
+      accent: 'bg-[#FFF8D6] text-[#6B352A]',
       helper: 'Fits these vehicles',
     },
     materials: {
       Icon: Layers3,
-      accent: 'bg-emerald-50 text-emerald-600',
+      accent: 'bg-[#F6EAE4] text-[#6B352A]',
       helper: 'Build and finish',
     },
     stitchPatterns: {
       Icon: Scissors,
-      accent: 'bg-rose-50 text-[#D9232D]',
+      accent: 'bg-[#FFF1A6] text-[#6B352A]',
       helper: 'Choose your style',
     },
   } as const;
@@ -491,26 +491,26 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[60] flex w-full max-w-full flex-col overflow-hidden overflow-x-hidden bg-[#F8FAFC] bg-[radial-gradient(circle_at_top_left,_rgba(217,35,45,0.085),_transparent_42%),radial-gradient(circle_at_top_right,_rgba(59,130,246,0.075),_transparent_44%)] text-slate-900">
-        {/* Classic Glass Top Sticky Header */}
+      <div className="fixed inset-0 z-[60] flex w-full max-w-full flex-col overflow-hidden overflow-x-hidden bg-[#FFFCF4] bg-[radial-gradient(circle_at_top_left,_rgba(255,241,166,0.38),_transparent_45%),radial-gradient(circle_at_top_right,_rgba(107,53,42,0.08),_transparent_44%)] text-[#2B1611]">
+        {/* Top Sticky Header */}
         <header
           data-testid="pdp-classic-glass-topbar"
-          className="classic-glass relative z-30 shrink-0 border-b border-white/85 bg-gradient-to-r from-white/88 via-white/80 to-rose-50/55 shadow-[0_10px_30px_-16px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl"
+          className="classic-glass relative z-30 shrink-0 border-b border-[#E8D8C4] bg-[#6B352A] text-[#FFFCF4] shadow-[0_10px_30px_-16px_rgba(43,22,17,0.35)]"
         >
           <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-2.5 px-3 sm:px-6">
-            {/* Left: Frosted Back Button + Glass Product Identity Capsule */}
+            {/* Left: Back Button + Product Identity Capsule */}
             <div className="flex min-w-0 flex-1 items-center gap-2.5">
               <button
                 type="button"
                 onClick={onClose}
                 aria-label="Go back"
-                className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/95 bg-white/85 text-slate-800 shadow-[0_6px_16px_-6px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.98)] backdrop-blur-md transition-all duration-200 hover:-translate-x-0.5 hover:border-rose-200/90 hover:bg-rose-50/90 hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95"
+                className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/15 text-[#FFFCF4] transition-all duration-200 hover:-translate-x-0.5 hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFF1A6] active:scale-95"
               >
                 <ArrowLeft className="h-5 w-5 stroke-[2.25] transition-transform duration-200 group-hover:-translate-x-0.5" />
               </button>
 
-              <div className="flex min-w-0 items-center gap-2.5 rounded-2xl border border-white/90 bg-white/70 py-1.5 pl-1.5 pr-3 shadow-[0_4px_16px_-8px_rgba(15,23,42,0.1),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md">
-                <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-xl border border-white/95 bg-slate-100 shadow-2xs">
+              <div className="flex min-w-0 items-center gap-2.5 rounded-2xl border border-white/15 bg-white/10 py-1.5 pl-1.5 pr-3 backdrop-blur-md">
+                <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-xl border border-white/30 bg-[#FFF8D6] shadow-2xs">
                   <img
                     src={images[activeImageIndex] ?? product.image}
                     alt=""
@@ -522,41 +522,41 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 </span>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="truncate text-[10px] font-extrabold uppercase tracking-wider text-[#D9232D]">
+                    <span className="truncate text-[10px] font-extrabold uppercase tracking-wider text-[#FFF1A6]">
                       {product.categoryLabel || 'Seat Covers'}
                     </span>
                     <span
                       aria-hidden="true"
-                      className="hidden h-1 w-1 shrink-0 rounded-full bg-slate-300 sm:inline-block"
+                      className="hidden h-1 w-1 shrink-0 rounded-full bg-white/40 sm:inline-block"
                     />
-                    <span className="hidden items-center gap-0.5 text-[10px] font-bold text-slate-600 tabular-nums sm:inline-flex">
-                      <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                    <span className="hidden items-center gap-0.5 text-[10px] font-bold text-[#FFF1A6] tabular-nums sm:inline-flex">
+                      <Star className="h-2.5 w-2.5 fill-[#FFF1A6] text-[#FFF1A6]" />
                       {reviewsValue}
                     </span>
                   </div>
-                  <p className="truncate text-xs font-extrabold leading-tight text-slate-900 sm:text-[13px]">
+                  <p className="truncate text-xs font-extrabold leading-tight text-[#FFFCF4] sm:text-[13px]">
                     {product.title}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Right: Classic Glass Action Dock */}
-            <div className="flex shrink-0 items-center gap-1 rounded-2xl border border-white/90 bg-white/65 p-1 shadow-[0_6px_20px_-8px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md">
+            {/* Right: Classic Action Dock */}
+            <div className="flex shrink-0 items-center gap-1 rounded-2xl border border-white/20 bg-white/10 p-1 backdrop-blur-md">
               <button
                 type="button"
                 aria-label="Share product"
                 onClick={() => void shareProduct()}
-                className={`inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-xl border px-2.5 text-xs font-bold transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] sm:h-10 sm:min-w-10 ${
+                className={`inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-xl border px-2.5 text-xs font-bold transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFF1A6] sm:h-10 sm:min-w-10 ${
                   copiedShareLink
-                    ? 'border-emerald-200/90 bg-emerald-50/95 text-emerald-700 shadow-2xs'
-                    : 'border-white/90 bg-white/85 text-slate-700 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.08)] hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D]'
+                    ? 'border-[#E6CE73] bg-[#FFF1A6] text-[#6B352A] shadow-2xs'
+                    : 'border-white/20 bg-white/15 text-[#FFFCF4] hover:bg-white/25'
                 }`}
               >
                 {copiedShareLink ? (
                   <>
-                    <Check className="h-4 w-4 text-emerald-600" />
-                    <span className="text-[11px] font-extrabold text-emerald-700">Copied</span>
+                    <Check className="h-4 w-4 text-[#6B352A]" />
+                    <span className="text-[11px] font-extrabold text-[#6B352A]">Copied</span>
                   </>
                 ) : (
                   <Share2 className="h-4 w-4" />
@@ -568,7 +568,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                   type="button"
                   aria-label="Search products"
                   onClick={onOpenSearch}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/90 bg-white/85 text-slate-700 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.08)] transition-all duration-150 hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95 sm:h-10 sm:w-10"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-white/15 text-[#FFFCF4] transition-all duration-150 hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFF1A6] active:scale-95 sm:h-10 sm:w-10"
                 >
                   <Search className="h-4.5 w-4.5" />
                 </button>
@@ -578,11 +578,11 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 type="button"
                 aria-label={`Open cart, ${cartCount} items`}
                 onClick={onOpenCart}
-                className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/90 bg-white/85 text-slate-800 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.08)] transition-all duration-150 hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95 sm:h-10 sm:w-10"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-white/15 text-[#FFFCF4] transition-all duration-150 hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFF1A6] active:scale-95 sm:h-10 sm:w-10"
               >
                 <ShoppingCart className="h-4.5 w-4.5" />
                 {cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full border border-white bg-gradient-to-r from-[#D9232D] to-[#B91822] px-1 text-[10px] font-extrabold text-white tabular-nums shadow-xs">
+                  <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full border border-[#6B352A] bg-[#FF6115] px-1 text-[10px] font-extrabold text-[#1F0E0A] tabular-nums shadow-xs">
                     {cartCount}
                   </span>
                 )}
@@ -610,14 +610,14 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 className="space-y-3 lg:sticky lg:top-6 lg:col-span-7"
               >
                 <div
-                  className={`classic-glass rounded-3xl bg-gradient-to-br from-white/92 via-white/82 to-rose-50/40 p-2.5 shadow-[0_18px_44px_-20px_rgba(15,23,42,0.18),inset_0_1px_0_rgba(255,255,255,0.95)] transition-all duration-300 sm:p-3.5 ${
+                  className={`classic-glass rounded-3xl bg-white p-2.5 shadow-[0_18px_44px_-20px_rgba(107,53,42,0.16)] transition-all duration-300 sm:p-3.5 ${
                     colorPreviewHighlight
-                      ? 'ring-2 ring-[#D9232D]/40'
-                      : 'ring-1 ring-white/90'
+                      ? 'ring-2 ring-[#6B352A]/50'
+                      : 'ring-1 ring-[#E8D8C4]'
                   }`}
                 >
                   <div
-                    className="group relative aspect-square w-full touch-pan-y overflow-hidden rounded-2xl bg-gradient-to-b from-slate-100/90 to-slate-200/55 ring-1 ring-inset ring-slate-900/[0.05]"
+                    className="group relative aspect-square w-full touch-pan-y overflow-hidden rounded-2xl bg-[#FFF8D6]/50 ring-1 ring-inset ring-[#E8D8C4]"
                     onTouchStart={handleGalleryTouchStart}
                     onTouchEnd={handleGalleryTouchEnd}
                   >
@@ -646,7 +646,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           aria-label="Previous image"
                           disabled={activeImageIndex === 0}
                           onClick={() => setActiveImageIndex((idx) => Math.max(0, idx - 1))}
-                          className="classic-glass absolute left-3 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-slate-800 shadow-sm transition hover:bg-white disabled:opacity-30 lg:flex lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
+                          className="classic-glass absolute left-3 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#2B1611] shadow-sm transition hover:bg-white disabled:opacity-30 lg:flex lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
                         >
                           <ChevronLeft className="h-4.5 w-4.5" />
                         </button>
@@ -657,7 +657,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           onClick={() =>
                             setActiveImageIndex((idx) => Math.min(images.length - 1, idx + 1))
                           }
-                          className="classic-glass absolute right-3 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-slate-800 shadow-sm transition hover:bg-white disabled:opacity-30 lg:flex lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
+                          className="classic-glass absolute right-3 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#2B1611] shadow-sm transition hover:bg-white disabled:opacity-30 lg:flex lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
                         >
                           <ChevronRight className="h-4.5 w-4.5" />
                         </button>
@@ -668,10 +668,10 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                   {/* Clean Glass Gallery Utility Bar */}
                   <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 px-0.5">
                     <div className="flex min-w-0 items-center gap-2">
-                      <span className="inline-flex h-8 shrink-0 items-center rounded-xl border border-white/90 bg-white/80 px-2.5 text-[11px] font-extrabold text-slate-700 shadow-2xs backdrop-blur-xs tabular-nums">
+                      <span className="inline-flex h-8 shrink-0 items-center rounded-xl border border-[#E8D8C4] bg-[#FFFCF4] px-2.5 text-[11px] font-extrabold text-[#4A2B23] shadow-2xs tabular-nums">
                         {activeImageIndex + 1} / {images.length}
                       </span>
-                      <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-slate-600">
+                      <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-[#6B4C44]">
                         <span
                           aria-hidden="true"
                           className="h-2.5 w-2.5 shrink-0 rounded-full border border-white shadow-2xs"
@@ -692,16 +692,16 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           }
                           onToggleWishlist(product);
                         }}
-                        className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold backdrop-blur-xs transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+                        className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6B352A] ${
                           isWishlisted
-                            ? 'border-rose-200 bg-rose-50/90 text-[#D9232D]'
-                            : 'border-white/90 bg-white/80 text-slate-700 shadow-2xs hover:border-rose-200 hover:bg-rose-50/70 hover:text-[#D9232D]'
+                            ? 'border-[#E6CE73] bg-[#FFF1A6] text-[#6B352A]'
+                            : 'border-[#E8D8C4] bg-[#FFFCF4] text-[#4A2B23] shadow-2xs hover:border-[#6B352A]/40 hover:bg-[#FFF8D6] hover:text-[#6B352A]'
                         }`}
                       >
                         <Heart
                           key={heartPulseKey}
                           className={`h-3.5 w-3.5 shrink-0 ${
-                            isWishlisted ? 'wishlist-heartbeat fill-[#D9232D] text-[#D9232D]' : ''
+                            isWishlisted ? 'wishlist-heartbeat fill-[#6B352A] text-[#6B352A]' : ''
                           }`}
                         />
                         <span>{isWishlisted ? 'Liked' : 'Like'}</span>
@@ -711,7 +711,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                         type="button"
                         aria-label="Zoom product image"
                         onClick={() => setIsLightboxOpen(true)}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-white/90 bg-white/80 px-3 text-xs font-bold text-slate-700 shadow-2xs backdrop-blur-xs transition hover:bg-white active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D]"
+                        className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-[#E8D8C4] bg-[#FFFCF4] px-3 text-xs font-bold text-[#4A2B23] shadow-2xs transition hover:bg-[#FFF8D6] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6B352A]"
                       >
                         <Expand className="h-3.5 w-3.5 shrink-0" />
                         <span>Zoom</span>
@@ -729,10 +729,10 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           onClick={() => setActiveImageIndex(index)}
                           aria-label={`View product image ${index + 1}`}
                           aria-current={activeImageIndex === index ? 'true' : undefined}
-                          className={`h-16 w-16 shrink-0 overflow-hidden rounded-2xl border-2 bg-white/70 backdrop-blur-xs transition sm:h-[72px] sm:w-[72px] ${
+                          className={`h-16 w-16 shrink-0 overflow-hidden rounded-2xl border-2 bg-[#FFFCF4] transition sm:h-[72px] sm:w-[72px] ${
                             activeImageIndex === index
-                              ? 'border-[#D9232D] ring-2 ring-rose-200/70 shadow-xs'
-                              : 'border-white/80 opacity-80 hover:opacity-100'
+                              ? 'border-[#6B352A] ring-2 ring-[#FFF1A6] shadow-xs'
+                              : 'border-[#E8D8C4] opacity-80 hover:opacity-100'
                           }`}
                         >
                           <img src={image} alt="" className="h-full w-full object-cover" />
@@ -748,59 +748,59 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 aria-label="Configure and buy product"
                 className="lg:col-span-5"
               >
-                <div className="classic-glass space-y-5 rounded-3xl bg-gradient-to-br from-white/92 via-white/84 to-slate-50/75 p-5 shadow-[0_16px_40px_-22px_rgba(15,23,42,0.15),inset_0_1px_0_rgba(255,255,255,0.95)] sm:p-6">
+                <div className="classic-glass space-y-5 rounded-3xl border border-[#E8D8C4] bg-gradient-to-br from-white via-[#FFFCF4] to-[#FFF8D6]/45 p-5 shadow-[0_16px_40px_-22px_rgba(107,53,42,0.16)] sm:p-6">
                   {/* Product Identity & Rating */}
                   <div>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-slate-500">
-                      <span className="font-extrabold uppercase tracking-wider text-[#D9232D]">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-[#8A6C63]">
+                      <span className="font-extrabold uppercase tracking-wider text-[#6B352A]">
                         {product.categoryLabel || 'Bike Covers'}
                       </span>
                       <span aria-hidden="true">·</span>
-                      <span className="inline-flex items-center gap-1 text-slate-700 tabular-nums">
-                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                      <span className="inline-flex items-center gap-1 text-[#4A2B23] tabular-nums">
+                        <Star className="h-3.5 w-3.5 fill-[#FF6115] text-[#FF6115]" />
                         <strong>{reviewsValue}</strong>
-                        <span className="text-slate-500">({product.reviewCount} reviews)</span>
+                        <span className="text-[#8A6C63]">({product.reviewCount} reviews)</span>
                       </span>
                       {(product.isBestseller ||
                         product.badge === 'Bestseller' ||
                         product.id === 'rg-prod-01') && (
                         <>
                           <span aria-hidden="true">·</span>
-                          <span className="font-bold text-slate-800">Bestseller</span>
+                          <span className="font-bold text-[#2B1611]">Bestseller</span>
                         </>
                       )}
                       {product.isWaterproof && (
                         <>
                           <span aria-hidden="true">·</span>
-                          <span className="inline-flex items-center gap-1 font-semibold text-slate-700">
-                            <Droplets className="h-3.5 w-3.5 text-sky-600" />
+                          <span className="inline-flex items-center gap-1 font-semibold text-[#4A2B23]">
+                            <Droplets className="h-3.5 w-3.5 text-[#6B352A]" />
                             Waterproof
                           </span>
                         </>
                       )}
                     </div>
 
-                    <h1 className="mt-2 text-2xl font-black leading-tight tracking-tight text-slate-950 [text-wrap:balance] sm:text-[26px]">
+                    <h1 className="mt-2 text-2xl font-black leading-tight tracking-tight text-[#2B1611] [text-wrap:balance] sm:text-[26px]">
                       {product.title}
                     </h1>
                     {details.subtitle && (
-                      <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+                      <p className="mt-1.5 text-sm leading-relaxed text-[#6B4C44]">
                         {details.subtitle}
                       </p>
                     )}
 
                     {/* Live Pricing & Availability */}
-                    <div className="mt-4 rounded-2xl border border-white/90 bg-white/75 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xs">
+                    <div className="mt-4 rounded-2xl border border-[#E8D8C4] bg-[#FFFCF4] p-4 shadow-2xs">
                       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                        <strong className="text-3xl font-black tracking-tight text-slate-950 tabular-nums">
+                        <strong className="text-3xl font-black tracking-tight text-[#2B1611] tabular-nums">
                           ₹{totalPrice}
                         </strong>
                         {savings > 0 && (
                           <>
-                            <span className="text-sm font-medium text-slate-400 line-through tabular-nums">
+                            <span className="text-sm font-medium text-[#8A6C63] line-through tabular-nums">
                               ₹{displayOriginalTotal}
                             </span>
-                            <span className="text-xs font-extrabold text-[#D9232D] tabular-nums">
+                            <span className="rounded-full bg-[#FFF1A6] px-2 py-0.5 text-xs font-extrabold text-[#6B352A] tabular-nums">
                               Save ₹{savings} ({discount}% OFF)
                             </span>
                           </>
@@ -812,15 +812,15 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           role="status"
                           className={`inline-flex items-center gap-1.5 font-bold ${
                             availability.state === 'out-of-stock'
-                              ? 'text-amber-700'
-                              : 'text-emerald-700'
+                              ? 'text-[#9A4D16]'
+                              : 'text-[#6B352A]'
                           }`}
                         >
                           <CircleCheck className="h-3.5 w-3.5 shrink-0" />
                           <span>{availability.label}</span>
                         </p>
                         {(quantity > 1 || optionExtraPerUnit > 0) && (
-                          <span className="font-semibold text-slate-500 tabular-nums">
+                          <span className="font-semibold text-[#6B4C44] tabular-nums">
                             ₹{unitPrice} per cover
                           </span>
                         )}
@@ -828,8 +828,8 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                     </div>
 
                     {guaranteeInfo && (
-                      <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-emerald-200/80 bg-emerald-50/75 px-3 py-2 text-xs font-semibold text-emerald-800">
-                        <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+                      <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-[#E6CE73] bg-[#FFF8D6] px-3 py-2 text-xs font-semibold text-[#6B352A]">
+                        <ShieldCheck className="h-4 w-4 shrink-0 text-[#6B352A]" />
                         <span>
                           Guarantee valid until{' '}
                           <strong className="font-extrabold">
@@ -841,10 +841,10 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                   </div>
 
                   {/* 1. Color Swatches */}
-                  <div className="border-t border-slate-100 pt-4">
+                  <div className="border-t border-[#F4EAE0] pt-4">
                     <div className="mb-2.5 flex items-center justify-between gap-2">
-                      <h2 className="text-sm font-extrabold text-slate-900">Color Finish</h2>
-                      <span className="text-xs font-semibold text-slate-500">
+                      <h2 className="text-sm font-extrabold text-[#2B1611]">Color Finish</h2>
+                      <span className="text-xs font-semibold text-[#6B4C44]">
                         {selectedColor.name}
                       </span>
                     </div>
@@ -860,10 +860,10 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                             className="group min-w-0 text-center focus-visible:outline-none"
                           >
                             <span
-                              className={`relative mx-auto block aspect-square w-full overflow-hidden rounded-2xl border-2 bg-slate-100 transition ${
+                              className={`relative mx-auto block aspect-square w-full overflow-hidden rounded-2xl border-2 bg-[#FFF8D6]/50 transition ${
                                 isSelected
-                                  ? 'border-[#D9232D] ring-2 ring-rose-100'
-                                  : 'border-slate-200/70 group-hover:border-slate-300'
+                                  ? 'border-[#6B352A] ring-2 ring-[#FFF1A6]'
+                                  : 'border-[#E8D8C4] group-hover:border-[#6B352A]/50'
                               }`}
                             >
                               <img
@@ -878,7 +878,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                             </span>
                             <span
                               className={`mt-1.5 block truncate text-[10px] leading-tight ${
-                                isSelected ? 'font-bold text-[#D9232D]' : 'text-slate-600'
+                                isSelected ? 'font-bold text-[#6B352A]' : 'text-[#6B4C44]'
                               }`}
                             >
                               {color.name.replace(' & ', ' ')}
@@ -891,12 +891,12 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
 
                   {/* 2. Foam Thickness & Cushioning Upgrade Selector */}
                   {product.thicknessOptions.length > 0 && (
-                    <div className="border-t border-slate-100 pt-4">
+                    <div className="border-t border-[#F4EAE0] pt-4">
                       <div className="mb-2.5 flex items-center justify-between gap-2">
-                        <h2 className="text-sm font-extrabold text-slate-900">
+                        <h2 className="text-sm font-extrabold text-[#2B1611]">
                           Foam Thickness &amp; Cushioning
                         </h2>
-                        <span className="text-xs font-semibold text-slate-500">
+                        <span className="text-xs font-semibold text-[#6B4C44]">
                           {selectedThickness.extraPrice > 0
                             ? `+₹${selectedThickness.extraPrice}`
                             : 'Included'}
@@ -911,16 +911,16 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                               type="button"
                               aria-pressed={isSelected}
                               onClick={() => setSelectedThickness(option)}
-                              className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border px-3.5 py-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+                              className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border px-3.5 py-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6B352A] ${
                                 isSelected
-                                  ? 'border-[#D9232D] bg-rose-50/70 text-slate-950'
-                                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                                  ? 'border-[#6B352A] bg-[#FFF8D6] text-[#2B1611]'
+                                  : 'border-[#E8D8C4] bg-white text-[#4A2B23] hover:border-[#6B352A]/40'
                               }`}
                             >
                               <span className="text-xs font-bold leading-snug">{option.label}</span>
                               <span
                                 className={`shrink-0 text-xs font-extrabold tabular-nums ${
-                                  isSelected ? 'text-[#D9232D]' : 'text-slate-500'
+                                  isSelected ? 'text-[#6B352A]' : 'text-[#8A6C63]'
                                 }`}
                               >
                                 {option.extraPrice > 0 ? `+₹${option.extraPrice}` : 'Base'}
@@ -934,11 +934,11 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
 
                   {/* 3. Inline Stitch Pattern Selector */}
                   {details.stitchPatterns.length > 0 && (
-                    <div className="border-t border-slate-100 pt-4">
+                    <div className="border-t border-[#F4EAE0] pt-4">
                       <div className="mb-2.5 flex items-center justify-between gap-2">
-                        <h2 className="text-sm font-extrabold text-slate-900">Stitch Pattern</h2>
+                        <h2 className="text-sm font-extrabold text-[#2B1611]">Stitch Pattern</h2>
                         {selectedStitch && (
-                          <span className="text-xs font-semibold text-slate-500">
+                          <span className="text-xs font-semibold text-[#6B4C44]">
                             {selectedStitch}
                           </span>
                         )}
@@ -952,10 +952,10 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                               type="button"
                               aria-pressed={isSelected}
                               onClick={() => setSelectedStitch(pattern)}
-                              className={`inline-flex min-h-11 items-center gap-1.5 rounded-2xl border px-3.5 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+                              className={`inline-flex min-h-11 items-center gap-1.5 rounded-2xl border px-3.5 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6B352A] ${
                                 isSelected
-                                  ? 'border-[#D9232D] bg-rose-50 text-[#D9232D]'
-                                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                                  ? 'border-[#6B352A] bg-[#FFF1A6] text-[#6B352A]'
+                                  : 'border-[#E8D8C4] bg-white text-[#4A2B23] hover:border-[#6B352A]/40'
                               }`}
                             >
                               <Scissors className="h-3.5 w-3.5 shrink-0" />
@@ -969,16 +969,16 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
 
                   {/* 4. Custom Name Embroidery Input */}
                   {product.isCustomizable && (
-                    <div className="border-t border-slate-100/90 pt-4">
-                      <div className="rounded-2xl border border-white/90 bg-white/75 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xs">
+                    <div className="border-t border-[#F4EAE0] pt-4">
+                      <div className="rounded-2xl border border-[#E8D8C4] bg-[#FFFCF4] p-3.5 shadow-2xs">
                         <div className="flex items-center justify-between gap-2">
                           <label
                             htmlFor="pdp-custom-embroidery"
-                            className="text-xs font-extrabold text-slate-900"
+                            className="text-xs font-extrabold text-[#2B1611]"
                           >
                             Custom Name Embroidery (Optional · +₹150)
                           </label>
-                          <span className="text-[11px] font-bold text-slate-500 tabular-nums">
+                          <span className="text-[11px] font-bold text-[#6B4C44] tabular-nums">
                             {normalizedEmbroidery.length}/{MAX_EMBROIDERY_CHARS}
                           </span>
                         </div>
@@ -990,21 +990,21 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                             maxLength={MAX_EMBROIDERY_CHARS}
                             onChange={(event) => setCustomEmbroideryText(event.target.value)}
                             placeholder="e.g. ASIK 07 (leave blank for standard)"
-                            className="min-h-11 w-full rounded-xl border border-slate-200 bg-white pl-3.5 pr-11 text-base font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#D9232D] focus:ring-2 focus:ring-rose-100 sm:text-sm"
+                            className="min-h-11 w-full rounded-xl border border-[#E8D8C4] bg-white pl-3.5 pr-11 text-base font-semibold text-[#2B1611] outline-none transition placeholder:font-normal placeholder:text-[#8A6C63] focus:border-[#6B352A] focus:ring-2 focus:ring-[#FFF1A6] sm:text-sm"
                           />
                           {customEmbroideryText && (
                             <button
                               type="button"
                               aria-label="Clear embroidery text"
                               onClick={() => setCustomEmbroideryText('')}
-                              className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                              className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-[#6B4C44] hover:bg-[#FFF8D6] hover:text-[#2B1611]"
                             >
                               <X className="h-4 w-4" />
                             </button>
                           )}
                         </div>
                         {normalizedEmbroidery && (
-                          <p className="mt-2 text-xs font-semibold text-[#D9232D]">
+                          <p className="mt-2 text-xs font-semibold text-[#6B352A]">
                             Stitch preview: &ldquo;{normalizedEmbroidery}&rdquo; (+₹150 workshop
                             embroidery added)
                           </p>
@@ -1015,17 +1015,17 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
 
                   {/* 5. Vehicle Type & Model Fitment Check */}
                   {(compatibleTypes.length > 1 || modelOptions.length > 0) && (
-                    <div className="space-y-3 border-t border-slate-100 pt-4">
+                    <div className="space-y-3 border-t border-[#F4EAE0] pt-4">
                       <div className="flex items-center justify-between gap-2">
-                        <h2 className="text-sm font-extrabold text-slate-900">
+                        <h2 className="text-sm font-extrabold text-[#2B1611]">
                           Vehicle Fitment Check{' '}
-                          <span className="font-medium text-slate-400">(Optional)</span>
+                          <span className="font-medium text-[#8A6C63]">(Optional)</span>
                         </h2>
                         {details.compatibility.length > 0 && (
                           <button
                             type="button"
                             onClick={() => setDetailSheet('compatibility')}
-                            className="text-xs font-bold text-[#D9232D] hover:underline"
+                            className="text-xs font-bold text-[#6B352A] hover:underline"
                           >
                             View all {details.compatibility.length}
                           </button>
@@ -1049,8 +1049,8 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                                 }}
                                 className={`flex min-h-11 items-center justify-center gap-1.5 rounded-2xl border px-3 text-xs font-bold transition ${
                                   vehicleType === type
-                                    ? 'border-[#D9232D] bg-rose-50 text-[#D9232D]'
-                                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                                    ? 'border-[#6B352A] bg-[#FFF1A6] text-[#6B352A]'
+                                    : 'border-[#E8D8C4] bg-white text-[#4A2B23] hover:border-[#6B352A]/40'
                                 }`}
                               >
                                 <Icon className="h-4 w-4" />
@@ -1067,7 +1067,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           <select
                             value={selectedModel}
                             onChange={(event) => setSelectedModel(event.target.value)}
-                            className="min-h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-white pl-11 pr-10 text-base font-medium text-slate-700 outline-none transition focus:border-[#D9232D] focus:ring-2 focus:ring-rose-100 sm:text-sm"
+                            className="min-h-12 w-full appearance-none rounded-2xl border border-[#E8D8C4] bg-white pl-11 pr-10 text-base font-medium text-[#2B1611] outline-none transition focus:border-[#6B352A] focus:ring-2 focus:ring-[#FFF1A6] sm:text-sm"
                           >
                             <option value="">
                               Choose your {vehicleType === 'scooter' ? 'scooter' : 'vehicle'} model
@@ -1078,13 +1078,13 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                               </option>
                             ))}
                           </select>
-                          <Bike className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#D9232D]" />
-                          <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                          <Bike className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6B352A]" />
+                          <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8A6C63]" />
                         </label>
                       )}
 
                       {selectedModel && (
-                        <p className="flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
+                        <p className="flex items-center gap-2 rounded-xl border border-[#E6CE73] bg-[#FFF8D6] px-3 py-2 text-xs font-semibold text-[#6B352A]">
                           <CircleCheck className="h-4 w-4 shrink-0" />
                           <span>Verified workshop fit for {selectedModel}.</span>
                         </p>
@@ -1093,20 +1093,20 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                   )}
 
                   {/* 6. Quantity Stepper & Desktop Action Bar */}
-                  <div className="space-y-4 border-t border-slate-100 pt-4">
+                  <div className="space-y-4 border-t border-[#F4EAE0] pt-4">
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-extrabold text-slate-900">Quantity</span>
-                      <div className="inline-flex items-center rounded-2xl border border-slate-200 bg-[#F8FAFC] p-1">
+                      <span className="text-sm font-extrabold text-[#2B1611]">Quantity</span>
+                      <div className="inline-flex items-center rounded-2xl border border-[#E8D8C4] bg-[#FFF8D6]/60 p-1">
                         <button
                           type="button"
                           aria-label="Decrease quantity"
                           disabled={quantity <= 1}
                           onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                          className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-700 transition hover:bg-white disabled:opacity-35"
+                          className="flex h-10 w-10 items-center justify-center rounded-xl text-[#4A2B23] transition hover:bg-white disabled:opacity-35"
                         >
                           <Minus className="h-4 w-4" />
                         </button>
-                        <span className="min-w-10 text-center text-sm font-black text-slate-950 tabular-nums">
+                        <span className="min-w-10 text-center text-sm font-black text-[#2B1611] tabular-nums">
                           {quantity}
                         </span>
                         <button
@@ -1116,7 +1116,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           onClick={() =>
                             setQuantity((q) => Math.min(MAX_ORDER_ITEM_QUANTITY, q + 1))
                           }
-                          className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-700 transition hover:bg-white disabled:opacity-35"
+                          className="flex h-10 w-10 items-center justify-center rounded-xl text-[#4A2B23] transition hover:bg-white disabled:opacity-35"
                         >
                           <Plus className="h-4 w-4" />
                         </button>
@@ -1136,7 +1136,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                             aria-label={
                               isSelectedConfigurationInCart ? 'Go to Cart' : 'Add to cart'
                             }
-                            className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-[#D9232D] bg-white px-4 text-sm font-extrabold text-[#D9232D] transition hover:bg-rose-50/70 active:scale-[0.98]"
+                            className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-[#6B352A] bg-white px-4 text-sm font-extrabold text-[#6B352A] transition hover:bg-[#FFF8D6] active:scale-[0.98]"
                           >
                             <ShoppingCart className="h-4 w-4" />
                             <span>
@@ -1146,7 +1146,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           <button
                             type="button"
                             onClick={() => addToCart(true)}
-                            className="banner-cta-shine group/cta flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-4 text-sm font-extrabold text-white shadow-[0_10px_22px_-8px_rgba(217,35,45,0.45)] transition-all hover:brightness-105 active:scale-[0.98]"
+                            className="banner-cta-shine group/cta flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#FF6115] px-4 text-sm font-extrabold text-[#1F0E0A] shadow-[0_10px_22px_-8px_rgba(255,97,21,0.45)] transition-all hover:bg-[#E5520D] active:scale-[0.98]"
                           >
                             <Zap className="h-4 w-4 fill-current transition-transform duration-200 group-hover/cta:translate-x-0.5" />
                             <span>Buy Now</span>
@@ -1158,7 +1158,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           disabled={!onNotifyMe || notifySubmitting}
                           onClick={() => void handleNotifyMe(product)}
                           aria-label="Notify me when this product is back in stock"
-                          className="banner-cta-shine group/cta col-span-2 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-4 text-sm font-extrabold text-white shadow-sm transition-all hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
+                          className="banner-cta-shine group/cta col-span-2 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#6B352A] px-4 text-sm font-extrabold text-[#FFFCF4] shadow-sm transition-all hover:bg-[#53271E] active:scale-[0.98] disabled:opacity-50"
                         >
                           <Clock3
                             className={`h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5 ${
@@ -1181,15 +1181,15 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 <section
                   id="pdp-section-description"
                   aria-labelledby="pdp-heading-description"
-                  className="classic-glass rounded-3xl bg-white/82 p-5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-6"
+                  className="classic-glass rounded-3xl border border-[#E8D8C4] bg-white p-5 shadow-[0_12px_34px_-20px_rgba(107,53,42,0.14)] sm:p-6"
                 >
                   <div className="mb-4">
-                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#D9232D]">
+                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#6B352A]">
                       At a glance
                     </p>
                     <h2
                       id="pdp-heading-description"
-                      className="mt-0.5 text-lg font-extrabold tracking-tight text-slate-950"
+                      className="mt-0.5 text-lg font-extrabold tracking-tight text-[#2B1611]"
                     >
                       Build Highlights &amp; Materials
                     </h2>
@@ -1208,7 +1208,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                               key={key}
                               type="button"
                               onClick={() => setDetailSheet(key)}
-                              className="group flex min-h-[86px] items-start gap-3 rounded-2xl border border-slate-200/80 bg-[#F8FAFC]/60 p-3.5 text-left transition hover:border-slate-300 hover:bg-white active:scale-[0.99]"
+                              className="group flex min-h-[86px] items-start gap-3 rounded-2xl border border-[#E8D8C4] bg-[#FFFCF4] p-3.5 text-left transition hover:border-[#6B352A]/40 hover:bg-[#FFF8D6]/55 active:scale-[0.99]"
                             >
                               <span
                                 className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${accent}`}
@@ -1216,19 +1216,19 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                                 <Icon className="h-[19px] w-[19px]" />
                               </span>
                               <span className="min-w-0 flex-1">
-                                <b className="block text-[13px] font-extrabold leading-tight text-slate-900">
+                                <b className="block text-[13px] font-extrabold leading-tight text-[#2B1611]">
                                   {sheetLabels[key]}
                                 </b>
-                                <span className="mt-1 block text-[11px] font-medium text-slate-400">
+                                <span className="mt-1 block text-[11px] font-medium text-[#8A6C63]">
                                   {helper}
                                 </span>
-                                <span className="mt-1.5 block truncate text-xs leading-tight text-slate-600">
+                                <span className="mt-1.5 block truncate text-xs leading-tight text-[#6B4C44]">
                                   {key === 'stitchPatterns' && selectedStitch
                                     ? selectedStitch
                                     : preview(details[key])}
                                 </span>
                               </span>
-                              <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-700" />
+                              <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[#8A6C63] transition group-hover:translate-x-0.5 group-hover:text-[#6B352A]" />
                             </button>
                           );
                         },
@@ -1236,10 +1236,10 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                     </div>
                   )}
 
-                  <div className="border-t border-slate-100 pt-5">
-                    <h3 className="text-base font-extrabold text-slate-950">Description</h3>
+                  <div className="border-t border-[#F4EAE0] pt-5">
+                    <h3 className="text-base font-extrabold text-[#2B1611]">Description</h3>
                     <p
-                      className={`mt-2 text-sm leading-relaxed text-slate-600 ${
+                      className={`mt-2 text-sm leading-relaxed text-[#4A2B23] ${
                         descriptionOpen ? '' : 'line-clamp-4'
                       }`}
                     >
@@ -1248,7 +1248,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                     <button
                       type="button"
                       onClick={() => setDescriptionOpen((open) => !open)}
-                      className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-xs font-extrabold text-slate-800 transition hover:bg-slate-50"
+                      className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#E8D8C4] bg-[#FFFCF4] px-4 text-xs font-extrabold text-[#2B1611] transition hover:bg-[#FFF8D6]"
                     >
                       <span>{descriptionOpen ? 'Read less' : 'Read more'}</span>
                       <ChevronDown
@@ -1269,16 +1269,16 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 <section
                   id="pdp-section-embroidery"
                   aria-labelledby="pdp-heading-embroidery"
-                  className="classic-glass rounded-3xl bg-white/82 p-5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-6"
+                  className="classic-glass rounded-3xl border border-[#E8D8C4] bg-white p-5 shadow-[0_12px_34px_-20px_rgba(107,53,42,0.14)] sm:p-6"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#D9232D]">
+                      <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#6B352A]">
                         Workshop craft
                       </p>
                       <h2
                         id="pdp-heading-embroidery"
-                        className="mt-0.5 text-lg font-extrabold tracking-tight text-slate-950"
+                        className="mt-0.5 text-lg font-extrabold tracking-tight text-[#2B1611]"
                       >
                         Embroidery Details
                       </h2>
@@ -1287,7 +1287,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                       <button
                         type="button"
                         onClick={focusEmbroideryInput}
-                        className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 text-xs font-extrabold text-[#D9232D] transition hover:bg-rose-100/70"
+                        className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-[#E6CE73] bg-[#FFF8D6] px-3 text-xs font-extrabold text-[#6B352A] transition hover:bg-[#FFF1A6]"
                       >
                         <Scissors className="h-3.5 w-3.5" />
                         <span>{normalizedEmbroidery ? 'Edit text above' : 'Add embroidery'}</span>
@@ -1296,24 +1296,24 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                   </div>
 
                   <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-200/75 bg-[#F8FAFC] p-3.5">
-                      <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">
+                    <div className="rounded-2xl border border-[#E8D8C4] bg-[#FFFCF4] p-3.5">
+                      <p className="text-[11px] font-extrabold uppercase tracking-wide text-[#8A6C63]">
                         Thread &amp; Stitch Finish
                       </p>
-                      <p className="mt-1.5 text-xs leading-relaxed text-slate-700">
+                      <p className="mt-1.5 text-xs leading-relaxed text-[#4A2B23]">
                         Stitched with UV-stable high-tensile nylon thread using{' '}
-                        <strong className="text-slate-900">
+                        <strong className="text-[#2B1611]">
                           {selectedStitch || details.stitchPatterns[0] || 'Double Lockstitch'}
                         </strong>{' '}
                         reinforcement so seams hold cleanly through daily rain and sun.
                       </p>
                     </div>
 
-                    <div className="rounded-2xl border border-slate-200/75 bg-[#F8FAFC] p-3.5">
-                      <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">
+                    <div className="rounded-2xl border border-[#E8D8C4] bg-[#FFFCF4] p-3.5">
+                      <p className="text-[11px] font-extrabold uppercase tracking-wide text-[#8A6C63]">
                         {product.isCustomizable ? 'Custom Name Spec (+₹150)' : 'Signature Emblem'}
                       </p>
-                      <p className="mt-1.5 text-xs leading-relaxed text-slate-700">
+                      <p className="mt-1.5 text-xs leading-relaxed text-[#4A2B23]">
                         {product.isCustomizable
                           ? `Supports up to ${MAX_EMBROIDERY_CHARS} uppercase characters embroidered across the rear rider crest before workshop fitment.`
                           : 'Finished with our factory-embroidered crest and double-piped edges ready for immediate fitment.'}
@@ -1321,18 +1321,18 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                     </div>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-rose-100 bg-rose-50/60 px-4 py-3 text-xs">
-                    <div className="flex items-center gap-2 text-slate-700">
-                      <Scissors className="h-4 w-4 shrink-0 text-[#D9232D]" />
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#E6CE73] bg-[#FFF8D6]/80 px-4 py-3 text-xs">
+                    <div className="flex items-center gap-2 text-[#4A2B23]">
+                      <Scissors className="h-4 w-4 shrink-0 text-[#6B352A]" />
                       <span>
                         Selected finish:{' '}
-                        <strong className="text-slate-950">
+                        <strong className="text-[#2B1611]">
                           {selectedColor.name} · {selectedThickness.label}
                         </strong>
                       </span>
                     </div>
                     {product.isCustomizable && (
-                      <span className="font-extrabold text-[#D9232D] tabular-nums">
+                      <span className="font-extrabold text-[#6B352A] tabular-nums">
                         {normalizedEmbroidery
                           ? `Text: “${normalizedEmbroidery}” (+₹150)`
                           : 'Standard finish (No embroidery text)'}
@@ -1347,21 +1347,21 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 <section
                   id="pdp-section-specifications"
                   aria-labelledby="pdp-heading-specifications"
-                  className="classic-glass rounded-3xl bg-white/82 p-5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-6"
+                  className="classic-glass rounded-3xl border border-[#E8D8C4] bg-white p-5 shadow-[0_12px_34px_-20px_rgba(107,53,42,0.14)] sm:p-6"
                 >
                   <div className="mb-3">
-                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#D9232D]">
+                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#6B352A]">
                       Technical breakdown
                     </p>
                     <h2
                       id="pdp-heading-specifications"
-                      className="mt-0.5 text-lg font-extrabold tracking-tight text-slate-950"
+                      className="mt-0.5 text-lg font-extrabold tracking-tight text-[#2B1611]"
                     >
                       Specifications
                     </h2>
                   </div>
 
-                  <div className="divide-y divide-slate-100 border-t border-slate-100">
+                  <div className="divide-y divide-[#F4EAE0] border-t border-[#F4EAE0]">
                     {(
                       [
                         ['Material', details.materials.join(', ')],
@@ -1383,7 +1383,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                           key={label}
                           className="grid grid-cols-[24px_minmax(72px,0.7fr)_minmax(0,1.3fr)] items-start gap-2.5 py-3 text-xs"
                         >
-                          <span className="mt-0.5 grid h-6 w-6 place-items-center rounded-lg bg-slate-100 text-slate-500">
+                          <span className="mt-0.5 grid h-6 w-6 place-items-center rounded-lg bg-[#FFF8D6] text-[#6B352A]">
                             {label === 'Waterproof' ? (
                               <Droplets className="h-3.5 w-3.5" />
                             ) : label === 'Installation' ? (
@@ -1392,8 +1392,8 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                               <PackageCheck className="h-3.5 w-3.5" />
                             )}
                           </span>
-                          <span className="min-w-0 font-semibold text-slate-500">{label}</span>
-                          <span className="min-w-0 break-words text-right font-semibold leading-relaxed text-slate-800">
+                          <span className="min-w-0 font-semibold text-[#8A6C63]">{label}</span>
+                          <span className="min-w-0 break-words text-right font-semibold leading-relaxed text-[#2B1611]">
                             {value}
                           </span>
                         </div>
@@ -1403,7 +1403,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
 
                 <section
                   aria-label="Workshop guarantees"
-                  className="divide-y divide-rose-100 rounded-3xl border border-rose-100 bg-rose-50/75 px-5 py-2"
+                  className="divide-y divide-[#EAD278]/70 rounded-3xl border border-[#E6CE73] bg-[#FFF8D6] px-5 py-2"
                 >
                   {[
                     [
@@ -1434,12 +1434,12 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                     const TrustIcon = Icon as React.ComponentType<{ className?: string }>;
                     return (
                       <div key={title as string} className="flex items-start gap-3 py-3.5">
-                        <TrustIcon className="mt-0.5 h-5 w-5 shrink-0 text-[#D9232D]" />
+                        <TrustIcon className="mt-0.5 h-5 w-5 shrink-0 text-[#6B352A]" />
                         <div>
-                          <p className="text-xs font-extrabold text-slate-900">
+                          <p className="text-xs font-extrabold text-[#2B1611]">
                             {title as string}
                           </p>
-                          <p className="mt-0.5 text-xs leading-relaxed text-slate-600">
+                          <p className="mt-0.5 text-xs leading-relaxed text-[#4A2B23]">
                             {detail as string}
                           </p>
                         </div>
@@ -1453,7 +1453,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
             {/* Verified Customer Reviews */}
             <div
               id="pdp-section-reviews"
-              className="classic-glass overflow-hidden rounded-3xl bg-white/82 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)]"
+              className="classic-glass overflow-hidden rounded-3xl border border-[#E8D8C4] bg-white shadow-[0_12px_34px_-20px_rgba(107,53,42,0.14)]"
             >
               <ProductReviews
                 productId={product.id}
@@ -1470,14 +1470,14 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               <section
                 id="pdp-section-related"
                 aria-label="You may also like"
-                className="classic-glass rounded-3xl bg-white/82 p-5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-6"
+                className="classic-glass rounded-3xl border border-[#E8D8C4] bg-white p-5 shadow-[0_12px_34px_-20px_rgba(107,53,42,0.14)] sm:p-6"
               >
                 <div className="mb-4 flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#D9232D]">
+                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#6B352A]">
                       Workshop picks
                     </p>
-                    <h2 className="mt-0.5 text-lg font-extrabold tracking-tight text-slate-950">
+                    <h2 className="mt-0.5 text-lg font-extrabold tracking-tight text-[#2B1611]">
                       You may also like
                     </h2>
                   </div>
@@ -1504,14 +1504,14 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
         </motion.main>
 
         {/* Classic Glass Mobile Sticky Bottom Action Bar */}
-        <footer className="classic-glass z-40 shrink-0 border-t border-white/85 bg-white/80 px-4 py-2.5 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-8px_28px_-10px_rgba(15,23,42,0.1)] lg:hidden">
+        <footer className="classic-glass z-40 shrink-0 border-t border-[#E8D8C4] bg-[#FFFCF4]/95 px-4 py-2.5 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-8px_28px_-10px_rgba(43,22,17,0.12)] lg:hidden">
           {sellable ? (
             <div className="mx-auto flex max-w-2xl items-center gap-2.5">
               <div className="min-w-0 pr-1">
-                <p className="text-base font-black leading-none text-slate-950 tabular-nums">
+                <p className="text-base font-black leading-none text-[#2B1611] tabular-nums">
                   ₹{totalPrice}
                 </p>
-                <p className="mt-0.5 text-[10px] font-semibold text-slate-500 tabular-nums">
+                <p className="mt-0.5 text-[10px] font-semibold text-[#6B4C44] tabular-nums">
                   {quantity} {quantity === 1 ? 'item' : 'items'}
                 </p>
               </div>
@@ -1522,7 +1522,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                   else addToCart(false);
                 }}
                 aria-label={isSelectedConfigurationInCart ? 'Go to Cart' : 'Add to cart'}
-                className="flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl border border-[#D9232D] bg-white px-3 text-xs font-extrabold text-[#D9232D] active:scale-[0.98]"
+                className="flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl border border-[#6B352A] bg-white px-3 text-xs font-extrabold text-[#6B352A] active:scale-[0.98]"
               >
                 <ShoppingCart className="h-4 w-4 shrink-0" />
                 <span className="truncate">
@@ -1532,7 +1532,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               <button
                 type="button"
                 onClick={() => addToCart(true)}
-                className="banner-cta-shine group/cta flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-3 text-xs font-extrabold text-white shadow-[0_8px_18px_-4px_rgba(217,35,45,0.38)] transition-all hover:brightness-105 active:scale-[0.97]"
+                className="banner-cta-shine group/cta flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-[#FF6115] px-3 text-xs font-extrabold text-[#1F0E0A] shadow-[0_8px_18px_-4px_rgba(255,97,21,0.42)] transition-all hover:bg-[#E5520D] active:scale-[0.97]"
               >
                 <Zap className="h-4 w-4 shrink-0 fill-current transition-transform duration-200 group-hover/cta:translate-x-0.5" />
                 <span className="truncate">Buy Now</span>
@@ -1544,7 +1544,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
               disabled={!onNotifyMe || notifySubmitting}
               onClick={() => void handleNotifyMe(product)}
               aria-label="Notify me when this product is back in stock"
-              className="banner-cta-shine group/cta flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] to-[#B91822] text-sm font-extrabold text-white shadow-sm transition-all hover:brightness-105 active:scale-[0.97] disabled:opacity-50"
+              className="banner-cta-shine group/cta flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#6B352A] text-sm font-extrabold text-[#FFFCF4] shadow-sm transition-all hover:bg-[#53271E] active:scale-[0.97] disabled:opacity-50"
             >
               <Clock3
                 className={`h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5 ${
@@ -1571,9 +1571,9 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                     return (
                       <section
                         key={brand}
-                        className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_2px_10px_rgba(15,23,42,0.04)]"
+                        className="overflow-hidden rounded-2xl border border-[#E8D8C4] bg-white shadow-[0_2px_10px_rgba(107,53,42,0.05)]"
                       >
-                        <div className="flex items-center gap-2.5 border-b border-slate-100 bg-slate-50/80 px-3.5 py-3">
+                        <div className="flex items-center gap-2.5 border-b border-[#F4EAE0] bg-[#FFF8D6]/60 px-3.5 py-3">
                           {logoUrl ? (
                             <img
                               src={logoUrl}
@@ -1581,21 +1581,21 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                               className="h-7 w-9 shrink-0 object-contain"
                             />
                           ) : (
-                            <span className="grid h-7 w-9 shrink-0 place-items-center rounded-lg bg-[#FCEBEB] text-[9px] font-black text-[#D9232D]">
+                            <span className="grid h-7 w-9 shrink-0 place-items-center rounded-lg bg-[#FFF1A6] text-[9px] font-black text-[#6B352A]">
                               {getBrandInitials(brand)}
                             </span>
                           )}
                           <div className="min-w-0 flex-1">
-                            <h3 className="truncate text-[13px] font-extrabold text-slate-900">
+                            <h3 className="truncate text-[13px] font-extrabold text-[#2B1611]">
                               {brand}
                             </h3>
-                            <p className="text-[10px] font-medium text-slate-400">
+                            <p className="text-[10px] font-medium text-[#8A6C63]">
                               {models.length} {models.length === 1 ? 'model' : 'models'} compatible
                             </p>
                           </div>
-                          <CircleCheck className="h-4 w-4 shrink-0 text-emerald-500" />
+                          <CircleCheck className="h-4 w-4 shrink-0 text-[#6B352A]" />
                         </div>
-                        <div className="divide-y divide-slate-100">
+                        <div className="divide-y divide-[#F4EAE0]">
                           {models.map((model) => (
                             <div key={model.id} className="flex items-center gap-3 px-3.5 py-2.5">
                               {model.image ? (
@@ -1603,18 +1603,18 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                                   src={model.image}
                                   alt={`${model.brand} ${model.name}`}
                                   loading="lazy"
-                                  className="h-12 w-[68px] shrink-0 rounded-xl bg-slate-50 object-cover"
+                                  className="h-12 w-[68px] shrink-0 rounded-xl bg-[#FFFCF4] object-cover"
                                 />
                               ) : (
-                                <span className="grid h-12 w-[68px] shrink-0 place-items-center rounded-xl bg-slate-50 text-slate-400">
+                                <span className="grid h-12 w-[68px] shrink-0 place-items-center rounded-xl bg-[#FFF8D6] text-[#8A6C63]">
                                   <Bike className="h-5 w-5" />
                                 </span>
                               )}
                               <div className="min-w-0">
-                                <p className="truncate text-[13px] font-extrabold text-slate-800">
+                                <p className="truncate text-[13px] font-extrabold text-[#2B1611]">
                                   {model.name}
                                 </p>
-                                <p className="mt-0.5 text-[10px] font-medium capitalize text-slate-400">
+                                <p className="mt-0.5 text-[10px] font-medium capitalize text-[#8A6C63]">
                                   {model.type}
                                 </p>
                               </div>
@@ -1629,9 +1629,9 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                     {details.compatibility.map((item) => (
                       <div
                         key={item}
-                        className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-700"
+                        className="flex items-center gap-2 rounded-xl border border-[#E8D8C4] bg-[#FFFCF4] px-3 py-3 text-sm text-[#4A2B23]"
                       >
-                        <CircleCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+                        <CircleCheck className="h-4 w-4 shrink-0 text-[#6B352A]" />
                         <span>{item}</span>
                       </div>
                     ))}
@@ -1643,9 +1643,9 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                 {details[detailSheet].map((item) => (
                   <div
                     key={item}
-                    className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-700"
+                    className="flex items-start gap-2 rounded-xl border border-[#E8D8C4] bg-[#FFFCF4] px-3 py-3 text-sm text-[#4A2B23]"
                   >
-                    <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                    <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#6B352A]" />
                     {detailSheet === 'stitchPatterns' ? (
                       <label className="flex cursor-pointer items-center gap-3">
                         <input
@@ -1656,6 +1656,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                             setSelectedStitch(item);
                             setDetailSheet(null);
                           }}
+                          className="accent-[#6B352A]"
                         />
                         <span>{item}</span>
                       </label>
@@ -1674,17 +1675,17 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
             role="dialog"
             aria-modal="true"
             aria-label={`${product.title} enlarged gallery`}
-            className="fixed inset-0 z-[80] flex flex-col bg-slate-950/95 p-4 text-white backdrop-blur-sm"
+            className="fixed inset-0 z-[80] flex flex-col bg-[#1F0E0A]/95 p-4 text-[#FFFCF4] backdrop-blur-sm"
           >
             <div className="mx-auto flex w-full max-w-4xl items-center justify-between">
-              <span className="text-xs font-bold text-slate-300 tabular-nums">
+              <span className="text-xs font-bold text-[#EAD8C8] tabular-nums">
                 {activeImageIndex + 1} / {images.length} · {selectedColor.name}
               </span>
               <button
                 type="button"
                 onClick={() => setIsLightboxOpen(false)}
                 aria-label="Close zoomed image"
-                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 text-white hover:bg-white/25"
+                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 text-[#FFFCF4] hover:bg-white/25"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1702,7 +1703,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                     aria-label="Previous zoomed image"
                     disabled={activeImageIndex === 0}
                     onClick={() => setActiveImageIndex((idx) => Math.max(0, idx - 1))}
-                    className="absolute left-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 text-white hover:bg-white/25 disabled:opacity-30"
+                    className="absolute left-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 text-[#FFFCF4] hover:bg-white/25 disabled:opacity-30"
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
@@ -1713,7 +1714,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
                     onClick={() =>
                       setActiveImageIndex((idx) => Math.min(images.length - 1, idx + 1))
                     }
-                    className="absolute right-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 text-white hover:bg-white/25 disabled:opacity-30"
+                    className="absolute right-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 text-[#FFFCF4] hover:bg-white/25 disabled:opacity-30"
                   >
                     <ChevronRight className="h-5 w-5" />
                   </button>
@@ -1752,11 +1753,11 @@ const SuggestionCard: React.FC<{
     }
   };
   return (
-    <article className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/90 bg-white/80 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.14)] backdrop-blur-md transition hover:border-rose-200/80 hover:bg-white">
+    <article className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-[#E8D8C4] bg-white shadow-[0_8px_24px_-16px_rgba(107,53,42,0.14)] transition hover:border-[#6B352A]/40">
       <button
         type="button"
         onClick={onSelect}
-        className="block aspect-square w-full overflow-hidden bg-slate-100"
+        className="block aspect-square w-full overflow-hidden bg-[#FFF8D6]/50"
       >
         <img
           src={localProductImages[product.id]?.[0] ?? product.image}
@@ -1769,11 +1770,11 @@ const SuggestionCard: React.FC<{
           <button
             type="button"
             onClick={onSelect}
-            className="block text-left text-xs font-extrabold leading-snug text-slate-900 hover:text-[#D9232D] sm:text-[13px]"
+            className="block text-left text-xs font-extrabold leading-snug text-[#2B1611] hover:text-[#6B352A] sm:text-[13px]"
           >
             {product.title}
           </button>
-          <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-slate-500">
+          <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-[#6B4C44]">
             {product.subtitle}
           </p>
         </div>
@@ -1781,16 +1782,16 @@ const SuggestionCard: React.FC<{
         <div className="mt-3">
           <p
             className={`text-[10px] font-bold ${
-              availability.state === 'out-of-stock' ? 'text-amber-700' : 'text-emerald-700'
+              availability.state === 'out-of-stock' ? 'text-[#9A4D16]' : 'text-[#6B352A]'
             }`}
           >
             {availability.label}
           </p>
           <div className="mt-1.5 flex items-center justify-between gap-2">
-            <span className="text-sm font-black text-slate-950 tabular-nums sm:text-base">
+            <span className="text-sm font-black text-[#2B1611] tabular-nums sm:text-base">
               ₹{product.price}{' '}
               {product.originalPrice > product.price && (
-                <small className="text-[10px] font-medium text-slate-400 line-through">
+                <small className="text-[10px] font-medium text-[#8A6C63] line-through">
                   ₹{product.originalPrice}
                 </small>
               )}
@@ -1823,8 +1824,10 @@ const SuggestionCard: React.FC<{
                 !isProductSellable(product) && !isInCart
                   ? 'min-w-[74px] px-2.5 text-[10px] font-extrabold'
                   : 'min-w-11'
-              } place-items-center rounded-xl text-white transition active:scale-95 ${
-                isInCart ? 'bg-emerald-600' : 'bg-[#D9232D] hover:bg-[#B91822]'
+              } place-items-center rounded-xl transition active:scale-95 ${
+                isInCart
+                  ? 'bg-[#FF6115] text-[#1F0E0A] hover:bg-[#E5520D]'
+                  : 'bg-[#6B352A] text-[#FFFCF4] hover:bg-[#53271E]'
               }`}
             >
               {isInCart ? (
@@ -1838,10 +1841,10 @@ const SuggestionCard: React.FC<{
               )}
             </button>
           </div>
-          <div className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-amber-500 tabular-nums">
+          <div className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-[#FF6115] tabular-nums">
             <Star className="h-3 w-3 fill-current" />
-            <span className="text-slate-700">{product.rating}</span>
-            <span className="text-slate-400">({product.reviewCount})</span>
+            <span className="text-[#4A2B23]">{product.rating}</span>
+            <span className="text-[#8A6C63]">({product.reviewCount})</span>
           </div>
         </div>
       </div>

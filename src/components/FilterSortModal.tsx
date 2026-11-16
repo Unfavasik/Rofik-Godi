@@ -97,7 +97,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={onCloseSort}
-              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              className="fixed inset-0 bg-[#1F0E0A]/60 backdrop-blur-xs"
             />
 
             {/* Content Sheet */}
@@ -106,22 +106,22 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-              className="relative w-full max-w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden text-gray-800 max-h-[85dvh]"
+              className="relative w-full max-w-full sm:max-w-md bg-[#FFFCF4] border border-[#E8D8C4] rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden text-[#2B1611] max-h-[85dvh]"
             >
               {/* Sheet Grab Handle on Mobile */}
-              <div className="sm:hidden w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-3 mb-1 shrink-0" />
+              <div className="sm:hidden w-12 h-1.5 bg-[#E8D8C4] rounded-full mx-auto mt-3 mb-1 shrink-0" />
 
               {/* Header */}
-              <div className="flex shrink-0 justify-between items-center gap-3 px-5 py-3.5 border-b border-gray-100">
+              <div className="flex shrink-0 justify-between items-center gap-3 px-5 py-3.5 border-b border-[#E8D8C4] bg-white">
                 <div className="flex min-w-0 items-center gap-2">
-                  <div className="w-8 h-8 shrink-0 rounded-full bg-red-50 flex items-center justify-center text-[#D9232D]">
+                  <div className="w-8 h-8 shrink-0 rounded-full bg-[#FFF1A6] flex items-center justify-center text-[#6B352A]">
                     <ArrowUpDown className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-[15px] font-black text-gray-900 leading-tight truncate">
+                    <h3 className="text-[15px] font-black text-[#2B1611] leading-tight truncate">
                       Sort Products
                     </h3>
-                    <p className="text-[11px] text-gray-400 font-medium truncate">
+                    <p className="text-[11px] text-[#8A6C63] font-medium truncate">
                       Select how you want to order results
                     </p>
                   </div>
@@ -129,7 +129,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                 <button
                   onClick={onCloseSort}
                   aria-label="Close sort options"
-                  className="min-h-11 min-w-11 shrink-0 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors cursor-pointer"
+                  className="min-h-11 min-w-11 shrink-0 rounded-full bg-[#FFF8D6] hover:bg-[#FFF1A6] text-[#6B352A] flex items-center justify-center transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -151,26 +151,26 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                       }}
                       className={`w-full text-left p-3.5 rounded-xl transition-all flex items-center justify-between border cursor-pointer ${
                         isSelected
-                          ? 'bg-red-50/70 border-red-200 text-[#D9232D] shadow-2xs'
-                          : 'bg-white hover:bg-gray-50 border-gray-100 text-gray-800'
+                          ? 'bg-[#FFF8D6] border-[#6B352A] text-[#6B352A] shadow-2xs'
+                          : 'bg-white hover:bg-[#FFF8D6]/50 border-[#E8D8C4] text-[#2B1611]'
                       }`}
                     >
                       <div className="pr-3">
                         <div className="text-[13px] font-bold leading-snug flex items-center gap-1.5">
                           <span>{item.label}</span>
                           {opt === 'popular' && (
-                            <span className="text-[9px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full uppercase">
+                            <span className="text-[9px] font-black bg-[#FFF1A6] text-[#6B352A] px-1.5 py-0.5 rounded-full uppercase border border-[#E6CE73]">
                               HOT
                             </span>
                           )}
                         </div>
-                        <div className="text-[11px] text-gray-400 mt-0.5">{item.desc}</div>
+                        <div className="text-[11px] text-[#8A6C63] mt-0.5">{item.desc}</div>
                       </div>
                       <div
                         className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all flex-shrink-0 ${
                           isSelected
-                            ? 'bg-[#D9232D] border-[#D9232D] text-white'
-                            : 'border-gray-300 bg-white'
+                            ? 'bg-[#6B352A] border-[#6B352A] text-[#FFFCF4]'
+                            : 'border-[#D4C0AA] bg-white'
                         }`}
                       >
                         {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
@@ -194,7 +194,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={onCloseFilter}
-              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              className="fixed inset-0 bg-[#1F0E0A]/60 backdrop-blur-xs"
             />
 
             {/* Filter Drawer / Modal */}
@@ -203,22 +203,22 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-              className="relative w-full max-w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden text-gray-800 max-h-[90dvh]"
+              className="relative w-full max-w-full sm:max-w-lg bg-[#FFFCF4] border border-[#E8D8C4] rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden text-[#2B1611] max-h-[90dvh]"
             >
               {/* Mobile grab bar */}
-              <div className="sm:hidden w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-3 mb-1 shrink-0" />
+              <div className="sm:hidden w-12 h-1.5 bg-[#E8D8C4] rounded-full mx-auto mt-3 mb-1 shrink-0" />
 
               {/* Modal Header */}
-              <div className="flex shrink-0 justify-between items-center gap-2 px-4 sm:px-5 py-3.5 border-b border-gray-100 bg-white sticky top-0 z-10">
+              <div className="flex shrink-0 justify-between items-center gap-2 px-4 sm:px-5 py-3.5 border-b border-[#E8D8C4] bg-white sticky top-0 z-10">
                 <div className="flex min-w-0 items-center gap-2">
-                  <div className="w-8 h-8 shrink-0 rounded-full bg-red-50 flex items-center justify-center text-[#D9232D]">
+                  <div className="w-8 h-8 shrink-0 rounded-full bg-[#FFF1A6] flex items-center justify-center text-[#6B352A]">
                     <SlidersHorizontal className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-[15px] font-black text-gray-900 leading-tight truncate">
+                    <h3 className="text-[15px] font-black text-[#2B1611] leading-tight truncate">
                       Filter Products
                     </h3>
-                    <p className="text-[11px] text-gray-400 font-medium truncate">
+                    <p className="text-[11px] text-[#8A6C63] font-medium truncate">
                       Refine by vehicle, price, features & rating
                     </p>
                   </div>
@@ -228,7 +228,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                   <button
                     type="button"
                     onClick={handleReset}
-                    className="min-h-11 text-[11.5px] font-bold text-gray-400 hover:text-[#D9232D] transition-colors flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-red-50/50 cursor-pointer"
+                    className="min-h-11 text-[11.5px] font-bold text-[#6B4C44] hover:text-[#6B352A] transition-colors flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#FFF8D6] cursor-pointer"
                   >
                     <RotateCcw className="w-3 h-3" />
                     Reset
@@ -236,7 +236,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                   <button
                     onClick={onCloseFilter}
                     aria-label="Close filter options"
-                    className="min-h-11 min-w-11 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors cursor-pointer"
+                    className="min-h-11 min-w-11 rounded-full bg-[#FFF8D6] hover:bg-[#FFF1A6] text-[#6B352A] flex items-center justify-center transition-colors cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -247,7 +247,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
               <div className="min-h-0 min-w-0 flex-1 p-4 sm:p-5 overflow-x-hidden overflow-y-auto space-y-5 text-[13px]">
                 {/* 1. Category Selection */}
                 <div>
-                  <label className="block text-[12px] font-black text-gray-800 uppercase tracking-wider mb-2.5">
+                  <label className="block text-[12px] font-black text-[#2B1611] uppercase tracking-wider mb-2.5">
                     Vehicle Category
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -272,8 +272,8 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                           }
                           className={`py-2 px-2.5 text-center text-[12px] font-bold rounded-xl border transition-all cursor-pointer ${
                             isSel
-                              ? 'bg-[#D9232D] border-[#D9232D] text-white shadow-xs'
-                              : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+                              ? 'bg-[#6B352A] border-[#6B352A] text-[#FFFCF4] shadow-xs'
+                              : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#4A2B23]'
                           }`}
                         >
                           {cat.label}
@@ -286,10 +286,10 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                 {/* 2. Quick Price Ranges */}
                 <div>
                   <div className="flex justify-between items-center mb-2.5">
-                    <label className="text-[12px] font-black text-gray-800 uppercase tracking-wider">
+                    <label className="text-[12px] font-black text-[#2B1611] uppercase tracking-wider">
                       Price Range
                     </label>
-                    <span className="text-[11.5px] font-bold text-[#D9232D]">
+                    <span className="text-[11.5px] font-bold text-[#6B352A]">
                       {draftFilters.priceRange === 'all' || draftFilters.priceRange === 'custom'
                         ? `Up to ₹${draftFilters.maxPrice}`
                         : draftFilters.priceRange === 'under_300'
@@ -324,8 +324,8 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                           }
                           className={`py-2 px-2.5 text-center text-[11.5px] font-bold rounded-xl border transition-all cursor-pointer ${
                             isSel
-                              ? 'bg-red-50 border-red-300 text-[#D9232D] shadow-2xs'
-                              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                              ? 'bg-[#FFF1A6] border-[#6B352A] text-[#6B352A] shadow-2xs'
+                              : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#4A2B23]'
                           }`}
                         >
                           {p.label}
@@ -335,8 +335,8 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                   </div>
 
                   {/* Slider for Maximum Price */}
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80">
-                    <div className="flex justify-between text-[11px] font-semibold text-gray-500 mb-1">
+                  <div className="bg-white p-3 rounded-xl border border-[#E8D8C4]">
+                    <div className="flex justify-between text-[11px] font-semibold text-[#6B4C44] mb-1">
                       <span>Max Price: ₹{draftFilters.maxPrice}</span>
                       <span>₹2,500 Max</span>
                     </div>
@@ -353,14 +353,14 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                           priceRange: 'all', // Custom slider overrides fixed buckets
                         }))
                       }
-                      className="w-full accent-[#D9232D] cursor-pointer"
+                      className="w-full accent-[#6B352A] cursor-pointer"
                     />
                   </div>
                 </div>
 
                 {/* 3. Special Feature Highlights */}
                 <div>
-                  <label className="block text-[12px] font-black text-gray-800 uppercase tracking-wider mb-2.5">
+                  <label className="block text-[12px] font-black text-[#2B1611] uppercase tracking-wider mb-2.5">
                     Features & Assurance
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -375,19 +375,19 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                       }
                       className={`p-2.5 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
                         draftFilters.waterproofOnly
-                          ? 'bg-blue-50/80 border-blue-300 text-blue-700'
-                          : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                          ? 'bg-[#FFF1A6] border-[#6B352A] text-[#6B352A]'
+                          : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#4A2B23]'
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <Droplets className="w-4 h-4 text-blue-500" />
+                        <Droplets className="w-4 h-4 text-[#6B352A]" />
                         <span className="text-[12px] font-bold">100% Waterproof</span>
                       </div>
                       <div
                         className={`w-4 h-4 rounded-md border flex items-center justify-center ${
                           draftFilters.waterproofOnly
-                            ? 'bg-blue-600 border-blue-600 text-white'
-                            : 'border-slate-300'
+                            ? 'bg-[#6B352A] border-[#6B352A] text-[#FFFCF4]'
+                            : 'border-[#D4C0AA]'
                         }`}
                       >
                         {draftFilters.waterproofOnly && <Check className="w-3 h-3 stroke-[3]" />}
@@ -405,19 +405,19 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                       }
                       className={`p-2.5 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
                         draftFilters.bestsellerOnly
-                          ? 'bg-red-50/80 border-red-300 text-[#D9232D]'
-                          : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                          ? 'bg-[#FFF1A6] border-[#6B352A] text-[#6B352A]'
+                          : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#4A2B23]'
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <Flame className="w-4 h-4 text-red-500" />
+                        <Flame className="w-4 h-4 text-[#FF6115]" />
                         <span className="text-[12px] font-bold">Bestsellers</span>
                       </div>
                       <div
                         className={`w-4 h-4 rounded-md border flex items-center justify-center ${
                           draftFilters.bestsellerOnly
-                            ? 'bg-[#D9232D] border-[#D9232D] text-white'
-                            : 'border-slate-300'
+                            ? 'bg-[#6B352A] border-[#6B352A] text-[#FFFCF4]'
+                            : 'border-[#D4C0AA]'
                         }`}
                       >
                         {draftFilters.bestsellerOnly && <Check className="w-3 h-3 stroke-[3]" />}
@@ -435,19 +435,19 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                       }
                       className={`p-2.5 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
                         draftFilters.inStockOnly
-                          ? 'bg-emerald-50/80 border-emerald-300 text-emerald-700'
-                          : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                          ? 'bg-[#FFF1A6] border-[#6B352A] text-[#6B352A]'
+                          : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#4A2B23]'
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        <CheckCircle2 className="w-4 h-4 text-[#6B352A]" />
                         <span className="text-[12px] font-bold">In Stock Only</span>
                       </div>
                       <div
                         className={`w-4 h-4 rounded-md border flex items-center justify-center ${
                           draftFilters.inStockOnly
-                            ? 'bg-emerald-600 border-emerald-600 text-white'
-                            : 'border-slate-300'
+                            ? 'bg-[#6B352A] border-[#6B352A] text-[#FFFCF4]'
+                            : 'border-[#D4C0AA]'
                         }`}
                       >
                         {draftFilters.inStockOnly && <Check className="w-3 h-3 stroke-[3]" />}
@@ -465,19 +465,19 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                       }
                       className={`p-2.5 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
                         draftFilters.customizableOnly
-                          ? 'bg-purple-50/80 border-purple-300 text-purple-700'
-                          : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                          ? 'bg-[#FFF1A6] border-[#6B352A] text-[#6B352A]'
+                          : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#4A2B23]'
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <Scissors className="w-4 h-4 text-purple-500" />
+                        <Scissors className="w-4 h-4 text-[#6B352A]" />
                         <span className="text-[12px] font-bold">Custom Fit Ready</span>
                       </div>
                       <div
                         className={`w-4 h-4 rounded-md border flex items-center justify-center ${
                           draftFilters.customizableOnly
-                            ? 'bg-purple-600 border-purple-600 text-white'
-                            : 'border-slate-300'
+                            ? 'bg-[#6B352A] border-[#6B352A] text-[#FFFCF4]'
+                            : 'border-[#D4C0AA]'
                         }`}
                       >
                         {draftFilters.customizableOnly && <Check className="w-3 h-3 stroke-[3]" />}
@@ -488,7 +488,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
 
                 {/* 4. Minimum Rating */}
                 <div>
-                  <label className="block text-[12px] font-black text-gray-800 uppercase tracking-wider mb-2.5">
+                  <label className="block text-[12px] font-black text-[#2B1611] uppercase tracking-wider mb-2.5">
                     Minimum Customer Rating
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -510,13 +510,13 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                           }
                           className={`min-h-11 py-2 px-2.5 text-center text-[12px] font-bold rounded-xl border transition-all flex items-center justify-center gap-1 cursor-pointer ${
                             isSel
-                              ? 'bg-amber-50 border-amber-300 text-amber-900 shadow-2xs'
-                              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                              ? 'bg-[#FFF1A6] border-[#6B352A] text-[#6B352A] shadow-2xs'
+                              : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#4A2B23]'
                           }`}
                         >
                           <Star
                             className={`w-3.5 h-3.5 ${
-                              isSel ? 'fill-amber-400 text-amber-500' : 'text-gray-400'
+                              isSel ? 'fill-[#FF6115] text-[#FF6115]' : 'text-[#8A6C63]'
                             }`}
                           />
                           <span>{r.label}</span>
@@ -528,7 +528,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
 
                 {/* 5. Vehicle Brand / Compatibility */}
                 <div>
-                  <label className="block text-[12px] font-black text-gray-800 uppercase tracking-wider mb-2.5">
+                  <label className="block text-[12px] font-black text-[#2B1611] uppercase tracking-wider mb-2.5">
                     Vehicle Brand / Model Compatibility
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -546,12 +546,12 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                           }
                           className={`min-h-11 min-w-0 p-2.5 text-left text-[12px] font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
                             isSel
-                              ? 'bg-red-50 border-red-300 text-[#D9232D]'
-                              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                              ? 'bg-[#FFF1A6] border-[#6B352A] text-[#6B352A]'
+                              : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#4A2B23]'
                           }`}
                         >
                           <span className="truncate pr-1">{brand.label}</span>
-                          {isSel && <Check className="w-3.5 h-3.5 text-[#D9232D] flex-shrink-0" />}
+                          {isSel && <Check className="w-3.5 h-3.5 text-[#6B352A] flex-shrink-0" />}
                         </button>
                       );
                     })}
@@ -560,18 +560,18 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
               </div>
 
               {/* Modal Footer CTA */}
-              <div className="shrink-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-gray-100 bg-slate-50/80 flex items-center gap-2.5 sm:gap-3">
+              <div className="shrink-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-[#E8D8C4] bg-white flex items-center gap-2.5 sm:gap-3">
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="min-h-11 flex-1 py-3 px-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 text-gray-700 font-bold text-[13px] transition-all cursor-pointer text-center whitespace-nowrap"
+                  className="min-h-11 flex-1 py-3 px-3 rounded-xl border border-[#E8D8C4] bg-[#FFFCF4] hover:bg-[#FFF8D6] text-[#4A2B23] font-bold text-[13px] transition-all cursor-pointer text-center whitespace-nowrap"
                 >
                   Reset All
                 </button>
                 <button
                   type="button"
                   onClick={handleApply}
-                  className="min-h-11 flex-[2] py-3 px-4 rounded-xl bg-[#D9232D] hover:bg-red-700 text-white font-black text-[13px] shadow-sm transition-all active:scale-98 cursor-pointer text-center flex items-center justify-center gap-1.5 whitespace-nowrap tabular-nums"
+                  className="min-h-11 flex-[2] py-3 px-4 rounded-xl bg-[#FF6115] hover:bg-[#E5520D] text-[#1F0E0A] font-black text-[13px] shadow-sm transition-all active:scale-98 cursor-pointer text-center flex items-center justify-center gap-1.5 whitespace-nowrap tabular-nums"
                 >
                   <Sparkles className="w-4 h-4 shrink-0" />
                   <span>

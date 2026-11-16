@@ -44,6 +44,6 @@ export const CloudLoader: React.FC<CloudLoaderProps> = ({ label = 'Loading…', 
         </g>
       </svg>
     </div>
-    {label && <p className="mt-1 text-sm font-semibold text-slate-700">{label}</p>}
+    {label && <p className="mt-1 text-sm font-semibold text-[#4A2B23]">{label}</p>}
   </div>
 );

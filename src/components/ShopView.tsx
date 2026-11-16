@@ -83,37 +83,37 @@ export const ShopView: React.FC<ShopViewProps> = ({
   }, [activeCategory, renderableProducts]);
 
   return (
-    <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#f8f9fc] pb-[max(2rem,env(safe-area-inset-bottom))] text-slate-800">
-      <header className="flex items-center justify-between gap-2 px-4 pb-2 pt-4 sm:px-5">
+    <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#FFFCF4] pb-[max(2rem,env(safe-area-inset-bottom))] text-[#2B1611]">
+      <header className="flex items-center justify-between gap-2 bg-[#6B352A] text-[#FFFCF4] px-4 pb-3 pt-4 sm:px-5 shadow-sm">
         <div className="flex min-w-0 items-center gap-2.5 sm:gap-3.5">
-          <button onClick={onBack} aria-label="Go back" className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-full">
+          <button onClick={onBack} aria-label="Go back" className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-full hover:bg-[#53271E]">
             <ArrowLeft className="h-6 w-6" />
           </button>
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-bold leading-none">Shop</h1>
-            <p className="mt-1 truncate text-[11px] font-medium text-slate-400">Home / Shop</p>
+            <h1 className="truncate text-xl font-bold leading-none text-[#FFFCF4]">Shop</h1>
+            <p className="mt-1 truncate text-[11px] font-medium text-[#FFF1A6]/85">Home / Shop</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <button onClick={() => onSearch('')} aria-label="Search" className="grid min-h-11 min-w-11 place-items-center rounded-full">
+          <button onClick={() => onSearch('')} aria-label="Search" className="grid min-h-11 min-w-11 place-items-center rounded-full hover:bg-[#53271E]">
             <Search className="h-5 w-5" />
           </button>
-          <button aria-label="Go to Cart" onClick={onOpenCart} className="relative grid min-h-11 min-w-11 place-items-center rounded-full">
+          <button aria-label="Go to Cart" onClick={onOpenCart} className="relative grid min-h-11 min-w-11 place-items-center rounded-full hover:bg-[#53271E]">
             <ShoppingCart className="h-6 w-6" />
-            <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#e61e25] text-[10px] font-bold text-white">
+            <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#FF6115] text-[10px] font-extrabold text-[#1F0E0A]">
               {cartCount}
             </span>
           </button>
         </div>
       </header>
 
-      <div className="mt-2 px-4 sm:px-5">
-        <div className="flex min-h-11 items-center rounded-full border border-slate-200/60 bg-[#f1f3f7] px-4 py-1.5">
-          <Search className="h-5 w-5 shrink-0 text-slate-400" />
+      <div className="mt-3 px-4 sm:px-5">
+        <div className="flex min-h-11 items-center rounded-full border border-[#E8D8C4] bg-white px-4 py-1.5 shadow-2xs">
+          <Search className="h-5 w-5 shrink-0 text-[#8C6F66]" />
           <input
             aria-label="Search seat covers"
             onChange={(event) => onSearch(event.target.value)}
-            className="ml-2 min-h-9 w-full min-w-0 bg-transparent text-base sm:text-[13px] outline-none placeholder:text-slate-400"
+            className="ml-2 min-h-9 w-full min-w-0 bg-transparent text-base sm:text-[13px] text-[#2B1611] outline-none placeholder:text-[#8C6F66]"
             placeholder="Search seat covers, cushions..."
           />
         </div>
@@ -125,7 +125,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
             key={item}
             onClick={() => setCategory(item)}
             aria-pressed={activeCategory === item}
-            className={`min-h-10 shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold ${activeCategory === item ? 'bg-[#e61e25] text-white' : 'bg-[#eceef3] text-slate-700'}`}
+            className={`min-h-10 shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${activeCategory === item ? 'bg-[#6B352A] text-[#FFFCF4]' : 'bg-[#FFF8D6] text-[#6B352A] border border-[#E8D8C4]'}`}
           >
             {item}
           </button>
@@ -134,25 +134,25 @@ export const ShopView: React.FC<ShopViewProps> = ({
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5">
         <div className="flex min-w-0 flex-wrap gap-2">
-          <button type="button" onClick={onOpenSort} aria-label="Sort products" className="flex min-h-11 items-center gap-1 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold">
-            <ArrowUpDown className="h-3.5 w-3.5" /> {sortLabel}
+          <button type="button" onClick={onOpenSort} aria-label="Sort products" className="flex min-h-11 items-center gap-1 rounded-full border border-[#E8D8C4] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#2B1611]">
+            <ArrowUpDown className="h-3.5 w-3.5 text-[#6B352A]" /> {sortLabel}
           </button>
-          <button type="button" onClick={onOpenFilter} aria-label="Filter products" className="flex min-h-11 items-center gap-1 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold">
-            <SlidersHorizontal className="h-3.5 w-3.5" /> Filter
-            {activeFilterCount > 0 && <span className="grid h-4 min-w-4 place-items-center rounded-full bg-[#e61e25] px-1 text-[9px] font-extrabold text-white">{activeFilterCount}</span>}
+          <button type="button" onClick={onOpenFilter} aria-label="Filter products" className="flex min-h-11 items-center gap-1 rounded-full border border-[#E8D8C4] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#2B1611]">
+            <SlidersHorizontal className="h-3.5 w-3.5 text-[#6B352A]" /> Filter
+            {activeFilterCount > 0 && <span className="grid h-4 min-w-4 place-items-center rounded-full bg-[#6B352A] px-1 text-[9px] font-extrabold text-[#FFFCF4]">{activeFilterCount}</span>}
           </button>
         </div>
         <div className="flex shrink-0 gap-1">
-          <button onClick={() => setLayout('grid')} aria-label="Grid view" aria-pressed={layout === 'grid'} className={`grid min-h-11 min-w-11 place-items-center rounded-lg ${layout === 'grid' ? 'bg-[#e61e25] text-white' : 'text-slate-500'}`}>
+          <button onClick={() => setLayout('grid')} aria-label="Grid view" aria-pressed={layout === 'grid'} className={`grid min-h-11 min-w-11 place-items-center rounded-lg ${layout === 'grid' ? 'bg-[#6B352A] text-[#FFFCF4]' : 'text-[#7A5B52]'}`}>
             <LayoutGrid className="h-4 w-4" />
           </button>
-          <button onClick={() => setLayout('list')} aria-label="List view" aria-pressed={layout === 'list'} className={`grid min-h-11 min-w-11 place-items-center rounded-lg ${layout === 'list' ? 'bg-[#e61e25] text-white' : 'text-slate-500'}`}>
+          <button onClick={() => setLayout('list')} aria-label="List view" aria-pressed={layout === 'list'} className={`grid min-h-11 min-w-11 place-items-center rounded-lg ${layout === 'list' ? 'bg-[#6B352A] text-[#FFFCF4]' : 'text-[#7A5B52]'}`}>
             <List className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      <p className="mt-3 px-5 text-xs font-medium text-slate-500" aria-live="polite">
+      <p className="mt-3 px-5 text-xs font-medium text-[#7A5B52]" aria-live="polite">
         {isLoading && renderableProducts.length === 0
           ? 'Loading products…'
           : error && renderableProducts.length === 0
@@ -163,7 +163,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
       {error && <div className="px-4 pt-3"><CatalogStatus state="error" onRetry={onRetry} /></div>}
       {isLoading && renderableProducts.length === 0 && <div className="px-4 pt-3"><CatalogStatus state="loading" /></div>}
       {!isLoading && !error && visibleProducts.length === 0 && (
-        <p className="mx-4 mt-4 rounded-2xl border border-slate-200 bg-white px-5 py-8 text-center text-sm text-slate-600" role="status">
+        <p className="mx-4 mt-4 rounded-2xl border border-[#E8D8C4] bg-white px-5 py-8 text-center text-sm text-[#6B4C44]" role="status">
           No products found
         </p>
       )}

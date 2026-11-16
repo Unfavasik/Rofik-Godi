@@ -31,7 +31,7 @@ export class ProductCardErrorBoundary extends React.Component<
     if (this.state.hasError) {
       return (
         <article
-          className="rounded-2xl border border-amber-200 bg-white px-3 py-6 text-center text-xs text-slate-600"
+          className="rounded-2xl border border-[#E6CE73] bg-[#FFF8D6] px-3 py-6 text-center text-xs text-[#6B352A]"
           role="alert"
           aria-label={`Unable to display ${this.props.productTitle}`}
         >

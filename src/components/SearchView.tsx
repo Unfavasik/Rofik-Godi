@@ -238,9 +238,9 @@ export const SearchView: React.FC<SearchViewProps> = ({
                 : 'Discount';
 
   return (
-    <div className="flex-1 flex w-full max-w-full flex-col overflow-x-hidden bg-[#F8FAFC] pb-[max(2.5rem,env(safe-area-inset-bottom))] min-h-dvh text-slate-900">
+    <div className="flex-1 flex w-full max-w-full flex-col overflow-x-hidden bg-[#FFFCF4] pb-[max(2.5rem,env(safe-area-inset-bottom))] min-h-dvh text-[#2B1611]">
       {/* Compact Sticky Top Search Bar (Under 15% Mobile Viewport Cap) */}
-      <div className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
+      <div className="sticky top-0 z-30 border-b border-[#E8D8C4] bg-[#FFFCF4]/95 backdrop-blur-md">
         <div className="mx-auto w-full max-w-6xl px-4 py-2.5">
           <div className="flex items-center gap-2 min-w-0">
             <button
@@ -248,14 +248,14 @@ export const SearchView: React.FC<SearchViewProps> = ({
               aria-label="Go back"
               title="Go back"
               type="button"
-              className="min-h-11 min-w-11 rounded-full border border-slate-200/80 bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-800 transition-colors active:scale-95 shrink-0 cursor-pointer"
+              className="min-h-11 min-w-11 rounded-full border border-[#E8D8C4] bg-[#FFF8D6]/60 hover:bg-[#FFF1A6]/70 flex items-center justify-center text-[#2B1611] transition-colors active:scale-95 shrink-0 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
 
             {/* Search Input Form */}
             <form onSubmit={handleSearchSubmit} className="relative min-w-0 flex-1 flex items-center">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+              <Search className="w-4 h-4 text-[#8A6C63] absolute left-3.5 pointer-events-none" />
               <input
                 ref={searchInputRef}
                 type="text"
@@ -272,9 +272,9 @@ export const SearchView: React.FC<SearchViewProps> = ({
                   }
                 }}
                 placeholder="Search by bike model, seat cover, or cushion..."
-                className={`min-h-11 w-full bg-[#F8FAFC] hover:bg-slate-100/70 focus:bg-white border border-slate-200/90 focus:border-[#D9232D] focus:ring-2 focus:ring-[#D9232D]/15 rounded-2xl pl-10 ${
+                className={`min-h-11 w-full bg-white hover:bg-[#FFF8D6]/40 focus:bg-white border border-[#E8D8C4] focus:border-[#6B352A] focus:ring-2 focus:ring-[#6B352A]/15 rounded-2xl pl-10 ${
                   searchQuery ? 'pr-22' : 'pr-12'
-                } py-2 text-base sm:text-[13.5px] font-medium text-slate-900 placeholder:text-slate-400 focus:outline-hidden transition-all`}
+                } py-2 text-base sm:text-[13.5px] font-medium text-[#2B1611] placeholder:text-[#8A6C63] focus:outline-hidden transition-all`}
                 enterKeyHint="search"
               />
               <AnimatePresence>
@@ -290,7 +290,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                     }}
                     aria-label="Clear search query"
                     title="Clear search"
-                    className="absolute right-10 flex h-9 w-9 items-center justify-center text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-200/60 transition-all cursor-pointer"
+                    className="absolute right-10 flex h-9 w-9 items-center justify-center text-[#8A6C63] hover:text-[#6B352A] rounded-xl hover:bg-[#FFF8D6] transition-all cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </motion.button>
@@ -312,8 +312,8 @@ export const SearchView: React.FC<SearchViewProps> = ({
                 }
                 className={`absolute right-1 flex h-9 w-9 items-center justify-center rounded-xl transition-all cursor-pointer ${
                   voiceSearch.isListening
-                    ? 'voice-mic-pulse bg-[#D9232D] text-white shadow-xs'
-                    : 'text-slate-500 hover:text-[#D9232D] hover:bg-rose-50'
+                    ? 'voice-mic-pulse bg-[#6B352A] text-[#FFFCF4] shadow-xs'
+                    : 'text-[#6B4C44] hover:text-[#6B352A] hover:bg-[#FFF8D6]'
                 }`}
               >
                 <Mic className="w-4 h-4" />
@@ -327,14 +327,14 @@ export const SearchView: React.FC<SearchViewProps> = ({
               aria-label="Open product filters"
               className={`min-h-11 shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
                 activeFiltersCount > 0
-                  ? 'bg-rose-50 border-rose-200 text-[#D9232D]'
-                  : 'bg-slate-50 hover:bg-slate-100 border-slate-200/90 text-slate-700'
+                  ? 'bg-[#FFF1A6] border-[#E6CE73] text-[#6B352A]'
+                  : 'bg-white hover:bg-[#FFF8D6] border-[#E8D8C4] text-[#4A2B23]'
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
               <span className="hidden sm:inline whitespace-nowrap">Filters</span>
               {activeFiltersCount > 0 && (
-                <span className="min-w-4 h-4 px-1 rounded-full bg-[#D9232D] text-white text-[10px] font-extrabold flex items-center justify-center tabular-nums">
+                <span className="min-w-4 h-4 px-1 rounded-full bg-[#6B352A] text-[#FFFCF4] text-[10px] font-extrabold flex items-center justify-center tabular-nums">
                   {activeFiltersCount}
                 </span>
               )}
@@ -367,7 +367,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
             aria-label="Search suggestions"
             className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2 mb-1"
           >
-            <span className="text-[11px] font-semibold text-slate-400 shrink-0 mr-0.5">
+            <span className="text-[11px] font-semibold text-[#8A6C63] shrink-0 mr-0.5">
               Suggestions:
             </span>
             {liveSuggestions.map((item) => (
@@ -375,14 +375,14 @@ export const SearchView: React.FC<SearchViewProps> = ({
                 key={`${item.kind}-${item.term}`}
                 type="button"
                 onClick={() => handleSelectSearchTerm(item.term)}
-                className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white hover:border-rose-200 hover:bg-rose-50/60 px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:text-[#D9232D] transition-colors whitespace-nowrap cursor-pointer"
+                className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-xl border border-[#E8D8C4] bg-white hover:border-[#E6CE73] hover:bg-[#FFF8D6] px-2.5 py-1 text-[11px] font-semibold text-[#4A2B23] hover:text-[#6B352A] transition-colors whitespace-nowrap cursor-pointer"
               >
                 {item.kind === 'recent' ? (
-                  <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                  <Clock className="w-3 h-3 text-[#8A6C63] shrink-0" />
                 ) : item.kind === 'vehicle' ? (
-                  <Bike className="w-3 h-3 text-[#D9232D] shrink-0" />
+                  <Bike className="w-3 h-3 text-[#6B352A] shrink-0" />
                 ) : (
-                  <Search className="w-3 h-3 text-slate-400 shrink-0" />
+                  <Search className="w-3 h-3 text-[#8A6C63] shrink-0" />
                 )}
                 <span>{item.term}</span>
               </button>
@@ -413,14 +413,14 @@ export const SearchView: React.FC<SearchViewProps> = ({
                     aria-pressed={isSelected}
                     className={`min-h-9 shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 border ${
                       isSelected
-                        ? 'bg-[#D9232D] border-[#D9232D] text-white'
-                        : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-700'
+                        ? 'bg-[#6B352A] border-[#6B352A] text-[#FFFCF4]'
+                        : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#4A2B23]'
                     }`}
                   >
                     <span>{cat.label}</span>
                     <span
                       className={`text-[10.5px] font-semibold tabular-nums ${
-                        isSelected ? 'text-white/90' : 'text-slate-400'
+                        isSelected ? 'text-[#FFF1A6]' : 'text-[#8A6C63]'
                       }`}
                     >
                       ({count})
@@ -449,11 +449,11 @@ export const SearchView: React.FC<SearchViewProps> = ({
               }
               className={`min-h-9 px-3 py-1.5 rounded-xl text-[11.5px] font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer border shrink-0 ${
                 filters.inStockOnly
-                  ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                  : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-600'
+                  ? 'bg-[#FFF1A6] border-[#E6CE73] text-[#6B352A]'
+                  : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#6B4C44]'
               }`}
             >
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#6B352A] shrink-0" />
               <span>In Stock</span>
             </button>
 
@@ -469,11 +469,11 @@ export const SearchView: React.FC<SearchViewProps> = ({
               }
               className={`min-h-9 px-3 py-1.5 rounded-xl text-[11.5px] font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer border shrink-0 ${
                 filters.waterproofOnly
-                  ? 'bg-sky-50 border-sky-300 text-sky-800'
-                  : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-600'
+                  ? 'bg-[#FFF1A6] border-[#E6CE73] text-[#6B352A]'
+                  : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#6B4C44]'
               }`}
             >
-              <Droplets className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+              <Droplets className="w-3.5 h-3.5 text-[#6B352A] shrink-0" />
               <span>Waterproof</span>
             </button>
 
@@ -490,8 +490,8 @@ export const SearchView: React.FC<SearchViewProps> = ({
               }
               className={`min-h-9 px-3 py-1.5 rounded-xl text-[11.5px] font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer border shrink-0 tabular-nums ${
                 filters.maxPrice === 500
-                  ? 'bg-rose-50 border-rose-300 text-[#D9232D]'
-                  : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-600'
+                  ? 'bg-[#FFF1A6] border-[#E6CE73] text-[#6B352A]'
+                  : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#6B4C44]'
               }`}
             >
               <span>Under ₹500</span>
@@ -509,11 +509,11 @@ export const SearchView: React.FC<SearchViewProps> = ({
               }
               className={`min-h-9 px-3 py-1.5 rounded-xl text-[11.5px] font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer border shrink-0 tabular-nums ${
                 filters.minRating === 4.5
-                  ? 'bg-amber-50 border-amber-300 text-amber-900'
-                  : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-600'
+                  ? 'bg-[#FFF1A6] border-[#E6CE73] text-[#6B352A]'
+                  : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#6B4C44]'
               }`}
             >
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500 shrink-0" />
+              <Star className="w-3.5 h-3.5 fill-[#FF6115] text-[#FF6115] shrink-0" />
               <span>4.5★ &amp; above</span>
             </button>
 
@@ -529,11 +529,11 @@ export const SearchView: React.FC<SearchViewProps> = ({
               }
               className={`min-h-9 px-3 py-1.5 rounded-xl text-[11.5px] font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer border shrink-0 ${
                 filters.bestsellerOnly
-                  ? 'bg-rose-50 border-rose-300 text-[#D9232D]'
-                  : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-600'
+                  ? 'bg-[#FFF1A6] border-[#E6CE73] text-[#6B352A]'
+                  : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#6B4C44]'
               }`}
             >
-              <Flame className="w-3.5 h-3.5 text-[#D9232D] shrink-0" />
+              <Flame className="w-3.5 h-3.5 text-[#FF6115] shrink-0" />
               <span>Bestsellers</span>
             </button>
 
@@ -549,11 +549,11 @@ export const SearchView: React.FC<SearchViewProps> = ({
               }
               className={`min-h-9 px-3 py-1.5 rounded-xl text-[11.5px] font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer border shrink-0 ${
                 filters.customizableOnly
-                  ? 'bg-rose-50 border-rose-300 text-[#D9232D]'
-                  : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-600'
+                  ? 'bg-[#FFF1A6] border-[#E6CE73] text-[#6B352A]'
+                  : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#6B4C44]'
               }`}
             >
-              <Scissors className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+              <Scissors className="w-3.5 h-3.5 text-[#6B352A] shrink-0" />
               <span>Custom Fit</span>
             </button>
           </div>
@@ -563,7 +563,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
         {!hasActiveSearchOrFilter && (
           <div className="space-y-5 pb-4">
             {/* Unified Recent + Trending Search Panel */}
-            <div className="rounded-2xl border border-slate-200/80 bg-white divide-y lg:divide-y-0 lg:divide-x divide-slate-100 grid grid-cols-1 lg:grid-cols-2">
+            <div className="rounded-2xl border border-[#E8D8C4] bg-white divide-y lg:divide-y-0 lg:divide-x divide-[#F4EAE0] grid grid-cols-1 lg:grid-cols-2">
               {recentSearches.length > 0 && (
                 <section
                   aria-label="Recent searches"
@@ -571,14 +571,14 @@ export const SearchView: React.FC<SearchViewProps> = ({
                   className="p-3.5 sm:p-4"
                 >
                   <div className="flex items-center justify-between mb-2.5">
-                    <h2 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-[#D9232D]" />
+                    <h2 className="text-xs font-bold text-[#2B1611] flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-[#6B352A]" />
                       Recent Searches
                     </h2>
                     <button
                       type="button"
                       onClick={clearAllRecentSearches}
-                      className="text-xs font-semibold text-slate-400 hover:text-[#D9232D] transition-colors cursor-pointer flex items-center gap-1 active:scale-95"
+                      className="text-xs font-semibold text-[#8A6C63] hover:text-[#6B352A] transition-colors cursor-pointer flex items-center gap-1 active:scale-95"
                     >
                       <Trash2 className="w-3 h-3" />
                       Clear all
@@ -589,12 +589,12 @@ export const SearchView: React.FC<SearchViewProps> = ({
                     {recentSearches.map((term) => (
                       <div
                         key={term}
-                        className="group bg-slate-50 hover:bg-rose-50/60 border border-slate-200/80 hover:border-rose-200 text-slate-800 text-xs font-medium pl-2.5 pr-1 py-0.5 rounded-xl flex items-center gap-0.5 transition-all"
+                        className="group bg-[#FFFCF4] hover:bg-[#FFF8D6] border border-[#E8D8C4] hover:border-[#E6CE73] text-[#2B1611] text-xs font-medium pl-2.5 pr-1 py-0.5 rounded-xl flex items-center gap-0.5 transition-all"
                       >
                         <button
                           type="button"
                           onClick={() => handleSelectSearchTerm(term)}
-                          className="py-1 text-left group-hover:text-[#D9232D] transition-colors font-medium cursor-pointer"
+                          className="py-1 text-left group-hover:text-[#6B352A] transition-colors font-medium cursor-pointer"
                         >
                           {term}
                         </button>
@@ -603,7 +603,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                           onClick={(e) => removeRecentSearch(term, e)}
                           aria-label={`Remove recent search ${term}`}
                           title={`Remove "${term}"`}
-                          className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-400 hover:text-[#D9232D] hover:bg-rose-100/70 transition-all cursor-pointer"
+                          className="w-6 h-6 rounded-lg flex items-center justify-center text-[#8A6C63] hover:text-[#6B352A] hover:bg-[#FFF1A6] transition-all cursor-pointer"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -619,8 +619,8 @@ export const SearchView: React.FC<SearchViewProps> = ({
                 className={`p-3.5 sm:p-4 ${recentSearches.length === 0 ? 'lg:col-span-2' : ''}`}
               >
                 <div className="flex items-center justify-between mb-2.5">
-                  <h2 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <TrendingUp className="w-3.5 h-3.5 text-[#D9232D]" />
+                  <h2 className="text-xs font-bold text-[#2B1611] flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5 text-[#6B352A]" />
                     Popular Searches
                   </h2>
                 </div>
@@ -630,9 +630,9 @@ export const SearchView: React.FC<SearchViewProps> = ({
                       key={item}
                       type="button"
                       onClick={() => handleSelectSearchTerm(item)}
-                      className="bg-slate-50 hover:bg-rose-50 hover:text-[#D9232D] border border-slate-200/80 hover:border-rose-200 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                      className="bg-[#FFFCF4] hover:bg-[#FFF8D6] hover:text-[#6B352A] border border-[#E8D8C4] hover:border-[#E6CE73] text-[#4A2B23] text-xs font-semibold px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
                     >
-                      <Search className="w-3 h-3 text-slate-400" />
+                      <Search className="w-3 h-3 text-[#8A6C63]" />
                       <span>{item}</span>
                     </button>
                   ))}
@@ -644,10 +644,10 @@ export const SearchView: React.FC<SearchViewProps> = ({
             {quickVehicleBrands.length > 0 && (
               <section aria-label="Browse by vehicle brand">
                 <div className="flex items-baseline justify-between gap-2 mb-2">
-                  <h2 className="text-sm font-extrabold text-slate-900">
+                  <h2 className="text-sm font-extrabold text-[#2B1611]">
                     Shop by Vehicle Brand
                   </h2>
-                  <span className="text-[11px] font-medium text-slate-500">
+                  <span className="text-[11px] font-medium text-[#6B4C44]">
                     Verified fitment models
                   </span>
                 </div>
@@ -662,18 +662,18 @@ export const SearchView: React.FC<SearchViewProps> = ({
                           vehicleBrand: brand.id,
                         }))
                       }
-                      className="group flex items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 text-left transition-all hover:border-rose-200 hover:bg-rose-50/30 cursor-pointer active:scale-[0.99]"
+                      className="group flex items-center justify-between gap-2 rounded-xl border border-[#E8D8C4] bg-white px-3 py-2.5 text-left transition-all hover:border-[#E6CE73] hover:bg-[#FFF8D6]/50 cursor-pointer active:scale-[0.99]"
                     >
                       <div className="min-w-0">
-                        <p className="text-xs font-extrabold text-slate-900 group-hover:text-[#D9232D] truncate">
+                        <p className="text-xs font-extrabold text-[#2B1611] group-hover:text-[#6B352A] truncate">
                           {brand.label}
                         </p>
-                        <p className="text-[11px] text-slate-500 truncate tabular-nums">
+                        <p className="text-[11px] text-[#6B4C44] truncate tabular-nums">
                           {brand.matchCount} {brand.matchCount === 1 ? 'cover' : 'covers'} ·{' '}
                           {brand.subtitle}
                         </p>
                       </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#D9232D] shrink-0 transition-transform group-hover:translate-x-0.5" />
+                      <ChevronRight className="w-3.5 h-3.5 text-[#8A6C63] group-hover:text-[#6B352A] shrink-0 transition-transform group-hover:translate-x-0.5" />
                     </button>
                   ))}
                 </div>
@@ -685,14 +685,14 @@ export const SearchView: React.FC<SearchViewProps> = ({
               <section aria-label="Popular seat covers">
                 <div className="flex items-center justify-between gap-2 mb-2.5">
                   <div>
-                    <h2 className="text-sm font-extrabold text-slate-900">
+                    <h2 className="text-sm font-extrabold text-[#2B1611]">
                       Popular Seat Covers &amp; Cushions
                     </h2>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[#6B4C44]">
                       Workshop-fitted bestsellers ready for pickup
                     </p>
                   </div>
-                  <div className="flex items-center bg-white p-0.5 rounded-xl border border-slate-200/80 shrink-0">
+                  <div className="flex items-center bg-white p-0.5 rounded-xl border border-[#E8D8C4] shrink-0">
                     <button
                       type="button"
                       onClick={() => setLayoutMode('grid')}
@@ -700,8 +700,8 @@ export const SearchView: React.FC<SearchViewProps> = ({
                       aria-pressed={layoutMode === 'grid'}
                       className={`min-h-9 min-w-9 grid place-items-center rounded-lg transition-all cursor-pointer ${
                         layoutMode === 'grid'
-                          ? 'bg-slate-900 text-white'
-                          : 'text-slate-500 hover:text-slate-800'
+                          ? 'bg-[#6B352A] text-[#FFFCF4]'
+                          : 'text-[#6B4C44] hover:text-[#2B1611]'
                       }`}
                     >
                       <LayoutGrid className="w-3.5 h-3.5" />
@@ -713,8 +713,8 @@ export const SearchView: React.FC<SearchViewProps> = ({
                       aria-pressed={layoutMode === 'list'}
                       className={`min-h-9 min-w-9 grid place-items-center rounded-lg transition-all cursor-pointer ${
                         layoutMode === 'list'
-                          ? 'bg-slate-900 text-white'
-                          : 'text-slate-500 hover:text-slate-800'
+                          ? 'bg-[#6B352A] text-[#FFFCF4]'
+                          : 'text-[#6B4C44] hover:text-[#2B1611]'
                       }`}
                     >
                       <List className="w-3.5 h-3.5" />
@@ -766,10 +766,10 @@ export const SearchView: React.FC<SearchViewProps> = ({
         {hasActiveSearchOrFilter && (
           <div>
             {/* Clean Results Toolbar (Hairline Divider instead of Nested Card) */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-3 border-b border-slate-200/80">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-3 border-b border-[#E8D8C4]">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-baseline gap-1.5">
-                  <h1 className="text-sm sm:text-base font-extrabold text-slate-900 truncate">
+                  <h1 className="text-sm sm:text-base font-extrabold text-[#2B1611] truncate">
                     {searchQuery.trim()
                       ? `Results for "${searchQuery.trim()}"`
                       : filters.vehicleBrand !== 'all'
@@ -778,7 +778,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                           ? `${SEARCH_CATEGORY_FILTERS.find((c) => c.id === filters.category)?.label || filters.category} Collection`
                           : 'Filtered Catalog'}
                   </h1>
-                  <span className="text-xs font-semibold text-slate-500 tabular-nums">
+                  <span className="text-xs font-semibold text-[#6B4C44] tabular-nums">
                     · {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}
                   </span>
                 </div>
@@ -792,8 +792,8 @@ export const SearchView: React.FC<SearchViewProps> = ({
                   aria-label="Sort search results"
                   className={`min-h-10 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                     sortBy !== 'manual'
-                      ? 'bg-rose-50 border-rose-200 text-[#D9232D]'
-                      : 'bg-white hover:bg-slate-50 border-slate-200/90 text-slate-700'
+                      ? 'bg-[#FFF1A6] border-[#E6CE73] text-[#6B352A]'
+                      : 'bg-white hover:bg-[#FFF8D6]/60 border-[#E8D8C4] text-[#4A2B23]'
                   }`}
                 >
                   <ArrowUpDown className="w-3.5 h-3.5 shrink-0" />
@@ -801,7 +801,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                 </button>
 
                 {/* View Mode Switcher */}
-                <div className="flex items-center bg-white p-0.5 rounded-xl border border-slate-200/80">
+                <div className="flex items-center bg-white p-0.5 rounded-xl border border-[#E8D8C4]">
                   <button
                     type="button"
                     onClick={() => setLayoutMode('grid')}
@@ -809,8 +809,8 @@ export const SearchView: React.FC<SearchViewProps> = ({
                     aria-pressed={layoutMode === 'grid'}
                     className={`min-h-9 min-w-9 grid place-items-center rounded-lg transition-all cursor-pointer ${
                       layoutMode === 'grid'
-                        ? 'bg-slate-900 text-white'
-                        : 'text-slate-500 hover:text-slate-800'
+                        ? 'bg-[#6B352A] text-[#FFFCF4]'
+                        : 'text-[#6B4C44] hover:text-[#2B1611]'
                     }`}
                   >
                     <LayoutGrid className="w-3.5 h-3.5" />
@@ -822,8 +822,8 @@ export const SearchView: React.FC<SearchViewProps> = ({
                     aria-pressed={layoutMode === 'list'}
                     className={`min-h-9 min-w-9 grid place-items-center rounded-lg transition-all cursor-pointer ${
                       layoutMode === 'list'
-                        ? 'bg-slate-900 text-white'
-                        : 'text-slate-500 hover:text-slate-800'
+                        ? 'bg-[#6B352A] text-[#FFFCF4]'
+                        : 'text-[#6B4C44] hover:text-[#2B1611]'
                     }`}
                   >
                     <List className="w-3.5 h-3.5" />
@@ -839,7 +839,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                 aria-label="Active filters"
                 className="flex flex-wrap items-center gap-1.5 mb-3"
               >
-                <span className="text-[11px] font-bold text-slate-400 mr-0.5">Active:</span>
+                <span className="text-[11px] font-bold text-[#8A6C63] mr-0.5">Active:</span>
 
                 {activeFilterChips.map((chip) => (
                   <button
@@ -847,7 +847,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                     type="button"
                     onClick={() => setFilters((prev) => chip.clear(prev))}
                     aria-label={`Remove filter ${chip.label}`}
-                    className="inline-flex min-h-8 items-center gap-1 px-2.5 py-1 rounded-xl bg-rose-50 hover:bg-rose-100/80 text-[#D9232D] text-[11px] font-bold border border-rose-200 transition-colors cursor-pointer"
+                    className="inline-flex min-h-8 items-center gap-1 px-2.5 py-1 rounded-xl bg-[#FFF1A6] hover:bg-[#FFE980] text-[#6B352A] text-[11px] font-bold border border-[#E6CE73] transition-colors cursor-pointer"
                   >
                     <span>{chip.label}</span>
                     <X className="w-3 h-3 shrink-0" />
@@ -859,7 +859,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                     type="button"
                     onClick={() => setSortBy('manual')}
                     aria-label={`Reset sort ${SORT_LABELS[sortBy]?.label}`}
-                    className="inline-flex min-h-8 items-center gap-1 px-2.5 py-1 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200 transition-colors cursor-pointer"
+                    className="inline-flex min-h-8 items-center gap-1 px-2.5 py-1 rounded-xl bg-white hover:bg-[#FFF8D6] text-[#4A2B23] text-[11px] font-bold border border-[#E8D8C4] transition-colors cursor-pointer"
                   >
                     <span>Sort: {activeSortShortLabel}</span>
                     <X className="w-3 h-3 shrink-0" />
@@ -869,7 +869,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                 <button
                   type="button"
                   onClick={resetAllFilters}
-                  className="text-xs font-bold text-slate-500 hover:text-[#D9232D] ml-1 px-2 py-1 rounded-lg hover:bg-slate-100 cursor-pointer flex items-center gap-1 transition-colors"
+                  className="text-xs font-bold text-[#6B4C44] hover:text-[#6B352A] ml-1 px-2 py-1 rounded-lg hover:bg-[#FFF8D6] cursor-pointer flex items-center gap-1 transition-colors"
                 >
                   <RotateCcw className="w-3 h-3" />
                   <span>Reset all</span>
@@ -890,14 +890,14 @@ export const SearchView: React.FC<SearchViewProps> = ({
             {products.length > 0 &&
               (filteredProducts.length === 0 ? (
                 <div className="space-y-6 mt-2">
-                  <div className="bg-white rounded-2xl p-6 sm:p-8 text-center border border-slate-200/80">
-                    <div className="w-12 h-12 bg-rose-50 text-[#D9232D] rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <div className="bg-white rounded-2xl p-6 sm:p-8 text-center border border-[#E8D8C4]">
+                    <div className="w-12 h-12 bg-[#FFF1A6] text-[#6B352A] rounded-2xl flex items-center justify-center mx-auto mb-3 border border-[#E6CE73]">
                       <Search className="w-5 h-5" />
                     </div>
-                    <h2 className="text-slate-900 font-extrabold text-base mb-1">
+                    <h2 className="text-[#2B1611] font-extrabold text-base mb-1">
                       No exact matches found
                     </h2>
-                    <p className="text-slate-500 text-xs max-w-md mx-auto mb-4">
+                    <p className="text-[#6B4C44] text-xs max-w-md mx-auto mb-4">
                       {searchQuery.trim()
                         ? `We couldn't find any seat covers matching "${searchQuery.trim()}"${
                             activeFiltersCount > 0 ? ' with your selected filters' : ''
@@ -910,7 +910,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                         <button
                           type="button"
                           onClick={resetAllFilters}
-                          className="min-h-11 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer transition-all"
+                          className="min-h-11 bg-[#FFF8D6] hover:bg-[#FFF1A6] border border-[#E6CE73] text-[#6B352A] text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer transition-all"
                         >
                           Clear Filters Only ({activeFiltersCount})
                         </button>
@@ -918,15 +918,15 @@ export const SearchView: React.FC<SearchViewProps> = ({
                       <button
                         type="button"
                         onClick={resetSearchAndFilters}
-                        className="banner-cta-shine min-h-11 bg-gradient-to-r from-[#D9232D] to-[#B91822] hover:brightness-105 text-white text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer active:scale-95 transition-all"
+                        className="banner-cta-shine min-h-11 bg-[#6B352A] hover:bg-[#53271E] text-[#FFFCF4] text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer active:scale-95 transition-all"
                       >
                         Reset Search &amp; Filters
                       </button>
                     </div>
 
                     {/* Try Searching For */}
-                    <div className="mt-5 pt-4 border-t border-slate-100">
-                      <p className="text-[11px] font-bold text-slate-400 mb-2">
+                    <div className="mt-5 pt-4 border-t border-[#F4EAE0]">
+                      <p className="text-[11px] font-bold text-[#8A6C63] mb-2">
                         Try searching for popular models:
                       </p>
                       <div className="flex flex-wrap items-center justify-center gap-1.5">
@@ -938,7 +938,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                               resetAllFilters();
                               handleSelectSearchTerm(term);
                             }}
-                            className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:border-rose-200 hover:bg-rose-50 hover:text-[#D9232D] text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl border border-[#E8D8C4] bg-[#FFFCF4] hover:border-[#E6CE73] hover:bg-[#FFF8D6] hover:text-[#6B352A] text-xs font-semibold text-[#4A2B23] transition-colors cursor-pointer"
                           >
                             {term}
                           </button>
@@ -950,7 +950,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                   {/* Fallback Popular Products */}
                   {popularShowcaseProducts.length > 0 && (
                     <section aria-label="Recommended seat covers">
-                      <h3 className="text-sm font-extrabold text-slate-900 mb-3">
+                      <h3 className="text-sm font-extrabold text-[#2B1611] mb-3">
                         Popular Seat Covers You Might Like
                       </h3>
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">

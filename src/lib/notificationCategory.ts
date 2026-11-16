@@ -55,5 +55,5 @@ export function matchesNotificationCategoryToggle(
 }
 
 export function getNotificationRowSurfaceClass(isUnread: boolean): string {
-  return isUnread ? 'bg-rose-50' : 'bg-white';
+  return isUnread ? 'bg-[#FFF8D6]' : 'bg-white';
 }

@@ -61,8 +61,8 @@ const SLIDES: Slide[] = [
 ];
 
 const THEME = {
-  dark: { h: "text-white", accent: "text-[#FF6F88]", p: "text-white/90", on: "bg-white", off: "bg-white/35", bg: "bg-[#770216]" },
-  light: { h: "text-[#0F1B3D]", accent: "text-[#E11D2E]", p: "text-slate-500", on: "bg-[#E11D2E]", off: "bg-slate-200", bg: "bg-white" },
+  dark: { h: "text-[#FFFCF4]", accent: "text-[#FFF1A6]", p: "text-[#FFFCF4]/90", on: "bg-[#FFF1A6]", off: "bg-[#FFFCF4]/35", bg: "bg-[#6B352A]" },
+  light: { h: "text-[#2B1611]", accent: "text-[#6B352A]", p: "text-[#6B4C44]", on: "bg-[#6B352A]", off: "bg-[#E8D8C4]", bg: "bg-[#FFFCF4]" },
 } as const;
 
 const EASE =
@@ -142,7 +142,7 @@ export default function RofikOnboarding({ onFinish }: Props) {
       onPointerUp={onUp}
       onPointerCancel={onUp}
       style={{ fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif' }}
-      className="relative mx-auto h-[100dvh] w-full max-w-[440px] touch-pan-y select-none overflow-hidden bg-white sm:my-4 sm:h-[min(calc(100dvh_-_2rem),880px)] sm:rounded-[36px] sm:shadow-2xl"
+      className="relative mx-auto h-[100dvh] w-full max-w-[440px] touch-pan-y select-none overflow-hidden bg-[#FFFCF4] sm:my-4 sm:h-[min(calc(100dvh_-_2rem),880px)] sm:rounded-[36px] sm:shadow-2xl"
     >
       {/* Artwork fits the width at the top; its bottom fades into the slide colour, so the text sits below the character */}
       <div className={`absolute inset-0 flex ${ease}`} style={trackStyle}>
@@ -202,7 +202,7 @@ export default function RofikOnboarding({ onFinish }: Props) {
             onClick={() => onFinish?.()}
             tabIndex={i === 0 ? -1 : 0}
             aria-hidden={i === 0}
-            className={`overflow-hidden text-base font-semibold text-slate-500 transition-all duration-300 ${
+            className={`overflow-hidden text-base font-semibold text-[#6B4C44] transition-all duration-300 ${
               i === 0 ? "pointer-events-none max-w-0 px-0 opacity-0" : "max-w-[90px] px-2.5 py-3.5"
             }`}
           >
@@ -211,7 +211,7 @@ export default function RofikOnboarding({ onFinish }: Props) {
           <button
             type="button"
             onClick={next}
-            className={`banner-cta-shine group/cta relative h-[58px] rounded-full bg-[linear-gradient(90deg,#F2364F,#D5122F)] text-[17px] font-bold text-white shadow-[0_12px_24px_-10px_rgba(225,29,46,0.7)] transition-all duration-[400ms] hover:brightness-105 hover:shadow-[0_14px_28px_-8px_rgba(225,29,46,0.75)] active:scale-[0.97] ${
+            className={`banner-cta-shine group/cta relative h-[58px] rounded-full bg-[linear-gradient(90deg,#7B3E31,#53271E)] text-[17px] font-bold text-[#FFFCF4] shadow-[0_12px_24px_-10px_rgba(107,53,42,0.55)] transition-all duration-[400ms] hover:brightness-105 hover:shadow-[0_14px_28px_-8px_rgba(107,53,42,0.65)] active:scale-[0.97] ${
               i === 0 ? "w-full" : "w-3/5"
             }`}
           >
