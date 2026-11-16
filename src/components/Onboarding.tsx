@@ -120,7 +120,7 @@ export default function Onboarding({ onFinish }: Props) {
       onPointerUp={onUp}
       onPointerCancel={onUp}
       style={{ fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif' }}
-      className="relative mx-auto flex h-[100dvh] w-full max-w-[440px] touch-pan-y select-none flex-col overflow-hidden bg-[#FFFCF4] text-[#2B1611] sm:my-4 sm:h-[min(calc(100dvh_-_2rem),880px)] sm:rounded-[36px] sm:shadow-2xl"
+      className="relative mx-auto flex h-[100dvh] w-full max-w-[440px] touch-pan-y select-none flex-col overflow-hidden bg-white text-[#0F1B3D] sm:my-4 sm:h-[min(calc(100dvh_-_2rem),880px)] sm:rounded-[36px] sm:shadow-2xl"
     >
       {/* Illustration */}
       <div className="relative min-h-0 flex-1 overflow-hidden">
@@ -140,7 +140,7 @@ export default function Onboarding({ onFinish }: Props) {
           ))}
         </div>
         <svg
-          className="pointer-events-none absolute inset-x-0 -bottom-px h-14 w-full fill-[#FFFCF4]"
+          className="pointer-events-none absolute inset-x-0 -bottom-px h-14 w-full fill-white"
           viewBox="0 0 400 56"
           preserveAspectRatio="none"
           aria-hidden="true"
@@ -160,7 +160,7 @@ export default function Onboarding({ onFinish }: Props) {
             aria-label={`Step ${k + 1}`}
             onClick={() => go(k)}
             className={`relative h-2 rounded-full transition-all duration-300 before:absolute before:-inset-x-1 before:-inset-y-2.5 before:content-[''] ${
-              k === i ? "w-6 bg-[#6B352A]" : "w-2 bg-[#E8D8C4]"
+              k === i ? "w-6 bg-[#E11D2E]" : "w-2 bg-slate-200"
             }`}
           />
         ))}
@@ -174,7 +174,7 @@ export default function Onboarding({ onFinish }: Props) {
               <h1 className="mb-2.5 text-[clamp(26px,7.6vw,31px)] font-extrabold leading-[1.15] tracking-tight [text-wrap:balance]">
                 {s.title}
               </h1>
-              <p className="mx-auto max-w-[30ch] text-[15.5px] font-medium leading-relaxed text-[#6B4C44]">
+              <p className="mx-auto max-w-[30ch] text-[15.5px] font-medium leading-relaxed text-slate-500">
                 {s.text}
               </p>
             </div>
@@ -189,7 +189,7 @@ export default function Onboarding({ onFinish }: Props) {
           onClick={() => onFinish?.()}
           tabIndex={i === 0 ? -1 : 0}
           aria-hidden={i === 0}
-          className={`overflow-hidden text-base font-semibold text-[#6B4C44] transition-all duration-300 ${
+          className={`overflow-hidden text-base font-semibold text-slate-500 transition-all duration-300 ${
             i === 0 ? "pointer-events-none max-w-0 px-0 opacity-0" : "max-w-[90px] px-2.5 py-3.5"
           }`}
         >
@@ -198,7 +198,7 @@ export default function Onboarding({ onFinish }: Props) {
         <button
           type="button"
           onClick={next}
-          className={`banner-cta-shine group/cta relative h-[58px] rounded-full bg-[linear-gradient(180deg,#7B3E31,#53271E)] text-[17px] font-bold text-[#FFFCF4] shadow-[0_12px_24px_-10px_rgba(107,53,42,0.55)] transition-all duration-[400ms] hover:brightness-105 hover:shadow-[0_14px_28px_-8px_rgba(107,53,42,0.65)] active:scale-[0.97] ${
+          className={`banner-cta-shine group/cta relative h-[58px] rounded-full bg-[linear-gradient(180deg,#EF3040,#C60F20)] text-[17px] font-bold text-white shadow-[0_12px_24px_-10px_rgba(225,29,46,0.7)] transition-all duration-[400ms] hover:brightness-105 hover:shadow-[0_14px_28px_-8px_rgba(225,29,46,0.75)] active:scale-[0.97] ${
             i === 0 ? "w-full" : "w-3/5"
           }`}
         >

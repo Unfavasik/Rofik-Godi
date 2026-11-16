@@ -346,31 +346,31 @@ export const downloadOrderInvoice = async (
   const paid = order.payment_status?.toLowerCase() === 'paid';
   const paymentState = paid ? 'PAID' : 'DUE AT PICKUP';
 
-  // Top Clay Brown & Soft Butter Workshop Strip
-  pdf.setFillColor(107, 53, 42);
-  pdf.rect(0, 0, pageWidth * 0.72, 3.8, 'F');
-  pdf.setFillColor(255, 241, 166);
-  pdf.rect(pageWidth * 0.72, 0, pageWidth * 0.28, 3.8, 'F');
+  // Top Dual-Accent Workshop Strip
+  pdf.setFillColor(185, 28, 28);
+  pdf.rect(0, 0, pageWidth * 0.65, 3.8, 'F');
+  pdf.setFillColor(13, 148, 136);
+  pdf.rect(pageWidth * 0.65, 0, pageWidth * 0.35, 3.8, 'F');
 
   // Monogram Crest Badge
-  pdf.setFillColor(255, 241, 166);
-  pdf.setDrawColor(219, 186, 98);
+  pdf.setFillColor(255, 241, 242);
+  pdf.setDrawColor(254, 205, 211);
   pdf.roundedRect(margin, 13, 12, 12, 2.5, 2.5, 'FD');
-  pdf.setTextColor(107, 53, 42);
+  pdf.setTextColor(190, 18, 60);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(8.5);
   pdf.text('RGC', margin + 6, 20.5, { align: 'center' });
 
   // Workshop Title & Address
-  pdf.setTextColor(107, 53, 42);
+  pdf.setTextColor(190, 18, 60);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(7.5);
   pdf.text('CUSTOM SEAT COVER WORKSHOP', margin + 15.5, 16);
-  pdf.setTextColor(43, 22, 17);
+  pdf.setTextColor(15, 23, 42);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(17);
   pdf.text('ROFIK GODI CENTRE', margin + 15.5, 22.5);
-  pdf.setTextColor(107, 76, 68);
+  pdf.setTextColor(100, 116, 139);
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(8);
   pdf.text(String(WORKSHOP_INFO.address || 'Berhampore, West Bengal'), margin, 30.5);
@@ -381,48 +381,48 @@ export const downloadOrderInvoice = async (
   );
 
   // Invoice Status Card (Top Right)
-  pdf.setFillColor(255, 252, 244);
-  pdf.setDrawColor(232, 216, 196);
+  pdf.setFillColor(248, 250, 252);
+  pdf.setDrawColor(226, 232, 240);
   pdf.roundedRect(right - 52, 12, 52, 24, 3, 3, 'FD');
-  pdf.setTextColor(43, 22, 17);
+  pdf.setTextColor(15, 23, 42);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(11);
   pdf.text('INVOICE', right - 26, 19.5, { align: 'center' });
 
-  pdf.setFillColor(paid ? 107 : 255, paid ? 53 : 241, paid ? 42 : 166);
-  pdf.setDrawColor(paid ? 107 : 219, paid ? 53 : 186, paid ? 42 : 98);
+  pdf.setFillColor(paid ? 236 : 255, paid ? 253 : 251, paid ? 245 : 235);
+  pdf.setDrawColor(paid ? 167 : 253, paid ? 243 : 230, paid ? 208 : 138);
   pdf.roundedRect(right - 41, 22, 30, 5.5, 2.5, 2.5, 'FD');
-  pdf.setTextColor(paid ? 255 : 107, paid ? 252 : 53, paid ? 244 : 42);
+  pdf.setTextColor(paid ? 4 : 180, paid ? 120 : 83, paid ? 87 : 9);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(7);
   pdf.text(paymentState, right - 26, 25.8, { align: 'center' });
 
-  pdf.setTextColor(107, 76, 68);
+  pdf.setTextColor(71, 85, 105);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(7.5);
   pdf.text(`#${order.order_number}`, right - 26, 33, { align: 'center' });
 
   // Customer, Order & Pickup Strip
-  pdf.setFillColor(255, 252, 244);
-  pdf.setDrawColor(232, 216, 196);
+  pdf.setFillColor(248, 250, 252);
+  pdf.setDrawColor(226, 232, 240);
   pdf.roundedRect(margin, 41, contentWidth, 29, 3, 3, 'FD');
   pdf.line(margin + contentWidth * 0.34, 41, margin + contentWidth * 0.34, 70);
   pdf.line(margin + contentWidth * 0.72, 41, margin + contentWidth * 0.72, 70);
 
   // Col 1: Billed To
-  pdf.setTextColor(122, 91, 82);
+  pdf.setTextColor(100, 116, 139);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(7);
   pdf.text('BILLED TO', margin + 4, 46.5);
-  pdf.setTextColor(43, 22, 17);
+  pdf.setTextColor(15, 23, 42);
   pdf.setFontSize(9.5);
   pdf.text(String(customerName || order.customer_name || 'Customer').slice(0, 26), margin + 4, 52.5);
-  pdf.setTextColor(107, 76, 68);
+  pdf.setTextColor(71, 85, 105);
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(8);
   pdf.text(order.customer_phone || 'Phone not provided', margin + 4, 58);
   if (order.vehicle_model) {
-    pdf.setTextColor(107, 53, 42);
+    pdf.setTextColor(190, 18, 60);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(7.5);
     pdf.text(`Vehicle: ${order.vehicle_model}`.slice(0, 32), margin + 4, 65.5);
@@ -430,18 +430,18 @@ export const downloadOrderInvoice = async (
 
   // Col 2: Workshop Pickup
   const col2X = margin + contentWidth * 0.34 + 4;
-  pdf.setTextColor(122, 91, 82);
+  pdf.setTextColor(100, 116, 139);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(7);
   pdf.text('WORKSHOP PICKUP (NO ONLINE DELIVERY)', col2X, 46.5);
-  pdf.setTextColor(43, 22, 17);
+  pdf.setTextColor(15, 23, 42);
   pdf.setFontSize(9);
   pdf.text(
     String(order.pickup_store || WORKSHOP_INFO.name || 'Rofik Godi Centre').slice(0, 32),
     col2X,
     52.5,
   );
-  pdf.setTextColor(107, 76, 68);
+  pdf.setTextColor(71, 85, 105);
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(7.5);
   pdf.text('In-person collection · Free workshop fitment', col2X, 58);
@@ -449,20 +449,20 @@ export const downloadOrderInvoice = async (
 
   // Col 3: Status / Guarantee Summary
   const col3X = margin + contentWidth * 0.72 + 4;
-  pdf.setTextColor(122, 91, 82);
+  pdf.setTextColor(100, 116, 139);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(7);
   pdf.text('ORDER STATUS', col3X, 46.5);
-  pdf.setTextColor(43, 22, 17);
+  pdf.setTextColor(15, 23, 42);
   pdf.setFontSize(9);
   pdf.text(String(order.status || 'COMPLETED').replace(/_/g, ' '), col3X, 52.5);
   if (guaranteeInfo.enabled) {
-    pdf.setTextColor(107, 53, 42);
+    pdf.setTextColor(4, 120, 87);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(7.2);
     pdf.text(`Guarantee: ${guaranteeInfo.validUntilLabel}`, col3X, 65.5);
   } else {
-    pdf.setTextColor(122, 91, 82);
+    pdf.setTextColor(100, 116, 139);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(7.5);
     pdf.text(
@@ -476,10 +476,10 @@ export const downloadOrderInvoice = async (
 
   // Guarantee Certificate Highlight Strip
   if (guaranteeInfo.enabled) {
-    pdf.setFillColor(255, 248, 214);
-    pdf.setDrawColor(232, 207, 104);
+    pdf.setFillColor(240, 253, 244);
+    pdf.setDrawColor(187, 247, 208);
     pdf.roundedRect(margin, y - 3, contentWidth, 18, 2.5, 2.5, 'FD');
-    pdf.setTextColor(107, 53, 42);
+    pdf.setTextColor(4, 120, 87);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(7.8);
     pdf.text(
@@ -488,14 +488,14 @@ export const downloadOrderInvoice = async (
       y + 2.5,
     );
     pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(74, 46, 38);
+    pdf.setTextColor(51, 65, 85);
     pdf.setFontSize(7);
     pdf.text(
       'Covered (Normal Use): Natural splitting/cracking, seam tearing & rexine/leatherette surface peeling before expiry.',
       margin + 4,
       y + 7.5,
     );
-    pdf.setTextColor(154, 52, 18);
+    pdf.setTextColor(190, 18, 60);
     pdf.text(
       'Excluded: Physical damage from accidents, cuts, burns, animal scratches, improper handling or external misuse.',
       margin + 4,
@@ -506,10 +506,10 @@ export const downloadOrderInvoice = async (
 
   // Item Table Header
   const drawTableHeader = () => {
-    pdf.setFillColor(107, 53, 42);
-    pdf.setDrawColor(107, 53, 42);
+    pdf.setFillColor(241, 245, 249);
+    pdf.setDrawColor(226, 232, 240);
     pdf.roundedRect(margin, y - 5, contentWidth, 10, 2, 2, 'FD');
-    pdf.setTextColor(255, 252, 244);
+    pdf.setTextColor(51, 65, 85);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(7.8);
     pdf.text('ITEM DESCRIPTION', margin + 3.5, y + 1.2);
@@ -552,8 +552,8 @@ export const downloadOrderInvoice = async (
     // Crisp Thumbnail Container (Actual Product Photo or Clean Monogram Fallback)
     const imgX = margin + 3;
     const imgY = y + 1.2;
-    pdf.setFillColor(255, 252, 244);
-    pdf.setDrawColor(232, 216, 196);
+    pdf.setFillColor(248, 250, 252);
+    pdf.setDrawColor(226, 232, 240);
     pdf.roundedRect(imgX, imgY, thumbBoxSize, thumbBoxSize, 1.5, 1.5, 'FD');
 
     if (thumb) {
@@ -568,7 +568,7 @@ export const downloadOrderInvoice = async (
         );
       } catch {
         // Fallback monogram if single image frame fails in jsPDF
-        pdf.setTextColor(140, 111, 102);
+        pdf.setTextColor(148, 163, 184);
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(8);
         pdf.text(
@@ -579,7 +579,7 @@ export const downloadOrderInvoice = async (
         );
       }
     } else {
-      pdf.setTextColor(140, 111, 102);
+      pdf.setTextColor(148, 163, 184);
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(8);
       pdf.text(
@@ -590,24 +590,24 @@ export const downloadOrderInvoice = async (
       );
     }
 
-    pdf.setTextColor(43, 22, 17);
+    pdf.setTextColor(15, 23, 42);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(8.5);
     pdf.text(nameLines, textOffsetX, y + 4.5);
 
     if (specLines.length > 0) {
       pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(107, 76, 68);
+      pdf.setTextColor(100, 116, 139);
       pdf.setFontSize(7.1);
       pdf.text(specLines, textOffsetX, y + 4.5 + nameLines.length * 4.1);
     }
 
     pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(107, 76, 68);
+    pdf.setTextColor(71, 85, 105);
     pdf.setFontSize(8.2);
     pdf.text(String(item.quantity || 0), 142, y + 5, { align: 'right' });
     pdf.text(amount(Number(item.unit_price || 0)), 168, y + 5, { align: 'right' });
-    pdf.setTextColor(43, 22, 17);
+    pdf.setTextColor(15, 23, 42);
     pdf.setFont('helvetica', 'bold');
     pdf.text(
       amount(Number(item.quantity || 0) * Number(item.unit_price || 0)),
@@ -617,7 +617,7 @@ export const downloadOrderInvoice = async (
     );
 
     y += rowHeight;
-    pdf.setDrawColor(239, 227, 206);
+    pdf.setDrawColor(241, 245, 249);
     pdf.line(margin, y, right, y);
     y += 2;
   }
@@ -636,8 +636,8 @@ export const downloadOrderInvoice = async (
   const hasDiscount = Number(order.discount || 0) > 0;
   const totalsCardH = hasDiscount ? 34 : 28;
 
-  pdf.setFillColor(255, 252, 244);
-  pdf.setDrawColor(232, 216, 196);
+  pdf.setFillColor(248, 250, 252);
+  pdf.setDrawColor(226, 232, 240);
   pdf.roundedRect(totalsCardX, y - 3, totalsCardW, totalsCardH, 2.5, 2.5, 'FD');
 
   let rowY = y + 3;
@@ -645,7 +645,7 @@ export const downloadOrderInvoice = async (
   const drawSummaryRow = (label: string, value: string, colorRgb: [number, number, number]) => {
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8.5);
-    pdf.setTextColor(107, 76, 68);
+    pdf.setTextColor(71, 85, 105);
     pdf.text(label, totalsCardX + 4, rowY);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(...colorRgb);
@@ -653,22 +653,22 @@ export const downloadOrderInvoice = async (
     rowY += 6;
   };
 
-  drawSummaryRow('Subtotal', amount(order.subtotal), [43, 22, 17]);
-  drawSummaryRow('Workshop Fitment', 'Complimentary', [107, 53, 42]);
+  drawSummaryRow('Subtotal', amount(order.subtotal), [15, 23, 42]);
+  drawSummaryRow('Workshop Fitment', 'Complimentary', [4, 120, 87]);
   if (hasDiscount) {
-    drawSummaryRow('Discount', `- ${amount(order.discount)}`, [180, 83, 9]);
+    drawSummaryRow('Discount', `- ${amount(order.discount)}`, [4, 120, 87]);
   }
 
   // Highlighted Total Footer Band inside Totals Card
-  pdf.setFillColor(255, 241, 166);
-  pdf.setDrawColor(219, 186, 98);
+  pdf.setFillColor(255, 241, 242);
+  pdf.setDrawColor(254, 205, 211);
   pdf.roundedRect(totalsCardX, rowY - 2, totalsCardW, 10, 2, 2, 'FD');
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(9.5);
-  pdf.setTextColor(107, 53, 42);
+  pdf.setTextColor(159, 18, 57);
   pdf.text('TOTAL', totalsCardX + 4, rowY + 4.5);
   pdf.setFontSize(11);
-  pdf.setTextColor(43, 22, 17);
+  pdf.setTextColor(15, 23, 42);
   pdf.text(amount(order.total), summaryRight, rowY + 4.5, { align: 'right' });
 
   y = rowY + 14;
@@ -688,18 +688,18 @@ export const downloadOrderInvoice = async (
   }
 
   pdf.setFillColor(255, 255, 255);
-  pdf.setDrawColor(232, 216, 196);
+  pdf.setDrawColor(226, 232, 240);
   pdf.roundedRect(margin, y, contentWidth, termsBlockHeight, 2.5, 2.5, 'FD');
-  pdf.setFillColor(255, 248, 214);
+  pdf.setFillColor(248, 250, 252);
   pdf.rect(margin + 0.3, y + 0.3, contentWidth - 0.6, 7.5, 'F');
-  pdf.setTextColor(107, 53, 42);
+  pdf.setTextColor(15, 23, 42);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(8);
   pdf.text(invoiceTerms.policyHeading, margin + 4, y + 5.2);
 
   let termY = y + 12;
   pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(74, 46, 38);
+  pdf.setTextColor(51, 65, 85);
   pdf.setFontSize(7.2);
   for (const lines of formattedClauses) {
     pdf.text(lines, margin + 4, termY);
@@ -732,17 +732,17 @@ export const downloadOrderInvoice = async (
       // Keep signature line intact even if raster fails
     }
   }
-  pdf.setDrawColor(168, 140, 128);
+  pdf.setDrawColor(148, 163, 184);
   pdf.line(sigX, y + 12, right, y + 12);
-  pdf.setTextColor(107, 53, 42);
+  pdf.setTextColor(51, 65, 85);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(8);
   pdf.text('Authorised signature', right, y + 16.5, { align: 'right' });
 
-  pdf.setFillColor(255, 241, 166);
-  pdf.setDrawColor(219, 186, 98);
+  pdf.setFillColor(255, 241, 242);
+  pdf.setDrawColor(254, 205, 211);
   pdf.roundedRect(margin, y, contentWidth - 54, 18, 2.5, 2.5, 'FD');
-  pdf.setTextColor(107, 53, 42);
+  pdf.setTextColor(190, 18, 60);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(8.5);
   pdf.text(
@@ -752,7 +752,7 @@ export const downloadOrderInvoice = async (
     { align: 'center' },
   );
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(74, 46, 38);
+  pdf.setTextColor(51, 65, 85);
   pdf.setFontSize(7.5);
   pdf.text(
     invoiceTerms.closingSubtitle,
@@ -765,7 +765,7 @@ export const downloadOrderInvoice = async (
   for (let page = 1; page <= pageCount; page += 1) {
     pdf.setPage(page);
     pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(140, 111, 102);
+    pdf.setTextColor(148, 163, 184);
     pdf.setFontSize(7);
     pdf.text(
       `Invoice · ${order.order_number}     Page ${page} of ${pageCount}`,

@@ -193,27 +193,27 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
       >
         <div
           data-testid="hero-banner-skeleton"
-          className="classic-glass overflow-hidden rounded-[24px] bg-gradient-to-br from-[#FFFCF4] via-[#FFF8D6]/55 to-[#F7ECE3] shadow-[0_16px_40px_-14px_rgba(107,53,42,0.12)] ring-1 ring-[#6B352A]/10 sm:rounded-[28px]"
+          className="classic-glass overflow-hidden rounded-[24px] bg-gradient-to-br from-white/95 via-rose-50/45 to-slate-100/90 shadow-[0_16px_40px_-14px_rgba(15,23,42,0.12)] ring-1 ring-slate-900/[0.06] sm:rounded-[28px]"
         >
           {/* Poster Stage Shimmer */}
-          <div className="skeleton-shimmer relative aspect-[16/9] w-full bg-gradient-to-br from-[#FFF8D6]/60 via-[#FFFCF4] to-[#F4E6D8] sm:aspect-[2/1]">
+          <div className="skeleton-shimmer relative aspect-[16/9] w-full bg-gradient-to-br from-slate-100 via-rose-50/50 to-slate-200/70 sm:aspect-[2/1]">
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-[#FFF1A6]/45 blur-3xl"
+              className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-[#D9232D]/10 blur-3xl"
             />
-            <div className="absolute bottom-3 right-3.5 flex items-center gap-1.5 rounded-full bg-[#2B1611]/40 px-2.5 py-1.5 ring-1 ring-white/50 backdrop-blur-md">
-              <span className="h-1.5 w-6 rounded-full bg-[#FFF1A6]/80" />
-              <span className="h-1.5 w-1.5 rounded-full bg-white/50" />
+            <div className="absolute bottom-3 right-3.5 flex items-center gap-1.5 rounded-full bg-slate-900/35 px-2.5 py-1.5 ring-1 ring-white/50 backdrop-blur-md">
+              <span className="h-1.5 w-6 rounded-full bg-white/60" />
+              <span className="h-1.5 w-1.5 rounded-full bg-white/40" />
             </div>
           </div>
 
           {/* Classic Glass Caption Bar Shimmer */}
-          <div className="flex flex-col gap-2.5 border-t border-[#E8D8C4]/70 bg-gradient-to-r from-[#FFFCF4] via-[#FFF8D6]/50 to-[#FFFCF4] px-4 py-3.5 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4">
+          <div className="flex flex-col gap-2.5 border-t border-white/80 bg-gradient-to-r from-white/90 via-rose-50/45 to-white/90 px-4 py-3.5 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4">
             <div className="min-w-0 flex-1 space-y-2">
-              <div className="skeleton-shimmer h-4 w-56 max-w-[88%] rounded-md bg-[#E8D8C4]/80 sm:h-5 sm:w-72" />
-              <div className="skeleton-shimmer h-3 w-64 max-w-[78%] rounded bg-[#E8D8C4]/60 sm:h-3.5 sm:w-80" />
+              <div className="skeleton-shimmer h-4 w-56 max-w-[88%] rounded-md bg-slate-200/85 sm:h-5 sm:w-72" />
+              <div className="skeleton-shimmer h-3 w-64 max-w-[78%] rounded bg-slate-200/65 sm:h-3.5 sm:w-80" />
             </div>
-            <div className="skeleton-shimmer flex h-8 w-28 shrink-0 items-center justify-end rounded-full bg-[#6B352A]/25 pr-1.5 sm:h-9 sm:w-32">
+            <div className="skeleton-shimmer flex h-8 w-28 shrink-0 items-center justify-end rounded-full bg-rose-200/70 pr-1.5 sm:h-9 sm:w-32">
               <span className="h-5 w-5 rounded-full bg-white/60" />
             </div>
           </div>
@@ -255,7 +255,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
         className="group relative focus:outline-none"
       >
         {/* Gradient + Classic Glass Effect Card */}
-        <div className="classic-glass relative overflow-hidden rounded-[24px] bg-gradient-to-br from-[#FFFCF4] via-[#FFF9DC]/75 to-[#F9EFE3] shadow-[0_16px_42px_-14px_rgba(107,53,42,0.15),0_6px_20px_-6px_rgba(107,53,42,0.08)] ring-1 ring-[#6B352A]/12 transition-all duration-500 hover:shadow-[0_22px_50px_-14px_rgba(107,53,42,0.2)] sm:rounded-[28px]">
+        <div className="classic-glass relative overflow-hidden rounded-[24px] bg-gradient-to-br from-white/95 via-rose-50/45 to-slate-100/90 shadow-[0_16px_42px_-14px_rgba(15,23,42,0.13),0_6px_20px_-6px_rgba(217,35,45,0.09)] ring-1 ring-slate-900/[0.07] transition-all duration-500 hover:shadow-[0_22px_50px_-14px_rgba(217,35,45,0.18)] sm:rounded-[28px]">
           {/* Specular Inner Frosted Glass Rim */}
           <div
             aria-hidden="true"
@@ -263,15 +263,15 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
           />
 
           {/* Top Stage: Smart Uncropped Image Showcase with Gradient & Ambient Glass Aura */}
-          <div className="relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-b from-[#FFFCF4] via-[#FFFCF4] to-[#FFF8D6]/55 sm:aspect-[2/1]">
+          <div className="relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-b from-white via-[#FAFBFD] to-rose-50/40 sm:aspect-[2/1]">
             {/* Ambient Gradient Orbs */}
             <div
               aria-hidden="true"
-              className="banner-ambient-pulse pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-[#FFF1A6]/45 blur-3xl"
+              className="banner-ambient-pulse pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-rose-400/15 blur-3xl"
             />
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -right-10 -bottom-10 h-40 w-40 rounded-full bg-[#6B352A]/10 blur-3xl"
+              className="pointer-events-none absolute -right-10 -bottom-10 h-40 w-40 rounded-full bg-amber-300/15 blur-3xl"
             />
 
             {/* Shimmer Skeleton Backdrop while the active banner image is downloading */}
@@ -279,7 +279,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
               <div
                 aria-hidden="true"
                 data-testid="hero-banner-image-shimmer"
-                className="skeleton-shimmer pointer-events-none absolute inset-0 z-10 bg-gradient-to-br from-[#FFF8D6]/60 via-[#FFFCF4] to-[#F4E6D8]"
+                className="skeleton-shimmer pointer-events-none absolute inset-0 z-10 bg-gradient-to-br from-slate-100 via-rose-50/50 to-slate-200/70"
               />
             )}
 
@@ -288,11 +288,11 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
               <div
                 onClick={handleActivateSlideLink}
                 role="presentation"
-                className="absolute inset-0 flex cursor-pointer flex-col justify-end bg-gradient-to-br from-[#FFF1A6]/80 via-[#FFFCF4] to-[#F6E4D8] p-4 sm:p-6"
+                className="absolute inset-0 flex cursor-pointer flex-col justify-end bg-gradient-to-br from-rose-100/80 via-white to-amber-50/70 p-4 sm:p-6"
               >
                 <div
                   aria-hidden="true"
-                  className="banner-ambient-pulse pointer-events-none absolute -right-12 -top-12 h-56 w-56 rounded-full bg-[#6B352A]/12 blur-3xl"
+                  className="banner-ambient-pulse pointer-events-none absolute -right-12 -top-12 h-56 w-56 rounded-full bg-[#D9232D]/15 blur-3xl"
                 />
               </div>
             ) : (
@@ -361,7 +361,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
                     goToPrev();
                   }}
                   aria-label="Previous banner slide"
-                  className="hidden sm:flex absolute left-3.5 top-1/2 -translate-y-1/2 z-20 h-9 w-9 items-center justify-center rounded-full bg-[#2B1611]/55 hover:bg-[#6B352A] text-[#FFFCF4] ring-1 ring-white/50 backdrop-blur-md opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all active:scale-95"
+                  className="hidden sm:flex absolute left-3.5 top-1/2 -translate-y-1/2 z-20 h-9 w-9 items-center justify-center rounded-full bg-slate-900/40 hover:bg-slate-900/65 text-white ring-1 ring-white/50 backdrop-blur-md opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all active:scale-95"
                 >
                   <ChevronLeft className="h-4.5 w-4.5" />
                 </button>
@@ -372,7 +372,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
                     goToNext();
                   }}
                   aria-label="Next banner slide"
-                  className="hidden sm:flex absolute right-3.5 top-1/2 -translate-y-1/2 z-20 h-9 w-9 items-center justify-center rounded-full bg-[#2B1611]/55 hover:bg-[#6B352A] text-[#FFFCF4] ring-1 ring-white/50 backdrop-blur-md opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all active:scale-95"
+                  className="hidden sm:flex absolute right-3.5 top-1/2 -translate-y-1/2 z-20 h-9 w-9 items-center justify-center rounded-full bg-slate-900/40 hover:bg-slate-900/65 text-white ring-1 ring-white/50 backdrop-blur-md opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all active:scale-95"
                 >
                   <ChevronRight className="h-4.5 w-4.5" />
                 </button>
@@ -389,10 +389,10 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
                     e.stopPropagation();
                     handleActivateSlideLink();
                   }}
-                  className="banner-cta-shine pointer-events-auto group/cta font-banner-outfit shrink-0 inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#6B352A] to-[#53271E] pl-3.5 pr-1.5 py-1.5 text-[11px] font-extrabold tracking-[-0.01em] text-[#FFFCF4] shadow-[0_8px_20px_-4px_rgba(107,53,42,0.45)] ring-1 ring-[#FFF1A6]/40 backdrop-blur-md transition-all active:scale-95 sm:pl-4 sm:pr-1.5 sm:py-1.5 sm:text-[12px]"
+                  className="banner-cta-shine pointer-events-auto group/cta font-banner-outfit shrink-0 inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91C1C] pl-3.5 pr-1.5 py-1.5 text-[11px] font-extrabold tracking-[-0.01em] text-white shadow-[0_8px_20px_-4px_rgba(217,35,45,0.45)] ring-1 ring-white/40 backdrop-blur-md transition-all active:scale-95 sm:pl-4 sm:pr-1.5 sm:py-1.5 sm:text-[12px]"
                 >
                   <span>{slide.buttonLabel || 'Shop now'}</span>
-                  <span className="grid h-5 w-5 place-items-center rounded-full bg-[#FFF1A6]/25 text-[#FFF1A6] ring-1 ring-[#FFF1A6]/40 transition-transform duration-200 group-hover/cta:translate-x-0.5">
+                  <span className="grid h-5 w-5 place-items-center rounded-full bg-white/20 text-white ring-1 ring-white/30 transition-transform duration-200 group-hover/cta:translate-x-0.5">
                     <ArrowRight className="h-3 w-3" aria-hidden="true" />
                   </span>
                 </motion.button>
@@ -405,7 +405,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
                   role="tablist"
                   aria-label="Choose banner slide"
                   onClick={(e) => e.stopPropagation()}
-                  className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-[#2B1611]/55 px-2.5 py-1.5 shadow-[0_4px_14px_rgba(43,22,17,0.22)] ring-1 ring-white/55 backdrop-blur-md"
+                  className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-slate-900/45 px-2.5 py-1.5 shadow-[0_4px_14px_rgba(15,23,42,0.2)] ring-1 ring-white/55 backdrop-blur-md"
                 >
                   {activeSlides.map((s, idx) => {
                     const isActive = currentIndex === idx;
@@ -436,7 +436,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
                               duration: isPaused ? 0.2 : SLIDE_DURATION_MS / 1000,
                               ease: 'linear',
                             }}
-                            className="absolute inset-y-0 left-0 rounded-full bg-[#FFF1A6]"
+                            className="absolute inset-y-0 left-0 rounded-full bg-[#FF4D58]"
                           />
                         )}
                       </button>
@@ -452,21 +452,21 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
             <div
               onClick={handleActivateSlideLink}
               role="presentation"
-              className="relative z-20 flex cursor-pointer flex-col gap-2.5 border-t border-[#E8D8C4]/80 bg-gradient-to-br from-[#FFFCF4] via-[#FFF8D6]/65 to-[#FFFCF4] px-4 py-3.5 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-4"
+              className="relative z-20 flex cursor-pointer flex-col gap-2.5 border-t border-white/90 bg-gradient-to-br from-white/92 via-rose-50/65 to-slate-100/90 px-4 py-3.5 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-4"
             >
               {/* Delicate Classic Glass Gradient Shimmer Line */}
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#6B352A]/35 to-transparent"
+                className="pointer-events-none absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#D9232D]/35 to-transparent"
               />
               {/* Soft Frosted Glass Ambient Glow Orbs */}
               <div
                 aria-hidden="true"
-                className="banner-ambient-pulse pointer-events-none absolute -left-8 -top-4 h-24 w-44 rounded-full bg-[#FFF1A6]/45 blur-2xl"
+                className="banner-ambient-pulse pointer-events-none absolute -left-8 -top-4 h-24 w-44 rounded-full bg-rose-400/15 blur-2xl"
               />
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute -right-6 bottom-0 h-20 w-36 rounded-full bg-[#6B352A]/8 blur-2xl"
+                className="pointer-events-none absolute -right-6 bottom-0 h-20 w-36 rounded-full bg-amber-300/15 blur-2xl"
               />
 
               <AnimatePresence mode="wait">
@@ -483,11 +483,11 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
                       initial={{ opacity: 0, x: -4 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.24, delay: 0.04 }}
-                      className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-[#FFF1A6] px-2.5 py-0.5 text-[10px] font-extrabold tracking-wide text-[#6B352A] ring-1 ring-[#6B352A]/20 backdrop-blur-xs"
+                      className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-rose-500/12 px-2.5 py-0.5 text-[10px] font-extrabold tracking-wide text-[#D9232D] ring-1 ring-rose-500/25 backdrop-blur-xs"
                     >
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#6B352A] animate-pulse" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#D9232D] animate-pulse" />
                       <span>Limited Offer</span>
-                      <span aria-hidden="true" className="text-[#6B352A]/60">
+                      <span aria-hidden="true" className="text-rose-400">
                         ·
                       </span>
                       <span>{promoEndLabel}</span>
@@ -498,7 +498,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.28, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
-                      className={`break-words text-balance text-[#6B352A] ${titleFontClass} ${titleSizeClass}`}
+                      className={`break-words text-balance text-slate-900 ${titleFontClass} ${titleSizeClass}`}
                     >
                       {slide.title}
                     </motion.h2>
@@ -508,7 +508,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-                      className="font-banner-subtitle mt-1 break-words text-[12px] font-medium leading-[1.42] text-[#6B4C44] sm:text-[13.5px]"
+                      className="font-banner-subtitle mt-1 break-words text-[12px] font-medium leading-[1.42] text-slate-600 sm:text-[13.5px]"
                     >
                       {slide.subtitle}
                     </motion.p>
@@ -525,10 +525,10 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
                     e.stopPropagation();
                     handleActivateSlideLink();
                   }}
-                  className="banner-cta-shine group/cta relative font-banner-outfit shrink-0 inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#6B352A] to-[#53271E] pl-4 pr-1.5 py-1.5 text-[11.5px] font-extrabold tracking-[-0.01em] text-[#FFFCF4] shadow-[0_8px_20px_-4px_rgba(107,53,42,0.42)] ring-1 ring-[#FFF1A6]/35 transition-all hover:shadow-[0_10px_24px_-4px_rgba(107,53,42,0.55)] active:scale-95 sm:pl-4.5 sm:pr-1.5 sm:py-1.5 sm:text-[12.5px]"
+                  className="banner-cta-shine group/cta relative font-banner-outfit shrink-0 inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91C1C] pl-4 pr-1.5 py-1.5 text-[11.5px] font-extrabold tracking-[-0.01em] text-white shadow-[0_8px_20px_-4px_rgba(217,35,45,0.42)] ring-1 ring-white/40 transition-all hover:shadow-[0_10px_24px_-4px_rgba(217,35,45,0.55)] active:scale-95 sm:pl-4.5 sm:pr-1.5 sm:py-1.5 sm:text-[12.5px]"
                 >
                   <span>{slide.buttonLabel || 'Shop now'}</span>
-                  <span className="grid h-5 w-5 sm:h-5.5 sm:w-5.5 place-items-center rounded-full bg-[#FFF1A6]/25 text-[#FFF1A6] ring-1 ring-[#FFF1A6]/35 backdrop-blur-xs transition-transform duration-200 group-hover/cta:translate-x-0.5">
+                  <span className="grid h-5 w-5 sm:h-5.5 sm:w-5.5 place-items-center rounded-full bg-white/20 text-white ring-1 ring-white/35 backdrop-blur-xs transition-transform duration-200 group-hover/cta:translate-x-0.5">
                     <ArrowRight className="h-3 w-3" aria-hidden="true" />
                   </span>
                 </motion.button>

@@ -73,7 +73,7 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-[#1F0E0A]/55 backdrop-blur-xs"
+          className="fixed inset-0 bg-slate-950/55 backdrop-blur-xs"
         />
 
         {/* Drawer */}
@@ -82,25 +82,25 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="relative w-full max-w-full sm:max-w-[440px] bg-gradient-to-br from-[#FFFCF4] via-[#FFF8D6]/40 to-[#FFFCF4] h-full shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden text-[#2B1611]"
+          className="relative w-full max-w-full sm:max-w-[440px] bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] h-full shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden text-slate-800"
         >
-          {/* Sticky Header */}
-          <div className="sticky top-0 z-20 px-4 py-3.5 border-b border-[#E8D8C4] bg-white/95 backdrop-blur-md shadow-[0_4px_20px_-10px_rgba(107,53,42,0.08)]">
+          {/* Glassmorphic Sticky Header */}
+          <div className="sticky top-0 z-20 px-4 py-3.5 border-b border-slate-200/80 bg-white/92 backdrop-blur-md shadow-[0_4px_20px_-10px_rgba(15,23,42,0.06)]">
             <div className="flex justify-between items-center gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-2xl bg-[#6B352A] flex items-center justify-center text-[#FFF1A6] shadow-2xs shrink-0">
-                  <Heart className="w-4.5 h-4.5 fill-[#FFF1A6]" />
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FFE4E6] to-[#FECDD3] flex items-center justify-center text-[#D9232D] shadow-2xs ring-1 ring-inset ring-rose-200/70 shrink-0">
+                  <Heart className="w-4.5 h-4.5 fill-[#D9232D]" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[#FFF1A6] px-2 py-0.5 text-[9.5px] font-black uppercase tracking-[0.14em] text-[#6B352A] ring-1 ring-inset ring-[#E6CE73]">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[9.5px] font-black uppercase tracking-[0.14em] text-[#D9232D] ring-1 ring-inset ring-rose-100">
                       <Sparkles className="h-2.5 w-2.5" /> Saved Garage
                     </span>
                   </div>
-                  <h3 className="mt-0.5 text-[16px] font-black text-[#2B1611] leading-tight truncate">
+                  <h3 className="mt-0.5 text-[16px] font-black text-slate-900 leading-tight truncate">
                     Your Wishlist
                   </h3>
-                  <p className="text-[11px] text-[#6B4C44] font-semibold tabular-nums">
+                  <p className="text-[11px] text-slate-500 font-semibold tabular-nums">
                     {wishlist.length} {wishlist.length === 1 ? 'item' : 'items'} saved
                     {wishlist.length > 0 && ` · ₹${totalSavedValue.toLocaleString('en-IN')}`}
                   </p>
@@ -112,7 +112,7 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                   <button
                     type="button"
                     onClick={handleMoveAllToCart}
-                    className="min-h-11 rounded-xl bg-[#FFF8D6] hover:bg-[#FFF1A6] px-2.5 py-1.5 text-[10.5px] font-extrabold text-[#6B352A] border border-[#E6CE73] transition-colors"
+                    className="min-h-11 rounded-xl bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 text-[10.5px] font-extrabold text-[#D9232D] border border-rose-200/80 transition-colors"
                   >
                     Move All ({movableItems.length})
                   </button>
@@ -120,7 +120,7 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                 <button
                   onClick={onClose}
                   aria-label="Close wishlist"
-                  className="min-h-11 min-w-11 rounded-2xl bg-[#FFF8D6] hover:bg-[#FFF1A6] text-[#6B352A] flex items-center justify-center transition-colors"
+                  className="min-h-11 min-w-11 rounded-2xl bg-slate-100 hover:bg-rose-50 hover:text-[#D9232D] text-slate-700 flex items-center justify-center transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -135,8 +135,8 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                   onClick={() => setActiveFilter('all')}
                   className={`min-h-11 shrink-0 rounded-full px-3.5 py-2 text-[11px] font-extrabold transition-all ${
                     activeFilter === 'all'
-                      ? 'bg-[#6B352A] text-[#FFFCF4] shadow-2xs'
-                      : 'bg-[#FFF8D6]/80 text-[#4A2B23] hover:bg-[#FFF1A6]'
+                      ? 'bg-[#D9232D] text-white shadow-2xs'
+                      : 'bg-slate-100/90 text-slate-600 hover:bg-slate-200/70'
                   }`}
                 >
                   All ({wishlist.length})
@@ -146,8 +146,8 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                   onClick={() => setActiveFilter('in-stock')}
                   className={`min-h-11 shrink-0 rounded-full px-3.5 py-2 text-[11px] font-extrabold transition-all ${
                     activeFilter === 'in-stock'
-                      ? 'bg-[#6B352A] text-[#FFFCF4] shadow-2xs'
-                      : 'bg-[#FFF8D6]/80 text-[#4A2B23] hover:bg-[#FFF1A6]'
+                      ? 'bg-[#D9232D] text-white shadow-2xs'
+                      : 'bg-slate-100/90 text-slate-600 hover:bg-slate-200/70'
                   }`}
                 >
                   In Stock ({wishlist.filter((i) => i.inStock !== false).length})
@@ -159,8 +159,8 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                     onClick={() => setActiveFilter(catKey)}
                     className={`min-h-11 shrink-0 rounded-full px-3.5 py-2 text-[11px] font-extrabold transition-all ${
                       activeFilter === catKey
-                        ? 'bg-[#6B352A] text-[#FFFCF4] shadow-2xs'
-                        : 'bg-[#FFF8D6]/80 text-[#4A2B23] hover:bg-[#FFF1A6]'
+                        ? 'bg-[#D9232D] text-white shadow-2xs'
+                        : 'bg-slate-100/90 text-slate-600 hover:bg-slate-200/70'
                     }`}
                   >
                     {catLabel}
@@ -177,29 +177,29 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
             ) : wishlist.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4">
                 <div className="relative mb-4">
-                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#FFF8D6] via-white to-[#FFF1A6]/80 border border-[#E6CE73] shadow-[0_12px_28px_-12px_rgba(107,53,42,0.18)] flex items-center justify-center text-[#6B352A]">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-rose-50 via-white to-rose-100/80 border border-rose-200/70 shadow-[0_12px_28px_-12px_rgba(217,35,45,0.18)] flex items-center justify-center text-[#D9232D]">
                     <Heart className="w-9 h-9" />
                   </div>
                 </div>
-                <h4 className="text-[16px] font-black text-[#2B1611] mb-1">No items saved yet</h4>
-                <p className="text-[12px] text-[#6B4C44] max-w-[230px] leading-relaxed mb-5">
+                <h4 className="text-[16px] font-black text-slate-900 mb-1">No items saved yet</h4>
+                <p className="text-[12px] text-slate-500 max-w-[230px] leading-relaxed mb-5">
                   Tap the heart icon on any seat cover to save it for later and compare fitment options!
                 </p>
                 <button
                   onClick={onClose}
-                  className="bg-[#6B352A] hover:bg-[#53271E] text-[#FFFCF4] text-[12px] font-black px-6 py-3 rounded-2xl shadow-md active:scale-95 transition-all inline-flex items-center gap-1.5"
+                  className="bg-gradient-to-r from-[#D9232D] to-[#B91822] text-white text-[12px] font-black px-6 py-3 rounded-2xl shadow-md shadow-red-600/20 hover:brightness-105 active:scale-95 transition-all inline-flex items-center gap-1.5"
                 >
                   <span>Start Browsing</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             ) : filteredWishlist.length === 0 ? (
-              <div className="rounded-3xl border border-[#E8D8C4] bg-white p-8 text-center space-y-2">
-                <p className="text-xs font-extrabold text-[#4A2B23]">No saved items match this filter</p>
+              <div className="rounded-3xl border border-slate-200/80 bg-white/95 p-8 text-center space-y-2">
+                <p className="text-xs font-extrabold text-slate-700">No saved items match this filter</p>
                 <button
                   type="button"
                   onClick={() => setActiveFilter('all')}
-                  className="text-[11px] font-bold text-[#6B352A] underline"
+                  className="text-[11px] font-bold text-[#D9232D] underline"
                 >
                   Show all saved items
                 </button>
@@ -216,14 +216,14 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                 return (
                   <div
                     key={p.id}
-                    className="group bg-white rounded-2xl p-3.5 border border-[#E8D8C4] hover:border-[#6B352A]/40 shadow-[0_8px_24px_-14px_rgba(107,53,42,0.1)] flex gap-3.5 relative transition-all duration-200 hover:-translate-y-0.5"
+                    className="group bg-white/95 backdrop-blur-md rounded-2xl p-3.5 border border-slate-200/80 hover:border-rose-200/90 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.07)] flex gap-3.5 relative transition-all duration-200 hover:-translate-y-0.5"
                   >
                     <div
                       onClick={() => {
                         onSelectProduct(p);
                         onClose();
                       }}
-                      className="relative w-20 h-20 rounded-2xl bg-[#FFF8D6]/50 border border-[#E8D8C4] overflow-hidden flex-shrink-0 cursor-pointer"
+                      className="relative w-20 h-20 rounded-2xl bg-slate-100 border border-slate-200/70 overflow-hidden flex-shrink-0 cursor-pointer"
                     >
                       <img
                         src={p.image}
@@ -231,7 +231,7 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                       {savings > 0 && (
-                        <span className="absolute top-1.5 left-1.5 rounded-md bg-[#6B352A] px-1.5 py-0.5 text-[9px] font-black text-[#FFF1A6] shadow-2xs">
+                        <span className="absolute top-1.5 left-1.5 rounded-md bg-[#D9232D] px-1.5 py-0.5 text-[9px] font-black text-white shadow-2xs">
                           -{savings}%
                         </span>
                       )}
@@ -245,47 +245,47 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                               onSelectProduct(p);
                               onClose();
                             }}
-                            className="text-[13px] font-black text-[#2B1611] leading-snug line-clamp-1 cursor-pointer hover:text-[#6B352A] transition-colors"
+                            className="text-[13px] font-black text-slate-900 leading-snug line-clamp-1 cursor-pointer hover:text-[#D9232D] transition-colors"
                           >
                             {p.title}
                           </h4>
                           <button
                             onClick={() => onRemoveWishlist(p)}
                             aria-label={`Remove ${p.title} from wishlist`}
-                            className="grid min-h-11 min-w-11 shrink-0 place-items-center text-[#8A6C63] hover:text-[#9E2A2B] hover:bg-[#FDF2EE] rounded-xl transition-colors"
+                            className="grid min-h-11 min-w-11 shrink-0 place-items-center text-slate-400 hover:text-red-600 hover:bg-rose-50 rounded-xl transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
 
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                          <span className="inline-flex items-center rounded-md bg-[#F6EAE4] px-2 py-0.5 text-[10px] font-bold text-[#6B352A]">
+                          <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
                             {p.categoryLabel}
                           </span>
                           <span
                             className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9.5px] font-extrabold ${
                               inStock
-                                ? 'bg-[#FFF8D6] text-[#6B352A] ring-1 ring-inset ring-[#E6CE73]'
-                                : 'bg-[#FDF2EE] text-[#9E2A2B] ring-1 ring-inset ring-[#E9C2B5]'
+                                ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/70'
+                                : 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200/70'
                             }`}
                           >
                             <span className="h-1.5 w-1.5 rounded-full bg-current" />
                             {inStock ? 'In Stock' : 'Out of Stock'}
                           </span>
                           {p.rating > 0 && (
-                            <span className="inline-flex items-center gap-0.5 text-[10px] font-extrabold text-[#9A4D16]">
-                              <Star className="h-3 w-3 fill-[#FF6115] text-[#FF6115]" />
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-extrabold text-amber-600">
+                              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                               {p.rating.toFixed(1)}
                             </span>
                           )}
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap justify-between items-center gap-2 mt-2.5 pt-2 border-t border-[#F4EAE0]">
+                      <div className="flex flex-wrap justify-between items-center gap-2 mt-2.5 pt-2 border-t border-slate-100">
                         <div className="flex items-baseline gap-1.5 tabular-nums">
-                          <span className="text-[15px] font-black text-[#6B352A]">₹{p.price}</span>
+                          <span className="text-[15px] font-black text-[#D9232D]">₹{p.price}</span>
                           {p.originalPrice > p.price && (
-                            <span className="text-[10.5px] font-semibold text-[#8A6C63] line-through">
+                            <span className="text-[10.5px] font-semibold text-slate-400 line-through">
                               ₹{p.originalPrice}
                             </span>
                           )}
@@ -301,9 +301,9 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                           aria-label={alreadyInCart ? 'Go to Cart' : `Move ${p.title} to cart`}
                           className={`${
                             alreadyInCart
-                              ? 'bg-[#FF6115] hover:bg-[#E5520D] text-[#1F0E0A]'
-                              : 'banner-cta-shine group/cta bg-[#6B352A] hover:bg-[#53271E] text-[#FFFCF4]'
-                          } min-h-11 text-[11px] font-extrabold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-xs active:scale-95 transition-all`}
+                              ? 'bg-emerald-600 hover:bg-emerald-700'
+                              : 'banner-cta-shine group/cta bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] hover:brightness-105 hover:shadow-md'
+                          } min-h-11 text-white text-[11px] font-extrabold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-xs active:scale-95 transition-all`}
                         >
                           {alreadyInCart ? (
                             <CheckCircle2 className="w-3.5 h-3.5" />
@@ -322,14 +322,14 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
 
           {/* Sticky Bottom Bar when wishlist has items */}
           {!isLoading && wishlist.length > 0 && (
-            <div className="shrink-0 border-t border-[#E8D8C4] bg-white/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
+            <div className="shrink-0 border-t border-slate-200/80 bg-white/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[10.5px] font-bold uppercase tracking-wider text-[#8A6C63]">
+                <p className="text-[10.5px] font-bold uppercase tracking-wider text-slate-400">
                   Saved Collection
                 </p>
-                <p className="text-sm font-black text-[#2B1611] tabular-nums truncate">
+                <p className="text-sm font-black text-slate-900 tabular-nums truncate">
                   ₹{totalSavedValue.toLocaleString('en-IN')}{' '}
-                  <span className="text-[11px] font-semibold text-[#6B4C44]">
+                  <span className="text-[11px] font-semibold text-slate-500">
                     ({wishlist.length} {wishlist.length === 1 ? 'item' : 'items'})
                   </span>
                 </p>
@@ -338,7 +338,7 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                 <button
                   type="button"
                   onClick={handleMoveAllToCart}
-                  className="banner-cta-shine group/cta min-h-11 shrink-0 rounded-2xl bg-[#FF6115] hover:bg-[#E5520D] px-4 py-2.5 text-xs font-black text-[#1F0E0A] shadow-[0_8px_18px_-4px_rgba(255,97,21,0.38)] active:scale-95 transition-all inline-flex items-center gap-1.5"
+                  className="banner-cta-shine group/cta min-h-11 shrink-0 rounded-2xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-4 py-2.5 text-xs font-black text-white shadow-[0_8px_18px_-4px_rgba(217,35,45,0.38)] hover:brightness-105 hover:shadow-[0_10px_22px_-4px_rgba(217,35,45,0.48)] active:scale-95 transition-all inline-flex items-center gap-1.5"
                 >
                   <ShoppingBag className="w-3.5 h-3.5 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
                   <span>Move All to Cart</span>
@@ -347,7 +347,7 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                 <button
                   type="button"
                   onClick={onOpenCart}
-                  className="banner-cta-shine group/cta min-h-11 shrink-0 rounded-2xl bg-[#FF6115] hover:bg-[#E5520D] px-4 py-2.5 text-xs font-black text-[#1F0E0A] shadow-sm active:scale-95 transition-all inline-flex items-center gap-1.5"
+                  className="banner-cta-shine group/cta min-h-11 shrink-0 rounded-2xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 text-xs font-black text-white shadow-sm hover:shadow-md active:scale-95 transition-all inline-flex items-center gap-1.5"
                 >
                   <ShoppingBag className="w-3.5 h-3.5 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
                   <span>Open Cart</span>

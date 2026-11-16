@@ -4,20 +4,13 @@
   :root {
     --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-display: var(--font-sans);
-    --bg-primary: #FFFCF4;
-    --bg-butter: #FFF1A6;
-    --bg-butter-soft: #FFF8D6;
-    --brand-clay: #6B352A;
-    --brand-clay-hover: #53271E;
-    --brand-clay-soft: #F6EAE4;
-    --cta-orange: #FF6115;
-    --cta-orange-hover: #E5520D;
-    --brand-red: #6B352A;
-    --brand-red-hover: #53271E;
-    --brand-red-soft: #FFF8D6;
-    --brand-dark: #2B1611;
+    --bg-primary: #F4F5F8;
+    --brand-red: #D9232D;
+    --brand-red-hover: #BF1B24;
+    --brand-red-soft: #FEECEC;
+    --brand-dark: #11141A;
     --surface-card: #FFFFFF;
-    --border-subtle: rgba(107, 53, 42, 0.14);
+    --border-subtle: rgba(15, 23, 42, 0.08);
   }
 
   html,
@@ -28,7 +21,7 @@
     min-height: 100%;
     overflow-x: hidden;
     overflow-x: clip;
-    background-color: #FFFCF4;
+    background-color: #D9232D;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
@@ -36,8 +29,8 @@
   body {
     min-height: 100vh;
     font-family: var(--font-sans);
-    background-color: #FFFCF4;
-    color: #2B1611;
+    background-color: #D9232D;
+    color: #13161B;
     -webkit-tap-highlight-color: transparent;
   }
 }
@@ -165,11 +158,11 @@ canvas {
 
 @keyframes voiceMicPulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(107, 53, 42, 0.45);
+    box-shadow: 0 0 0 0 rgba(217, 35, 45, 0.45);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 0 7px rgba(107, 53, 42, 0);
+    box-shadow: 0 0 0 7px rgba(217, 35, 45, 0);
     transform: scale(1.06);
   }
 }
@@ -235,25 +228,25 @@ canvas {
 
 /* Classic Glass Styles */
 .classic-glass {
-  background: rgba(255, 252, 244, 0.88);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  border: 1px solid rgba(232, 216, 196, 0.9);
-  box-shadow: 0 8px 32px rgba(107, 53, 42, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.06);
 }
 
 .dark-glass {
-  background: rgba(43, 22, 17, 0.88);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  border: 1px solid rgba(255, 241, 166, 0.16);
-  box-shadow: 0 12px 36px rgba(43, 22, 17, 0.35);
+  background: rgba(17, 20, 26, 0.85);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
 }
 
 /* Animated cloud spinner used by the startup splash screen. */
 .loader {
-  --cloud-color: #FFFCF4;
-  --arrows-color: #FFF1A6;
+  --cloud-color: #ffffff;
+  --arrows-color: #ffd9dc;
   --time-animation: 1s;
   width: 100px;
   margin-inline: auto;
@@ -262,8 +255,8 @@ canvas {
 }
 
 .loader--inline {
-  --cloud-color: #6B352A;
-  --arrows-color: #FF6115;
+  --cloud-color: #4387f4;
+  --arrows-color: #80b1ff;
   transform: scale(0.58);
 }
 

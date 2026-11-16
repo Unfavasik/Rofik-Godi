@@ -6,7 +6,7 @@ const APP_ICON = '/images/rofik-center-splash.webp';
 
 export const SplashScreen: React.FC = () => (
   <div
-    className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[#6B352A] select-none"
+    className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[#D9232D] select-none"
     data-purpose="splash-screen"
     aria-label="Loading Rofik Godi Center"
     role="status"
@@ -18,11 +18,11 @@ export const SplashScreen: React.FC = () => (
       loading="eager"
       decoding="async"
       fetchPriority="high"
-      className="absolute inset-0 h-full w-full scale-[1.18] object-cover object-top opacity-70"
+      className="absolute inset-0 h-full w-full scale-[1.18] object-cover object-top opacity-80"
       draggable={false}
     />
-    <div className="absolute inset-0 bg-[#4A221A]/60" aria-hidden="true" />
-    <div className="relative z-10 text-center text-[#FFFCF4]">
+    <div className="absolute inset-0 bg-[#6b0a1a]/45" aria-hidden="true" />
+    <div className="relative z-10 text-center text-white">
       <img
         src={APP_ICON}
         alt=""
@@ -30,11 +30,11 @@ export const SplashScreen: React.FC = () => (
         height={112}
         loading="eager"
         decoding="async"
-        className="mx-auto mb-4 h-28 w-28 object-contain drop-shadow-[0_12px_18px_rgba(43,22,17,0.35)]"
+        className="mx-auto mb-4 h-28 w-28 object-contain drop-shadow-[0_12px_18px_rgba(0,0,0,0.28)]"
         draggable={false}
       />
-      <p className="text-sm font-semibold tracking-[0.18em] text-[#FFFCF4]">ROFIK GODI CENTER</p>
-      <p className="mt-1 text-xs text-[#FFF1A6]">Loading your ride essentials</p>
+      <p className="text-sm font-semibold tracking-[0.18em]">ROFIK GODI CENTER</p>
+      <p className="mt-1 text-xs text-white/75">Loading your ride essentials</p>
 
       <div className="loader mx-auto mt-5" aria-hidden="true">
         <svg id="cloud" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">

@@ -15,7 +15,7 @@ function BrandMark({ brand }: { brand: string }) {
   const url = getBrandLogoUrl(brand);
   if (!url || failed) {
     return (
-      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#FFF1A6] text-[8px] font-black text-[#6B352A]">
+      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white text-[8px] font-black text-[#D9232D]">
         {getBrandInitials(brand)}
       </span>
     );
@@ -27,12 +27,12 @@ function ModelThumb({ image }: { image: string }) {
   const [failed, setFailed] = useState(false);
   if (!image || failed) {
     return (
-      <span className="flex h-9 w-14 shrink-0 items-center justify-center rounded-lg bg-[#FFF8D6] text-[#8A6C63]">
+      <span className="flex h-9 w-14 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-400">
         <Bike className="h-4 w-4" />
       </span>
     );
   }
-  return <img src={image} alt="" loading="lazy" onError={() => setFailed(true)} className="h-9 w-14 shrink-0 rounded-lg bg-[#FFF8D6] object-cover" />;
+  return <img src={image} alt="" loading="lazy" onError={() => setFailed(true)} className="h-9 w-14 shrink-0 rounded-lg bg-slate-50 object-cover" />;
 }
 
 export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }: Props) {
@@ -104,31 +104,31 @@ export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }:
   const selectedNames = Array.from(picked).sort((a, b) => a.localeCompare(b));
 
   return (
-    <div className="fixed inset-0 z-[70] flex w-full max-w-full flex-col overflow-x-hidden bg-[#FFFCF4]" role="dialog" aria-modal="true" aria-label="Compatible vehicles picker">
-      <header className="flex items-center gap-3 border-b border-[#E8D8C4] bg-[#FFFCF4] px-4 py-3">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#FFF1A6] text-[#6B352A]"><Bike className="h-5 w-5" /></span>
+    <div className="fixed inset-0 z-[70] flex w-full max-w-full flex-col overflow-x-hidden bg-white" role="dialog" aria-modal="true" aria-label="Compatible vehicles picker">
+      <header className="flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#FCEBEB] text-[#D9232D]"><Bike className="h-5 w-5" /></span>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-[17px] font-extrabold tracking-tight text-[#2B1611]">Compatible vehicles</h2>
-          <p className="truncate text-[11px] font-medium text-[#6B4C44]">Choose the bikes this seat cover fits</p>
+          <h2 className="truncate text-[17px] font-extrabold tracking-tight text-slate-900">Compatible vehicles</h2>
+          <p className="truncate text-[11px] font-medium text-slate-500">Choose the bikes this seat cover fits</p>
         </div>
-        <button type="button" onClick={onClose} aria-label="Close compatible vehicles picker" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-[#6B4C44] transition hover:bg-[#FFF8D6] hover:text-[#2B1611] cursor-pointer">
+        <button type="button" onClick={onClose} aria-label="Close compatible vehicles picker" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100">
           <X className="h-5 w-5" />
         </button>
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-4 pt-4">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8A6C63]" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search bike or scooter..."
             aria-label="Search bike or scooter"
-            className="h-11 w-full rounded-xl border border-[#E8D8C4] bg-white pl-10 pr-3 text-base sm:text-[13px] font-semibold text-[#2B1611] outline-none transition placeholder:font-normal placeholder:text-[#8A6C63] focus:border-[#6B352A] focus:ring-2 focus:ring-[#FFF1A6]"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-base sm:text-[13px] font-semibold text-slate-700 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#D9232D] focus:bg-white focus:ring-2 focus:ring-red-50"
           />
         </div>
 
-        <div className="mt-3 grid grid-cols-3 gap-1.5 rounded-xl bg-[#F4EAE0] p-1">
+        <div className="mt-3 grid grid-cols-3 gap-1.5 rounded-xl bg-slate-100 p-1">
           {([
             ['all', 'All vehicles', null],
             ['bike', 'Bike', Bike],
@@ -138,7 +138,7 @@ export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }:
               key={value}
               type="button"
               onClick={() => setTab(value)}
-              className={`flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-lg px-1.5 text-[11px] sm:text-[12px] font-extrabold transition cursor-pointer ${tab === value ? 'bg-[#6B352A] text-[#FFFCF4] shadow-sm' : 'text-[#4A2B23] hover:bg-white'}`}
+              className={`flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-lg px-1.5 text-[11px] sm:text-[12px] font-extrabold transition ${tab === value ? 'bg-[#D9232D] text-white shadow-sm' : 'text-slate-700 hover:bg-white'}`}
             >
               {Icon && <Icon className="h-4 w-4 shrink-0" />}<span className="truncate">{label}</span>
             </button>
@@ -146,51 +146,51 @@ export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }:
         </div>
 
         <div className="mt-4 flex items-center justify-between">
-          <p className="text-[13px] font-extrabold text-[#2B1611]">{picked.size} selected</p>
+          <p className="text-[13px] font-extrabold text-slate-900">{picked.size} selected</p>
           {picked.size > 0 && (
-            <button type="button" onClick={() => setPicked(new Set())} className="text-[12px] font-extrabold text-[#6B352A] hover:underline cursor-pointer">
+            <button type="button" onClick={() => setPicked(new Set())} className="text-[12px] font-extrabold text-[#D9232D]">
               Clear all
             </button>
           )}
         </div>
 
         {loading ? (
-          <p className="flex items-center justify-center gap-2 rounded-2xl bg-[#FFF8D6]/50 py-12 text-sm text-[#6B4C44]">
-            <Loader2 className="h-5 w-5 animate-spin text-[#6B352A]" />Loading vehicle catalog…
+          <p className="flex items-center justify-center gap-2 rounded-2xl bg-slate-50 py-12 text-sm text-slate-500">
+            <Loader2 className="h-5 w-5 animate-spin text-[#D9232D]" />Loading vehicle catalog…
           </p>
         ) : groups.length === 0 ? (
-          <p className="rounded-2xl bg-[#FFF8D6]/50 py-10 text-center text-sm text-[#6B4C44]">No vehicles match your search.</p>
+          <p className="rounded-2xl bg-slate-50 py-10 text-center text-sm text-slate-500">No vehicles match your search.</p>
         ) : (
           <div className="mt-2 space-y-3">
-            <label className="flex items-center justify-between gap-3 rounded-2xl border border-[#E8D8C4] bg-white p-3 shadow-sm cursor-pointer">
+            <label className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
               <span className="flex items-center gap-3">
                 <input
                   type="checkbox"
                   checked={allVisibleSelected}
                   onChange={toggleAllVisible}
                   aria-label="Select all vehicles"
-                  className="h-5 w-5 accent-[#6B352A]"
+                  className="h-5 w-5 accent-[#D9232D]"
                 />
-                <span className="text-[13px] font-extrabold text-[#2B1611]">Select all vehicles</span>
+                <span className="text-[13px] font-extrabold text-slate-900">Select all vehicles</span>
               </span>
-              <span className="rounded-full bg-[#FFF8D6] px-2.5 py-1 text-[10px] font-bold text-[#6B352A]">{filtered.length} models</span>
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600">{filtered.length} models</span>
             </label>
 
             {groups.map((group) => {
               const brandSelected = group.items.filter((model) => picked.has(model.name)).length;
               return (
-                <section key={group.brand} className="overflow-hidden rounded-2xl border border-[#E8D8C4] bg-white shadow-sm">
-                  <div className="flex items-center gap-2.5 bg-[#FFF8D6] px-3.5 py-2.5">
+                <section key={group.brand} className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+                  <div className="flex items-center gap-2.5 bg-[#FCEBEB]/70 px-3.5 py-2.5">
                     <BrandMark brand={group.brand} />
-                    <h3 className="min-w-0 flex-1 truncate text-[14px] font-extrabold text-[#2B1611]">{group.brand}</h3>
-                    <span className="shrink-0 text-[11px] font-semibold text-[#6B4C44]">{group.items.length} models</span>
+                    <h3 className="min-w-0 flex-1 truncate text-[14px] font-extrabold text-slate-900">{group.brand}</h3>
+                    <span className="shrink-0 text-[11px] font-semibold text-slate-500">{group.items.length} models</span>
                   </div>
-                  <div className="divide-y divide-[#F4EAE0]">
+                  <div className="divide-y divide-slate-50">
                     {group.items.map((model) => {
                       const checked = picked.has(model.name);
                       return (
-                        <label key={model.id} className="flex min-h-12 cursor-pointer items-center gap-3 px-3.5 py-2.5 transition hover:bg-[#FFF8D6]/40">
-                          <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 transition ${checked ? 'border-[#6B352A] bg-[#6B352A] text-[#FFFCF4]' : 'border-[#CBB8A6] bg-white'}`}>
+                        <label key={model.id} className="flex min-h-12 cursor-pointer items-center gap-3 px-3.5 py-2.5 transition hover:bg-slate-50">
+                          <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 transition ${checked ? 'border-[#D9232D] bg-[#D9232D] text-white' : 'border-slate-300 bg-white'}`}>
                             {checked && <Check className="h-3.5 w-3.5 stroke-[3]" />}
                           </span>
                           <input
@@ -201,7 +201,7 @@ export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }:
                             className="sr-only"
                           />
                           <ModelThumb image={model.image} />
-                          <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#2B1611]">{model.name}</span>
+                          <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-slate-800">{model.name}</span>
                           {brandSelected > 0 && <span className="sr-only">{brandSelected} selected in {group.brand}</span>}
                         </label>
                       );
@@ -212,13 +212,13 @@ export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }:
             })}
 
             {selectedNames.length > 0 && (
-              <div className="flex flex-wrap gap-2 rounded-2xl bg-[#FFF8D6]/60 p-3 border border-[#E8D8C4]">
+              <div className="flex flex-wrap gap-2 rounded-2xl bg-slate-50 p-3">
                 {selectedNames.map((name) => (
                   <button
                     key={name}
                     type="button"
                     onClick={() => toggleModel(name)}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF1A6] px-3 py-1.5 text-[11px] font-extrabold text-[#6B352A] transition hover:bg-[#FFE980] cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[#FCEBEB] px-3 py-1.5 text-[11px] font-extrabold text-[#D9232D] transition hover:bg-red-100"
                   >
                     {name}<X className="h-3.5 w-3.5" />
                   </button>
@@ -226,22 +226,22 @@ export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }:
               </div>
             )}
 
-            <p className="flex items-center gap-1.5 px-1 pt-1 text-[11px] font-medium text-[#8A6C63]">
-              <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full border border-[#CBB8A6] text-[9px] font-black text-[#8A6C63]">i</span>
+            <p className="flex items-center gap-1.5 px-1 pt-1 text-[11px] font-medium text-slate-400">
+              <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full border border-slate-300 text-[9px] font-black text-slate-400">i</span>
               You can select multiple models at once.
             </p>
           </div>
         )}
       </div>
 
-      <footer className="grid shrink-0 grid-cols-2 gap-2.5 border-t border-[#E8D8C4] bg-[#FFFCF4] px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">
-        <button type="button" onClick={onClose} className="min-h-12 rounded-xl border border-[#E8D8C4] bg-white text-[13px] font-extrabold text-[#4A2B23] transition hover:bg-[#FFF8D6] cursor-pointer">
+      <footer className="grid shrink-0 grid-cols-2 gap-2.5 border-t border-slate-100 bg-white px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+        <button type="button" onClick={onClose} className="min-h-12 rounded-xl border border-slate-200 bg-white text-[13px] font-extrabold text-slate-700 transition hover:bg-slate-50">
           Cancel
         </button>
         <button
           type="button"
           onClick={() => onApply(selectedNames)}
-          className="min-h-12 rounded-xl bg-[#6B352A] text-[13px] font-extrabold text-[#FFFCF4] shadow-sm transition hover:bg-[#53271E] cursor-pointer"
+          className="min-h-12 rounded-xl bg-[#D9232D] text-[13px] font-extrabold text-white shadow-sm transition hover:bg-[#bf1f29]"
         >
           Apply {picked.size} {picked.size === 1 ? 'vehicle' : 'vehicles'}
         </button>

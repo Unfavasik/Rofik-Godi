@@ -29,7 +29,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   const { t } = useI18n();
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-7xl bg-[#FFFCF4]/95 px-3 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur-md border-t border-[#E8D8C4] shadow-[0_-4px_25px_rgba(107,53,42,0.08)] sm:px-6"
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-7xl bg-white/95 px-3 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur-md border-t border-gray-100/90 shadow-[0_-4px_25px_rgba(0,0,0,0.06)] sm:px-6"
       data-purpose="mobile-navbar"
     >
       <div className="flex justify-around items-center gap-1">
@@ -41,8 +41,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           }}
           className="flex min-h-11 min-w-[52px] flex-col items-center justify-center group px-1.5 py-1 active:scale-95 transition-transform"
         >
-          <Home className={`w-5 h-5 transition-colors ${activeTab === 'home' ? 'text-[#6B352A]' : 'text-[#8C6F66] group-hover:text-[#6B352A]'}`} />
-          <span className={`text-[10.5px] mt-1 ${activeTab === 'home' ? 'font-bold text-[#6B352A]' : 'font-semibold text-[#7A5B52]'}`}>
+          <Home className={`w-5 h-5 transition-colors ${activeTab === 'home' ? 'text-[#D9232D]' : 'text-gray-400 group-hover:text-gray-600'}`} />
+          <span className={`text-[10.5px] mt-1 ${activeTab === 'home' ? 'font-bold text-[#D9232D]' : 'font-semibold text-gray-500'}`}>
             {t('nav.home')}
           </span>
         </button>
@@ -55,8 +55,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           }}
           className="flex min-h-11 min-w-[52px] flex-col items-center justify-center group px-1.5 py-1 active:scale-95 transition-transform"
         >
-          <ShoppingBag className={`w-5 h-5 transition-colors ${activeTab === 'shop' ? 'text-[#6B352A]' : 'text-[#8C6F66] group-hover:text-[#6B352A]'}`} />
-          <span className={`text-[10.5px] mt-1 ${activeTab === 'shop' ? 'font-bold text-[#6B352A]' : 'font-semibold text-[#7A5B52]'}`}>
+          <ShoppingBag className={`w-5 h-5 transition-colors ${activeTab === 'shop' ? 'text-[#D9232D]' : 'text-gray-400 group-hover:text-gray-600'}`} />
+          <span className={`text-[10.5px] mt-1 ${activeTab === 'shop' ? 'font-bold text-[#D9232D]' : 'font-semibold text-gray-500'}`}>
             {t('nav.shop')}
           </span>
         </button>
@@ -70,18 +70,18 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           className="flex min-h-11 min-w-[52px] flex-col items-center justify-center relative group px-1.5 py-1 active:scale-95 transition-transform"
         >
           <div className="relative">
-            <Heart className={`w-5 h-5 transition-colors ${activeTab === 'wishlist' ? 'text-[#6B352A]' : 'text-[#8C6F66] group-hover:text-[#6B352A]'}`} />
+            <Heart className={`w-5 h-5 transition-colors ${activeTab === 'wishlist' ? 'text-[#D9232D]' : 'text-gray-400 group-hover:text-gray-600'}`} />
             {wishlistCount > 0 && (
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-2 w-3.5 h-3.5 bg-[#6B352A] text-[#FFFCF4] text-[8.5px] font-bold rounded-full flex items-center justify-center border border-[#FFFCF4]"
+                className="absolute -top-1 -right-2 w-3.5 h-3.5 bg-gray-900 text-white text-[8.5px] font-bold rounded-full flex items-center justify-center border border-white"
               >
                 {wishlistCount}
               </motion.span>
             )}
           </div>
-          <span className={`text-[10.5px] mt-1 ${activeTab === 'wishlist' ? 'font-bold text-[#6B352A]' : 'font-semibold text-[#7A5B52]'}`}>
+          <span className={`text-[10.5px] mt-1 ${activeTab === 'wishlist' ? 'font-bold text-[#D9232D]' : 'font-semibold text-gray-500'}`}>
             {t('nav.saved')}
           </span>
         </button>
@@ -94,8 +94,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           }}
           className="flex min-h-11 min-w-[52px] flex-col items-center justify-center group px-1.5 py-1 active:scale-95 transition-transform"
         >
-          <User className={`w-5 h-5 transition-colors ${activeTab === 'account' ? 'text-[#6B352A]' : 'text-[#8C6F66] group-hover:text-[#6B352A]'}`} />
-          <span className={`text-[10.5px] mt-1 ${activeTab === 'account' ? 'font-bold text-[#6B352A]' : 'font-semibold text-[#7A5B52]'}`}>
+          <User className={`w-5 h-5 transition-colors ${activeTab === 'account' ? 'text-[#D9232D]' : 'text-gray-400 group-hover:text-gray-600'}`} />
+          <span className={`text-[10.5px] mt-1 ${activeTab === 'account' ? 'font-bold text-[#D9232D]' : 'font-semibold text-gray-500'}`}>
             {t('nav.account')}
           </span>
         </button>

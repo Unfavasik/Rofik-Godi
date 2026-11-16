@@ -106,42 +106,42 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
   };
 
   return (
-    <section className="border-t border-[#F4EAE0] px-5 py-5" aria-labelledby="product-reviews-title">
+    <section className="border-t border-slate-100 px-5 py-5" aria-labelledby="product-reviews-title">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <h2 id="product-reviews-title" className="text-[17px] font-extrabold tracking-tight text-[#2B1611]">
+          <h2 id="product-reviews-title" className="text-[17px] font-extrabold tracking-tight">
             Customer Reviews
           </h2>
-          <p className="text-[11px] text-[#6B4C44]">Feedback from completed purchases</p>
+          <p className="text-[11px] text-slate-500">Feedback from completed purchases</p>
         </div>
-        <span className="inline-flex items-center gap-1 rounded-full border border-[#E6CE73] bg-[#FFF8D6] px-2.5 py-1 text-[11px] font-bold text-[#6B352A]">
-          <Star className="h-3.5 w-3.5 fill-[#FF6115] text-[#FF6115]" />
+        <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-bold text-slate-700">
+          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
           {summary?.average_rating.toFixed(1) || '0.0'} / 5
         </span>
       </div>
 
-      <div className="grid grid-cols-[90px_1fr] gap-3 rounded-2xl border border-[#E8D8C4] bg-[#FFFCF4] p-4">
+      <div className="grid grid-cols-[90px_1fr] gap-3 rounded-2xl bg-slate-50 p-4">
         <div className="text-center">
-          <div className="text-[34px] font-black leading-none text-[#2B1611]">{summary?.average_rating.toFixed(1) || '0.0'}</div>
+          <div className="text-[34px] font-black leading-none">{summary?.average_rating.toFixed(1) || '0.0'}</div>
           <div className="mt-1 flex justify-center">
             {[1, 2, 3, 4, 5].map((value) => (
               <Star
                 key={value}
-                className={`h-3.5 w-3.5 ${value <= Math.round(summary?.average_rating || 0) ? 'fill-[#FF6115] text-[#FF6115]' : 'text-[#E8D8C4]'}`}
+                className={`h-3.5 w-3.5 ${value <= Math.round(summary?.average_rating || 0) ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`}
               />
             ))}
           </div>
-          <div className="mt-1 text-[10px] text-[#8A6C63]">{summary?.review_count || 0} reviews</div>
+          <div className="mt-1 text-[10px] text-slate-500">{summary?.review_count || 0} reviews</div>
         </div>
         <div className="space-y-1">
           {[5, 4, 3, 2, 1].map((value, index) => {
             const count = counts[index] || 0;
             const percent = summary?.review_count ? Math.round((count * 100) / summary.review_count) : 0;
             return (
-              <div key={value} className="flex items-center gap-1.5 text-[10px] text-[#6B4C44]">
+              <div key={value} className="flex items-center gap-1.5 text-[10px] text-slate-500">
                 <span className="w-7">{value} ★</span>
-                <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#F4EAE0]">
-                  <span className="block h-full rounded-full bg-[#FF6115]" style={{ width: `${percent}%` }} />
+                <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
+                  <span className="block h-full rounded-full bg-amber-400" style={{ width: `${percent}%` }} />
                 </span>
                 <span className="w-7 text-right">{percent}%</span>
               </div>
@@ -164,10 +164,10 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
               type="button"
               aria-pressed={isSelected}
               onClick={() => setActiveFilter(option.id)}
-              className={`inline-flex min-h-9 shrink-0 items-center gap-1 rounded-xl border px-3 text-[11px] font-bold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6B352A] ${
+              className={`inline-flex min-h-9 shrink-0 items-center gap-1 rounded-xl border px-3 text-[11px] font-bold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
                 isSelected
-                  ? 'border-[#6B352A] bg-[#FFF1A6] text-[#6B352A] shadow-2xs'
-                  : 'border-[#E8D8C4] bg-white text-[#4A2B23] hover:border-[#6B352A]/40 hover:bg-[#FFF8D6]/60 hover:text-[#2B1611]'
+                  ? 'border-rose-200 bg-rose-50 text-[#D9232D] shadow-2xs'
+                  : 'border-slate-200/90 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
               {option.id === 'verified-only' && <BadgeCheck className="h-3.5 w-3.5 shrink-0" />}
@@ -182,7 +182,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
 
       <div className="mt-3 space-y-2.5">
         {loading ? (
-          <p className="py-5 text-center text-xs text-[#6B4C44]">Loading reviews…</p>
+          <p className="py-5 text-center text-xs text-slate-500">Loading reviews…</p>
         ) : filteredReviews.length ? (
           filteredReviews.map((review) => {
             const isVerifiedCustomer = isVerifiedProductReview(
@@ -202,12 +202,12 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
             return (
               <article
                 key={review.id}
-                className="rounded-2xl border border-[#F4EAE0] bg-white p-3.5 shadow-[0_2px_10px_rgba(107,53,42,.04)]"
+                className="rounded-2xl border border-slate-100 bg-white p-3.5 shadow-[0_2px_10px_rgba(15,23,42,.025)]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <b className="text-[12px] text-[#2B1611]">{review.author_name || 'Customer'}</b>
+                      <b className="text-[12px] text-slate-900">{review.author_name || 'Customer'}</b>
                       {isVerifiedCustomer && (
                         <a
                           href={orderHistoryHref}
@@ -224,7 +224,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
                               ? `View Order #${matchingOwnOrder.order_number} in order history`
                               : 'View your order history'
                           }
-                          className="inline-flex items-center gap-1 rounded-full border border-[#E6CE73] bg-[#FFF8D6] px-2 py-0.5 text-[10px] font-bold text-[#6B352A] transition hover:bg-[#FFF1A6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6B352A]"
+                          className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                         >
                           <BadgeCheck className="h-3 w-3 shrink-0" />
                           <span>Verified Customer</span>
@@ -232,7 +232,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
                         </a>
                       )}
                     </div>
-                    <p className="mt-1 text-[10px] text-[#8A6C63]">
+                    <p className="mt-1 text-[10px] text-slate-400">
                       {new Date(review.created_at).toLocaleDateString('en-IN', {
                         day: '2-digit',
                         month: 'short',
@@ -244,13 +244,13 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
                     {[1, 2, 3, 4, 5].map((value) => (
                       <Star
                         key={value}
-                        className={`h-3.5 w-3.5 ${value <= review.rating ? 'fill-[#FF6115] text-[#FF6115]' : 'text-[#E8D8C4]'}`}
+                        className={`h-3.5 w-3.5 ${value <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`}
                       />
                     ))}
                   </div>
                 </div>
                 {review.review_text && (
-                  <p className="mt-2.5 whitespace-pre-wrap text-[11px] leading-relaxed text-[#4A2B23]">
+                  <p className="mt-2.5 whitespace-pre-wrap text-[11px] leading-relaxed text-slate-600">
                     {review.review_text}
                   </p>
                 )}
@@ -258,11 +258,11 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
             );
           })
         ) : reviews.length > 0 ? (
-          <p className="rounded-xl border border-dashed border-[#E8D8C4] px-3 py-5 text-center text-xs text-[#6B4C44]">
+          <p className="rounded-xl border border-dashed border-slate-200 px-3 py-5 text-center text-xs text-slate-500">
             No reviews match the selected filter yet.
           </p>
         ) : (
-          <p className="rounded-xl border border-dashed border-[#E8D8C4] px-3 py-5 text-center text-xs text-[#6B4C44]">
+          <p className="rounded-xl border border-dashed border-slate-200 px-3 py-5 text-center text-xs text-slate-500">
             No published reviews yet. Be the first verified customer to share your experience.
           </p>
         )}
@@ -270,46 +270,46 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
           <button
             type="button"
             onClick={() => setShowAll((value) => !value)}
-            className="w-full rounded-lg py-2 text-xs font-bold text-[#6B352A] hover:bg-[#FFF8D6]"
+            className="w-full rounded-lg py-2 text-xs font-bold text-[#d9232d]"
           >
             {showAll ? 'Show latest reviews' : 'See all reviews'}
           </button>
         )}
       </div>
 
-      <div className="mt-4 border-t border-[#F4EAE0] pt-4">
+      <div className="mt-4 border-t border-slate-100 pt-4">
         {!isAuthenticated ? (
           <button
             type="button"
             onClick={onRequestLogin}
-            className="w-full rounded-xl border border-[#E6CE73] bg-[#FFF8D6] px-4 py-3 text-xs font-bold text-[#6B352A] hover:bg-[#FFF1A6]"
+            className="w-full rounded-xl bg-rose-50 px-4 py-3 text-xs font-bold text-[#d9232d]"
           >
             Sign in to check review eligibility
           </button>
         ) : orders.length ? (
           <div className="space-y-2">
-            <p className="text-[11px] font-bold text-[#4A2B23]">Your completed purchases</p>
+            <p className="text-[11px] font-bold text-slate-700">Your completed purchases</p>
             {orders.slice(0, 3).map((order) => {
               const review = countByOrder.get(order.id);
               return (
                 <div
                   key={order.id}
-                  className="flex items-center justify-between gap-2 rounded-xl border border-[#E8D8C4] bg-[#FFFCF4] p-3"
+                  className="flex items-center justify-between gap-2 rounded-xl border border-slate-100 p-3"
                 >
                   <div>
                     <a
                       href={getPathForCustomerOrder(order.order_number.toLowerCase())}
                       onClick={(event) => navigateToOrderHistory(event, order.order_number)}
-                      className="text-[11px] font-bold text-[#2B1611] hover:text-[#6B352A] hover:underline"
+                      className="text-[11px] font-bold text-slate-800 hover:text-[#d9232d] hover:underline"
                     >
                       Order #{order.order_number}
                     </a>
-                    <p className="text-[10px] font-semibold text-[#6B352A]">Verified purchase eligible</p>
+                    <p className="text-[10px] text-emerald-700">Verified purchase eligible</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setComposer({ order, review })}
-                    className="shrink-0 rounded-lg bg-[#6B352A] px-3 py-2 text-[10px] font-bold text-[#FFFCF4] hover:bg-[#53271E]"
+                    className="shrink-0 rounded-lg bg-[#d9232d] px-3 py-2 text-[10px] font-bold text-white"
                   >
                     {review ? 'Edit review' : 'Rate & Review'}
                   </button>
@@ -318,7 +318,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
             })}
           </div>
         ) : (
-          <p className="rounded-xl bg-[#FFF8D6]/60 px-3 py-3 text-center text-[11px] text-[#6B4C44]">
+          <p className="rounded-xl bg-slate-50 px-3 py-3 text-center text-[11px] text-slate-500">
             Purchase and complete this product’s order to share a review.
           </p>
         )}

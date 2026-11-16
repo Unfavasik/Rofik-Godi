@@ -713,12 +713,12 @@ export const AccountView: React.FC<AccountViewProps> = ({
   }
 
   return (
-    <div className="w-full max-w-full flex-1 flex flex-col space-y-4 pb-12 overflow-x-hidden animate-fade-in text-[#4A2B23] bg-[#FFFCF4]">
+    <div className="w-full max-w-full flex-1 flex flex-col space-y-4 pb-12 overflow-x-hidden animate-fade-in text-slate-800 bg-[#F8FAFC]">
       {/* Account Page Title & Top Actions */}
       <section className="px-4 sm:px-5 pt-4 pb-1 flex justify-between items-center gap-2" data-purpose="account-header">
         <div>
-          <h1 className="text-[28px] sm:text-[30px] font-black tracking-tight text-[#2B1611] leading-none">{t('account.title')}</h1>
-          <p className="text-xs text-[#6B4C44] font-medium mt-1.5 tracking-tight">
+          <h1 className="text-[28px] sm:text-[30px] font-black tracking-tight text-slate-900 leading-none">{t('account.title')}</h1>
+          <p className="text-xs text-slate-500 font-medium mt-1.5 tracking-tight">
             {isGuest ? t('account.guestSubtitle') : t('account.subtitle')}
           </p>
         </div>
@@ -727,13 +727,13 @@ export const AccountView: React.FC<AccountViewProps> = ({
             type="button"
             onClick={() => (onOpenNotifications ? onOpenNotifications() : onOpenSupportPage?.())}
             aria-label={t('account.supportRequests')}
-            className="relative min-h-11 min-w-11 h-11 w-11 rounded-2xl bg-white hover:bg-[#FAF4EA] border border-[#E8D8C4] flex items-center justify-center text-[#6B352A] shadow-2xs transition-all active:scale-95"
+            className="relative min-h-11 min-w-11 h-11 w-11 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-700 shadow-2xs transition-all active:scale-95"
           >
             <Bell className="h-5 w-5" />
             {notificationCount > 0 && (
               <span
                 aria-hidden="true"
-                className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-[#FF6115] ring-2 ring-white"
+                className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-[#D9232D] ring-2 ring-white"
               />
             )}
           </button>
@@ -741,7 +741,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             type="button"
             onClick={() => handleProtectedAction('settings')}
             aria-label={t('account.settings')}
-            className="min-h-11 min-w-11 h-11 w-11 rounded-2xl bg-white hover:bg-[#FAF4EA] border border-[#E8D8C4] flex items-center justify-center text-[#6B352A] shadow-2xs transition-all active:scale-95"
+            className="min-h-11 min-w-11 h-11 w-11 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-700 shadow-2xs transition-all active:scale-95"
           >
             <Settings className="h-5 w-5" />
           </button>
@@ -751,17 +751,17 @@ export const AccountView: React.FC<AccountViewProps> = ({
       <main className="px-4 space-y-4">
         {/* BEGIN: ProfileHeroCard */}
         <section
-          className="group relative overflow-hidden rounded-3xl bg-white border border-[#E8D8C4] shadow-[0_10px_30px_-14px_rgba(43,22,17,0.1)] transition-all duration-200"
+          className="group relative overflow-hidden rounded-3xl bg-white border border-slate-200/90 shadow-[0_10px_30px_-14px_rgba(15,23,42,0.08)] transition-all duration-200"
           data-purpose="profile-hero-card"
         >
           {/* Subtle Top Ambient Workshop Accent Band */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-br from-[#FFF8D6] via-[#FAF4EA] to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-br from-[#FFF0F2] via-[#FFF7F8] to-transparent"
           />
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#6B352A]/[0.07] blur-2xl"
+            className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#D9232D]/[0.06] blur-2xl"
           />
 
           <div className="relative p-4 sm:p-5 space-y-3.5">
@@ -774,14 +774,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 aria-label={isGuest ? t('account.login') : t('account.editProfile')}
                 className="relative h-[68px] w-[68px] sm:h-[74px] sm:w-[74px] shrink-0 rounded-full text-left transition-transform active:scale-95 focus:outline-none"
               >
-                <div className="h-full w-full rounded-full bg-gradient-to-br from-[#6B352A] via-[#834639] to-[#E6CE73] p-[2.5px] shadow-[0_6px_16px_rgba(107,53,42,0.2)]">
-                  <div className="relative h-full w-full rounded-full bg-[#FAF4EA] ring-2 ring-white flex items-center justify-center overflow-hidden">
+                <div className="h-full w-full rounded-full bg-gradient-to-br from-[#D9232D] via-[#F43F5E] to-[#FDA4AF] p-[2.5px] shadow-[0_6px_16px_rgba(217,35,45,0.18)]">
+                  <div className="relative h-full w-full rounded-full bg-[#FFF5F6] ring-2 ring-white flex items-center justify-center overflow-hidden">
                     {currentUser?.avatar ? (
                       <>
                         {!heroAvatarLoaded && (
                           <span
                             aria-hidden="true"
-                            className="skeleton-shimmer absolute inset-0 rounded-full bg-[#F6EAE4]"
+                            className="skeleton-shimmer absolute inset-0 rounded-full bg-rose-100/80"
                           />
                         )}
                         <img
@@ -802,7 +802,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                     ) : (
                       <span
                         aria-hidden="true"
-                        className="text-xl font-black tracking-tight text-[#6B352A]"
+                        className="text-xl font-black tracking-tight text-[#D9232D]"
                       >
                         {getInitials(currentUser?.name || '')}
                       </span>
@@ -811,7 +811,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 </div>
                 <span
                   aria-hidden="true"
-                  className="absolute -bottom-0.5 -right-0.5 grid h-6 w-6 place-items-center rounded-full bg-[#6B352A] text-[#FFF1A6] ring-2 ring-white shadow-xs transition-transform group-hover:scale-105"
+                  className="absolute -bottom-0.5 -right-0.5 grid h-6 w-6 place-items-center rounded-full bg-[#D9232D] text-white ring-2 ring-white shadow-xs transition-transform group-hover:scale-105"
                 >
                   <Camera className="h-3 w-3" />
                 </span>
@@ -819,7 +819,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
               {/* Identity Headline */}
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-[19px] sm:text-[21px] font-black tracking-tight text-[#2B1611] leading-tight">
+                <h2 className="truncate text-[19px] sm:text-[21px] font-black tracking-tight text-slate-900 leading-tight">
                   {currentUser?.name?.trim() || (isGuest ? t('account.guestTitle') : 'Rider')}
                 </h2>
               </div>
@@ -830,7 +830,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   <button
                     type="button"
                     onClick={onOpenLogin}
-                    className="banner-cta-shine group/cta inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#6B352A] hover:bg-[#53271E] active:scale-95 px-3.5 py-2 text-xs font-bold text-[#FFF1A6] shadow-xs transition-all"
+                    className="banner-cta-shine group/cta inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#D9232D] hover:bg-[#C01B24] active:scale-95 px-3.5 py-2 text-xs font-bold text-white shadow-xs transition-all"
                   >
                     <span>{t('account.login')}</span>
                     <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover/cta:translate-x-0.5" aria-hidden="true" />
@@ -840,7 +840,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                     type="button"
                     onClick={() => handleProtectedAction('profile')}
                     aria-label={t('account.editProfile')}
-                    className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl bg-white hover:bg-[#6B352A] text-[#6B352A] hover:text-[#FFF1A6] border border-[#E8D8C4] hover:border-[#6B352A] px-3 py-1.5 text-xs font-bold shadow-2xs transition-all active:scale-95"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl bg-white hover:bg-[#D9232D] text-slate-700 hover:text-white border border-slate-200/90 hover:border-[#D9232D] px-3 py-1.5 text-xs font-bold shadow-2xs transition-all active:scale-95"
                   >
                     <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                     <span className="hidden sm:inline">{t('account.editProfile')}</span>
@@ -851,46 +851,46 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
             {/* Clean Full-Width Contact Details Strip (Never Cramped Beside Avatar) */}
             {(currentUser?.email?.trim() || currentUser?.phone?.trim() || !isGuest || isGuest) && (
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] font-medium text-[#6B4C44]">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] font-medium text-slate-600">
                 {currentUser?.email?.trim() && (
-                  <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-[#6B4C44]">
-                    <Mail className="h-3.5 w-3.5 shrink-0 text-[#8A6C63]" aria-hidden="true" />
+                  <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-slate-600">
+                    <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
                     <span className="break-all sm:truncate">{currentUser.email.trim()}</span>
                   </span>
                 )}
                 {currentUser?.phone?.trim() ? (
-                  <span className="inline-flex items-center gap-1.5 tabular-nums font-semibold text-[#2B1611] whitespace-nowrap">
-                    <Phone className="h-3.5 w-3.5 shrink-0 text-[#8A6C63]" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1.5 tabular-nums font-semibold text-slate-800 whitespace-nowrap">
+                    <Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
                     <span>{currentUser.phone.trim()}</span>
                   </span>
                 ) : !isGuest ? (
                   <button
                     type="button"
                     onClick={() => handleProtectedAction('profile')}
-                    className="inline-flex min-h-9 items-center gap-1 text-xs font-bold text-[#6B352A] hover:underline"
+                    className="inline-flex min-h-9 items-center gap-1 text-xs font-bold text-[#D9232D] hover:underline"
                   >
                     <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                     <span>+ Add phone</span>
                   </button>
                 ) : (
-                  <span className="text-xs text-[#6B4C44]">{t('account.loginHint')}</span>
+                  <span className="text-xs text-slate-500">{t('account.loginHint')}</span>
                 )}
               </div>
             )}
 
             {/* Profile Completeness Nudge (when signed in & < 100%) OR Guest Sign-in Callout */}
             {isGuest ? (
-              <div className="rounded-2xl bg-gradient-to-r from-[#FFF8D6] via-[#FFF1A6]/45 to-[#FAF4EA] border border-[#E6CE73] p-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
+              <div className="rounded-2xl bg-gradient-to-r from-rose-50/90 via-rose-50/50 to-slate-50 border border-rose-200/70 p-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs font-extrabold text-[#2B1611] truncate">{t('account.unlock')}</p>
-                  <p className="text-[11px] font-medium text-[#6B4C44] truncate mt-0.5">
+                  <p className="text-xs font-extrabold text-slate-900 truncate">{t('account.unlock')}</p>
+                  <p className="text-[11px] font-medium text-slate-500 truncate mt-0.5">
                     Save your bike model, track live orders &amp; get custom seat recommendations
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={onOpenLogin}
-                  className="shrink-0 min-h-11 rounded-xl bg-[#6B352A] hover:bg-[#53271E] px-3.5 py-2 text-xs font-extrabold text-[#FFF1A6] transition-colors"
+                  className="shrink-0 min-h-11 rounded-xl bg-white border border-rose-200 px-3.5 py-2 text-xs font-extrabold text-[#D9232D] hover:bg-rose-50 transition-colors"
                 >
                   Sign in
                 </button>
@@ -900,19 +900,19 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 <button
                   type="button"
                   onClick={() => handleProtectedAction('profile')}
-                  className="w-full rounded-2xl bg-[#FFF8D6]/75 hover:bg-[#FFF8D6] border border-[#E6CE73]/80 px-3.5 py-2.5 text-left transition-colors group/complete"
+                  className="w-full rounded-2xl bg-slate-50/90 hover:bg-rose-50/40 border border-slate-200/70 hover:border-rose-200/80 px-3.5 py-2.5 text-left transition-colors group/complete"
                 >
                   <div className="flex items-center justify-between gap-2 text-[11px]">
-                    <span className="font-bold text-[#4A2B23] truncate">
+                    <span className="font-bold text-slate-700 truncate">
                       {accountProfileCompletion.missingLabel}
                     </span>
-                    <span className="shrink-0 font-extrabold text-[#6B352A] tabular-nums">
+                    <span className="shrink-0 font-extrabold text-[#D9232D] tabular-nums">
                       {accountProfileCompletion.percent}%
                     </span>
                   </div>
-                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[#E8D8C4]">
+                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-200/80">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#6B352A] to-[#834639] transition-all duration-300"
+                      className="h-full rounded-full bg-gradient-to-r from-[#D9232D] to-[#FB7185] transition-all duration-300"
                       style={{ width: `${accountProfileCompletion.percent}%` }}
                     />
                   </div>
@@ -921,13 +921,13 @@ export const AccountView: React.FC<AccountViewProps> = ({
             )}
 
             {/* Interactive "My Fitment Garage" Sub-Card with Vehicle Photo */}
-            <div className="rounded-2xl bg-[#FFFCF4] border border-[#E8D8C4] p-3.5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="rounded-2xl bg-[#F8FAFC] border border-slate-200/80 p-3.5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <button
                 type="button"
                 onClick={() => handleProtectedAction('profile')}
                 className="flex items-center gap-3 min-w-0 flex-1 text-left group/garage"
               >
-                <div className="h-16 w-24 sm:h-[72px] sm:w-28 rounded-xl bg-white border border-[#E8D8C4] text-[#6B352A] flex items-center justify-center shrink-0 overflow-hidden shadow-2xs group-hover/garage:border-[#6B352A]/40 transition-colors">
+                <div className="h-16 w-24 sm:h-[72px] sm:w-28 rounded-xl bg-white border border-slate-200/85 text-[#D9232D] flex items-center justify-center shrink-0 overflow-hidden shadow-2xs group-hover/garage:border-rose-200 transition-colors">
                   {garageImageSrc && !garageImgError ? (
                     <img
                       src={garageImageSrc}
@@ -941,27 +941,27 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#6B4C44] leading-tight whitespace-nowrap">
+                  <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-500 leading-tight whitespace-nowrap">
                     My Fitment Garage
                   </p>
                   {currentUser?.vehicle?.trim() ? (
-                    <p className="mt-1 break-words text-[13.5px] sm:text-[14.5px] font-black leading-snug text-[#2B1611]">
+                    <p className="mt-1 break-words text-[13.5px] sm:text-[14.5px] font-black leading-snug text-slate-900">
                       {currentUser.vehicle.trim()}
                     </p>
                   ) : (
-                    <p className="mt-1 text-xs font-semibold leading-snug text-[#6B4C44]">
+                    <p className="mt-1 text-xs font-semibold leading-snug text-slate-500">
                       Add your bike, scooter or toto model
                     </p>
                   )}
                 </div>
               </button>
 
-              <div className="grid grid-cols-2 gap-2 border-t border-[#EFE2D2] pt-2.5 sm:flex sm:items-center sm:shrink-0 sm:border-t-0 sm:pt-0">
+              <div className="grid grid-cols-2 gap-2 border-t border-slate-200/70 pt-2.5 sm:flex sm:items-center sm:shrink-0 sm:border-t-0 sm:pt-0">
                 {currentUser?.vehicle?.trim() && onOpenShop && (
                   <button
                     type="button"
                     onClick={onOpenShop}
-                    className="banner-cta-shine group/cta inline-flex min-h-11 items-center justify-center gap-1 rounded-xl bg-[#FFF8D6] hover:bg-[#FFF1A6] border border-[#E6CE73] px-3.5 py-2 text-xs font-extrabold text-[#6B352A] transition-all active:scale-[0.98] whitespace-nowrap"
+                    className="banner-cta-shine group/cta inline-flex min-h-11 items-center justify-center gap-1 rounded-xl bg-rose-50 hover:bg-rose-100 px-3.5 py-2 text-xs font-extrabold text-[#D9232D] transition-all active:scale-[0.98] whitespace-nowrap"
                   >
                     <span>Browse seats</span>
                     <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover/cta:translate-x-0.5" aria-hidden="true" />
@@ -970,7 +970,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 <button
                   type="button"
                   onClick={() => handleProtectedAction('profile')}
-                  className={`inline-flex min-h-11 items-center justify-center rounded-xl bg-white hover:bg-[#FAF4EA] border border-[#E8D8C4] px-3.5 py-2 text-xs font-extrabold text-[#4A2B23] transition-colors active:scale-[0.98] whitespace-nowrap ${
+                  className={`inline-flex min-h-11 items-center justify-center rounded-xl bg-white hover:bg-slate-100 border border-slate-200/90 px-3.5 py-2 text-xs font-extrabold text-slate-700 transition-colors active:scale-[0.98] whitespace-nowrap ${
                     !(currentUser?.vehicle?.trim() && onOpenShop) ? 'col-span-2 sm:col-span-1' : ''
                   }`}
                 >
@@ -981,57 +981,57 @@ export const AccountView: React.FC<AccountViewProps> = ({
           </div>
 
           {/* Interactive 3-Column Live Metrics Footer */}
-          <div className="grid grid-cols-3 divide-x divide-[#EFE2D2] border-t border-[#EFE2D2] bg-[#FAF4EA]/65">
+          <div className="grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100 bg-slate-50/50">
             <button
               type="button"
               onClick={() => handleProtectedAction('orders')}
-              className="py-2.5 px-2 flex flex-col items-center justify-center hover:bg-white active:bg-[#FAF4EA] transition-colors"
+              className="py-2.5 px-2 flex flex-col items-center justify-center hover:bg-white active:bg-slate-100/70 transition-colors"
             >
-              <div className="flex items-center gap-1 text-[#2B1611]">
-                <Package className="h-3.5 w-3.5 text-[#6B352A]" aria-hidden="true" />
+              <div className="flex items-center gap-1 text-slate-900">
+                <Package className="h-3.5 w-3.5 text-[#D9232D]" aria-hidden="true" />
                 {summaryLoading ? (
                   <span
                     aria-hidden="true"
                     data-testid="account-orders-metric-skeleton"
-                    className="skeleton-shimmer inline-block h-4 w-6 rounded bg-[#E8D8C4]"
+                    className="skeleton-shimmer inline-block h-4 w-6 rounded bg-slate-200/85"
                   />
                 ) : (
                   <span className="text-[15px] font-black tabular-nums leading-none">{customerOrders.length}</span>
                 )}
               </div>
-              <span className="mt-1 text-[10.5px] font-semibold text-[#6B4C44]">Orders</span>
+              <span className="mt-1 text-[10.5px] font-semibold text-slate-500">Orders</span>
             </button>
 
             <button
               type="button"
               onClick={onOpenWishlist}
-              className="py-2.5 px-2 flex flex-col items-center justify-center hover:bg-white active:bg-[#FAF4EA] transition-colors"
+              className="py-2.5 px-2 flex flex-col items-center justify-center hover:bg-white active:bg-slate-100/70 transition-colors"
             >
-              <div className="flex items-center gap-1 text-[#2B1611]">
-                <Heart className="h-3.5 w-3.5 text-[#6B352A]" aria-hidden="true" />
+              <div className="flex items-center gap-1 text-slate-900">
+                <Heart className="h-3.5 w-3.5 text-[#7C3AED]" aria-hidden="true" />
                 <span className="text-[15px] font-black tabular-nums leading-none">{wishlistCount}</span>
               </div>
-              <span className="mt-1 text-[10.5px] font-semibold text-[#6B4C44]">Saved</span>
+              <span className="mt-1 text-[10.5px] font-semibold text-slate-500">Saved</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleProtectedAction('orders')}
-              className="py-2.5 px-2 flex flex-col items-center justify-center hover:bg-white active:bg-[#FAF4EA] transition-colors"
+              className="py-2.5 px-2 flex flex-col items-center justify-center hover:bg-white active:bg-slate-100/70 transition-colors"
             >
-              <div className="flex items-center gap-1 text-[#2B1611]">
-                <Star className="h-3.5 w-3.5 text-[#FF6115]" aria-hidden="true" />
+              <div className="flex items-center gap-1 text-slate-900">
+                <Star className="h-3.5 w-3.5 text-[#D97706]" aria-hidden="true" />
                 {summaryLoading ? (
                   <span
                     aria-hidden="true"
                     data-testid="account-reviews-metric-skeleton"
-                    className="skeleton-shimmer inline-block h-4 w-6 rounded bg-[#E8D8C4]"
+                    className="skeleton-shimmer inline-block h-4 w-6 rounded bg-slate-200/85"
                   />
                 ) : (
                   <span className="text-[15px] font-black tabular-nums leading-none">{myReviews.length}</span>
                 )}
               </div>
-              <span className="mt-1 text-[10.5px] font-semibold text-[#6B4C44]">Reviews</span>
+              <span className="mt-1 text-[10.5px] font-semibold text-slate-500">Reviews</span>
             </button>
           </div>
         </section>
@@ -1040,51 +1040,51 @@ export const AccountView: React.FC<AccountViewProps> = ({
         {/* BEGIN: QuickActionsGrid */}
         <section className="space-y-2.5" data-purpose="account-categories">
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-sm font-extrabold tracking-tight text-[#2B1611]">{t('account.yourAccount')}</h2>
-            <p className="text-[11px] font-medium text-[#8A6C63]">{t('account.manageExperience')}</p>
+            <h2 className="text-sm font-extrabold tracking-tight text-slate-900">{t('account.yourAccount')}</h2>
+            <p className="text-[11px] font-medium text-slate-400">{t('account.manageExperience')}</p>
           </div>
           <div className="grid grid-cols-2 gap-2.5" data-purpose="quick-navigation-grid">
             {/* 1. My Orders */}
             <button
               type="button"
               onClick={() => handleProtectedAction('orders')}
-              className="min-h-14 bg-white rounded-2xl p-3 flex items-center gap-2.5 border border-[#E8D8C4] shadow-2xs hover:border-[#6B352A]/40 active:scale-[0.98] transition-all text-left"
+              className="min-h-14 bg-white rounded-2xl p-3 flex items-center gap-2.5 border border-slate-200/80 shadow-2xs hover:border-slate-300 active:scale-[0.98] transition-all text-left"
             >
-              <div className="h-9 w-9 rounded-xl bg-[#F6EAE4] flex items-center justify-center text-[#6B352A] shrink-0">
+              <div className="h-9 w-9 rounded-xl bg-rose-50 flex items-center justify-center text-[#D9232D] shrink-0">
                 <Package className="w-4.5 h-4.5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-[13px] font-bold text-[#2B1611] tracking-tight leading-tight truncate">{t('account.myOrders')}</h3>
+                <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.myOrders')}</h3>
                 {summaryLoading ? (
                   <span
                     aria-hidden="true"
-                    className="skeleton-shimmer mt-1 block h-3 w-20 rounded bg-[#EFE2D2]"
+                    className="skeleton-shimmer mt-1 block h-3 w-20 rounded bg-slate-200/75"
                   />
                 ) : (
-                  <p className="text-[11px] text-[#6B4C44] font-medium mt-0.5 truncate tabular-nums">
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5 truncate tabular-nums">
                     {customerOrders.length > 0 ? `${customerOrders.length} ${customerOrders.length === 1 ? 'order' : 'orders'}` : t('account.ordersHint')}
                   </p>
                 )}
               </div>
-              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#8A6C63]" />
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
             </button>
 
             {/* 2. Wishlist */}
             <button
               type="button"
               onClick={onOpenWishlist}
-              className="min-h-14 bg-white rounded-2xl p-3 flex items-center gap-2.5 border border-[#E8D8C4] shadow-2xs hover:border-[#6B352A]/40 active:scale-[0.98] transition-all text-left"
+              className="min-h-14 bg-white rounded-2xl p-3 flex items-center gap-2.5 border border-slate-200/80 shadow-2xs hover:border-slate-300 active:scale-[0.98] transition-all text-left"
             >
-              <div className="h-9 w-9 rounded-xl bg-[#FFF8D6] flex items-center justify-center text-[#6B352A] shrink-0">
+              <div className="h-9 w-9 rounded-xl bg-[#F3EEFD] flex items-center justify-center text-[#7C3AED] shrink-0">
                 <Heart className="w-4.5 h-4.5 fill-current" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-[13px] font-bold text-[#2B1611] tracking-tight leading-tight truncate">{t('account.wishlist')}</h3>
-                <p className="text-[11px] text-[#6B4C44] font-medium mt-0.5 truncate tabular-nums">
+                <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.wishlist')}</h3>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5 truncate tabular-nums">
                   {wishlistCount > 0 ? t('account.savedCount', { count: wishlistCount }) : t('account.savedItems')}
                 </p>
               </div>
-              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#8A6C63]" />
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
             </button>
 
             {/* 3. Coupons */}
@@ -1092,9 +1092,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
               type="button"
               onClick={() => (onOpenCouponsPage ? onOpenCouponsPage() : handleProtectedAction('settings'))}
               aria-label={t('account.coupons')}
-              className="min-h-14 bg-white rounded-2xl p-3 flex items-center gap-2.5 border border-[#E8D8C4] shadow-2xs hover:border-[#6B352A]/40 active:scale-[0.98] transition-all text-left"
+              className="min-h-14 bg-white rounded-2xl p-3 flex items-center gap-2.5 border border-slate-200/80 shadow-2xs hover:border-slate-300 active:scale-[0.98] transition-all text-left"
             >
-              <div className="h-9 w-9 rounded-xl bg-[#FFF1A6] flex items-center justify-center text-[#6B352A] shrink-0">
+              <div className="h-9 w-9 rounded-xl bg-[#FFF4E0] flex items-center justify-center text-[#D97706] shrink-0">
                 <svg className="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path
                     clipRule="evenodd"
@@ -1104,26 +1104,26 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 </svg>
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-[13px] font-bold text-[#2B1611] tracking-tight leading-tight truncate">{t('account.coupons')}</h3>
-                <p className="text-[11px] text-[#6B4C44] font-medium mt-0.5 truncate">{t('account.couponsHint')}</p>
+                <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.coupons')}</h3>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5 truncate">{t('account.couponsHint')}</p>
               </div>
-              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#8A6C63]" />
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
             </button>
 
             {/* 4. Settings */}
             <button
               type="button"
               onClick={() => handleProtectedAction('settings')}
-              className="min-h-14 bg-white rounded-2xl p-3 flex items-center gap-2.5 border border-[#E8D8C4] shadow-2xs hover:border-[#6B352A]/40 active:scale-[0.98] transition-all text-left"
+              className="min-h-14 bg-white rounded-2xl p-3 flex items-center gap-2.5 border border-slate-200/80 shadow-2xs hover:border-slate-300 active:scale-[0.98] transition-all text-left"
             >
-              <div className="h-9 w-9 rounded-xl bg-[#FAF4EA] flex items-center justify-center text-[#53271E] shrink-0">
+              <div className="h-9 w-9 rounded-xl bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] shrink-0">
                 <SlidersHorizontal className="w-4.5 h-4.5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-[13px] font-bold text-[#2B1611] tracking-tight leading-tight truncate">{t('account.settings')}</h3>
-                <p className="text-[11px] text-[#6B4C44] font-medium mt-0.5 truncate">{t('account.preferences')}</p>
+                <h3 className="text-[13px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.settings')}</h3>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5 truncate">{t('account.preferences')}</p>
               </div>
-              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#8A6C63]" />
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
             </button>
           </div>
         </section>
@@ -1131,34 +1131,34 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
         {/* BEGIN: ActivityServicesSection (Minimal Clean Grouped List) */}
         <section className="space-y-2" data-purpose="activity-services">
-          <h2 className="px-1 text-sm font-extrabold tracking-tight text-[#2B1611]">{t('account.activityServices')}</h2>
+          <h2 className="px-1 text-sm font-extrabold tracking-tight text-slate-900">{t('account.activityServices')}</h2>
 
-          <div className="bg-white rounded-2xl border border-[#E8D8C4] shadow-2xs divide-y divide-[#EFE2D2] overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs divide-y divide-slate-100 overflow-hidden">
             {/* My reviews */}
             <button
               type="button"
               onClick={() => handleProtectedAction('orders')}
-              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-[#FAF4EA]/70 active:bg-[#FAF4EA] transition-colors text-left"
+              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-[#FFF8D6] flex items-center justify-center text-[#FF6115] shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-[#FFF7E6] flex items-center justify-center text-[#B45309] shrink-0">
                   <Star className="w-4.5 h-4.5 fill-current" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-[13.5px] font-bold text-[#2B1611] leading-tight truncate">{t('account.myReviews')}</h3>
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">{t('account.myReviews')}</h3>
                   {summaryLoading ? (
                     <span
                       aria-hidden="true"
-                      className="skeleton-shimmer mt-1 block h-3 w-24 rounded bg-[#EFE2D2]"
+                      className="skeleton-shimmer mt-1 block h-3 w-24 rounded bg-slate-200/75"
                     />
                   ) : (
-                    <p className="text-[11px] text-[#6B4C44] font-normal mt-0.5 truncate tabular-nums">
+                    <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate tabular-nums">
                       {myReviews.length > 0 ? t('account.reviewsCount', { count: myReviews.length }) : t('account.reviewsHint')}
                     </p>
                   )}
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-[#8A6C63] shrink-0" />
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
             </button>
 
             {/* Rating store — iframe-safe external anchor link */}
@@ -1166,72 +1166,72 @@ export const AccountView: React.FC<AccountViewProps> = ({
               href="https://g.page/r/CUiStgroG6BfEAE/review"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-[#FAF4EA]/70 active:bg-[#FAF4EA] transition-colors text-left"
+              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-[#FFF1A6] flex items-center justify-center text-[#6B352A] shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-[#EAF7EF] flex items-center justify-center text-[#15803D] shrink-0">
                   <Star className="w-4.5 h-4.5 fill-current" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-[13.5px] font-bold text-[#2B1611] leading-tight truncate">{t('account.ratingStore')}</h3>
-                  <p className="text-[11px] text-[#6B4C44] font-normal mt-0.5 truncate">{t('account.ratingStoreHint')}</p>
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">{t('account.ratingStore')}</h3>
+                  <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">{t('account.ratingStoreHint')}</p>
                 </div>
               </div>
-              <ExternalLink className="w-4 h-4 text-[#8A6C63] shrink-0" />
+              <ExternalLink className="w-4 h-4 text-slate-400 shrink-0" />
             </a>
 
             {/* Support requests */}
             <button
               type="button"
               onClick={() => onOpenSupportPage?.()}
-              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-[#FAF4EA]/70 active:bg-[#FAF4EA] transition-colors text-left"
+              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-[#F6EAE4] flex items-center justify-center text-[#6B352A] shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] shrink-0">
                   <MessageCircle className="w-4.5 h-4.5" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-[13.5px] font-bold text-[#2B1611] leading-tight truncate">{t('account.supportRequests')}</h3>
-                  <p className="text-[11px] text-[#6B4C44] font-normal mt-0.5 truncate">{t('account.supportRequestsHint')}</p>
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">{t('account.supportRequests')}</h3>
+                  <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">{t('account.supportRequestsHint')}</p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-[#8A6C63] shrink-0" />
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
             </button>
 
             {/* Custom seat builder */}
             <button
               type="button"
               onClick={onOpenCustomBuilder}
-              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-[#FAF4EA]/70 active:bg-[#FAF4EA] transition-colors text-left"
+              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-[#FFF8D6] flex items-center justify-center text-[#53271E] shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-[#F3EEFD] flex items-center justify-center text-[#7C3AED] shrink-0">
                   <Sparkles className="w-4.5 h-4.5" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-[13.5px] font-bold text-[#2B1611] leading-tight truncate">{t('account.customSeat')}</h3>
-                  <p className="text-[11px] text-[#6B4C44] font-normal mt-0.5 truncate">{t('account.customSeatHint')}</p>
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">{t('account.customSeat')}</h3>
+                  <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">{t('account.customSeatHint')}</p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-[#8A6C63] shrink-0" />
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
             </button>
 
             {/* Browse shop */}
             <button
               type="button"
               onClick={onOpenShop}
-              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-[#FAF4EA]/70 active:bg-[#FAF4EA] transition-colors text-left"
+              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-[#FAF4EA] flex items-center justify-center text-[#6B352A] shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center text-[#D9232D] shrink-0">
                   <ShoppingBag className="w-4.5 h-4.5" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-[13.5px] font-bold text-[#2B1611] leading-tight truncate">{t('account.browseShop')}</h3>
-                  <p className="text-[11px] text-[#6B4C44] font-normal mt-0.5 truncate">{t('account.browseShopHint')}</p>
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">{t('account.browseShop')}</h3>
+                  <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">{t('account.browseShopHint')}</p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-[#8A6C63] shrink-0" />
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
             </button>
           </div>
         </section>
@@ -1240,25 +1240,25 @@ export const AccountView: React.FC<AccountViewProps> = ({
         {/* BEGIN: NeedHelpSection (Streamlined Single-Card Support & Quick Contact Bar) */}
         <section className="space-y-2" data-purpose="help-section">
           <div className="flex justify-between items-center px-1">
-            <h2 className="text-sm font-extrabold text-[#2B1611] tracking-tight">{t('account.needHelp')}</h2>
+            <h2 className="text-sm font-extrabold text-slate-900 tracking-tight">{t('account.needHelp')}</h2>
             <button
               type="button"
               onClick={() => onOpenContactSupport?.()}
-              className="text-xs font-semibold text-[#6B4C44] hover:text-[#6B352A] flex items-center gap-0.5"
+              className="text-xs font-semibold text-slate-500 hover:text-slate-700 flex items-center gap-0.5"
             >
               <span>{t('account.getSupport')}</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="bg-white rounded-2xl p-3.5 border border-[#E8D8C4] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="bg-white rounded-2xl p-3.5 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-[#FAF4EA] border border-[#EFE2D2] flex items-center justify-center shrink-0 overflow-hidden">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden">
                 <img src="/images/chat-support-bubbles.webp" alt="" className="h-9 w-9 object-contain" loading="lazy" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-[13.5px] font-bold text-[#2B1611] leading-tight truncate">{t('account.contactSupportTitle')}</h3>
-                <p className="text-[11px] text-[#6B4C44] font-normal mt-0.5 truncate">{t('account.quickAnswers')}</p>
+                <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">{t('account.contactSupportTitle')}</h3>
+                <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">{t('account.quickAnswers')}</p>
               </div>
             </div>
 
@@ -1266,7 +1266,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
               <a
                 href={`tel:${WORKSHOP_INFO.phone.replace(/[^+\d]/g, '')}`}
                 aria-label="Call workshop support"
-                className="min-h-10 px-3.5 py-2 rounded-xl bg-[#FAF4EA] hover:bg-[#EFE2D2] border border-[#E8D8C4] text-[#4A2B23] text-xs font-bold flex items-center justify-center gap-1.5 transition-colors flex-1 sm:flex-initial whitespace-nowrap"
+                className="min-h-10 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors flex-1 sm:flex-initial whitespace-nowrap"
               >
                 <Phone className="w-3.5 h-3.5" />
                 <span>Call us</span>
@@ -1274,7 +1274,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenContactSupport?.()}
-                className="min-h-10 bg-[#6B352A] hover:bg-[#53271E] text-[#FFF1A6] text-xs font-bold px-4 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors flex-1 sm:flex-initial shadow-2xs whitespace-nowrap"
+                className="min-h-10 bg-[#D9232D] hover:bg-[#B91C1C] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors flex-1 sm:flex-initial shadow-2xs whitespace-nowrap"
               >
                 <span>{t('account.chatNow')}</span>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -1286,33 +1286,33 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
         {/* BEGIN: VisitOurStoreSection (Interactive Store Location Card) */}
         <section
-          className="bg-white rounded-2xl p-4 border border-[#E8D8C4] shadow-2xs relative overflow-hidden"
+          className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs relative overflow-hidden"
           data-purpose="store-locator-card"
         >
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
             {/* Left details column */}
             <div className="min-w-0 sm:col-span-7 space-y-2">
               <div className="flex items-center space-x-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#F6EAE4] flex items-center justify-center text-[#6B352A] flex-shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-rose-50 flex items-center justify-center text-[#D9232D] flex-shrink-0">
                   <MapPin className="w-4.5 h-4.5" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-[13.5px] font-bold text-[#2B1611] leading-tight truncate">Visit our store</h3>
-                  <p className="text-[11px] text-[#6B4C44] font-medium leading-none mt-0.5 truncate">Rofik Godi Centre</p>
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">Visit our store</h3>
+                  <p className="text-[11px] text-slate-500 font-medium leading-none mt-0.5 truncate">Rofik Godi Centre</p>
                 </div>
               </div>
 
-              <p className="text-[11px] text-[#6B4C44] font-normal leading-snug">
+              <p className="text-[11px] text-slate-500 font-normal leading-snug">
                 Local automotive accessories &amp; fitting service
               </p>
 
-              <div className="space-y-1 pt-0.5 text-[11px] text-[#4A2B23] font-medium">
+              <div className="space-y-1 pt-0.5 text-[11px] text-slate-600 font-medium">
                 <div className="flex items-center space-x-1.5">
-                  <Clock className="w-3.5 h-3.5 text-[#8A6C63] flex-shrink-0" />
+                  <Clock className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
                   <span className="truncate">{WORKSHOP_INFO.workingHours}</span>
                 </div>
                 <div className="flex items-center space-x-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-[#8A6C63] flex-shrink-0" />
+                  <MapPin className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
                   <span className="line-clamp-2 break-words">{WORKSHOP_INFO.address}</span>
                 </div>
               </div>
@@ -1321,7 +1321,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 <button
                   type="button"
                   onClick={() => handleProtectedAction('pickupStore')}
-                  className="min-h-11 inline-flex items-center space-x-1 bg-[#FF6115] hover:bg-[#E5520D] text-[#1F0E0A] text-xs font-extrabold px-3.5 py-2 rounded-xl transition-colors whitespace-nowrap shadow-2xs"
+                  className="min-h-11 inline-flex items-center space-x-1 bg-rose-50 hover:bg-rose-100 text-[#D9232D] text-xs font-bold px-3.5 py-2 rounded-xl transition-colors whitespace-nowrap"
                 >
                   <span>Get directions</span>
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -1329,7 +1329,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setActiveModal('pickupStore')}
-                  className="min-h-11 inline-flex items-center space-x-1 bg-[#FAF4EA] hover:bg-[#EFE2D2] border border-[#E8D8C4] text-[#4A2B23] text-xs font-bold px-3.5 py-2 rounded-xl transition-colors whitespace-nowrap"
+                  className="min-h-11 inline-flex items-center space-x-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3.5 py-2 rounded-xl transition-colors whitespace-nowrap"
                 >
                   <span>Pickup details</span>
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -1341,41 +1341,41 @@ export const AccountView: React.FC<AccountViewProps> = ({
             <div
               onClick={() => handleProtectedAction('pickupStore')}
               role="presentation"
-              className="min-w-0 sm:col-span-5 h-full min-h-[136px] rounded-xl overflow-hidden relative bg-[#FAF4EA] border border-[#EFE2D2] flex items-center justify-center p-1.5 cursor-pointer"
+              className="min-w-0 sm:col-span-5 h-full min-h-[136px] rounded-xl overflow-hidden relative bg-[#E7F0FA] flex items-center justify-center p-1.5 cursor-pointer"
             >
               <svg className="w-full h-full" fill="none" viewBox="0 0 140 140">
-                <rect fill="#FFFCF4" height="140" rx="16" width="140" />
+                <rect fill="#E8F4E8" height="140" rx="16" width="140" />
                 <path d="M-10 60 L150 110" stroke="#FFFFFF" strokeLinecap="round" strokeWidth="18" />
-                <path d="M-10 60 L150 110" stroke="#EFE2D2" strokeLinecap="round" strokeWidth="12" />
+                <path d="M-10 60 L150 110" stroke="#D1E2F0" strokeLinecap="round" strokeWidth="12" />
                 <path d="M90 -10 L40 150" stroke="#FFFFFF" strokeWidth="14" />
-                <path d="M90 -10 L40 150" stroke="#EFE2D2" strokeWidth="8" />
-                <circle cx="20" cy="25" fill="#FFF8D6" r="14" />
-                <circle cx="125" cy="40" fill="#FFF8D6" r="18" />
-                <circle cx="120" cy="120" fill="#FFF8D6" r="16" />
+                <path d="M90 -10 L40 150" stroke="#D1E2F0" strokeWidth="8" />
+                <circle cx="20" cy="25" fill="#D3EDD8" r="14" />
+                <circle cx="125" cy="40" fill="#D3EDD8" r="18" />
+                <circle cx="120" cy="120" fill="#D3EDD8" r="16" />
                 <g transform="translate(42, 45)">
-                  <ellipse cx="28" cy="42" fill="#2B1611" opacity="0.12" rx="22" ry="7" />
-                  <rect fill="#FAF4EA" height="24" rx="2" stroke="#CBB8A6" strokeWidth="1" width="36" x="10" y="16" />
-                  <rect fill="#FFF1A6" height="12" rx="1" width="12" x="14" y="24" />
-                  <rect fill="#6B352A" height="18" rx="1" width="12" x="30" y="22" />
-                  <rect fill="#8A6C63" height="16" width="8" x="32" y="24" />
-                  <path d="M 6,16 L 10,7 L 46,7 L 50,16 Z" fill="#6B352A" />
-                  <path d="M 14,16 L 16.5,7 L 22.5,7 L 20,16 Z" fill="#FFF1A6" />
-                  <path d="M 28,16 L 29.5,7 L 35.5,7 L 34,16 Z" fill="#FFF1A6" />
-                  <path d="M 42,16 L 42.5,7 L 48.5,7 L 48,16 Z" fill="#FFF1A6" />
+                  <ellipse cx="28" cy="42" fill="#000000" opacity="0.12" rx="22" ry="7" />
+                  <rect fill="#E2E8F0" height="24" rx="2" stroke="#94A3B8" strokeWidth="1" width="36" x="10" y="16" />
+                  <rect fill="#7DD3FC" height="12" rx="1" width="12" x="14" y="24" />
+                  <rect fill="#64748B" height="18" rx="1" width="12" x="30" y="22" />
+                  <rect fill="#94A3B8" height="16" width="8" x="32" y="24" />
+                  <path d="M 6,16 L 10,7 L 46,7 L 50,16 Z" fill="#EF4444" />
+                  <path d="M 14,16 L 16.5,7 L 22.5,7 L 20,16 Z" fill="#FFFFFF" />
+                  <path d="M 28,16 L 29.5,7 L 35.5,7 L 34,16 Z" fill="#FFFFFF" />
+                  <path d="M 42,16 L 42.5,7 L 48.5,7 L 48,16 Z" fill="#FFFFFF" />
                   <path
                     d="M 6,16 Q 10,19 14,16 Q 18,19 22,16 Q 26,19 30,16 Q 34,19 38,16 Q 42,19 46,16 Q 50,19 54,16"
                     fill="none"
-                    stroke="#53271E"
+                    stroke="#DC2626"
                     strokeWidth="2"
                   />
                 </g>
                 <g transform="translate(90, 80)">
-                  <ellipse cx="12" cy="27" fill="#2B1611" opacity="0.2" rx="6" ry="2.5" />
+                  <ellipse cx="12" cy="27" fill="#1E293B" opacity="0.2" rx="6" ry="2.5" />
                   <path
                     d="M12 2C6.48 2 2 6.48 2 12c0 6.5 10 16 10 16s10-9.5 10-16c0-5.52-4.48-10-10-10z"
-                    fill="#FF6115"
+                    fill="#EF4444"
                   />
-                  <circle cx="12" cy="11" fill="#FFF1A6" r="4" />
+                  <circle cx="12" cy="11" fill="#FFFFFF" r="4" />
                 </g>
               </svg>
             </div>
@@ -1385,25 +1385,25 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
         {/* BEGIN: MoreOptionsSection (Minimal Clean Grouped List) */}
         <section className="space-y-2" data-purpose="more-options-section">
-          <h2 className="text-sm font-extrabold text-[#2B1611] tracking-tight px-1">More options</h2>
+          <h2 className="text-sm font-extrabold text-slate-900 tracking-tight px-1">More options</h2>
 
-          <div className="bg-white rounded-2xl border border-[#E8D8C4] shadow-2xs divide-y divide-[#EFE2D2] overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs divide-y divide-slate-100 overflow-hidden">
             {isAdmin && onOpenAdminPanel && (
               <button
                 type="button"
                 onClick={onOpenAdminPanel}
-                className="w-full min-h-14 bg-[#FFF8D6] hover:bg-[#FFF1A6]/70 px-3.5 py-3 flex items-center justify-between transition-colors text-left cursor-pointer"
+                className="w-full min-h-14 bg-[#FFF8F1] hover:bg-orange-50/80 px-3.5 py-3 flex items-center justify-between transition-colors text-left cursor-pointer"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-[#6B352A] flex items-center justify-center text-[#FFF1A6] shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center text-orange-700 shrink-0">
                     <ShieldCheck className="w-4.5 h-4.5" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-[13.5px] font-bold text-[#2B1611] leading-tight truncate">Go to admin panel</h3>
-                    <p className="text-[11px] text-[#6B4C44] font-normal mt-0.5 truncate">Manage products, orders and support</p>
+                    <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">Go to admin panel</h3>
+                    <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">Manage products, orders and support</p>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-[#6B352A] shrink-0" />
+                <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
               </button>
             )}
 
@@ -1411,36 +1411,36 @@ export const AccountView: React.FC<AccountViewProps> = ({
             <button
               type="button"
               onClick={() => handleProtectedAction('privacy')}
-              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-[#FAF4EA]/70 active:bg-[#FAF4EA] transition-colors text-left cursor-pointer"
+              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-[#FFF8D6] flex items-center justify-center text-[#6B352A] shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-[#E8F8F0] flex items-center justify-center text-[#10B981] shrink-0">
                   <ShieldCheck className="w-4.5 h-4.5 fill-current" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-[13.5px] font-bold text-[#2B1611] leading-tight truncate">Privacy Policy</h3>
-                  <p className="text-[11px] text-[#6B4C44] font-normal mt-0.5 truncate">Your data &amp; vehicle specs protection</p>
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">Privacy Policy</h3>
+                  <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">Your data &amp; vehicle specs protection</p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-[#8A6C63] shrink-0" />
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
             </button>
 
             {/* Terms & Conditions Row */}
             <button
               type="button"
               onClick={() => handleProtectedAction('terms')}
-              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-[#FAF4EA]/70 active:bg-[#FAF4EA] transition-colors text-left cursor-pointer"
+              className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-[#F6EAE4] flex items-center justify-center text-[#6B352A] shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] shrink-0">
                   <FileText className="w-4.5 h-4.5" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-[13.5px] font-bold text-[#2B1611] leading-tight truncate">Terms &amp; Conditions</h3>
-                  <p className="text-[11px] text-[#6B4C44] font-normal mt-0.5 truncate">Rules for using Rofik Godi Centre app</p>
+                  <h3 className="text-[13.5px] font-bold text-slate-900 leading-tight truncate">Terms &amp; Conditions</h3>
+                  <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">Rules for using Rofik Godi Centre app</p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-[#8A6C63] shrink-0" />
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
             </button>
 
             {/* Log out Row */}
@@ -1448,18 +1448,18 @@ export const AccountView: React.FC<AccountViewProps> = ({
               <button
                 type="button"
                 onClick={() => setConfirmLogout(true)}
-                className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-[#FDF2EE] active:bg-[#FDF2EE] transition-colors text-left"
+                className="w-full min-h-14 px-3.5 py-3 flex items-center justify-between hover:bg-red-50/60 active:bg-red-50 transition-colors text-left"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-[#FDF2EE] flex items-center justify-center text-[#9E2A2B] shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center text-[#D9232D] shrink-0">
                     <LogOut className="w-4.5 h-4.5" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-[13.5px] font-bold text-[#9E2A2B] leading-tight truncate">{t('account.logout')}</h3>
-                    <p className="text-[11px] text-[#6B4C44] font-normal mt-0.5 truncate">{t('account.logoutHint')}</p>
+                    <h3 className="text-[13.5px] font-bold text-[#D9232D] leading-tight truncate">{t('account.logout')}</h3>
+                    <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">{t('account.logoutHint')}</p>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-[#8A6C63] shrink-0" />
+                <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
               </button>
             )}
           </div>
@@ -1536,38 +1536,38 @@ export const AccountView: React.FC<AccountViewProps> = ({
       <AnimatePresence>
         {activeModal === 'pickupStore' && (
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-[#2B1611]/60 backdrop-blur-xs" />
-            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="relative w-full max-w-full sm:max-w-[440px] max-h-[92dvh] bg-[#FFFCF4] rounded-t-3xl sm:rounded-[28px] shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              <div className="flex justify-between items-center gap-2 px-5 py-4 border-b border-[#EFE2D2] bg-white">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="relative w-full max-w-full sm:max-w-[440px] max-h-[92dvh] bg-white rounded-t-3xl sm:rounded-[28px] shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              <div className="flex justify-between items-center gap-2 px-5 py-4 border-b border-gray-100 bg-white">
                 <div className="flex min-w-0 items-center gap-2">
-                  <div className="w-8 h-8 shrink-0 rounded-full bg-[#FFF8D6] flex items-center justify-center text-[#6B352A]">
+                  <div className="w-8 h-8 shrink-0 rounded-full bg-[#ECF8F1] flex items-center justify-center text-[#16A34A]">
                     <MapPin className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-[15px] font-black text-[#2B1611] truncate">Pickup Store</h3>
-                    <p className="text-[11px] text-[#8A6C63] truncate">Store pickup location and hours</p>
+                    <h3 className="text-[15px] font-black text-gray-900 truncate">Pickup Store</h3>
+                    <p className="text-[11px] text-gray-400 truncate">Store pickup location and hours</p>
                   </div>
                 </div>
-                <button type="button" onClick={() => setActiveModal(null)} aria-label="Close pickup store details" className="w-11 h-11 shrink-0 rounded-full bg-[#FAF4EA] hover:bg-[#EFE2D2] flex items-center justify-center text-[#4A2B23]">
+                <button type="button" onClick={() => setActiveModal(null)} aria-label="Close pickup store details" className="w-11 h-11 shrink-0 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="overflow-y-auto overflow-x-hidden px-5 py-4 space-y-3 flex-1 no-scrollbar">
-                <div className="bg-white border border-[#E8D8C4] rounded-2xl p-4 space-y-2 relative">
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2 relative">
                   <div className="flex justify-between items-center gap-2">
-                    <span className="text-[11px] font-extrabold tracking-wide text-[#6B352A]">Pickup Location</span>
-                    <span className="rounded-full bg-[#FFF8D6] border border-[#E6CE73] px-2 py-0.5 text-[10px] font-bold text-[#6B352A]">Free store pickup</span>
+                    <span className="text-[11px] font-extrabold tracking-wide text-[#16A34A]">Pickup Location</span>
+                    <span className="text-[10px] font-semibold text-emerald-700">Free store pickup</span>
                   </div>
-                  <div className="text-[13px] font-bold text-[#2B1611] break-words">{WORKSHOP_INFO.name} ({WORKSHOP_INFO.phone})</div>
-                  <p className="text-xs text-[#6B4C44] break-words">{WORKSHOP_INFO.address}</p>
-                  <p className="text-[11px] text-[#8A6C63] font-medium">{WORKSHOP_INFO.workingHours}</p>
+                  <div className="text-[13px] font-bold text-slate-900 break-words">{WORKSHOP_INFO.name} ({WORKSHOP_INFO.phone})</div>
+                  <p className="text-xs text-slate-600 break-words">{WORKSHOP_INFO.address}</p>
+                  <p className="text-[11px] text-slate-500 font-medium">{WORKSHOP_INFO.workingHours}</p>
                   <div className="pt-2 flex flex-wrap gap-2">
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${WORKSHOP_INFO.lat},${WORKSHOP_INFO.lng}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-[#FF6115] px-3.5 py-2 text-xs font-extrabold text-[#1F0E0A] shadow-2xs hover:bg-[#E5520D] transition-colors"
+                      className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-[#D9232D] px-3.5 py-2 text-xs font-bold text-white shadow-2xs hover:bg-[#B91C1C] transition-colors"
                     >
                       <MapPin className="h-3.5 w-3.5" />
                       <span>Open in Google Maps</span>
@@ -1579,7 +1579,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                           setActiveModal(null);
                           onOpenStoreInfo();
                         }}
-                        className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-[#E8D8C4] bg-[#FAF4EA] px-3.5 py-2 text-xs font-bold text-[#4A2B23] hover:bg-[#EFE2D2] transition-colors"
+                        className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
                       >
                         <span>Store details</span>
                         <ChevronRight className="h-3.5 w-3.5" />
@@ -1604,7 +1604,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
-            className="fixed inset-0 z-50 flex w-full max-w-full flex-col bg-gradient-to-br from-[#FFFCF4] via-[#FAF3E6] to-[#FFF8D6] overflow-hidden"
+            className="fixed inset-0 z-50 flex w-full max-w-full flex-col bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] overflow-hidden"
           >
             {/* Clean Classic Glass Top Bar */}
             <div className="sticky top-0 z-20 px-3.5 pt-2 pb-1.5 sm:px-5">
@@ -1614,7 +1614,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   onClick={requestCloseProfile}
                   disabled={profileSaving}
                   aria-label="Close profile editor"
-                  className="classic-glass inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E8D8C4] bg-white/90 text-[#2B1611] shadow-[0_6px_18px_-8px_rgba(43,22,17,0.16)] backdrop-blur-xl transition-all hover:bg-[#FAF4EA] hover:text-[#6B352A] active:scale-95 disabled:opacity-50"
+                  className="classic-glass inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/85 bg-white/85 text-slate-800 shadow-[0_6px_18px_-8px_rgba(15,23,42,0.16)] backdrop-blur-xl transition-all hover:bg-white hover:text-[#D9232D] active:scale-95 disabled:opacity-50"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </button>
@@ -1622,15 +1622,15 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   Edit Profile
                 </h3>
                 {profileDirty && !profileLoading && (
-                  <span className="classic-glass inline-flex items-center gap-1.5 rounded-lg border border-[#E6CE73] bg-[#FFF8D6] px-2 py-0.5 text-[10px] font-extrabold text-[#6B352A] shadow-2xs backdrop-blur-md">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#FF6115] animate-pulse" />
+                  <span className="classic-glass inline-flex items-center gap-1.5 rounded-lg border border-amber-200/85 bg-amber-50/90 px-2 py-0.5 text-[10px] font-extrabold text-amber-800 shadow-2xs backdrop-blur-md">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
                     <span>Editing</span>
                   </span>
                 )}
               </div>
             </div>
 
-            <div className="overflow-y-auto overflow-x-hidden flex-1 no-scrollbar text-[#4A2B23]">
+            <div className="overflow-y-auto overflow-x-hidden flex-1 no-scrollbar text-slate-800">
               <div
                 className={`mx-auto w-full max-w-[540px] px-3.5 sm:px-5 pt-1 space-y-3 ${
                   profileDirty || profileSaving ? 'pb-20' : 'pb-6'
@@ -1641,10 +1641,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 ) : (
                   <>
                 {/* Sleek Live Rider Profile Card */}
-                <div className="relative overflow-hidden rounded-[22px] border border-[#E6CE73] bg-gradient-to-br from-[#FFF8D6] via-[#FFFCF4] to-[#F6EAE4] p-3.5 sm:p-4 shadow-[0_10px_28px_-16px_rgba(107,53,42,0.16)] space-y-3">
+                <div className="relative overflow-hidden rounded-[22px] border border-rose-200/75 bg-gradient-to-br from-white via-[#FFF9FA] to-[#FFF2F4] p-3.5 sm:p-4 shadow-[0_10px_28px_-16px_rgba(217,35,45,0.14)] space-y-3">
                   <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-[#6B352A]/[0.06] blur-2xl"
+                    className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-[#D9232D]/[0.05] blur-2xl"
                   />
 
                   <div className="relative flex items-center gap-3">
@@ -1654,7 +1654,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                         disabled={profileSaving || profileLoading}
                         onClick={() => avatarFileInputRef.current?.click()}
                         aria-label="Choose profile photo"
-                        className="group/avatar relative grid h-15 w-15 sm:h-16 sm:w-16 place-items-center overflow-hidden rounded-full border-2 border-white bg-gradient-to-br from-[#F6EAE4] to-[#FFF1A6] text-base font-black text-[#6B352A] shadow-[0_6px_16px_rgba(107,53,42,0.18)] transition-transform active:scale-95 disabled:opacity-60"
+                        className="group/avatar relative grid h-15 w-15 sm:h-16 sm:w-16 place-items-center overflow-hidden rounded-full border-2 border-white bg-gradient-to-br from-[#FFE4E6] to-[#FECDD3] text-base font-black text-[#D9232D] shadow-[0_6px_16px_rgba(217,35,45,0.16)] transition-transform active:scale-95 disabled:opacity-60"
                       >
                         {profileAvatarUrl ? (
                           <img
@@ -1670,14 +1670,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
                         )}
                         <span
                           aria-hidden="true"
-                          className="absolute inset-0 flex items-center justify-center bg-[#2B1611]/35 opacity-0 transition-opacity group-hover/avatar:opacity-100"
+                          className="absolute inset-0 flex items-center justify-center bg-slate-900/35 opacity-0 transition-opacity group-hover/avatar:opacity-100"
                         >
                           <Camera className="h-4 w-4 text-white" />
                         </span>
                       </button>
                       <span
                         aria-hidden="true"
-                        className="pointer-events-none absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-[#6B352A] text-[#FFF1A6] ring-2 ring-white shadow-2xs"
+                        className="pointer-events-none absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-[#D9232D] text-white ring-2 ring-white shadow-2xs"
                       >
                         <Camera className="h-2.5 w-2.5" />
                       </span>
@@ -1685,10 +1685,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-[13.5px] font-black tracking-tight text-[#2B1611] truncate">
+                        <p className="text-[13.5px] font-black tracking-tight text-slate-950 truncate">
                           {profileName.trim() || 'Rider Profile Photo'}
                         </p>
-                        <span className="shrink-0 rounded-md bg-[#FFF8D6] border border-[#E6CE73] px-1.5 py-0.5 text-[9.5px] font-extrabold text-[#6B352A] tabular-nums">
+                        <span className="shrink-0 rounded-md bg-rose-50 border border-rose-200/80 px-1.5 py-0.5 text-[9.5px] font-extrabold text-[#D9232D] tabular-nums">
                           {editorProfileCompletion}% complete
                         </span>
                       </div>
@@ -1696,13 +1696,13 @@ export const AccountView: React.FC<AccountViewProps> = ({
                       {/* Live Identity & Fitment Preview Chips */}
                       <div className="mt-1 flex flex-wrap items-center gap-1">
                         {profilePhone.trim() && (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-white border border-[#E8D8C4] px-1.5 py-0.5 text-[10px] font-semibold text-[#4A2B23] tabular-nums">
-                            <Phone className="h-2.5 w-2.5 text-[#6B352A]" />
+                          <span className="inline-flex items-center gap-1 rounded-md bg-white border border-slate-200/80 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 tabular-nums">
+                            <Phone className="h-2.5 w-2.5 text-[#D9232D]" />
                             {profilePhone.trim()}
                           </span>
                         )}
                         {profileVehicle.trim() && (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-white border border-[#E8D8C4] px-1.5 py-0.5 text-[10px] font-semibold text-[#6B352A] truncate max-w-full">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-white border border-rose-200/75 px-1.5 py-0.5 text-[10px] font-semibold text-[#D9232D] truncate max-w-full">
                             <Bike className="h-2.5 w-2.5 shrink-0" />
                             <span className="truncate">{profileVehicle.trim()}</span>
                           </span>
@@ -1730,7 +1730,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                           aria-label="Upload profile photo"
                           disabled={profileSaving || profileLoading}
                           onClick={() => avatarFileInputRef.current?.click()}
-                          className="banner-cta-shine inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#6B352A] hover:bg-[#53271E] px-2.5 text-[10.5px] font-extrabold text-[#FFF1A6] shadow-2xs transition-all active:scale-95 disabled:opacity-50"
+                          className="banner-cta-shine inline-flex h-8 items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#D9232D] to-[#B91822] hover:brightness-105 px-2.5 text-[10.5px] font-extrabold text-white shadow-2xs transition-all active:scale-95 disabled:opacity-50"
                         >
                           <Camera className="h-3 w-3" aria-hidden="true" /> Change photo
                         </button>
@@ -1744,7 +1744,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                               setProfileAvatarUrl(null);
                               setProfileMessage('');
                             }}
-                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#E9C2B5] bg-white hover:bg-[#FDF2EE] px-2.5 text-[10.5px] font-bold text-[#9E2A2B] transition-all active:scale-95 disabled:opacity-50"
+                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-rose-200/90 bg-white hover:bg-rose-50 px-2.5 text-[10.5px] font-bold text-[#D9232D] transition-all active:scale-95 disabled:opacity-50"
                           >
                             <Trash2 className="h-3 w-3" aria-hidden="true" /> Remove photo
                           </button>
@@ -1754,10 +1754,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   </div>
 
                   {/* Compact Completeness Bar & Checklist */}
-                  <div className="rounded-xl bg-white/90 border border-[#E8D8C4] px-2.5 py-2 space-y-1.5">
-                    <div className="h-1 w-full overflow-hidden rounded-full bg-[#EFE2D2]">
+                  <div className="rounded-xl bg-white/90 border border-rose-100/90 px-2.5 py-2 space-y-1.5">
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-rose-100/90">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-[#6B352A] to-[#834639] transition-all duration-300"
+                        className="h-full rounded-full bg-gradient-to-r from-[#D9232D] to-[#FB7185] transition-all duration-300"
                         style={{ width: `${editorProfileCompletion}%` }}
                       />
                     </div>
@@ -1772,11 +1772,11 @@ export const AccountView: React.FC<AccountViewProps> = ({
                           key={step.label}
                           className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9.5px] font-bold ${
                             step.done
-                              ? 'bg-[#FFF8D6] text-[#6B352A] ring-1 ring-inset ring-[#E6CE73]'
-                              : 'bg-[#FAF4EA] text-[#8A6C63]'
+                              ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/70'
+                              : 'bg-slate-100 text-slate-500'
                           }`}
                         >
-                          <CheckCircle2 className={`h-2.5 w-2.5 ${step.done ? 'text-[#6B352A]' : 'text-[#8A6C63]'}`} />
+                          <CheckCircle2 className={`h-2.5 w-2.5 ${step.done ? 'text-emerald-600' : 'text-slate-400'}`} />
                           {step.label}
                         </span>
                       ))}
@@ -1785,19 +1785,19 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 </div>
 
                 {/* Personal Information Card */}
-                <div className="rounded-[22px] border border-[#E8D8C4] bg-white/95 backdrop-blur-md p-3.5 sm:p-4 shadow-[0_6px_22px_-12px_rgba(43,22,17,0.06)] space-y-3">
-                  <div className="flex items-center justify-between border-b border-[#EFE2D2] pb-2.5">
+                <div className="rounded-[22px] border border-slate-200/80 bg-white/95 backdrop-blur-md p-3.5 sm:p-4 shadow-[0_6px_22px_-12px_rgba(15,23,42,0.06)] space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                     <div>
-                      <h4 className="text-xs font-black text-[#2B1611]">Personal Details</h4>
-                      <p className="text-[10.5px] text-[#6B4C44]">Used on invoices, order pickup &amp; support</p>
+                      <h4 className="text-xs font-black text-slate-900">Personal Details</h4>
+                      <p className="text-[10.5px] text-slate-500">Used on invoices, order pickup &amp; support</p>
                     </div>
-                    <div className="h-7 w-7 rounded-lg bg-[#FFF8D6] text-[#6B352A] flex items-center justify-center shrink-0">
+                    <div className="h-7 w-7 rounded-lg bg-rose-50 text-[#D9232D] flex items-center justify-center shrink-0">
                       <User className="h-3.5 w-3.5" aria-hidden="true" />
                     </div>
                   </div>
 
                   <div>
-                    <label htmlFor="profile-name" className="text-[11px] font-bold text-[#4A2B23] block mb-1">
+                    <label htmlFor="profile-name" className="text-[11px] font-bold text-slate-600 block mb-1">
                       Your Name
                     </label>
                     <input
@@ -1815,10 +1815,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
                       aria-invalid={Boolean(profileFieldErrors.full_name)}
                       aria-describedby={profileFieldErrors.full_name ? 'profile-name-error' : undefined}
                       disabled={profileLoading || profileSaving}
-                      className="h-9.5 w-full bg-[#FAF4EA]/80 text-[12.5px] font-semibold text-[#2B1611] rounded-xl px-3 py-1.5 border border-[#E8D8C4] transition-all focus:bg-white focus:outline-none focus:border-[#6B352A] focus:ring-2 focus:ring-[#FFF1A6]"
+                      className="h-9.5 w-full bg-slate-50/90 text-[12.5px] font-semibold text-slate-900 rounded-xl px-3 py-1.5 border border-slate-200/90 transition-all focus:bg-white focus:outline-none focus:border-[#D9232D] focus:ring-2 focus:ring-rose-100"
                     />
                     {profileFieldErrors.full_name && (
-                      <p id="profile-name-error" role="alert" className="mt-1 text-[10.5px] font-medium text-[#9E2A2B]">
+                      <p id="profile-name-error" role="alert" className="mt-1 text-[10.5px] font-medium text-red-600">
                         {profileFieldErrors.full_name}
                       </p>
                     )}
@@ -1844,7 +1844,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   </div>
 
                   <div>
-                    <label htmlFor="profile-email" className="text-[11px] font-bold text-[#4A2B23] block mb-1">
+                    <label htmlFor="profile-email" className="text-[11px] font-bold text-slate-600 block mb-1">
                       Email
                     </label>
                     <div className="relative">
@@ -1855,11 +1855,11 @@ export const AccountView: React.FC<AccountViewProps> = ({
                         readOnly
                         disabled
                         aria-describedby="profile-email-hint"
-                        className="h-9.5 w-full rounded-xl border border-[#E8D8C4] bg-[#FAF4EA] px-3 py-1.5 pr-8 text-[12.5px] font-medium text-[#8A6C63] disabled:cursor-not-allowed"
+                        className="h-9.5 w-full rounded-xl border border-slate-200/90 bg-slate-100/80 px-3 py-1.5 pr-8 text-[12.5px] font-medium text-slate-500 disabled:cursor-not-allowed"
                       />
-                      <LockKeyhole className="absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#8A6C63]" aria-hidden="true" />
+                      <LockKeyhole className="absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" aria-hidden="true" />
                     </div>
-                    <p id="profile-email-hint" className="mt-1 text-[10px] text-[#8A6C63]">
+                    <p id="profile-email-hint" className="mt-1 text-[10px] text-slate-400">
                       Email is linked to your login account and cannot be changed
                     </p>
                   </div>
@@ -1867,19 +1867,19 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
                 {/* Vehicle Fitment Card */}
                 <section
-                  className="space-y-3 rounded-[22px] border border-[#E8D8C4] bg-white/95 backdrop-blur-md p-3.5 sm:p-4 shadow-[0_6px_22px_-12px_rgba(43,22,17,0.06)]"
+                  className="space-y-3 rounded-[22px] border border-slate-200/80 bg-white/95 backdrop-blur-md p-3.5 sm:p-4 shadow-[0_6px_22px_-12px_rgba(15,23,42,0.06)]"
                   aria-label="Vehicle fitment"
                 >
-                  <div className="flex items-start justify-between gap-2.5 border-b border-[#EFE2D2] pb-2.5">
+                  <div className="flex items-start justify-between gap-2.5 border-b border-slate-100 pb-2.5">
                     <div className="flex items-center gap-2.5">
-                      <div className="h-7 w-7 rounded-lg bg-[#F6EAE4] text-[#6B352A] flex items-center justify-center shrink-0">
+                      <div className="h-7 w-7 rounded-lg bg-rose-50 text-[#D9232D] flex items-center justify-center shrink-0">
                         <Bike className="h-3.5 w-3.5" aria-hidden="true" />
                       </div>
                       <div>
-                        <p className="text-xs font-black text-[#2B1611]">
-                          Vehicle for fitment <span className="font-normal text-[#8A6C63]">(optional)</span>
+                        <p className="text-xs font-black text-slate-900">
+                          Vehicle for fitment <span className="font-normal text-slate-400">(optional)</span>
                         </p>
-                        <p className="text-[10.5px] leading-snug text-[#6B4C44]">
+                        <p className="text-[10.5px] leading-snug text-slate-500">
                           Choose vehicle type &amp; brand for compatible covers.
                         </p>
                       </div>
@@ -1894,7 +1894,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                           setProfileVehicle('');
                           setProfileMessage('');
                         }}
-                        className="shrink-0 h-7 rounded-lg bg-[#FFF8D6] hover:bg-[#FFF1A6] border border-[#E6CE73] px-2.5 text-[10px] font-bold text-[#6B352A] transition-colors"
+                        className="shrink-0 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 px-2.5 text-[10px] font-bold text-[#D9232D] transition-colors"
                       >
                         Clear
                       </button>
@@ -1922,8 +1922,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
                           }}
                           className={`h-8 rounded-lg border px-1.5 text-[10.5px] font-bold transition-all ${
                             active
-                              ? 'border-[#6B352A] bg-[#6B352A] text-[#FFF1A6] shadow-2xs'
-                              : 'border-[#E8D8C4] bg-[#FAF4EA] text-[#4A2B23] hover:bg-[#EFE2D2]'
+                              ? 'border-[#D9232D] bg-gradient-to-r from-[#D9232D] to-[#B91822] text-white shadow-2xs'
+                              : 'border-slate-200/80 bg-slate-50/90 text-slate-600 hover:bg-slate-100'
                           }`}
                         >
                           {shortLabel}
@@ -1932,7 +1932,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                     })}
                   </div>
 
-                  <label htmlFor="profile-vehicle-type" className="block text-[11px] font-bold text-[#4A2B23]">
+                  <label htmlFor="profile-vehicle-type" className="block text-[11px] font-bold text-slate-600">
                     {t('checkout.vehicleType')}
                     <select
                       id="profile-vehicle-type"
@@ -1945,7 +1945,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                         setProfileMessage('');
                       }}
                       disabled={profileLoading || profileSaving}
-                      className="mt-1 h-9.5 w-full rounded-xl border border-[#E8D8C4] bg-[#FAF4EA]/80 px-3 py-1.5 text-[12.5px] font-semibold text-[#2B1611] outline-none focus:bg-white focus:border-[#6B352A]"
+                      className="mt-1 h-9.5 w-full rounded-xl border border-slate-200/90 bg-slate-50/90 px-3 py-1.5 text-[12.5px] font-semibold text-slate-900 outline-none focus:bg-white focus:border-[#D9232D]"
                     >
                       {(['Bike', 'Scooter', 'Toto / E-rickshaw', 'Car', 'Other'] as CheckoutVehicleType[]).map((type) => (
                         <option key={type} value={type}>
@@ -1965,7 +1965,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
                   {profileVehicleCompanies.length > 0 ? (
                     <div className="grid gap-3">
-                      <label htmlFor="profile-vehicle-company" className="block min-w-0 text-[11px] font-bold text-[#4A2B23]">
+                      <label htmlFor="profile-vehicle-company" className="block min-w-0 text-[11px] font-bold text-slate-600">
                         {t('checkout.vehicleCompany')}
                         <select
                           id="profile-vehicle-company"
@@ -1977,7 +1977,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                             setProfileMessage('');
                           }}
                           disabled={profileLoading || profileSaving}
-                          className="mt-1 h-9.5 w-full rounded-xl border border-[#E8D8C4] bg-[#FAF4EA]/80 px-3 py-1.5 text-[12.5px] font-semibold text-[#2B1611] outline-none focus:bg-white focus:border-[#6B352A]"
+                          className="mt-1 h-9.5 w-full rounded-xl border border-slate-200/90 bg-slate-50/90 px-3 py-1.5 text-[12.5px] font-semibold text-slate-900 outline-none focus:bg-white focus:border-[#D9232D]"
                         >
                           <option value="">{t('checkout.chooseCompany')}</option>
                           {profileVehicleCompanies.map((company) => (
@@ -1987,12 +1987,12 @@ export const AccountView: React.FC<AccountViewProps> = ({
                           ))}
                         </select>
                       </label>
-                      <div className="block min-w-0 text-[11px] font-bold text-[#4A2B23]">
+                      <div className="block min-w-0 text-[11px] font-bold text-slate-600">
                         <span>
-                          {t('checkout.vehicleModel')} <span className="font-normal text-[#8A6C63]">(optional)</span>
+                          {t('checkout.vehicleModel')} <span className="font-normal text-slate-400">(optional)</span>
                         </span>
                         {!profileVehicleCompany ? (
-                          <p className="mt-1 rounded-xl border border-dashed border-[#D4C0AA] bg-[#FAF4EA]/70 px-3 py-2 text-[11px] font-medium text-[#8A6C63]">
+                          <p className="mt-1 rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-3 py-2 text-[11px] font-medium text-slate-400">
                             {t('checkout.chooseCompany')}
                           </p>
                         ) : (
@@ -2015,8 +2015,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
                     </div>
                   ) : (
                     <div>
-                      <label htmlFor="profile-vehicle" className="mb-1 block text-[11px] font-bold text-[#4A2B23]">
-                        Vehicle Model <span className="font-normal text-[#8A6C63]">(optional)</span>
+                      <label htmlFor="profile-vehicle" className="mb-1 block text-[11px] font-bold text-slate-600">
+                        Vehicle Model <span className="font-normal text-slate-400">(optional)</span>
                       </label>
                       <input
                         id="profile-vehicle"
@@ -2031,12 +2031,12 @@ export const AccountView: React.FC<AccountViewProps> = ({
                         aria-describedby={profileFieldErrors.vehicle_model ? 'profile-vehicle-error' : undefined}
                         disabled={profileLoading || profileSaving}
                         placeholder={t('checkout.exampleVehicle')}
-                        className="h-9.5 w-full rounded-xl border border-[#E8D8C4] bg-[#FAF4EA]/80 px-3 py-1.5 text-[12.5px] font-semibold text-[#2B1611] outline-none focus:bg-white focus:border-[#6B352A]"
+                        className="h-9.5 w-full rounded-xl border border-slate-200/90 bg-slate-50/90 px-3 py-1.5 text-[12.5px] font-semibold text-slate-900 outline-none focus:bg-white focus:border-[#D9232D]"
                       />
                     </div>
                   )}
                   {profileFieldErrors.vehicle_model && (
-                    <p id="profile-vehicle-error" role="alert" className="text-[10.5px] font-medium text-[#9E2A2B]">
+                    <p id="profile-vehicle-error" role="alert" className="text-[10.5px] font-medium text-red-600">
                       {profileFieldErrors.vehicle_model}
                     </p>
                   )}
@@ -2047,8 +2047,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
                     role="status"
                     className={`rounded-xl px-3.5 py-2.5 text-center text-[11px] font-bold ${
                       profileMessage.toLowerCase().includes('saved') && !profileMessage.toLowerCase().includes('could not')
-                        ? 'bg-[#FFF8D6] text-[#6B352A] border border-[#E6CE73]'
-                        : 'bg-[#FDF2EE] text-[#9E2A2B] border border-[#E9C2B5]'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/70'
+                        : 'bg-red-50 text-red-600 border border-red-200/70'
                     }`}
                   >
                     {profileMessage}
@@ -2068,11 +2068,11 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   exit={{ y: 28, opacity: 0 }}
                   transition={{ duration: 0.2, ease: 'easeOut' }}
                   data-testid="profile-unsaved-bar"
-                  className="border-t border-[#E8D8C4] bg-white/95 backdrop-blur-xl px-3.5 py-2.5 pb-[max(0.65rem,env(safe-area-inset-bottom))] shadow-[0_-10px_28px_-12px_rgba(43,22,17,0.14)]"
+                  className="border-t border-slate-200/85 bg-white/95 backdrop-blur-xl px-3.5 py-2.5 pb-[max(0.65rem,env(safe-area-inset-bottom))] shadow-[0_-10px_28px_-12px_rgba(15,23,42,0.12)]"
                 >
                   <div className="mx-auto flex max-w-[540px] flex-wrap sm:flex-nowrap items-center justify-between gap-2">
-                    <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-bold text-[#4A2B23] truncate">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF6115] animate-pulse" />
+                    <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-bold text-slate-700 truncate">
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#D9232D] animate-pulse" />
                       <span className="truncate">Unsaved profile changes</span>
                     </span>
                     <div className="flex items-center gap-1.5 shrink-0 ml-auto">
@@ -2080,7 +2080,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                         type="button"
                         disabled={profileSaving}
                         onClick={requestCloseProfile}
-                        className="h-8.5 rounded-lg border border-[#E8D8C4] bg-[#FAF4EA] hover:bg-[#EFE2D2] px-3 text-[11px] font-bold text-[#4A2B23] transition-colors whitespace-nowrap disabled:opacity-50"
+                        className="h-8.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 px-3 text-[11px] font-bold text-slate-700 transition-colors whitespace-nowrap disabled:opacity-50"
                       >
                         Discard
                       </button>
@@ -2094,7 +2094,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                           Object.keys(profileFieldErrors).length > 0
                         }
                         onClick={() => void handleSaveProfile()}
-                        className="banner-cta-shine h-8.5 rounded-lg bg-[#6B352A] hover:bg-[#53271E] hover:shadow-md px-3.5 text-[11px] font-extrabold text-[#FFF1A6] shadow-sm transition-all active:scale-95 whitespace-nowrap disabled:opacity-45"
+                        className="banner-cta-shine h-8.5 rounded-lg bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] hover:brightness-105 hover:shadow-md px-3.5 text-[11px] font-extrabold text-white shadow-sm shadow-red-600/20 transition-all active:scale-95 whitespace-nowrap disabled:opacity-45"
                       >
                         {profileSaving ? 'Saving…' : 'Save changes'}
                       </button>

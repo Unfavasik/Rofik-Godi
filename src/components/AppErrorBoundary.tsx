@@ -22,13 +22,13 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
   render() {
     if (this.state.failed) {
       return (
-        <div className="fixed inset-0 z-[100] flex min-h-screen flex-col items-center justify-center bg-[#6B352A] px-6 text-center text-[#FFFCF4]">
+        <div className="fixed inset-0 z-[100] flex min-h-screen flex-col items-center justify-center bg-[#D9232D] px-6 text-center text-white">
           <h1 className="text-2xl font-black">Something went wrong</h1>
-          <p className="mt-2 text-sm text-[#FFF8D6]">Please reload the app.</p>
+          <p className="mt-2 text-sm">Please reload the app.</p>
           <button
             type="button"
             onClick={() => window.location.replace('/home')}
-            className="mt-6 rounded-xl bg-[#FFF1A6] px-5 py-3 text-sm font-extrabold text-[#6B352A] hover:bg-[#FFE980] transition-colors cursor-pointer"
+            className="mt-6 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-[#D9232D]"
           >
             Reload
           </button>

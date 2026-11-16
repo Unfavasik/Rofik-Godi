@@ -40,12 +40,12 @@ export const WelcomeAuthScreen: React.FC<WelcomeAuthScreenProps> = ({
   ];
 
   return (
-    <div className="min-h-screen w-full bg-[#FFFCF4] flex flex-col justify-between p-5 max-w-[440px] mx-auto select-none font-sans animate-fade-in">
-      {/* Top Header Row with Skip Button */}
+    <div className="min-h-screen w-full bg-white flex flex-col justify-between p-5 max-w-[440px] mx-auto select-none font-sans animate-fade-in">
+      {/* Top Header Row with Skip Button (Matching Image 2) */}
       <div className="flex justify-end items-center pt-2">
         <button
           onClick={onContinueGuest}
-          className="text-xs font-bold text-[#6B4C44] hover:text-[#2B1611] px-3 py-1 rounded-full hover:bg-[#FFF8D6] transition-all active:scale-95"
+          className="text-xs font-bold text-gray-500 hover:text-gray-900 px-3 py-1 rounded-full hover:bg-gray-100 transition-all active:scale-95"
         >
           Skip
         </button>
@@ -53,43 +53,43 @@ export const WelcomeAuthScreen: React.FC<WelcomeAuthScreenProps> = ({
 
       {/* Main Hero Header */}
       <div className="space-y-1.5 mt-2">
-        <h1 className="text-[28px] sm:text-[32px] font-extrabold text-[#2B1611] tracking-tight leading-[1.15]">
+        <h1 className="text-[28px] sm:text-[32px] font-extrabold text-gray-950 tracking-tight leading-[1.15]">
           Welcome to <br />
-          <span className="text-[#6B352A]">Rofik Godi</span> Centre
+          <span className="text-[#D9232D]">Rofik Godi</span> Centre
         </h1>
-        <p className="text-[13.5px] text-[#6B4C44] font-normal leading-relaxed">
+        <p className="text-[13.5px] text-gray-500 font-normal leading-relaxed">
           Premium seat covers for bike, toto and more.
         </p>
 
-        {/* 3 Value Proposition Badges */}
+        {/* 3 Value Proposition Badges (Matching Image 2) */}
         <div className="grid grid-cols-3 gap-2.5 pt-3">
-          <div className="bg-[#FFF8D6]/70 border border-[#E8D8C4] rounded-2xl p-2.5 flex flex-col items-center text-center shadow-[0_2px_8px_-2px_rgba(107,53,42,0.06)]">
-            <div className="w-8 h-8 rounded-full bg-[#FFF1A6] flex items-center justify-center text-[#6B352A] mb-1.5">
-              <Shield className="w-4 h-4 fill-[#6B352A]/15 stroke-[2.2]" />
+          <div className="bg-[#FAF9FB] border border-gray-100/90 rounded-2xl p-2.5 flex flex-col items-center text-center shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03)]">
+            <div className="w-8 h-8 rounded-full bg-[#FEECEC] flex items-center justify-center text-[#EF4444] mb-1.5">
+              <Shield className="w-4 h-4 fill-[#EF4444]/20 stroke-[2.2]" />
             </div>
-            <span className="text-[11.5px] font-bold text-[#2B1611] leading-none">Durable</span>
-            <span className="text-[9.5px] text-[#8A6C63] mt-0.5">Quality</span>
+            <span className="text-[11.5px] font-bold text-gray-900 leading-none">Durable</span>
+            <span className="text-[9.5px] text-gray-400 mt-0.5">Quality</span>
           </div>
 
-          <div className="bg-[#FFF8D6]/70 border border-[#E8D8C4] rounded-2xl p-2.5 flex flex-col items-center text-center shadow-[0_2px_8px_-2px_rgba(107,53,42,0.06)]">
-            <div className="w-8 h-8 rounded-full bg-[#FFF1A6] flex items-center justify-center text-[#6B352A] mb-1.5">
-              <Truck className="w-4 h-4 fill-[#6B352A]/15 stroke-[2.2]" />
+          <div className="bg-[#FAF9FB] border border-gray-100/90 rounded-2xl p-2.5 flex flex-col items-center text-center shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03)]">
+            <div className="w-8 h-8 rounded-full bg-[#FEECEC] flex items-center justify-center text-[#EF4444] mb-1.5">
+              <Truck className="w-4 h-4 fill-[#EF4444]/20 stroke-[2.2]" />
             </div>
-            <span className="text-[11.5px] font-bold text-[#2B1611] leading-none">Local</span>
-            <span className="text-[9.5px] text-[#8A6C63] mt-0.5">Service</span>
+            <span className="text-[11.5px] font-bold text-gray-900 leading-none">Local</span>
+            <span className="text-[9.5px] text-gray-400 mt-0.5">Service</span>
           </div>
 
-          <div className="bg-[#FFF8D6]/70 border border-[#E8D8C4] rounded-2xl p-2.5 flex flex-col items-center text-center shadow-[0_2px_8px_-2px_rgba(107,53,42,0.06)]">
-            <div className="w-8 h-8 rounded-full bg-[#FFF1A6] flex items-center justify-center text-[#6B352A] mb-1.5">
-              <Star className="w-4 h-4 fill-[#6B352A]/15 stroke-[2.2]" />
+          <div className="bg-[#FAF9FB] border border-gray-100/90 rounded-2xl p-2.5 flex flex-col items-center text-center shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03)]">
+            <div className="w-8 h-8 rounded-full bg-[#FEECEC] flex items-center justify-center text-[#EF4444] mb-1.5">
+              <Star className="w-4 h-4 fill-[#EF4444]/20 stroke-[2.2]" />
             </div>
-            <span className="text-[11.5px] font-bold text-[#2B1611] leading-none">Trusted</span>
-            <span className="text-[9.5px] text-[#8A6C63] mt-0.5">Store</span>
+            <span className="text-[11.5px] font-bold text-gray-900 leading-none">Trusted</span>
+            <span className="text-[9.5px] text-gray-400 mt-0.5">Store</span>
           </div>
         </div>
       </div>
 
-      {/* Center Showcase Visual */}
+      {/* Center Showcase Visual with Dual-Tone Seat Cover & Shadow (Matching Image 2) */}
       <div className="py-2 flex flex-col items-center">
         <motion.div
           key={activeSlide}
@@ -99,11 +99,11 @@ export const WelcomeAuthScreen: React.FC<WelcomeAuthScreenProps> = ({
           className="relative w-full max-w-[280px] aspect-[1.3/1] flex items-center justify-center"
         >
           {/* Soft background oval backdrop */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-[#FFF1A6]/70 via-[#FFF8D6]/50 to-transparent rounded-[40px] transform rotate-1 scale-95" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-[#FDECE9]/70 via-[#FDF5F3]/50 to-transparent rounded-[40px] transform rotate-1 scale-95" />
           <img
             src={showcaseSlides[activeSlide].image}
             alt={showcaseSlides[activeSlide].title}
-            className="w-[88%] h-auto object-contain drop-shadow-[0_16px_20px_rgba(107,53,42,0.18)] z-10 transform -rotate-3 transition-transform duration-500 hover:scale-105"
+            className="w-[88%] h-auto object-contain drop-shadow-[0_16px_20px_rgba(0,0,0,0.18)] z-10 transform -rotate-3 transition-transform duration-500 hover:scale-105"
           />
         </motion.div>
 
@@ -115,19 +115,19 @@ export const WelcomeAuthScreen: React.FC<WelcomeAuthScreenProps> = ({
               onClick={() => setActiveSlide(idx)}
               aria-label={`Slide ${idx + 1}`}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                activeSlide === idx ? 'w-5 bg-[#6B352A]' : 'w-1.5 bg-[#E8D8C4]'
+                activeSlide === idx ? 'w-5 bg-[#D9232D]' : 'w-1.5 bg-gray-200'
               }`}
             />
           ))}
         </div>
       </div>
 
-      {/* Auth Action Buttons */}
+      {/* Auth Action Buttons (Matching Image 2) */}
       <div className="space-y-2.5 pb-2">
         {/* 1. Continue with Google */}
         <button
           onClick={onContinueGoogle}
-          className="banner-cta-shine group/cta w-full h-12 bg-gradient-to-r from-[#6B352A] to-[#53271E] hover:brightness-105 hover:shadow-[0_8px_20px_rgba(107,53,42,0.36)] active:scale-[0.98] text-[#FFFCF4] rounded-2xl flex items-center justify-center space-x-3 shadow-[0_4px_14px_rgba(107,53,42,0.28)] transition-all font-semibold text-[14.5px]"
+          className="banner-cta-shine group/cta w-full h-12 bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] hover:brightness-105 hover:shadow-[0_8px_20px_rgba(217,35,45,0.38)] active:scale-[0.98] text-white rounded-2xl flex items-center justify-center space-x-3 shadow-[0_4px_14px_rgba(217,35,45,0.3)] transition-all font-semibold text-[14.5px]"
         >
           <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center flex-shrink-0">
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
@@ -155,53 +155,53 @@ export const WelcomeAuthScreen: React.FC<WelcomeAuthScreenProps> = ({
         {/* 2. Continue with Phone */}
         <button
           onClick={onContinuePhone}
-          className="w-full h-12 bg-white hover:bg-[#FFF8D6]/50 active:scale-[0.98] text-[#2B1611] border border-[#E8D8C4] rounded-2xl flex items-center justify-center space-x-3 transition-all font-semibold text-[14.5px] shadow-xs"
+          className="w-full h-12 bg-white hover:bg-gray-50 active:scale-[0.98] text-gray-900 border border-gray-200 rounded-2xl flex items-center justify-center space-x-3 transition-all font-semibold text-[14.5px] shadow-xs"
         >
-          <Phone className="w-4 h-4 text-[#6B352A]" />
+          <Phone className="w-4 h-4 text-gray-700" />
           <span>Continue with Phone</span>
         </button>
 
         {/* 3. Continue with Email */}
         <button
           onClick={onContinueEmail}
-          className="w-full h-12 bg-white hover:bg-[#FFF8D6]/50 active:scale-[0.98] text-[#2B1611] border border-[#E8D8C4] rounded-2xl flex items-center justify-center space-x-3 transition-all font-semibold text-[14.5px] shadow-xs"
+          className="w-full h-12 bg-white hover:bg-gray-50 active:scale-[0.98] text-gray-900 border border-gray-200 rounded-2xl flex items-center justify-center space-x-3 transition-all font-semibold text-[14.5px] shadow-xs"
         >
-          <Mail className="w-4 h-4 text-[#6B352A]" />
+          <Mail className="w-4 h-4 text-gray-700" />
           <span>Continue with Email</span>
         </button>
 
         {/* OR Divider */}
         <div className="flex items-center space-x-3 py-0.5">
-          <div className="flex-1 h-[1px] bg-[#E8D8C4]" />
-          <span className="text-[11px] font-bold text-[#8A6C63] tracking-wider">OR</span>
-          <div className="flex-1 h-[1px] bg-[#E8D8C4]" />
+          <div className="flex-1 h-[1px] bg-gray-200" />
+          <span className="text-[11px] font-bold text-gray-400 tracking-wider">OR</span>
+          <div className="flex-1 h-[1px] bg-gray-200" />
         </div>
 
-        {/* 4. Continue as Guest */}
+        {/* 4. Continue as Guest (Matching Image 2) */}
         <button
           onClick={onContinueGuest}
-          className="w-full h-12 bg-[#FFF1A6] hover:bg-[#FCE883] active:scale-[0.98] text-[#6B352A] rounded-2xl flex items-center justify-between px-5 transition-all font-bold text-[14px]"
+          className="w-full h-12 bg-[#FDECE9] hover:bg-[#FCD8CF] active:scale-[0.98] text-[#D9232D] rounded-2xl flex items-center justify-between px-5 transition-all font-bold text-[14px]"
         >
           <div className="flex items-center space-x-2.5">
-            <User className="w-4 h-4 text-[#6B352A]" />
+            <User className="w-4 h-4 text-[#D9232D]" />
             <span>Continue as Guest</span>
           </div>
-          <ChevronRight className="w-4 h-4 text-[#6B352A]" />
+          <ChevronRight className="w-4 h-4 text-[#D9232D]" />
         </button>
 
         {/* Terms and Privacy Footer Note */}
-        <p className="text-[11px] text-center text-[#8A6C63] pt-1 leading-normal">
+        <p className="text-[11px] text-center text-gray-400 pt-1 leading-normal">
           By continuing, you agree to our{' '}
           <button
             onClick={onOpenTerms}
-            className="text-[#6B352A] hover:underline font-medium"
+            className="text-[#D9232D] hover:underline font-medium"
           >
             Terms &amp; Conditions
           </button>{' '}
           and{' '}
           <button
             onClick={onOpenPrivacy}
-            className="text-[#6B352A] hover:underline font-medium"
+            className="text-[#D9232D] hover:underline font-medium"
           >
             Privacy Policy
           </button>
