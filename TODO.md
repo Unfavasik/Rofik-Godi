@@ -17,7 +17,6 @@
 
 - [x] Notification inbox supports All, Orders, Offers, Support and System categories derived from actual notification payloads; opening a support reply shows real ticket metadata/latest staff reply and opens the same private conversation.
 - [x] `/contact-support` provides the reference-style support form using the authenticated support workflow, real customer order choices and existing message/attachment limits.
-- [x] `/contact-support` exposes a direct in-app chat shortcut to the existing authenticated customer-support inbox; customer and admin replies use the existing private conversation and notification flow.
 - [x] My Support, support detail and Contact Support render as full-height pages without the persistent account tab bar; the mobile ticket list is an edge-to-edge page rather than a nested oversized card.
 - [x] Notification delete is revealed by press-and-hold or swipe-left; swipe-right/tap closes it, ordinary tap opens details, and keyboard focus exposes the accessible delete control.
 

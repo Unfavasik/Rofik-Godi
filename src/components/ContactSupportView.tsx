@@ -88,29 +88,6 @@ export function ContactSupportView({
                 </p>
               </div>
             </div>
-            {onOpenSupportRequests && (
-              <button
-                type="button"
-                onClick={onOpenSupportRequests}
-                aria-label="Open support chat"
-                className="mt-4 flex min-h-[68px] w-full items-center justify-between gap-3 rounded-2xl border border-rose-200/80 bg-white/95 px-3.5 py-3 text-left shadow-2xs transition-all hover:border-rose-300 hover:bg-rose-50/40 active:scale-[0.99]"
-              >
-                <span className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-[#D9232D] ring-1 ring-rose-100">
-                    <MessageCircle className="h-5 w-5" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-xs font-extrabold text-slate-900">Chat with the workshop team</span>
-                    <span className="mt-0.5 block text-[10.5px] leading-4 text-slate-600">
-                      Private chat · replies appear here and trigger a notification. / ব্যক্তিগত চ্যাট · উত্তর এখানে পাবেন, নোটিফিকেশনও আসবে।
-                    </span>
-                  </span>
-                </span>
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-rose-50 px-2.5 py-1.5 text-[10.5px] font-extrabold text-[#D9232D]">
-                  Open chat <ChevronRight className="h-3.5 w-3.5" />
-                </span>
-              </button>
-            )}
           </section>
 
           <CustomerSupportRequestForm

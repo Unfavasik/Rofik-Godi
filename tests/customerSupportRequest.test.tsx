@@ -124,9 +124,6 @@ describe('customer support request', () => {
       />,
     );
     expect(html).toContain('Contact Workshop Team');
-    expect(html).toContain('Chat with the workshop team');
-    expect(html).toContain('aria-label="Open support chat"');
-    expect(html).toContain('ব্যক্তিগত চ্যাট');
     expect(html).toContain('Direct workshop channels');
     expect(html).toContain('WhatsApp Direct Support');
     expect(html).toContain('View my support requests');
