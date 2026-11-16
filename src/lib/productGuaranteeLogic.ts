@@ -228,11 +228,18 @@ export interface InvoiceTermsClause {
 }
 
 export function buildInvoiceTermsText(guaranteeInfo?: ResolvedGuaranteeInfo | null): {
+  policyHeading: string;
   pickupAndCraftPolicyText: string;
   returnPolicyText: string;
   guaranteePolicyText: string;
+  closingTitle: string;
+  closingSubtitle: string;
   clauses: InvoiceTermsClause[];
 } {
+  const policyHeading = 'WORKSHOP TERMS & GUARANTEE POLICY';
+  const closingTitle = 'Thank You for Choosing Rofik Godi Centre!';
+  const closingSubtitle = 'Customer Satisfaction Is Our Priority';
+
   const pickupAndCraftPolicyText =
     'Store Pickup Only & Craftsmanship Scope: We do not provide online, home, or courier delivery—all orders must be collected in person at Rofik Godi Centre (Berhampore) with your Order ID or Pickup QR code for complimentary on-spot workshop fitment. Seat covers are tailored strictly to the selected vehicle model, colour, foam thickness, and stitch pattern; we do not write, print, or embroider custom names or text on seat covers.';
 
@@ -248,35 +255,49 @@ export function buildInvoiceTermsText(guaranteeInfo?: ResolvedGuaranteeInfo | nu
 
   const clauses: InvoiceTermsClause[] = [
     {
-      number: '01',
-      title: 'Workshop Pickup Only (No Online Delivery)',
-      body: 'We do not provide online, home, or courier delivery. Every order is prepared for in-person collection at Rofik Godi Centre, Berhampore with Order ID / Pickup QR verification and complimentary on-spot seat installation.',
+      number: '1',
+      title: 'Product Inspection',
+      body: 'Customers are requested to check the seat cover and fitting before leaving the workshop.',
     },
     {
-      number: '02',
-      title: 'Standard Vehicle Fitment (No Custom Name Writing)',
-      body: 'Seat covers are crafted strictly per your selected vehicle model, colour variant, foam cushioning thickness, and stitch pattern. We do not write, print, or embroider custom names, numbers, or logos on seat covers.',
+      number: '2',
+      title: 'Fitting Guarantee',
+      body: 'Any fitting-related issue caused by our workmanship will be inspected and corrected within a reasonable time.',
     },
     {
-      number: '03',
-      title: '7-Day Defect Replacement & Refund Rules',
-      body: 'Unused, uninstalled covers in original condition qualify for workshop replacement within 7 days for verified stitching flaws or fitment mismatches. Approved online payment refunds are processed to the original source within 3–5 working banking days.',
+      number: '3',
+      title: 'Manufacturing Defects',
+      body: 'Genuine manufacturing defects will be inspected and handled according to the applicable product warranty.',
     },
     {
-      number: '04',
-      title: `Replacement Guarantee (${
-        guaranteeInfo?.enabled && guaranteeInfo.validUntilIso
-          ? `Valid until ${guaranteeInfo.validUntilLabel}`
-          : 'Admin-Issued Date Only'
-      })`,
-      body: 'Covers natural splitting/cracking, seam tearing, or rexine/leatherette surface peeling under normal everyday use before the guarantee expiry date. Strictly void for cat or animal scratches, bilet / blade or sharp-object cuts, fire or burn damage, chemical spills, and intentional misuse.',
+      number: '4',
+      title: 'No Guarantee on Physical Damage',
+      body: 'Damage caused by accidents, cuts, burns, improper handling, or external factors is not covered.',
+    },
+    {
+      number: '5',
+      title: 'Customer Responsibility',
+      body: 'Customers must ensure that the selected product and fitting meet their requirements before confirming the purchase.',
+    },
+    {
+      number: '6',
+      title: 'Invoice Required',
+      body: 'Original invoice must be presented for any warranty or service-related claim.',
+    },
+    {
+      number: '7',
+      title: 'Final Inspection',
+      body: 'Once the product and fitting are checked and accepted by the customer, subsequent claims will be subject to inspection.',
     },
   ];
 
   return {
+    policyHeading,
     pickupAndCraftPolicyText,
     returnPolicyText,
     guaranteePolicyText,
+    closingTitle,
+    closingSubtitle,
     clauses,
   };
 }

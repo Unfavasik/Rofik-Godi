@@ -386,7 +386,7 @@ describe('Storefront & Checkout mobile-first responsive markup', () => {
     expect(html).toContain('Browse seats');
   });
 
-  it('renders Edit Profile with a clean classic-glass top bar and hides the bottom save bar until changes are made', () => {
+  it('renders Edit Profile with a clean classic-glass top bar, compact controls/typography, and hides the bottom save bar until changes are made', () => {
     const html = renderToStaticMarkup(
       <AccountView
         currentUser={{
@@ -408,6 +408,11 @@ describe('Storefront & Checkout mobile-first responsive markup', () => {
     expect(html).not.toContain('Personal details &amp; fitment garage');
     expect(html).not.toContain('All changes up to date');
     expect(html).not.toContain('data-testid="profile-unsaved-bar"');
+    expect(html).toContain('h-9.5');
+    expect(html).toContain('h-8');
+    expect(html).toContain('text-[12.5px]');
+    expect(html).toContain('text-[10.5px]');
+    expect(html).toContain('h-15 w-15');
   });
 });
 

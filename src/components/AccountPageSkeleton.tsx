@@ -167,69 +167,70 @@ export const AccountProfileEditorSkeleton: React.FC = () => {
       data-testid="account-profile-editor-skeleton"
       aria-busy="true"
       aria-label="Loading profile details"
-      className="space-y-4"
+      className="space-y-3"
     >
       {/* Glassmorphic Rider ID Card Skeleton */}
-      <div className="relative overflow-hidden rounded-3xl border border-rose-200/80 bg-gradient-to-br from-[#FFF4F5] via-white to-[#FCECEF] p-4 sm:p-5 shadow-[0_12px_32px_-14px_rgba(217,35,45,0.14)] space-y-4">
-        <div className="flex items-start gap-4">
-          <div className="skeleton-shimmer h-20 w-20 shrink-0 rounded-full border-[3px] border-white bg-rose-100 shadow-sm" />
-          <div className="min-w-0 flex-1 space-y-2">
+      <div className="relative overflow-hidden rounded-[22px] border border-rose-200/75 bg-gradient-to-br from-[#FFF4F5] via-white to-[#FCECEF] p-3.5 sm:p-4 shadow-[0_10px_28px_-16px_rgba(217,35,45,0.14)] space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="skeleton-shimmer h-15 w-15 sm:h-16 sm:w-16 shrink-0 rounded-full border-2 border-white bg-rose-100 shadow-sm" />
+          <div className="min-w-0 flex-1 space-y-1.5">
             <div className="flex items-center justify-between gap-2">
-              <div className="skeleton-shimmer h-4 w-36 rounded-md bg-slate-200/85" />
-              <div className="skeleton-shimmer h-5 w-24 rounded-full bg-rose-100/90" />
+              <div className="skeleton-shimmer h-3.5 w-32 rounded-md bg-slate-200/85" />
+              <div className="skeleton-shimmer h-4.5 w-20 rounded-md bg-rose-100/90" />
             </div>
-            <div className="flex flex-wrap gap-1.5">
-              <div className="skeleton-shimmer h-5 w-28 rounded-lg bg-white/90 border border-rose-100" />
-              <div className="skeleton-shimmer h-5 w-32 rounded-lg bg-white/90 border border-rose-100" />
+            <div className="flex flex-wrap gap-1">
+              <div className="skeleton-shimmer h-4.5 w-24 rounded-md bg-white/90 border border-rose-100" />
+              <div className="skeleton-shimmer h-4.5 w-28 rounded-md bg-white/90 border border-rose-100" />
             </div>
-            <div className="flex gap-2 pt-1">
-              <div className="skeleton-shimmer h-9 w-28 rounded-xl bg-rose-200/80" />
-              <div className="skeleton-shimmer h-9 w-28 rounded-xl bg-white border border-rose-100" />
+            <div className="flex gap-1.5 pt-1">
+              <div className="skeleton-shimmer h-8 w-24 rounded-lg bg-rose-200/80" />
+              <div className="skeleton-shimmer h-8 w-24 rounded-lg bg-white border border-rose-100" />
             </div>
           </div>
         </div>
-        <div className="space-y-1.5 rounded-2xl bg-white/80 p-3 border border-rose-100/80">
-          <div className="flex justify-between">
-            <div className="skeleton-shimmer h-3 w-36 rounded bg-slate-200/75" />
-            <div className="skeleton-shimmer h-3 w-12 rounded bg-rose-100" />
+        <div className="space-y-1.5 rounded-xl bg-white/80 px-2.5 py-2 border border-rose-100/80">
+          <div className="skeleton-shimmer h-1 w-full rounded-full bg-rose-100" />
+          <div className="flex gap-1">
+            {[0, 1, 2, 3].map((chip) => (
+              <div key={chip} className="skeleton-shimmer h-4.5 w-14 rounded-md bg-slate-100" />
+            ))}
           </div>
-          <div className="skeleton-shimmer h-2 w-full rounded-full bg-rose-100" />
         </div>
       </div>
 
       {/* Personal Details Form Skeleton */}
-      <div className="rounded-3xl border border-slate-200/80 bg-white/95 p-4 sm:p-5 shadow-[0_8px_28px_-14px_rgba(15,23,42,0.06)] space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div className="space-y-1.5">
-            <div className="skeleton-shimmer h-4 w-32 rounded bg-slate-200/85" />
-            <div className="skeleton-shimmer h-3 w-48 rounded bg-slate-200/65" />
+      <div className="rounded-[22px] border border-slate-200/80 bg-white/95 p-3.5 sm:p-4 shadow-[0_6px_22px_-12px_rgba(15,23,42,0.06)] space-y-3">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <div className="space-y-1">
+            <div className="skeleton-shimmer h-3.5 w-28 rounded bg-slate-200/85" />
+            <div className="skeleton-shimmer h-2.5 w-44 rounded bg-slate-200/65" />
           </div>
-          <div className="skeleton-shimmer h-9 w-9 rounded-xl bg-rose-50" />
+          <div className="skeleton-shimmer h-7 w-7 rounded-lg bg-rose-50" />
         </div>
         {[0, 1, 2].map((field) => (
-          <div key={field} className="space-y-1.5">
-            <div className="skeleton-shimmer h-3 w-28 rounded bg-slate-200/75" />
-            <div className="skeleton-shimmer h-11 w-full rounded-xl bg-slate-100" />
+          <div key={field} className="space-y-1">
+            <div className="skeleton-shimmer h-2.5 w-24 rounded bg-slate-200/75" />
+            <div className="skeleton-shimmer h-9.5 w-full rounded-xl bg-slate-100" />
           </div>
         ))}
       </div>
 
       {/* Vehicle Fitment Garage Card Skeleton */}
-      <div className="rounded-3xl border border-slate-200/80 bg-white/95 p-4 sm:p-5 shadow-[0_8px_28px_-14px_rgba(15,23,42,0.06)] space-y-3.5">
-        <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-          <div className="skeleton-shimmer h-9 w-9 rounded-xl bg-rose-50 shrink-0" />
-          <div className="space-y-1.5 flex-1">
-            <div className="skeleton-shimmer h-4 w-40 rounded bg-slate-200/85" />
-            <div className="skeleton-shimmer h-3 w-56 max-w-[85%] rounded bg-slate-200/65" />
+      <div className="rounded-[22px] border border-slate-200/80 bg-white/95 p-3.5 sm:p-4 shadow-[0_6px_22px_-12px_rgba(15,23,42,0.06)] space-y-3">
+        <div className="flex items-center gap-2.5 border-b border-slate-100 pb-2.5">
+          <div className="skeleton-shimmer h-7 w-7 rounded-lg bg-rose-50 shrink-0" />
+          <div className="space-y-1 flex-1">
+            <div className="skeleton-shimmer h-3.5 w-36 rounded bg-slate-200/85" />
+            <div className="skeleton-shimmer h-2.5 w-52 max-w-[85%] rounded bg-slate-200/65" />
           </div>
         </div>
         <div className="grid grid-cols-5 gap-1.5">
           {[0, 1, 2, 3, 4].map((pill) => (
-            <div key={pill} className="skeleton-shimmer h-9 rounded-xl bg-slate-100" />
+            <div key={pill} className="skeleton-shimmer h-8 rounded-lg bg-slate-100" />
           ))}
         </div>
-        <div className="skeleton-shimmer h-11 w-full rounded-xl bg-slate-100" />
-        <div className="skeleton-shimmer h-11 w-full rounded-xl bg-slate-100" />
+        <div className="skeleton-shimmer h-9.5 w-full rounded-xl bg-slate-100" />
+        <div className="skeleton-shimmer h-9.5 w-full rounded-xl bg-slate-100" />
       </div>
     </div>
   );

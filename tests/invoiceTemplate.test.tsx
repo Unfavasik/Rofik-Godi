@@ -2,6 +2,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { InvoiceTemplate, DEFAULT_STORE, amountInWords } from '../src/components/InvoiceTemplate';
+import { resolveOrderItemImageUrl } from '../src/lib/orderInvoice';
 import { toCustomerOrderRecord, type AdminOrderRecord } from '../src/lib/supabaseAdminOrders';
 
 const adminOrder: AdminOrderRecord = {
@@ -75,7 +76,7 @@ describe('InvoiceTemplate', () => {
     });
   });
 
-  it('renders the configured shop, pending balance, terms and optional pickup code', () => {
+  it('renders the configured shop, pending balance, 7-point terms, gratitude banner, and optional pickup code', () => {
     const html = renderToStaticMarkup(
       <InvoiceTemplate order={toCustomerOrderRecord(adminOrder)} pickupToken="RGCPICKUP123" />,
     );
@@ -86,12 +87,16 @@ describe('InvoiceTemplate', () => {
     expect(html).toContain('PENDING');
     expect(html).toContain('Balance due at store');
     expect(html).toContain('RGCPICKUP123');
-    expect(html).toContain('Workshop Terms &amp; Guarantee Policy');
-    expect(html).toContain('Workshop Pickup Only (No Online Delivery)');
-    expect(html).toContain('We do not provide online, home, or courier delivery');
-    expect(html).toContain('Standard Vehicle Fitment (No Custom Name Writing)');
-    expect(html).toContain('We do not write, print, or embroider custom names, numbers, or logos on seat covers');
-    expect(html).toContain('7 days');
+    expect(html).toContain('WORKSHOP TERMS &amp; GUARANTEE POLICY');
+    expect(html).toContain('Product Inspection');
+    expect(html).toContain('Fitting Guarantee');
+    expect(html).toContain('Manufacturing Defects');
+    expect(html).toContain('No Guarantee on Physical Damage');
+    expect(html).toContain('Customer Responsibility');
+    expect(html).toContain('Invoice Required');
+    expect(html).toContain('Final Inspection');
+    expect(html).toContain('Thank You for Choosing Rofik Godi Centre!');
+    expect(html).toContain('Customer Satisfaction Is Our Priority');
     expect(html).toContain('Two Thousand Five Hundred Rupees Only');
   });
 
@@ -133,7 +138,7 @@ describe('InvoiceTemplate', () => {
     expect(html).toContain('Embroidery: ROFIK');
   });
 
-  it('renders ordered item images and the authorised workshop signature', () => {
+  it('renders ordered item images, falls back to bundled catalog by name, and renders authorised signature', () => {
     const orderWithImage = toCustomerOrderRecord(adminOrder);
     orderWithImage.order_items[0].image_url = 'https://cdn.example.com/seat-black.jpg';
 
@@ -142,6 +147,14 @@ describe('InvoiceTemplate', () => {
     expect(html).toContain('https://cdn.example.com/seat-black.jpg');
     expect(html).toContain('/assets/aistudio/brittany-signature_775bf19a.png');
     expect(html).toContain('Authorised signature');
+
+    // Verify PDF/invoice image resolver resolves product image by title even when image_url and product_id don't match
+    const resolvedFallback = resolveOrderItemImageUrl({
+      product_id: 'unknown-id',
+      product_name: 'Premium Bike Seat Cover',
+      color: 'Jet Black & Crimson Red',
+    });
+    expect(resolvedFallback).toContain('https://lh3.googleusercontent.com/');
   });
 
   it('displays per-product guarantee date from matching catalog product and keeps terms clean when no date is set', () => {
@@ -203,6 +216,52 @@ describe('InvoiceTemplate', () => {
     );
     expect(htmlWithoutDate).not.toContain('Replacement Guarantee:');
     expect(htmlWithoutDate).not.toContain('data-testid="guarantee-certificate-qr"');
+  });
+
+  it('uses the clean minimal, soft & friendly warm paper palette without heavy dark blocks or thick left stripes', () => {
+    const html = renderToStaticMarkup(
+      <InvoiceTemplate
+        order={toCustomerOrderRecord(adminOrder)}
+        onClose={() => undefined}
+        products={[
+          {
+            id: 'product-1',
+            title: 'Bike seat cover',
+            subtitle: '',
+            slug: 'bike-seat-cover',
+            category: 'bike',
+            categoryLabel: 'Bike Covers',
+            price: 1500,
+            originalPrice: 1800,
+            image: '',
+            additionalImages: [],
+            description: '',
+            features: [],
+            isBestseller: false,
+            isNew: false,
+            isWaterproof: true,
+            isCustomizable: false,
+            inStock: true,
+            materials: [],
+            colors: [],
+            stitchPatterns: [],
+            compatibility: [],
+            thicknessOptions: [],
+            rating: 5,
+            reviewCount: 1,
+            guaranteeValidUntil: '2028-09-15',
+          },
+        ]}
+      />,
+    );
+
+    expect(html).toContain('bg-[#F6F7FA]');
+    expect(html).toContain('bg-[#F8FAFC]');
+    expect(html).toContain('bg-[#F0FDF4]');
+    expect(html).toContain('bg-[#FFF5F6]');
+    expect(html).toContain('rounded-full');
+    expect(html).not.toContain('bg-slate-900');
+    expect(html).not.toContain('border-l-4');
   });
 });
 

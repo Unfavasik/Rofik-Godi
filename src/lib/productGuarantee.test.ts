@@ -87,4 +87,12 @@ test('buildInvoiceTermsText includes 7-day rule, normal-use defects, and explici
 
   const genericTerms = buildInvoiceTermsText(null);
   assert.match(genericTerms.guaranteePolicyText, /admin-issued guarantee date/i);
+  assert.equal(terms.clauses.length, 7);
+  assert.equal(terms.clauses[0]?.title, 'Product Inspection');
+  assert.equal(terms.clauses[1]?.title, 'Fitting Guarantee');
+  assert.equal(terms.clauses[2]?.title, 'Manufacturing Defects');
+  assert.equal(terms.clauses[3]?.title, 'No Guarantee on Physical Damage');
+  assert.equal(terms.clauses[4]?.title, 'Customer Responsibility');
+  assert.equal(terms.clauses[5]?.title, 'Invoice Required');
+  assert.equal(terms.clauses[6]?.title, 'Final Inspection');
 });

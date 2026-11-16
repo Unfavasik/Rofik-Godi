@@ -21,7 +21,7 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import type { CustomerOrderRecord, Product } from '../types';
 import { WORKSHOP_INFO } from '../data/products';
-import { downloadOrderInvoice } from '../lib/orderInvoice';
+import { downloadOrderInvoice, resolveOrderItemImageUrl } from '../lib/orderInvoice';
 import {
   buildGuaranteeVerificationUrl,
   buildInvoiceTermsText,
@@ -66,32 +66,12 @@ const dateLabel = (v: string) => {
     : parsed.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
 };
 
-function resolveOrderItemImage(
-  item: CustomerOrderRecord['order_items'][number],
-  productsById: Map<string, Product>,
-): string | null {
-  if (typeof item.image_url === 'string' && item.image_url.trim()) {
-    return item.image_url.trim();
-  }
-  const product = item.product_id ? productsById.get(item.product_id) : undefined;
-  if (!product) return null;
-  const colorName = String(item.color || '').trim().toLowerCase();
-  if (colorName && Array.isArray(product.colors)) {
-    const matchedColor = product.colors.find(
-      (entry) => String(entry.name || '').trim().toLowerCase() === colorName,
-    );
-    const colorImg = matchedColor?.images?.find((src) => typeof src === 'string' && src.trim());
-    if (colorImg) return colorImg.trim();
-  }
-  return typeof product.image === 'string' && product.image.trim() ? product.image.trim() : null;
-}
-
 const InvoiceItemThumb: React.FC<{ src: string | null; alt: string }> = ({ src, alt }) => {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const showImage = Boolean(src && failedSrc !== src);
 
   return (
-    <span className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50 text-slate-300 shadow-2xs sm:h-13 sm:w-13">
+    <span className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] text-slate-300 shadow-xs sm:h-13 sm:w-13">
       <Package className="h-4 w-4" aria-hidden="true" />
       {showImage && src && (
         <img
@@ -292,12 +272,12 @@ export const InvoiceTemplate: React.FC<{
 
         return {
           ...item,
-          resolvedImage: resolveOrderItemImage(item, productsById),
+          resolvedImage: resolveOrderItemImageUrl(item, products),
           itemGuarantee: resolveSpecificProductGuarantee(rawGuaranteeDate),
           rawGuaranteeDate: normalizeGuaranteeDate(rawGuaranteeDate),
         };
       }),
-    [items, findMatchingProduct, dbGuaranteeByKey, productsById],
+    [items, findMatchingProduct, dbGuaranteeByKey, products],
   );
 
   const productOverrideDate = useMemo(() => {
@@ -352,6 +332,7 @@ export const InvoiceTemplate: React.FC<{
         allowAnyStatus: true,
         guaranteePolicy: activeGuaranteePolicy,
         productOverrideDate,
+        products,
       });
       if (exported) {
         setDownloaded(true);
@@ -368,17 +349,17 @@ export const InvoiceTemplate: React.FC<{
   );
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-[#E9EEF5] via-[#EEF2F7] to-[#E5EBF3] px-2.5 py-4 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-8 print:bg-white print:p-0">
+    <div className="min-h-screen overflow-x-hidden bg-[#F6F7FA] px-2 py-3 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-8 print:bg-white print:p-0">
       <style>{PRINT_CSS}</style>
 
-      {/* Executive Studio Action Bar */}
-      <div className="no-print sticky top-2.5 z-20 mx-auto mb-5 flex max-w-[210mm] flex-wrap items-center justify-between gap-2.5 rounded-2xl border border-white/90 bg-white/90 px-3 py-2.5 shadow-[0_14px_34px_-14px_rgba(15,23,42,0.18)] backdrop-blur-xl sm:px-4">
-        <div className="flex min-w-0 items-center gap-2.5">
+      {/* Crisp Single-Row Sticky Action Bar */}
+      <div className="no-print sticky top-2 z-20 mx-auto mb-3.5 flex max-w-[210mm] items-center justify-between gap-2 rounded-full border border-[#E2E8F0] bg-white/95 px-2.5 py-1.5 shadow-[0_10px_28px_-14px_rgba(15,23,42,0.16)] backdrop-blur-xl sm:mb-5 sm:px-3.5 sm:py-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           {onClose ? (
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200/90 bg-white px-3.5 py-2 text-xs font-extrabold text-slate-700 shadow-2xs transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]"
+              className="inline-flex h-8.5 shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-3 text-[11px] font-bold text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950 active:scale-[0.98] sm:h-9 sm:px-3.5 sm:text-xs"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               <span>Close</span>
@@ -386,19 +367,18 @@ export const InvoiceTemplate: React.FC<{
           ) : null}
 
           <div className="flex min-w-0 items-center gap-2">
-            <span className="hidden h-8 w-8 shrink-0 place-items-center rounded-xl bg-slate-900 text-white sm:grid">
-              <FileCheck2 className="h-4 w-4 text-rose-400" />
+            <span className="hidden h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#FFF1F2] to-[#FFE4E6] text-[#BE123C] sm:grid">
+              <FileCheck2 className="h-4 w-4" />
             </span>
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <p className="truncate text-[11px] font-black uppercase tracking-wider text-slate-900">
-                  Official Invoice
-                </p>
+              <div className="flex items-center gap-1.5 text-[11px] sm:text-xs">
+                <p className="hidden truncate font-bold text-slate-900 sm:block">Official Invoice</p>
+                <span aria-hidden="true" className="hidden text-slate-300 sm:inline">
+                  ·
+                </span>
                 <span
-                  className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wide ${
-                    paid
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : 'bg-amber-100 text-amber-800'
+                  className={`shrink-0 font-bold ${
+                    paid ? 'text-[#047857]' : 'text-[#B45309]'
                   }`}
                 >
                   {paid ? 'Paid' : 'Pending'}
@@ -408,34 +388,34 @@ export const InvoiceTemplate: React.FC<{
                 type="button"
                 onClick={() => void handleCopyOrderNumber()}
                 title="Copy invoice number"
-                className="group mt-0.5 inline-flex items-center gap-1 font-mono text-[11px] font-bold text-slate-500 tabular-nums transition hover:text-slate-900"
+                className="group flex max-w-full items-center gap-1 font-mono text-[10px] font-semibold text-slate-500 tabular-nums transition hover:text-[#BE123C] sm:text-[11px]"
               >
                 <span className="truncate">#{order.order_number}</span>
                 {copiedOrderNo ? (
-                  <Check className="h-3 w-3 shrink-0 text-emerald-600" />
+                  <Check className="h-2.5 w-2.5 shrink-0 text-[#059669]" />
                 ) : (
-                  <Copy className="h-3 w-3 shrink-0 opacity-60 group-hover:opacity-100" />
+                  <Copy className="h-2.5 w-2.5 shrink-0 opacity-60 group-hover:opacity-100" />
                 )}
               </button>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <button
             type="button"
             disabled={downloadingPdf}
             onClick={() => void handleDownloadPdf()}
-            className="inline-flex min-h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border border-slate-200/90 bg-white px-3.5 py-2 text-xs font-extrabold text-slate-800 shadow-2xs transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] disabled:opacity-60"
+            className="inline-flex h-8.5 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#FECDD3] bg-[#FFF5F6] px-2.5 text-[11px] font-bold text-[#BE123C] transition hover:border-[#FDA4AF] hover:bg-[#FFE4E6] active:scale-[0.98] disabled:opacity-60 sm:h-9 sm:px-3.5 sm:text-xs"
           >
             {downloaded ? (
               <>
-                <Check className="h-4 w-4 text-emerald-600" />
-                <span className="text-emerald-700">Saved PDF</span>
+                <Check className="h-3.5 w-3.5 text-[#047857]" />
+                <span className="text-[#047857]">Saved PDF</span>
               </>
             ) : (
               <>
-                <Download className="h-4 w-4 text-slate-600" />
+                <Download className="h-3.5 w-3.5" />
                 <span>{downloadingPdf ? 'Saving PDF…' : 'Download PDF'}</span>
               </>
             )}
@@ -443,342 +423,465 @@ export const InvoiceTemplate: React.FC<{
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex min-h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91C1C] px-4 py-2 text-xs font-extrabold text-white shadow-[0_8px_20px_-6px_rgba(217,35,45,0.55)] transition hover:brightness-105 active:scale-[0.98]"
+            className="inline-flex h-8.5 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-[#D9232D] to-[#BE123C] px-3 text-[11px] font-bold text-white shadow-[0_8px_18px_-6px_rgba(217,35,45,0.48)] transition hover:brightness-105 active:scale-[0.98] sm:h-9 sm:px-4 sm:text-xs"
           >
-            <Printer className="h-4 w-4" />
+            <Printer className="h-3.5 w-3.5" />
             <span>Print</span>
           </button>
         </div>
       </div>
 
-      {/* Executive Workshop Invoice Sheet */}
+      {/* Elevated Porcelain Paper Invoice Sheet */}
       <article
         id="invoice-sheet"
-        className="mx-auto flex min-h-0 w-full max-w-full flex-col overflow-hidden rounded-[22px] border border-slate-200/95 bg-white text-slate-900 shadow-[0_28px_70px_-24px_rgba(15,23,42,0.22),0_4px_16px_-4px_rgba(15,23,42,0.06)] sm:min-h-[297mm] sm:max-w-[210mm] sm:rounded-[24px] print:rounded-none print:border-0"
+        className="mx-auto flex min-h-0 w-full max-w-full flex-col overflow-hidden rounded-[22px] border border-[#E2E8F0] bg-white text-slate-800 shadow-[0_22px_56px_-24px_rgba(15,23,42,0.14)] sm:min-h-[297mm] sm:max-w-[210mm] sm:rounded-[26px] print:rounded-none print:border-0 print:shadow-none"
       >
-        {/* Signature Top Brand Rule */}
-        <div className="h-2 w-full shrink-0 bg-gradient-to-r from-slate-950 via-[#D9232D] to-[#9F1239]" />
+        {/* Signature Crimson-to-Teal Top Accent Ribbon */}
+        <div className="h-2 w-full shrink-0 bg-gradient-to-r from-[#B91C1C] via-[#E11D48] to-[#0D9488]" />
 
-        {/* Executive Letterhead */}
-        <header className="relative border-b border-slate-200/90 bg-gradient-to-br from-slate-50/90 via-white to-rose-50/25 px-4 py-5 sm:px-9 sm:py-7">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-            {/* Workshop Identity */}
-            <div className="min-w-0 flex-1">
-              <div className="flex items-start gap-3.5">
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-[#D9232D] text-white shadow-[0_10px_22px_-8px_rgba(15,23,42,0.45)] sm:h-13 sm:w-13">
-                  <span className="font-mono text-sm font-black tracking-tighter">RGC</span>
-                </div>
-                <div className="min-w-0">
-                  <div className="inline-flex items-center gap-1.5 rounded-md border border-rose-200/80 bg-rose-50/80 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#D9232D]">
-                    <Sparkles className="h-3 w-3 shrink-0" />
-                    <span>Custom Seat Cover Workshop</span>
-                  </div>
-                  <h1 className="mt-1.5 text-xl font-black tracking-tight text-slate-950 break-words sm:text-2xl">
-                    {store.name}
-                  </h1>
-                </div>
+        {/* Airy Workshop Letterhead + Aligned Receipt Strip */}
+        <header className="border-b border-[#E2E8F0] bg-gradient-to-b from-[#F8FAFC] to-white px-4 py-5 sm:px-9 sm:py-7">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#D9232D] to-[#9F1239] text-white shadow-[0_8px_18px_-8px_rgba(217,35,45,0.55)] sm:h-11 sm:w-11">
+                <span className="font-mono text-xs font-black tracking-tight">RGC</span>
               </div>
-
-              <div className="mt-3.5 space-y-1.5 text-[11.5px] text-slate-600">
-                <p className="flex items-start gap-2 max-w-[360px] leading-relaxed break-words">
-                  <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#D9232D]" />
-                  <span>{store.address}</span>
+              <div className="min-w-0">
+                <p className="inline-flex items-center gap-1 whitespace-nowrap text-[10px] font-bold text-[#BE123C] sm:text-[10.5px]">
+                  <Sparkles className="h-3 w-3 shrink-0" />
+                  <span>Custom Seat Cover Workshop</span>
                 </p>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-semibold text-slate-600">
-                  <span className="inline-flex items-center gap-1.5 tabular-nums">
-                    <Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                    <span>{store.phone}</span>
-                  </span>
-                  {store.email ? (
-                    <span className="inline-flex items-center gap-1.5 break-all">
-                      <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                      <span>{store.email}</span>
-                    </span>
-                  ) : null}
-                </div>
-                {store.gstin ? (
-                  <p className="font-mono text-[11px] font-semibold text-slate-500">
-                    GSTIN: {store.gstin}
-                  </p>
-                ) : null}
+                <h1 className="mt-0.5 text-[15.5px] leading-tight font-extrabold tracking-tight text-slate-950 break-words sm:text-2xl">
+                  {store.name}
+                </h1>
               </div>
             </div>
 
-            {/* Invoice Document Box */}
-            <div className="w-full shrink-0 rounded-2xl border border-slate-200/90 bg-white/95 p-3.5 shadow-2xs sm:w-[248px] sm:p-4">
-              <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-                <div>
-                  <p className="text-[9.5px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
-                    Tax &amp; Workshop Receipt
-                  </p>
-                  <p className="text-xl font-black tracking-tight text-slate-950 sm:text-2xl">
-                    Invoice
-                  </p>
-                </div>
+            <div className="shrink-0 text-right">
+              <p className="hidden text-[10px] font-semibold text-slate-400 sm:block">
+                Tax &amp; Workshop Receipt
+              </p>
+              <div className="flex items-center justify-end gap-1.5 sm:mt-0.5 sm:gap-2">
+                <span className="text-[15px] font-extrabold tracking-tight text-slate-900 sm:text-xl">
+                  Invoice
+                </span>
                 <span
-                  className={`inline-flex items-center rounded-xl border px-2.5 py-1 text-[10.5px] font-black uppercase tracking-wider shadow-2xs ${
+                  className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold tracking-wide ${
                     paid
-                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                      : 'border-amber-200 bg-amber-50 text-amber-800'
+                      ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                      : 'border-amber-300 bg-amber-50 text-amber-800'
                   }`}
                 >
                   {paid ? 'PAID' : (order.payment_status || 'PENDING').toUpperCase()}
                 </span>
               </div>
-
-              <dl className="mt-2.5 space-y-1.5 text-[11px]">
-                <div className="flex items-center justify-between gap-2">
-                  <dt className="font-semibold text-slate-400">Receipt No.</dt>
-                  <dd className="font-mono font-extrabold text-slate-900 tabular-nums">
-                    {order.order_number}
-                  </dd>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <dt className="font-semibold text-slate-400">Issued</dt>
-                  <dd className="font-semibold text-slate-700 tabular-nums">
-                    {dateLabel(order.created_at)}
-                  </dd>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <dt className="font-semibold text-slate-400">Mode</dt>
-                  <dd className="font-extrabold text-[#D9232D]">Workshop Pickup</dd>
-                </div>
-              </dl>
             </div>
           </div>
+
+          {/* Contact Details */}
+          <div className="mt-3.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-stone-600">
+            <span className="inline-flex items-start gap-1.5 leading-snug">
+              <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#D9232D]" />
+              <span>{store.address}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 font-medium tabular-nums">
+              <Phone className="h-3 w-3 shrink-0 text-[#059669]" />
+              <span>{store.phone}</span>
+            </span>
+            {store.email ? (
+              <span className="inline-flex items-center gap-1.5 font-medium break-all">
+                <Mail className="h-3 w-3 shrink-0 text-[#BE123C]" />
+                <span>{store.email}</span>
+              </span>
+            ) : null}
+            {store.gstin ? (
+              <span className="font-mono text-[10.5px] font-medium text-stone-500">
+                GSTIN: {store.gstin}
+              </span>
+            ) : null}
+          </div>
+
+          {/* Clean Tinted 3-Cell Receipt Metadata Strip */}
+          <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-3.5 py-3 text-[11px] sm:grid-cols-3 sm:px-4">
+            <div className="min-w-0">
+              <dt className="text-[10px] font-semibold text-slate-400">Receipt No.</dt>
+              <dd className="mt-0.5 truncate font-mono font-bold text-slate-900 tabular-nums">
+                {order.order_number}
+              </dd>
+            </div>
+            <div className="min-w-0 text-right sm:text-left">
+              <dt className="text-[10px] font-semibold text-slate-400">Issued</dt>
+              <dd className="mt-0.5 font-semibold text-slate-700 tabular-nums">
+                {dateLabel(order.created_at)}
+              </dd>
+            </div>
+            <div className="col-span-2 flex items-center justify-between border-t border-[#E2E8F0] pt-2 sm:col-span-1 sm:block sm:border-t-0 sm:pt-0 sm:text-right">
+              <dt className="text-[10px] font-semibold text-slate-400">Mode</dt>
+              <dd className="font-bold text-[#BE123C] sm:mt-0.5">Workshop Pickup</dd>
+            </div>
+          </dl>
         </header>
 
-        <div className="min-w-0 flex-1 px-4 py-5 sm:px-9 sm:py-6">
-          {/* 3-Column Party, Workshop Pickup & Payment Metadata Ledger */}
-          <section className="grid grid-cols-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-[#F8FAFC] text-xs shadow-2xs sm:grid-cols-3 sm:divide-x sm:divide-slate-200/80">
-            {/* 01. Billed To */}
-            <div className="min-w-0 p-3.5 sm:p-4">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+        <div className="min-w-0 flex-1 space-y-5 px-4 py-5 sm:px-9 sm:py-6">
+          {/* Balanced Party, Payment & Pickup Ledger */}
+          <section className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC]/80 text-xs">
+            <div className="grid grid-cols-2 divide-x divide-[#E2E8F0] sm:grid-cols-3">
+              {/* Billed To */}
+              <div className="min-w-0 p-3.5 sm:p-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Billed to
                 </p>
-                <span className="font-mono text-[10px] font-bold text-slate-300">01</span>
-              </div>
-              <p className="mt-1.5 text-[13.5px] font-black text-slate-950 break-words">
-                {order.customer_name}
-              </p>
-              <p className="mt-0.5 font-mono text-[11.5px] font-semibold text-slate-600 tabular-nums break-words">
-                {order.customer_phone || '-'}
-              </p>
-              {order.vehicle_model ? (
-                <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 text-[10.5px] font-bold text-slate-800 shadow-2xs break-words">
-                  <Wrench className="h-3 w-3 shrink-0 text-[#D9232D]" />
-                  <span>Vehicle: {order.vehicle_model}</span>
-                </div>
-              ) : null}
-            </div>
-
-            {/* 02. Workshop Pickup */}
-            <div className="min-w-0 border-t border-slate-200/80 p-3.5 sm:border-t-0 sm:p-4">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                  Workshop pickup (No online delivery)
+                <p className="mt-1 text-[13px] font-bold text-slate-950 break-words">
+                  {order.customer_name}
                 </p>
-                <span className="font-mono text-[10px] font-bold text-slate-300">02</span>
+                <p className="mt-0.5 font-mono text-[11px] font-medium text-slate-600 tabular-nums break-words">
+                  {order.customer_phone || '-'}
+                </p>
               </div>
-              <p className="mt-1.5 text-[13.5px] font-black text-slate-950 break-words">
-                {order.pickup_store || store.name}
-              </p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-slate-600">
-                {pickupToken
-                  ? 'Collect in person with your pickup code · Free on-spot seat fitment'
-                  : 'Collect in person at the pickup store · Free on-spot seat fitment'}
-              </p>
-            </div>
 
-            {/* 03. Payment */}
-            <div className="min-w-0 border-t border-slate-200/80 p-3.5 text-left sm:border-t-0 sm:p-4 sm:text-right">
-              <div className="flex items-center justify-between gap-2 sm:flex-row-reverse">
-                <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+              {/* Payment */}
+              <div className="min-w-0 p-3.5 text-right sm:order-3 sm:p-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Payment
                 </p>
-                <span className="font-mono text-[10px] font-bold text-slate-300">03</span>
+                <p
+                  className={`mt-1 text-[13px] font-bold ${
+                    paid ? 'text-[#047857]' : 'text-slate-950'
+                  }`}
+                >
+                  {payAtStore
+                    ? paid
+                      ? 'Paid at store'
+                      : 'Pay at store'
+                    : paid
+                      ? 'Paid online'
+                      : 'Pay online'}
+                </p>
+                <p className="mt-0.5 text-[10.5px] text-slate-500">
+                  {paid
+                    ? 'Settlement complete'
+                    : payAtStore
+                      ? 'Collect at handover'
+                      : 'Awaiting settlement'}
+                </p>
+                <p className="mt-1 text-[10px] font-semibold text-slate-500">
+                  Status: {String(order.status || 'NEW').replace(/_/g, ' ')}
+                </p>
               </div>
-              <p className="mt-1.5 text-[13.5px] font-black text-slate-950">
-                {payAtStore
-                  ? paid
-                    ? 'Paid at store'
-                    : 'Pay at store'
-                  : paid
-                    ? 'Paid online'
-                    : 'Pay online'}
-              </p>
-              <p className="mt-0.5 text-[11px] font-semibold text-slate-500">
-                {paid
-                  ? 'Settlement complete'
-                  : payAtStore
-                    ? 'Collect at handover'
-                    : 'Awaiting settlement'}
-              </p>
-              <p className="mt-1.5 inline-flex items-center rounded-md bg-slate-200/75 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-slate-700">
-                Status: {String(order.status || 'NEW').replace(/_/g, ' ')}
-              </p>
+
+              {/* Workshop Pickup */}
+              <div className="col-span-2 min-w-0 border-t border-[#E2E8F0] bg-white/75 p-3.5 sm:order-2 sm:col-span-1 sm:border-t-0 sm:bg-transparent sm:p-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#BE123C]/85">
+                  Workshop pickup (No online delivery)
+                </p>
+                <p className="mt-1 text-[13px] font-bold text-slate-950 break-words">
+                  {order.pickup_store || store.name}
+                </p>
+                <p className="mt-0.5 text-[10.5px] leading-relaxed text-slate-500">
+                  {pickupToken
+                    ? 'Collect in person with your pickup code · Free on-spot seat fitment'
+                    : 'Collect in person at the pickup store · Free on-spot seat fitment'}
+                </p>
+              </div>
+            </div>
+
+            {order.vehicle_model ? (
+              <div className="flex items-center gap-2 border-t border-[#E2E8F0] bg-[#FFF5F6]/70 px-3.5 py-2.5 text-[11px] font-bold text-slate-800 sm:px-4">
+                <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-[#FFE4E6] text-[#BE123C]">
+                  <Wrench className="h-3 w-3" />
+                </span>
+                <span className="truncate">Vehicle: {order.vehicle_model}</span>
+              </div>
+            ) : null}
+          </section>
+
+          {/* Itemized Order Schedule */}
+          <section>
+            <div className="mb-2 flex items-center justify-between gap-2 px-0.5">
+              <p className="text-xs font-extrabold text-slate-900">Itemized Order Schedule</p>
+              <span className="font-mono text-[11px] font-semibold text-slate-500 tabular-nums">
+                {enrichedItems.length} {enrichedItems.length === 1 ? 'Item' : 'Items'} · {totalUnits}{' '}
+                {totalUnits === 1 ? 'Unit' : 'Units'}
+              </span>
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white">
+              {/* Desktop Aligned Column Header */}
+              <div className="hidden grid-cols-[2.25rem_minmax(0,1fr)_5.5rem_3.25rem_6rem] items-center border-b border-[#E2E8F0] bg-[#F1F5F9] px-4 py-2.5 text-[10.5px] font-bold uppercase tracking-wider text-slate-600 sm:grid">
+                <span>#</span>
+                <span>Item Description</span>
+                <span className="text-right">Price</span>
+                <span className="text-center">Qty</span>
+                <span className="text-right">Amount</span>
+              </div>
+
+              <div className="divide-y divide-[#F1F5F9]">
+                {enrichedItems.map((item, index) => {
+                  const specs = [
+                    item.color ? `Colour: ${item.color}` : '',
+                    item.selected_thickness ? `Thickness: ${item.selected_thickness}` : '',
+                    item.selected_stitch ? `Stitch: ${item.selected_stitch}` : '',
+                    item.custom_embroidery_text ? `Embroidery: ${item.custom_embroidery_text}` : '',
+                  ].filter(Boolean);
+
+                  return (
+                    <div
+                      key={index}
+                      className="p-3.5 transition-colors hover:bg-[#F8FAFC] sm:grid sm:grid-cols-[2.25rem_minmax(0,1fr)_5.5rem_3.25rem_6rem] sm:items-center sm:px-4 sm:py-3.5"
+                    >
+                      <span className="hidden font-mono text-[11px] font-bold text-slate-400 tabular-nums sm:block">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+
+                      <div className="min-w-0 sm:pr-3">
+                        <div className="flex items-start gap-3">
+                          <InvoiceItemThumb
+                            src={item.resolvedImage}
+                            alt={item.product_name || 'Ordered item'}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-[13px] font-bold leading-snug text-slate-950 break-words">
+                                {item.product_name}
+                              </p>
+                              <span className="shrink-0 font-mono text-[13px] font-extrabold text-slate-950 tabular-nums sm:hidden">
+                                {money(lineTotal(item))}
+                              </span>
+                            </div>
+
+                            {specs.length > 0 ? (
+                              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                                {specs.join(' · ')}
+                              </p>
+                            ) : null}
+
+                            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                              <span className="font-mono text-[10.5px] font-medium text-slate-400 tabular-nums sm:hidden">
+                                {money(item.unit_price)} × {item.quantity}
+                              </span>
+                              {item.itemGuarantee ? (
+                                <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10.5px] font-semibold text-emerald-800">
+                                  <ShieldCheck className="h-3 w-3 shrink-0 text-[#059669]" />
+                                  <span>
+                                    Guarantee until {item.itemGuarantee.validUntilLabel}
+                                  </span>
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <span className="hidden text-right font-mono text-[11.5px] font-medium text-slate-600 tabular-nums whitespace-nowrap sm:block">
+                        {money(item.unit_price)}
+                      </span>
+                      <div className="hidden text-center sm:block">
+                        <span className="inline-flex min-w-7 items-center justify-center rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-0.5 font-mono text-[11.5px] font-bold text-slate-700 tabular-nums">
+                          {item.quantity}
+                        </span>
+                      </div>
+                      <span className="hidden text-right font-mono text-[12.5px] font-extrabold text-slate-950 tabular-nums whitespace-nowrap sm:block">
+                        {money(lineTotal(item))}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </section>
 
-          {/* Official Workshop Guarantee Certificate */}
+          {/* Unified Totals Summary (with Amount in Words) & Pickup Voucher */}
+          <section className="grid grid-cols-1 gap-3.5 sm:grid-cols-12 sm:items-start sm:gap-4">
+            {/* Financial Summary + Amount in Words */}
+            <div className="flex w-full flex-col justify-between overflow-hidden rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] text-xs sm:order-2 sm:col-span-6">
+              <div className="space-y-2 p-3.5 sm:p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Subtotal</span>
+                  <span className="font-mono font-semibold text-slate-800 tabular-nums">
+                    {money(order.subtotal)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Workshop Fitment</span>
+                  <span className="text-[11px] font-bold text-[#047857]">Complimentary</span>
+                </div>
+                {order.discount > 0 ? (
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Discount</span>
+                    <span className="font-mono font-bold text-[#047857] tabular-nums">
+                      - {money(order.discount)}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+
+              <div>
+                <div className="flex items-baseline justify-between border-t border-[#FECDD3] bg-[#FFF5F6] px-3.5 py-3 sm:px-4">
+                  <span className="text-xs font-extrabold text-[#9F1239]">Total</span>
+                  <span className="font-mono text-lg font-extrabold text-slate-950 tabular-nums">
+                    {money(order.total)}
+                  </span>
+                </div>
+
+                {!paid && payAtStore ? (
+                  <div className="flex items-center justify-between border-t border-amber-200 bg-amber-50/90 px-3.5 py-2 text-[11px] font-bold text-amber-900 sm:px-4">
+                    <span>Balance due at store</span>
+                    <span className="font-mono tabular-nums">{money(order.total)}</span>
+                  </div>
+                ) : null}
+
+                <div className="border-t border-[#E2E8F0] bg-white px-3.5 py-2.5 sm:px-4">
+                  <p className="text-[10px] font-medium text-slate-400">Amount in words</p>
+                  <p className="mt-0.5 text-[11px] font-bold leading-snug text-slate-700 break-words">
+                    {amountInWords(order.total)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Workshop Promise / Pickup Code */}
+            <div className="flex flex-col gap-3 sm:order-1 sm:col-span-6">
+              {pickupToken ? (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#FB7185]/70 bg-gradient-to-br from-[#FFF5F6] to-white p-4 text-center">
+                  <p className="text-[10.5px] font-bold uppercase tracking-wider text-[#BE123C]">
+                    Pickup code
+                  </p>
+                  <p className="mt-1 font-mono text-xl font-extrabold tracking-[0.2em] text-[#BE123C] break-all sm:text-2xl">
+                    {pickupToken}
+                  </p>
+                  <p className="mt-1 text-[11px] font-medium text-slate-500">
+                    Show this code at the store
+                  </p>
+                </div>
+              ) : null}
+
+              <div className="flex flex-col justify-center gap-2 rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3.5 text-[11px] font-semibold text-slate-700">
+                <span className="inline-flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#059669]" />
+                  <span>Free Workshop Seat Fitment</span>
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#059669]" />
+                  <span>Quality Checked Before Handover</span>
+                </span>
+              </div>
+            </div>
+          </section>
+
+          {/* Compact Emerald Workshop Guarantee Certificate + QR Seal */}
           {guaranteeInfo.enabled && (
             <section
               aria-label="Product guarantee validity"
               data-testid="invoice-guarantee-card"
-              className="mt-4 overflow-hidden rounded-2xl border border-emerald-300/90 bg-white text-xs shadow-[0_12px_30px_-16px_rgba(5,150,105,0.22)]"
+              className="overflow-hidden rounded-2xl border border-[#A7F3D0] bg-[#F0FDF4] text-xs shadow-[0_8px_24px_-18px_rgba(5,150,105,0.28)]"
             >
-              {/* Certificate Top Rule */}
-              <div className="h-1 w-full bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-700" />
-
-              {/* Certificate Header Band */}
-              <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-emerald-100 bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/45 px-3.5 py-3 sm:px-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-800 text-white shadow-2xs ring-4 ring-emerald-100/80">
-                    <ShieldCheck className="h-4.5 w-4.5" />
+              {/* Certificate Header */}
+              <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-[#BBF7D0] bg-gradient-to-r from-[#ECFDF5] to-[#F0FDF4] px-3.5 py-3 sm:px-4">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-[#059669] text-white shadow-xs">
+                    <ShieldCheck className="h-4 w-4" />
                   </span>
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <p className="text-[9.5px] font-black uppercase tracking-[0.14em] text-emerald-700">
-                        Official Workshop Guarantee Certificate
-                      </p>
-                      <span className="hidden rounded bg-emerald-100/90 px-1.5 py-0.5 font-mono text-[8.5px] font-bold uppercase text-emerald-800 sm:inline-block">
-                        Verified Seal
-                      </span>
-                    </div>
-                    <p className="mt-0.5 text-xs font-black tracking-tight text-slate-950 sm:text-[13.5px]">
+                    <p className="text-[10px] font-bold text-[#047857]">
+                      Official Workshop Guarantee Certificate
+                    </p>
+                    <p className="text-[12.5px] font-bold tracking-tight text-slate-900 sm:text-[13px]">
                       Replacement Guarantee:{' '}
-                      <span className="text-emerald-800">
+                      <span className="text-[#047857]">
                         Valid until {guaranteeInfo.validUntilLabel}
                       </span>
                     </p>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200/90 bg-white px-2.5 py-1 text-[10.5px] font-extrabold text-emerald-900 tabular-nums shadow-2xs">
-                    <Calendar className="h-3.5 w-3.5 text-emerald-600" />
+                <div className="flex flex-wrap items-center gap-2 text-[10.5px]">
+                  <span className="inline-flex items-center gap-1 font-semibold text-slate-600 tabular-nums">
+                    <Calendar className="h-3 w-3 text-[#059669]" />
                     <span>Expires {guaranteeInfo.validUntilLabel}</span>
                   </span>
                   <span
-                    className={`inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide shadow-2xs ${
+                    className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${
                       guaranteeInfo.isActive
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-200 text-slate-600'
+                        ? 'border-emerald-300 bg-emerald-100 text-emerald-900'
+                        : 'border-slate-300 bg-slate-200/80 text-slate-600'
                     }`}
                   >
-                    <span
-                      aria-hidden="true"
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        guaranteeInfo.isActive ? 'bg-emerald-200' : 'bg-slate-400'
-                      }`}
-                    />
-                    <span>{guaranteeInfo.isActive ? 'Guarantee Active' : 'Guarantee Expired'}</span>
+                    {guaranteeInfo.isActive ? 'Guarantee Active' : 'Guarantee Expired'}
                   </span>
                 </div>
               </div>
 
-              {/* Covered vs. Excluded + Dynamic QR Verification Seal */}
-              <div className="grid grid-cols-1 gap-2.5 bg-slate-50/45 p-3 sm:grid-cols-12 sm:gap-3 sm:p-3.5">
-                <div className="grid grid-cols-1 gap-2.5 sm:col-span-9 sm:grid-cols-2 sm:gap-3">
+              {/* Coverage + Excluded + Dynamic QR Verification */}
+              <div className="grid grid-cols-1 gap-2.5 p-3 sm:grid-cols-12 sm:gap-3 sm:p-3.5">
+                <div className="grid grid-cols-1 gap-2.5 sm:col-span-9 sm:grid-cols-2">
                   {/* Covered Panel */}
-                  <div className="flex flex-col justify-between rounded-xl border border-emerald-200/85 border-l-4 border-l-emerald-600 bg-white p-3 shadow-2xs">
+                  <div className="flex flex-col justify-between rounded-xl border border-[#BBF7D0] bg-white p-3">
                     <div>
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="flex items-center gap-1.5 text-[11px] font-black text-emerald-900">
-                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                          <span>Covered Under Normal Everyday Use</span>
-                        </p>
-                        <span className="shrink-0 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-emerald-700">
-                          Free Replace
-                        </span>
-                      </div>
-                      <p className="mt-1.5 text-[10.5px] leading-relaxed text-slate-600">
+                      <p className="flex items-center gap-1.5 text-[11px] font-bold text-[#047857]">
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#059669]" />
+                        <span>Covered Under Normal Everyday Use</span>
+                      </p>
+                      <p className="mt-1 text-[10.5px] leading-relaxed text-slate-600">
                         Free workshop replacement before{' '}
-                        <strong className="font-extrabold text-slate-900">
+                        <strong className="font-bold text-slate-900">
                           {guaranteeInfo.validUntilLabel}
                         </strong>{' '}
                         for natural splitting/cracking, seam tearing, or rexine/leatherette surface
                         peeling.
                       </p>
                     </div>
-
-                    <div className="mt-2.5 flex flex-wrap gap-1 border-t border-emerald-100/80 pt-2">
-                      {['Natural Cracking', 'Seam Tearing', 'Rexine Peeling'].map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center gap-1 rounded-md border border-emerald-200/70 bg-emerald-50/70 px-1.5 py-0.5 text-[9.5px] font-bold text-emerald-800"
-                        >
-                          <Check className="h-2.5 w-2.5 text-emerald-600" />
-                          <span>{tag}</span>
-                        </span>
-                      ))}
-                    </div>
+                    <p className="mt-2 border-t border-emerald-100 pt-1.5 text-[10px] font-semibold text-[#047857]">
+                      Natural Cracking · Seam Tearing · Rexine Peeling
+                    </p>
                   </div>
 
                   {/* Void / Excluded Panel */}
-                  <div className="flex flex-col justify-between rounded-xl border border-rose-200/85 border-l-4 border-l-[#D9232D] bg-white p-3 shadow-2xs">
+                  <div className="flex flex-col justify-between rounded-xl border border-[#FECDD3] bg-[#FFF5F6] p-3">
                     <div>
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="flex items-center gap-1.5 text-[11px] font-black text-rose-900">
-                          <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-[#D9232D]" />
-                          <span>Guarantee Void / Strictly Excluded</span>
-                        </p>
-                        <span className="shrink-0 rounded-md bg-rose-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-[#D9232D]">
-                          Not Covered
-                        </span>
-                      </div>
-                      <p className="mt-1.5 text-[10.5px] leading-relaxed text-slate-600">
+                      <p className="flex items-center gap-1.5 text-[11px] font-bold text-[#BE123C]">
+                        <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+                        <span>Guarantee Void / Strictly Excluded</span>
+                      </p>
+                      <p className="mt-1 text-[10.5px] leading-relaxed text-slate-600">
                         <XCircle
                           aria-hidden="true"
-                          className="mr-1 inline h-3 w-3 align-text-bottom text-[#D9232D]"
+                          className="mr-1 inline h-3 w-3 align-text-bottom text-[#E11D48]"
                         />
                         Not valid for cat or animal scratches, bilet / blade or sharp-object cuts,
                         fire or burn damage, or intentional misuse.
                       </p>
                     </div>
-
-                    <div className="mt-2.5 flex flex-wrap gap-1 border-t border-rose-100/80 pt-2">
-                      {['Cat Scratches', 'Bilet / Blade Cuts', 'Fire / Burn', 'Self-Damage'].map(
-                        (tag) => (
-                          <span
-                            key={tag}
-                            className="inline-flex items-center gap-1 rounded-md border border-rose-200/70 bg-rose-50/60 px-1.5 py-0.5 text-[9.5px] font-bold text-rose-800"
-                          >
-                            <XCircle className="h-2.5 w-2.5 text-[#D9232D]" />
-                            <span>{tag}</span>
-                          </span>
-                        ),
-                      )}
-                    </div>
+                    <p className="mt-2 border-t border-[#FECDD3]/70 pt-1.5 text-[10px] font-semibold text-[#BE123C]">
+                      Cat Scratches · Bilet / Blade Cuts · Fire / Burn · Self-Damage
+                    </p>
                   </div>
                 </div>
 
-                {/* Dynamic QR Verification Seal */}
+                {/* QR Verification Stamp */}
                 <div
                   data-testid="guarantee-certificate-qr"
-                  className="flex flex-row items-center justify-between gap-3 rounded-xl border border-emerald-200/85 bg-white p-2.5 shadow-2xs sm:col-span-3 sm:flex-col sm:justify-center sm:p-3 sm:text-center"
+                  className="flex flex-row items-center justify-between gap-3 rounded-xl border border-[#BBF7D0] bg-white p-2.5 sm:col-span-3 sm:flex-col sm:justify-center sm:p-3 sm:text-center"
                 >
-                  <div className="shrink-0 rounded-xl border border-emerald-200/90 bg-white p-2 shadow-2xs">
+                  <div className="shrink-0 rounded-lg border border-[#E2E8F0] bg-white p-1.5">
                     <QRCodeSVG
                       value={guaranteeVerificationUrl}
-                      size={64}
+                      size={60}
                       level="M"
                       includeMargin={false}
                       title={`Verify guarantee and invoice for order ${order.order_number}`}
                     />
                   </div>
                   <div className="min-w-0 flex-1 sm:flex-initial">
-                    <p className="text-[9.5px] font-black uppercase tracking-wider text-emerald-800">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#047857]">
                       Scan to Verify
                     </p>
-                    <p className="mt-0.5 text-[9px] font-medium leading-tight text-slate-500">
+                    <p className="mt-0.5 text-[10px] leading-tight text-slate-500">
                       Original Invoice &amp; Guarantee
                     </p>
                     <a
                       href={guaranteeVerificationUrl}
                       data-testid="guarantee-verification-link"
-                      className="mt-1 inline-flex items-center gap-1 rounded-md border border-emerald-200/80 bg-emerald-50/70 px-1.5 py-0.5 font-mono text-[9px] font-bold text-emerald-900 tabular-nums transition hover:bg-emerald-100"
+                      className="mt-1 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-mono text-[9.5px] font-bold text-[#047857] tabular-nums transition hover:bg-emerald-100"
                     >
                       <span className="truncate">#{order.order_number}</span>
                     </a>
@@ -787,274 +890,83 @@ export const InvoiceTemplate: React.FC<{
               </div>
             </section>
           )}
-
-          {/* Itemized Order Schedule (Zero horizontal scroll on mobile) */}
-          <div className="mt-5">
-            <div className="mb-2 flex items-center justify-between gap-2 px-0.5">
-              <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                Itemized Order Schedule
-              </p>
-              <span className="font-mono text-[10.5px] font-bold text-slate-500 tabular-nums">
-                {enrichedItems.length} {enrichedItems.length === 1 ? 'Item' : 'Items'} · {totalUnits}{' '}
-                {totalUnits === 1 ? 'Unit' : 'Units'}
-              </span>
-            </div>
-
-            <div className="w-full overflow-hidden rounded-2xl border border-slate-200/95 shadow-2xs">
-              <table className="w-full border-collapse text-left text-xs">
-                <thead>
-                  <tr className="bg-slate-900 text-[10.5px] font-extrabold uppercase tracking-wider text-white">
-                    <th className="hidden w-9 py-3 pl-3.5 sm:table-cell">#</th>
-                    <th className="py-3 pl-3.5 sm:pl-2">Item Description</th>
-                    <th className="hidden py-3 text-right sm:table-cell">Price</th>
-                    <th className="w-12 py-3 text-center">Qty</th>
-                    <th className="py-3 pr-3.5 text-right">Amount</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200/80 bg-white">
-                  {enrichedItems.map((item, index) => {
-                    const specs = [
-                      item.color ? `Colour: ${item.color}` : '',
-                      item.selected_thickness ? `Thickness: ${item.selected_thickness}` : '',
-                      item.selected_stitch ? `Stitch: ${item.selected_stitch}` : '',
-                      item.custom_embroidery_text ? `Embroidery: ${item.custom_embroidery_text}` : '',
-                    ].filter(Boolean);
-                    return (
-                      <tr key={index} className="align-middle transition-colors hover:bg-slate-50/60">
-                        <td className="hidden py-3.5 pl-3.5 font-mono text-[11px] font-bold text-slate-400 tabular-nums sm:table-cell">
-                          {String(index + 1).padStart(2, '0')}
-                        </td>
-                        <td className="py-3.5 pl-3.5 pr-2 sm:pl-2 sm:pr-3">
-                          <div className="flex items-start gap-3">
-                            <InvoiceItemThumb
-                              src={item.resolvedImage}
-                              alt={item.product_name || 'Ordered item'}
-                            />
-                            <div className="min-w-0 flex-1">
-                              <p className="text-[12.5px] font-black text-slate-950 break-words leading-snug">
-                                {item.product_name}
-                              </p>
-                              {specs.length > 0 ? (
-                                <p className="mt-1 text-[10.5px] font-medium text-slate-500">
-                                  {specs.join(' · ')}
-                                </p>
-                              ) : null}
-                              <p className="mt-1 font-mono text-[10.5px] font-semibold text-slate-400 tabular-nums sm:hidden">
-                                {money(item.unit_price)} × {item.quantity}
-                              </p>
-                              {item.itemGuarantee ? (
-                                <p className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-emerald-200/90 bg-emerald-50/80 px-2 py-0.5 text-[10px] font-extrabold text-emerald-800">
-                                  <ShieldCheck className="h-3 w-3 shrink-0 text-emerald-600" />
-                                  <span>
-                                    Guarantee until {item.itemGuarantee.validUntilLabel}
-                                  </span>
-                                </p>
-                              ) : null}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="hidden py-3.5 text-right font-mono text-[11.5px] font-semibold text-slate-700 tabular-nums whitespace-nowrap sm:table-cell">
-                          {money(item.unit_price)}
-                        </td>
-                        <td className="py-3.5 text-center">
-                          <span className="inline-flex min-w-7 items-center justify-center rounded-lg bg-slate-100 px-2 py-0.5 font-mono text-[11.5px] font-extrabold text-slate-800 tabular-nums">
-                            {item.quantity}
-                          </span>
-                        </td>
-                        <td className="py-3.5 pr-3.5 text-right font-mono text-[12.5px] font-black text-slate-950 tabular-nums whitespace-nowrap">
-                          {money(lineTotal(item))}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Totals Ledger, Amount in Words & Pickup Voucher */}
-          <section className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-12 sm:items-start sm:gap-5">
-            {/* Left Column: Amount in Words + Optional Pickup Code */}
-            <div className="space-y-3.5 sm:col-span-7">
-              <div className="rounded-2xl border border-slate-200/90 bg-[#F8FAFC] p-3.5 text-xs">
-                <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                  Amount in words
-                </p>
-                <p className="mt-1 text-xs font-extrabold leading-relaxed text-slate-900 break-words">
-                  {amountInWords(order.total)}
-                </p>
-              </div>
-
-              {pickupToken ? (
-                <div className="rounded-2xl border-2 border-dashed border-[#D9232D]/60 bg-gradient-to-r from-rose-50/70 via-white to-rose-50/50 p-3.5 text-center shadow-2xs">
-                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-                    Pickup code
-                  </p>
-                  <p className="mt-1 font-mono text-xl font-black tracking-[0.22em] text-[#D9232D] break-all sm:text-2xl">
-                    {pickupToken}
-                  </p>
-                  <p className="mt-1 text-[10.5px] font-semibold text-slate-500">
-                    Show this code at the store
-                  </p>
-                </div>
-              ) : (
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-2xl border border-slate-200/80 bg-white px-3.5 py-2.5 text-[10.5px] font-bold text-slate-600">
-                  <span className="inline-flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>Free Workshop Seat Fitment</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>Quality Checked Before Handover</span>
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Right Column: Financial Summary Card */}
-            <div className="w-full overflow-hidden rounded-2xl border border-slate-200/95 bg-[#F8FAFC] text-xs shadow-2xs sm:col-span-5">
-              <div className="space-y-2 p-3.5 sm:p-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-500">Subtotal</span>
-                  <span className="font-mono font-bold text-slate-800 tabular-nums">
-                    {money(order.subtotal)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-500">Workshop Fitment</span>
-                  <span className="text-[10.5px] font-extrabold uppercase tracking-wide text-emerald-700">
-                    Complimentary
-                  </span>
-                </div>
-                {order.discount > 0 ? (
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-slate-500">Discount</span>
-                    <span className="font-mono font-extrabold text-emerald-700 tabular-nums">
-                      - {money(order.discount)}
-                    </span>
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="flex items-baseline justify-between border-t border-slate-200/90 bg-slate-900 px-3.5 py-3 text-white sm:px-4">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-300">
-                  Total
-                </span>
-                <span className="font-mono text-lg font-black text-white tabular-nums">
-                  {money(order.total)}
-                </span>
-              </div>
-
-              {!paid && payAtStore ? (
-                <div className="flex items-center justify-between border-t border-amber-200/80 bg-amber-50 px-3.5 py-2 text-[11px] font-extrabold text-amber-900 sm:px-4">
-                  <span>Balance due at store</span>
-                  <span className="font-mono tabular-nums">{money(order.total)}</span>
-                </div>
-              ) : null}
-            </div>
-          </section>
         </div>
 
-        {/* Workshop Terms & Guarantee Policy + Authorised Signature Footer */}
-        <footer className="border-t border-slate-200/95 bg-gradient-to-b from-slate-50/90 to-slate-100/75 px-4 py-4 text-[10.5px] leading-relaxed text-slate-600 sm:px-9 sm:py-5">
+        {/* 7-Point Workshop Terms & Guarantee Policy + Gratitude Footer */}
+        <footer className="border-t border-[#E2E8F0] bg-[#F8FAFC] px-4 py-4 text-[10.5px] leading-relaxed text-slate-600 sm:px-9 sm:py-5">
           <div
             data-testid="invoice-terms-policy-card"
-            className="overflow-hidden rounded-2xl border border-slate-200/95 bg-white shadow-2xs"
+            className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white"
           >
-            {/* Dark Executive Policy Header */}
-            <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-900 px-3.5 py-2.5 text-white sm:px-4">
+            <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-[#E2E8F0] bg-[#F8FAFC] px-3.5 py-2.5 sm:px-4">
               <div className="flex items-center gap-2">
-                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-white/10 text-rose-400">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#D9232D] text-white shadow-xs">
                   <ShieldCheck className="h-3.5 w-3.5" />
                 </span>
-                <p className="text-xs font-black tracking-tight text-white">
-                  Workshop Terms &amp; Guarantee Policy
+                <p className="text-xs font-extrabold tracking-wide text-slate-900">
+                  {invoiceTerms.policyHeading}
                 </p>
               </div>
-              <span className="rounded-lg bg-[#D9232D] px-2.5 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wider text-white shadow-2xs">
+              <span className="text-[10px] font-bold text-[#BE123C]">
                 Store Pickup Only · No Online Delivery
               </span>
             </div>
 
-            {/* 2x2 Structured Policy Clauses Grid */}
-            <div className="grid grid-cols-1 gap-2.5 bg-slate-50/60 p-3 sm:grid-cols-2 sm:p-3.5">
+            <div className="grid grid-cols-1 gap-2.5 p-3 sm:grid-cols-2 sm:gap-2.5 sm:p-3.5">
               {invoiceTerms.clauses.map((clause, idx) => {
-                const badgeMeta = [
-                  {
-                    tag: 'In-Store Handover',
-                    accent: 'border-l-[#D9232D]',
-                    numBg: 'bg-rose-50 text-[#D9232D] border-rose-200/80',
-                    tagBg: 'bg-rose-50 text-rose-800',
-                  },
-                  {
-                    tag: 'Standard OEM Fit',
-                    accent: 'border-l-amber-500',
-                    numBg: 'bg-amber-50 text-amber-800 border-amber-200/80',
-                    tagBg: 'bg-amber-50 text-amber-800',
-                  },
-                  {
-                    tag: '7-Day Inspection',
-                    accent: 'border-l-sky-600',
-                    numBg: 'bg-sky-50 text-sky-800 border-sky-200/80',
-                    tagBg: 'bg-sky-50 text-sky-800',
-                  },
-                  {
-                    tag: 'Warranty Rules',
-                    accent: 'border-l-emerald-600',
-                    numBg: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
-                    tagBg: 'bg-emerald-50 text-emerald-800',
-                  },
-                ][idx % 4];
+                const badgePalette = [
+                  'bg-rose-100 text-[#BE123C]',
+                  'bg-emerald-100 text-[#047857]',
+                  'bg-sky-100 text-sky-800',
+                  'bg-amber-100 text-amber-800',
+                  'bg-indigo-100 text-indigo-800',
+                  'bg-teal-100 text-teal-800',
+                  'bg-[#FFE4E6] text-[#9F1239]',
+                ][idx % 7];
 
                 return (
                   <div
                     key={clause.number}
-                    className={`flex flex-col justify-between rounded-xl border border-slate-200/90 border-l-4 ${badgeMeta.accent} bg-white p-3 shadow-2xs`}
+                    className={`rounded-xl border border-[#E2E8F0] bg-[#F8FAFC]/80 p-2.5 sm:p-3 ${
+                      idx === invoiceTerms.clauses.length - 1 && invoiceTerms.clauses.length % 2 === 1
+                        ? 'sm:col-span-2'
+                        : ''
+                    }`}
                   >
-                    <div>
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="flex items-center gap-1.5 text-[11px] font-black text-slate-950 leading-snug">
-                          <span
-                            className={`inline-flex h-5 w-6 shrink-0 items-center justify-center rounded-md border font-mono text-[10px] font-black ${badgeMeta.numBg}`}
-                          >
-                            {clause.number}.
-                          </span>
-                          <span>{clause.title}</span>
-                        </p>
-                        <span
-                          className={`hidden shrink-0 rounded-md px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase tracking-wide sm:inline-block ${badgeMeta.tagBg}`}
-                        >
-                          {badgeMeta.tag}
-                        </span>
-                      </div>
-                      <p className="mt-1.5 text-[10px] leading-relaxed text-slate-600">
-                        {clause.body}
-                      </p>
-                    </div>
+                    <p className="flex items-start gap-2 text-[11px] font-bold leading-snug text-slate-900">
+                      <span
+                        className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md font-mono text-[10px] font-extrabold ${badgePalette}`}
+                      >
+                        {clause.number}
+                      </span>
+                      <span className="pt-0.5">
+                        {clause.title}:{' '}
+                        <span className="font-normal text-slate-600">{clause.body}</span>
+                      </span>
+                    </p>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          <div className="mt-4 flex flex-col items-start justify-between gap-4 border-t border-slate-200/90 pt-3.5 sm:flex-row sm:items-end">
-            <div className="min-w-0 text-[11px] text-slate-500">
-              <p className="font-extrabold text-slate-900">
-                Thank you for shopping with {store.name}
+          <div className="mt-4 flex flex-col items-start justify-between gap-4 rounded-2xl border border-[#FECDD3] bg-gradient-to-r from-[#FFF5F6] via-white to-[#ECFDF5]/60 px-4 py-3.5 sm:flex-row sm:items-center">
+            <div className="min-w-0">
+              <p className="text-xs font-extrabold text-[#9F1239]">
+                {invoiceTerms.closingTitle}
               </p>
-              <p className="mt-0.5 text-[10px] text-slate-500">
-                Visit our Berhampore workshop with this receipt or your Order ID for pickup &amp;
-                complimentary seat installation.
+              <p className="mt-0.5 text-[11px] font-bold text-[#047857]">
+                {invoiceTerms.closingSubtitle}
               </p>
             </div>
             <div className="shrink-0 text-left sm:text-right">
-              <div className="mb-1 flex h-12 w-40 items-end justify-start border-b border-slate-400 pb-1 sm:justify-end">
+              <div className="mb-1 flex h-11 w-36 items-end justify-start border-b border-slate-300 pb-1 sm:justify-end">
                 {!signatureFailed && (
                   <img
                     src={AUTHORISED_SIGNATURE_SRC}
                     alt={`Authorised signature for ${store.name}`}
                     onError={() => setSignatureFailed(true)}
-                    className="max-h-10 w-auto max-w-[152px] object-contain"
+                    className="max-h-9 w-auto max-w-[140px] object-contain"
                   />
                 )}
               </div>
