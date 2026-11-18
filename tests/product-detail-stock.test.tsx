@@ -95,11 +95,13 @@ describe('product availability awareness and product detail page UI/UX', () => {
     };
     const guaranteedHtml = renderDetails(guaranteedProduct);
     expect(guaranteedHtml).toContain('data-testid="product-guarantee-terms"');
+    expect(guaranteedHtml).toContain('data-variant="compact"');
+    expect(guaranteedHtml).toContain('data-testid="guarantee-terms-toggle"');
     expect(guaranteedHtml).toContain('Official Product Guarantee');
     expect(guaranteedHtml).toContain('30 Jun 2028');
-    expect(guaranteedHtml).toContain('Rexine or leatherette top-coat peeling');
-    expect(guaranteedHtml).toContain('Blade (bilet)');
-    expect(guaranteedHtml).toContain('Fire, cigarette, exhaust heat, or burn damage');
+    expect(guaranteedHtml).toContain('Natural cracking, seam tearing');
+    expect(guaranteedHtml).toContain('Cat scratches, bilet/blade cuts');
+    expect(guaranteedHtml).not.toContain('Rexine or leatherette top-coat peeling');
     expect(guaranteedHtml).toContain('Product Replacement Guarantee (30 Jun 2028)');
   });
 

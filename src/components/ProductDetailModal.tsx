@@ -1260,6 +1260,7 @@ const ProductDetailPage: React.FC<ProductDetailModalProps & { product: Product }
 
                 {/* Conditional Product-Specific Guarantee & Replacement Terms */}
                 <GuaranteeTerms
+                  variant="compact"
                   productId={product.id}
                   productSlug={product.slug}
                   guaranteeDate={product.guaranteeValidUntil}
