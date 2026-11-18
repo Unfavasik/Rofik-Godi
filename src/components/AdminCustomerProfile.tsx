@@ -144,17 +144,17 @@ function SummaryTile({
   tone: string;
 }) {
   return (
-    <article className={`min-w-0 rounded-2xl p-3.5 text-center sm:p-4 ${tone}`}>
-      <span className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-white/75">
-        <Icon className="h-5 w-5" />
+    <article className={`min-w-0 rounded-xl p-3 text-center ${tone}`}>
+      <span className="mx-auto grid h-8 w-8 place-items-center rounded-full bg-white/75">
+        <Icon className="h-4 w-4" />
       </span>
       <p
-        className="mt-2 truncate text-[15px] font-black tracking-tight text-slate-900 sm:text-lg"
+        className="mt-1.5 truncate text-sm font-black tracking-tight text-slate-900 sm:text-base"
         title={value}
       >
         {value}
       </p>
-      <p className="mt-0.5 text-[10px] font-medium text-slate-500 sm:text-[11px]">{label}</p>
+      <p className="mt-0.5 text-[10px] font-medium text-slate-500">{label}</p>
     </article>
   );
 }
@@ -171,12 +171,12 @@ function DetailRow({
   accent?: string;
 }) {
   return (
-    <div className="flex flex-wrap items-start gap-2.5 border-t border-slate-100 py-3 first:border-t-0 sm:grid sm:grid-cols-[38px_minmax(115px,.8fr)_minmax(0,1.3fr)] sm:items-center sm:gap-3">
-      <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${accent}`}>
-        <Icon className="h-4 w-4" />
+    <div className="flex flex-wrap items-start gap-2.5 border-t border-slate-100 py-2.5 first:border-t-0 sm:grid sm:grid-cols-[34px_minmax(115px,.8fr)_minmax(0,1.3fr)] sm:items-center sm:gap-3">
+      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${accent}`}>
+        <Icon className="h-3.5 w-3.5" />
       </span>
-      <span className="min-w-0 pt-1.5 text-[11px] font-semibold text-slate-500 sm:pt-0 sm:text-xs">{label}</span>
-      <span className="w-full min-w-0 break-words pl-[46px] text-[13px] font-semibold text-slate-800 sm:w-auto sm:pl-0 sm:text-sm">
+      <span className="min-w-0 pt-1 text-[11px] font-semibold text-slate-500 sm:pt-0 sm:text-xs">{label}</span>
+      <span className="w-full min-w-0 break-words pl-[42px] text-xs font-semibold text-slate-800 sm:w-auto sm:pl-0 sm:text-[13px]">
         {value || 'Not available'}
       </span>
     </div>
@@ -396,27 +396,27 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
   ];
 
   return (
-    <section className="mx-auto w-full max-w-[1100px] overflow-x-hidden pb-8" aria-labelledby="customer-profile-title">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <section className="mx-auto w-full max-w-[960px] overflow-x-hidden pb-6" aria-labelledby="customer-profile-title">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2.5">
         <h2
           id="customer-profile-title"
-          className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl"
+          className="text-lg font-black tracking-tight text-slate-900 sm:text-xl"
         >
           Customer profile
         </h2>
         <button
           type="button"
           onClick={onBack}
-          className="min-h-11 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50"
+          className="min-h-9 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50"
         >
           All customers
         </button>
       </div>
 
-      <header className="relative overflow-hidden rounded-3xl border border-sky-100 bg-gradient-to-r from-sky-50 via-[#f1f8ff] to-blue-50 p-4 shadow-[0_10px_30px_rgba(36,99,160,.06)] sm:p-6">
-        <div className="pointer-events-none absolute -right-12 -top-20 h-56 w-56 rounded-full bg-white/70 blur-2xl" />
-        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center">
-          <div className="relative mx-auto grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-full bg-blue-600 text-3xl font-black text-white shadow-[0_10px_24px_rgba(37,99,235,.22)] sm:mx-0 sm:h-28 sm:w-28">
+      <header className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-50 via-[#f1f8ff] to-blue-50 p-3.5 shadow-[0_10px_30px_rgba(36,99,160,.06)] sm:p-4">
+        <div className="pointer-events-none absolute -right-12 -top-20 h-48 w-48 rounded-full bg-white/70 blur-2xl" />
+        <div className="relative flex flex-col gap-3.5 sm:flex-row sm:items-center">
+          <div className="relative mx-auto grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full bg-blue-600 text-xl font-black text-white shadow-[0_8px_20px_rgba(37,99,235,.22)] sm:mx-0 sm:h-20 sm:w-20 sm:text-2xl">
             <span aria-hidden="true">{initials || 'C'}</span>
             {avatarUrl && (
               <img
@@ -432,17 +432,17 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
           </div>
           <div className="min-w-0 flex-1 text-center sm:text-left">
             <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-              <h3 className="max-w-full truncate text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+              <h3 className="max-w-full truncate text-lg font-black tracking-tight text-slate-900 sm:text-xl">
                 {customer.name}
               </h3>
             </div>
-            <div className="mt-3 flex flex-col items-center gap-x-5 gap-y-2 text-xs text-slate-600 sm:flex-row sm:flex-wrap sm:items-start">
-              <span className="inline-flex max-w-full min-w-0 items-center gap-2">
-                <Mail className="h-4 w-4 shrink-0 text-slate-500" />
+            <div className="mt-2 flex flex-col items-center gap-x-4 gap-y-1.5 text-xs text-slate-600 sm:flex-row sm:flex-wrap sm:items-start">
+              <span className="inline-flex max-w-full min-w-0 items-center gap-1.5">
+                <Mail className="h-3.5 w-3.5 shrink-0 text-slate-500" />
                 <span className="truncate">{customer.email || 'Email not available'}</span>
               </span>
-              <span className="inline-flex items-center gap-2">
-                <Phone className="h-4 w-4 shrink-0 text-slate-500" />
+              <span className="inline-flex items-center gap-1.5">
+                <Phone className="h-3.5 w-3.5 shrink-0 text-slate-500" />
                 <span>{customer.phone || 'Phone not available'}</span>
               </span>
             </div>
@@ -450,15 +450,15 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
           <button
             type="button"
             onClick={() => setEditNoticeOpen(true)}
-            className="inline-flex shrink-0 items-center justify-center gap-2 self-center rounded-full border border-slate-200 bg-white/80 px-4 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-white sm:self-start"
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 self-center rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-white sm:self-start"
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-3.5 w-3.5" />
             Edit
           </button>
         </div>
       </header>
 
-      <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+      <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         <SummaryTile
           icon={ShoppingBag}
           label="Total orders"
@@ -486,7 +486,7 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
       </div>
 
       <div
-        className="mt-4 rounded-full bg-slate-100 p-1.5"
+        className="mt-3 rounded-full bg-slate-100 p-1"
         role="tablist"
         aria-label="Customer profile sections"
       >
@@ -500,9 +500,9 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
               aria-selected={activeTab === id}
               aria-controls={`customer-profile-panel-${id}`}
               onClick={() => setActiveTab(id)}
-              className={`flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 text-[10px] font-bold transition sm:gap-2 sm:px-4 sm:text-xs ${activeTab === id ? 'bg-[#101f3d] text-white shadow-sm' : 'text-slate-500 hover:bg-white/70 hover:text-slate-800'}`}
+              className={`flex min-h-9 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 text-[10px] font-bold transition sm:gap-1.5 sm:px-3 sm:text-xs ${activeTab === id ? 'bg-[#101f3d] text-white shadow-sm' : 'text-slate-500 hover:bg-white/70 hover:text-slate-800'}`}
             >
-              <Icon className="h-4 w-4 shrink-0 sm:h-[18px] sm:w-[18px]" />
+              <Icon className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate">{label}</span>
             </button>
           ))}
@@ -514,22 +514,22 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
         role="tabpanel"
         aria-labelledby="customer-profile-tab-orders"
         hidden={activeTab !== 'orders'}
-        className="mt-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_4px_20px_rgba(15,23,42,.035)] sm:p-5"
+        className="mt-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-[0_4px_20px_rgba(15,23,42,.035)] sm:p-4"
       >
-        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
+        <div className="flex flex-wrap items-start justify-between gap-2.5 border-b border-slate-100 pb-3">
           <div>
-            <h3 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+            <h3 className="text-base font-black tracking-tight text-slate-900 sm:text-lg">
               Recent order history
             </h3>
-            <p className="mt-1 text-[11px] leading-5 text-slate-500">
+            <p className="mt-0.5 text-[11px] leading-snug text-slate-500">
               Latest orders placed by this customer, with saved product details.
             </p>
           </div>
-          <span className="rounded-full bg-slate-100 px-3 py-1.5 text-[10px] font-bold text-slate-500">
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-500">
             {history.length} {history.length === 1 ? 'order' : 'orders'} loaded
           </span>
         </div>
-        <div className="mt-3 space-y-3">
+        <div className="mt-2.5 space-y-2.5">
           {history.map((order) => {
             const firstItem = order.items[0];
             const firstImage = firstItem ? findProductImage(firstItem, products) : '';
@@ -537,16 +537,16 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
             return (
               <article
                 key={order.id}
-                className="rounded-2xl border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:shadow-sm sm:p-4"
+                className="rounded-xl border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:shadow-sm"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <button
                     type="button"
                     onClick={() => onOpenOrder(order)}
                     aria-label={`Open order ${order.orderNumber}`}
-                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
                   >
-                    <span className="grid h-[68px] w-[68px] shrink-0 place-items-center overflow-hidden rounded-xl bg-slate-100 text-slate-300 sm:h-[76px] sm:w-[76px]">
+                    <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-slate-100 text-slate-300 sm:h-14 sm:w-14">
                       {firstImage ? (
                         <img
                           src={firstImage}
@@ -555,35 +555,35 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <Package className="h-7 w-7" />
+                        <Package className="h-5 w-5" />
                       )}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate font-mono text-[12px] font-black text-slate-900 sm:text-sm">
+                      <span className="block truncate font-mono text-xs font-black text-slate-900">
                         {order.id}
                       </span>
-                      <span className="mt-1 block truncate text-[10px] text-slate-500 sm:text-[11px]">
+                      <span className="mt-0.5 block truncate text-[10px] text-slate-500 sm:text-[11px]">
                         {dateLabel(order.createdAt)}
                       </span>
-                      <span className="mt-2 block">
+                      <span className="mt-1.5 block">
                         <StatusPill status={order.status} />
                       </span>
                     </span>
-                    <span className="flex shrink-0 items-center gap-1 text-sm font-black text-slate-900 sm:text-base">
+                    <span className="flex shrink-0 items-center gap-1 text-xs font-black text-slate-900 sm:text-sm">
                       {money(order.amount)}
                       <ChevronRight className="h-4 w-4 text-slate-400" />
                     </span>
                   </button>
                 </div>
                 {order.items.length > 0 && (
-                  <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+                  <div className="mt-2.5 flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-2.5">
                     {visibleItems.map((item, index) => {
                       const image = findProductImage(item, products);
                       return (
                         <span
                           key={`${order.id}-${item.product_id || item.product_name}-${index}`}
                           title={item.product_name || 'Product'}
-                          className="grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-slate-100 text-slate-300 ring-1 ring-slate-200 sm:h-12 sm:w-12"
+                          className="grid h-9 w-9 place-items-center overflow-hidden rounded-lg bg-slate-100 text-slate-300 ring-1 ring-slate-200"
                         >
                           {image ? (
                             <img
@@ -593,13 +593,13 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <Package className="h-4 w-4" />
+                            <Package className="h-3.5 w-3.5" />
                           )}
                         </span>
                       );
                     })}
                     {order.items.length > visibleItems.length && (
-                      <span className="rounded-xl bg-slate-50 px-3 py-3 text-[10px] font-bold text-slate-500">
+                      <span className="rounded-lg bg-slate-50 px-2.5 py-2 text-[10px] font-bold text-slate-500">
                         +{order.items.length - visibleItems.length} more
                       </span>
                     )}
@@ -613,11 +613,11 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
             );
           })}
           {!history.length && (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-5 py-12 text-center">
-              <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-white text-slate-300 shadow-sm">
-                <ShoppingBag className="h-5 w-5" />
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center">
+              <span className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-white text-slate-300 shadow-sm">
+                <ShoppingBag className="h-4 w-4" />
               </span>
-              <p className="mt-3 text-sm font-bold text-slate-700">No matching order records</p>
+              <p className="mt-2.5 text-xs font-bold text-slate-700">No matching order records</p>
               <p className="mt-1 text-[11px] text-slate-400">
                 Orders for this customer will appear here when available.
               </p>
@@ -631,14 +631,14 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
         role="tabpanel"
         aria-labelledby="customer-profile-tab-details"
         hidden={activeTab !== 'details'}
-        className="mt-4 space-y-4"
+        className="mt-3 space-y-3"
       >
-        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_4px_20px_rgba(15,23,42,.035)] sm:p-5">
-          <div className="mb-3">
-            <h3 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+        <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-[0_4px_20px_rgba(15,23,42,.035)] sm:p-4">
+          <div className="mb-2.5">
+            <h3 className="text-base font-black tracking-tight text-slate-900 sm:text-lg">
               Customer details
             </h3>
-            <p className="mt-1 text-[11px] text-slate-500">
+            <p className="mt-0.5 text-[11px] text-slate-500">
               Basic information associated with this customer account.
             </p>
           </div>
@@ -657,16 +657,16 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
           />
           <DetailRow icon={ShoppingBag} label="Last order" value={dateLabel(customer.lastOrder)} />
         </section>
-        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_4px_20px_rgba(15,23,42,.035)] sm:p-5">
+        <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-[0_4px_20px_rgba(15,23,42,.035)] sm:p-4">
           <div>
-            <h3 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+            <h3 className="text-base font-black tracking-tight text-slate-900 sm:text-lg">
               Order insights
             </h3>
-            <p className="mt-1 text-[11px] text-slate-500">
+            <p className="mt-0.5 text-[11px] text-slate-500">
               A quick summary of this customer’s order activity.
             </p>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+          <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
             <SummaryTile
               icon={ShoppingBag}
               label="Total orders"
@@ -692,7 +692,7 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
               tone="bg-orange-50"
             />
           </div>
-          <p className="mt-3 text-[10px] text-slate-400">
+          <p className="mt-2.5 text-[10px] text-slate-400">
             Order-status insights use the latest orders loaded by the admin workspace.
           </p>
         </section>
@@ -703,36 +703,36 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
         role="tabpanel"
         aria-labelledby="customer-profile-tab-notes"
         hidden={activeTab !== 'notes'}
-        className="mt-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_4px_20px_rgba(15,23,42,.035)] sm:p-5"
+        className="mt-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-[0_4px_20px_rgba(15,23,42,.035)] sm:p-4"
       >
         <div>
-          <h3 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+          <h3 className="text-base font-black tracking-tight text-slate-900 sm:text-lg">
             Customer notes
           </h3>
-          <p className="mt-1 text-[11px] text-slate-500">
+          <p className="mt-0.5 text-[11px] text-slate-500">
             New notes are sent to this customer as in-app notifications. Existing team-only notes are not sent retroactively.
           </p>
         </div>
-        <form onSubmit={(event) => void addNote(event)} className="mt-4">
+        <form onSubmit={(event) => void addNote(event)} className="mt-3">
           <label htmlFor="customer-note-content" className="sr-only">
             Write a note to this customer
           </label>
           <div className="relative">
-            <FileText className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+            <FileText className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
             <textarea
               id="customer-note-content"
               value={noteText}
               maxLength={500}
               onChange={(event) => setNoteText(event.target.value)}
-              rows={3}
+              rows={2}
               placeholder="Write a note to share with this customer…"
-              className="w-full resize-y rounded-2xl border border-slate-200 bg-slate-50/40 py-3 pl-10 pr-4 text-base leading-5 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-50 sm:text-xs"
+              className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50/40 py-2.5 pl-9 pr-4 text-base leading-5 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-50 sm:text-xs"
             />
-            <span className="absolute bottom-3 right-3 text-[10px] text-slate-400">
+            <span className="absolute bottom-2.5 right-3 text-[10px] text-slate-400">
               {noteText.length}/500
             </span>
           </div>
-          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-2.5 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-1.5" aria-label="Note category">
               {noteCategories.map(({ label, icon: Icon }) => (
                 <button
@@ -740,9 +740,9 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
                   type="button"
                   aria-pressed={noteCategory === label}
                   onClick={() => setNoteCategory(label)}
-                  className={`inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ring-1 transition sm:text-[10px] ${noteCategory === label ? categoryClasses[label] : 'bg-white text-slate-400 ring-slate-200 hover:text-slate-700'}`}
+                  className={`inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 transition sm:text-[10px] ${noteCategory === label ? categoryClasses[label] : 'bg-white text-slate-400 ring-slate-200 hover:text-slate-700'}`}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className="h-3 w-3" />
                   {label}
                 </button>
               ))}
@@ -750,7 +750,7 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
             <button
               type="submit"
               disabled={!noteText.trim() || notesSaving}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#101f3d] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-45 sm:text-[11px]"
+              className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl bg-[#101f3d] px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-45 sm:text-[11px]"
             >
               <Send className="h-3.5 w-3.5" />
               {notesSaving ? 'Saving & notifying…' : 'Save & notify'}
@@ -759,15 +759,15 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
         </form>
         {notesError && (
           <div
-            className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-[11px] leading-5 text-amber-800"
+            className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-[11px] leading-5 text-amber-800"
             role="status"
           >
             Note update was not confirmed: {notesError}
           </div>
         )}
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-          <h4 className="text-sm font-black text-slate-900">Notes ({customerNotes.length})</h4>
-          <label className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-base font-semibold text-slate-600 sm:text-[11px]">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2.5 border-t border-slate-100 pt-3">
+          <h4 className="text-xs font-black text-slate-900 sm:text-sm">Notes ({customerNotes.length})</h4>
+          <label className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-base font-semibold text-slate-600 sm:text-[11px]">
             <ArrowDownUp className="h-3.5 w-3.5 shrink-0" />
             <span className="sr-only">Sort notes</span>
             <select
@@ -781,10 +781,10 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
             </select>
           </label>
         </div>
-        <div className="mt-3 space-y-2.5">
+        <div className="mt-2.5 space-y-2">
           {notesLoading ? (
             <p
-              className="rounded-2xl bg-slate-50 px-4 py-8 text-center text-xs text-slate-400"
+              className="rounded-xl bg-slate-50 px-4 py-6 text-center text-xs text-slate-400"
               role="status"
             >
               Loading customer notes…
@@ -796,30 +796,30 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
               return (
                 <article
                   key={note.id}
-                  className="flex items-start gap-3 rounded-2xl border border-slate-200 p-3.5 sm:p-4"
+                  className="flex items-start gap-2.5 rounded-xl border border-slate-200 p-3"
                 >
                   <span
-                    className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${categoryClasses[note.category].split(' ').slice(0, 2).join(' ')}`}
+                    className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${categoryClasses[note.category].split(' ').slice(0, 2).join(' ')}`}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-3.5 w-3.5" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <span
-                        className={`inline-flex rounded-full px-2 py-1 text-[9px] font-extrabold ${categoryClasses[note.category]}`}
+                        className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-extrabold ${categoryClasses[note.category]}`}
                       >
                         {note.category}
                       </span>
                       <span
-                        className={`inline-flex rounded-full px-2 py-1 text-[9px] font-bold ${note.customerNotifiedAt ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}
+                        className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold ${note.customerNotifiedAt ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}
                       >
                         {note.customerNotifiedAt ? 'Sent to customer' : 'Team-only'}
                       </span>
                     </div>
-                    <p className="mt-2 whitespace-pre-wrap break-words text-[12px] leading-5 text-slate-700">
+                    <p className="mt-1.5 whitespace-pre-wrap break-words text-xs leading-5 text-slate-700">
                       {note.content}
                     </p>
-                    <p className="mt-2 text-[10px] text-slate-400">
+                    <p className="mt-1.5 text-[10px] text-slate-400">
                       Added by {note.author || 'Admin'} <span className="px-1">·</span>{' '}
                       {dateLabel(note.createdAt)}
                     </p>
@@ -830,16 +830,16 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
                     disabled={notesSaving}
                     aria-label={`Remove ${note.category.toLowerCase()} note`}
                     title={note.customerNotifiedAt ? 'Remove from admin notes only; the customer notification cannot be recalled.' : 'Remove note'}
-                    className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </article>
               );
             })
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-5 py-10 text-center">
-              <FileText className="mx-auto h-6 w-6 text-slate-300" />
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center">
+              <FileText className="mx-auto h-5 w-5 text-slate-300" />
               <p className="mt-2 text-xs font-bold text-slate-600">No notes yet</p>
               <p className="mt-1 text-[10px] text-slate-400">
                 Add a note to keep helpful context with this customer profile.
@@ -861,16 +861,16 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
             role="dialog"
             aria-modal="true"
             aria-labelledby="customer-edit-notice-title"
-            className="max-h-[92dvh] w-full max-w-full overflow-y-auto overflow-x-hidden rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl sm:max-w-md sm:rounded-3xl sm:p-6"
+            className="max-h-[92dvh] w-full max-w-full overflow-y-auto overflow-x-hidden rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl sm:max-w-sm sm:rounded-2xl sm:p-5"
           >
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#D9232D]">
                   Customer account
                 </p>
                 <h3
                   id="customer-edit-notice-title"
-                  className="mt-1 text-lg font-black text-slate-900"
+                  className="mt-1 text-base font-black text-slate-900"
                 >
                   Profile details are read-only
                 </h3>
@@ -879,12 +879,12 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
                 type="button"
                 onClick={() => setEditNoticeOpen(false)}
                 aria-label="Close"
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-600"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-600"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <p className="mt-3 text-xs leading-5 text-slate-600">
+            <p className="mt-2.5 text-xs leading-5 text-slate-600">
               Name, email and phone are managed through the customer’s account. This admin workspace
               does not have permission to change those fields.
             </p>
@@ -894,7 +894,7 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
                 setEditNoticeOpen(false);
                 setActiveTab('details');
               }}
-              className="mt-5 min-h-11 w-full rounded-xl bg-[#101f3d] px-4 py-2.5 text-xs font-bold text-white"
+              className="mt-4 min-h-9 w-full rounded-xl bg-[#101f3d] px-4 py-2 text-xs font-bold text-white"
             >
               View customer details
             </button>

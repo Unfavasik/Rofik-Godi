@@ -222,18 +222,18 @@ export function AdminOrderDetails({
   ];
 
   const renderOverview = () => (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <StatusHero hero={hero} status={order.status} />
       {order.status === 'COMPLETED' && (
-        <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:p-5">
-          <div className="flex min-w-0 items-center gap-3 text-emerald-800">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white"><FileText className="h-5 w-5" /></span>
-            <div><h3 className="text-sm font-black">Invoice ready</h3><p className="mt-0.5 text-[11px] leading-relaxed">The customer invoice is ready to view or print.</p></div>
+        <section className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5">
+          <div className="flex min-w-0 items-center gap-2.5 text-emerald-800">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white"><FileText className="h-4 w-4" /></span>
+            <div><h3 className="text-xs font-black">Invoice ready</h3><p className="mt-0.5 text-[11px] leading-snug">The customer invoice is ready to view or print.</p></div>
           </div>
-          <button type="button" onClick={() => setShowInvoice(true)} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-700 px-3.5 text-xs font-black text-white transition hover:bg-emerald-800"><Printer className="h-4 w-4" />Open invoice</button>
+          <button type="button" onClick={() => setShowInvoice(true)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-emerald-700 px-3 text-xs font-black text-white transition hover:bg-emerald-800"><Printer className="h-3.5 w-3.5" />Open invoice</button>
         </section>
       )}
-      <section aria-label="Order information" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <section aria-label="Order information" className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         <CustomerInformationCard order={order} />
         <InformationCard icon={Phone} label="Phone" value={order.phone || '—'} />
         <VehicleInformationCard order={order} />
@@ -244,14 +244,14 @@ export function AdminOrderDetails({
         <InformationCard icon={CalendarDays} label="Created at" value={formatDateTime(order.createdAt)} />
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <div className="mb-3 flex items-center justify-between gap-3">
+      <section className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4">
+        <div className="mb-2.5 flex items-center justify-between gap-2.5">
           <div>
-            <h3 className="text-sm font-black text-slate-900">Products <span className="text-slate-400">({order.items.length})</span></h3>
+            <h3 className="text-xs font-black text-slate-900">Products <span className="text-slate-400">({order.items.length})</span></h3>
             <p className="mt-0.5 text-[11px] text-slate-500">Items saved with this order</p>
           </div>
           {order.items.length > 0 && (
-            <button type="button" onClick={() => setActiveTab('products')} className="inline-flex min-h-10 items-center gap-1 text-xs font-extrabold text-[#D9232D]">
+            <button type="button" onClick={() => setActiveTab('products')} className="inline-flex min-h-9 items-center gap-1 text-xs font-extrabold text-[#D9232D]">
               View all <ChevronRight className="h-3.5 w-3.5" />
             </button>
           )}
@@ -271,10 +271,10 @@ export function AdminOrderDetails({
   );
 
   const renderProducts = () => (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-      <div className="mb-3 flex items-end justify-between gap-3">
-        <div><h3 className="text-base font-black text-slate-900">Products</h3><p className="mt-1 text-xs text-slate-500">{order.items.length} {order.items.length === 1 ? 'line item' : 'line items'} · {order.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)} total units</p></div>
-        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600">{order.items.length} items</span>
+    <section className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4">
+      <div className="mb-2.5 flex items-end justify-between gap-2.5">
+        <div><h3 className="text-sm font-black text-slate-900">Products</h3><p className="mt-0.5 text-xs text-slate-500">{order.items.length} {order.items.length === 1 ? 'line item' : 'line items'} · {order.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)} total units</p></div>
+        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">{order.items.length} items</span>
       </div>
       {order.items.length ? (
         <div className="divide-y divide-slate-100">
@@ -287,9 +287,9 @@ export function AdminOrderDetails({
   );
 
   const renderTimeline = () => (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div><h3 className="text-base font-black text-slate-900">Order timeline</h3><p className="mt-1 text-xs text-slate-500">Only events recorded by the order system are shown.</p></div>
+    <section className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4">
+      <div className="mb-3 flex items-center justify-between gap-2.5">
+        <div><h3 className="text-sm font-black text-slate-900">Order timeline</h3><p className="mt-0.5 text-xs text-slate-500">Only events recorded by the order system are shown.</p></div>
         <Clock3 className="h-4 w-4 text-slate-400" />
       </div>
       <ol className="space-y-0">
@@ -297,7 +297,7 @@ export function AdminOrderDetails({
           const isCurrent = event.status === order.status;
           const isLast = index === timelineEvents.length - 1;
           return (
-            <li key={event.id} className="relative flex gap-3 pb-5 last:pb-0">
+            <li key={event.id} className="relative flex gap-3 pb-4 last:pb-0">
               {!isLast && <span className="absolute left-[13px] top-7 h-[calc(100%-20px)] w-px bg-slate-200" aria-hidden="true" />}
               <span className={`relative z-10 grid h-7 w-7 shrink-0 place-items-center rounded-full border ${isCurrent ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-400'}`}>
                 {event.kind === 'placed' ? <Package className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
@@ -314,23 +314,23 @@ export function AdminOrderDetails({
         })}
       </ol>
       {timelineEvents.length <= 1 && order.status !== 'NEW' && (
-        <p className="mt-5 rounded-xl bg-slate-50 px-3 py-2.5 text-[11px] leading-relaxed text-slate-500">Earlier status timestamps are not available for this order. No dates have been inferred.</p>
+        <p className="mt-4 rounded-xl bg-slate-50 px-3 py-2 text-[11px] leading-relaxed text-slate-500">Earlier status timestamps are not available for this order. No dates have been inferred.</p>
       )}
       {timelineEvents.length === 1 && order.status === 'NEW' && (
-        <p className="mt-5 rounded-xl bg-slate-50 px-3 py-2.5 text-[11px] text-slate-500">New status events will appear here as they are recorded.</p>
+        <p className="mt-4 rounded-xl bg-slate-50 px-3 py-2 text-[11px] text-slate-500">New status events will appear here as they are recorded.</p>
       )}
     </section>
   );
 
   const renderNotes = () => (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-      <div className="mb-4 flex items-center gap-2"><FileText className="h-4 w-4 text-slate-500" /><div><h3 className="text-base font-black text-slate-900">Order notes</h3><p className="mt-1 text-xs text-slate-500">Customer pickup notes and meaningful notes recorded with status events.</p></div></div>
+    <section className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4">
+      <div className="mb-3 flex items-center gap-2"><FileText className="h-4 w-4 text-slate-500" /><div><h3 className="text-sm font-black text-slate-900">Order notes</h3><p className="mt-0.5 text-xs text-slate-500">Customer pickup notes and meaningful notes recorded with status events.</p></div></div>
       {notes.length ? (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {notes.map((note, index) => (
-            <article key={`${note.label}-${index}`} className="rounded-xl border border-slate-100 bg-slate-50 p-3.5">
+            <article key={`${note.label}-${index}`} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
               <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-[11px] font-extrabold text-slate-700">{note.label}</p>{note.date && <time className="text-[10px] text-slate-400">{formatDateTime(note.date)}</time>}</div>
-              <p className="mt-2 whitespace-pre-wrap break-words text-xs leading-relaxed text-slate-600">{note.text}</p>
+              <p className="mt-1.5 whitespace-pre-wrap break-words text-xs leading-relaxed text-slate-600">{note.text}</p>
             </article>
           ))}
         </div>
@@ -361,34 +361,34 @@ export function AdminOrderDetails({
           initial={isDesktopLayout && !prefersReducedMotion ? { x: 24, opacity: 0.92 } : false}
           animate={{ x: 0, opacity: 1 }}
           transition={isDesktopLayout && !prefersReducedMotion ? { duration: 0.2, ease: 'easeOut' } : { duration: 0 }}
-          className="relative z-10 flex h-[100dvh] w-full max-w-[620px] flex-col overflow-hidden border-l border-slate-200 bg-[#F6F8FB] shadow-2xl max-sm:border-l-0 max-sm:shadow-none"
+          className="relative z-10 flex h-[100dvh] w-full max-w-[540px] flex-col overflow-hidden border-l border-slate-200 bg-[#F6F8FB] shadow-2xl max-sm:border-l-0 max-sm:shadow-none"
         >
-          <header className="shrink-0 border-b border-slate-200 bg-white px-4 py-3.5 sm:px-6 sm:py-4">
-            <div className="flex items-center gap-3">
-              <button type="button" onClick={onClose} aria-label="Back to orders" className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 active:scale-95">
+          <header className="shrink-0 border-b border-slate-200 bg-white px-4 py-2.5 sm:px-5">
+            <div className="flex items-center gap-2.5">
+              <button type="button" onClick={onClose} aria-label="Back to orders" className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 active:scale-95">
                 <ArrowLeft className="h-4 w-4" />
               </button>
               <div className="min-w-0 flex-1">
-                <h2 id="admin-order-details-title" className="truncate text-base font-black tracking-tight text-[#0F172A] sm:text-lg">Order Details</h2>
+                <h2 id="admin-order-details-title" className="truncate text-sm font-black tracking-tight text-[#0F172A] sm:text-base">Order Details</h2>
                 <p className="mt-0.5 flex min-w-0 items-center gap-1 text-[10px] text-slate-500"><span className="shrink-0 font-semibold">Order ID</span><span className="truncate font-mono font-bold text-slate-700">#{order.orderNumber}</span></p>
               </div>
               <StatusBadge status={order.status} />
               <details className="relative shrink-0">
-                <summary aria-label="Order actions" className="grid h-11 w-11 cursor-pointer list-none place-items-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 [&::-webkit-details-marker]:hidden"><MoreHorizontal className="h-5 w-5" /></summary>
-                <div className="absolute right-0 top-full z-30 mt-2 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
-                  <button type="button" onClick={() => void copyOrderNumber()} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-xs font-bold text-slate-700 hover:bg-slate-50"><Copy className="h-3.5 w-3.5 text-slate-400" />Copy order number</button>
-                  {order.status === 'READY_FOR_PICKUP' && <button type="button" onClick={() => void completeWithoutQr()} disabled={busyAction !== null} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-xs font-bold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"><Check className="h-3.5 w-3.5" />Complete without QR</button>}
-                  {pendingPayment && <button type="button" onClick={() => void verifyPayment()} disabled={busyAction !== null} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-xs font-bold text-emerald-700 hover:bg-emerald-50"><CreditCard className="h-3.5 w-3.5" />Verify payment</button>}
-                  {hasInvoice && <button type="button" onClick={() => setShowInvoice(true)} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-xs font-bold text-emerald-700 hover:bg-emerald-50"><Printer className="h-3.5 w-3.5" />Open invoice</button>}
+                <summary aria-label="Order actions" className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 [&::-webkit-details-marker]:hidden"><MoreHorizontal className="h-4 w-4" /></summary>
+                <div className="absolute right-0 top-full z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+                  <button type="button" onClick={() => void copyOrderNumber()} className="flex min-h-9 w-full items-center gap-2 rounded-lg px-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50"><Copy className="h-3.5 w-3.5 text-slate-400" />Copy order number</button>
+                  {order.status === 'READY_FOR_PICKUP' && <button type="button" onClick={() => void completeWithoutQr()} disabled={busyAction !== null} className="flex min-h-9 w-full items-center gap-2 rounded-lg px-2.5 text-left text-xs font-bold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"><Check className="h-3.5 w-3.5" />Complete without QR</button>}
+                  {pendingPayment && <button type="button" onClick={() => void verifyPayment()} disabled={busyAction !== null} className="flex min-h-9 w-full items-center gap-2 rounded-lg px-2.5 text-left text-xs font-bold text-emerald-700 hover:bg-emerald-50"><CreditCard className="h-3.5 w-3.5" />Verify payment</button>}
+                  {hasInvoice && <button type="button" onClick={() => setShowInvoice(true)} className="flex min-h-9 w-full items-center gap-2 rounded-lg px-2.5 text-left text-xs font-bold text-emerald-700 hover:bg-emerald-50"><Printer className="h-3.5 w-3.5" />Open invoice</button>}
                 </div>
               </details>
             </div>
           </header>
 
-          <nav className="shrink-0 overflow-x-auto border-b border-slate-200 bg-white px-4 sm:px-6" role="tablist" aria-label="Order details sections">
-            <div className="flex min-w-max gap-5">
+          <nav className="shrink-0 overflow-x-auto border-b border-slate-200 bg-white px-4 sm:px-5" role="tablist" aria-label="Order details sections">
+            <div className="flex min-w-max gap-4">
               {tabs.map((tab) => (
-                <button key={tab.id} type="button" role="tab" aria-selected={activeTab === tab.id} aria-controls={`order-tab-${tab.id}`} onClick={() => setActiveTab(tab.id)} className={`relative min-h-12 px-0.5 text-xs font-extrabold transition-colors ${activeTab === tab.id ? 'text-[#D9232D]' : 'text-slate-500 hover:text-slate-800'}`}>
+                <button key={tab.id} type="button" role="tab" aria-selected={activeTab === tab.id} aria-controls={`order-tab-${tab.id}`} onClick={() => setActiveTab(tab.id)} className={`relative min-h-10 px-0.5 text-xs font-extrabold transition-colors ${activeTab === tab.id ? 'text-[#D9232D]' : 'text-slate-500 hover:text-slate-800'}`}>
                   {tab.label}
                   {activeTab === tab.id && <motion.span layoutId={prefersReducedMotion ? undefined : 'admin-order-tab-underline'} className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-[#D9232D]" />}
                 </button>
@@ -396,31 +396,31 @@ export function AdminOrderDetails({
             </div>
           </nav>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5" id={`order-tab-${activeTab}`} role="tabpanel" tabIndex={0} aria-label={`${tabs.find((tab) => tab.id === activeTab)?.label} details`}>
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3.5 sm:px-5 sm:py-4" id={`order-tab-${activeTab}`} role="tabpanel" tabIndex={0} aria-label={`${tabs.find((tab) => tab.id === activeTab)?.label} details`}>
             <motion.div key={activeTab} initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: prefersReducedMotion ? 0 : 0.16 }}>
               {tabContent[activeTab]()}
             </motion.div>
           </div>
 
-          <footer className="sticky bottom-0 z-20 shrink-0 border-t border-slate-200 bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:px-6">
-            <div className="flex items-center justify-between gap-3">
+          <footer className="sticky bottom-0 z-20 shrink-0 border-t border-slate-200 bg-white/95 px-4 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] backdrop-blur sm:px-5">
+            <div className="flex items-center justify-between gap-2.5">
               {order.status === 'COMPLETED' ? (
-                <div className="flex min-h-11 min-w-0 items-center gap-2 text-xs font-extrabold text-emerald-700"><CheckCircle2 className="h-4 w-4 shrink-0" /><span>Completed</span></div>
+                <div className="flex min-h-9 min-w-0 items-center gap-1.5 text-xs font-extrabold text-emerald-700"><CheckCircle2 className="h-4 w-4 shrink-0" /><span>Completed</span></div>
               ) : hasInvoice ? (
-                <button type="button" onClick={() => setShowInvoice(true)} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-extrabold text-slate-700 transition hover:bg-slate-50 active:scale-[0.98]"><Printer className="h-4 w-4" />Invoice / Print</button>
+                <button type="button" onClick={() => setShowInvoice(true)} className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-extrabold text-slate-700 transition hover:bg-slate-50 active:scale-[0.98]"><Printer className="h-3.5 w-3.5" />Invoice / Print</button>
               ) : order.status === 'CANCELLED' ? (
-                <span className="inline-flex min-h-11 items-center gap-2 text-xs font-bold text-rose-700"><XCircle className="h-4 w-4" />Order cancelled</span>
+                <span className="inline-flex min-h-9 items-center gap-1.5 text-xs font-bold text-rose-700"><XCircle className="h-4 w-4" />Order cancelled</span>
               ) : (
-                <span className="max-w-[40%] text-[10px] font-semibold leading-relaxed text-slate-400">Invoice available after pickup</span>
+                <span className="max-w-[40%] text-[10px] font-semibold leading-snug text-slate-400">Invoice available after pickup</span>
               )}
 
               {order.status === 'COMPLETED' ? (
-                <button type="button" onClick={() => setShowInvoice(true)} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-xs font-black text-white transition hover:bg-emerald-800 active:scale-[0.98]"><Printer className="h-4 w-4" />Open invoice</button>
+                <button type="button" onClick={() => setShowInvoice(true)} className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-emerald-700 px-3.5 text-xs font-black text-white transition hover:bg-emerald-800 active:scale-[0.98]"><Printer className="h-3.5 w-3.5" />Open invoice</button>
               ) : order.status === 'CANCELLED' ? (
                 <span className="text-xs font-bold text-slate-400">No further fulfillment</span>
               ) : nextStatus ? (
-                <button type="button" onClick={() => void updateStatus()} disabled={busyAction !== null} className="inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-xl bg-[#0F172A] px-2.5 text-center text-xs font-black text-white transition hover:bg-slate-800 active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 sm:px-4">
-                  {busyAction === 'status' ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> : <ChevronRight className="h-4 w-4" />}
+                <button type="button" onClick={() => void updateStatus()} disabled={busyAction !== null} className="inline-flex min-h-9 min-w-0 items-center justify-center gap-1.5 rounded-xl bg-[#0F172A] px-3 text-center text-xs font-black text-white transition hover:bg-slate-800 active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 sm:px-3.5">
+                  {busyAction === 'status' ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" /> : <ChevronRight className="h-3.5 w-3.5" />}
                   {busyAction === 'status' ? 'Updating…' : `Mark ${getOrderStatusLabel(nextStatus)}`}
                 </button>
               ) : null}
@@ -456,37 +456,37 @@ function StatusBadge({ status }: { status: string }) {
 function StatusHero({ hero, status }: { hero: ReturnType<typeof statusHero>; status: string }) {
   const Icon = hero.icon;
   return (
-    <section className={`flex items-center gap-3 rounded-2xl border p-4 sm:p-5 ${hero.tone}`}>
-      <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${hero.iconTone}`}><Icon className="h-5 w-5" /></span>
-      <div className="min-w-0 flex-1"><h3 className="text-sm font-black leading-snug sm:text-base">{hero.title}</h3><p className="mt-1 text-[11px] leading-relaxed opacity-80">{hero.description}</p></div>
-      <span className="hidden rounded-full bg-white/70 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wide sm:inline-flex">{getOrderStatusLabel(status)}</span>
+    <section className={`flex items-center gap-2.5 rounded-2xl border p-3 sm:p-3.5 ${hero.tone}`}>
+      <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${hero.iconTone}`}><Icon className="h-4 w-4" /></span>
+      <div className="min-w-0 flex-1"><h3 className="text-sm font-black leading-snug">{hero.title}</h3><p className="mt-0.5 text-[11px] leading-snug opacity-80">{hero.description}</p></div>
+      <span className="hidden rounded-full bg-white/70 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide sm:inline-flex">{getOrderStatusLabel(status)}</span>
     </section>
   );
 }
 
 function InformationCard({ icon: Icon, label, value, strong = false }: { icon: React.ElementType; label: string; value: string; strong?: boolean }) {
   return (
-    <article className="min-w-0 rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4">
-      <div className="flex items-center gap-2 text-slate-400"><Icon className="h-3.5 w-3.5 shrink-0" /><p className="text-[10px] font-bold uppercase tracking-[0.08em]">{label}</p></div>
-      <p className={`mt-2 break-words text-xs leading-snug ${strong ? 'text-base font-black text-[#0F172A]' : 'font-bold text-slate-800'}`}>{value}</p>
+    <article className="min-w-0 rounded-xl border border-slate-200 bg-white p-3">
+      <div className="flex items-center gap-1.5 text-slate-400"><Icon className="h-3.5 w-3.5 shrink-0" /><p className="text-[10px] font-bold uppercase tracking-[0.08em]">{label}</p></div>
+      <p className={`mt-1.5 break-words text-xs leading-snug ${strong ? 'text-sm font-black text-[#0F172A]' : 'font-bold text-slate-800'}`}>{value}</p>
     </article>
   );
 }
 
 function CustomerInformationCard({ order }: { order: AdminOrderRecord }) {
   return (
-    <article className="min-w-0 rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4">
-      <div className="flex items-center gap-2 text-slate-400">
+    <article className="min-w-0 rounded-xl border border-slate-200 bg-white p-3">
+      <div className="flex items-center gap-1.5 text-slate-400">
         <UserRound className="h-3.5 w-3.5 shrink-0" />
         <p className="text-[10px] font-bold uppercase tracking-[0.08em]">Customer</p>
       </div>
-      <div className="mt-2 flex items-center gap-3">
+      <div className="mt-1.5 flex items-center gap-2.5">
         <AdminCustomerAvatar
           name={order.customer || 'Customer'}
           initials={order.initials || 'RG'}
           avatarUrl={order.customerAvatarUrl}
-          className="h-10 w-10 rounded-xl bg-gradient-to-br from-slate-900 to-slate-700 text-white shadow-2xs ring-1 ring-slate-200/80"
-          textClassName="font-mono text-[11px] font-black"
+          className="h-8 w-8 rounded-lg bg-gradient-to-br from-slate-900 to-slate-700 text-white shadow-2xs ring-1 ring-slate-200/80"
+          textClassName="font-mono text-[10px] font-black"
         />
         <p className="min-w-0 break-words text-xs font-bold leading-snug text-slate-800">
           {order.customer || '—'}
@@ -499,18 +499,18 @@ function CustomerInformationCard({ order }: { order: AdminOrderRecord }) {
 function VehicleInformationCard({ order }: { order: AdminOrderRecord }) {
   const vehicleLabel = order.vehicleModel || 'Vehicle not specified';
   return (
-    <article aria-label="Vehicle" className="min-w-0 rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4">
-      <div className="flex items-center gap-2 text-slate-400"><CarFront className="h-3.5 w-3.5 shrink-0" /><p className="text-[10px] font-bold uppercase tracking-[0.08em]">Vehicle</p></div>
-      <div className="mt-2 flex items-center gap-3">
+    <article aria-label="Vehicle" className="min-w-0 rounded-xl border border-slate-200 bg-white p-3">
+      <div className="flex items-center gap-1.5 text-slate-400"><CarFront className="h-3.5 w-3.5 shrink-0" /><p className="text-[10px] font-bold uppercase tracking-[0.08em]">Vehicle</p></div>
+      <div className="mt-1.5 flex items-center gap-2.5">
         {order.vehicleImage ? (
-          <img src={order.vehicleImage} alt={`${order.vehicleCompany || 'Vehicle'} ${vehicleLabel}`} className="h-14 w-20 shrink-0 rounded-lg bg-slate-50 object-contain p-1" />
+          <img src={order.vehicleImage} alt={`${order.vehicleCompany || 'Vehicle'} ${vehicleLabel}`} className="h-11 w-16 shrink-0 rounded-lg bg-slate-50 object-contain p-0.5" />
         ) : (
-          <span className="grid h-14 w-20 shrink-0 place-items-center rounded-lg bg-slate-50 text-slate-300"><CarFront className="h-6 w-6" /></span>
+          <span className="grid h-11 w-16 shrink-0 place-items-center rounded-lg bg-slate-50 text-slate-300"><CarFront className="h-5 w-5" /></span>
         )}
         <div className="min-w-0">
           <p className="truncate text-[10px] font-bold uppercase tracking-wide text-slate-400">{order.vehicleType || 'Vehicle'}</p>
-          {order.vehicleCompany && <p className="truncate text-xs font-extrabold text-slate-600">{order.vehicleCompany}</p>}
-          <p className="break-words text-sm font-black leading-snug text-slate-900">{vehicleLabel}</p>
+          {order.vehicleCompany && <p className="truncate text-[11px] font-extrabold text-slate-600">{order.vehicleCompany}</p>}
+          <p className="break-words text-xs font-black leading-snug text-slate-900">{vehicleLabel}</p>
         </div>
       </div>
     </article>
@@ -522,14 +522,14 @@ function OrderProductRow({ item, product, roomy = false }: { item: AdminOrderRec
   const unitPrice = Number(item.unit_price || 0);
   const image = product?.image;
   return (
-    <article className={`flex min-w-0 items-center gap-3 ${roomy ? 'py-3.5' : 'py-3'}`}>
-      <div className={`grid shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 ${roomy ? 'h-16 w-16' : 'h-14 w-14'}`}>
-        {image ? <img src={image} alt={item.product_name || 'Order product'} loading="lazy" className="h-full w-full object-cover" /> : <Package className="h-5 w-5 text-slate-300" />}
+    <article className={`flex min-w-0 items-center gap-2.5 ${roomy ? 'py-2.5' : 'py-2'}`}>
+      <div className={`grid shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 ${roomy ? 'h-12 w-12' : 'h-11 w-11'}`}>
+        {image ? <img src={image} alt={item.product_name || 'Order product'} loading="lazy" className="h-full w-full object-cover" /> : <Package className="h-4 w-4 text-slate-300" />}
       </div>
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 text-xs font-extrabold leading-snug text-slate-800">{item.product_name || 'Product'}</p>
-        <p className="mt-1 text-[10px] text-slate-500">Qty: {quantity}{item.color ? ` · ${item.color}` : ''}{product?.categoryLabel ? ` · ${product.categoryLabel}` : ''}</p>
-        {(item.selected_thickness || item.selected_stitch || item.custom_embroidery_text) && <p className="mt-1 text-[10px] leading-relaxed text-slate-500">{[item.selected_thickness && `Thickness: ${item.selected_thickness}`, item.selected_stitch && `Stitch: ${item.selected_stitch}`, item.custom_embroidery_text && `Embroidery: ${item.custom_embroidery_text}`].filter(Boolean).join(' · ')}</p>}
+        <p className="mt-0.5 text-[10px] text-slate-500">Qty: {quantity}{item.color ? ` · ${item.color}` : ''}{product?.categoryLabel ? ` · ${product.categoryLabel}` : ''}</p>
+        {(item.selected_thickness || item.selected_stitch || item.custom_embroidery_text) && <p className="mt-0.5 text-[10px] leading-snug text-slate-500">{[item.selected_thickness && `Thickness: ${item.selected_thickness}`, item.selected_stitch && `Stitch: ${item.selected_stitch}`, item.custom_embroidery_text && `Embroidery: ${item.custom_embroidery_text}`].filter(Boolean).join(' · ')}</p>}
         <p className="mt-0.5 text-[10px] text-slate-400">{money(unitPrice)} each</p>
       </div>
       <p className="shrink-0 text-right text-xs font-black text-[#0F172A]">{money(unitPrice * quantity)}</p>
@@ -541,17 +541,17 @@ function PaymentSummary({ order, pendingPayment, busy, onVerify }: { order: Admi
   const paymentStatus = order.paymentStatus || 'PENDING';
   const statusTone = paymentStatus.toUpperCase() === 'PAID' ? 'bg-emerald-50 text-emerald-700' : paymentStatus.toUpperCase() === 'FAILED' ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-800';
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-      <div className="flex items-start justify-between gap-3"><div><h3 className="text-sm font-black text-slate-900">Payment summary</h3><p className="mt-1 text-[11px] text-slate-500">{order.paymentMethod.replaceAll('_', ' ') || 'Payment method unavailable'}</p></div><span className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold ${statusTone}`}>{paymentStatus}</span></div>
-      <div className="mt-4 space-y-2.5 border-t border-slate-100 pt-3 text-xs">
+    <section className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4">
+      <div className="flex items-start justify-between gap-2.5"><div><h3 className="text-xs font-black text-slate-900">Payment summary</h3><p className="mt-0.5 text-[11px] text-slate-500">{order.paymentMethod.replaceAll('_', ' ') || 'Payment method unavailable'}</p></div><span className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${statusTone}`}>{paymentStatus}</span></div>
+      <div className="mt-3 space-y-2 border-t border-slate-100 pt-2.5 text-xs">
         <MoneyLine label="Subtotal" amount={order.subtotal} />
         <MoneyLine label="Discount" amount={-Math.abs(order.discount)} discount />
-        <div className="my-2 border-t border-dashed border-slate-200" />
+        <div className="my-1.5 border-t border-dashed border-slate-200" />
         <MoneyLine label="Total" amount={order.amount} strong />
       </div>
       {pendingPayment && (
-        <button type="button" onClick={onVerify} disabled={busy} className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-xs font-black text-white transition hover:bg-emerald-800 active:scale-[0.99] disabled:cursor-wait disabled:opacity-60 sm:w-auto">
-          {busy ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> : <CreditCard className="h-4 w-4" />}{busy ? 'Verifying…' : 'Verify Payment'}
+        <button type="button" onClick={onVerify} disabled={busy} className="mt-3 inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-700 px-3.5 text-xs font-black text-white transition hover:bg-emerald-800 active:scale-[0.99] disabled:cursor-wait disabled:opacity-60 sm:w-auto">
+          {busy ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" /> : <CreditCard className="h-3.5 w-3.5" />}{busy ? 'Verifying…' : 'Verify Payment'}
         </button>
       )}
     </section>

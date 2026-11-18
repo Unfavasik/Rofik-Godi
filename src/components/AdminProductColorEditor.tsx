@@ -158,12 +158,12 @@ export const AdminProductColorEditor: React.FC<Props> = ({
   return (
     <section
       aria-label="Product color options"
-      className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+      className="rounded-xl border border-slate-200 bg-slate-50 p-3"
     >
-      <div className="flex flex-wrap sm:flex-nowrap items-start justify-between gap-3">
+      <div className="flex flex-wrap sm:flex-nowrap items-start justify-between gap-2.5">
         <div className="min-w-0">
           <h3 className="text-xs font-black text-slate-800">Product color options</h3>
-          <p className="mt-1 max-w-xl text-[10px] leading-relaxed text-slate-500">
+          <p className="mt-0.5 max-w-xl text-[10px] leading-relaxed text-slate-500">
             Each colour holds its own photos. The first image of a colour is its main image, and the
             first colour with photos also becomes the product cover. Colours without photos reuse
             that default gallery.
@@ -186,7 +186,7 @@ export const AdminProductColorEditor: React.FC<Props> = ({
               },
             ]);
           }}
-          className="inline-flex min-h-10 shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-700"
+          className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-700"
         >
           <Plus className="h-3.5 w-3.5" />
           Add color
@@ -211,9 +211,9 @@ export const AdminProductColorEditor: React.FC<Props> = ({
               // A stable key is critical: keying by color.name remounts the card
               // on every keystroke and dismisses the mobile keyboard mid-edit.
               key={index}
-              className="rounded-xl border border-slate-200 bg-white p-3"
+              className="rounded-xl border border-slate-200 bg-white p-2.5"
             >
-              <div className="mb-2 flex items-center justify-between gap-2">
+              <div className="mb-1.5 flex items-center justify-between gap-2">
                 <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-400">
                   Color {index + 1}
                 </p>
@@ -222,7 +222,7 @@ export const AdminProductColorEditor: React.FC<Props> = ({
                   onClick={() => onChange(colors.filter((_, colorIndex) => colorIndex !== index))}
                   disabled={colors.length <= 1 || autoFillIndex !== null}
                   aria-label={`Remove color ${color.name || index + 1}`}
-                  className="rounded-lg p-1.5 text-slate-400 disabled:opacity-30"
+                  className="rounded-lg p-1 text-slate-400 disabled:opacity-30"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -239,7 +239,7 @@ export const AdminProductColorEditor: React.FC<Props> = ({
                     }
                     placeholder="Crimson Red"
                     aria-label={`Color name ${index + 1}`}
-                    className="min-h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-base sm:text-xs font-semibold"
+                    className="min-h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-base sm:text-xs font-semibold"
                   />
                 </label>
                 <label className="min-w-0">
@@ -252,25 +252,25 @@ export const AdminProductColorEditor: React.FC<Props> = ({
                     placeholder="#D9232D or navy"
                     aria-label={`Color code or CSS name ${index + 1}`}
                     aria-invalid={!validColor}
-                    className="min-h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-base sm:text-xs font-semibold"
+                    className="min-h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-base sm:text-xs font-semibold"
                   />
                 </label>
-                <label className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-lg border">
+                <label className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-lg border">
                   <input
                     type="color"
                     value={toColorPickerValue(color.hex)}
                     onChange={(event) => changeHex(index, event.target.value)}
                     aria-label={`Choose color ${index + 1}`}
-                    className="h-14 w-14"
+                    className="h-12 w-12"
                   />
                 </label>
               </div>
               {!validColor && (
-                <p role="alert" className="mt-1.5 text-[10px] font-semibold text-rose-600">
+                <p role="alert" className="mt-1 text-[10px] font-semibold text-rose-600">
                   Enter a valid color.
                 </p>
               )}
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+              <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
                 <div className="min-w-0">
                   <p className="text-[10px] font-black text-slate-600">Colour details</p>
                   <p className="break-words text-[10px] text-slate-400">
@@ -283,17 +283,17 @@ export const AdminProductColorEditor: React.FC<Props> = ({
                     setCopyFrom('');
                     setDetailsIndex(index);
                   }}
-                  className="min-h-10 shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-[11px] font-bold text-white"
+                  className="min-h-8 shrink-0 rounded-lg bg-slate-900 px-2.5 py-1.5 text-[11px] font-bold text-white"
                 >
                   Edit details
                 </button>
               </div>
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <div className="mt-2.5 flex flex-col gap-2 sm:flex-row">
                 <button
                   type="button"
                   onClick={() => openFilePicker(index)}
                   disabled={!onUploadFiles || uploadingIndex !== null}
-                  className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold"
+                  className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-bold"
                 >
                   {uploadingIndex === index ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -309,13 +309,13 @@ export const AdminProductColorEditor: React.FC<Props> = ({
                       setUrlDrafts((current) => ({ ...current, [index]: event.target.value }))
                     }
                     placeholder="Paste image URL"
-                    className="min-h-11 min-w-0 flex-1 rounded-lg border bg-slate-50 px-2.5 py-2 text-base sm:text-xs"
+                    className="min-h-9 min-w-0 flex-1 rounded-lg border bg-slate-50 px-2.5 py-1.5 text-base sm:text-xs"
                   />
                   <button
                     type="button"
                     onClick={() => addUrl(index)}
                     aria-label="Add image URL"
-                    className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-lg bg-slate-900 px-2.5 text-white"
+                    className="grid min-h-9 min-w-9 shrink-0 place-items-center rounded-lg bg-slate-900 px-2 text-white"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
@@ -326,7 +326,7 @@ export const AdminProductColorEditor: React.FC<Props> = ({
                   type="button"
                   onClick={() => void autoFillDetails(index)}
                   disabled={!images.length || autoFillIndex !== null || uploadingIndex !== null}
-                  className="inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-[10px] font-bold text-violet-900 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex min-h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-[10px] font-bold text-violet-900 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {autoFillIndex === index ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -339,11 +339,11 @@ export const AdminProductColorEditor: React.FC<Props> = ({
                   AI-generated, please check before saving.
                 </p>
               </div>
-              <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+              <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
                 <div className="flex items-center gap-2">
                   <p className="text-[10px] font-black text-slate-700">Photos · {images.length}</p>
                   {coverColorIndex === index && (
-                    <span className="rounded-full bg-emerald-50 px-2 py-1 text-[8px] font-black text-emerald-700">
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[8px] font-black text-emerald-700">
                       Product cover
                     </span>
                   )}
@@ -353,13 +353,13 @@ export const AdminProductColorEditor: React.FC<Props> = ({
                 )}
               </div>
               {images.length === 0 && (
-                <p className="mt-2 rounded-lg bg-slate-50 px-2.5 py-2 text-[9px] leading-relaxed text-slate-500">
+                <p className="mt-1.5 rounded-lg bg-slate-50 px-2.5 py-1.5 text-[9px] leading-relaxed text-slate-500">
                   {coverColorIndex === index
                     ? 'No photos yet. Upload one to make this the product cover.'
                     : `Customers see the default gallery from ${coverColorIndex >= 0 ? colors[coverColorIndex]?.name : 'the first colour with photos'}.`}
                 </p>
               )}
-              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {images.map((image, imageIndex) => (
                   <div
                     key={`${image}-${imageIndex}`}
@@ -462,7 +462,7 @@ const ColorDetailsForm: React.FC<{
     ['Package Includes', packageIncludes, setPackageIncludes, productDefaults.packageIncludes],
   ] as const;
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       <p className="text-[11px] leading-relaxed text-slate-500">
         Empty fields use the product default. Fill a field to give this colour its own value.
       </p>
@@ -471,7 +471,7 @@ const ColorDetailsForm: React.FC<{
         <select
           value={copyFrom}
           onChange={(event) => setCopyFrom(event.target.value)}
-          className="mt-1 min-h-11 w-full rounded-xl border px-3 py-2.5 text-base sm:text-xs"
+          className="mt-1 min-h-9 w-full rounded-xl border px-3 py-1.5 text-base sm:text-xs"
         >
           <option value="">Choose colour</option>
           {colors.map(
@@ -488,7 +488,7 @@ const ColorDetailsForm: React.FC<{
         type="button"
         onClick={onCopy}
         disabled={!copyFrom}
-        className="min-h-11 rounded-lg border px-3.5 py-2 text-xs sm:text-[10px] font-bold disabled:opacity-40"
+        className="min-h-9 rounded-lg border px-3 py-1.5 text-xs sm:text-[10px] font-bold disabled:opacity-40"
       >
         Apply copied details
       </button>
@@ -497,7 +497,7 @@ const ColorDetailsForm: React.FC<{
         <input
           value={subtitle}
           onChange={(event) => setSubtitle(event.target.value)}
-          className="mt-1 min-h-11 w-full rounded-xl border px-3 py-2.5 text-base sm:text-xs"
+          className="mt-1 min-h-9 w-full rounded-xl border px-3 py-1.5 text-base sm:text-xs"
           placeholder={productDefaults.subtitle || 'Product default subtitle'}
         />
       </label>
@@ -505,10 +505,10 @@ const ColorDetailsForm: React.FC<{
         <label key={label} className="block text-xs font-bold">
           {label}
           <textarea
-            rows={4}
+            rows={3}
             value={value}
             onChange={(event) => setter(event.target.value)}
-            className="mt-1 w-full rounded-xl border px-3 py-2.5 text-base sm:text-xs"
+            className="mt-1 w-full rounded-xl border px-3 py-2 text-base sm:text-xs"
             placeholder={fallback.length ? fallback.join('\n') : 'One per line'}
           />
         </label>
@@ -518,7 +518,7 @@ const ColorDetailsForm: React.FC<{
         <input
           value={installation}
           onChange={(event) => setInstallation(event.target.value)}
-          className="mt-1 min-h-11 w-full rounded-xl border px-3 py-2.5 text-base sm:text-xs"
+          className="mt-1 min-h-9 w-full rounded-xl border px-3 py-1.5 text-base sm:text-xs"
           placeholder={productDefaults.installation || DEFAULT_INSTALLATION}
         />
       </label>
@@ -526,7 +526,7 @@ const ColorDetailsForm: React.FC<{
         <button
           type="button"
           onClick={onCancel}
-          className="min-h-11 rounded-xl border px-4 py-2.5 text-xs font-bold"
+          className="min-h-9 rounded-xl border px-3.5 py-1.5 text-xs font-bold"
         >
           Cancel
         </button>
@@ -543,7 +543,7 @@ const ColorDetailsForm: React.FC<{
               installation: installation.trim() || undefined,
             })
           }
-          className="banner-cta-shine min-h-11 rounded-xl bg-[#D9232D] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#b91822] active:scale-[0.98]"
+          className="banner-cta-shine min-h-9 rounded-xl bg-[#D9232D] px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#b91822] active:scale-[0.98]"
         >
           Save details
         </button>

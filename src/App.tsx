@@ -574,6 +574,7 @@ export default function App() {
 
   // Modals & Drawers
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [browseProductIds, setBrowseProductIds] = useState<string[] | null>(null);
   // Colour name from a banner deep link (?color=…) that should be preselected
   // when the product page opens.
   const [selectedProductColor, setSelectedProductColor] = useState<string | null>(null);
@@ -738,7 +739,19 @@ export default function App() {
     return () => { active = false; };
   }, [couponRouteCode]);
 
-  const openProductRoute = useCallback((product: Product) => {
+  const filteredProductsRef = useRef<Product[]>([]);
+
+  const openProductRoute = useCallback((product: Product, listContext?: Product[]) => {
+    if (listContext && listContext.length > 0) {
+      setBrowseProductIds(listContext.map((item) => item.id));
+    } else if (resolveAppRoute(location.pathname).kind !== 'product') {
+      const currentFiltered = filteredProductsRef.current;
+      setBrowseProductIds(
+        currentFiltered.some((item) => item.id === product.id)
+          ? currentFiltered.map((item) => item.id)
+          : null,
+      );
+    }
     // Save the exact storefront position before opening the full-screen detail
     // route. The route-level restore effect will put it back when the customer
     // taps Back, instead of sending them to the top of Home or Shop.
@@ -755,8 +768,14 @@ export default function App() {
     setSelectedProduct(product);
     navigate(getPathForProduct(product.id), { state: { returnTo: location.pathname } });
   }, [location.pathname, location.search, navigate]);
+  const navigateAdjacentProduct = useCallback((nextProduct: Product) => {
+    setSelectedProduct(nextProduct);
+    setSelectedProductColor(null);
+    navigate(getPathForProduct(nextProduct.id), { replace: true, state: location.state });
+  }, [location.state, navigate]);
   const closeProductRoute = useCallback(() => {
     setSelectedProduct(null);
+    setBrowseProductIds(null);
     if (resolveAppRoute(location.pathname).kind !== 'product') return;
     const routeState = location.state as { returnTo?: unknown } | null;
     const returnTo = typeof routeState?.returnTo === 'string' ? routeState.returnTo : '/shop';
@@ -987,6 +1006,7 @@ export default function App() {
         }
       });
   }, [catalogProducts, selectedCategory, vehicleFilter, searchQuery, sortBy, homeFilters]);
+  filteredProductsRef.current = filteredProducts;
 
   const homeSearchPromptTerms = useMemo(
     () => getHomeSearchPromptTerms(catalogProducts, 10),
@@ -2157,6 +2177,23 @@ export default function App() {
         <Suspense fallback={null}>
         {selectedProduct && <ProductDetailModal
           products={catalogProducts}
+          browseProducts={
+            browseProductIds?.length
+              ? (() => {
+                  const byId = new Map(catalogProducts.map((item) => [item.id, item]));
+                  const resolved = browseProductIds
+                    .map((id) => byId.get(id))
+                    .filter((item): item is Product => Boolean(item));
+                  return resolved.some((item) => item.id === selectedProduct.id)
+                    ? resolved
+                    : filteredProducts.some((item) => item.id === selectedProduct.id)
+                      ? filteredProducts
+                      : catalogProducts;
+                })()
+              : filteredProducts.some((item) => item.id === selectedProduct.id)
+                ? filteredProducts
+                : catalogProducts
+          }
           product={selectedProduct}
           onClose={closeProductRoute}
           onAddToCart={handleDetailAddToCart}
@@ -2175,6 +2212,7 @@ export default function App() {
           }}
           onBuyNow={handleDetailBuyNow}
           onSelectProduct={openProductRoute}
+          onNavigateAdjacentProduct={navigateAdjacentProduct}
           onQuickAdd={handleToggleDefaultCartItem}
           onNotifyMe={handleNotifyMe}
           isAuthenticated={!currentUser.isGuest}

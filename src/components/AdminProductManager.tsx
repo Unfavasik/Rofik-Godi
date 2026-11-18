@@ -130,7 +130,7 @@ const Field: React.FC<{
   className?: string;
 }> = ({ label, hint, children, className = '' }) => (
   <label className={`block ${className}`}>
-    <span className="mb-1.5 block text-[11px] font-bold text-slate-600">{label}</span>
+    <span className="mb-1 block text-[11px] font-bold text-slate-600">{label}</span>
     {children}
     {hint && <span className="mt-1 block text-[10px] text-slate-400">{hint}</span>}
   </label>
@@ -138,13 +138,13 @@ const Field: React.FC<{
 const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
   <input
     {...props}
-    className={`min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-base font-semibold outline-none transition focus:border-[#D9232D] focus:bg-white sm:text-xs ${props.className || ''}`}
+    className={`min-h-9 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-base font-semibold outline-none transition focus:border-[#D9232D] focus:bg-white sm:text-xs ${props.className || ''}`}
   />
 );
 const Textarea = (props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
   <textarea
     {...props}
-    className={`w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-base font-semibold outline-none transition focus:border-[#D9232D] focus:bg-white sm:text-xs ${props.className || ''}`}
+    className={`w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-base font-semibold outline-none transition focus:border-[#D9232D] focus:bg-white sm:text-xs ${props.className || ''}`}
   />
 );
 
@@ -503,24 +503,24 @@ export const AdminProductManager: React.FC<{
 
   return (
     <section className="max-w-full overflow-x-hidden">
-      <div className="mb-6 flex flex-col justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-[0_12px_36px_-16px_rgba(15,23,42,0.06)] backdrop-blur-md sm:flex-row sm:items-center sm:p-5">
+      <div className="mb-4 flex flex-col justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/90 p-3.5 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.06)] backdrop-blur-md sm:flex-row sm:items-center sm:p-4">
         <div className="min-w-0">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50/90 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#D9232D] ring-1 ring-inset ring-red-100">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50/90 px-2 py-0.5 text-[9.5px] font-black uppercase tracking-[0.14em] text-[#D9232D] ring-1 ring-inset ring-red-100">
             <span className="h-1.5 w-1.5 rounded-full bg-[#D9232D]" />
             Catalog control
           </span>
-          <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900 md:text-[28px]">
+          <h2 className="mt-1.5 text-lg font-black tracking-tight text-slate-900 md:text-xl">
             Products
           </h2>
-          <p className="mt-1 text-xs leading-relaxed text-slate-500">
+          <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
             Manage product details, image galleries, price, stock and storefront visibility.
           </p>
         </div>
         <button
           onClick={openNew}
-          className="banner-cta-shine group/cta inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D9232D] to-[#b91822] px-4 py-2.5 text-xs font-black text-white shadow-md shadow-red-600/20 transition hover:brightness-105 active:scale-[0.98]"
+          className="banner-cta-shine group/cta inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#D9232D] to-[#b91822] px-3.5 py-1.5 text-xs font-black text-white shadow-sm shadow-red-600/20 transition hover:brightness-105 active:scale-[0.98]"
         >
-          <Plus className="h-4 w-4 transition-transform duration-200 group-hover/cta:scale-110" />
+          <Plus className="h-3.5 w-3.5 transition-transform duration-200 group-hover/cta:scale-110" />
           Add product
         </button>
       </div>
@@ -528,7 +528,7 @@ export const AdminProductManager: React.FC<{
       {loadState === 'ready' && products.length > 1 && (
         <ProductOrderList products={filtered} saving={savingOrder} onMove={moveProduct} />
       )}
-      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Summary label="Total products" value={products.length.toString()} tone="text-slate-900" loading={loadState === 'loading'} />
         <Summary
           label="Visible in store"
@@ -543,9 +543,9 @@ export const AdminProductManager: React.FC<{
           loading={loadState === 'loading'}
         />
       </div>
-      <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white/95 p-3.5 shadow-[0_8px_28px_-14px_rgba(15,23,42,0.06)] backdrop-blur-md sm:flex-row">
-        <div className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50/90 px-3 py-2 focus-within:border-red-200 focus-within:bg-white focus-within:ring-2 focus-within:ring-red-100">
-          <Search className="h-4 w-4 shrink-0 text-slate-400" />
+      <div className="mb-3.5 flex flex-col gap-2.5 rounded-2xl border border-slate-200/80 bg-white/95 p-2.5 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.06)] backdrop-blur-md sm:flex-row">
+        <div className="flex min-h-9 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50/90 px-3 py-1.5 focus-within:border-red-200 focus-within:bg-white focus-within:ring-2 focus-within:ring-red-100">
+          <Search className="h-3.5 w-3.5 shrink-0 text-slate-400" />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -556,7 +556,7 @@ export const AdminProductManager: React.FC<{
         <select
           value={category}
           onChange={(event) => setCategory(event.target.value as 'all' | VehicleCategory)}
-          className="min-h-11 max-w-full rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-base font-bold text-slate-600 outline-none focus:border-[#D9232D] sm:text-xs"
+          className="min-h-9 max-w-full rounded-xl border border-slate-200/80 bg-white px-3 py-1.5 text-base font-bold text-slate-600 outline-none focus:border-[#D9232D] sm:text-xs"
         >
           <option value="all">All categories</option>
           {categories.map((item) => (
@@ -569,7 +569,7 @@ export const AdminProductManager: React.FC<{
       {loadState === 'loading' && (
         <p
           role="status"
-          className="mb-3 rounded-xl border border-slate-200/80 bg-white/90 px-3.5 py-2.5 text-xs font-semibold text-slate-500 shadow-sm"
+          className="mb-3 rounded-xl border border-slate-200/80 bg-white/90 px-3.5 py-2 text-xs font-semibold text-slate-500 shadow-sm"
         >
           Loading products…
         </p>
@@ -583,45 +583,45 @@ export const AdminProductManager: React.FC<{
           <button
             type="button"
             onClick={() => void loadProducts()}
-            className="self-start rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-[11px] font-bold text-amber-800 hover:bg-amber-100 sm:self-auto"
+            className="self-start rounded-lg border border-amber-300 bg-white px-3 py-1 text-[11px] font-bold text-amber-800 hover:bg-amber-100 sm:self-auto"
           >
             Retry
           </button>
         </div>
       )}
-      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_12px_36px_-16px_rgba(15,23,42,0.06)] backdrop-blur-md">
+      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_10px_28px_-16px_rgba(15,23,42,0.06)] backdrop-blur-md">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[880px] text-left">
+          <table className="w-full min-w-[820px] text-left">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/80 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                <th className="px-5 py-3.5">Product</th>
-                <th className="py-3.5">Category</th>
-                <th className="py-3.5">Price</th>
-                <th className="py-3.5">Stock</th>
-                <th className="py-3.5">Guarantee</th>
-                <th className="py-3.5">Status</th>
-                <th className="py-3.5 pr-5 text-right">Actions</th>
+                <th className="px-4 py-2.5">Product</th>
+                <th className="py-2.5">Category</th>
+                <th className="py-2.5">Price</th>
+                <th className="py-2.5">Stock</th>
+                <th className="py-2.5">Guarantee</th>
+                <th className="py-2.5">Status</th>
+                <th className="py-2.5 pr-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loadState === 'loading' && filtered.length === 0
                 ? [0, 1, 2, 3].map((row) => (
                     <tr key={row} className="animate-pulse">
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="h-12 w-12 rounded-xl bg-slate-200/70" />
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="h-9 w-9 rounded-lg bg-slate-200/70" />
                           <div className="space-y-1.5">
-                            <div className="h-3.5 w-40 rounded-full bg-slate-200/80" />
+                            <div className="h-3.5 w-36 rounded-full bg-slate-200/80" />
                             <div className="h-2.5 w-24 rounded-full bg-slate-100" />
                           </div>
                         </div>
                       </td>
-                      <td className="py-3.5"><div className="h-3 w-20 rounded-full bg-slate-200/70" /></td>
-                      <td className="py-3.5"><div className="h-3.5 w-16 rounded-full bg-slate-200/80" /></td>
-                      <td className="py-3.5"><div className="h-3 w-16 rounded-full bg-slate-100" /></td>
-                      <td className="py-3.5"><div className="h-5 w-24 rounded-full bg-slate-100" /></td>
-                      <td className="py-3.5"><div className="h-6 w-20 rounded-full bg-slate-200/70" /></td>
-                      <td className="py-3.5 pr-5"><div className="ml-auto h-7 w-24 rounded-lg bg-slate-100" /></td>
+                      <td className="py-2.5"><div className="h-3 w-20 rounded-full bg-slate-200/70" /></td>
+                      <td className="py-2.5"><div className="h-3.5 w-14 rounded-full bg-slate-200/80" /></td>
+                      <td className="py-2.5"><div className="h-3 w-14 rounded-full bg-slate-100" /></td>
+                      <td className="py-2.5"><div className="h-5 w-20 rounded-full bg-slate-100" /></td>
+                      <td className="py-2.5"><div className="h-5 w-16 rounded-full bg-slate-200/70" /></td>
+                      <td className="py-2.5 pr-4"><div className="ml-auto h-6 w-20 rounded-lg bg-slate-100" /></td>
                     </tr>
                   ))
                 : filtered.map((product) => (
@@ -630,9 +630,9 @@ export const AdminProductManager: React.FC<{
                   key={product.id}
                   className="text-xs transition hover:bg-red-50/25"
                 >
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 overflow-hidden rounded-xl border border-slate-200/70 bg-slate-100 shadow-xs">
+                  <td className="px-4 py-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-9 w-9 overflow-hidden rounded-lg border border-slate-200/70 bg-slate-100 shadow-xs">
                         <img
                           src={product.image}
                           alt=""
@@ -643,28 +643,28 @@ export const AdminProductManager: React.FC<{
                         />
                       </div>
                       <div>
-                        <p className="max-w-[240px] truncate font-black text-slate-900">
+                        <p className="max-w-[230px] truncate font-black text-slate-900">
                           {product.title}
                         </p>
-                        <p className="mt-1 max-w-[250px] truncate font-mono text-[10px] text-slate-400">
+                        <p className="mt-0.5 max-w-[240px] truncate font-mono text-[10px] text-slate-400">
                           /{product.slug}
                         </p>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3.5 font-semibold text-slate-600">{product.categoryLabel}</td>
-                  <td className="py-3.5 tabular-nums">
+                  <td className="py-2.5 font-semibold text-slate-600">{product.categoryLabel}</td>
+                  <td className="py-2.5 tabular-nums">
                     <p className="font-black text-slate-900">{money(product.price)}</p>
                     <p className="text-[10px] text-slate-400 line-through">
                       {money(product.originalPrice)}
                     </p>
                   </td>
-                  <td className="py-3.5 font-semibold text-slate-600">
+                  <td className="py-2.5 font-semibold text-slate-600">
                     {product.inStock ? 'Available' : 'Hidden'}
                   </td>
-                  <td className="py-3.5">
+                  <td className="py-2.5">
                     {normalizeGuaranteeDate(product.guaranteeValidUntil) ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-200/80 tabular-nums">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-200/80 tabular-nums">
                         <ShieldCheck className="h-3 w-3 shrink-0" />
                         Until {formatGuaranteeDateLabel(normalizeGuaranteeDate(product.guaranteeValidUntil)!)}
                       </span>
@@ -672,37 +672,37 @@ export const AdminProductManager: React.FC<{
                       <span className="text-[11px] font-medium text-slate-400">Not set</span>
                     )}
                   </td>
-                  <td className="py-3.5">
+                  <td className="py-2.5">
                     <button
                       onClick={() => toggleStock(product.id)}
-                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black ring-1 ring-inset transition ${product.inStock ? 'bg-emerald-50 text-emerald-700 ring-emerald-200/80 hover:bg-emerald-100/70' : 'bg-red-50 text-red-700 ring-red-200/80 hover:bg-red-100/70'}`}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-black ring-1 ring-inset transition ${product.inStock ? 'bg-emerald-50 text-emerald-700 ring-emerald-200/80 hover:bg-emerald-100/70' : 'bg-red-50 text-red-700 ring-red-200/80 hover:bg-red-100/70'}`}
                     >
                       <span className="h-1.5 w-1.5 rounded-full bg-current" />
                       {product.inStock ? 'Published' : 'Unpublished'}
                     </button>
                   </td>
-                  <td className="py-3.5 pr-5">
+                  <td className="py-2.5 pr-4">
                     <div className="flex justify-end gap-1">
                       <button
                         title="Edit product"
                         onClick={() => openEdit(product)}
-                        className="grid h-10 w-10 place-items-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-[#D9232D]"
+                        className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-[#D9232D]"
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="h-3.5 w-3.5" />
                       </button>
                       <button
                         title="Duplicate product"
                         onClick={() => duplicate(product)}
-                        className="grid h-10 w-10 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-800"
+                        className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-800"
                       >
-                        <Copy className="h-4 w-4" />
+                        <Copy className="h-3.5 w-3.5" />
                       </button>
                       <button
                         title="Delete product"
                         onClick={() => remove(product.id)}
-                        className="grid h-10 w-10 place-items-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                        className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </td>
@@ -712,7 +712,7 @@ export const AdminProductManager: React.FC<{
           </table>
         </div>
         {loadState !== 'loading' && filtered.length === 0 && (
-          <div className="py-14 text-center text-sm font-semibold text-slate-400">
+          <div className="py-10 text-center text-xs font-semibold text-slate-400">
             No products match your filters.
           </div>
         )}
@@ -748,8 +748,8 @@ const ProductOrderList: React.FC<{
   const draggedProductId = useRef<string | null>(null);
   if (!products.length) return null;
   return (
-    <details open className="mb-5 rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-[0_8px_28px_-14px_rgba(15,23,42,0.06)] backdrop-blur-md">
-      <summary className="cursor-pointer list-none text-sm font-black text-slate-900">
+    <details open className="mb-4 rounded-2xl border border-slate-200/80 bg-white/95 p-3 shadow-[0_6px_20px_-14px_rgba(15,23,42,0.06)] backdrop-blur-md">
+      <summary className="cursor-pointer list-none text-xs font-black text-slate-900">
         Arrange storefront order{' '}
         <span className="ml-2 text-[10px] font-semibold text-slate-400">
           Drag products or use the arrows
@@ -766,7 +766,7 @@ const ProductOrderList: React.FC<{
       <div
         role="list"
         aria-label="Storefront product order"
-        className="mt-3 max-h-80 divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-100 bg-white"
+        className="mt-2.5 max-h-60 divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-100 bg-white"
       >
         {products.map((product, index) => (
           <div
@@ -791,13 +791,13 @@ const ProductOrderList: React.FC<{
             onDragEnd={() => {
               draggedProductId.current = null;
             }}
-            className="flex min-w-0 items-center gap-2 px-3 py-2.5 text-xs transition hover:bg-red-50/30"
+            className="flex min-w-0 items-center gap-2 px-3 py-1.5 text-xs transition hover:bg-red-50/30"
           >
             <GripVertical
               aria-hidden="true"
-              className="h-4 w-4 shrink-0 cursor-grab text-slate-300"
+              className="h-3.5 w-3.5 shrink-0 cursor-grab text-slate-300"
             />
-            <span className="w-6 shrink-0 text-center font-black tabular-nums text-slate-400">{index + 1}</span>
+            <span className="w-5 shrink-0 text-center font-black tabular-nums text-slate-400">{index + 1}</span>
             <span className="min-w-0 flex-1 truncate font-bold text-slate-800">
               {product.title}
               <span className="ml-2 font-medium text-slate-400">{product.categoryLabel}</span>
@@ -808,9 +808,9 @@ const ProductOrderList: React.FC<{
               title="Move up"
               disabled={saving || index === 0}
               onClick={() => void onMove(product.id, products[index - 1].id)}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-slate-500 hover:bg-red-50 hover:text-[#D9232D] disabled:opacity-30"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-500 hover:bg-red-50 hover:text-[#D9232D] disabled:opacity-30"
             >
-              <ArrowUp className="h-4 w-4" />
+              <ArrowUp className="h-3.5 w-3.5" />
             </button>
             <button
               type="button"
@@ -818,9 +818,9 @@ const ProductOrderList: React.FC<{
               title="Move down"
               disabled={saving || index === products.length - 1}
               onClick={() => void onMove(product.id, products[index + 1].id)}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-slate-500 hover:bg-red-50 hover:text-[#D9232D] disabled:opacity-30"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-500 hover:bg-red-50 hover:text-[#D9232D] disabled:opacity-30"
             >
-              <ArrowDown className="h-4 w-4" />
+              <ArrowDown className="h-3.5 w-3.5" />
             </button>
           </div>
         ))}
@@ -835,13 +835,13 @@ const Summary: React.FC<{ label: string; value: string; tone: string; loading?: 
   tone,
   loading,
 }) => (
-  <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-[0_8px_28px_-14px_rgba(15,23,42,0.06)] backdrop-blur-md transition duration-200 hover:-translate-y-0.5 hover:border-red-100">
+  <div className="group relative overflow-hidden rounded-xl border border-slate-200/80 bg-white/95 p-3.5 shadow-[0_6px_20px_-14px_rgba(15,23,42,0.06)] backdrop-blur-md transition duration-200 hover:-translate-y-0.5 hover:border-red-100">
     <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#D9232D]/80 via-rose-400/50 to-transparent opacity-80" />
-    <p className="text-[11px] font-bold text-slate-500">{label}</p>
+    <p className="text-[10.5px] font-bold text-slate-500">{label}</p>
     {loading ? (
-      <div className="mt-2 h-7 w-16 animate-pulse rounded-lg bg-slate-200/80" />
+      <div className="mt-1.5 h-6 w-14 animate-pulse rounded-lg bg-slate-200/80" />
     ) : (
-      <p className={`mt-1 text-2xl font-black tracking-tight tabular-nums ${tone}`}>{value}</p>
+      <p className={`mt-0.5 text-xl font-black tracking-tight tabular-nums ${tone}`}>{value}</p>
     )}
   </div>
 );
@@ -1106,9 +1106,9 @@ const ProductEditor: React.FC<{
       className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-white"
     >
       <form onSubmit={submit} className="flex h-full min-h-0 flex-col bg-white">
-        <div className="z-10 flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 bg-white px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3.5 sm:px-7 sm:py-4">
+        <div className="z-10 flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 bg-white px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 sm:px-6 sm:py-3">
           <div className="min-w-0">
-            <h3 id="product-editor-title" className="truncate text-lg font-black">
+            <h3 id="product-editor-title" className="truncate text-base font-black">
               {form.id ? 'Edit product' : 'Add product'}
             </h3>
             <p className="mt-0.5 text-[11px] text-slate-400">
@@ -1119,23 +1119,23 @@ const ProductEditor: React.FC<{
             type="button"
             onClick={onClose}
             aria-label="Close editor"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-slate-400 hover:bg-slate-100"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-slate-400 hover:bg-slate-100"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
           {validationError && (
             <p
               role="alert"
-              className="border-b border-red-100 bg-red-50 px-5 py-3 text-xs font-semibold text-red-700"
+              className="border-b border-red-100 bg-red-50 px-5 py-2.5 text-xs font-semibold text-red-700"
             >
               {validationError}
             </p>
           )}
-          <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-6 p-4 sm:p-7 lg:grid-cols-[1.25fr_.85fr]">
-            <div className="min-w-0 space-y-5">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mx-auto grid w-full max-w-[1160px] grid-cols-1 gap-4 p-3.5 sm:p-5 lg:grid-cols-[1.25fr_.85fr]">
+            <div className="min-w-0 space-y-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Field label="Product name *" className="sm:col-span-2">
                   <Input
                     required
@@ -1158,7 +1158,7 @@ const ProductEditor: React.FC<{
                   <select
                     value={form.category}
                     onChange={(event) => set('category', event.target.value as VehicleCategory)}
-                    className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-base font-semibold outline-none focus:border-[#D9232D] sm:text-xs"
+                    className="min-h-9 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-base font-semibold outline-none focus:border-[#D9232D] sm:text-xs"
                   >
                     {categories.map((item) => (
                       <option key={item} value={item}>
@@ -1237,7 +1237,7 @@ const ProductEditor: React.FC<{
                           onClick={() =>
                             set('guaranteeValidUntil', addMonthsToIsoDate(new Date(), preset.months))
                           }
-                          className="min-h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-[11px] font-bold text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800"
+                          className="min-h-8 rounded-xl border border-slate-200 bg-slate-50 px-2.5 text-[11px] font-bold text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800"
                         >
                           {preset.label}
                         </button>
@@ -1246,7 +1246,7 @@ const ProductEditor: React.FC<{
                         <button
                           type="button"
                           onClick={() => set('guaranteeValidUntil', null)}
-                          className="min-h-10 rounded-xl border border-rose-200 bg-rose-50 px-3 text-[11px] font-bold text-[#D9232D] transition hover:bg-rose-100"
+                          className="min-h-8 rounded-xl border border-rose-200 bg-rose-50 px-2.5 text-[11px] font-bold text-[#D9232D] transition hover:bg-rose-100"
                         >
                           Clear
                         </button>
@@ -1267,7 +1267,7 @@ const ProductEditor: React.FC<{
                 </div>
               </Field>
               <div className="block min-w-0">
-                <span className="mb-1.5 block text-[11px] font-bold text-slate-600">Badge</span>
+                <span className="mb-1 block text-[11px] font-bold text-slate-600">Badge</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -1277,20 +1277,20 @@ const ProductEditor: React.FC<{
                     });
                     setBadgeSheetOpen(true);
                   }}
-                  className="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left text-xs font-semibold hover:border-[#D9232D] hover:bg-white"
+                  className="flex min-h-9 w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-left text-xs font-semibold hover:border-[#D9232D] hover:bg-white"
                 >
                   <span className="min-w-0 truncate">{form.badge || 'No badge'}</span>
                   <span className="shrink-0 text-[10px] font-bold text-[#D9232D]">Edit in sheet</span>
                 </button>
               </div>
               <div className="block min-w-0">
-                <span className="mb-1.5 block text-[11px] font-bold text-slate-600">
+                <span className="mb-1 block text-[11px] font-bold text-slate-600">
                   Compatible vehicles
                 </span>
                 <button
                   type="button"
                   onClick={() => setCompatibilityPickerOpen(true)}
-                  className="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left text-xs font-semibold hover:border-[#D9232D] hover:bg-white"
+                  className="flex min-h-9 w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-left text-xs font-semibold hover:border-[#D9232D] hover:bg-white"
                 >
                   <span className="min-w-0 truncate">
                     {(form.compatibility || []).length > 0
@@ -1303,7 +1303,7 @@ const ProductEditor: React.FC<{
                 </button>
               </div>
               <div className="block min-w-0">
-                <span className="mb-1.5 block text-[11px] font-bold text-slate-600">
+                <span className="mb-1 block text-[11px] font-bold text-slate-600">
                   Product details
                 </span>
                 <button
@@ -1319,7 +1319,7 @@ const ProductEditor: React.FC<{
                     });
                     setDetailsSheetOpen(true);
                   }}
-                  className="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left text-xs font-semibold hover:border-[#D9232D] hover:bg-white"
+                  className="flex min-h-9 w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-left text-xs font-semibold hover:border-[#D9232D] hover:bg-white"
                 >
                   <span className="min-w-0 truncate">{detailsDraft.subtitle || 'Subtitle, features & fit details'}</span>
                   <span className="shrink-0 text-[10px] font-bold text-[#D9232D]">Edit in sheet</span>
@@ -1328,7 +1328,7 @@ const ProductEditor: React.FC<{
             </div>
             <Field label="Description">
               <Textarea
-                rows={4}
+                rows={3}
                 value={form.description}
                 onChange={(event) => set('description', event.target.value)}
                 placeholder="Explain the product, fit, materials and benefits..."
@@ -1456,24 +1456,24 @@ const ProductEditor: React.FC<{
           </div>
         </div>
         </div>
-        <div className="z-20 flex shrink-0 justify-end gap-2 border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[max(0.875rem,env(safe-area-inset-bottom))] shadow-[0_-8px_25px_rgba(15,23,42,0.08)] backdrop-blur sm:px-7">
+        <div className="z-20 flex shrink-0 justify-end gap-2 border-t border-slate-200 bg-white/95 px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] shadow-[0_-8px_25px_rgba(15,23,42,0.08)] backdrop-blur sm:px-6">
           <button
             type="button"
             onClick={onClose}
-            className="min-h-11 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-600"
+            className="min-h-9 rounded-xl border border-slate-200 px-3.5 py-1.5 text-xs font-bold text-slate-600"
           >
             Cancel
           </button>
           <button
             disabled={saving}
             type="submit"
-            className="banner-cta-shine inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#D9232D] px-5 py-2.5 text-xs font-bold text-white shadow-sm shadow-red-600/20 transition hover:bg-[#b91822] hover:shadow-md active:scale-[0.98] disabled:opacity-60"
+            className="banner-cta-shine inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-[#D9232D] px-4 py-1.5 text-xs font-bold text-white shadow-sm shadow-red-600/20 transition hover:bg-[#b91822] hover:shadow-md active:scale-[0.98] disabled:opacity-60"
           >
             {saving ? (
               'Saving...'
             ) : (
               <>
-                <Check className="h-4 w-4" />
+                <Check className="h-3.5 w-3.5" />
                 Save product
               </>
             )}
@@ -1484,29 +1484,29 @@ const ProductEditor: React.FC<{
           title="Product details"
           onClose={() => setDetailsSheetOpen(false)}
         >
-          <div className="space-y-4">
+          <div className="space-y-3">
             <p className="text-xs leading-relaxed text-slate-500">
               Set default product details here. A colour can override each value from its own Edit
               details sheet. Compatible vehicles are picked with the dedicated vehicle picker.
             </p>
             <div className="overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-indigo-50 shadow-sm">
-              <div className="flex items-start gap-3 p-4 pb-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-200">
-                  <Sparkles className="h-5 w-5" />
+              <div className="flex items-start gap-2.5 p-3.5 pb-2.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-200">
+                  <Sparkles className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-extrabold text-slate-900">Gemini AI autofill</p>
-                  <p className="mt-0.5 text-[11px] leading-relaxed text-slate-600">
+                  <p className="text-xs font-extrabold text-slate-900 sm:text-sm">Gemini AI autofill</p>
+                  <p className="mt-0.5 text-[11px] leading-snug text-slate-600">
                     Create product details from the primary colour photo.
                   </p>
                 </div>
               </div>
-              <div className="px-4 pb-4">
+              <div className="px-3.5 pb-3.5">
                 <button
                   type="button"
                   onClick={() => void autoFillDetailsFromImage()}
                   disabled={imageAssistBusy || !derived.image}
-                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 text-xs font-extrabold text-white shadow-md shadow-violet-200 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-55"
+                  className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-3.5 py-2 text-xs font-extrabold text-white shadow-md shadow-violet-200 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-55"
                 >
                   {imageAssistBusy ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -1517,14 +1517,14 @@ const ProductEditor: React.FC<{
                 </button>
                 <p
                   aria-live="polite"
-                  className={`mt-3 text-[11px] leading-relaxed ${imageAssistError ? 'text-rose-700' : 'text-violet-900'}`}
+                  className={`mt-2.5 text-[11px] leading-relaxed ${imageAssistError ? 'text-rose-700' : 'text-violet-900'}`}
                 >
                   {imageAssistMessage ||
                     (derived.image
                       ? 'AI-generated—please check before saving. The suggestions replace the detail fields, and you can edit them anytime.'
                       : 'Upload a product image first to generate suggestions.')}
                 </p>
-                <p className="mt-1.5 text-[10px] leading-relaxed text-slate-500">
+                <p className="mt-1 text-[10px] leading-relaxed text-slate-500">
                   Only visible details are suggested. Package includes and installation will use the
                   standard defaults: 1 Seat Cover · Easy (DIY).
                 </p>
@@ -1552,7 +1552,7 @@ const ProductEditor: React.FC<{
               <label key={key} className="block text-xs font-bold text-slate-700">
                 {label}
                 <textarea
-                  rows={4}
+                  rows={3}
                   value={detailsDraft[key].join('\n')}
                   onChange={(event) =>
                     setDetailsDraft((current) => ({
@@ -1564,7 +1564,7 @@ const ProductEditor: React.FC<{
                     }))
                   }
                   placeholder="One item per line"
-                  className="mt-1 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-base font-semibold sm:text-xs"
+                  className="mt-1 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-base font-semibold sm:text-xs"
                 />
               </label>
             ))}
@@ -1578,11 +1578,11 @@ const ProductEditor: React.FC<{
                 placeholder={DEFAULT_INSTALLATION}
               />
             </label>
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-1.5">
               <button
                 type="button"
                 onClick={() => setDetailsSheetOpen(false)}
-                className="min-h-11 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold"
+                className="min-h-9 rounded-xl border border-slate-200 px-3.5 py-1.5 text-xs font-bold"
               >
                 Cancel
               </button>
@@ -1592,7 +1592,7 @@ const ProductEditor: React.FC<{
                   setForm((current) => ({ ...current, ...detailsDraft }));
                   setDetailsSheetOpen(false);
                 }}
-                className="banner-cta-shine min-h-11 rounded-xl bg-[#D9232D] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#b91822] active:scale-[0.98]"
+                className="banner-cta-shine min-h-9 rounded-xl bg-[#D9232D] px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#b91822] active:scale-[0.98]"
               >
                 Save details
               </button>
@@ -1604,7 +1604,7 @@ const ProductEditor: React.FC<{
           title="Product badge"
           onClose={() => setBadgeSheetOpen(false)}
         >
-          <div className="space-y-4">
+          <div className="space-y-3">
             <p className="text-xs leading-relaxed text-slate-500">
               Choose an optional badge shown on the product card. Leave the label empty to remove
               it.
@@ -1630,7 +1630,7 @@ const ProductEditor: React.FC<{
                     color: event.target.value as NonNullable<ProductDraft['badgeColor']>,
                   }))
                 }
-                className="mt-1 min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-base font-semibold sm:text-xs"
+                className="mt-1 min-h-9 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-base font-semibold sm:text-xs"
               >
                 <option value="red">Red</option>
                 <option value="green">Green</option>
@@ -1639,10 +1639,10 @@ const ProductEditor: React.FC<{
               </select>
             </label>
             <div>
-              <p className="mb-2 text-[10px] font-black uppercase tracking-wide text-slate-400">
+              <p className="mb-1.5 text-[10px] font-black uppercase tracking-wide text-slate-400">
                 Quick badges
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {[
                   'New',
                   'Hot',
@@ -1659,18 +1659,18 @@ const ProductEditor: React.FC<{
                     key={label}
                     type="button"
                     onClick={() => setBadgeDraft((current) => ({ ...current, label }))}
-                    className="min-h-10 rounded-full border border-slate-200 px-3.5 py-1.5 text-[11px] font-bold text-slate-600"
+                    className="min-h-8 rounded-full border border-slate-200 px-3 py-1 text-[11px] font-bold text-slate-600"
                   >
                     {label}
                   </button>
                 ))}
               </div>
             </div>
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-1.5">
               <button
                 type="button"
                 onClick={() => setBadgeSheetOpen(false)}
-                className="min-h-11 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold"
+                className="min-h-9 rounded-xl border border-slate-200 px-3.5 py-1.5 text-xs font-bold"
               >
                 Cancel
               </button>
@@ -1681,7 +1681,7 @@ const ProductEditor: React.FC<{
                   set('badgeColor', badgeDraft.label.trim() ? badgeDraft.color : undefined);
                   setBadgeSheetOpen(false);
                 }}
-                className="banner-cta-shine min-h-11 rounded-xl bg-[#D9232D] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#b91822] active:scale-[0.98]"
+                className="banner-cta-shine min-h-9 rounded-xl bg-[#D9232D] px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#b91822] active:scale-[0.98]"
               >
                 Save badge
               </button>

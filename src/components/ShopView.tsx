@@ -14,7 +14,7 @@ interface ShopViewProps {
   onRetry: () => void;
   onBack: () => void;
   onSearch: (value: string) => void;
-  onSelectProduct: (product: Product) => void;
+  onSelectProduct: (product: Product, productList?: Product[]) => void;
   onQuickAdd: (product: Product, event: React.MouseEvent) => void;
   onNotifyMe?: (product: Product) => void | Promise<void>;
   isQuickAddInCart: (product: Product) => boolean;
@@ -174,7 +174,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
               <ProductCard
                 product={product}
                 layoutMode={layout}
-                onSelectProduct={onSelectProduct}
+                onSelectProduct={(selected) => onSelectProduct(selected, visibleProducts)}
                 onQuickAddToCart={onQuickAdd}
                 onNotifyMe={onNotifyMe}
                 isInCart={isQuickAddInCart(product)}
