@@ -536,13 +536,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const renderSummary = () => (
     <section
-      className="min-w-0 max-w-full rounded-3xl border border-slate-200/85 bg-white/95 p-4 sm:p-5 backdrop-blur-md shadow-[0_12px_32px_-16px_rgba(15,23,42,0.08)]"
+      className="min-w-0 max-w-full rounded-2xl border border-slate-200/85 bg-white/95 p-3.5 sm:p-4 backdrop-blur-md shadow-[0_12px_32px_-16px_rgba(15,23,42,0.08)]"
       aria-label={t('checkout.orderSummary')}
     >
-      <div className="mb-3.5 flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
-        <h3 className="flex min-w-0 items-center gap-2 text-sm font-black tracking-tight text-slate-900">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-[#D9232D]">
-            <ShoppingBag className="h-4 w-4" />
+      <div className="mb-3 flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+        <h3 className="flex min-w-0 items-center gap-2 text-[13px] font-black tracking-tight text-slate-900">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-[#D9232D]">
+            <ShoppingBag className="h-3.5 w-3.5" />
           </span>
           <span className="truncate">{t('checkout.orderSummary')}</span>
         </h3>
@@ -551,16 +551,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         </span>
       </div>
 
-      <div className="max-h-60 space-y-3 overflow-y-auto overflow-x-hidden pr-0.5 no-scrollbar">
+      <div className="max-h-56 space-y-2 overflow-y-auto overflow-x-hidden pr-0.5 no-scrollbar">
         {items.map((item) => (
           <div
             key={item.cartItemId}
-            className="flex min-w-0 items-start gap-2.5 rounded-2xl border border-slate-100 bg-slate-50/70 p-2.5 sm:items-center sm:gap-3"
+            className="flex min-w-0 items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-2 sm:items-center"
           >
             <img
               src={item.selectedColor?.images?.[0] ?? item.product.image}
               alt=""
-              className="h-12 w-12 shrink-0 rounded-xl bg-white object-cover ring-1 ring-slate-200/70 sm:h-14 sm:w-14"
+              className="h-11 w-11 shrink-0 rounded-lg bg-white object-cover ring-1 ring-slate-200/70 sm:h-12 sm:w-12"
             />
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
@@ -571,25 +571,25 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   {indianMoney(item.unitPrice * item.quantity)}
                 </b>
               </div>
-              <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
-                <span className="min-w-0 truncate text-[11px] font-medium text-slate-500">
+              <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                <span className="min-w-0 truncate text-[10.5px] font-medium text-slate-500">
                   {item.selectedColor?.name || 'Standard'}
                 </span>
                 <div
                   role="group"
                   aria-label={t('cart.quantityFor', { title: item.product.title })}
-                  className="flex shrink-0 items-center rounded-xl border border-slate-200/90 bg-white p-0.5 shadow-2xs"
+                  className="flex shrink-0 items-center rounded-lg border border-slate-200/90 bg-white p-0.5 shadow-2xs"
                 >
                   <button
                     type="button"
                     onClick={() => onUpdateQuantity(item.cartItemId, item.quantity - 1)}
                     disabled={item.quantity <= 1}
                     aria-label={t('cart.decreaseQuantity', { title: item.product.title })}
-                    className="grid min-h-11 min-w-11 place-items-center rounded-lg text-slate-700 transition-colors hover:bg-rose-50 hover:text-[#D9232D] disabled:opacity-40"
+                    className="grid h-8 w-8 place-items-center rounded-md text-slate-700 transition-colors hover:bg-rose-50 hover:text-[#D9232D] disabled:opacity-40"
                   >
                     <Minus className="h-3.5 w-3.5" />
                   </button>
-                  <span className="w-7 text-center text-xs font-extrabold text-slate-900 tabular-nums">
+                  <span className="w-6 text-center text-xs font-extrabold text-slate-900 tabular-nums">
                     {item.quantity}
                   </span>
                   <button
@@ -601,7 +601,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         ? t('cart.maxQuantity', { title: item.product.title })
                         : t('cart.increaseQuantity', { title: item.product.title })
                     }
-                    className="grid min-h-11 min-w-11 place-items-center rounded-lg text-slate-700 transition-colors hover:bg-rose-50 hover:text-[#D9232D] disabled:opacity-40"
+                    className="grid h-8 w-8 place-items-center rounded-md text-slate-700 transition-colors hover:bg-rose-50 hover:text-[#D9232D] disabled:opacity-40"
                   >
                     <Plus className="h-3.5 w-3.5" />
                   </button>
@@ -667,18 +667,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 14 }}
           transition={{ duration: 0.2 }}
-          className="relative flex max-h-[96dvh] w-full max-w-full flex-col overflow-hidden rounded-t-[28px] bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] text-slate-900 shadow-2xl sm:max-h-[92vh] sm:max-w-[960px] sm:rounded-[28px]"
+          className="relative flex max-h-[96dvh] w-full max-w-full flex-col overflow-hidden rounded-t-2xl bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] text-slate-900 shadow-2xl sm:max-h-[92vh] sm:max-w-[960px] sm:rounded-2xl"
         >
           {/* Frosted Header & Step Progress */}
           <header className="shrink-0 border-b border-slate-200/80 bg-white/92 backdrop-blur-md">
-            <div className="flex min-w-0 items-center justify-between gap-3 px-4 py-3.5 sm:px-6">
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FFE4E6] to-[#FECDD3] text-[#D9232D] ring-1 ring-inset ring-rose-200/70">
-                  <Store className="h-5 w-5" />
+            <div className="flex min-w-0 items-center justify-between gap-2.5 px-4 py-2.5 sm:px-5">
+              <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#FFE4E6] to-[#FECDD3] text-[#D9232D] ring-1 ring-inset ring-rose-200/70">
+                  <Store className="h-4.5 w-4.5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[10.5px] font-extrabold text-[#D9232D]">Rofik Godi Centre</p>
-                  <h2 className="truncate text-base font-black tracking-tight text-slate-900 sm:text-lg">
+                  <p className="truncate text-[10px] font-extrabold text-[#D9232D]">Rofik Godi Centre</p>
+                  <h2 className="truncate text-[15px] font-black tracking-tight text-slate-900 sm:text-base">
                     {step === 3 ? t('checkout.placedTitle') : t('checkout.title')}
                   </h2>
                 </div>
@@ -687,14 +687,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 type="button"
                 onClick={onClose}
                 aria-label={t('common.close')}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100/90 text-slate-600 transition-colors hover:bg-rose-50 hover:text-[#D9232D]"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100/90 text-slate-600 transition-colors hover:bg-rose-50 hover:text-[#D9232D]"
               >
-                <X className="h-4.5 w-4.5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
             {step < 3 && (
-              <div className="flex min-w-0 items-center gap-3 border-t border-slate-100 px-4 py-2.5 sm:px-6">
+              <div className="flex min-w-0 items-center gap-2.5 border-t border-slate-100 px-4 py-2 sm:px-5">
                 <span className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-200/80">
                   <i
                     className={`block h-full rounded-full bg-gradient-to-r from-[#D9232D] to-[#FB7185] transition-all duration-300 ${
@@ -702,7 +702,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     }`}
                   />
                 </span>
-                <span className="shrink-0 whitespace-nowrap text-[11px] font-bold text-slate-600 tabular-nums">
+                <span className="shrink-0 whitespace-nowrap text-[10.5px] font-bold text-slate-600 tabular-nums">
                   {step === 1 ? t('checkout.progressPickup') : t('checkout.progressPayment')} · {step}/2
                 </span>
               </div>
@@ -710,7 +710,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           </header>
 
           {/* Scrollable Body */}
-          <main className="no-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3.5 py-4 sm:px-6 sm:py-5">
+          <main className="no-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3.5 py-3 sm:px-5 sm:py-4">
             {profileLoad === 'loading' && step < 3 && (
               <CheckoutPageSkeleton label={t('checkout.loading')} />
             )}
@@ -718,7 +718,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             {profileError && step < 3 && (
               <div
                 role="alert"
-                className="rounded-2xl border border-amber-200 bg-amber-50/95 p-4 text-xs font-medium leading-relaxed text-amber-900 shadow-2xs"
+                className="rounded-xl border border-amber-200 bg-amber-50/95 p-3.5 text-xs font-medium leading-relaxed text-amber-900 shadow-2xs"
               >
                 {profileError}
                 <button type="button" onClick={onClose} className="ml-2 font-black underline">
@@ -728,54 +728,54 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             )}
 
             {step === 1 && profileLoad === 'ready' && (
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)] lg:items-start">
-                <div className="min-w-0 space-y-4">
+              <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)] lg:items-start">
+                <div className="min-w-0 space-y-3">
                   {/* 1. Customer Details Card */}
-                  <section className="min-w-0 max-w-full rounded-3xl border border-slate-200/85 bg-white/95 p-4 sm:p-5 backdrop-blur-md shadow-[0_12px_32px_-16px_rgba(15,23,42,0.08)]">
-                    <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2">
-                      <h3 className="flex min-w-0 items-center gap-2 text-sm font-black tracking-tight text-slate-900">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-[#D9232D]">
-                          <UserRound className="h-4 w-4" />
+                  <section className="min-w-0 max-w-full rounded-2xl border border-slate-200/85 bg-white/95 p-3.5 sm:p-4 backdrop-blur-md shadow-[0_12px_32px_-16px_rgba(15,23,42,0.08)]">
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <h3 className="flex min-w-0 items-center gap-2 text-[13px] font-black tracking-tight text-slate-900">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-[#D9232D]">
+                          <UserRound className="h-3.5 w-3.5" />
                         </span>
                         <span className="truncate">{t('checkout.details')}</span>
                       </h3>
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-emerald-200/80 bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold text-emerald-700">
-                        <ShieldCheck className="h-3.5 w-3.5" />
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-emerald-200/80 bg-emerald-50 px-2 py-0.5 text-[10px] font-extrabold text-emerald-700">
+                        <ShieldCheck className="h-3 w-3" />
                         {t('checkout.account')}
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <div className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50/80 px-3.5 py-3">
+                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                      <div className="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5">
                         <p className="text-[10px] font-bold text-slate-400">{t('checkout.name')}</p>
-                        <p className="mt-1 break-words text-sm font-extrabold text-slate-900 sm:text-xs">
+                        <p className="mt-0.5 break-words text-sm font-extrabold text-slate-900 sm:text-xs">
                           {customerName || t('checkout.nameMissing')}
                         </p>
                       </div>
-                      <div className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50/80 px-3.5 py-3">
+                      <div className="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5">
                         <p className="text-[10px] font-bold text-slate-400">{t('checkout.email')}</p>
-                        <p className="mt-1 break-all text-sm font-semibold text-slate-700 sm:text-xs">{email}</p>
+                        <p className="mt-0.5 break-all text-sm font-semibold text-slate-700 sm:text-xs">{email}</p>
                       </div>
                     </div>
 
-                    <div className="mt-3 min-w-0 rounded-2xl border border-slate-200/80 bg-slate-50/60 p-3.5">
+                    <div className="mt-2.5 min-w-0 rounded-xl border border-slate-200/80 bg-slate-50/60 p-3">
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <p className="text-[10px] font-bold text-slate-400">{t('checkout.mobile')}</p>
-                          <p className="mt-1 break-words text-sm font-extrabold text-slate-900 tabular-nums sm:text-xs">
+                          <p className="mt-0.5 break-words text-sm font-extrabold text-slate-900 tabular-nums sm:text-xs">
                             {phone && !editingPhone ? phone : t('checkout.addMobile')}
                           </p>
                           {savedPhone && !editingPhone && (
-                            <p className="mt-1 text-[11px] text-slate-500">{t('checkout.changeNumber')}</p>
+                            <p className="mt-0.5 text-[10.5px] text-slate-500">{t('checkout.changeNumber')}</p>
                           )}
                         </div>
                         {savedPhone && !editingPhone && (
                           <button
                             type="button"
                             onClick={() => setEditingPhone(true)}
-                            className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:border-rose-200 hover:text-[#D9232D]"
+                            className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:border-rose-200 hover:text-[#D9232D]"
                           >
-                            <Pencil className="h-3.5 w-3.5" /> Edit
+                            <Pencil className="h-3 w-3" /> Edit
                           </button>
                         )}
                       </div>
@@ -810,15 +810,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   </section>
 
                   {/* 2. Vehicle Fitment Card with Quick Category Pills */}
-                  <section className="min-w-0 max-w-full rounded-3xl border border-slate-200/85 bg-white/95 p-4 sm:p-5 backdrop-blur-md shadow-[0_12px_32px_-16px_rgba(15,23,42,0.08)]">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex min-w-0 flex-1 items-start gap-2.5">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-[#D9232D]">
-                          <Truck className="h-4 w-4" />
+                  <section className="min-w-0 max-w-full rounded-2xl border border-slate-200/85 bg-white/95 p-3.5 sm:p-4 backdrop-blur-md shadow-[0_12px_32px_-16px_rgba(15,23,42,0.08)]">
+                    <div className="flex flex-wrap items-center justify-between gap-2.5">
+                      <div className="flex min-w-0 flex-1 items-start gap-2">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-[#D9232D]">
+                          <Truck className="h-3.5 w-3.5" />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-sm font-black tracking-tight text-slate-900">{t('checkout.vehicle')}</h3>
-                          <p className="mt-0.5 break-words text-[11px] font-medium text-slate-500">
+                          <h3 className="text-[13px] font-black tracking-tight text-slate-900">{t('checkout.vehicle')}</h3>
+                          <p className="mt-0.5 break-words text-[10.5px] font-medium text-slate-500">
                             {t('checkout.vehicleCompany')} → {t('checkout.vehicleModel')}
                           </p>
                         </div>
@@ -827,7 +827,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         <button
                           type="button"
                           onClick={() => setEditingVehicle(true)}
-                          className="min-h-11 shrink-0 rounded-xl border border-rose-200/80 bg-rose-50 px-3 text-xs font-extrabold text-[#D9232D] transition-colors hover:bg-rose-100"
+                          className="min-h-9 shrink-0 rounded-xl border border-rose-200/80 bg-rose-50 px-2.5 text-xs font-extrabold text-[#D9232D] transition-colors hover:bg-rose-100"
                         >
                           {t('checkout.changeModel')}
                         </button>
@@ -835,14 +835,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     </div>
 
                     {!editingVehicle && hasSavedVehicle ? (
-                      <div className="mt-4 flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-3 sm:gap-3.5 sm:p-3.5">
+                      <div className="mt-3 flex min-w-0 items-center gap-3 rounded-xl border border-slate-200/80 bg-slate-50/80 p-2.5 sm:p-3">
                         {selectedFitment?.image ? (
-                          <div className="h-16 w-24 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-slate-200/60 sm:h-[72px] sm:w-32">
+                          <div className="h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-slate-200/60 sm:h-16 sm:w-24">
                             <img src={selectedFitment.image} alt={selectedFitment.name} className="h-full w-full object-contain p-1 sm:scale-110 sm:p-0" />
                           </div>
                         ) : (
-                          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-white text-[#D9232D] ring-1 ring-slate-200/60">
-                            <Truck className="h-6 w-6" />
+                          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-white text-[#D9232D] ring-1 ring-slate-200/60">
+                            <Truck className="h-5 w-5" />
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
@@ -850,13 +850,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           <p className="mt-0.5 truncate text-[11px] font-semibold text-slate-500">
                             {vehicleCompany || vehicleType}
                           </p>
-                          <p className="mt-0.5 break-words text-sm font-black text-slate-900">
+                          <p className="mt-0.5 break-words text-xs font-black text-slate-900 sm:text-sm">
                             {vehicleModel || t('checkout.exampleVehicle')}
                           </p>
                         </div>
                       </div>
                     ) : (
-                      <div className="mt-4 min-w-0 space-y-3.5">
+                      <div className="mt-3 min-w-0 space-y-3">
                         {/* Quick Vehicle Category Pills */}
                         <div className="flex flex-wrap gap-1.5 sm:grid sm:grid-cols-5" role="group" aria-label="Quick vehicle category">
                           {vehicleTypes.map((type) => {
@@ -872,7 +872,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                   setVehicleCompany('');
                                   setVehicleModel('');
                                 }}
-                                className={`min-h-11 min-w-[calc(33%-4px)] flex-1 rounded-xl border px-2 py-1.5 text-xs font-extrabold transition-all whitespace-nowrap truncate sm:min-w-0 sm:text-[11px] ${
+                                className={`min-h-9.5 min-w-[calc(33%-4px)] flex-1 rounded-xl border px-2 py-1 text-xs font-extrabold transition-all whitespace-nowrap truncate sm:min-w-0 sm:text-[11px] ${
                                   active
                                     ? 'border-[#D9232D] bg-gradient-to-r from-[#D9232D] to-[#B91822] text-white shadow-2xs'
                                     : 'border-slate-200/85 bg-slate-50/90 text-slate-600 hover:border-rose-200 hover:bg-rose-50/40'
@@ -893,7 +893,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                               setVehicleCompany('');
                               setVehicleModel('');
                             }}
-                            className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-200/90 bg-slate-50/70 px-3.5 text-base font-semibold text-slate-900 outline-none transition focus:border-[#D9232D] focus:bg-white focus:ring-4 focus:ring-red-100 sm:text-sm"
+                            className="mt-1 min-h-10.5 w-full rounded-xl border border-slate-200/90 bg-slate-50/70 px-3 text-base font-semibold text-slate-900 outline-none transition focus:border-[#D9232D] focus:bg-white focus:ring-4 focus:ring-red-100 sm:text-sm"
                           >
                             {vehicleTypes.map((type) => (
                               <option key={type} value={type}>
@@ -904,7 +904,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         </label>
 
                         {vehicleCompanies.length > 0 ? (
-                          <div className="grid grid-cols-1 gap-3">
+                          <div className="grid grid-cols-1 gap-2.5">
                             <label className="block min-w-0 text-[11px] font-bold text-slate-600">
                               {t('checkout.vehicleCompany')}
                               <select
@@ -913,7 +913,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                   setVehicleCompany(event.target.value);
                                   setVehicleModel('');
                                 }}
-                                className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-200/90 bg-slate-50/70 px-3.5 text-base font-semibold text-slate-900 outline-none transition focus:border-[#D9232D] focus:bg-white focus:ring-4 focus:ring-red-100 sm:text-sm"
+                                className="mt-1 min-h-10.5 w-full rounded-xl border border-slate-200/90 bg-slate-50/70 px-3 text-base font-semibold text-slate-900 outline-none transition focus:border-[#D9232D] focus:bg-white focus:ring-4 focus:ring-red-100 sm:text-sm"
                               >
                                 <option value="">{t('checkout.chooseCompany')}</option>
                                 {vehicleCompanies.map((company) => (
@@ -926,7 +926,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                             <div className="block min-w-0 text-[11px] font-bold text-slate-600">
                               <span>{t('checkout.vehicleModel')}</span>
                               {!vehicleCompany ? (
-                                <p className="mt-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3.5 py-4 text-xs font-medium text-slate-400">
+                                <p className="mt-1 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-xs font-medium text-slate-400">
                                   {t('checkout.chooseCompany')}
                                 </p>
                               ) : (
@@ -942,7 +942,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                             </div>
                           </div>
                         ) : (
-                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                             <label className="block min-w-0 text-[11px] font-bold text-slate-600">
                               {t('checkout.vehicleCompany')}
                               <input
@@ -950,7 +950,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                 onChange={(event) => setVehicleCompany(event.target.value)}
                                 maxLength={40}
                                 placeholder={t('checkout.exampleCompany')}
-                                className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-200/90 bg-slate-50/70 px-3.5 text-base font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#D9232D] focus:bg-white focus:ring-4 focus:ring-red-100 sm:text-sm"
+                                className="mt-1 min-h-10.5 w-full rounded-xl border border-slate-200/90 bg-slate-50/70 px-3 text-base font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#D9232D] focus:bg-white focus:ring-4 focus:ring-red-100 sm:text-sm"
                               />
                             </label>
                             <label className="block min-w-0 text-[11px] font-bold text-slate-600">
@@ -960,7 +960,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                 onChange={(event) => setVehicleModel(event.target.value)}
                                 maxLength={60}
                                 placeholder={t('checkout.exampleModel')}
-                                className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-200/90 bg-slate-50/70 px-3.5 text-base font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#D9232D] focus:bg-white focus:ring-4 focus:ring-red-100 sm:text-sm"
+                                className="mt-1 min-h-10.5 w-full rounded-xl border border-slate-200/90 bg-slate-50/70 px-3 text-base font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#D9232D] focus:bg-white focus:ring-4 focus:ring-red-100 sm:text-sm"
                               />
                             </label>
                           </div>
@@ -969,7 +969,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           <button
                             type="button"
                             onClick={() => setEditingVehicle(false)}
-                            className="min-h-11 text-xs font-bold text-slate-500 underline decoration-slate-300 underline-offset-4 hover:text-slate-800"
+                            className="min-h-9 text-xs font-bold text-slate-500 underline decoration-slate-300 underline-offset-4 hover:text-slate-800"
                           >
                             {t('checkout.keepVehicle')}
                           </button>
@@ -979,18 +979,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   </section>
 
                   {/* 3. Pickup Date & Time Slots Card */}
-                  <section className="min-w-0 max-w-full overflow-hidden rounded-3xl border border-slate-200/85 bg-white/95 p-4 sm:p-5 backdrop-blur-md shadow-[0_12px_32px_-16px_rgba(15,23,42,0.08)]">
-                    <div className="flex min-w-0 items-start gap-2.5">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-[#D9232D]">
-                        <CalendarDays className="h-4 w-4" />
+                  <section className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200/85 bg-white/95 p-3.5 sm:p-4 backdrop-blur-md shadow-[0_12px_32px_-16px_rgba(15,23,42,0.08)]">
+                    <div className="flex min-w-0 items-start gap-2">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-[#D9232D]">
+                        <CalendarDays className="h-3.5 w-3.5" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-sm font-black tracking-tight text-slate-900">{t('checkout.chooseTime')}</h3>
-                        <p className="mt-0.5 text-[11px] text-slate-500">{t('checkout.slotHint')}</p>
+                        <h3 className="text-[13px] font-black tracking-tight text-slate-900">{t('checkout.chooseTime')}</h3>
+                        <p className="mt-0.5 text-[10.5px] text-slate-500">{t('checkout.slotHint')}</p>
                       </div>
                     </div>
 
-                    <div className="no-scrollbar mt-3.5 flex w-full max-w-full snap-x snap-mandatory gap-2 overflow-x-auto pb-1">
+                    <div className="no-scrollbar mt-3 flex w-full max-w-full snap-x snap-mandatory gap-1.5 overflow-x-auto pb-1">
                       {pickupDates.map((date) => {
                         const value = isoDate(date);
                         const selected = pickupDate === value;
@@ -1000,13 +1000,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                             type="button"
                             onClick={() => setPickupDate(value)}
                             aria-pressed={selected}
-                            className={`min-h-14 w-[78px] shrink-0 snap-start rounded-2xl border px-3 py-2.5 text-left transition-all sm:w-auto sm:min-w-[84px] ${
+                            className={`min-h-12 w-[72px] shrink-0 snap-start rounded-xl border px-2.5 py-1.5 text-left transition-all sm:w-auto sm:min-w-[78px] ${
                               selected
                                 ? 'border-[#D9232D] bg-gradient-to-br from-[#FFF1F2] to-white text-[#D9232D] shadow-2xs ring-1 ring-rose-200'
                                 : 'border-slate-200/90 bg-slate-50/70 text-slate-600 hover:border-rose-200 hover:bg-white'
                             }`}
                           >
-                            <span className="block text-[10px] font-bold uppercase opacity-75">
+                            <span className="block text-[9.5px] font-bold uppercase opacity-75">
                               {date.toLocaleDateString(locale, { weekday: 'short' })}
                             </span>
                             <span className="mt-0.5 block text-xs font-black tabular-nums">
@@ -1017,7 +1017,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       })}
                     </div>
 
-                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <div className="mt-2.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                       {timeSlots.map((slot) => {
                         const selected = pickupTime === slot;
                         return (
@@ -1026,7 +1026,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                             type="button"
                             onClick={() => setPickupTime(slot)}
                             aria-pressed={selected}
-                            className={`flex min-h-11 min-w-0 items-center gap-2 rounded-xl border px-3.5 text-left text-xs font-bold transition-all tabular-nums ${
+                            className={`flex min-h-10 min-w-0 items-center gap-2 rounded-xl border px-3 text-left text-xs font-bold transition-all tabular-nums ${
                               selected
                                 ? 'border-[#D9232D] bg-rose-50/90 text-[#D9232D] shadow-2xs'
                                 : 'border-slate-200/90 bg-slate-50/60 text-slate-700 hover:border-rose-200 hover:bg-white'
@@ -1042,9 +1042,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   </section>
 
                   {/* 4. Workshop Pickup Location Card */}
-                  <section className="flex min-w-0 max-w-full items-start gap-3.5 rounded-3xl border border-rose-200/80 bg-gradient-to-br from-[#FFF4F5] via-white to-[#FCECEF] p-4 sm:p-5 shadow-2xs">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-[#D9232D] ring-1 ring-rose-200/70 shadow-2xs">
-                      <MapPin className="h-5 w-5" />
+                  <section className="flex min-w-0 max-w-full items-start gap-3 rounded-2xl border border-rose-200/80 bg-gradient-to-br from-[#FFF4F5] via-white to-[#FCECEF] p-3.5 sm:p-4 shadow-2xs">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#D9232D] ring-1 ring-rose-200/70 shadow-2xs">
+                      <MapPin className="h-4.5 w-4.5" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
@@ -1056,12 +1056,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         </span>
                       </div>
                       <p className="mt-1 break-words text-[11px] leading-relaxed text-slate-600">{WORKSHOP_INFO.address}</p>
-                      <p className="mt-1 break-words text-[11px] font-medium text-slate-500">{WORKSHOP_INFO.workingHours}</p>
+                      <p className="mt-0.5 break-words text-[10.5px] font-medium text-slate-500">{WORKSHOP_INFO.workingHours}</p>
                       <a
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${WORKSHOP_INFO.name}, ${WORKSHOP_INFO.address}`)}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-2.5 inline-flex min-h-11 items-center gap-1 rounded-xl bg-white px-3.5 py-2 text-xs font-extrabold text-[#D9232D] ring-1 ring-rose-200/80 transition-colors hover:bg-rose-50"
+                        className="mt-2 inline-flex min-h-9 items-center gap-1 rounded-xl bg-white px-3 py-1.5 text-xs font-extrabold text-[#D9232D] ring-1 ring-rose-200/80 transition-colors hover:bg-rose-50"
                       >
                         {t('checkout.openMaps')}
                       </a>
@@ -1069,7 +1069,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   </section>
 
                   {/* 5. Optional Pickup Note */}
-                  <label className="block min-w-0 max-w-full rounded-3xl border border-slate-200/85 bg-white/95 p-4 sm:p-5 text-xs font-extrabold text-slate-700 backdrop-blur-md shadow-2xs">
+                  <label className="block min-w-0 max-w-full rounded-2xl border border-slate-200/85 bg-white/95 p-3.5 sm:p-4 text-xs font-extrabold text-slate-700 backdrop-blur-md shadow-2xs">
                     {t('checkout.note')} <span className="font-normal text-slate-400">{t('checkout.optional')}</span>
                     <textarea
                       value={note}
@@ -1077,7 +1077,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       maxLength={240}
                       rows={2}
                       placeholder={t('checkout.noteHint')}
-                      className="mt-2 w-full resize-none rounded-2xl border border-slate-200/90 bg-slate-50/80 p-3 text-base font-medium text-slate-800 outline-none transition-colors focus:border-[#D9232D] focus:bg-white sm:text-sm"
+                      className="mt-1.5 w-full resize-none rounded-xl border border-slate-200/90 bg-slate-50/80 p-2.5 text-base font-medium text-slate-800 outline-none transition-colors focus:border-[#D9232D] focus:bg-white sm:text-sm"
                     />
                   </label>
                 </div>
@@ -1088,18 +1088,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             )}
 
             {step === 2 && (
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)] lg:items-start">
-                <div className="min-w-0 space-y-4">
+              <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)] lg:items-start">
+                <div className="min-w-0 space-y-3">
                   {/* Payment Method Cards */}
-                  <section className="min-w-0 max-w-full rounded-3xl border border-slate-200/85 bg-white/95 p-4 sm:p-5 backdrop-blur-md shadow-[0_12px_32px_-16px_rgba(15,23,42,0.08)]">
-                    <h3 className="mb-3.5 flex items-center gap-2 text-sm font-black tracking-tight text-slate-900">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-[#D9232D]">
-                        <CreditCard className="h-4 w-4" />
+                  <section className="min-w-0 max-w-full rounded-2xl border border-slate-200/85 bg-white/95 p-3.5 sm:p-4 backdrop-blur-md shadow-[0_12px_32px_-16px_rgba(15,23,42,0.08)]">
+                    <h3 className="mb-3 flex items-center gap-2 text-[13px] font-black tracking-tight text-slate-900">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-[#D9232D]">
+                        <CreditCard className="h-3.5 w-3.5" />
                       </span>
                       <span className="truncate">{t('checkout.paymentMethod')}</span>
                     </h3>
 
-                    <div className="space-y-2.5">
+                    <div className="space-y-2">
                       <button
                         type="button"
                         onClick={() => {
@@ -1107,22 +1107,22 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           setPaymentMethod('pay_at_store');
                         }}
                         aria-pressed={paymentMethod === 'pay_at_store'}
-                        className={`flex min-h-[72px] w-full min-w-0 items-center gap-3.5 rounded-2xl border p-3.5 text-left transition-all ${
+                        className={`flex min-h-[60px] w-full min-w-0 items-center gap-3 rounded-xl border p-3 text-left transition-all ${
                           paymentMethod === 'pay_at_store'
                             ? 'border-[#D9232D] bg-gradient-to-r from-rose-50/90 to-white shadow-2xs ring-1 ring-rose-200'
                             : 'border-slate-200/90 bg-slate-50/50 hover:border-rose-200 hover:bg-white'
                         }`}
                       >
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/70">
-                          <Banknote className="h-5 w-5" />
+                        <span className="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/70">
+                          <Banknote className="h-4.5 w-4.5" />
                         </span>
                         <span className="min-w-0 flex-1">
                           <b className="block break-words text-xs font-extrabold text-slate-900">{t('checkout.payAtWorkshop')}</b>
-                          <small className="mt-1 block break-words text-[11px] font-medium text-slate-500">
+                          <small className="mt-0.5 block break-words text-[10.5px] font-medium text-slate-500">
                             {t('checkout.cashOrUpi')}
                           </small>
                         </span>
-                        {paymentMethod === 'pay_at_store' && <CheckCircle2 className="h-5 w-5 shrink-0 text-[#D9232D]" />}
+                        {paymentMethod === 'pay_at_store' && <CheckCircle2 className="h-4.5 w-4.5 shrink-0 text-[#D9232D]" />}
                       </button>
 
                       <button
@@ -1132,36 +1132,36 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           setPaymentMethod('pay_online');
                         }}
                         aria-pressed={paymentMethod === 'pay_online'}
-                        className={`flex min-h-[72px] w-full min-w-0 items-center gap-3.5 rounded-2xl border p-3.5 text-left transition-all ${
+                        className={`flex min-h-[60px] w-full min-w-0 items-center gap-3 rounded-xl border p-3 text-left transition-all ${
                           paymentMethod === 'pay_online'
                             ? 'border-[#D9232D] bg-gradient-to-r from-rose-50/90 to-white shadow-2xs ring-1 ring-rose-200'
                             : 'border-slate-200/90 bg-slate-50/50 hover:border-rose-200 hover:bg-white'
                         }`}
                       >
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-[#2563EB] ring-1 ring-blue-200/70">
-                          <CreditCard className="h-5 w-5" />
+                        <span className="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#2563EB] ring-1 ring-blue-200/70">
+                          <CreditCard className="h-4.5 w-4.5" />
                         </span>
                         <span className="min-w-0 flex-1">
                           <b className="block break-words text-xs font-extrabold text-slate-900">{t('checkout.onlinePayment')}</b>
-                          <small className="mt-1 block break-words text-[11px] font-medium text-slate-500">
+                          <small className="mt-0.5 block break-words text-[10.5px] font-medium text-slate-500">
                             {t('checkout.onlinePaymentMethods')}
                           </small>
                         </span>
-                        {paymentMethod === 'pay_online' && <CheckCircle2 className="h-5 w-5 shrink-0 text-[#D9232D]" />}
+                        {paymentMethod === 'pay_online' && <CheckCircle2 className="h-4.5 w-4.5 shrink-0 text-[#D9232D]" />}
                       </button>
                     </div>
 
                     {paymentMethod === 'pay_online' && (
-                      <div className="mt-3.5 rounded-2xl border border-blue-200/70 bg-blue-50/80 p-3.5 text-xs text-blue-950">
+                      <div className="mt-3 rounded-xl border border-blue-200/70 bg-blue-50/80 p-3 text-xs text-blue-950">
                         <p className="font-extrabold">{t('checkout.razorpayPaymentInfo')}</p>
-                        <p className="mt-1.5 text-[11px] leading-relaxed text-blue-800">{t('checkout.paymentPending')}</p>
+                        <p className="mt-1 text-[11px] leading-relaxed text-blue-800">{t('checkout.paymentPending')}</p>
                       </div>
                     )}
                   </section>
 
                   {/* Pickup Recap Card */}
-                  <div className="min-w-0 max-w-full rounded-3xl border border-slate-200/85 bg-white/95 p-4 sm:p-5 backdrop-blur-md shadow-2xs">
-                    <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                  <div className="min-w-0 max-w-full rounded-2xl border border-slate-200/85 bg-white/95 p-3.5 sm:p-4 backdrop-blur-md shadow-2xs">
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
                       <h3 className="min-w-0 truncate text-xs font-black tracking-tight text-slate-900">{t('checkout.pickupDetails')}</h3>
                       <button
                         type="button"
@@ -1170,12 +1170,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           setStep(1);
                           setSubmissionError('');
                         }}
-                        className="min-h-11 shrink-0 px-2 text-xs font-bold text-[#D9232D] hover:underline"
+                        className="min-h-8 shrink-0 px-2 text-xs font-bold text-[#D9232D] hover:underline"
                       >
                         Edit
                       </button>
                     </div>
-                    <p className="mt-3 break-words text-xs font-bold text-slate-800">
+                    <p className="mt-2.5 break-words text-xs font-bold text-slate-800">
                       {pickupDate &&
                         new Date(`${pickupDate}T00:00:00`).toLocaleDateString(locale, {
                           weekday: 'long',
@@ -1184,7 +1184,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         })}{' '}
                       · {pickupTime}
                     </p>
-                    <p className="mt-1 break-words text-[11.5px] font-medium text-slate-500">
+                    <p className="mt-0.5 break-words text-[11px] font-medium text-slate-500">
                       {customerName} · {phone} · {vehicleValue || vehicleType}
                     </p>
                   </div>
@@ -1196,37 +1196,37 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             )}
 
             {step === 3 && placedOrder && (
-              <div className="mx-auto w-full min-w-0 max-w-lg space-y-5 py-2 text-center sm:py-4">
-                <div className="mx-auto flex h-18 w-18 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-100 to-teal-50 text-emerald-700 ring-1 ring-emerald-200/80 shadow-sm">
-                  <CheckCircle2 className="h-10 w-10" />
+              <div className="mx-auto w-full min-w-0 max-w-md space-y-4 py-2 text-center sm:py-3">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-50 text-emerald-700 ring-1 ring-emerald-200/80 shadow-sm">
+                  <CheckCircle2 className="h-8 w-8" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black tracking-tight text-slate-900">{t('checkout.orderReceived')}</h3>
-                  <p className="mt-1.5 text-xs font-medium text-slate-500">{t('checkout.orderSaved')}</p>
+                  <h3 className="text-lg font-black tracking-tight text-slate-900">{t('checkout.orderReceived')}</h3>
+                  <p className="mt-1 text-xs font-medium text-slate-500">{t('checkout.orderSaved')}</p>
                 </div>
 
-                <div className="rounded-3xl border border-slate-200/85 bg-white/95 p-4 text-left backdrop-blur-md shadow-[0_14px_34px_-16px_rgba(15,23,42,0.1)] sm:p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3.5">
+                <div className="rounded-2xl border border-slate-200/85 bg-white/95 p-3.5 text-left backdrop-blur-md shadow-[0_14px_34px_-16px_rgba(15,23,42,0.1)] sm:p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                     <span className="text-xs font-semibold text-slate-500">{t('checkout.orderId')}</span>
                     <div className="flex items-center gap-2">
-                      <b className="font-mono text-base font-black text-slate-900">#{placedOrder.orderId}</b>
+                      <b className="font-mono text-sm font-black text-slate-900">#{placedOrder.orderId}</b>
                       <button
                         type="button"
                         onClick={() => void handleCopyPlacedOrderId()}
                         aria-label={copiedOrderId ? 'Order ID copied' : 'Copy Order ID'}
-                        className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200/85 bg-slate-50 text-slate-500 hover:bg-rose-50 hover:text-[#D9232D]"
+                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/85 bg-slate-50 text-slate-500 hover:bg-rose-50 hover:text-[#D9232D]"
                       >
-                        {copiedOrderId ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                        {copiedOrderId ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
                       </button>
                     </div>
                   </div>
-                  <div className="mt-3.5 flex flex-wrap justify-between gap-2 text-xs">
+                  <div className="mt-3 flex flex-wrap justify-between gap-2 text-xs">
                     <span className="text-slate-500">{t('checkout.pickup')}</span>
                     <b className="break-words text-right font-bold text-slate-900 tabular-nums">
                       {pickupDate} · {pickupTime}
                     </b>
                   </div>
-                  <div className="mt-2.5 flex flex-wrap justify-between gap-2 text-xs">
+                  <div className="mt-2 flex flex-wrap justify-between gap-2 text-xs">
                     <span className="text-slate-500">{t('checkout.payment')}</span>
                     <b className="text-right font-bold text-slate-900">
                       {placedOrder.paymentMethod === 'pay_at_store'
@@ -1236,7 +1236,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           : t('checkout.upiPending')}
                     </b>
                   </div>
-                  <div className="mt-3 flex justify-between gap-2 border-t border-slate-100 pt-3 text-sm">
+                  <div className="mt-2.5 flex justify-between gap-2 border-t border-slate-100 pt-2.5 text-sm">
                     <span className="font-bold text-slate-700">{t('orders.total')}</span>
                     <b className="shrink-0 whitespace-nowrap font-black text-[#D9232D] tabular-nums">{indianMoney(placedOrder.total)}</b>
                   </div>
@@ -1249,7 +1249,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             {submissionError && step < 3 && (
               <p
                 role="alert"
-                className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700"
+                className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-semibold text-rose-700"
               >
                 {submissionError}
               </p>
@@ -1258,7 +1258,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
           {/* Compact Sticky Action Footer */}
           <footer
-            className="w-full shrink-0 border-t border-slate-200/85 bg-white/92 px-3.5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.08)] sm:px-6"
+            className="w-full shrink-0 border-t border-slate-200/85 bg-white/92 px-3.5 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.08)] sm:px-5"
           >
             {step === 3 ? (
               <button
@@ -1268,17 +1268,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   setPlacedOrder(null);
                   onClose();
                 }}
-                className="banner-cta-shine group/cta min-h-12 w-full rounded-2xl bg-slate-900 text-sm font-black text-white shadow-sm transition-all hover:bg-slate-800 hover:shadow-md active:scale-[0.98]"
+                className="banner-cta-shine group/cta min-h-11 w-full rounded-xl bg-slate-900 text-xs font-black text-white shadow-sm transition-all hover:bg-slate-800 hover:shadow-md active:scale-[0.98] sm:text-sm"
               >
                 {t('checkout.continueShopping')}
               </button>
             ) : (
               <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2.5 sm:flex-nowrap sm:gap-3">
                 <div className="min-w-0 shrink-0">
-                  <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <span className="block text-[9.5px] font-bold uppercase tracking-wider text-slate-400">
                     {t('checkout.payable')}
                   </span>
-                  <b className="whitespace-nowrap text-lg font-black text-slate-900 tabular-nums">{indianMoney(total)}</b>
+                  <b className="whitespace-nowrap text-base font-black text-slate-900 tabular-nums sm:text-lg">{indianMoney(total)}</b>
                 </div>
                 <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
                   {step === 2 && (
@@ -1289,7 +1289,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         setStep(1);
                         setSubmissionError('');
                       }}
-                      className="min-h-12 shrink-0 whitespace-nowrap rounded-2xl border border-slate-200/90 bg-slate-50 px-3.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100 active:scale-[0.98] sm:px-4"
+                      className="min-h-11 shrink-0 whitespace-nowrap rounded-xl border border-slate-200/90 bg-slate-50 px-3 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100 active:scale-[0.98] sm:px-4"
                     >
                       {t('checkout.back')}
                     </button>
@@ -1298,7 +1298,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     type="button"
                     disabled={isProcessing || profileLoad !== 'ready'}
                     onClick={() => (step === 1 ? continueToPayment() : void handlePlaceOrder())}
-                    className="banner-cta-shine group/cta flex min-h-12 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-2xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-4 text-xs font-black text-white shadow-[0_8px_20px_-6px_rgba(217,35,45,0.42)] transition-all hover:brightness-105 hover:shadow-[0_10px_24px_-4px_rgba(217,35,45,0.52)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none sm:flex-initial sm:min-w-[230px] sm:px-5 sm:text-sm"
+                    className="banner-cta-shine group/cta flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-4 text-xs font-black text-white shadow-[0_8px_20px_-6px_rgba(217,35,45,0.42)] transition-all hover:brightness-105 hover:shadow-[0_10px_24px_-4px_rgba(217,35,45,0.52)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none sm:flex-initial sm:min-w-[210px] sm:px-5 sm:text-[13px]"
                   >
                     {isProcessing ? (
                       <>

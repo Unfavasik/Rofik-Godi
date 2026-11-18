@@ -683,20 +683,20 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
           data-testid="pdp-classic-glass-topbar"
           className="classic-glass relative z-30 shrink-0 border-b border-white/85 bg-gradient-to-r from-white/88 via-white/80 to-rose-50/55 shadow-[0_10px_30px_-16px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl"
         >
-          <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-2.5 px-3 sm:px-6">
+          <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-2 px-3 sm:px-5">
             {/* Left: Frosted Back Button + Glass Product Identity Capsule */}
-            <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
               <button
                 type="button"
                 onClick={onClose}
                 aria-label="Go back"
-                className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/95 bg-white/85 text-slate-800 shadow-[0_6px_16px_-6px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.98)] backdrop-blur-md transition-all duration-200 hover:-translate-x-0.5 hover:border-rose-200/90 hover:bg-rose-50/90 hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95"
+                className="group flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-xl border border-white/95 bg-white/85 text-slate-800 shadow-[0_6px_16px_-6px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.98)] backdrop-blur-md transition-all duration-200 hover:-translate-x-0.5 hover:border-rose-200/90 hover:bg-rose-50/90 hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95"
               >
-                <ArrowLeft className="h-5 w-5 stroke-[2.25] transition-transform duration-200 group-hover:-translate-x-0.5" />
+                <ArrowLeft className="h-4.5 w-4.5 stroke-[2.25] transition-transform duration-200 group-hover:-translate-x-0.5" />
               </button>
 
-              <div className="flex min-w-0 items-center gap-2.5 rounded-2xl border border-white/90 bg-white/70 py-1.5 pl-1.5 pr-3 shadow-[0_4px_16px_-8px_rgba(15,23,42,0.1),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md">
-                <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-xl border border-white/95 bg-slate-100 shadow-2xs">
+              <div className="flex min-w-0 items-center gap-2 rounded-xl border border-white/90 bg-white/70 py-1 pl-1 pr-2.5 shadow-[0_4px_16px_-8px_rgba(15,23,42,0.1),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md">
+                <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-white/95 bg-slate-100 shadow-2xs">
                   <img
                     src={images[activeImageIndex] ?? product.image}
                     alt=""
@@ -708,19 +708,19 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                 </span>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="truncate text-[10px] font-extrabold uppercase tracking-wider text-[#D9232D]">
+                    <span className="truncate text-[9.5px] font-extrabold uppercase tracking-wider text-[#D9232D]">
                       {product.categoryLabel || 'Seat Covers'}
                     </span>
                     <span
                       aria-hidden="true"
                       className="hidden h-1 w-1 shrink-0 rounded-full bg-slate-300 sm:inline-block"
                     />
-                    <span className="hidden items-center gap-0.5 text-[10px] font-bold text-slate-600 tabular-nums sm:inline-flex">
+                    <span className="hidden items-center gap-0.5 text-[9.5px] font-bold text-slate-600 tabular-nums sm:inline-flex">
                       <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
                       {reviewsValue}
                     </span>
                   </div>
-                  <p className="truncate text-xs font-extrabold leading-tight text-slate-900 sm:text-[13px]">
+                  <p className="truncate text-[11.5px] font-extrabold leading-tight text-slate-900 sm:text-xs">
                     {product.title}
                   </p>
                 </div>
@@ -728,12 +728,12 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
             </div>
 
             {/* Right: Classic Glass Action Dock */}
-            <div className="flex shrink-0 items-center gap-1 rounded-2xl border border-white/90 bg-white/65 p-1 shadow-[0_6px_20px_-8px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md">
+            <div className="flex shrink-0 items-center gap-1 rounded-xl border border-white/90 bg-white/65 p-1 shadow-[0_6px_20px_-8px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md">
               <button
                 type="button"
                 aria-label="Share product"
                 onClick={() => void shareProduct()}
-                className={`inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-xl border px-2.5 text-xs font-bold transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] sm:h-10 sm:min-w-10 ${
+                className={`inline-flex h-8.5 min-w-8.5 items-center justify-center gap-1.5 rounded-lg border px-2 text-xs font-bold transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] sm:h-9 sm:min-w-9 ${
                   copiedShareLink
                     ? 'border-emerald-200/90 bg-emerald-50/95 text-emerald-700 shadow-2xs'
                     : 'border-white/90 bg-white/85 text-slate-700 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.08)] hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D]'
@@ -741,7 +741,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
               >
                 {copiedShareLink ? (
                   <>
-                    <Check className="h-4 w-4 text-emerald-600" />
+                    <Check className="h-3.5 w-3.5 text-emerald-600" />
                     <span className="text-[11px] font-extrabold text-emerald-700">Copied</span>
                   </>
                 ) : (
@@ -754,9 +754,9 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                   type="button"
                   aria-label="Search products"
                   onClick={onOpenSearch}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/90 bg-white/85 text-slate-700 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.08)] transition-all duration-150 hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95 sm:h-10 sm:w-10"
+                  className="flex h-8.5 w-8.5 items-center justify-center rounded-lg border border-white/90 bg-white/85 text-slate-700 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.08)] transition-all duration-150 hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95 sm:h-9 sm:w-9"
                 >
-                  <Search className="h-4.5 w-4.5" />
+                  <Search className="h-4 w-4" />
                 </button>
               )}
 
@@ -764,11 +764,11 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                 type="button"
                 aria-label={`Open cart, ${cartCount} items`}
                 onClick={onOpenCart}
-                className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/90 bg-white/85 text-slate-800 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.08)] transition-all duration-150 hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95 sm:h-10 sm:w-10"
+                className="relative flex h-8.5 w-8.5 items-center justify-center rounded-lg border border-white/90 bg-white/85 text-slate-800 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.08)] transition-all duration-150 hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95 sm:h-9 sm:w-9"
               >
-                <ShoppingCart className="h-4.5 w-4.5" />
+                <ShoppingCart className="h-4 w-4" />
                 {cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full border border-white bg-gradient-to-r from-[#D9232D] to-[#B91822] px-1 text-[10px] font-extrabold text-white tabular-nums shadow-xs">
+                  <span className="absolute -right-1 -top-1 grid h-4.5 min-w-4.5 place-items-center rounded-full border border-white bg-gradient-to-r from-[#D9232D] to-[#B91822] px-1 text-[9.5px] font-extrabold text-white tabular-nums shadow-xs">
                     {cartCount}
                   </span>
                 )}
@@ -846,12 +846,12 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
           aria-label={`${product.title} product details`}
           className="product-scroll min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain"
         >
-          <div className="mx-auto w-full max-w-6xl space-y-5 px-4 pb-8 pt-3.5 sm:px-6 lg:space-y-6 lg:py-7">
+          <div className="mx-auto w-full max-w-5xl space-y-4 px-3.5 pb-6 pt-3 sm:px-5 lg:space-y-5 lg:py-5">
             {orderedProducts.length > 1 && currentIndex >= 0 && (
               <nav
                 aria-label="Browse adjacent products"
                 data-testid="pdp-adjacent-nav"
-                className="classic-glass flex items-center justify-between gap-2 rounded-2xl border border-white/90 bg-white/75 px-2 py-1.5 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md"
+                className="classic-glass flex items-center justify-between gap-2 rounded-xl border border-white/90 bg-white/75 px-2 py-1 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md"
               >
                 <button
                   type="button"
@@ -861,9 +861,9 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                   aria-label={
                     prevProduct ? `Previous product: ${prevProduct.title}` : 'No previous product'
                   }
-                  className="inline-flex min-h-9 min-w-0 max-w-[38%] items-center gap-1 rounded-xl px-2 py-1 text-[11px] font-bold text-slate-700 transition hover:bg-white hover:text-[#D9232D] active:scale-95 disabled:pointer-events-none disabled:opacity-35 sm:px-2.5 sm:text-xs"
+                  className="inline-flex min-h-8 min-w-0 max-w-[38%] items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold text-slate-700 transition hover:bg-white hover:text-[#D9232D] active:scale-95 disabled:pointer-events-none disabled:opacity-35 sm:px-2.5 sm:text-xs"
                 >
-                  <ChevronLeft className="h-4 w-4 shrink-0" />
+                  <ChevronLeft className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">{prevProduct ? prevProduct.title : 'First'}</span>
                 </button>
 
@@ -883,24 +883,24 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                   aria-label={
                     nextProduct ? `Next product: ${nextProduct.title}` : 'No next product'
                   }
-                  className="inline-flex min-h-9 min-w-0 max-w-[38%] items-center justify-end gap-1 rounded-xl px-2 py-1 text-[11px] font-bold text-slate-700 transition hover:bg-white hover:text-[#D9232D] active:scale-95 disabled:pointer-events-none disabled:opacity-35 sm:px-2.5 sm:text-xs"
+                  className="inline-flex min-h-8 min-w-0 max-w-[38%] items-center justify-end gap-1 rounded-lg px-2 py-1 text-[11px] font-bold text-slate-700 transition hover:bg-white hover:text-[#D9232D] active:scale-95 disabled:pointer-events-none disabled:opacity-35 sm:px-2.5 sm:text-xs"
                 >
                   <span className="truncate">{nextProduct ? nextProduct.title : 'Last'}</span>
-                  <ChevronRight className="h-4 w-4 shrink-0" />
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0" />
                 </button>
               </nav>
             )}
 
             {/* Desktop Split Grid: Sticky Left Gallery + Contiguous Right Purchase Module */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start lg:gap-8">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start lg:gap-6">
               {/* Left Gallery Column */}
               <section
                 ref={gallerySectionRef}
                 aria-label="Product gallery"
-                className="space-y-3 lg:sticky lg:top-6 lg:col-span-7"
+                className="mx-auto w-full max-w-[440px] space-y-2.5 lg:sticky lg:top-5 lg:col-span-6 lg:max-w-[460px]"
               >
                 <div
-                  className={`classic-glass rounded-3xl bg-gradient-to-br from-white/92 via-white/82 to-rose-50/40 p-2.5 shadow-[0_18px_44px_-20px_rgba(15,23,42,0.18),inset_0_1px_0_rgba(255,255,255,0.95)] transition-all duration-300 sm:p-3.5 ${
+                  className={`classic-glass rounded-2xl bg-gradient-to-br from-white/92 via-white/82 to-rose-50/40 p-2 shadow-[0_18px_44px_-20px_rgba(15,23,42,0.18),inset_0_1px_0_rgba(255,255,255,0.95)] transition-all duration-300 sm:p-3 ${
                     colorPreviewHighlight
                       ? 'ring-2 ring-[#D9232D]/40'
                       : 'ring-1 ring-white/90'
@@ -908,7 +908,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                 >
                   <div
                     data-gallery-carousel="true"
-                    className="group relative aspect-square w-full touch-pan-y overflow-hidden rounded-2xl bg-gradient-to-b from-slate-100/90 to-slate-200/55 ring-1 ring-inset ring-slate-900/[0.05]"
+                    className="group relative aspect-square w-full touch-pan-y overflow-hidden rounded-xl bg-gradient-to-b from-slate-100/90 to-slate-200/55 ring-1 ring-inset ring-slate-900/[0.05]"
                     onTouchStart={handleGalleryTouchStart}
                     onTouchEnd={handleGalleryTouchEnd}
                   >
@@ -1014,7 +1014,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                   {images.length > 1 && (
                     <div
                       data-no-product-swipe="true"
-                      className="mt-2.5 flex gap-2.5 overflow-x-auto no-scrollbar pb-0.5"
+                      className="mt-2 flex gap-2 overflow-x-auto no-scrollbar pb-0.5"
                     >
                       {images.map((image, index) => (
                         <button
@@ -1023,7 +1023,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                           onClick={() => setActiveImageIndex(index)}
                           aria-label={`View product image ${index + 1}`}
                           aria-current={activeImageIndex === index ? 'true' : undefined}
-                          className={`h-16 w-16 shrink-0 overflow-hidden rounded-2xl border-2 bg-white/70 backdrop-blur-xs transition sm:h-[72px] sm:w-[72px] ${
+                          className={`h-12 w-12 shrink-0 overflow-hidden rounded-xl border-2 bg-white/70 backdrop-blur-xs transition sm:h-14 sm:w-14 ${
                             activeImageIndex === index
                               ? 'border-[#D9232D] ring-2 ring-rose-200/70 shadow-xs'
                               : 'border-white/80 opacity-80 hover:opacity-100'
@@ -1040,18 +1040,18 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
               {/* Right Column: Contiguous Classic Glass Purchase & Customization Module */}
               <section
                 aria-label="Configure and buy product"
-                className="lg:col-span-5"
+                className="lg:col-span-6"
               >
-                <div className="classic-glass space-y-5 rounded-3xl bg-gradient-to-br from-white/92 via-white/84 to-slate-50/75 p-5 shadow-[0_16px_40px_-22px_rgba(15,23,42,0.15),inset_0_1px_0_rgba(255,255,255,0.95)] sm:p-6">
+                <div className="classic-glass space-y-3.5 rounded-2xl bg-gradient-to-br from-white/92 via-white/84 to-slate-50/75 p-3.5 shadow-[0_16px_40px_-22px_rgba(15,23,42,0.15),inset_0_1px_0_rgba(255,255,255,0.95)] sm:p-4">
                   {/* Product Identity & Rating */}
                   <div>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-slate-500">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-slate-500">
                       <span className="font-extrabold uppercase tracking-wider text-[#D9232D]">
                         {product.categoryLabel || 'Bike Covers'}
                       </span>
                       <span aria-hidden="true">·</span>
                       <span className="inline-flex items-center gap-1 text-slate-700 tabular-nums">
-                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                         <strong>{reviewsValue}</strong>
                         <span className="text-slate-500">({product.reviewCount} reviews)</span>
                       </span>
@@ -1067,41 +1067,41 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                         <>
                           <span aria-hidden="true">·</span>
                           <span className="inline-flex items-center gap-1 font-semibold text-slate-700">
-                            <Droplets className="h-3.5 w-3.5 text-sky-600" />
+                            <Droplets className="h-3 w-3 text-sky-600" />
                             Waterproof
                           </span>
                         </>
                       )}
                     </div>
 
-                    <h1 className="mt-2 text-2xl font-black leading-tight tracking-tight text-slate-950 [text-wrap:balance] sm:text-[26px]">
+                    <h1 className="mt-1.5 text-lg font-black leading-tight tracking-tight text-slate-950 [text-wrap:balance] sm:text-[22px]">
                       {product.title}
                     </h1>
                     {details.subtitle && (
-                      <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+                      <p className="mt-1 text-xs leading-relaxed text-slate-500 sm:text-[13px]">
                         {details.subtitle}
                       </p>
                     )}
 
                     {/* Live Pricing & Availability */}
-                    <div className="mt-4 rounded-2xl border border-white/90 bg-white/75 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xs">
-                      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                        <strong className="text-3xl font-black tracking-tight text-slate-950 tabular-nums">
+                    <div className="mt-3 rounded-xl border border-white/90 bg-white/75 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xs">
+                      <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+                        <strong className="text-2xl font-black tracking-tight text-slate-950 tabular-nums">
                           ₹{totalPrice}
                         </strong>
                         {savings > 0 && (
                           <>
-                            <span className="text-sm font-medium text-slate-400 line-through tabular-nums">
+                            <span className="text-xs font-medium text-slate-400 line-through tabular-nums sm:text-sm">
                               ₹{displayOriginalTotal}
                             </span>
-                            <span className="text-xs font-extrabold text-[#D9232D] tabular-nums">
+                            <span className="text-[11px] font-extrabold text-[#D9232D] tabular-nums">
                               Save ₹{savings} ({discount}% OFF)
                             </span>
                           </>
                         )}
                       </div>
 
-                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
                         <p
                           role="status"
                           className={`inline-flex items-center gap-1.5 font-bold ${
@@ -1122,8 +1122,8 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                     </div>
 
                     {guaranteeInfo && (
-                      <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-emerald-200/80 bg-emerald-50/75 px-3 py-2 text-xs font-semibold text-emerald-800">
-                        <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+                      <div className="mt-2 flex items-center gap-2 rounded-xl border border-emerald-200/80 bg-emerald-50/75 px-3 py-1.5 text-[11px] font-semibold text-emerald-800">
+                        <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
                         <span>
                           Guarantee valid until{' '}
                           <strong className="font-extrabold">
@@ -1135,14 +1135,14 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                   </div>
 
                   {/* 1. Color Swatches */}
-                  <div className="border-t border-slate-100 pt-4">
-                    <div className="mb-2.5 flex items-center justify-between gap-2">
-                      <h2 className="text-sm font-extrabold text-slate-900">Color Finish</h2>
-                      <span className="text-xs font-semibold text-slate-500">
+                  <div className="border-t border-slate-100 pt-3">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <h2 className="text-xs font-extrabold text-slate-900">Color Finish</h2>
+                      <span className="text-[11px] font-semibold text-slate-500">
                         {selectedColor.name}
                       </span>
                     </div>
-                    <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+                    <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-5">
                       {product.colors.map((color) => {
                         const isSelected = selectedColor.name === color.name;
                         return (
@@ -1154,7 +1154,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                             className="group min-w-0 text-center focus-visible:outline-none"
                           >
                             <span
-                              className={`relative mx-auto block aspect-square w-full overflow-hidden rounded-2xl border-2 bg-slate-100 transition ${
+                              className={`relative mx-auto block aspect-square w-full overflow-hidden rounded-xl border-2 bg-slate-100 transition ${
                                 isSelected
                                   ? 'border-[#D9232D] ring-2 ring-rose-100'
                                   : 'border-slate-200/70 group-hover:border-slate-300'
@@ -1185,18 +1185,18 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
 
                   {/* 2. Foam Thickness & Cushioning Upgrade Selector */}
                   {product.thicknessOptions.length > 0 && (
-                    <div className="border-t border-slate-100 pt-4">
-                      <div className="mb-2.5 flex items-center justify-between gap-2">
-                        <h2 className="text-sm font-extrabold text-slate-900">
+                    <div className="border-t border-slate-100 pt-3">
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <h2 className="text-xs font-extrabold text-slate-900">
                           Foam Thickness &amp; Cushioning
                         </h2>
-                        <span className="text-xs font-semibold text-slate-500">
+                        <span className="text-[11px] font-semibold text-slate-500">
                           {selectedThickness.extraPrice > 0
                             ? `+₹${selectedThickness.extraPrice}`
                             : 'Included'}
                         </span>
                       </div>
-                      <div className="grid grid-cols-1 gap-2">
+                      <div className="grid grid-cols-1 gap-1.5">
                         {product.thicknessOptions.map((option) => {
                           const isSelected = selectedThickness.label === option.label;
                           return (
@@ -1205,7 +1205,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                               type="button"
                               aria-pressed={isSelected}
                               onClick={() => setSelectedThickness(option)}
-                              className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border px-3.5 py-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+                              className={`flex min-h-10 w-full items-center justify-between gap-2.5 rounded-xl border px-3 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
                                 isSelected
                                   ? 'border-[#D9232D] bg-rose-50/70 text-slate-950'
                                   : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
@@ -1228,16 +1228,16 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
 
                   {/* 3. Inline Stitch Pattern Selector */}
                   {details.stitchPatterns.length > 0 && (
-                    <div className="border-t border-slate-100 pt-4">
-                      <div className="mb-2.5 flex items-center justify-between gap-2">
-                        <h2 className="text-sm font-extrabold text-slate-900">Stitch Pattern</h2>
+                    <div className="border-t border-slate-100 pt-3">
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <h2 className="text-xs font-extrabold text-slate-900">Stitch Pattern</h2>
                         {selectedStitch && (
-                          <span className="text-xs font-semibold text-slate-500">
+                          <span className="text-[11px] font-semibold text-slate-500">
                             {selectedStitch}
                           </span>
                         )}
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1.5">
                         {details.stitchPatterns.map((pattern) => {
                           const isSelected = selectedStitch === pattern;
                           return (
@@ -1246,7 +1246,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                               type="button"
                               aria-pressed={isSelected}
                               onClick={() => setSelectedStitch(pattern)}
-                              className={`inline-flex min-h-11 items-center gap-1.5 rounded-2xl border px-3.5 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+                              className={`inline-flex min-h-9.5 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
                                 isSelected
                                   ? 'border-[#D9232D] bg-rose-50 text-[#D9232D]'
                                   : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
@@ -1263,8 +1263,8 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
 
                   {/* 4. Custom Name Embroidery Input */}
                   {product.isCustomizable && (
-                    <div className="border-t border-slate-100/90 pt-4">
-                      <div className="rounded-2xl border border-white/90 bg-white/75 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xs">
+                    <div className="border-t border-slate-100/90 pt-3">
+                      <div className="rounded-xl border border-white/90 bg-white/75 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xs">
                         <div className="flex items-center justify-between gap-2">
                           <label
                             htmlFor="pdp-custom-embroidery"
@@ -1276,7 +1276,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                             {normalizedEmbroidery.length}/{MAX_EMBROIDERY_CHARS}
                           </span>
                         </div>
-                        <div className="relative mt-2">
+                        <div className="relative mt-1.5">
                           <input
                             id="pdp-custom-embroidery"
                             type="text"
@@ -1284,7 +1284,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                             maxLength={MAX_EMBROIDERY_CHARS}
                             onChange={(event) => setCustomEmbroideryText(event.target.value)}
                             placeholder="e.g. ASIK 07 (leave blank for standard)"
-                            className="min-h-11 w-full rounded-xl border border-slate-200 bg-white pl-3.5 pr-11 text-base font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#D9232D] focus:ring-2 focus:ring-rose-100 sm:text-sm"
+                            className="min-h-10.5 w-full rounded-xl border border-slate-200 bg-white pl-3 pr-10 text-base font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#D9232D] focus:ring-2 focus:ring-rose-100 sm:text-sm"
                           />
                           {customEmbroideryText && (
                             <button
@@ -1309,9 +1309,9 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
 
                   {/* 5. Vehicle Type & Model Fitment Check */}
                   {(compatibleTypes.length > 1 || modelOptions.length > 0) && (
-                    <div className="space-y-3 border-t border-slate-100 pt-4">
+                    <div className="space-y-2.5 border-t border-slate-100 pt-3">
                       <div className="flex items-center justify-between gap-2">
-                        <h2 className="text-sm font-extrabold text-slate-900">
+                        <h2 className="text-xs font-extrabold text-slate-900">
                           Vehicle Fitment Check{' '}
                           <span className="font-medium text-slate-400">(Optional)</span>
                         </h2>
@@ -1327,7 +1327,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                       </div>
 
                       {compatibleTypes.length > 1 && (
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-1.5">
                           {compatibleTypes.map((type) => {
                             const label =
                               type === 'bike' ? 'Bike' : type === 'scooter' ? 'Scooter' : 'Toto';
@@ -1341,13 +1341,13 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                                   setVehicleType(type);
                                   setSelectedModel('');
                                 }}
-                                className={`flex min-h-11 items-center justify-center gap-1.5 rounded-2xl border px-3 text-xs font-bold transition ${
+                                className={`flex min-h-9.5 items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition ${
                                   vehicleType === type
                                     ? 'border-[#D9232D] bg-rose-50 text-[#D9232D]'
                                     : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                                 }`}
                               >
-                                <Icon className="h-4 w-4" />
+                                <Icon className="h-3.5 w-3.5" />
                                 <span>{label}</span>
                               </button>
                             );
@@ -1361,7 +1361,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                           <select
                             value={selectedModel}
                             onChange={(event) => setSelectedModel(event.target.value)}
-                            className="min-h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-white pl-11 pr-10 text-base font-medium text-slate-700 outline-none transition focus:border-[#D9232D] focus:ring-2 focus:ring-rose-100 sm:text-sm"
+                            className="min-h-10.5 w-full appearance-none rounded-xl border border-slate-200 bg-white pl-10 pr-9 text-base font-medium text-slate-700 outline-none transition focus:border-[#D9232D] focus:ring-2 focus:ring-rose-100 sm:text-sm"
                           >
                             <option value="">
                               Choose your {vehicleType === 'scooter' ? 'scooter' : 'vehicle'} model
@@ -1372,13 +1372,13 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                               </option>
                             ))}
                           </select>
-                          <Bike className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#D9232D]" />
-                          <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                          <Bike className="pointer-events-none absolute left-3 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-[#D9232D]" />
+                          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                         </label>
                       )}
 
                       {selectedModel && (
-                        <p className="flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
+                        <p className="flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800">
                           <CircleCheck className="h-4 w-4 shrink-0" />
                           <span>Verified workshop fit for {selectedModel}.</span>
                         </p>
@@ -1387,20 +1387,20 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                   )}
 
                   {/* 6. Quantity Stepper & Desktop Action Bar */}
-                  <div className="space-y-4 border-t border-slate-100 pt-4">
+                  <div className="space-y-3 border-t border-slate-100 pt-3">
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-extrabold text-slate-900">Quantity</span>
-                      <div className="inline-flex items-center rounded-2xl border border-slate-200 bg-[#F8FAFC] p-1">
+                      <span className="text-xs font-extrabold text-slate-900">Quantity</span>
+                      <div className="inline-flex items-center rounded-xl border border-slate-200 bg-[#F8FAFC] p-0.5">
                         <button
                           type="button"
                           aria-label="Decrease quantity"
                           disabled={quantity <= 1}
                           onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                          className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-700 transition hover:bg-white disabled:opacity-35"
+                          className="flex h-8.5 w-8.5 items-center justify-center rounded-lg text-slate-700 transition hover:bg-white disabled:opacity-35"
                         >
-                          <Minus className="h-4 w-4" />
+                          <Minus className="h-3.5 w-3.5" />
                         </button>
-                        <span className="min-w-10 text-center text-sm font-black text-slate-950 tabular-nums">
+                        <span className="min-w-8 text-center text-xs font-black text-slate-950 tabular-nums">
                           {quantity}
                         </span>
                         <button
@@ -1410,15 +1410,15 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                           onClick={() =>
                             setQuantity((q) => Math.min(MAX_ORDER_ITEM_QUANTITY, q + 1))
                           }
-                          className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-700 transition hover:bg-white disabled:opacity-35"
+                          className="flex h-8.5 w-8.5 items-center justify-center rounded-lg text-slate-700 transition hover:bg-white disabled:opacity-35"
                         >
-                          <Plus className="h-4 w-4" />
+                          <Plus className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     </div>
 
                     {/* Desktop Purchase Buttons */}
-                    <div className="hidden gap-2.5 lg:grid lg:grid-cols-2">
+                    <div className="hidden gap-2 lg:grid lg:grid-cols-2">
                       {sellable ? (
                         <>
                           <button
@@ -1430,7 +1430,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                             aria-label={
                               isSelectedConfigurationInCart ? 'Go to Cart' : 'Add to cart'
                             }
-                            className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-[#D9232D] bg-white px-4 text-sm font-extrabold text-[#D9232D] transition hover:bg-rose-50/70 active:scale-[0.98]"
+                            className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#D9232D] bg-white px-3.5 text-xs font-extrabold text-[#D9232D] transition hover:bg-rose-50/70 active:scale-[0.98]"
                           >
                             <ShoppingCart className="h-4 w-4" />
                             <span>
@@ -1440,7 +1440,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                           <button
                             type="button"
                             onClick={() => addToCart(true)}
-                            className="banner-cta-shine group/cta flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-4 text-sm font-extrabold text-white shadow-[0_10px_22px_-8px_rgba(217,35,45,0.45)] transition-all hover:brightness-105 active:scale-[0.98]"
+                            className="banner-cta-shine group/cta flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-3.5 text-xs font-extrabold text-white shadow-[0_10px_22px_-8px_rgba(217,35,45,0.45)] transition-all hover:brightness-105 active:scale-[0.98]"
                           >
                             <Zap className="h-4 w-4 fill-current transition-transform duration-200 group-hover/cta:translate-x-0.5" />
                             <span>Buy Now</span>
@@ -1452,7 +1452,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                           disabled={!onNotifyMe || notifySubmitting}
                           onClick={() => void handleNotifyMe(product)}
                           aria-label="Notify me when this product is back in stock"
-                          className="banner-cta-shine group/cta col-span-2 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-4 text-sm font-extrabold text-white shadow-sm transition-all hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
+                          className="banner-cta-shine group/cta col-span-2 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-3.5 text-xs font-extrabold text-white shadow-sm transition-all hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
                         >
                           <Clock3
                             className={`h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5 ${
@@ -1469,21 +1469,21 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
             </div>
 
             {/* Below-the-Fold Storefront Information Grid */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start">
               {/* Left Info Column: Highlights Cards, Description & Embroidery Details */}
-              <div className="space-y-6 lg:col-span-7">
+              <div className="space-y-4 lg:col-span-7">
                 <section
                   id="pdp-section-description"
                   aria-labelledby="pdp-heading-description"
-                  className="classic-glass rounded-3xl bg-white/82 p-5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-6"
+                  className="classic-glass rounded-2xl bg-white/82 p-3.5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-4"
                 >
-                  <div className="mb-4">
-                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#D9232D]">
+                  <div className="mb-3">
+                    <p className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#D9232D]">
                       At a glance
                     </p>
                     <h2
                       id="pdp-heading-description"
-                      className="mt-0.5 text-lg font-extrabold tracking-tight text-slate-950"
+                      className="mt-0.5 text-base font-extrabold tracking-tight text-slate-950"
                     >
                       Build Highlights &amp; Materials
                     </h2>
@@ -1492,7 +1492,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                   {(['features', 'compatibility', 'materials', 'stitchPatterns'] as const).some(
                     (key) => details[key].length > 0,
                   ) && (
-                    <div className="mb-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                    <div className="mb-3.5 grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {(['features', 'compatibility', 'materials', 'stitchPatterns'] as const).map(
                         (key) => {
                           if (!details[key].length) return null;
@@ -1502,27 +1502,27 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                               key={key}
                               type="button"
                               onClick={() => setDetailSheet(key)}
-                              className="group flex min-h-[86px] items-start gap-3 rounded-2xl border border-slate-200/80 bg-[#F8FAFC]/60 p-3.5 text-left transition hover:border-slate-300 hover:bg-white active:scale-[0.99]"
+                              className="group flex min-h-[70px] items-start gap-2.5 rounded-xl border border-slate-200/80 bg-[#F8FAFC]/60 p-2.5 text-left transition hover:border-slate-300 hover:bg-white active:scale-[0.99]"
                             >
                               <span
-                                className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${accent}`}
+                                className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${accent}`}
                               >
-                                <Icon className="h-[19px] w-[19px]" />
+                                <Icon className="h-4 w-4" />
                               </span>
                               <span className="min-w-0 flex-1">
-                                <b className="block text-[13px] font-extrabold leading-tight text-slate-900">
+                                <b className="block text-xs font-extrabold leading-tight text-slate-900">
                                   {sheetLabels[key]}
                                 </b>
-                                <span className="mt-1 block text-[11px] font-medium text-slate-400">
+                                <span className="mt-0.5 block text-[10.5px] font-medium text-slate-400">
                                   {helper}
                                 </span>
-                                <span className="mt-1.5 block truncate text-xs leading-tight text-slate-600">
+                                <span className="mt-1 block truncate text-[11px] leading-tight text-slate-600">
                                   {key === 'stitchPatterns' && selectedStitch
                                     ? selectedStitch
                                     : preview(details[key])}
                                 </span>
                               </span>
-                              <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-700" />
+                              <ChevronRight className="mt-1 h-3.5 w-3.5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-700" />
                             </button>
                           );
                         },
@@ -1530,10 +1530,10 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                     </div>
                   )}
 
-                  <div className="border-t border-slate-100 pt-5">
-                    <h3 className="text-base font-extrabold text-slate-950">Description</h3>
+                  <div className="border-t border-slate-100 pt-3.5">
+                    <h3 className="text-sm font-extrabold text-slate-950">Description</h3>
                     <p
-                      className={`mt-2 text-sm leading-relaxed text-slate-600 ${
+                      className={`mt-1.5 text-xs leading-relaxed text-slate-600 sm:text-[13px] ${
                         descriptionOpen ? '' : 'line-clamp-4'
                       }`}
                     >
@@ -1542,11 +1542,11 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                     <button
                       type="button"
                       onClick={() => setDescriptionOpen((open) => !open)}
-                      className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-xs font-extrabold text-slate-800 transition hover:bg-slate-50"
+                      className="mt-2.5 inline-flex min-h-9.5 w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-extrabold text-slate-800 transition hover:bg-slate-50"
                     >
                       <span>{descriptionOpen ? 'Read less' : 'Read more'}</span>
                       <ChevronDown
-                        className={`h-4 w-4 transition ${descriptionOpen ? 'rotate-180' : ''}`}
+                        className={`h-3.5 w-3.5 transition ${descriptionOpen ? 'rotate-180' : ''}`}
                       />
                     </button>
                   </div>
@@ -1564,16 +1564,16 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                 <section
                   id="pdp-section-embroidery"
                   aria-labelledby="pdp-heading-embroidery"
-                  className="classic-glass rounded-3xl bg-white/82 p-5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-6"
+                  className="classic-glass rounded-2xl bg-white/82 p-3.5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-4"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex flex-wrap items-start justify-between gap-2.5">
                     <div>
-                      <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#D9232D]">
+                      <p className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#D9232D]">
                         Workshop craft
                       </p>
                       <h2
                         id="pdp-heading-embroidery"
-                        className="mt-0.5 text-lg font-extrabold tracking-tight text-slate-950"
+                        className="mt-0.5 text-base font-extrabold tracking-tight text-slate-950"
                       >
                         Embroidery Details
                       </h2>
@@ -1582,7 +1582,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                       <button
                         type="button"
                         onClick={focusEmbroideryInput}
-                        className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 text-xs font-extrabold text-[#D9232D] transition hover:bg-rose-100/70"
+                        className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-2.5 text-xs font-extrabold text-[#D9232D] transition hover:bg-rose-100/70"
                       >
                         <Scissors className="h-3.5 w-3.5" />
                         <span>{normalizedEmbroidery ? 'Edit text above' : 'Add embroidery'}</span>
@@ -1590,12 +1590,12 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                     )}
                   </div>
 
-                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-200/75 bg-[#F8FAFC] p-3.5">
-                      <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">
+                  <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                    <div className="rounded-xl border border-slate-200/75 bg-[#F8FAFC] p-3">
+                      <p className="text-[10.5px] font-extrabold uppercase tracking-wide text-slate-500">
                         Thread &amp; Stitch Finish
                       </p>
-                      <p className="mt-1.5 text-xs leading-relaxed text-slate-700">
+                      <p className="mt-1 text-xs leading-relaxed text-slate-700">
                         Stitched with UV-stable high-tensile nylon thread using{' '}
                         <strong className="text-slate-900">
                           {selectedStitch || details.stitchPatterns[0] || 'Double Lockstitch'}
@@ -1604,11 +1604,11 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                       </p>
                     </div>
 
-                    <div className="rounded-2xl border border-slate-200/75 bg-[#F8FAFC] p-3.5">
-                      <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">
+                    <div className="rounded-xl border border-slate-200/75 bg-[#F8FAFC] p-3">
+                      <p className="text-[10.5px] font-extrabold uppercase tracking-wide text-slate-500">
                         {product.isCustomizable ? 'Custom Name Spec (+₹150)' : 'Signature Emblem'}
                       </p>
-                      <p className="mt-1.5 text-xs leading-relaxed text-slate-700">
+                      <p className="mt-1 text-xs leading-relaxed text-slate-700">
                         {product.isCustomizable
                           ? `Supports up to ${MAX_EMBROIDERY_CHARS} uppercase characters embroidered across the rear rider crest before workshop fitment.`
                           : 'Finished with our factory-embroidered crest and double-piped edges ready for immediate fitment.'}
@@ -1616,7 +1616,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                     </div>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-rose-100 bg-rose-50/60 px-4 py-3 text-xs">
+                  <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-rose-100 bg-rose-50/60 px-3 py-2.5 text-xs">
                     <div className="flex items-center gap-2 text-slate-700">
                       <Scissors className="h-4 w-4 shrink-0 text-[#D9232D]" />
                       <span>
@@ -1638,19 +1638,19 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
               </div>
 
               {/* Right Info Column: Specifications & Workshop Guarantees */}
-              <div className="space-y-6 lg:col-span-5">
+              <div className="space-y-4 lg:col-span-5">
                 <section
                   id="pdp-section-specifications"
                   aria-labelledby="pdp-heading-specifications"
-                  className="classic-glass rounded-3xl bg-white/82 p-5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-6"
+                  className="classic-glass rounded-2xl bg-white/82 p-3.5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-4"
                 >
-                  <div className="mb-3">
-                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#D9232D]">
+                  <div className="mb-2.5">
+                    <p className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#D9232D]">
                       Technical breakdown
                     </p>
                     <h2
                       id="pdp-heading-specifications"
-                      className="mt-0.5 text-lg font-extrabold tracking-tight text-slate-950"
+                      className="mt-0.5 text-base font-extrabold tracking-tight text-slate-950"
                     >
                       Specifications
                     </h2>
@@ -1676,7 +1676,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                       .map(([label, value]) => (
                         <div
                           key={label}
-                          className="grid grid-cols-[24px_minmax(72px,0.7fr)_minmax(0,1.3fr)] items-start gap-2.5 py-3 text-xs"
+                          className="grid grid-cols-[24px_minmax(72px,0.7fr)_minmax(0,1.3fr)] items-start gap-2.5 py-2 text-xs"
                         >
                           <span className="mt-0.5 grid h-6 w-6 place-items-center rounded-lg bg-slate-100 text-slate-500">
                             {label === 'Waterproof' ? (
@@ -1698,7 +1698,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
 
                 <section
                   aria-label="Workshop guarantees"
-                  className="divide-y divide-rose-100 rounded-3xl border border-rose-100 bg-rose-50/75 px-5 py-2"
+                  className="divide-y divide-rose-100 rounded-2xl border border-rose-100 bg-rose-50/75 px-4 py-1.5"
                 >
                   {[
                     [
@@ -1728,13 +1728,13 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                   ].map(([Icon, title, detail]) => {
                     const TrustIcon = Icon as React.ComponentType<{ className?: string }>;
                     return (
-                      <div key={title as string} className="flex items-start gap-3 py-3.5">
-                        <TrustIcon className="mt-0.5 h-5 w-5 shrink-0 text-[#D9232D]" />
+                      <div key={title as string} className="flex items-start gap-2.5 py-2.5">
+                        <TrustIcon className="mt-0.5 h-4 w-4 shrink-0 text-[#D9232D]" />
                         <div>
                           <p className="text-xs font-extrabold text-slate-900">
                             {title as string}
                           </p>
-                          <p className="mt-0.5 text-xs leading-relaxed text-slate-600">
+                          <p className="mt-0.5 text-[11px] leading-relaxed text-slate-600">
                             {detail as string}
                           </p>
                         </div>
@@ -1748,7 +1748,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
             {/* Verified Customer Reviews */}
             <div
               id="pdp-section-reviews"
-              className="classic-glass overflow-hidden rounded-3xl bg-white/82 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)]"
+              className="classic-glass overflow-hidden rounded-2xl bg-white/82 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)]"
             >
               <ProductReviews
                 productId={product.id}
@@ -1765,19 +1765,19 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
               <section
                 id="pdp-section-related"
                 aria-label="You may also like"
-                className="classic-glass rounded-3xl bg-white/82 p-5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-6"
+                className="classic-glass rounded-2xl bg-white/82 p-3.5 shadow-[0_12px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-4"
               >
-                <div className="mb-4 flex items-center justify-between gap-2">
+                <div className="mb-3 flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#D9232D]">
+                    <p className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#D9232D]">
                       Workshop picks
                     </p>
-                    <h2 className="mt-0.5 text-lg font-extrabold tracking-tight text-slate-950">
+                    <h2 className="mt-0.5 text-base font-extrabold tracking-tight text-slate-950">
                       You may also like
                     </h2>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                   {suggested.map((item) => (
                     <SuggestionCard
                       key={item.id}
@@ -1799,11 +1799,11 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
         </motion.main>
 
         {/* Classic Glass Mobile Sticky Bottom Action Bar */}
-        <footer className="classic-glass z-40 shrink-0 border-t border-white/85 bg-white/80 px-4 py-2.5 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-8px_28px_-10px_rgba(15,23,42,0.1)] lg:hidden">
+        <footer className="classic-glass z-40 shrink-0 border-t border-white/85 bg-white/80 px-3.5 py-2 pb-[max(10px,env(safe-area-inset-bottom))] shadow-[0_-8px_28px_-10px_rgba(15,23,42,0.1)] lg:hidden">
           {sellable ? (
-            <div className="mx-auto flex max-w-2xl items-center gap-2.5">
+            <div className="mx-auto flex max-w-2xl items-center gap-2">
               <div className="min-w-0 pr-1">
-                <p className="text-base font-black leading-none text-slate-950 tabular-nums">
+                <p className="text-sm font-black leading-none text-slate-950 tabular-nums">
                   ₹{totalPrice}
                 </p>
                 <p className="mt-0.5 text-[10px] font-semibold text-slate-500 tabular-nums">
@@ -1817,9 +1817,9 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                   else addToCart(false);
                 }}
                 aria-label={isSelectedConfigurationInCart ? 'Go to Cart' : 'Add to cart'}
-                className="flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl border border-[#D9232D] bg-white px-3 text-xs font-extrabold text-[#D9232D] active:scale-[0.98]"
+                className="flex min-h-10.5 flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#D9232D] bg-white px-3 text-xs font-extrabold text-[#D9232D] active:scale-[0.98]"
               >
-                <ShoppingCart className="h-4 w-4 shrink-0" />
+                <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">
                   {isSelectedConfigurationInCart ? 'Go to Cart' : 'Add to Cart'}
                 </span>
@@ -1827,9 +1827,9 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
               <button
                 type="button"
                 onClick={() => addToCart(true)}
-                className="banner-cta-shine group/cta flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-3 text-xs font-extrabold text-white shadow-[0_8px_18px_-4px_rgba(217,35,45,0.38)] transition-all hover:brightness-105 active:scale-[0.97]"
+                className="banner-cta-shine group/cta flex min-h-10.5 flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-3 text-xs font-extrabold text-white shadow-[0_8px_18px_-4px_rgba(217,35,45,0.38)] transition-all hover:brightness-105 active:scale-[0.97]"
               >
-                <Zap className="h-4 w-4 shrink-0 fill-current transition-transform duration-200 group-hover/cta:translate-x-0.5" />
+                <Zap className="h-3.5 w-3.5 shrink-0 fill-current transition-transform duration-200 group-hover/cta:translate-x-0.5" />
                 <span className="truncate">Buy Now</span>
               </button>
             </div>
@@ -1839,7 +1839,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
               disabled={!onNotifyMe || notifySubmitting}
               onClick={() => void handleNotifyMe(product)}
               aria-label="Notify me when this product is back in stock"
-              className="banner-cta-shine group/cta flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] to-[#B91822] text-sm font-extrabold text-white shadow-sm transition-all hover:brightness-105 active:scale-[0.97] disabled:opacity-50"
+              className="banner-cta-shine group/cta flex min-h-10.5 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91822] text-xs font-extrabold text-white shadow-sm transition-all hover:brightness-105 active:scale-[0.97] disabled:opacity-50"
             >
               <Clock3
                 className={`h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5 ${
@@ -2059,30 +2059,30 @@ const SuggestionCard: React.FC<{
           className="h-full w-full object-cover transition duration-300 hover:scale-[1.03]"
         />
       </button>
-      <div className="flex flex-1 flex-col justify-between p-3">
+      <div className="flex flex-1 flex-col justify-between p-2.5">
         <div>
           <button
             type="button"
             onClick={onSelect}
-            className="block text-left text-xs font-extrabold leading-snug text-slate-900 hover:text-[#D9232D] sm:text-[13px]"
+            className="line-clamp-2 block text-left text-[11.5px] font-extrabold leading-snug text-slate-900 hover:text-[#D9232D] sm:text-xs"
           >
             {product.title}
           </button>
-          <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-slate-500">
+          <p className="mt-0.5 line-clamp-1 text-[10.5px] leading-snug text-slate-500">
             {product.subtitle}
           </p>
         </div>
 
-        <div className="mt-3">
+        <div className="mt-2">
           <p
-            className={`text-[10px] font-bold ${
+            className={`text-[9.5px] font-bold ${
               availability.state === 'out-of-stock' ? 'text-amber-700' : 'text-emerald-700'
             }`}
           >
             {availability.label}
           </p>
-          <div className="mt-1.5 flex items-center justify-between gap-2">
-            <span className="text-sm font-black text-slate-950 tabular-nums sm:text-base">
+          <div className="mt-1 flex items-center justify-between gap-2">
+            <span className="text-[13px] font-black text-slate-950 tabular-nums sm:text-sm">
               ₹{product.price}{' '}
               {product.originalPrice > product.price && (
                 <small className="text-[10px] font-medium text-slate-400 line-through">
@@ -2114,18 +2114,18 @@ const SuggestionCard: React.FC<{
                     ? 'Add to cart'
                     : 'Notify me'
               }
-              className={`grid min-h-11 ${
+              className={`grid min-h-9 ${
                 !isProductSellable(product) && !isInCart
-                  ? 'min-w-[74px] px-2.5 text-[10px] font-extrabold'
-                  : 'min-w-11'
+                  ? 'min-w-[68px] px-2 text-[10px] font-extrabold'
+                  : 'min-w-9'
               } place-items-center rounded-xl text-white transition active:scale-95 ${
                 isInCart ? 'bg-emerald-600' : 'bg-[#D9232D] hover:bg-[#B91822]'
               }`}
             >
               {isInCart ? (
-                <ShoppingCart className="h-4 w-4" />
+                <ShoppingCart className="h-3.5 w-3.5" />
               ) : isProductSellable(product) ? (
-                <Plus className="h-4 w-4" />
+                <Plus className="h-3.5 w-3.5" />
               ) : notifySubmitting ? (
                 'Wait…'
               ) : (
@@ -2133,7 +2133,7 @@ const SuggestionCard: React.FC<{
               )}
             </button>
           </div>
-          <div className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-amber-500 tabular-nums">
+          <div className="mt-1 flex items-center gap-1 text-[10.5px] font-semibold text-amber-500 tabular-nums">
             <Star className="h-3 w-3 fill-current" />
             <span className="text-slate-700">{product.rating}</span>
             <span className="text-slate-400">({product.reviewCount})</span>

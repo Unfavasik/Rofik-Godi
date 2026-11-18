@@ -91,15 +91,15 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="w-full flex flex-col bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-[0_1px_6px_rgba(0,0,0,0.03)] sticky top-0 z-40 transition-all">
       {/* Top Main Bar */}
-      <div className="flex min-w-0 items-center justify-between gap-2 bg-white px-3 pt-3 pb-2 sm:px-4">
+      <div className="flex min-w-0 items-center justify-between gap-2 bg-white px-3 pt-2 pb-1.5 sm:px-4">
         {/* Left: User Avatar & Welcome greeting */}
         <button
           type="button"
           onClick={onOpenAccount}
           aria-label={`Open account profile for ${currentUser?.name || 'Rider'}`}
-          className="flex min-h-11 min-w-0 max-w-[calc(100%-6.75rem)] items-center gap-2.5 cursor-pointer group select-none"
+          className="flex min-h-10 min-w-0 max-w-[calc(100%-6rem)] items-center gap-2 cursor-pointer group select-none"
         >
-          <div className="w-9 h-9 shrink-0 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 shadow-2xs group-hover:border-[#D9232D]/40 transition-all overflow-hidden relative">
+          <div className="w-8 h-8 shrink-0 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 shadow-2xs group-hover:border-[#D9232D]/40 transition-all overflow-hidden relative">
             {currentUser?.avatar ? (
               <img
                 src={currentUser.avatar}
@@ -107,39 +107,39 @@ export const Header: React.FC<HeaderProps> = ({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span aria-hidden="true" className="text-xs font-black text-[#D9232D]">
+              <span aria-hidden="true" className="text-[11px] font-black text-[#D9232D]">
                 {getInitials(currentUser?.name || '')}
               </span>
             )}
             {currentUser?.isGuest && (
               <span
-                className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-amber-400 border border-white rounded-full"
+                className="absolute bottom-0 right-0 w-2 h-2 bg-amber-400 border border-white rounded-full"
                 title="Guest Mode"
               />
             )}
           </div>
           <div className="min-w-0 flex flex-col">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-none flex items-center gap-1">
+            <span className="text-[9.5px] font-bold text-gray-400 uppercase tracking-wider leading-none flex items-center gap-1">
               {greeting}
               <Sparkles className="w-2.5 h-2.5 text-amber-500" />
             </span>
-            <h1 className="truncate text-[15px] font-black tracking-tight flex items-center leading-tight mt-0.5 text-slate-900 group-hover:text-[#D9232D] transition-colors">
+            <h1 className="truncate text-[14px] font-black tracking-tight flex items-center leading-tight mt-0.5 text-slate-900 group-hover:text-[#D9232D] transition-colors">
               {currentUser?.isGuest ? 'Guest' : currentUser?.name?.trim() || 'Rider'}
             </h1>
           </div>
         </button>
 
         {/* Right: Actions (Notifications & Cart) */}
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1.5">
           <div className="relative">
             <button
               type="button"
               onClick={onOpenNotifications}
               aria-label="Notifications"
-              className="relative w-11 h-11 rounded-full bg-white hover:bg-red-50 border border-slate-200 shadow-2xs flex items-center justify-center text-slate-800 active:scale-95 transition-all cursor-pointer"
+              className="relative w-9.5 h-9.5 rounded-full bg-white hover:bg-red-50 border border-slate-200 shadow-2xs flex items-center justify-center text-slate-800 active:scale-95 transition-all cursor-pointer"
               title="Notifications"
             >
-              <Bell className="w-[18px] h-[18px] text-slate-900" />
+              <Bell className="w-4 h-4 text-slate-900" />
               {notificationCount > 0 && (
                 <span
                   aria-label={`${notificationCount} unread notifications`}
@@ -155,7 +155,7 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onOpenCart}
             aria-label="Cart"
-            className="relative w-11 h-11 rounded-full bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs flex items-center justify-center text-slate-800 active:scale-95 transition-all cursor-pointer"
+            className="relative w-9.5 h-9.5 rounded-full bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs flex items-center justify-center text-slate-800 active:scale-95 transition-all cursor-pointer"
             title="Shopping Cart"
           >
             <ShoppingBag className="w-4 h-4 text-slate-900" />
@@ -175,7 +175,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Interactive Home Search Trigger with Smooth Vertical-Roll Product Prompt */}
       {setSearchQuery && !hideSearchInput && (
-        <div className="px-3 pb-2.5 bg-white sm:px-4">
+        <div className="px-3 pb-2 bg-white sm:px-4">
           <div className="relative flex min-w-0 items-center">
             <button
               type="button"
@@ -185,17 +185,17 @@ export const Header: React.FC<HeaderProps> = ({
                   ? `Search products, current query ${searchQuery}`
                   : `Search products, try ${activePrompt}`
               }
-              className={`min-h-11 w-full bg-slate-50 hover:bg-slate-100/80 border border-slate-200 hover:border-slate-300 focus-visible:border-[#D9232D] focus-visible:ring-2 focus-visible:ring-[#D9232D]/15 rounded-xl pl-3.5 ${
-                hasSearchQuery ? 'pr-22' : 'pr-12'
-              } py-2 flex items-center gap-2 text-left transition-all shadow-2xs cursor-pointer focus-visible:outline-hidden`}
+              className={`min-h-9.5 w-full bg-slate-50 hover:bg-slate-100/80 border border-slate-200 hover:border-slate-300 focus-visible:border-[#D9232D] focus-visible:ring-2 focus-visible:ring-[#D9232D]/15 rounded-xl pl-3 ${
+                hasSearchQuery ? 'pr-20' : 'pr-11'
+              } py-1.5 flex items-center gap-2 text-left transition-all shadow-2xs cursor-pointer focus-visible:outline-hidden`}
             >
-              <Search className="w-4 h-4 text-slate-400 shrink-0" />
+              <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               {hasSearchQuery ? (
-                <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-slate-900">
+                <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-slate-900">
                   {searchQuery}
                 </span>
               ) : (
-                <div className="min-w-0 flex-1 flex items-center gap-1.5 text-[13px] leading-5">
+                <div className="min-w-0 flex-1 flex items-center gap-1.5 text-[12.5px] leading-5">
                   <span className="text-slate-500 font-medium shrink-0">Search</span>
                   <div
                     aria-live="off"
@@ -227,7 +227,7 @@ export const Header: React.FC<HeaderProps> = ({
                 }}
                 aria-label="Clear search"
                 title="Clear search"
-                className="absolute right-10 flex h-9 w-9 items-center justify-center text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-200/70 transition-all cursor-pointer"
+                className="absolute right-9 flex h-8 w-8 items-center justify-center text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-200/70 transition-all cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -249,13 +249,13 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'Search by voice'
                     : 'Voice search unavailable in this browser'
               }
-              className={`absolute right-1 flex h-9 w-9 items-center justify-center rounded-xl transition-all cursor-pointer ${
+              className={`absolute right-1 flex h-8 w-8 items-center justify-center rounded-lg transition-all cursor-pointer ${
                 voiceSearch.isListening
                   ? 'voice-mic-pulse bg-[#D9232D] text-white shadow-xs'
                   : 'text-slate-500 hover:text-[#D9232D] hover:bg-rose-50'
               }`}
             >
-              <Mic className="w-4 h-4" />
+              <Mic className="w-3.5 h-3.5" />
             </button>
           </div>
 

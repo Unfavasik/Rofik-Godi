@@ -629,40 +629,40 @@ export function NotificationsView({
       return (
         <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#F8FAFC] pb-[max(2rem,env(safe-area-inset-bottom))] font-sans text-slate-900">
           <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-            <div className="mx-auto flex min-h-[58px] w-full max-w-2xl items-center gap-3 px-3 py-2 sm:px-5">
+            <div className="mx-auto flex min-h-[52px] w-full max-w-2xl items-center gap-2.5 px-3 py-1.5 sm:px-5">
               <button
                 type="button"
                 onClick={() => setSelectedNotification(null)}
                 aria-label="Back to notifications"
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-slate-700 transition-colors hover:bg-slate-100 active:scale-95"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-700 transition-colors hover:bg-slate-100 active:scale-95"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <h1 className="truncate text-[19px] sm:text-[21px] font-extrabold tracking-tight text-slate-900">
+              <h1 className="truncate text-[18px] sm:text-[19px] font-extrabold tracking-tight text-slate-900">
                 Coupon Details
               </h1>
             </div>
           </header>
-          <section className="mx-auto max-w-2xl px-4 py-6 sm:px-5">
+          <section className="mx-auto max-w-2xl px-4 py-4 sm:px-5">
             {couponDetailsLoading ? (
-              <div className="space-y-4 rounded-3xl border border-slate-200/85 bg-white p-6 shadow-xs" aria-busy="true" aria-label="Loading offer details">
-                <div className="skeleton-shimmer mx-auto h-14 w-14 rounded-2xl bg-rose-100/70" />
-                <div className="skeleton-shimmer mx-auto h-5 w-48 rounded-lg bg-slate-200/80" />
-                <div className="skeleton-shimmer mx-auto h-4 w-64 max-w-full rounded bg-slate-200/65" />
+              <div className="space-y-3 rounded-2xl border border-slate-200/85 bg-white p-5 shadow-xs" aria-busy="true" aria-label="Loading offer details">
+                <div className="skeleton-shimmer mx-auto h-11 w-11 rounded-xl bg-rose-100/70" />
+                <div className="skeleton-shimmer mx-auto h-4 w-44 rounded-lg bg-slate-200/80" />
+                <div className="skeleton-shimmer mx-auto h-3.5 w-60 max-w-full rounded bg-slate-200/65" />
               </div>
             ) : (
-              <div className="rounded-3xl border border-slate-200/85 bg-white px-6 py-10 text-center shadow-[0_8px_24px_-12px_rgba(15,23,42,0.08)]">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-[#D9232D]">
-                  <Tag className="h-7 w-7" />
+              <div className="rounded-2xl border border-slate-200/85 bg-white px-5 py-7 text-center shadow-[0_8px_24px_-12px_rgba(15,23,42,0.08)]">
+                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 text-[#D9232D]">
+                  <Tag className="h-5 w-5" />
                 </div>
-                <h2 className="mt-4 text-lg font-extrabold text-slate-900">Offer details unavailable</h2>
-                <p role="status" className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-600">
+                <h2 className="mt-3 text-base font-extrabold text-slate-900">Offer details unavailable</h2>
+                <p role="status" className="mx-auto mt-1.5 max-w-md text-xs leading-relaxed text-slate-600">
                   {couponDetailsError || 'This coupon is no longer active.'}
                 </p>
                 <button
                   type="button"
                   onClick={() => onOpenShop?.()}
-                  className="banner-cta-shine group/cta mt-6 inline-flex min-h-11 items-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] via-[#E51E35] to-[#B91822] px-6 py-3 text-sm font-extrabold text-white shadow-md hover:brightness-105 hover:shadow-lg active:scale-95"
+                  className="banner-cta-shine group/cta mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#D9232D] via-[#E51E35] to-[#B91822] px-5 py-2.5 text-xs font-extrabold text-white shadow-md hover:brightness-105 hover:shadow-lg active:scale-95"
                 >
                   <span>Shop Now</span>
                   <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
@@ -687,55 +687,55 @@ export function NotificationsView({
     return (
       <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#F8FAFC] pb-[max(2rem,env(safe-area-inset-bottom))] font-sans text-slate-900">
         <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-          <div className="mx-auto flex min-h-[58px] w-full max-w-2xl items-center gap-3 px-3 py-2 sm:px-5">
+          <div className="mx-auto flex min-h-[52px] w-full max-w-2xl items-center gap-2.5 px-3 py-1.5 sm:px-5">
             <button
               type="button"
               onClick={() => setSelectedNotification(null)}
               aria-label="Back to notifications"
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-slate-700 transition-colors hover:bg-slate-100 active:scale-95"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-700 transition-colors hover:bg-slate-100 active:scale-95"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <h1 className="truncate text-[19px] sm:text-[21px] font-extrabold tracking-tight text-slate-900">
+            <h1 className="truncate text-[18px] sm:text-[19px] font-extrabold tracking-tight text-slate-900">
               Notification Details
             </h1>
           </div>
         </header>
-        <div className="mx-auto max-w-2xl px-4 py-4 sm:px-5 sm:py-6">
-          <section className="rounded-3xl border border-slate-200/85 bg-white p-5 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.08)] sm:p-6">
+        <div className="mx-auto max-w-2xl px-3.5 py-3.5 sm:px-5 sm:py-4">
+          <section className="rounded-2xl border border-slate-200/85 bg-white p-4 shadow-[0_6px_20px_-12px_rgba(15,23,42,0.08)] sm:p-5">
             {selectedNotification.image_url && (
               <img
                 src={selectedNotification.image_url}
                 alt={selectedNotification.title}
                 referrerPolicy="no-referrer"
-                className="mb-4 max-h-[260px] w-full rounded-2xl border border-slate-100 object-cover"
+                className="mb-3.5 max-h-[210px] w-full rounded-xl border border-slate-100 object-cover"
               />
             )}
             <div className="flex items-center gap-3">
-              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${toneFor(selectedNotification)}`}>
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${toneFor(selectedNotification)}`}>
                 {iconFor(selectedNotification)}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-500">
+                <p className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold text-slate-500">
                   <span className="font-bold text-[#D9232D]">{detailCategory}</span>
                   <span aria-hidden="true" className="text-slate-300">·</span>
                   <time dateTime={selectedNotification.created_at} className="tabular-nums">
                     {timeAgo(selectedNotification.created_at)}
                   </time>
                 </p>
-                <h2 className="mt-1 text-[19px] sm:text-[22px] font-extrabold leading-tight tracking-tight text-slate-900">
+                <h2 className="mt-0.5 text-[17px] sm:text-[19px] font-extrabold leading-tight tracking-tight text-slate-900">
                   {selectedNotification.title}
                 </h2>
               </div>
             </div>
-            <p className="mt-4 border-t border-slate-100 pt-4 text-[14px] leading-relaxed text-slate-600">
+            <p className="mt-3 border-t border-slate-100 pt-3 text-[13px] leading-relaxed text-slate-600">
               {selectedNotification.body}
             </p>
             {selectedNotification.action_url && (
               <button
                 type="button"
                 onClick={() => onOpenActionUrl?.(getNotificationTargetPath(selectedNotification.action_url))}
-                className="banner-cta-shine group/cta mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] via-[#E51E35] to-[#B91822] px-5 text-sm font-extrabold text-white shadow-md hover:brightness-105 hover:shadow-lg active:scale-[0.98]"
+                className="banner-cta-shine group/cta mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D9232D] via-[#E51E35] to-[#B91822] px-5 text-xs font-extrabold text-white shadow-md hover:brightness-105 hover:shadow-lg active:scale-[0.98]"
               >
                 <span>View details</span>
                 <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
@@ -750,21 +750,21 @@ export function NotificationsView({
   return (
     <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#F8FAFC] pb-[max(2rem,env(safe-area-inset-bottom))] text-slate-900 font-sans">
       <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-        <div className="mx-auto flex min-h-[58px] w-full max-w-2xl items-center gap-2.5 px-3 py-2 sm:px-5">
+        <div className="mx-auto flex min-h-[52px] w-full max-w-2xl items-center gap-2 px-3 py-1.5 sm:px-5">
           <button
             type="button"
             onClick={onBack}
             aria-label="Go back"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-slate-700 transition-colors hover:bg-slate-100 active:scale-95"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-700 transition-colors hover:bg-slate-100 active:scale-95"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-[20px] font-black tracking-tight text-slate-900 leading-tight">
+            <h1 className="truncate text-[18px] sm:text-[19px] font-black tracking-tight text-slate-900 leading-tight">
               Notifications
             </h1>
             {!isGuest && !loading && (
-              <p className="text-[11.5px] font-semibold text-slate-500 tabular-nums">
+              <p className="text-[11px] font-semibold text-slate-500 tabular-nums">
                 {totalUnreadCount > 0 ? (
                   <span className="text-[#D9232D]">{totalUnreadCount} unread</span>
                 ) : (
@@ -778,7 +778,7 @@ export function NotificationsView({
               type="button"
               onClick={() => void handleMarkAllRead()}
               disabled={markingAllRead}
-              className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-bold text-[#D9232D] transition-colors hover:bg-rose-50 active:scale-95 disabled:opacity-50 whitespace-nowrap"
+              className="inline-flex min-h-10 shrink-0 items-center gap-1 rounded-xl px-2 py-1.5 text-[11.5px] font-bold text-[#D9232D] transition-colors hover:bg-rose-50 active:scale-95 disabled:opacity-50 whitespace-nowrap"
             >
               <CheckCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span>Mark all read</span>
@@ -788,9 +788,9 @@ export function NotificationsView({
             type="button"
             onClick={() => (onOpenSettingsRoute ? onOpenSettingsRoute() : setShowSettings(true))}
             aria-label="Notification settings"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200/85 bg-white text-slate-700 transition-colors hover:bg-slate-50 active:scale-95"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-slate-200/85 bg-white text-slate-700 transition-colors hover:bg-slate-50 active:scale-95"
           >
-            <Settings className="h-5 w-5" />
+            <Settings className="h-4.5 w-4.5" />
           </button>
         </div>
 
@@ -869,16 +869,16 @@ export function NotificationsView({
         {loading ? (
           <NotificationsSkeleton />
         ) : loadError ? (
-          <section role="alert" className="mt-4 rounded-3xl border border-rose-200 bg-white px-5 py-9 text-center shadow-xs">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-[#D9232D]">
+          <section role="alert" className="mt-3 rounded-2xl border border-rose-200 bg-white px-4 py-7 text-center shadow-xs">
+            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 text-[#D9232D]">
               <BellOff className="h-5 w-5" />
             </div>
-            <h2 className="mt-3 text-base font-extrabold text-slate-900">Notifications could not be loaded</h2>
-            <p className="mx-auto mt-1 max-w-sm text-sm text-slate-600">{loadError}</p>
+            <h2 className="mt-2.5 text-[15px] font-extrabold text-slate-900">Notifications could not be loaded</h2>
+            <p className="mx-auto mt-1 max-w-sm text-xs text-slate-600">{loadError}</p>
             <button
               type="button"
               onClick={() => setLoadAttempt((attempt) => attempt + 1)}
-              className="banner-cta-shine mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#D9232D] px-5 py-2.5 text-xs font-extrabold text-white shadow-sm hover:brightness-105 active:scale-95"
+              className="banner-cta-shine mt-3.5 inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-[#D9232D] px-4 py-2 text-xs font-extrabold text-white shadow-sm hover:brightness-105 active:scale-95"
             >
               <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
               <span>Try again</span>
@@ -886,28 +886,28 @@ export function NotificationsView({
           </section>
         ) : visible.length === 0 ? (
           items.length > 0 && enabledItems.length === 0 ? (
-            <section className="mt-4 rounded-3xl border border-amber-200/90 bg-white px-5 py-9 text-center shadow-xs">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+            <section className="mt-3 rounded-2xl border border-amber-200/90 bg-white px-4 py-7 text-center shadow-xs">
+              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
                 <BellOff className="h-5 w-5" />
               </div>
-              <h2 className="mt-3 text-[15px] font-extrabold text-slate-900">Notifications are turned off</h2>
-              <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-slate-600">
+              <h2 className="mt-2.5 text-[14.5px] font-extrabold text-slate-900">Notifications are turned off</h2>
+              <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-slate-600">
                 Every notification category is muted in your settings, so nothing appears here. Turn them back on to see order updates, offers and replies again.
               </p>
               <button
                 type="button"
                 onClick={() => (onOpenSettingsRoute ? onOpenSettingsRoute() : setShowSettings(true))}
-                className="banner-cta-shine mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-5 py-2.5 text-xs font-extrabold text-white shadow-sm hover:brightness-105 active:scale-95"
+                className="banner-cta-shine mt-3.5 inline-flex min-h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-4 py-2 text-xs font-extrabold text-white shadow-sm hover:brightness-105 active:scale-95"
               >
                 <span>Open notification settings</span>
               </button>
             </section>
           ) : enabledItems.length > 0 ? (
-            <section className="mt-4 rounded-3xl border border-slate-200/85 bg-white px-5 py-10 text-center shadow-xs">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+            <section className="mt-3 rounded-2xl border border-slate-200/85 bg-white px-4 py-7 text-center shadow-xs">
+              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
                 <Bell className="h-5 w-5" />
               </div>
-              <h2 className="mt-3 text-[15px] font-extrabold text-slate-900">
+              <h2 className="mt-2.5 text-[14.5px] font-extrabold text-slate-900">
                 {unreadOnly ? 'No unread notifications' : `No ${filter.toLowerCase()} notifications`}
               </h2>
               <p className="mx-auto mt-1 max-w-xs text-xs text-slate-500">
@@ -921,18 +921,18 @@ export function NotificationsView({
                   setFilter('All');
                   setUnreadOnly(false);
                 }}
-                className="mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 active:scale-95"
+                className="mt-3.5 inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 active:scale-95"
               >
                 <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Reset filters</span>
               </button>
             </section>
           ) : (
-            <section className="mt-4 rounded-3xl border border-slate-200/85 bg-white px-5 py-10 text-center shadow-xs">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+            <section className="mt-3 rounded-2xl border border-slate-200/85 bg-white px-4 py-7 text-center shadow-xs">
+              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
                 <Bell className="h-5 w-5" />
               </div>
-              <h2 className="mt-3 text-[15px] font-extrabold text-slate-900">
+              <h2 className="mt-2.5 text-[14.5px] font-extrabold text-slate-900">
                 {isGuest ? 'Sign in to see your notifications' : 'You’re all caught up'}
               </h2>
               <p className="mx-auto mt-1 max-w-xs text-xs text-slate-500">
@@ -943,28 +943,28 @@ export function NotificationsView({
             </section>
           )
         ) : (
-          <div className="mt-4 space-y-5">
+          <div className="mt-3 space-y-4">
             {groupedNotifications.map((group) => (
-              <section key={group.label} aria-label={`${group.label} notifications`} className="space-y-2.5">
+              <section key={group.label} aria-label={`${group.label} notifications`} className="space-y-2">
                 <div className="flex items-center justify-between px-1">
-                  <h2 className="text-xs font-extrabold uppercase tracking-[0.08em] text-slate-500">
+                  <h2 className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-500">
                     {group.label}
                   </h2>
-                  <span className="text-xs font-semibold tabular-nums text-slate-400">
+                  <span className="text-[11px] font-semibold tabular-nums text-slate-400">
                     {group.items.length}
                   </span>
                 </div>
 
-                <div className="space-y-2.5">
+                <div className="space-y-2">
                   {group.items.map((item) => {
                     const isDeleteRevealed = revealedDeleteId === item.id;
                     const categoryLabel = getCustomerNotificationCategory(item);
                     return (
                       <article
                         key={item.id}
-                        className={`relative isolate overflow-hidden rounded-2xl border transition-shadow ${
+                        className={`relative isolate overflow-hidden rounded-xl border transition-shadow ${
                           !item.read_at
-                            ? 'border-rose-200/90 shadow-[0_6px_18px_-8px_rgba(217,35,45,0.16)]'
+                            ? 'border-rose-200/90 shadow-[0_6px_16px_-8px_rgba(217,35,45,0.16)]'
                             : 'border-slate-200/85 shadow-[0_2px_10px_-4px_rgba(15,23,42,0.05)]'
                         }`}
                       >
@@ -982,9 +982,9 @@ export function NotificationsView({
                             aria-label={`Open notification: ${item.title}. Press and hold or swipe left to reveal delete.`}
                             aria-expanded={isDeleteRevealed}
                             style={{ touchAction: 'pan-y' }}
-                            className="flex min-w-0 flex-1 items-start gap-3 px-3.5 py-3.5 text-left sm:px-4"
+                            className="flex min-w-0 flex-1 items-start gap-2.5 px-3 py-2.5 text-left sm:px-3.5"
                           >
-                            <div className={`relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl ${toneFor(item)}`}>
+                            <div className={`relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl ${toneFor(item)}`}>
                               {item.image_url ? (
                                 <img
                                   src={item.image_url}
@@ -997,7 +997,7 @@ export function NotificationsView({
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500">
+                              <div className="flex items-center gap-1.5 text-[10.5px] font-semibold text-slate-500">
                                 <span className={!item.read_at ? 'font-bold text-[#D9232D]' : 'text-slate-600'}>
                                   {categoryLabel}
                                 </span>
@@ -1012,10 +1012,10 @@ export function NotificationsView({
                                   </>
                                 )}
                               </div>
-                              <h3 className="mt-1 line-clamp-2 text-[14px] font-extrabold leading-snug tracking-tight text-slate-900">
+                              <h3 className="mt-0.5 line-clamp-2 text-[13px] font-extrabold leading-snug tracking-tight text-slate-900">
                                 {item.title}
                               </h3>
-                              <p className="mt-0.5 line-clamp-2 text-[12.5px] leading-relaxed text-slate-600">
+                              <p className="mt-0.5 line-clamp-2 text-[12px] leading-relaxed text-slate-600">
                                 {item.body}
                               </p>
                             </div>
@@ -1069,7 +1069,7 @@ function NotificationsSkeleton() {
       data-testid="notifications-skeleton"
       aria-busy="true"
       aria-label="Loading notifications"
-      className="mt-4 space-y-3"
+      className="mt-3 space-y-2.5"
     >
       <div className="flex items-center justify-between px-1">
         <div className="skeleton-shimmer h-3 w-16 rounded bg-slate-200/80" />
@@ -1078,15 +1078,15 @@ function NotificationsSkeleton() {
       {[0, 1, 2, 3].map((row) => (
         <div
           key={row}
-          className="flex items-start gap-3 rounded-2xl border border-slate-200/85 bg-white p-4 shadow-2xs"
+          className="flex items-start gap-2.5 rounded-xl border border-slate-200/85 bg-white p-3 shadow-2xs"
         >
-          <div className="skeleton-shimmer h-11 w-11 shrink-0 rounded-2xl bg-slate-100" />
-          <div className="min-w-0 flex-1 space-y-2">
-            <div className="skeleton-shimmer h-3 w-28 rounded bg-slate-200/70" />
-            <div className="skeleton-shimmer h-4 w-3/4 rounded-md bg-slate-200/85" />
-            <div className="skeleton-shimmer h-3.5 w-full rounded bg-slate-100" />
+          <div className="skeleton-shimmer h-10 w-10 shrink-0 rounded-xl bg-slate-100" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <div className="skeleton-shimmer h-3 w-24 rounded bg-slate-200/70" />
+            <div className="skeleton-shimmer h-3.5 w-3/4 rounded-md bg-slate-200/85" />
+            <div className="skeleton-shimmer h-3 w-full rounded bg-slate-100" />
           </div>
-          <div className="skeleton-shimmer h-9 w-9 shrink-0 rounded-xl bg-slate-100" />
+          <div className="skeleton-shimmer h-8 w-8 shrink-0 rounded-lg bg-slate-100" />
         </div>
       ))}
     </div>
@@ -1110,28 +1110,28 @@ function NotificationSettingsView({
       key: 'offers' as const,
       title: 'Festival Discounts & Coupons',
       description: 'Alerts about seasonal flash sales & discounts',
-      icon: <Tag className="h-5 w-5 text-[#D9232D]" />,
+      icon: <Tag className="h-4.5 w-4.5 text-[#D9232D]" />,
       tone: 'bg-rose-50',
     },
     {
       key: 'orderUpdates' as const,
       title: 'Order Status & Tracking',
       description: 'Realtime updates when stitching starts or completes',
-      icon: <Truck className="h-5 w-5 text-[#D9232D]" />,
+      icon: <Truck className="h-4.5 w-4.5 text-[#D9232D]" />,
       tone: 'bg-rose-50',
     },
     {
       key: 'workshopAlerts' as const,
       title: 'Support & Workshop Replies',
       description: 'Responses to your support requests',
-      icon: <MessageCircle className="h-5 w-5 text-[#D9232D]" />,
+      icon: <MessageCircle className="h-4.5 w-4.5 text-[#D9232D]" />,
       tone: 'bg-rose-50',
     },
     {
       key: 'systemUpdates' as const,
       title: 'Product & Account Updates',
       description: 'New products, profile and service notices',
-      icon: <Package className="h-5 w-5 text-purple-600" />,
+      icon: <Package className="h-4.5 w-4.5 text-purple-600" />,
       tone: 'bg-purple-50',
     },
   ];
@@ -1146,50 +1146,50 @@ function NotificationSettingsView({
   return (
     <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#F8FAFC] pb-[max(2rem,env(safe-area-inset-bottom))] text-slate-900 font-sans">
       <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-        <div className="mx-auto flex min-h-[58px] w-full max-w-2xl items-center gap-3 px-3 py-2 sm:px-5">
+        <div className="mx-auto flex min-h-[52px] w-full max-w-2xl items-center gap-2.5 px-3 py-1.5 sm:px-5">
           <button
             type="button"
             onClick={onBack}
             aria-label="Go back"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-slate-700 transition-colors hover:bg-slate-100 active:scale-95"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-700 transition-colors hover:bg-slate-100 active:scale-95"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="min-w-0">
-            <h1 className="truncate text-[19px] sm:text-[21px] font-extrabold leading-tight tracking-tight text-slate-900">
+            <h1 className="truncate text-[18px] sm:text-[19px] font-extrabold leading-tight tracking-tight text-slate-900">
               Notification Settings
             </h1>
-            <p className="text-[12px] text-slate-500">Choose what appears in your in-app inbox</p>
+            <p className="text-[11.5px] text-slate-500">Choose what appears in your in-app inbox</p>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-2xl space-y-3.5 px-3 pt-4 sm:px-5">
-        <section className="flex items-center gap-4 rounded-3xl border border-rose-100 bg-gradient-to-r from-[#FFF1F2] via-white to-[#FFF7F7] p-4 shadow-2xs sm:p-5">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-rose-100/80 text-[#D9232D]">
-            <Bell className="h-6 w-6" />
+      <div className="mx-auto max-w-2xl space-y-3 px-3 pt-3 sm:px-5">
+        <section className="flex items-center gap-3 rounded-2xl border border-rose-100 bg-gradient-to-r from-[#FFF1F2] via-white to-[#FFF7F7] p-3.5 shadow-2xs sm:p-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-100/80 text-[#D9232D]">
+            <Bell className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-base font-extrabold leading-snug text-slate-900">Stay Updated</h2>
-            <p className="mt-0.5 text-[12.5px] leading-relaxed text-slate-600">
+            <h2 className="text-[14.5px] font-extrabold leading-snug text-slate-900">Stay Updated</h2>
+            <p className="mt-0.5 text-[12px] leading-relaxed text-slate-600">
               Get important updates about your orders, offers and more.
             </p>
           </div>
         </section>
 
-        <section className="space-y-2.5">
+        <section className="space-y-2">
           {rows.map((row) => (
             <article
               key={row.key}
-              className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200/85 bg-white p-3.5 shadow-2xs sm:p-4"
+              className="flex items-center justify-between gap-2.5 rounded-xl border border-slate-200/85 bg-white p-3 shadow-2xs"
             >
-              <div className="flex min-w-0 items-center gap-3.5">
-                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${row.tone}`}>
+              <div className="flex min-w-0 items-center gap-3">
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${row.tone}`}>
                   {row.icon}
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-[14.5px] font-bold text-slate-900">{row.title}</h3>
-                  <p className="mt-0.5 text-[12px] leading-snug text-slate-500">{row.description}</p>
+                  <h3 className="text-[13px] font-bold text-slate-900">{row.title}</h3>
+                  <p className="mt-0.5 text-[11.5px] leading-snug text-slate-500">{row.description}</p>
                 </div>
               </div>
               <button
@@ -1201,16 +1201,16 @@ function NotificationSettingsView({
                   setSaved(false);
                   setPreferences({ ...preferences, [row.key]: !preferences[row.key] });
                 }}
-                className="flex min-h-11 min-w-12 shrink-0 items-center justify-end"
+                className="flex min-h-10 min-w-11 shrink-0 items-center justify-end"
               >
                 <span
                   aria-hidden="true"
-                  className={`relative h-7 w-12 rounded-full transition-colors ${
+                  className={`relative h-6 w-11 rounded-full transition-colors ${
                     preferences[row.key] ? 'bg-[#D9232D]' : 'bg-slate-200'
                   }`}
                 >
                   <span
-                    className={`absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow-md transition-transform ${
+                    className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform ${
                       preferences[row.key] ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
@@ -1221,7 +1221,7 @@ function NotificationSettingsView({
         </section>
 
         {saved && (
-          <p role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs font-semibold leading-relaxed text-emerald-800">
+          <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold leading-relaxed text-emerald-800">
             Notification preferences saved on this device. They control which categories appear in your in-app inbox.
           </p>
         )}
@@ -1233,7 +1233,7 @@ function NotificationSettingsView({
         <button
           type="button"
           onClick={save}
-          className="banner-cta-shine min-h-12 w-full rounded-2xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-5 py-3 text-sm font-extrabold text-white shadow-sm transition-all hover:brightness-105 hover:shadow-md active:scale-[0.98]"
+          className="banner-cta-shine min-h-11 w-full rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-5 py-2.5 text-xs font-extrabold text-white shadow-sm transition-all hover:brightness-105 hover:shadow-md active:scale-[0.98]"
         >
           Save Preferences
         </button>

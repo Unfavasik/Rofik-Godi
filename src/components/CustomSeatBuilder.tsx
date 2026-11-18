@@ -92,39 +92,39 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-          className="relative w-full max-w-full sm:max-w-[480px] max-h-[92dvh] bg-white rounded-t-[28px] sm:rounded-[28px] shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden"
+          className="relative w-full max-w-full sm:max-w-[440px] max-h-[92dvh] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden"
         >
           {/* Top Bar */}
-          <div className="flex shrink-0 justify-between items-center gap-3 px-4 py-3.5 sm:px-5 sm:py-4 bg-gradient-to-r from-gray-900 to-black text-white">
+          <div className="flex shrink-0 justify-between items-center gap-2.5 px-4 py-2.5 sm:py-3 bg-gradient-to-r from-gray-900 to-black text-white">
             <div className="flex min-w-0 items-center gap-2">
-              <div className="w-8 h-8 shrink-0 rounded-lg bg-[#D9232D] flex items-center justify-center text-white">
-                <Scissors className="w-4 h-4" />
+              <div className="w-7.5 h-7.5 shrink-0 rounded-lg bg-[#D9232D] flex items-center justify-center text-white">
+                <Scissors className="w-3.5 h-3.5" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-[15px] font-black tracking-tight leading-tight flex items-center gap-1.5 truncate">
+                <h3 className="text-[14px] font-black tracking-tight leading-tight flex items-center gap-1.5 truncate">
                   <span className="truncate">Custom Seat & Godi Studio</span>
                   <Sparkles className="w-3.5 h-3.5 shrink-0 text-amber-400" />
                 </h3>
-                <p className="text-[10.5px] text-gray-400 truncate">Tailored by Master Craftsmen at Rofik Godi</p>
+                <p className="text-[10px] text-gray-400 truncate">Tailored by Master Craftsmen at Rofik Godi</p>
               </div>
             </div>
             <button
               onClick={onClose}
               aria-label="Close custom seat studio"
-              className="min-h-11 min-w-11 shrink-0 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+              className="h-9 w-9 shrink-0 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Form Options Body */}
-          <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-4 space-y-4 no-scrollbar pb-6 text-gray-800 sm:px-5">
+          <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-3 space-y-3 no-scrollbar pb-5 text-gray-800">
             {/* Step 1: Vehicle selection */}
             <div>
               <label className="text-[12px] font-black uppercase tracking-wider text-gray-900 block mb-2">
                 1. Select Vehicle
               </label>
-              <div className="grid grid-cols-3 gap-2 mb-2">
+              <div className="grid grid-cols-3 gap-1.5 mb-2">
                 {(['bike', 'scooter', 'toto'] as const).map((t) => (
                   <button
                     key={t}
@@ -137,7 +137,7 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
                         setModel(bList[0].models[0] || '');
                       }
                     }}
-                    className={`min-h-11 py-2 rounded-xl text-[12px] font-bold border transition-all ${
+                    className={`min-h-9.5 py-1.5 rounded-xl text-[11.5px] font-bold border transition-all ${
                       vehicleType === t
                         ? 'border-[#D9232D] bg-[#FEECEC] text-[#D9232D] shadow-xs'
                         : 'border-gray-200 text-gray-600'
@@ -156,7 +156,7 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
                     const bObj = availableBrands.find((b) => b.brand === e.target.value);
                     if (bObj && bObj.models.length > 0) setModel(bObj.models[0]);
                   }}
-                  className="min-h-11 min-w-0 w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-base sm:text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#D9232D]"
+                  className="min-h-10 min-w-0 w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-base sm:text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#D9232D]"
                 >
                   {availableBrands.map((b) => (
                     <option key={b.brand} value={b.brand}>
@@ -168,7 +168,7 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
                 <select
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
-                  className="min-h-11 min-w-0 w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-base sm:text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#D9232D]"
+                  className="min-h-10 min-w-0 w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-base sm:text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#D9232D]"
                 >
                   {availableModels.map((m) => (
                     <option key={m} value={m}>
@@ -248,7 +248,7 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
               <label className="text-[12px] font-black uppercase tracking-wider text-gray-900 block mb-2">
                 4. Piping Border Color Accent
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {[
                   { name: 'Crimson Red', hex: '#D9232D' },
                   { name: 'Stealth Black', hex: '#111827' },
@@ -263,11 +263,11 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
                       key={col.name}
                       type="button"
                       onClick={() => setPipingColor(col)}
-                      className={`min-h-11 flex items-center gap-1.5 px-3 py-2 rounded-full border text-[11px] font-bold transition-all ${
+                      className={`min-h-9 flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold transition-all ${
                         isSel ? 'border-[#D9232D] bg-[#FEECEC] text-[#D9232D]' : 'border-gray-200 text-gray-700'
                       }`}
                     >
-                      <span className="w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: col.hex }} />
+                      <span className="w-2.5 h-2.5 rounded-full border border-gray-300" style={{ backgroundColor: col.hex }} />
                       <span>{col.name}</span>
                     </button>
                   );
@@ -276,14 +276,14 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
             </div>
 
             {/* Step 5: Custom Name Embroidery */}
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-3.5">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3">
               <div className="flex items-center gap-1.5 mb-1">
-                <Sparkles className="w-4 h-4 shrink-0 text-amber-600" />
-                <span className="text-[12px] font-black text-amber-950">
+                <Sparkles className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                <span className="text-[11.5px] font-black text-amber-950">
                   5. Personalized Name / Number Embroidery (+₹150)
                 </span>
               </div>
-              <p className="text-[11px] text-amber-800 mb-2">
+              <p className="text-[10.5px] text-amber-800 mb-1.5">
                 Machine-stitched on the rear side of your custom seat.
               </p>
               <input
@@ -292,16 +292,16 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
                 value={embroideryText}
                 onChange={(e) => setEmbroideryText(e.target.value.toUpperCase())}
                 placeholder="Type your name e.g. RIDER 07"
-                className="min-h-11 w-full bg-white text-gray-900 text-base sm:text-[13px] font-black tracking-widest uppercase rounded-xl px-3 py-2 border border-amber-300 focus:outline-none focus:border-[#D9232D]"
+                className="min-h-10 w-full bg-white text-gray-900 text-base sm:text-[13px] font-black tracking-widest uppercase rounded-xl px-3 py-1.5 border border-amber-300 focus:outline-none focus:border-[#D9232D]"
               />
             </div>
           </div>
 
           {/* Bottom Total & Order Button */}
-          <div className="shrink-0 z-20 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-white border-t border-gray-100 flex items-center justify-between gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+          <div className="shrink-0 z-20 p-3.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] bg-white border-t border-gray-100 flex items-center justify-between gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
             <div className="shrink-0">
-              <span className="text-[10px] text-gray-400 uppercase font-bold block">Estimated Total</span>
-              <div className="text-xl sm:text-2xl font-black text-[#D9232D] whitespace-nowrap">₹{basePrice}</div>
+              <span className="text-[9.5px] text-gray-400 uppercase font-bold block">Estimated Total</span>
+              <div className="text-lg sm:text-xl font-black text-[#D9232D] whitespace-nowrap">₹{basePrice}</div>
             </div>
 
             <motion.button
@@ -309,7 +309,7 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
               whileTap={{ scale: 0.96 }}
               type="button"
               onClick={handleCreateOrder}
-              className="banner-cta-shine group/cta min-h-12 min-w-0 flex-1 py-3 px-3.5 bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] hover:brightness-105 text-white rounded-xl text-[13px] font-black shadow-[0_8px_18px_-4px_rgba(217,35,45,0.4)] hover:shadow-[0_10px_24px_-4px_rgba(217,35,45,0.5)] flex items-center justify-center gap-2 whitespace-nowrap transition-all"
+              className="banner-cta-shine group/cta min-h-11 min-w-0 flex-1 py-2.5 px-3.5 bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] hover:brightness-105 text-white rounded-xl text-[12.5px] font-black shadow-[0_8px_18px_-4px_rgba(217,35,45,0.4)] hover:shadow-[0_10px_24px_-4px_rgba(217,35,45,0.5)] flex items-center justify-center gap-2 whitespace-nowrap transition-all"
             >
               <ShoppingBag className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
               <span className="truncate">Add Custom Godi to Cart</span>

@@ -53,27 +53,27 @@ export function PickupQrCard({ order, onRefresh }: PickupQrCardProps) {
   if (!canShowPickupQr(order.status)) return null;
 
   return (
-    <section className="rounded-[22px] border border-emerald-200 bg-white p-4 shadow-[0_4px_18px_rgba(15,23,42,0.035)] sm:p-5" aria-label="Pickup QR code">
-      <div className="mb-3 flex items-center gap-2.5">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><QrCode className="h-4 w-4" /></span>
+    <section className="rounded-xl border border-emerald-200 bg-white p-2.5 shadow-[0_4px_14px_rgba(15,23,42,0.03)] sm:p-3" aria-label="Pickup QR code">
+      <div className="mb-2 flex items-center gap-2">
+        <span className="grid h-7 w-7 place-items-center rounded-lg bg-emerald-50 text-emerald-700"><QrCode className="h-3.5 w-3.5" /></span>
         <div>
-          <p className="text-xs font-black text-slate-900">Pickup QR code</p>
-          <p className="mt-0.5 text-[10px] text-slate-500">Show this code to the admin when your order is ready.</p>
+          <p className="text-[11.5px] font-black text-slate-900">Pickup QR code</p>
+          <p className="mt-0.5 text-[9.5px] text-slate-500">Show this code to the admin when your order is ready.</p>
         </div>
       </div>
       {loading ? (
-        <div className="grid min-h-36 place-items-center rounded-xl bg-slate-50 text-[11px] font-semibold text-slate-500">Loading your secure QR…</div>
+        <div className="grid min-h-24 place-items-center rounded-lg bg-slate-50 text-[10.5px] font-semibold text-slate-500">Loading your secure QR…</div>
       ) : token ? (
-        <div className="flex flex-col items-center gap-3 rounded-xl bg-emerald-50/60 p-4">
-          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-            <QRCodeSVG value={token} size={160} level="M" title={`Pickup QR for order ${order.order_number}`} />
+        <div className="flex flex-col items-center gap-2 rounded-lg bg-emerald-50/60 p-2.5">
+          <div className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm">
+            <QRCodeSVG value={token} size={104} level="M" title={`Pickup QR for order ${order.order_number}`} />
           </div>
-          <p className="text-center text-[10px] leading-relaxed text-slate-500">This one-time QR disappears after pickup or order completion.</p>
+          <p className="text-center text-[9.5px] leading-snug text-slate-500">This one-time QR disappears after pickup or order completion.</p>
         </div>
       ) : (
-        <div className="rounded-xl bg-amber-50 p-3 text-center">
-          <p className="text-[10px] leading-relaxed text-amber-800">{error || 'Pickup QR is temporarily unavailable.'}</p>
-          <button type="button" onClick={() => setRetry((value) => value + 1)} className="mt-2 rounded-lg bg-white px-3 py-1.5 text-[10px] font-extrabold text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100">Try again</button>
+        <div className="rounded-lg bg-amber-50 p-2 text-center">
+          <p className="text-[10px] leading-snug text-amber-800">{error || 'Pickup QR is temporarily unavailable.'}</p>
+          <button type="button" onClick={() => setRetry((value) => value + 1)} className="mt-1.5 rounded-lg bg-white px-2.5 py-1 text-[9.5px] font-extrabold text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100">Try again</button>
         </div>
       )}
     </section>

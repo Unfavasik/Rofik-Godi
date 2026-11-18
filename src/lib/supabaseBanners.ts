@@ -85,9 +85,9 @@ export function getBannerTitleSizeClass(
     if (len <= 52) return 'text-[clamp(14.5px,3vw,18px)] leading-[1.15]';
     return 'text-[clamp(13px,2.6vw,16px)] leading-[1.2]';
   }
-  if (len <= 26) return 'text-[clamp(18px,4.3vw,26px)] leading-[1.1]';
-  if (len <= 52) return 'text-[clamp(16px,3.8vw,22.5px)] leading-[1.14]';
-  return 'text-[clamp(14.5px,3.3vw,19px)] leading-[1.18]';
+  if (len <= 26) return 'text-[clamp(15px,3.2vw,20px)] leading-[1.15]';
+  if (len <= 52) return 'text-[clamp(14px,2.8vw,18px)] leading-[1.18]';
+  return 'text-[clamp(13px,2.4vw,16px)] leading-[1.2]';
 }
 
 export function parseBannerScheduleDate(value?: string | null): Date | null {

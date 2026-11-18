@@ -106,22 +106,22 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-              className="relative w-full max-w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden text-gray-800 max-h-[85dvh]"
+              className="relative w-full max-w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden text-gray-800 max-h-[85dvh]"
             >
               {/* Sheet Grab Handle on Mobile */}
-              <div className="sm:hidden w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-3 mb-1 shrink-0" />
+              <div className="sm:hidden w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2.5 mb-0.5 shrink-0" />
 
               {/* Header */}
-              <div className="flex shrink-0 justify-between items-center gap-3 px-5 py-3.5 border-b border-gray-100">
+              <div className="flex shrink-0 justify-between items-center gap-2.5 px-4 py-2.5 border-b border-gray-100">
                 <div className="flex min-w-0 items-center gap-2">
-                  <div className="w-8 h-8 shrink-0 rounded-full bg-red-50 flex items-center justify-center text-[#D9232D]">
-                    <ArrowUpDown className="w-4 h-4" />
+                  <div className="w-7.5 h-7.5 shrink-0 rounded-full bg-red-50 flex items-center justify-center text-[#D9232D]">
+                    <ArrowUpDown className="w-3.5 h-3.5" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-[15px] font-black text-gray-900 leading-tight truncate">
+                    <h3 className="text-[14px] font-black text-gray-900 leading-tight truncate">
                       Sort Products
                     </h3>
-                    <p className="text-[11px] text-gray-400 font-medium truncate">
+                    <p className="text-[10.5px] text-gray-400 font-medium truncate">
                       Select how you want to order results
                     </p>
                   </div>
@@ -129,14 +129,14 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                 <button
                   onClick={onCloseSort}
                   aria-label="Close sort options"
-                  className="min-h-11 min-w-11 shrink-0 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors cursor-pointer"
+                  className="h-9 w-9 shrink-0 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Options List */}
-              <div className="min-h-0 min-w-0 p-3 pb-[max(1rem,env(safe-area-inset-bottom))] overflow-x-hidden overflow-y-auto space-y-1.5">
+              <div className="min-h-0 min-w-0 p-2.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] overflow-x-hidden overflow-y-auto space-y-1">
                 {(Object.keys(SORT_LABELS) as SortOption[]).map((opt) => {
                   const isSelected = currentSort === opt;
                   const item = SORT_LABELS[opt];
@@ -149,14 +149,14 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                         onSelectSort(opt);
                         onCloseSort();
                       }}
-                      className={`w-full text-left p-3.5 rounded-xl transition-all flex items-center justify-between border cursor-pointer ${
+                      className={`w-full text-left p-2.5 rounded-xl transition-all flex items-center justify-between border cursor-pointer ${
                         isSelected
                           ? 'bg-red-50/70 border-red-200 text-[#D9232D] shadow-2xs'
                           : 'bg-white hover:bg-gray-50 border-gray-100 text-gray-800'
                       }`}
                     >
                       <div className="pr-3">
-                        <div className="text-[13px] font-bold leading-snug flex items-center gap-1.5">
+                        <div className="text-[12.5px] font-bold leading-snug flex items-center gap-1.5">
                           <span>{item.label}</span>
                           {opt === 'popular' && (
                             <span className="text-[9px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full uppercase">
@@ -203,22 +203,22 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-              className="relative w-full max-w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden text-gray-800 max-h-[90dvh]"
+              className="relative w-full max-w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden text-gray-800 max-h-[90dvh]"
             >
               {/* Mobile grab bar */}
-              <div className="sm:hidden w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-3 mb-1 shrink-0" />
+              <div className="sm:hidden w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2.5 mb-0.5 shrink-0" />
 
               {/* Modal Header */}
-              <div className="flex shrink-0 justify-between items-center gap-2 px-4 sm:px-5 py-3.5 border-b border-gray-100 bg-white sticky top-0 z-10">
+              <div className="flex shrink-0 justify-between items-center gap-2 px-4 py-2.5 border-b border-gray-100 bg-white sticky top-0 z-10">
                 <div className="flex min-w-0 items-center gap-2">
-                  <div className="w-8 h-8 shrink-0 rounded-full bg-red-50 flex items-center justify-center text-[#D9232D]">
-                    <SlidersHorizontal className="w-4 h-4" />
+                  <div className="w-7.5 h-7.5 shrink-0 rounded-full bg-red-50 flex items-center justify-center text-[#D9232D]">
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-[15px] font-black text-gray-900 leading-tight truncate">
+                    <h3 className="text-[14px] font-black text-gray-900 leading-tight truncate">
                       Filter Products
                     </h3>
-                    <p className="text-[11px] text-gray-400 font-medium truncate">
+                    <p className="text-[10.5px] text-gray-400 font-medium truncate">
                       Refine by vehicle, price, features & rating
                     </p>
                   </div>
@@ -228,7 +228,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                   <button
                     type="button"
                     onClick={handleReset}
-                    className="min-h-11 text-[11.5px] font-bold text-gray-400 hover:text-[#D9232D] transition-colors flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-red-50/50 cursor-pointer"
+                    className="min-h-8.5 text-[11px] font-bold text-gray-400 hover:text-[#D9232D] transition-colors flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-red-50/50 cursor-pointer"
                   >
                     <RotateCcw className="w-3 h-3" />
                     Reset
@@ -236,7 +236,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                   <button
                     onClick={onCloseFilter}
                     aria-label="Close filter options"
-                    className="min-h-11 min-w-11 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors cursor-pointer"
+                    className="h-9 w-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -244,10 +244,10 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
               </div>
 
               {/* Filter Body with Scrollable Categories */}
-              <div className="min-h-0 min-w-0 flex-1 p-4 sm:p-5 overflow-x-hidden overflow-y-auto space-y-5 text-[13px]">
+              <div className="min-h-0 min-w-0 flex-1 p-3.5 sm:p-4 overflow-x-hidden overflow-y-auto space-y-3.5 text-[12.5px]">
                 {/* 1. Category Selection */}
                 <div>
-                  <label className="block text-[12px] font-black text-gray-800 uppercase tracking-wider mb-2.5">
+                  <label className="block text-[11px] font-black text-gray-800 uppercase tracking-wider mb-2">
                     Vehicle Category
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -508,7 +508,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                               minRating: r.val,
                             }))
                           }
-                          className={`min-h-11 py-2 px-2.5 text-center text-[12px] font-bold rounded-xl border transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                          className={`min-h-10 py-1.5 px-2.5 text-center text-[11.5px] font-bold rounded-xl border transition-all flex items-center justify-center gap-1 cursor-pointer ${
                             isSel
                               ? 'bg-amber-50 border-amber-300 text-amber-900 shadow-2xs'
                               : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
@@ -528,10 +528,10 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
 
                 {/* 5. Vehicle Brand / Compatibility */}
                 <div>
-                  <label className="block text-[12px] font-black text-gray-800 uppercase tracking-wider mb-2.5">
+                  <label className="block text-[11px] font-black text-gray-800 uppercase tracking-wider mb-2">
                     Vehicle Brand / Model Compatibility
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                     {VEHICLE_BRANDS_LIST.map((brand) => {
                       const isSel = draftFilters.vehicleBrand === brand.id;
                       return (
@@ -544,7 +544,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                               vehicleBrand: brand.id,
                             }))
                           }
-                          className={`min-h-11 min-w-0 p-2.5 text-left text-[12px] font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                          className={`min-h-10 min-w-0 p-2 text-left text-[11.5px] font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
                             isSel
                               ? 'bg-red-50 border-red-300 text-[#D9232D]'
                               : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
@@ -560,20 +560,20 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
               </div>
 
               {/* Modal Footer CTA */}
-              <div className="shrink-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-gray-100 bg-slate-50/80 flex items-center gap-2.5 sm:gap-3">
+              <div className="shrink-0 p-3.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] border-t border-gray-100 bg-slate-50/80 flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="min-h-11 flex-1 py-3 px-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 text-gray-700 font-bold text-[13px] transition-all cursor-pointer text-center whitespace-nowrap"
+                  className="min-h-10 flex-1 py-2 px-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 text-gray-700 font-bold text-xs transition-all cursor-pointer text-center whitespace-nowrap"
                 >
                   Reset All
                 </button>
                 <button
                   type="button"
                   onClick={handleApply}
-                  className="min-h-11 flex-[2] py-3 px-4 rounded-xl bg-[#D9232D] hover:bg-red-700 text-white font-black text-[13px] shadow-sm transition-all active:scale-98 cursor-pointer text-center flex items-center justify-center gap-1.5 whitespace-nowrap tabular-nums"
+                  className="min-h-10 flex-[2] py-2 px-4 rounded-xl bg-[#D9232D] hover:bg-red-700 text-white font-black text-xs shadow-sm transition-all active:scale-98 cursor-pointer text-center flex items-center justify-center gap-1.5 whitespace-nowrap tabular-nums"
                 >
-                  <Sparkles className="w-4 h-4 shrink-0" />
+                  <Sparkles className="w-3.5 h-3.5 shrink-0" />
                   <span>
                     Show {draftMatchingCount} {draftMatchingCount === 1 ? 'Result' : 'Results'}
                   </span>

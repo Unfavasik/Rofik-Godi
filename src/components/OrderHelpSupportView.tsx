@@ -385,7 +385,7 @@ export function OrderHelpSupportView({
       {/* Classic Glass Sticky Top Bar */}
       <header
         data-testid="order-help-topbar"
-        className="classic-glass sticky top-0 z-30 border-b border-white/85 bg-gradient-to-r from-white/95 via-white/90 to-rose-50/60 px-3 py-2.5 shadow-[0_10px_30px_-16px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl sm:px-6 sm:py-3"
+        className="classic-glass sticky top-0 z-30 border-b border-white/85 bg-gradient-to-r from-white/95 via-white/90 to-rose-50/60 px-3 py-2 shadow-[0_10px_28px_-16px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl sm:px-5 sm:py-2.5"
       >
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-2">
           {/* Left: Frosted Back Button + Order Help Identity Capsule */}
@@ -394,23 +394,23 @@ export function OrderHelpSupportView({
               type="button"
               onClick={onBack}
               aria-label="Go back"
-              className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/95 bg-white/90 text-slate-800 shadow-[0_6px_16px_-6px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.98)] backdrop-blur-md transition-all duration-200 hover:-translate-x-0.5 hover:border-rose-200/90 hover:bg-rose-50/90 hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95 sm:h-11 sm:w-11"
+              className="group flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/95 bg-white/90 text-slate-800 shadow-[0_4px_12px_-6px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.98)] backdrop-blur-md transition-all duration-200 hover:-translate-x-0.5 hover:border-rose-200/90 hover:bg-rose-50/90 hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95 sm:h-10 sm:w-10"
             >
-              <ArrowLeft className="h-5 w-5 stroke-[2.25] transition-transform duration-200 group-hover:-translate-x-0.5" />
+              <ArrowLeft className="h-4.5 w-4.5 stroke-[2.25] transition-transform duration-200 group-hover:-translate-x-0.5" />
             </button>
 
-            <div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-2xl border border-white/90 bg-white/80 py-1.5 pl-2.5 pr-3 shadow-[0_4px_16px_-8px_rgba(15,23,42,0.1),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md sm:flex-initial sm:pr-4">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-rose-50 text-[#D9232D] ring-1 ring-rose-200/70">
-                <Headset className="h-4 w-4" />
+            <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/90 bg-white/80 py-1 pl-2 pr-2.5 shadow-[0_4px_14px_-8px_rgba(15,23,42,0.1),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md sm:flex-initial sm:pr-3.5">
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-rose-50 text-[#D9232D] ring-1 ring-rose-200/70">
+                <Headset className="h-3.5 w-3.5" />
               </span>
               <div className="min-w-0 flex-1">
-                <h1 className="truncate text-xs font-black leading-tight text-slate-950 sm:text-sm">
+                <h1 className="truncate text-xs font-black leading-tight text-slate-950 sm:text-[13px]">
                   Help &amp; Support
                 </h1>
                 {isSkeleton ? (
-                  <div className="skeleton-shimmer mt-1 h-3 w-24 rounded-md bg-rose-100/90" />
+                  <div className="skeleton-shimmer mt-0.5 h-3 w-20 rounded-md bg-rose-100/90" />
                 ) : (
-                  <p className="truncate font-mono text-[10.5px] font-extrabold leading-tight text-[#D9232D] tabular-nums">
+                  <p className="truncate font-mono text-[10px] font-extrabold leading-tight text-[#D9232D] tabular-nums">
                     #{safeOrder.order_number}
                   </p>
                 )}
@@ -419,13 +419,13 @@ export function OrderHelpSupportView({
           </div>
 
           {/* Right: Classic Glass Action Dock */}
-          <div className="flex shrink-0 items-center gap-1.5 rounded-2xl border border-white/90 bg-white/75 p-1 shadow-[0_6px_20px_-8px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md">
+          <div className="flex shrink-0 items-center gap-1.5 rounded-xl border border-white/90 bg-white/75 p-1 shadow-[0_6px_18px_-8px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md">
             {onOpenSupportRequests && (
               <button
                 type="button"
                 onClick={onOpenSupportRequests}
                 aria-label="My support tickets"
-                className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-white/90 bg-white/90 px-2.5 text-[11px] font-extrabold text-slate-700 shadow-2xs transition hover:border-rose-200 hover:text-[#D9232D]"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/90 bg-white/90 px-2 text-[11px] font-extrabold text-slate-700 shadow-2xs transition hover:border-rose-200 hover:text-[#D9232D]"
               >
                 <Ticket className="h-3.5 w-3.5 text-[#D9232D]" />
                 <span className="hidden sm:inline">My Tickets</span>
@@ -439,7 +439,7 @@ export function OrderHelpSupportView({
             <a
               href={phoneHref}
               aria-label="Call workshop support desk"
-              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-emerald-200/85 bg-emerald-50/90 px-2.5 text-[11px] font-extrabold text-emerald-700 transition hover:bg-emerald-100/80"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-emerald-200/85 bg-emerald-50/90 px-2 text-[11px] font-extrabold text-emerald-700 transition hover:bg-emerald-100/80"
             >
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
               <span className="hidden sm:inline">Workshop Desk</span>
@@ -454,170 +454,170 @@ export function OrderHelpSupportView({
           data-testid="order-help-skeleton"
           role="status"
           aria-label="Loading order help details"
-          className="mx-auto w-full max-w-5xl space-y-5 px-3.5 pb-[max(3.25rem,env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-5"
+          className="mx-auto w-full max-w-5xl space-y-3.5 px-3.5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-3.5 sm:px-5 sm:pt-4"
         >
           {/* Skeleton Hero Order Snapshot Card */}
-          <section className="classic-glass overflow-hidden rounded-3xl border border-white/90 bg-gradient-to-br from-white/95 via-white/88 to-rose-50/45 p-4 shadow-[0_18px_42px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.96)] sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/70 pb-3">
+          <section className="classic-glass overflow-hidden rounded-2xl border border-white/90 bg-gradient-to-br from-white/95 via-white/88 to-rose-50/45 p-3.5 shadow-[0_14px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.96)] sm:p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/70 pb-2.5">
               <div className="flex items-center gap-2">
                 <div className="skeleton-shimmer h-3.5 w-14 rounded-md bg-slate-200/85" />
-                <div className="skeleton-shimmer h-5 w-32 rounded-lg bg-slate-200/90" />
-                <div className="skeleton-shimmer h-7 w-14 rounded-lg bg-slate-200/75" />
+                <div className="skeleton-shimmer h-5 w-28 rounded-lg bg-slate-200/90" />
+                <div className="skeleton-shimmer h-6 w-12 rounded-lg bg-slate-200/75" />
               </div>
               <div className="flex items-center gap-2">
-                <div className="skeleton-shimmer h-7 w-24 rounded-xl bg-rose-100/85" />
-                <div className="skeleton-shimmer h-7 w-22 rounded-xl bg-slate-200/75" />
+                <div className="skeleton-shimmer h-6 w-22 rounded-xl bg-rose-100/85" />
+                <div className="skeleton-shimmer h-6 w-20 rounded-xl bg-slate-200/75" />
               </div>
             </div>
 
-            <div className="mt-3.5 flex items-center gap-3.5">
-              <div className="skeleton-shimmer h-16 w-16 shrink-0 rounded-2xl bg-slate-200/85 sm:h-18 sm:w-22" />
-              <div className="min-w-0 flex-1 space-y-2">
+            <div className="mt-3 flex items-center gap-3">
+              <div className="skeleton-shimmer h-13 w-13 shrink-0 rounded-xl bg-slate-200/85 sm:h-15 sm:w-18" />
+              <div className="min-w-0 flex-1 space-y-1.5">
                 <div className="skeleton-shimmer h-4 w-4/5 rounded-lg bg-slate-200/90" />
                 <div className="skeleton-shimmer h-3.5 w-3/5 rounded-md bg-slate-200/75" />
               </div>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-white/90 bg-white/80 px-3.5 py-3 shadow-2xs">
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-2">
+            <div className="mt-3 rounded-xl border border-white/90 bg-white/80 px-3 py-2.5 shadow-2xs">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {[0, 1, 2, 3].map((stepIdx) => (
-                  <div key={stepIdx} className="space-y-1.5">
+                  <div key={stepIdx} className="space-y-1">
                     <div className="flex items-center gap-1.5">
-                      <div className="skeleton-shimmer h-5 w-5 shrink-0 rounded-full bg-slate-200/90" />
+                      <div className="skeleton-shimmer h-4.5 w-4.5 shrink-0 rounded-full bg-slate-200/90" />
                       <div className="skeleton-shimmer h-1.5 flex-1 rounded-full bg-slate-200/75" />
                     </div>
-                    <div className="skeleton-shimmer h-3 w-20 rounded-md bg-slate-200/80" />
+                    <div className="skeleton-shimmer h-3 w-18 rounded-md bg-slate-200/80" />
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="mt-3.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
               {[0, 1, 2].map((tileIdx) => (
                 <div
                   key={tileIdx}
-                  className="flex items-center gap-2.5 rounded-2xl border border-white/90 bg-white/80 px-3.5 py-2.5 shadow-2xs"
+                  className="flex items-center gap-2 rounded-xl border border-white/90 bg-white/80 px-3 py-2 shadow-2xs"
                 >
-                  <div className="skeleton-shimmer h-8 w-8 shrink-0 rounded-xl bg-slate-200/85" />
-                  <div className="flex-1 space-y-1.5">
-                    <div className="skeleton-shimmer h-2.5 w-16 rounded-md bg-slate-200/75" />
-                    <div className="skeleton-shimmer h-3.5 w-28 rounded-md bg-slate-200/90" />
+                  <div className="skeleton-shimmer h-7 w-7 shrink-0 rounded-lg bg-slate-200/85" />
+                  <div className="flex-1 space-y-1">
+                    <div className="skeleton-shimmer h-2.5 w-14 rounded-md bg-slate-200/75" />
+                    <div className="skeleton-shimmer h-3 w-24 rounded-md bg-slate-200/90" />
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="mt-3 flex items-start gap-2.5 rounded-2xl border border-rose-100/80 bg-white/85 px-3.5 py-3">
+            <div className="mt-2.5 flex items-start gap-2 rounded-xl border border-rose-100/80 bg-white/85 px-3 py-2.5">
               <div className="skeleton-shimmer mt-0.5 h-4 w-4 shrink-0 rounded-full bg-rose-200/80" />
               <div className="flex-1 space-y-1.5">
-                <div className="skeleton-shimmer h-3.5 w-48 rounded-md bg-slate-200/90" />
+                <div className="skeleton-shimmer h-3.5 w-44 rounded-md bg-slate-200/90" />
                 <div className="skeleton-shimmer h-3 w-full rounded-md bg-slate-200/75" />
               </div>
             </div>
           </section>
 
           {/* Skeleton 12-Column Grid */}
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-start">
-            <div className="min-w-0 space-y-5 lg:col-span-7">
-              <section className="space-y-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start">
+            <div className="min-w-0 space-y-4 lg:col-span-7">
+              <section className="space-y-2.5">
                 <div className="flex items-center justify-between gap-3 px-1">
-                  <div className="space-y-1.5">
-                    <div className="skeleton-shimmer h-3 w-28 rounded-md bg-rose-200/75" />
-                    <div className="skeleton-shimmer h-5 w-44 rounded-lg bg-slate-200/90" />
+                  <div className="space-y-1">
+                    <div className="skeleton-shimmer h-3 w-24 rounded-md bg-rose-200/75" />
+                    <div className="skeleton-shimmer h-4.5 w-40 rounded-lg bg-slate-200/90" />
                   </div>
-                  <div className="skeleton-shimmer h-6 w-16 rounded-xl bg-slate-200/75" />
+                  <div className="skeleton-shimmer h-5.5 w-14 rounded-xl bg-slate-200/75" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {[0, 1, 2, 3, 4, 5].map((topicIdx) => (
                     <div
                       key={topicIdx}
-                      className="classic-glass flex flex-col justify-between rounded-2xl border border-white/90 bg-white/90 p-3.5 shadow-2xs"
+                      className="classic-glass flex flex-col justify-between rounded-xl border border-white/90 bg-white/90 p-2.5 shadow-2xs"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <div className="skeleton-shimmer h-9 w-9 rounded-xl bg-slate-200/85" />
-                        <div className="skeleton-shimmer h-4 w-12 rounded-full bg-slate-200/75" />
+                        <div className="skeleton-shimmer h-8 w-8 rounded-lg bg-slate-200/85" />
+                        <div className="skeleton-shimmer h-4 w-10 rounded-full bg-slate-200/75" />
                       </div>
-                      <div className="mt-3 space-y-1.5">
-                        <div className="skeleton-shimmer h-3.5 w-24 rounded-md bg-slate-200/90" />
-                        <div className="skeleton-shimmer h-3 w-full rounded-md bg-slate-200/75" />
+                      <div className="mt-2.5 space-y-1">
+                        <div className="skeleton-shimmer h-3.5 w-22 rounded-md bg-slate-200/90" />
+                        <div className="skeleton-shimmer h-2.5 w-full rounded-md bg-slate-200/75" />
                       </div>
                     </div>
                   ))}
                 </div>
               </section>
 
-              <section className="classic-glass overflow-hidden rounded-3xl border border-white/90 bg-gradient-to-br from-white/95 via-white/90 to-rose-50/45 p-4 shadow-[0_18px_42px_-20px_rgba(15,23,42,0.14)] sm:p-5">
-                <div className="space-y-2 border-b border-slate-200/75 pb-4">
-                  <div className="skeleton-shimmer h-5 w-48 rounded-full bg-rose-100/90" />
-                  <div className="skeleton-shimmer h-5 w-3/4 rounded-lg bg-slate-200/90" />
-                  <div className="skeleton-shimmer h-3.5 w-full rounded-md bg-slate-200/75" />
+              <section className="classic-glass overflow-hidden rounded-2xl border border-white/90 bg-gradient-to-br from-white/95 via-white/90 to-rose-50/45 p-3.5 shadow-[0_14px_34px_-20px_rgba(15,23,42,0.14)] sm:p-4">
+                <div className="space-y-1.5 border-b border-slate-200/75 pb-3">
+                  <div className="skeleton-shimmer h-4.5 w-44 rounded-full bg-rose-100/90" />
+                  <div className="skeleton-shimmer h-4.5 w-3/4 rounded-lg bg-slate-200/90" />
+                  <div className="skeleton-shimmer h-3 w-full rounded-md bg-slate-200/75" />
                 </div>
-                <div className="mt-3.5 space-y-2 rounded-2xl border border-slate-200/75 bg-white/90 p-3.5">
-                  <div className="skeleton-shimmer h-3.5 w-11/12 rounded-md bg-slate-200/80" />
-                  <div className="skeleton-shimmer h-3.5 w-4/5 rounded-md bg-slate-200/80" />
-                  <div className="skeleton-shimmer h-3.5 w-5/6 rounded-md bg-slate-200/80" />
+                <div className="mt-3 space-y-1.5 rounded-xl border border-slate-200/75 bg-white/90 p-3">
+                  <div className="skeleton-shimmer h-3 w-11/12 rounded-md bg-slate-200/80" />
+                  <div className="skeleton-shimmer h-3 w-4/5 rounded-md bg-slate-200/80" />
+                  <div className="skeleton-shimmer h-3 w-5/6 rounded-md bg-slate-200/80" />
                 </div>
-                <div className="mt-4 space-y-3">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div className="skeleton-shimmer h-11 w-full rounded-xl bg-slate-200/80" />
-                    <div className="skeleton-shimmer h-11 w-full rounded-xl bg-slate-200/80" />
+                <div className="mt-3 space-y-2.5">
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                    <div className="skeleton-shimmer h-10 w-full rounded-xl bg-slate-200/80" />
+                    <div className="skeleton-shimmer h-10 w-full rounded-xl bg-slate-200/80" />
                   </div>
-                  <div className="skeleton-shimmer h-24 w-full rounded-2xl bg-slate-200/80" />
-                  <div className="flex flex-col gap-2.5 sm:flex-row">
-                    <div className="skeleton-shimmer h-11 flex-1 rounded-2xl bg-rose-200/80" />
-                    <div className="skeleton-shimmer h-11 w-full rounded-2xl bg-emerald-100/80 sm:w-52" />
+                  <div className="skeleton-shimmer h-20 w-full rounded-xl bg-slate-200/80" />
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <div className="skeleton-shimmer h-10 flex-1 rounded-xl bg-rose-200/80" />
+                    <div className="skeleton-shimmer h-10 w-full rounded-xl bg-emerald-100/80 sm:w-48" />
                   </div>
                 </div>
               </section>
             </div>
 
-            <aside className="min-w-0 space-y-4 lg:col-span-5">
-              <section className="classic-glass rounded-3xl border border-white/90 bg-white/92 p-4 shadow-[0_14px_34px_-18px_rgba(15,23,42,0.12)] sm:p-5">
+            <aside className="min-w-0 space-y-3.5 lg:col-span-5">
+              <section className="classic-glass rounded-2xl border border-white/90 bg-white/92 p-3.5 shadow-[0_12px_28px_-18px_rgba(15,23,42,0.12)] sm:p-4">
                 <div className="space-y-1.5">
-                  <div className="skeleton-shimmer h-3 w-24 rounded-md bg-rose-200/75" />
-                  <div className="skeleton-shimmer h-5 w-40 rounded-lg bg-slate-200/90" />
+                  <div className="skeleton-shimmer h-3 w-22 rounded-md bg-rose-200/75" />
+                  <div className="skeleton-shimmer h-4.5 w-36 rounded-lg bg-slate-200/90" />
                   <div className="skeleton-shimmer h-3 w-4/5 rounded-md bg-slate-200/75" />
                 </div>
-                <div className="mt-4 space-y-2.5">
+                <div className="mt-3 space-y-2">
                   {[0, 1, 2].map((channelIdx) => (
                     <div
                       key={channelIdx}
-                      className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-3.5"
+                      className="flex items-center justify-between gap-2.5 rounded-xl border border-slate-200/80 bg-white p-3"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="skeleton-shimmer h-10 w-10 shrink-0 rounded-xl bg-slate-200/85" />
-                        <div className="space-y-1.5">
-                          <div className="skeleton-shimmer h-3.5 w-24 rounded-md bg-slate-200/90" />
-                          <div className="skeleton-shimmer h-3 w-36 rounded-md bg-slate-200/75" />
+                      <div className="flex items-center gap-2.5">
+                        <div className="skeleton-shimmer h-9 w-9 shrink-0 rounded-xl bg-slate-200/85" />
+                        <div className="space-y-1">
+                          <div className="skeleton-shimmer h-3.5 w-22 rounded-md bg-slate-200/90" />
+                          <div className="skeleton-shimmer h-2.5 w-32 rounded-md bg-slate-200/75" />
                         </div>
                       </div>
-                      <div className="skeleton-shimmer h-9 w-22 shrink-0 rounded-xl bg-slate-200/85" />
+                      <div className="skeleton-shimmer h-8 w-20 shrink-0 rounded-xl bg-slate-200/85" />
                     </div>
                   ))}
                 </div>
               </section>
 
-              <section className="classic-glass rounded-3xl border border-white/90 bg-white/92 p-4 shadow-[0_14px_34px_-18px_rgba(15,23,42,0.12)] sm:p-5">
-                <div className="flex items-start gap-3">
-                  <div className="skeleton-shimmer h-10 w-10 shrink-0 rounded-xl bg-rose-100/85" />
-                  <div className="flex-1 space-y-1.5">
-                    <div className="skeleton-shimmer h-3.5 w-36 rounded-md bg-slate-200/90" />
-                    <div className="skeleton-shimmer h-3.5 w-44 rounded-md bg-slate-200/80" />
+              <section className="classic-glass rounded-2xl border border-white/90 bg-white/92 p-3.5 shadow-[0_12px_28px_-18px_rgba(15,23,42,0.12)] sm:p-4">
+                <div className="flex items-start gap-2.5">
+                  <div className="skeleton-shimmer h-9 w-9 shrink-0 rounded-xl bg-rose-100/85" />
+                  <div className="flex-1 space-y-1">
+                    <div className="skeleton-shimmer h-3.5 w-32 rounded-md bg-slate-200/90" />
+                    <div className="skeleton-shimmer h-3.5 w-40 rounded-md bg-slate-200/80" />
                     <div className="skeleton-shimmer h-3 w-full rounded-md bg-slate-200/75" />
                   </div>
                 </div>
-                <div className="skeleton-shimmer mt-3.5 h-11 w-full rounded-xl bg-rose-100/80" />
+                <div className="skeleton-shimmer mt-3 h-10 w-full rounded-xl bg-rose-100/80" />
               </section>
             </aside>
           </div>
         </div>
       ) : (
-        <div className="mx-auto w-full max-w-5xl space-y-5 px-3.5 pb-[max(3.25rem,env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-5">
+        <div className="mx-auto w-full max-w-5xl space-y-3.5 px-3.5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-3.5 sm:px-5 sm:pt-4">
           {/* Top Hero: Classic Glass Order Snapshot + 4-Step Milestone Tracker */}
           <section
             aria-label="Current Order Status"
-            className="classic-glass overflow-hidden rounded-3xl border border-white/90 bg-gradient-to-br from-white/95 via-white/88 to-rose-50/45 p-4 shadow-[0_18px_42px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.96)] sm:p-6"
+            className="classic-glass overflow-hidden rounded-2xl border border-white/90 bg-gradient-to-br from-white/95 via-white/88 to-rose-50/45 p-3.5 shadow-[0_14px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.96)] sm:p-4"
           >
             {/* Row 1: Order ID + Copy on Left, Status Pill + Item Specs Toggle on Right */}
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/70 pb-3">
@@ -686,16 +686,16 @@ export function OrderHelpSupportView({
             </div>
 
             {/* Row 2: Thumbnail + Full-Width Order Product Summary */}
-            <div className="mt-3.5 flex items-center gap-3.5">
-              <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/95 bg-slate-100 p-1 shadow-xs sm:h-18 sm:w-22">
+            <div className="mt-3 flex items-center gap-3">
+              <div className="relative flex h-13 w-13 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/95 bg-slate-100 p-1 shadow-xs sm:h-15 sm:w-18">
                 {firstImage ? (
                   <img
                     src={firstImage}
                     alt="Order item"
-                    className="h-full w-full rounded-xl object-cover"
+                    className="h-full w-full rounded-lg object-cover"
                   />
                 ) : (
-                  <Package className="h-7 w-7 text-slate-600" />
+                  <Package className="h-6 w-6 text-slate-600" />
                 )}
                 {items.length > 1 && (
                   <span className="absolute bottom-1 right-1 rounded-md bg-slate-900/80 px-1.5 py-0.5 text-[9px] font-extrabold text-white tabular-nums">
@@ -705,11 +705,11 @@ export function OrderHelpSupportView({
               </div>
 
               <div className="min-w-0 flex-1">
-                <h2 className="line-clamp-2 text-sm font-black leading-snug tracking-tight text-slate-950 sm:text-base">
+                <h2 className="line-clamp-2 text-[13.5px] font-black leading-snug tracking-tight text-slate-950 sm:text-[15px]">
                   {items.map((item) => item.product_name).join(' · ') || 'Custom Seat Cover Order'}
                 </h2>
 
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-semibold text-slate-500 tabular-nums">
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11.5px] font-semibold text-slate-500 tabular-nums">
                   <span className="whitespace-nowrap">{formatDate(safeOrder.created_at)}</span>
                   <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                     <span aria-hidden="true">·</span>
@@ -726,7 +726,7 @@ export function OrderHelpSupportView({
             </div>
 
             {/* 4-Step Visual Milestone Bar (2x2 on narrow phones, 4 cols on sm+) */}
-            <div className="mt-4 rounded-2xl border border-white/90 bg-white/80 px-3.5 py-3 shadow-2xs">
+            <div className="mt-3 rounded-xl border border-white/90 bg-white/80 px-3 py-2.5 shadow-2xs">
               <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-2">
                 {progressSteps.map((step, index) => {
                   const isDone = step.state === 'done';
@@ -810,44 +810,44 @@ export function OrderHelpSupportView({
             )}
 
             {/* Order Meta Strip: Payment + Vehicle Fitment + Fulfillment */}
-            <div className="mt-3.5 grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
-              <div className="flex items-center gap-2.5 rounded-2xl border border-white/90 bg-white/80 px-3.5 py-2.5 shadow-2xs">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-rose-50 text-[#D9232D]">
-                  <CreditCard className="h-4 w-4" />
+            <div className="mt-3 grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
+              <div className="flex items-center gap-2 rounded-xl border border-white/90 bg-white/80 px-3 py-2 shadow-2xs">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-rose-50 text-[#D9232D]">
+                  <CreditCard className="h-3.5 w-3.5" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                  <p className="text-[9.5px] font-bold uppercase tracking-wide text-slate-400">
                     Payment
                   </p>
-                  <p className="truncate text-[11.5px] font-extrabold text-slate-800">
+                  <p className="truncate text-[11px] font-extrabold text-slate-800">
                     {statusGuidance.paymentStatusLabel}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5 rounded-2xl border border-white/90 bg-white/80 px-3.5 py-2.5 shadow-2xs">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600">
-                  <Bike className="h-4 w-4" />
+              <div className="flex items-center gap-2 rounded-xl border border-white/90 bg-white/80 px-3 py-2 shadow-2xs">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600">
+                  <Bike className="h-3.5 w-3.5" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                  <p className="text-[9.5px] font-bold uppercase tracking-wide text-slate-400">
                     Vehicle Fitment
                   </p>
-                  <p className="truncate text-[11.5px] font-extrabold text-slate-800">
+                  <p className="truncate text-[11px] font-extrabold text-slate-800">
                     {safeOrder.vehicle_model || 'Standard Universal Fit'}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5 rounded-2xl border border-white/90 bg-white/80 px-3.5 py-2.5 shadow-2xs">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-600">
-                  <Store className="h-4 w-4" />
+              <div className="flex items-center gap-2 rounded-xl border border-white/90 bg-white/80 px-3 py-2 shadow-2xs">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-emerald-50 text-emerald-600">
+                  <Store className="h-3.5 w-3.5" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                  <p className="text-[9.5px] font-bold uppercase tracking-wide text-slate-400">
                     Fulfillment
                   </p>
-                  <p className="truncate text-[11.5px] font-extrabold text-slate-800">
+                  <p className="truncate text-[11px] font-extrabold text-slate-800">
                     {safeOrder.pickup_store || 'Rofik Godi Centre'}
                   </p>
                 </div>
@@ -856,14 +856,14 @@ export function OrderHelpSupportView({
 
             {/* Status-Aware Guidance Callout */}
             <div
-              className={`mt-3 flex items-start gap-2.5 rounded-2xl border px-3.5 py-3 text-xs ${statusBannerTone(
+              className={`mt-2.5 flex items-start gap-2 rounded-xl border px-3 py-2.5 text-xs ${statusBannerTone(
                 statusGuidance.tone,
               )}`}
             >
               <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-[#D9232D]" />
               <div className="min-w-0">
                 <p className="font-extrabold">{statusGuidance.headline}</p>
-                <p className="mt-0.5 text-[11.5px] leading-relaxed opacity-90">
+                <p className="mt-0.5 text-[11px] leading-relaxed opacity-90">
                   {statusGuidance.description}
                 </p>
               </div>
@@ -880,26 +880,26 @@ export function OrderHelpSupportView({
           )}
 
           {/* Responsive 12-Column Support Studio Grid */}
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-start">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start">
             {/* Primary Left Column (7 cols): Interactive Topic Grid + Resolution Studio */}
-            <div className="min-w-0 space-y-5 lg:col-span-7">
+            <div className="min-w-0 space-y-4 lg:col-span-7">
               {/* Step 1: Interactive 6-Topic Selector */}
-              <section className="space-y-3">
+              <section className="space-y-2.5">
                 <div className="flex items-center justify-between gap-3 px-1">
                   <div className="min-w-0 flex-1">
                     <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#D9232D]">
                       Step 1 · Choose Topic
                     </span>
-                    <h2 className="mt-0.5 text-base font-black tracking-tight text-slate-950 sm:text-lg">
+                    <h2 className="mt-0.5 text-[15px] font-black tracking-tight text-slate-950 sm:text-base">
                       How can we help you?
                     </h2>
                   </div>
-                  <span className="rounded-xl border border-white/90 bg-white/80 px-2.5 py-1 text-[11px] font-bold text-slate-500 shadow-2xs">
+                  <span className="rounded-lg border border-white/90 bg-white/80 px-2 py-0.5 text-[10.5px] font-bold text-slate-500 shadow-2xs">
                     6 topics
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {ORDER_HELP_TOPICS.map((topic) => {
                     const TopicIcon = topicIcons[topic.id];
                     const isSelected = selectedTopicId === topic.id;
@@ -910,20 +910,20 @@ export function OrderHelpSupportView({
                         aria-pressed={isSelected}
                         data-testid={`order-help-topic-${topic.id}`}
                         onClick={() => handleSelectTopic(topic.id)}
-                        className={`classic-glass group flex min-w-0 flex-col justify-between rounded-2xl border p-3.5 text-left transition-all duration-150 active:scale-[0.98] ${
+                        className={`classic-glass group flex min-w-0 flex-col justify-between rounded-xl border p-2.5 text-left transition-all duration-150 active:scale-[0.98] ${
                           isSelected
-                            ? 'border-[#D9232D] bg-gradient-to-br from-rose-50/95 via-white to-white ring-2 ring-rose-200/80 shadow-[0_12px_26px_-14px_rgba(217,35,45,0.28)]'
+                            ? 'border-[#D9232D] bg-gradient-to-br from-rose-50/95 via-white to-white ring-2 ring-rose-200/80 shadow-[0_8px_20px_-14px_rgba(217,35,45,0.28)]'
                             : 'border-white/90 bg-white/90 shadow-2xs hover:border-rose-200 hover:bg-white hover:shadow-sm'
                         }`}
                       >
-                        <span className="flex w-full items-center justify-between gap-2">
+                        <span className="flex w-full items-center justify-between gap-1.5">
                           <span
-                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${topicIconTone[topic.id]}`}
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border ${topicIconTone[topic.id]}`}
                           >
-                            <TopicIcon className="h-4.5 w-4.5" />
+                            <TopicIcon className="h-4 w-4" />
                           </span>
                           <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+                            className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9.5px] font-extrabold ${
                               isSelected
                                 ? 'bg-[#D9232D] text-white'
                                 : 'text-slate-300 group-hover:text-[#D9232D]'
@@ -931,7 +931,7 @@ export function OrderHelpSupportView({
                           >
                             {isSelected ? (
                               <>
-                                <Check className="h-3 w-3" />
+                                <Check className="h-2.5 w-2.5" />
                                 <span>Active</span>
                               </>
                             ) : (
@@ -940,11 +940,11 @@ export function OrderHelpSupportView({
                           </span>
                         </span>
 
-                        <div className="mt-3">
-                          <span className="block break-words text-xs font-extrabold leading-tight text-slate-900">
+                        <div className="mt-2.5">
+                          <span className="block break-words text-[11.5px] font-extrabold leading-tight text-slate-900">
                             {topic.title}
                           </span>
-                          <span className="mt-1 block break-words text-[10.5px] leading-snug text-slate-500">
+                          <span className="mt-0.5 block break-words text-[10px] leading-snug text-slate-500">
                             {topic.hint}
                           </span>
                         </div>
@@ -959,7 +959,7 @@ export function OrderHelpSupportView({
                 ref={resolutionPanelRef}
                 data-testid="order-help-resolution-panel"
                 aria-label={`${resolution.topic.title} resolution and support form`}
-                className="classic-glass overflow-hidden rounded-3xl border border-white/90 bg-gradient-to-br from-white/95 via-white/90 to-rose-50/45 p-4 shadow-[0_18px_42px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.96)] sm:p-5"
+                className="classic-glass overflow-hidden rounded-2xl border border-white/90 bg-gradient-to-br from-white/95 via-white/90 to-rose-50/45 p-3.5 shadow-[0_14px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.96)] sm:p-4"
               >
                 {/* Resolution Guidance Header */}
                 <div className="flex flex-col gap-3 border-b border-slate-200/75 pb-4 sm:flex-row sm:items-start sm:justify-between">
@@ -1209,23 +1209,23 @@ export function OrderHelpSupportView({
             </div>
 
             {/* Right Sticky Column (5 cols): Active Order Threads + Direct Workshop Concierge + Maps */}
-            <aside className="min-w-0 space-y-4 lg:sticky lg:top-22 lg:col-span-5">
+            <aside className="min-w-0 space-y-3.5 lg:sticky lg:top-20 lg:col-span-5">
               {/* Active Support Threads for This Order */}
               {(orderTickets.length > 0 || ticketsLoading) && (
                 <section
                   aria-label="Tracked support requests for this order"
-                  className="classic-glass rounded-3xl border border-white/90 bg-white/90 p-4 shadow-[0_14px_34px_-18px_rgba(15,23,42,0.12)] sm:p-5"
+                  className="classic-glass rounded-2xl border border-white/90 bg-white/90 p-3.5 shadow-[0_10px_28px_-18px_rgba(15,23,42,0.12)] sm:p-4"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-rose-50 text-[#D9232D]">
-                        <Ticket className="h-4.5 w-4.5" />
+                    <div className="flex items-center gap-2">
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-rose-50 text-[#D9232D]">
+                        <Ticket className="h-4 w-4" />
                       </span>
                       <div>
-                        <h2 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                        <h2 className="text-[11.5px] font-black uppercase tracking-wider text-slate-900">
                           Active Threads · #{safeOrder.order_number}
                         </h2>
-                        <p className="text-[11px] font-medium text-slate-500">
+                        <p className="text-[10.5px] font-medium text-slate-500">
                           Continue an existing support conversation
                         </p>
                       </div>
@@ -1244,18 +1244,18 @@ export function OrderHelpSupportView({
                   {ticketsLoading && orderTickets.length === 0 ? (
                     <div
                       data-testid="order-help-threads-skeleton"
-                      className="mt-3 space-y-2"
+                      className="mt-2.5 space-y-2"
                       aria-label="Loading active support threads"
                     >
                       {[0, 1].map((idx) => (
                         <div
                           key={idx}
-                          className="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white px-3.5 py-2.5"
+                          className="flex w-full items-center justify-between gap-2.5 rounded-xl border border-slate-200/80 bg-white px-3 py-2"
                         >
-                          <div className="min-w-0 flex-1 space-y-1.5">
+                          <div className="min-w-0 flex-1 space-y-1">
                             <div className="flex items-center gap-1.5">
-                              <div className="skeleton-shimmer h-4 w-14 rounded-md bg-slate-200/85" />
-                              <div className="skeleton-shimmer h-3.5 w-20 rounded-md bg-slate-200/75" />
+                              <div className="skeleton-shimmer h-3.5 w-14 rounded-md bg-slate-200/85" />
+                              <div className="skeleton-shimmer h-3 w-20 rounded-md bg-slate-200/75" />
                             </div>
                             <div className="skeleton-shimmer h-3.5 w-3/4 rounded-md bg-slate-200/90" />
                           </div>
@@ -1264,7 +1264,7 @@ export function OrderHelpSupportView({
                       ))}
                     </div>
                   ) : (
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-2.5 space-y-1.5">
                       {orderTickets.slice(0, 3).map((ticket) => {
                         const badge = ticketStatusBadge(ticket.status);
                         return (
@@ -1276,7 +1276,7 @@ export function OrderHelpSupportView({
                                 ? onOpenSupportRequest(ticket.id)
                                 : onOpenLiveChat(safeOrder.id)
                             }
-                            className="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white px-3.5 py-2.5 text-left transition hover:border-rose-200 hover:bg-rose-50/40"
+                            className="flex w-full items-center justify-between gap-2.5 rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-left transition hover:border-rose-200 hover:bg-rose-50/40"
                           >
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-1.5">
@@ -1285,11 +1285,11 @@ export function OrderHelpSupportView({
                                 >
                                   {badge.label}
                                 </span>
-                                <span className="text-[10.5px] font-bold text-slate-400">
+                                <span className="text-[10px] font-bold text-slate-400">
                                   {ticket.category}
                                 </span>
                               </div>
-                              <p className="mt-1 truncate text-xs font-extrabold text-slate-900">
+                              <p className="mt-0.5 truncate text-xs font-extrabold text-slate-900">
                                 {ticket.subject}
                               </p>
                             </div>
@@ -1306,32 +1306,32 @@ export function OrderHelpSupportView({
               )}
 
               {/* Direct Workshop Channels Card */}
-              <section className="classic-glass rounded-3xl border border-white/90 bg-white/92 p-4 shadow-[0_14px_34px_-18px_rgba(15,23,42,0.12)] sm:p-5">
+              <section className="classic-glass rounded-2xl border border-white/90 bg-white/92 p-3.5 shadow-[0_10px_28px_-18px_rgba(15,23,42,0.12)] sm:p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#D9232D]">
                       Instant Support
                     </span>
-                    <h2 className="mt-0.5 text-base font-black tracking-tight text-slate-950">
+                    <h2 className="mt-0.5 text-[15px] font-black tracking-tight text-slate-950">
                       Contact Us Directly
                     </h2>
-                    <p className="mt-0.5 text-xs font-medium text-slate-500">
+                    <p className="mt-0.5 text-[11.5px] font-medium text-slate-500">
                       Immediate pickup, fitting, or billing assistance from our Berhampore team.
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-4 space-y-2.5">
+                <div className="mt-3 space-y-2">
                   {/* 1. Live Message Studio */}
-                  <div className="rounded-2xl border border-rose-200/80 bg-gradient-to-br from-[#FFF4F5] via-white to-white p-3.5">
-                    <div className="flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100/85 text-[#D9232D]">
-                          <MessageCircle className="h-5 w-5" />
+                  <div className="rounded-xl border border-rose-200/80 bg-gradient-to-br from-[#FFF4F5] via-white to-white p-3">
+                    <div className="flex flex-col gap-2.5 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-100/85 text-[#D9232D]">
+                          <MessageCircle className="h-4.5 w-4.5" />
                         </span>
                         <div className="min-w-0 flex-1">
                           <h4 className="text-xs font-extrabold text-slate-900">Live Message</h4>
-                          <p className="truncate text-[11px] text-slate-500">
+                          <p className="truncate text-[10.5px] text-slate-500">
                             Tracked chat linked to #{safeOrder.order_number}
                           </p>
                         </div>
@@ -1345,7 +1345,7 @@ export function OrderHelpSupportView({
                             message,
                           })
                         }
-                        className="banner-cta-shine inline-flex min-h-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-3.5 py-2 text-xs font-extrabold text-white shadow-xs transition hover:brightness-105 active:scale-95"
+                        className="banner-cta-shine inline-flex min-h-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-3 py-1.5 text-xs font-extrabold text-white shadow-xs transition hover:brightness-105 active:scale-95"
                       >
                         Start Chat
                       </button>
@@ -1353,18 +1353,18 @@ export function OrderHelpSupportView({
                   </div>
 
                   {/* 2. Call Us */}
-                  <div className="rounded-2xl border border-slate-200/85 bg-white/95 p-3.5">
-                    <div className="flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-start min-[420px]:justify-between">
-                      <div className="flex min-w-0 items-start gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#2563EB]">
-                          <Phone className="h-5 w-5" />
+                  <div className="rounded-xl border border-slate-200/85 bg-white/95 p-3">
+                    <div className="flex flex-col gap-2.5 min-[420px]:flex-row min-[420px]:items-start min-[420px]:justify-between">
+                      <div className="flex min-w-0 items-start gap-2.5">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#2563EB]">
+                          <Phone className="h-4.5 w-4.5" />
                         </span>
                         <div className="min-w-0 flex-1">
                           <h4 className="text-xs font-extrabold text-slate-900">Call Us</h4>
-                          <p className="text-[11px] text-slate-500">
+                          <p className="text-[10.5px] text-slate-500">
                             Speak directly with our workshop counter
                           </p>
-                          <div className="mt-1.5 flex flex-wrap gap-x-2.5 gap-y-1 text-[11px] font-extrabold text-slate-700 tabular-nums">
+                          <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] font-extrabold text-slate-700 tabular-nums">
                             <a href={phoneHref} className="hover:text-[#D9232D]">
                               {WORKSHOP_INFO.phone}
                             </a>
@@ -1377,7 +1377,7 @@ export function OrderHelpSupportView({
                       </div>
                       <a
                         href={phoneHref}
-                        className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-xl border border-[#D9232D] bg-white px-3.5 py-2 text-xs font-extrabold text-[#D9232D] transition-colors hover:bg-rose-50 active:scale-95"
+                        className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-xl border border-[#D9232D] bg-white px-3 py-1.5 text-xs font-extrabold text-[#D9232D] transition-colors hover:bg-rose-50 active:scale-95"
                       >
                         Call Now
                       </a>
@@ -1385,15 +1385,15 @@ export function OrderHelpSupportView({
                   </div>
 
                   {/* 3. WhatsApp Desk */}
-                  <div className="rounded-2xl border border-slate-200/85 bg-white/95 p-3.5">
-                    <div className="flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                          <MessageCircle className="h-5 w-5" />
+                  <div className="rounded-xl border border-slate-200/85 bg-white/95 p-3">
+                    <div className="flex flex-col gap-2.5 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                          <MessageCircle className="h-4.5 w-4.5" />
                         </span>
                         <div className="min-w-0 flex-1">
                           <h4 className="text-xs font-extrabold text-slate-900">WhatsApp</h4>
-                          <p className="truncate text-[11px] text-slate-500">
+                          <p className="truncate text-[10.5px] text-slate-500">
                             Share bike photos or pickup updates
                           </p>
                         </div>
@@ -1402,7 +1402,7 @@ export function OrderHelpSupportView({
                         href={whatsappHref}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1 rounded-xl border border-emerald-600 bg-white px-3 py-2 text-xs font-extrabold text-emerald-700 transition-colors hover:bg-emerald-50 active:scale-95"
+                        className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1 rounded-xl border border-emerald-600 bg-white px-3 py-1.5 text-xs font-extrabold text-emerald-700 transition-colors hover:bg-emerald-50 active:scale-95"
                       >
                         <span>Open WhatsApp</span>
                         <ExternalLink className="h-3 w-3" />
@@ -1413,17 +1413,17 @@ export function OrderHelpSupportView({
               </section>
 
               {/* Store Working Hours & Maps Card */}
-              <section className="classic-glass rounded-3xl border border-white/90 bg-white/92 p-4 shadow-[0_14px_34px_-18px_rgba(15,23,42,0.12)] sm:p-5">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-rose-100 bg-rose-50 text-[#D9232D]">
-                    <Store className="h-5 w-5" />
+              <section className="classic-glass rounded-2xl border border-white/90 bg-white/92 p-3.5 shadow-[0_10px_28px_-18px_rgba(15,23,42,0.12)] sm:p-4">
+                <div className="flex items-start gap-2.5">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-rose-100 bg-rose-50 text-[#D9232D]">
+                    <Store className="h-4.5 w-4.5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h4 className="text-xs font-extrabold text-slate-900">Store Working Hours</h4>
-                    <p className="mt-0.5 text-[11.5px] font-bold text-slate-700">
+                    <p className="mt-0.5 text-[11px] font-bold text-slate-700">
                       {WORKSHOP_INFO.workingHours}
                     </p>
-                    <p className="mt-1 text-[11px] leading-snug text-slate-500">
+                    <p className="mt-0.5 text-[10.5px] leading-snug text-slate-500">
                       {WORKSHOP_INFO.address}
                     </p>
                   </div>
@@ -1433,7 +1433,7 @@ export function OrderHelpSupportView({
                   type="button"
                   data-testid="order-help-open-store-map"
                   onClick={handleOpenStoreMap}
-                  className="mt-3.5 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-rose-50 px-3.5 py-2 text-xs font-extrabold text-[#D9232D] transition-colors hover:bg-rose-100 active:scale-[0.99]"
+                  className="mt-3 flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-rose-50 px-3 py-1.5 text-xs font-extrabold text-[#D9232D] transition-colors hover:bg-rose-100 active:scale-[0.99]"
                 >
                   <MapPin className="h-3.5 w-3.5" />
                   <span>Open in Maps</span>
@@ -1442,13 +1442,13 @@ export function OrderHelpSupportView({
               </section>
 
               {/* Helpful Tip */}
-              <section className="flex items-start gap-3 rounded-2xl border border-blue-200/75 bg-blue-50/80 p-3.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
-                  <Info className="h-4 w-4" />
+              <section className="flex items-start gap-2.5 rounded-xl border border-blue-200/75 bg-blue-50/80 p-3">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white">
+                  <Info className="h-3.5 w-3.5" />
                 </div>
                 <div>
                   <h4 className="text-xs font-extrabold text-slate-900">Before contacting</h4>
-                  <p className="mt-0.5 text-[11px] leading-snug text-slate-600">
+                  <p className="mt-0.5 text-[10.5px] leading-snug text-slate-600">
                     Your Order ID <strong>#{safeOrder.order_number}</strong> is automatically attached
                     to live chats and WhatsApp messages from this page.
                   </p>

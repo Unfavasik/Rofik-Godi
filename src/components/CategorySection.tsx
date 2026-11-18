@@ -69,15 +69,15 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
       }));
 
   return (
-    <section className="px-5 mb-6" data-purpose="category-list">
-      <div className="flex justify-between items-baseline mb-3">
+    <section className="px-3.5 sm:px-5 mb-4" data-purpose="category-list">
+      <div className="flex justify-between items-baseline mb-2">
         <div>
-          <h3 className="text-[17px] font-black text-gray-900 tracking-tight">{t('home.shopByCategory')}</h3>
-          <p className="text-[11.5px] text-gray-400 font-medium">{t('home.categoryHint')}</p>
+          <h3 className="text-[15px] sm:text-base font-black text-gray-900 tracking-tight">{t('home.shopByCategory')}</h3>
+          <p className="text-[11px] text-gray-400 font-medium">{t('home.categoryHint')}</p>
         </div>
         <button
           onClick={() => onSelectCategory('all')}
-          className={`text-[12px] font-bold flex items-center space-x-1 transition-colors ${
+          className={`text-[11.5px] font-bold flex items-center space-x-1 transition-colors ${
             selectedCategory === 'all' ? 'text-[#D9232D]' : 'text-gray-500 hover:text-[#D9232D]'
           }`}
         >
@@ -86,7 +86,7 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
         </button>
       </div>
 
-      <div className={`grid gap-2 sm:gap-2.5 ${cards.length <= 4 ? 'grid-cols-4' : 'grid-cols-3'}`}>
+      <div className={`grid gap-2 ${cards.length <= 4 ? 'grid-cols-4' : 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6'}`}>
         {cards.map((cat) => {
           const isActive = selectedCategory === cat.id;
           return (
@@ -94,35 +94,35 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
               key={cat.id}
               type="button"
               onClick={() => onSelectCategory(isActive ? 'all' : cat.id)}
-              className={`w-full rounded-2xl p-2 sm:p-2.5 pb-2.5 flex flex-col items-center justify-between text-center transition-all cursor-pointer shadow-xs group select-none active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+              className={`w-full rounded-xl p-1.5 sm:p-2 pb-2 flex flex-col items-center justify-between text-center transition-all cursor-pointer shadow-xs group select-none active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
                 isActive ? cat.scheme.activeBgClass : cat.scheme.bgClass
               }`}
             >
-              <div className="mb-1 flex h-14 w-full items-center justify-center sm:h-16">
+              <div className="mb-1 flex h-10 w-full items-center justify-center sm:h-12">
                 {cat.image ? (
                   <img
                     src={cat.image}
                     alt={cat.title}
-                    className="h-12 w-12 object-contain rounded-lg drop-shadow-xs transition-transform group-hover:scale-105 sm:h-14 sm:w-14"
+                    className="h-9 w-9 object-contain rounded-lg drop-shadow-xs transition-transform group-hover:scale-105 sm:h-11 sm:w-11"
                     loading="lazy"
                   />
                 ) : (
-                  <span className={`flex h-12 w-12 items-center justify-center rounded-xl ${cat.scheme.buttonBg} transition-transform group-hover:scale-105 sm:h-14 sm:w-14`}>
-                    <Tag className={`h-6 w-6 ${cat.scheme.buttonText}`} />
+                  <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${cat.scheme.buttonBg} transition-transform group-hover:scale-105 sm:h-11 sm:w-11`}>
+                    <Tag className={`h-4.5 w-4.5 sm:h-5 sm:w-5 ${cat.scheme.buttonText}`} />
                   </span>
                 )}
               </div>
 
-              <span className="text-[10px] sm:text-[11px] font-bold text-gray-900 leading-tight mb-1.5 text-center break-words w-full px-0.5">
+              <span className="text-[10px] sm:text-[10.5px] font-bold text-gray-900 leading-tight mb-1 text-center break-words w-full px-0.5">
                 {cat.title}
               </span>
 
               <div
-                className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-transform ${cat.scheme.buttonBg} ${cat.scheme.buttonText} ${
+                className={`w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center transition-transform ${cat.scheme.buttonBg} ${cat.scheme.buttonText} ${
                   isActive ? 'scale-110 ring-1 ring-white' : ''
                 }`}
               >
-                <span className="text-[10px] sm:text-[11px] font-bold leading-none">{isActive ? '✓' : '→'}</span>
+                <span className="text-[9.5px] sm:text-[10px] font-bold leading-none">{isActive ? '✓' : '→'}</span>
               </div>
             </button>
           );

@@ -1462,7 +1462,7 @@ export default function App() {
       <div
         onClickCapture={handleAppHapticTap}
         className={`w-full min-w-0 overflow-x-hidden bg-[#FDFDFD] min-h-screen flex flex-col relative shadow-2xl transition-all duration-300 ${
-          hidesBottomNavigation ? '' : 'pb-28'
+          hidesBottomNavigation ? '' : 'pb-20 sm:pb-22'
         } ${isMobileFrameMode ? 'max-w-[440px]' : 'max-w-7xl'}`}
       >
         {/* Main Header */}
@@ -1747,7 +1747,7 @@ export default function App() {
               onBannerClick={handleBannerClick}
             />
 
-            {pwaInstall.visible && <div className="mb-4 px-5"><PwaInstallCard visible={pwaInstall.visible} canInstall={pwaInstall.canInstall} isIOSSafari={pwaInstall.isIOSSafari} isInstalling={pwaInstall.isInstalling} installError={pwaInstall.installError} onInstall={pwaInstall.install} onDismiss={pwaInstall.dismiss} /></div>}
+            {pwaInstall.visible && <div className="mb-3 px-3.5 sm:px-5"><PwaInstallCard visible={pwaInstall.visible} canInstall={pwaInstall.canInstall} isIOSSafari={pwaInstall.isIOSSafari} isInstalling={pwaInstall.isInstalling} installError={pwaInstall.installError} onInstall={pwaInstall.install} onDismiss={pwaInstall.dismiss} /></div>}
 
             {/* Categories Section */}
             <CategorySection
@@ -1769,22 +1769,22 @@ export default function App() {
 
             {/* Popular Picks Horizontal Scroll (from user image) */}
             {selectedCategory === 'all' && !searchQuery && !vehicleFilter && (
-              <section className="px-5 mb-6" data-purpose="popular-picks">
-                <div className="flex justify-between items-baseline mb-3">
+              <section className="px-3.5 sm:px-5 mb-4" data-purpose="popular-picks">
+                <div className="flex justify-between items-baseline mb-2">
                   <div className="flex items-center gap-1.5">
                     <Flame className="w-4 h-4 text-[#D9232D]" />
                     <div>
-                      <h3 className="text-[17px] font-black text-gray-900 tracking-tight">
+                      <h3 className="text-[15px] sm:text-base font-black text-gray-900 tracking-tight">
                         {translate(uiLanguage, 'home.popularPicks')}
                       </h3>
-                      <p className="text-[11.5px] text-gray-400 font-medium">
+                      <p className="text-[11px] text-gray-400 font-medium">
                         {translate(uiLanguage, 'home.favourites')}
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={scrollToShop}
-                    className="text-[12px] font-bold text-[#D9232D] hover:text-red-700 flex items-center space-x-1 cursor-pointer"
+                    className="text-[11.5px] font-bold text-[#D9232D] hover:text-red-700 flex items-center space-x-1 cursor-pointer"
                   >
                     <span>{translate(uiLanguage, 'home.seeAll')}</span>
                     <span className="text-xs">→</span>
@@ -1799,7 +1799,7 @@ export default function App() {
                 ) : catalogProducts.length === 0 ? (
                   <CatalogStatus state="empty" compact />
                 ) : (
-                  <div className="flex space-x-3.5 overflow-x-auto no-scrollbar pb-4 pt-2 -mx-5 px-5">
+                  <div className="flex space-x-2.5 overflow-x-auto no-scrollbar pb-2.5 pt-1 -mx-3.5 px-3.5 sm:-mx-5 sm:px-5">
                     {catalogProducts.slice(0, 4).map((prod) => (
                       <ProductCard
                         key={prod.id}
@@ -1820,15 +1820,15 @@ export default function App() {
             )}
 
             {/* Full Shop / Product Catalog Section */}
-            <section id="shop-section" className="px-5 mb-6">
-              <div className="mb-3">
+            <section id="shop-section" className="px-3.5 sm:px-5 mb-5">
+              <div className="mb-2">
                 <div>
-                  <h3 className="text-[17px] font-black text-gray-900 tracking-tight">
+                  <h3 className="text-[15px] sm:text-base font-black text-gray-900 tracking-tight">
                     {selectedCategory === 'all'
                       ? 'All Seat Covers & Essentials'
                       : `${selectedCategory.toUpperCase()} COLLECTION`}
                   </h3>
-                  <p className="text-[11.5px] text-gray-400 font-medium">
+                  <p className="text-[11px] text-gray-400 font-medium">
                     {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}{' '}
                     available
                   </p>
@@ -1836,7 +1836,7 @@ export default function App() {
               </div>
 
               {/* Sort & Filter toolbar — identical to the /shop page */}
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-2.5">
                   <div className="flex gap-2">
                     <button
                       type="button"
@@ -2036,7 +2036,7 @@ export default function App() {
                   </button>
                 </div>
               ) : shopLayoutMode === 'grid' ? (
-                <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-2.5">
                   {filteredProducts.map((prod) => (
                     <ProductCard
                       key={prod.id}
@@ -2053,7 +2053,7 @@ export default function App() {
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col gap-2.5">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
                   {filteredProducts.map((prod) => (
                     <ProductCard
                       key={prod.id}
@@ -2076,15 +2076,15 @@ export default function App() {
             <CustomerReviews onOpenOrderHistory={() => openPageRoute('/my-orders')} />
 
             {/* Footer Brand Info */}
-            <footer className="px-5 pt-6 pb-4 bg-gray-900 text-gray-300 rounded-t-[32px] mt-auto">
-              <div className="space-y-4">
+            <footer className="px-4 pt-4 pb-3 bg-gray-900 text-gray-300 rounded-t-2xl mt-auto">
+              <div className="space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h4 className="text-lg font-black text-white flex items-center">
+                    <h4 className="text-base font-black text-white flex items-center">
                       <span>ROFIK</span>
                       <span className="text-[#D9232D] ml-1.5">GODI</span>
                     </h4>
-                    <p className="text-[10px] text-gray-400 mt-0.5 tracking-wider uppercase">
+                    <p className="text-[9.5px] text-gray-400 mt-0.5 tracking-wider uppercase">
                       CENTRE · LOCAL RIDE ESSENTIALS
                     </p>
                   </div>
@@ -2092,7 +2092,7 @@ export default function App() {
                   <div className="flex gap-2">
                     <a
                       href={`tel:${WORKSHOP_INFO.phone}`}
-                      className="w-8 h-8 rounded-full bg-gray-800 text-white hover:bg-[#D9232D] flex items-center justify-center transition-colors"
+                      className="w-7.5 h-7.5 rounded-full bg-gray-800 text-white hover:bg-[#D9232D] flex items-center justify-center transition-colors"
                       title="Call Us"
                     >
                       <PhoneCall className="w-3.5 h-3.5" />
@@ -2101,7 +2101,7 @@ export default function App() {
                       href={`https://wa.me/${WORKSHOP_INFO.whatsapp.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-700 transition-colors"
+                      className="w-7.5 h-7.5 rounded-full bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-700 transition-colors"
                       title="WhatsApp"
                     >
                       <MessageCircle className="w-3.5 h-3.5" />
@@ -2109,13 +2109,13 @@ export default function App() {
                   </div>
                 </div>
 
-                <p className="text-[11.5px] text-gray-400 leading-relaxed">
+                <p className="text-[11px] text-gray-400 leading-relaxed">
                   Leading seat cover manufacturer for bikes, toto e-rickshaws, and scooters.
                   Handcrafted with Japanese stitching cords, anti-fatigue memory foam, and
                   weather-proof rexine.
                 </p>
 
-                <div className="border-t border-gray-800 pt-3 flex flex-wrap justify-between items-center text-[10.5px] text-gray-500 gap-2">
+                <div className="border-t border-gray-800 pt-2.5 flex flex-wrap justify-between items-center text-[10px] text-gray-500 gap-2">
                   <span>© 2026 ROFIK GODI CENTRE</span>
                   <div className="flex items-center gap-3">
                     <button

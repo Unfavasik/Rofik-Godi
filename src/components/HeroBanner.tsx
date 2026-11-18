@@ -186,35 +186,35 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
   if (!bannersLoaded) {
     return (
       <section
-        className="mb-5 px-4 sm:px-5"
+        className="mb-4 px-3.5 sm:px-5"
         data-purpose="promotional-banner"
         aria-busy="true"
         aria-label="Loading promotions"
       >
         <div
           data-testid="hero-banner-skeleton"
-          className="classic-glass overflow-hidden rounded-[24px] bg-gradient-to-br from-white/95 via-rose-50/45 to-slate-100/90 shadow-[0_16px_40px_-14px_rgba(15,23,42,0.12)] ring-1 ring-slate-900/[0.06] sm:rounded-[28px]"
+          className="classic-glass overflow-hidden rounded-2xl bg-gradient-to-br from-white/95 via-rose-50/45 to-slate-100/90 shadow-[0_12px_32px_-14px_rgba(15,23,42,0.12)] ring-1 ring-slate-900/[0.06]"
         >
           {/* Poster Stage Shimmer */}
-          <div className="skeleton-shimmer relative aspect-[16/9] w-full bg-gradient-to-br from-slate-100 via-rose-50/50 to-slate-200/70 sm:aspect-[2/1]">
+          <div className="skeleton-shimmer relative aspect-[16/8] max-h-[240px] w-full bg-gradient-to-br from-slate-100 via-rose-50/50 to-slate-200/70 sm:aspect-[16/5.5]">
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-[#D9232D]/10 blur-3xl"
+              className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[#D9232D]/10 blur-3xl"
             />
-            <div className="absolute bottom-3 right-3.5 flex items-center gap-1.5 rounded-full bg-slate-900/35 px-2.5 py-1.5 ring-1 ring-white/50 backdrop-blur-md">
-              <span className="h-1.5 w-6 rounded-full bg-white/60" />
+            <div className="absolute bottom-2.5 right-3 flex items-center gap-1.5 rounded-full bg-slate-900/35 px-2 py-1 ring-1 ring-white/50 backdrop-blur-md">
+              <span className="h-1.5 w-5 rounded-full bg-white/60" />
               <span className="h-1.5 w-1.5 rounded-full bg-white/40" />
             </div>
           </div>
 
           {/* Classic Glass Caption Bar Shimmer */}
-          <div className="flex flex-col gap-2.5 border-t border-white/80 bg-gradient-to-r from-white/90 via-rose-50/45 to-white/90 px-4 py-3.5 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4">
-            <div className="min-w-0 flex-1 space-y-2">
-              <div className="skeleton-shimmer h-4 w-56 max-w-[88%] rounded-md bg-slate-200/85 sm:h-5 sm:w-72" />
-              <div className="skeleton-shimmer h-3 w-64 max-w-[78%] rounded bg-slate-200/65 sm:h-3.5 sm:w-80" />
+          <div className="flex flex-col gap-2 border-t border-white/80 bg-gradient-to-r from-white/90 via-rose-50/45 to-white/90 px-3.5 py-2.5 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-3">
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="skeleton-shimmer h-3.5 w-48 max-w-[85%] rounded-md bg-slate-200/85 sm:h-4 sm:w-64" />
+              <div className="skeleton-shimmer h-2.5 w-56 max-w-[75%] rounded bg-slate-200/65 sm:h-3 sm:w-72" />
             </div>
-            <div className="skeleton-shimmer flex h-8 w-28 shrink-0 items-center justify-end rounded-full bg-rose-200/70 pr-1.5 sm:h-9 sm:w-32">
-              <span className="h-5 w-5 rounded-full bg-white/60" />
+            <div className="skeleton-shimmer flex h-7 w-24 shrink-0 items-center justify-end rounded-full bg-rose-200/70 pr-1.5 sm:h-8 sm:w-28">
+              <span className="h-4 w-4 rounded-full bg-white/60" />
             </div>
           </div>
         </div>
@@ -236,7 +236,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
 
   return (
     <section
-      className="mb-5 px-4 sm:px-5"
+      className="mb-4 px-3.5 sm:px-5"
       data-purpose="promotional-banner"
       aria-roledescription="carousel"
       aria-label="Featured promotions"
@@ -255,15 +255,15 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
         className="group relative focus:outline-none"
       >
         {/* Gradient + Classic Glass Effect Card */}
-        <div className="classic-glass relative overflow-hidden rounded-[24px] bg-gradient-to-br from-white/95 via-rose-50/45 to-slate-100/90 shadow-[0_16px_42px_-14px_rgba(15,23,42,0.13),0_6px_20px_-6px_rgba(217,35,45,0.09)] ring-1 ring-slate-900/[0.07] transition-all duration-500 hover:shadow-[0_22px_50px_-14px_rgba(217,35,45,0.18)] sm:rounded-[28px]">
+        <div className="classic-glass relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/95 via-rose-50/45 to-slate-100/90 shadow-[0_12px_32px_-14px_rgba(15,23,42,0.12),0_4px_14px_-6px_rgba(217,35,45,0.08)] ring-1 ring-slate-900/[0.07] transition-all duration-500 hover:shadow-[0_18px_40px_-14px_rgba(217,35,45,0.16)]">
           {/* Specular Inner Frosted Glass Rim */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 z-30 rounded-[24px] ring-1 ring-inset ring-white/80 sm:rounded-[28px]"
+            className="pointer-events-none absolute inset-0 z-30 rounded-2xl ring-1 ring-inset ring-white/80"
           />
 
           {/* Top Stage: Smart Uncropped Image Showcase with Gradient & Ambient Glass Aura */}
-          <div className="relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-b from-white via-[#FAFBFD] to-rose-50/40 sm:aspect-[2/1]">
+          <div className="relative aspect-[16/8] max-h-[240px] w-full overflow-hidden bg-gradient-to-b from-white via-[#FAFBFD] to-rose-50/40 sm:aspect-[16/5.5]">
             {/* Ambient Gradient Orbs */}
             <div
               aria-hidden="true"
@@ -452,7 +452,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
             <div
               onClick={handleActivateSlideLink}
               role="presentation"
-              className="relative z-20 flex cursor-pointer flex-col gap-2.5 border-t border-white/90 bg-gradient-to-br from-white/92 via-rose-50/65 to-slate-100/90 px-4 py-3.5 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-4"
+              className="relative z-20 flex cursor-pointer flex-col gap-2 border-t border-white/90 bg-gradient-to-br from-white/92 via-rose-50/65 to-slate-100/90 px-3.5 py-2.5 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:gap-3.5 sm:px-4 sm:py-3"
             >
               {/* Delicate Classic Glass Gradient Shimmer Line */}
               <div
@@ -508,7 +508,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-                      className="font-banner-subtitle mt-1 break-words text-[12px] font-medium leading-[1.42] text-slate-600 sm:text-[13.5px]"
+                      className="font-banner-subtitle mt-0.5 break-words text-[11.5px] font-medium leading-[1.38] text-slate-600 sm:text-[12.5px]"
                     >
                       {slide.subtitle}
                     </motion.p>
