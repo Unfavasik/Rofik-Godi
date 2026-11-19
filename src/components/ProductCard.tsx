@@ -4,6 +4,7 @@ import { Heart, Plus, Star, ShoppingCart, ImageOff } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getProductAvailability, isProductSellable } from '../lib/productAvailability';
 import { formatInr, useI18n } from '../lib/i18n';
+import { getProductBadgeInfo, ProductCornerRibbon } from './ProductCornerRibbon';
 
 const loadedImageSrcs = new Set<string>();
 const formatPrice = formatInr;
@@ -77,7 +78,7 @@ const ProductCardOpenButton: React.FC<{ product: Product; onSelectProduct: (p: P
     type="button"
     onClick={() => onSelectProduct(product)}
     aria-label={t('product.view', { title: product.title })}
-    className="absolute inset-0 z-0 m-0 appearance-none rounded-2xl border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] focus-visible:ring-offset-2"
+    className="absolute inset-0 z-0 m-0 appearance-none rounded-xl border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#D9232D]"
   />;
 };
 
@@ -127,15 +128,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       setNotifySubmitting(false);
     }
   };
-  // Determine badge label and color
-  const rawBadgeLabel = product.badge || (product.isBestseller ? 'Bestseller' : product.isNew ? 'New' : null);
-  const badgeLabel = rawBadgeLabel === 'Bestseller' ? t('product.bestseller') : rawBadgeLabel === 'New' ? t('product.new') : rawBadgeLabel;
-  const badgeColorClass = (() => {
-    if (product.badgeColor === 'green' || (!product.badge && product.isNew)) return 'bg-emerald-600 text-white';
-    if (product.badgeColor === 'blue') return 'bg-blue-600 text-white';
-    if (product.badgeColor === 'orange') return 'bg-amber-600 text-white';
-    return 'bg-[#D9232D] text-white'; // default red
-  })();
+  // Determine diagonal corner ribbon badge label and color
+  const badgeInfo = getProductBadgeInfo(product, t);
 
   // ----------------------------------------------------------------------
   // LIST VIEW (Screen 3 in mockup - horizontal rows)
@@ -143,21 +137,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   if (layoutMode === 'list') {
     return (
       <article
-        className="w-full bg-white rounded-xl p-2 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:border-rose-200/80 md:hover:-translate-y-0.5 md:hover:shadow-[0_12px_24px_-8px_rgba(15,23,42,0.12)] flex items-center justify-between gap-2.5 relative group cursor-pointer transition-all duration-300 ease-out will-change-transform select-none"
+        className="w-full bg-white rounded-xl p-2 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:border-rose-200/80 md:hover:-translate-y-0.5 md:hover:shadow-[0_12px_24px_-8px_rgba(15,23,42,0.12)] flex items-center justify-between gap-2.5 relative overflow-hidden group cursor-pointer transition-all duration-300 ease-out will-change-transform select-none"
       >
         <ProductCardOpenButton product={product} onSelectProduct={onSelectProduct} />
-        {/* Left: Thumbnail with Badge */}
+        {badgeInfo && (
+          <ProductCornerRibbon
+            label={badgeInfo.label}
+            gradientClass={badgeInfo.gradientClass}
+            size="sm"
+          />
+        )}
+        {/* Left: Thumbnail */}
         <div className="relative z-10 pointer-events-none w-16 h-16 sm:w-[72px] sm:h-[72px] bg-[#F4F4F6] rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
           <ProductImage src={product.image} alt={product.title} variant="list" />
-
-          {badgeLabel && (
-            <span
-              className={`absolute top-1 left-1 z-10 text-[7.5px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded-full shadow-xs ${badgeColorClass}`}
-            >
-              {badgeLabel}
-            </span>
-          )}
-
         </div>
 
         {/* Middle: Title, Subtitle, Rating, Price */}
@@ -252,21 +244,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <article
       className={`${
         layoutMode === 'shelf' ? 'flex-shrink-0 w-[138px] sm:w-[152px]' : 'w-full'
-      } bg-white rounded-xl p-1.5 sm:p-2 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:border-rose-200/80 md:hover:-translate-y-1 md:hover:scale-[1.02] md:hover:shadow-[0_14px_28px_-10px_rgba(15,23,42,0.13),0_4px_12px_-4px_rgba(217,35,45,0.08)] flex flex-col justify-between relative group cursor-pointer transition-all duration-300 ease-out will-change-transform select-none`}
+      } bg-white rounded-xl p-1.5 sm:p-2 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:border-rose-200/80 md:hover:-translate-y-1 md:hover:scale-[1.02] md:hover:shadow-[0_14px_28px_-10px_rgba(15,23,42,0.13),0_4px_12px_-4px_rgba(217,35,45,0.08)] flex flex-col justify-between relative overflow-hidden group cursor-pointer transition-all duration-300 ease-out will-change-transform select-none`}
     >
       <ProductCardOpenButton product={product} onSelectProduct={onSelectProduct} />
+      {/* Dynamic Diagonal Corner Ribbon (Bestseller, New, Anti-Slip, Gel, Waterproof, etc.) */}
+      {badgeInfo && (
+        <ProductCornerRibbon
+          label={badgeInfo.label}
+          gradientClass={badgeInfo.gradientClass}
+          size={layoutMode === 'shelf' ? 'sm' : 'md'}
+        />
+      )}
       {/* Card Image & Badges Container (1:1 800x800 ratio) */}
       <div className="relative z-10 pointer-events-none w-full aspect-square bg-[#F4F4F6] rounded-lg overflow-hidden flex items-center justify-center mb-1.5">
         <ProductImage src={product.image} alt={product.title} variant="grid" />
-
-        {/* Dynamic Badge (Bestseller, New, Gel, Waterproof, etc.) */}
-        {badgeLabel && (
-          <span
-            className={`absolute top-1.5 left-1.5 z-10 text-[8px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded-full shadow-xs ${badgeColorClass}`}
-          >
-            {badgeLabel}
-          </span>
-        )}
 
         {/* Wishlist Heart */}
         <button

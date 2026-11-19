@@ -6,6 +6,7 @@ import { ProductCard } from '../src/components/ProductCard';
 import { ShopView } from '../src/components/ShopView';
 import { SearchView } from '../src/components/SearchView';
 import { Header } from '../src/components/Header';
+import { HeroBanner } from '../src/components/HeroBanner';
 import { PRODUCTS } from '../src/data/products';
 import type { Product } from '../src/types';
 
@@ -255,5 +256,54 @@ describe('catalog feedback', () => {
     expect(activeHeader).toContain('Search products, current query Splendor');
     expect(activeHeader).toContain('aria-label="Clear search"');
     expect(activeHeader).toContain('aria-label="Start voice search"');
+  });
+
+  it.each(['grid', 'list', 'shelf'] as const)('renders diagonal top-left corner ribbons for Bestseller, New, and custom badges in %s cards', (layoutMode) => {
+    const bestsellerHtml = renderCard({ ...sampleProduct, badge: undefined, isBestseller: true, isNew: false }, layoutMode);
+    expect(bestsellerHtml).toContain('data-testid="product-corner-ribbon"');
+    expect(bestsellerHtml).toContain('-rotate-45');
+    expect(bestsellerHtml).toContain('Bestseller');
+
+    const newHtml = renderCard({ ...sampleProduct, badge: undefined, isBestseller: false, isNew: true }, layoutMode);
+    expect(newHtml).toContain('data-testid="product-corner-ribbon"');
+    expect(newHtml).toContain('New');
+
+    const customHtml = renderCard({ ...sampleProduct, badge: 'Anti-Slip', isBestseller: false, isNew: false }, layoutMode);
+    expect(customHtml).toContain('data-testid="product-corner-ribbon"');
+    expect(customHtml).toContain('Anti-Slip');
+
+    const plainHtml = renderCard({ ...sampleProduct, badge: undefined, isBestseller: false, isNew: false }, layoutMode);
+    expect(plainHtml).not.toContain('data-testid="product-corner-ribbon"');
+  });
+
+  it('hides the HeroBanner completely when admin has not configured any active banners and renders configured admin banners', () => {
+    const emptyHtml = renderToStaticMarkup(
+      <HeroBanner
+        onExploreClick={() => {}}
+        onBannerClick={() => {}}
+        initialBanners={[]}
+      />,
+    );
+    expect(emptyHtml).toBe('');
+
+    const activeHtml = renderToStaticMarkup(
+      <HeroBanner
+        onExploreClick={() => {}}
+        onBannerClick={() => {}}
+        initialBanners={[
+          {
+            id: 'admin-promo-1',
+            title: 'Monsoon Seat Sale',
+            subtitle: 'Waterproof covers ready',
+            imageUrl: 'https://example.com/banner.jpg',
+            linkUrl: '/shop',
+            buttonLabel: 'Shop Now',
+          },
+        ]}
+      />,
+    );
+    expect(activeHtml).toContain('data-purpose="promotional-banner"');
+    expect(activeHtml).toContain('Monsoon Seat Sale');
+    expect(activeHtml).toContain('Shop Now');
   });
 });

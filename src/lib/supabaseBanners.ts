@@ -1,6 +1,8 @@
 import { supabase } from './supabase';
 import { convertImageToWebP } from './imagePipeline';
 
+export const STOREFRONT_BANNERS_CHANGED_EVENT = 'rgc:storefront-banners-changed';
+
 export type BannerFontStyle = 'outfit' | 'syne' | 'serif' | 'tech';
 
 export interface StorefrontBanner {

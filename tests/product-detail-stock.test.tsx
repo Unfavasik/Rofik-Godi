@@ -383,11 +383,28 @@ describe('product availability awareness and product detail page UI/UX', () => {
     expect(html).not.toContain('data-testid="pdp-next-product"');
   });
 
-  it('renders a Share button in ProductDetailModal and shares product name, price, and URL via the Web Share API with clipboard fallback', async () => {
+  it('keeps the top bar minimal with a single Share button and floats Like and Zoom on the gallery top-right', () => {
     const product = PRODUCTS[0]!;
     const html = renderDetails(product);
-    expect(html).toContain('data-testid="pdp-share-button"');
+    const headerMatch = html.match(/<header[^>]*data-testid="pdp-classic-glass-topbar"[^>]*>[\s\S]*?<\/header>/);
+    expect(headerMatch).not.toBeNull();
+    const headerHtml = headerMatch![0];
+    expect(headerHtml).toContain('aria-label="Go back"');
+    expect(headerHtml).toContain('data-testid="pdp-header-share-btn"');
+    expect(headerHtml).toContain('Open cart');
+    expect(headerHtml).not.toContain('<img');
+    expect(headerHtml).not.toContain(`>${product.title}<`);
+    expect(html).toContain('data-testid="pdp-gallery-floating-actions"');
+    expect(html).toContain('data-testid="pdp-gallery-like-btn"');
+    expect(html).toContain('data-testid="pdp-gallery-zoom-btn"');
+    expect(html).not.toContain('data-testid="pdp-share-button"');
+  });
+
+  it('renders a single Share button in the ProductDetailModal top bar and shares product name, price, and URL via the Web Share API with clipboard fallback', async () => {
+    const product = PRODUCTS[0]!;
+    const html = renderDetails(product);
     expect(html).toContain('data-testid="pdp-header-share-btn"');
+    expect(html).not.toContain('data-testid="pdp-share-button"');
     expect(html).toContain('>Share<');
 
     const payload = buildProductSharePayload(

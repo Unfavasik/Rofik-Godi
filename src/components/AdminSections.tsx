@@ -32,6 +32,7 @@ import {
   getBannerTitleSizeClass,
   normalizeBannerFontStyle,
   parseBannerScheduleDate,
+  STOREFRONT_BANNERS_CHANGED_EVENT,
   uploadStorefrontBannerImage,
   type BannerFontStyle,
   type BannerScheduleState,
@@ -246,6 +247,9 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
     }
     setBanners(next);
     writeSwrCache('admin:banners', next);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event(STOREFRONT_BANNERS_CHANGED_EVENT));
+    }
     notify('Banner settings saved');
     return true;
   };

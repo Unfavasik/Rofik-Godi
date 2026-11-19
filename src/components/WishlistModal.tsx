@@ -3,6 +3,7 @@ import { Product } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Heart, Trash2, ShoppingBag, Star, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 import { WishlistPageSkeleton } from './AccountPageSkeleton';
+import { getProductBadgeInfo, ProductCornerRibbon } from './ProductCornerRibbon';
 
 interface WishlistModalProps {
   isOpen: boolean;
@@ -212,11 +213,20 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                     : 0;
                 const alreadyInCart = isInCart(p);
 
+                const badgeInfo = getProductBadgeInfo(p);
+
                 return (
                   <div
                     key={p.id}
-                    className="group bg-white/95 backdrop-blur-md rounded-xl p-2.5 border border-slate-200/80 hover:border-rose-200/90 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.07)] flex gap-2.5 relative transition-all duration-200 hover:-translate-y-0.5"
+                    className="group relative overflow-hidden bg-white/95 backdrop-blur-md rounded-xl p-2.5 border border-slate-200/80 hover:border-rose-200/90 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.07)] flex gap-2.5 transition-all duration-200 hover:-translate-y-0.5"
                   >
+                    {badgeInfo && (
+                      <ProductCornerRibbon
+                        label={badgeInfo.label}
+                        gradientClass={badgeInfo.gradientClass}
+                        size="sm"
+                      />
+                    )}
                     <div
                       onClick={() => {
                         onSelectProduct(p);
@@ -229,8 +239,8 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                         alt={p.title}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
-                      {savings > 0 && (
-                        <span className="absolute top-1 left-1 rounded bg-[#D9232D] px-1 py-0.5 text-[8.5px] font-black text-white shadow-2xs">
+                      {!badgeInfo && savings > 0 && (
+                        <span className="absolute bottom-1 left-1 rounded bg-[#D9232D] px-1 py-0.5 text-[8.5px] font-black text-white shadow-2xs">
                           -{savings}%
                         </span>
                       )}

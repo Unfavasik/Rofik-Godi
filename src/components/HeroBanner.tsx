@@ -6,38 +6,19 @@ import {
   getBannerTitleSizeClass,
   isBannerCurrentlyActive,
   loadActiveStorefrontBanners,
+  STOREFRONT_BANNERS_CHANGED_EVENT,
   type StorefrontBanner,
 } from '../lib/supabaseBanners';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 interface HeroBannerProps {
   onExploreClick: () => void;
   onBannerClick: (url: string) => void;
+  initialBanners?: StorefrontBanner[];
 }
 
 const SLIDE_DURATION_MS = 6000;
-
-const DEFAULT_SHOWCASE_BANNERS: StorefrontBanner[] = [
-  {
-    id: 'default-showcase-1',
-    title: 'Custom Seat Covers & Precision Fitment',
-    subtitle:
-      'Weather-resistant, double-stitched seat covers crafted for bikes, scooters & totos.',
-    imageUrl: '/images/premium-seat-cover-hero.webp',
-    linkUrl: '/shop',
-    buttonLabel: 'Explore Catalog',
-    fontStyle: 'outfit',
-  },
-  {
-    id: 'default-showcase-2',
-    title: 'Built for All-Day Riding Comfort',
-    subtitle:
-      'High-density cushioning, custom colour piping & workshop-grade fitting tailored to your model.',
-    imageUrl: '/images/premium-seat-gallery-02.webp',
-    linkUrl: '/shop',
-    buttonLabel: 'Shop Seat Covers',
-    fontStyle: 'syne',
-  },
-];
+let cachedStorefrontBanners: StorefrontBanner[] | null = null;
 
 function formatPromoEndLabel(endsAt?: string): string | null {
   if (!endsAt) return null;
@@ -56,10 +37,18 @@ function formatPromoEndLabel(endsAt?: string): string | null {
   return `Until ${parsed.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
 }
 
-export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBannerClick }) => {
+export const HeroBanner: React.FC<HeroBannerProps> = ({
+  onExploreClick,
+  onBannerClick,
+  initialBanners,
+}) => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [slides, setSlides] = useState<StorefrontBanner[]>([]);
-  const [bannersLoaded, setBannersLoaded] = useState(false);
+  const [slides, setSlides] = useState<StorefrontBanner[]>(
+    () => initialBanners ?? cachedStorefrontBanners ?? [],
+  );
+  const [bannersLoaded, setBannersLoaded] = useState(
+    () => initialBanners !== undefined || cachedStorefrontBanners !== null || !isSupabaseConfigured,
+  );
   const [imageFailed, setImageFailed] = useState(false);
   const [loadedImageUrls, setLoadedImageUrls] = useState<Record<string, boolean>>({});
   const [imageAspectRatios, setImageAspectRatios] = useState<Record<string, number>>({});
@@ -78,16 +67,25 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
   }, []);
 
   useEffect(() => {
+    if (initialBanners !== undefined) return;
     let active = true;
     const refreshBanners = () => {
       void loadActiveStorefrontBanners().then(({ data }) => {
         if (active) {
+          cachedStorefrontBanners = data;
           setSlides(data);
           setBannersLoaded(true);
         }
       });
     };
     refreshBanners();
+    const onBannersChanged = () => {
+      setScheduleNow(new Date());
+      refreshBanners();
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener(STOREFRONT_BANNERS_CHANGED_EVENT, onBannersChanged);
+    }
     const poll = setInterval(() => {
       setScheduleNow(new Date());
       refreshBanners();
@@ -95,22 +93,26 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
     return () => {
       active = false;
       clearInterval(poll);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener(STOREFRONT_BANNERS_CHANGED_EVENT, onBannersChanged);
+      }
     };
-  }, []);
+  }, [initialBanners]);
 
-  const liveCustomSlides = useMemo(
+  const activeSlides = useMemo(
     () => slides.filter((item) => isBannerCurrentlyActive(item, scheduleNow)),
     [slides, scheduleNow],
   );
-  const activeSlides = liveCustomSlides.length > 0 ? liveCustomSlides : DEFAULT_SHOWCASE_BANNERS;
-  const currentIndex = currentSlide % activeSlides.length;
+  const currentIndex = activeSlides.length > 0 ? currentSlide % activeSlides.length : 0;
   const slide = activeSlides[currentIndex];
 
   const goToNext = useCallback(() => {
+    if (activeSlides.length === 0) return;
     setCurrentSlide((prev) => (prev + 1) % activeSlides.length);
   }, [activeSlides.length]);
 
   const goToPrev = useCallback(() => {
+    if (activeSlides.length === 0) return;
     setCurrentSlide((prev) => (prev - 1 + activeSlides.length) % activeSlides.length);
   }, [activeSlides.length]);
 
@@ -125,6 +127,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
 
   // Preload neighbouring slides so transitions never pop in blank.
   useEffect(() => {
+    if (activeSlides.length <= 1) return;
     for (const offset of [1, activeSlides.length - 1]) {
       const neighbour = activeSlides[(currentIndex + offset) % activeSlides.length];
       if (neighbour?.imageUrl) {
@@ -160,6 +163,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
   };
 
   const handleActivateSlideLink = () => {
+    if (!slide) return;
     if (Math.abs(touchDeltaX.current) >= 42) {
       touchDeltaX.current = 0;
       return;
@@ -182,44 +186,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick, onBanner
     }
   };
 
-  // Shimmer-effect skeleton loader in Classic Glass Gradient style while banner records fetch.
-  if (!bannersLoaded) {
-    return (
-      <section
-        className="mb-4 px-3.5 sm:px-5"
-        data-purpose="promotional-banner"
-        aria-busy="true"
-        aria-label="Loading promotions"
-      >
-        <div
-          data-testid="hero-banner-skeleton"
-          className="classic-glass overflow-hidden rounded-2xl bg-gradient-to-br from-white/95 via-rose-50/45 to-slate-100/90 shadow-[0_12px_32px_-14px_rgba(15,23,42,0.12)] ring-1 ring-slate-900/[0.06]"
-        >
-          {/* Poster Stage Shimmer */}
-          <div className="skeleton-shimmer relative aspect-[16/8] max-h-[240px] w-full bg-gradient-to-br from-slate-100 via-rose-50/50 to-slate-200/70 sm:aspect-[16/5.5]">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[#D9232D]/10 blur-3xl"
-            />
-            <div className="absolute bottom-2.5 right-3 flex items-center gap-1.5 rounded-full bg-slate-900/35 px-2 py-1 ring-1 ring-white/50 backdrop-blur-md">
-              <span className="h-1.5 w-5 rounded-full bg-white/60" />
-              <span className="h-1.5 w-1.5 rounded-full bg-white/40" />
-            </div>
-          </div>
-
-          {/* Classic Glass Caption Bar Shimmer */}
-          <div className="flex flex-col gap-2 border-t border-white/80 bg-gradient-to-r from-white/90 via-rose-50/45 to-white/90 px-3.5 py-2.5 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-3">
-            <div className="min-w-0 flex-1 space-y-1.5">
-              <div className="skeleton-shimmer h-3.5 w-48 max-w-[85%] rounded-md bg-slate-200/85 sm:h-4 sm:w-64" />
-              <div className="skeleton-shimmer h-2.5 w-56 max-w-[75%] rounded bg-slate-200/65 sm:h-3 sm:w-72" />
-            </div>
-            <div className="skeleton-shimmer flex h-7 w-24 shrink-0 items-center justify-end rounded-full bg-rose-200/70 pr-1.5 sm:h-8 sm:w-28">
-              <span className="h-4 w-4 rounded-full bg-white/60" />
-            </div>
-          </div>
-        </div>
-      </section>
-    );
+  // Do not show a placeholder or fallback banner until/unless admin has configured an active banner.
+  if (!bannersLoaded || !slide) {
+    return null;
   }
 
   const hasImage = !imageFailed && Boolean(slide.imageUrl);
