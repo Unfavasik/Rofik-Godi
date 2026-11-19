@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
+import { LoaderCircle } from 'lucide-react';
 import { UserProfile } from '../types';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getAuthCallbackUrl } from '../lib/oauthRedirect';
@@ -376,7 +377,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               disabled={isSubmitting}
               className="banner-cta-shine group/cta relative flex h-12 w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-0 bg-[linear-gradient(180deg,#ea2a3d_0%,#d0132a_100%)] text-[16.5px] font-semibold text-white shadow-[0_8px_18px_rgba(224,24,45,0.3)] transition-all hover:brightness-105 hover:shadow-[0_10px_22px_rgba(224,24,45,0.4)] active:scale-[0.985] disabled:cursor-wait disabled:opacity-70"
             >
-              <span>{isSubmitting ? 'Connecting…' : mode === 'signup' ? 'Sign up' : 'Sign in'}</span>
+              <span className="inline-flex items-center gap-2">
+                {isSubmitting && <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                {isSubmitting ? 'Connecting…' : mode === 'signup' ? 'Sign up' : 'Sign in'}
+              </span>
               <i className="absolute bottom-0 right-0 top-0 flex w-[54px] items-center justify-center rounded-l-2xl bg-white/10">
                 <svg
                   width="22"

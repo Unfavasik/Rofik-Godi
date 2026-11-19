@@ -14,6 +14,8 @@ import {
 } from '../lib/supabaseReviews';
 import { getPathForCustomerOrder } from '../lib/appRoutes';
 import { ReviewComposer } from './ReviewComposer';
+import { ProductReviewsSkeleton } from './AccountPageSkeleton';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 interface ProductReviewsProps {
   productId: string;
@@ -49,17 +51,25 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
   initialFilter = 'most-recent',
 }) => {
   const hasInitialData = initialReviews !== undefined || initialOrders !== undefined;
-  const [summary, setSummary] = useState<ProductRatingSummary | null>(initialSummary);
-  const [reviews, setReviews] = useState<ProductReviewRecord[]>(initialReviews ?? []);
-  const [orders, setOrders] = useState<ReviewEligibleOrder[]>(initialOrders ?? []);
-  const [myReviews, setMyReviews] = useState<ProductReviewRecord[]>([]);
-  const [loading, setLoading] = useState(!hasInitialData);
+  const publicCacheKey = `public:product-reviews:${productId}`;
+  const userCacheKey = isAuthenticated && customerId ? `user:${customerId}:review-ctx:${productId}` : '';
+  const initialCachedPublic = !hasInitialData
+    ? readSwrCache<{ summary: ProductRatingSummary | null; reviews: ProductReviewRecord[] }>(publicCacheKey)
+    : undefined;
+  const initialCachedUser = !hasInitialData && userCacheKey
+    ? readSwrCache<{ orders: ReviewEligibleOrder[]; reviews: ProductReviewRecord[] }>(userCacheKey)
+    : undefined;
+  const [summary, setSummary] = useState<ProductRatingSummary | null>(() => initialSummary ?? initialCachedPublic?.summary ?? null);
+  const [reviews, setReviews] = useState<ProductReviewRecord[]>(() => initialReviews ?? initialCachedPublic?.reviews ?? []);
+  const [orders, setOrders] = useState<ReviewEligibleOrder[]>(() => initialOrders ?? initialCachedUser?.orders ?? []);
+  const [myReviews, setMyReviews] = useState<ProductReviewRecord[]>(() => initialCachedUser?.reviews ?? []);
+  const [loading, setLoading] = useState(() => !hasInitialData && !initialCachedPublic);
   const [composer, setComposer] = useState<{ order: ReviewEligibleOrder; review?: ProductReviewRecord } | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [activeFilter, setActiveFilter] = useState<ReviewFilterMode>(initialFilter);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  const refresh = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     const [nextSummary, nextReviews, context] = await Promise.all([
       getProductRatingSummary(productId),
       listPublishedReviews(productId, showAll ? 100 : 25),
@@ -69,14 +79,30 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
     setReviews(nextReviews);
     setOrders(context.orders);
     setMyReviews(context.reviews);
+    writeSwrCache(publicCacheKey, { summary: nextSummary, reviews: nextReviews });
+    if (userCacheKey) {
+      writeSwrCache(userCacheKey, context);
+    }
     setLoading(false);
-  }, [productId, isAuthenticated, customerId, showAll]);
+  }, [productId, isAuthenticated, customerId, showAll, publicCacheKey, userCacheKey]);
 
   useEffect(() => {
-    if (!hasInitialData) {
-      void refresh();
+    if (hasInitialData) return;
+    const cachedPublic = readSwrCache<{ summary: ProductRatingSummary | null; reviews: ProductReviewRecord[] }>(publicCacheKey);
+    const cachedUser = userCacheKey
+      ? readSwrCache<{ orders: ReviewEligibleOrder[]; reviews: ProductReviewRecord[] }>(userCacheKey)
+      : undefined;
+    if (cachedPublic) {
+      setSummary(cachedPublic.summary);
+      setReviews(cachedPublic.reviews);
+      setLoading(false);
     }
-  }, [hasInitialData, refresh]);
+    if (cachedUser) {
+      setOrders(cachedUser.orders);
+      setMyReviews(cachedUser.reviews);
+    }
+    void refresh(Boolean(cachedPublic));
+  }, [hasInitialData, publicCacheKey, refresh, userCacheKey]);
 
   const counts = summary ? summaryCounts(summary) : [0, 0, 0, 0, 0];
   const countByOrder = new Map(myReviews.map((review) => [review.order_id, review]));
@@ -182,7 +208,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
 
       <div className="mt-3 space-y-2.5">
         {loading ? (
-          <p className="py-5 text-center text-xs text-slate-500">Loading reviews…</p>
+          <ProductReviewsSkeleton count={3} />
         ) : filteredReviews.length ? (
           filteredReviews.map((review) => {
             const isVerifiedCustomer = isVerifiedProductReview(
@@ -334,7 +360,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
           onClose={() => setComposer(null)}
           onSaved={() => {
             setComposer(null);
-            void refresh();
+            void refresh(true);
           }}
         />
       )}

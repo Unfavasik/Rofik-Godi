@@ -20,6 +20,9 @@ import {
   type SupportRequestRecord,
 } from '../lib/supabaseSupport';
 import { SupportConversationSkeleton } from './AccountPageSkeleton';
+import { useUploadProgress } from '../lib/useUploadProgress';
+import { UploadProgressBar } from './UploadProgressBar';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 const QUICK_REPLIES = [
   'Any update on this?',
@@ -58,13 +61,15 @@ export const SupportConversation: React.FC<{
   isAdmin?: boolean;
   onChanged?: () => void;
 }> = ({ requestId, currentUserId, customerName, isAdmin = false, onChanged }) => {
-  const [request, setRequest] = useState<SupportRequestRecord | null>(null);
-  const [messages, setMessages] = useState<SupportMessageRecord[]>([]);
+  const threadCacheKey = `user:${currentUserId || 'me'}:support-thread:${requestId}`;
+  const initialThread = readSwrCache<{ request: SupportRequestRecord | null; messages: SupportMessageRecord[]; hasOlder: boolean }>(threadCacheKey);
+  const [request, setRequest] = useState<SupportRequestRecord | null>(() => initialThread?.request ?? null);
+  const [messages, setMessages] = useState<SupportMessageRecord[]>(() => initialThread?.messages ?? []);
   const [draft, setDraft] = useState('');
   const [files, setFiles] = useState<File[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !initialThread);
   const [loadingOlder, setLoadingOlder] = useState(false);
-  const [hasOlder, setHasOlder] = useState(false);
+  const [hasOlder, setHasOlder] = useState(() => initialThread?.hasOlder ?? false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [previewAttachment, setPreviewAttachment] = useState<SupportMessageRecord['attachments'][number] | null>(null);
@@ -75,16 +80,26 @@ export const SupportConversation: React.FC<{
   const wasNearBottomRef = useRef(true);
   const attachmentCount = request?.attachment_count ?? 0;
   const customerReplyLocked = !isAdmin && request?.status === 'resolved';
+  const attachmentUploadProgress = useUploadProgress('attachments');
 
   useEffect(() => {
-    setRequest(null);
-    setMessages([]);
+    const cached = readSwrCache<{ request: SupportRequestRecord | null; messages: SupportMessageRecord[]; hasOlder: boolean }>(threadCacheKey);
+    if (cached) {
+      setRequest(cached.request);
+      setMessages(cached.messages);
+      setHasOlder(cached.hasOlder);
+      setLoading(false);
+    } else {
+      setRequest(null);
+      setMessages([]);
+      setHasOlder(false);
+      setLoading(true);
+    }
     setPreviewAttachment(null);
-    setHasOlder(false);
     pendingScrollRef.current = null;
     previousMessageCountRef.current = 0;
     wasNearBottomRef.current = true;
-  }, [requestId]);
+  }, [requestId, threadCacheKey]);
 
   const refresh = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -98,17 +113,28 @@ export const SupportConversation: React.FC<{
       if (messageResult.error) throw messageResult.error;
       setRequest(requestResult.data);
       setHasOlder(messageResult.hasMore);
-      setMessages((current) => mergeMessages(silent ? current : [], messageResult.data));
+      setMessages((current) => {
+        const nextMessages = mergeMessages(silent ? current : [], messageResult.data);
+        writeSwrCache(threadCacheKey, {
+          request: requestResult.data,
+          messages: nextMessages,
+          hasOlder: messageResult.hasMore,
+        });
+        return nextMessages;
+      });
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Conversation could not be loaded.');
+      if (!silent) {
+        setError(loadError instanceof Error ? loadError.message : 'Conversation could not be loaded.');
+      }
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [currentUserId, requestId]);
+  }, [currentUserId, requestId, threadCacheKey]);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    const cached = readSwrCache(threadCacheKey);
+    void refresh(Boolean(cached));
+  }, [refresh, threadCacheKey]);
 
   useEffect(() => {
     const container = messageScrollRef.current;
@@ -165,7 +191,15 @@ export const SupportConversation: React.FC<{
     try {
       const result = await listSupportMessages(requestId, currentUserId, cursor);
       if (result.error) throw result.error;
-      setMessages((current) => mergeMessages(current, result.data));
+      setMessages((current) => {
+        const nextMessages = mergeMessages(current, result.data);
+        writeSwrCache(threadCacheKey, {
+          request,
+          messages: nextMessages,
+          hasOlder: result.hasMore,
+        });
+        return nextMessages;
+      });
       setHasOlder(result.hasMore);
     } catch (loadError) {
       pendingScrollRef.current = null;
@@ -195,21 +229,37 @@ export const SupportConversation: React.FC<{
     if (sending || (!draft.trim() && files.length === 0)) return;
     setSending(true);
     setError('');
-    const result = await sendSupportMessage({
-      requestId,
-      message: draft,
-      files,
-      expectedUserId: currentUserId,
-    });
-    if (result.error) {
-      setError(result.error.message);
-    } else {
-      setDraft('');
-      setFiles([]);
-      await refresh(true);
-      onChanged?.();
+    if (files.length > 0) {
+      attachmentUploadProgress.startUpload(files[0].name, {
+        totalCount: files.length,
+        baseLabel: files.length === 1 ? 'attachment' : 'attachments',
+      });
     }
-    setSending(false);
+    try {
+      const result = await sendSupportMessage({
+        requestId,
+        message: draft,
+        files,
+        expectedUserId: currentUserId,
+      });
+      if (result.error) {
+        attachmentUploadProgress.resetUpload();
+        setError(result.error.message);
+      } else {
+        if (files.length > 0) {
+          attachmentUploadProgress.finishUpload('Attachments uploaded');
+        }
+        setDraft('');
+        setFiles([]);
+        await refresh(true);
+        onChanged?.();
+      }
+    } catch {
+      attachmentUploadProgress.resetUpload();
+      setError('Could not send your reply. Please try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const appendQuickReply = (chip: string) => {
@@ -402,6 +452,8 @@ export const SupportConversation: React.FC<{
             ))}
           </div>
         )}
+
+        <UploadProgressBar state={attachmentUploadProgress.state} compact className="mb-2" />
 
         <div className="flex items-end gap-2">
           <label

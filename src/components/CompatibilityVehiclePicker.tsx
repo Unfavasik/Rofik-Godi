@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Bike, Check, Loader2, Motorbike, Search, X } from 'lucide-react';
-import { loadVehicleModels, type VehicleCatalogModel } from '../lib/supabaseVehicleCatalog';
+import { getCachedVehicleModels, loadVehicleModels, type VehicleCatalogModel } from '../lib/supabaseVehicleCatalog';
 import { getBrandInitials, getBrandLogoUrl } from '../lib/brandLogos';
 
 type Props = {
@@ -36,8 +36,8 @@ function ModelThumb({ image }: { image: string }) {
 }
 
 export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }: Props) {
-  const [models, setModels] = useState<VehicleCatalogModel[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [models, setModels] = useState<VehicleCatalogModel[]>(() => getCachedVehicleModels());
+  const [loading, setLoading] = useState(() => getCachedVehicleModels().length === 0);
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState<'all' | 'bike' | 'scooter'>('all');
   const [picked, setPicked] = useState<Set<string>>(new Set());
@@ -45,10 +45,16 @@ export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }:
   useEffect(() => {
     if (!open) return;
     let active = true;
+    const cached = getCachedVehicleModels();
     setPicked(new Set(selected));
     setSearch('');
     setTab('all');
-    setLoading(true);
+    if (cached.length > 0) {
+      setModels(cached);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     void loadVehicleModels().then(({ data }) => {
       if (!active) return;
       setModels(data);

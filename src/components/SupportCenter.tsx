@@ -4,6 +4,7 @@ import {
   ChevronRight,
   CircleHelp,
   Headphones,
+  LoaderCircle,
   Plus,
   RefreshCw,
   Search,
@@ -19,6 +20,7 @@ import {
 import { CustomerSupportRequestForm } from './CustomerSupportRequestForm';
 import { SupportConversation } from './SupportConversation';
 import { SupportTicketListSkeleton } from './AccountPageSkeleton';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 type StatusFilter = 'all' | 'open' | 'in_progress' | 'resolved';
 
@@ -71,14 +73,18 @@ export const SupportCenter: React.FC<{
   onOpenLogin,
   onSelectRequest,
 }) => {
-  const [requests, setRequests] = useState<SupportRequestRecord[]>([]);
+  const cacheKey = currentUserId ? `user:${currentUserId}:support-requests` : '';
+  const initialCached = cacheKey
+    ? readSwrCache<{ data: SupportRequestRecord[]; hasMore: boolean; cursor: SupportRequestCursor | null }>(cacheKey)
+    : undefined;
+  const [requests, setRequests] = useState<SupportRequestRecord[]>(() => initialCached?.data ?? []);
   const [selectedId, setSelectedId] = useState<string | null>(initialRequestId);
   const [showNewRequest, setShowNewRequest] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !initialCached);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
-  const [cursor, setCursor] = useState<SupportRequestCursor | null>(null);
+  const [hasMore, setHasMore] = useState(() => initialCached?.hasMore ?? false);
+  const [cursor, setCursor] = useState<SupportRequestCursor | null>(() => initialCached?.cursor ?? null);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -94,26 +100,43 @@ export const SupportCenter: React.FC<{
       try {
         const result = await listMySupportRequests(currentUserId);
         if (result.error) throw result.error;
-        setRequests((current) => mergeRequests(current, result.data));
+        setRequests((current) => {
+          const next = mergeRequests(current, result.data);
+          if (cacheKey) {
+            writeSwrCache(cacheKey, { data: next, hasMore: result.hasMore, cursor: result.cursor });
+          }
+          return next;
+        });
         setHasMore(result.hasMore);
         setCursor(result.cursor);
       } catch (loadError) {
-        setError(
-          loadError instanceof Error
-            ? loadError.message
-            : 'Your support requests could not be loaded.',
-        );
+        if (!silent) {
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : 'Your support requests could not be loaded.',
+          );
+        }
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [currentUserId],
+    [cacheKey, currentUserId],
   );
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    const cached = cacheKey
+      ? readSwrCache<{ data: SupportRequestRecord[]; hasMore: boolean; cursor: SupportRequestCursor | null }>(cacheKey)
+      : undefined;
+    if (cached !== undefined) {
+      setRequests(cached.data);
+      setHasMore(cached.hasMore);
+      setCursor(cached.cursor);
+      setLoading(false);
+    }
+    void refresh(Boolean(cached));
+  }, [cacheKey, refresh]);
 
   useEffect(() => {
     if (!initialRequestId) {
@@ -197,7 +220,13 @@ export const SupportCenter: React.FC<{
     try {
       const result = await listMySupportRequests(currentUserId, cursor);
       if (result.error) throw result.error;
-      setRequests((current) => mergeRequests(current, result.data));
+      setRequests((current) => {
+        const next = mergeRequests(current, result.data);
+        if (cacheKey) {
+          writeSwrCache(cacheKey, { data: next, hasMore: result.hasMore, cursor: result.cursor });
+        }
+        return next;
+      });
       setHasMore(result.hasMore);
       setCursor(result.cursor);
     } catch (loadError) {
@@ -464,8 +493,9 @@ export const SupportCenter: React.FC<{
                     type="button"
                     onClick={() => void loadOlder()}
                     disabled={loadingOlder}
-                    className="min-h-10 w-full rounded-xl border border-slate-200/80 bg-slate-50 px-3 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                    className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200/80 bg-slate-50 px-3 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
                   >
+                    {loadingOlder && <LoaderCircle className="h-3.5 w-3.5 animate-spin text-[#D9232D]" aria-hidden="true" />}
                     {loadingOlder ? 'Loading…' : 'Load older requests'}
                   </button>
                 </div>

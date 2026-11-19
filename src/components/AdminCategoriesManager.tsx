@@ -23,6 +23,9 @@ import {
   uploadCategoryImage,
   type StorefrontCategory,
 } from '../lib/supabaseCategories';
+import { useUploadProgress } from '../lib/useUploadProgress';
+import { UploadProgressBar } from './UploadProgressBar';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 type Props = {
   products: Product[];
@@ -39,8 +42,12 @@ function isMissingTableError(error: unknown) {
 }
 
 export function AdminCategoriesManager({ products, notify }: Props) {
-  const [categories, setCategories] = useState<StorefrontCategory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<StorefrontCategory[]>(
+    () => readSwrCache<StorefrontCategory[]>('admin:categories') ?? [],
+  );
+  const [loading, setLoading] = useState(
+    () => readSwrCache('admin:categories') === undefined,
+  );
   const [tableMissing, setTableMissing] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -54,21 +61,26 @@ export function AdminCategoriesManager({ products, notify }: Props) {
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const createImageInputRef = useRef<HTMLInputElement | null>(null);
   const editImageInputRef = useRef<HTMLInputElement | null>(null);
+  const createUploadProgress = useUploadProgress('category image');
+  const replaceUploadProgress = useUploadProgress('category image');
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  const refresh = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     const result = await loadStorefrontCategories({ includeHidden: true });
     if (result.error) {
       setTableMissing(isMissingTableError(result.error));
       if (!isMissingTableError(result.error)) notify(`Could not load categories: ${result.error.message}`, 'error');
     } else {
       setTableMissing(false);
+      writeSwrCache('admin:categories', result.data);
     }
     setCategories(result.data);
     setLoading(false);
   }, [notify]);
 
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    void refresh(readSwrCache('admin:categories') !== undefined);
+  }, [refresh]);
 
   const addCategory = async () => {
     const cleanName = name.trim();
@@ -80,12 +92,18 @@ export function AdminCategoriesManager({ products, notify }: Props) {
     try {
       const sortOrder = categories.length + 1;
       created = await createCategory({ key: slugifyCategoryKey(cleanName), name: cleanName, description, sortOrder });
+      const pendingFile = imageFile;
       setName(''); setDescription(''); setImageFile(null);
-      if (imageFile) await uploadCategoryImage(created.id, imageFile);
-      await refresh();
+      if (pendingFile) {
+        createUploadProgress.startUpload(pendingFile.name, { baseLabel: 'category image' });
+        await uploadCategoryImage(created.id, pendingFile);
+        createUploadProgress.finishUpload('Category image uploaded');
+      }
+      await refresh(true);
       notify('Category added to Supabase', 'success');
     } catch (error) {
-      await refresh();
+      createUploadProgress.resetUpload();
+      await refresh(true);
       notify(error instanceof Error ? (created ? `Category added, but image upload failed: ${error.message}` : error.message) : 'Could not add category', 'error');
     } finally {
       setCreating(false);
@@ -104,7 +122,7 @@ export function AdminCategoriesManager({ products, notify }: Props) {
     try {
       await updateCategory(category.id, { name: editName.trim(), description: editDescription });
       setEditingId(null);
-      await refresh();
+      await refresh(true);
       notify('Category changes saved', 'success');
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not save category', 'error');
@@ -116,7 +134,7 @@ export function AdminCategoriesManager({ products, notify }: Props) {
   const toggleCategory = async (category: StorefrontCategory) => {
     try {
       await updateCategory(category.id, { isActive: !category.isActive });
-      await refresh();
+      await refresh(true);
       notify(category.isActive ? 'Category hidden from customers' : 'Category visible to customers', 'success');
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not update visibility', 'error');
@@ -129,11 +147,14 @@ export function AdminCategoriesManager({ products, notify }: Props) {
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) return notify('Choose an image smaller than 5MB', 'error');
     setUploadingId(category.id);
+    replaceUploadProgress.startUpload(file.name, { baseLabel: 'category image' });
     try {
       const result = await uploadCategoryImage(category.id, file);
-      await refresh();
+      replaceUploadProgress.finishUpload('Category image uploaded');
+      await refresh(true);
       notify(`Image saved as WebP (${Math.round(result.bytes / 1024)} KB)`, 'success');
     } catch (error) {
+      replaceUploadProgress.resetUpload();
       notify(error instanceof Error ? error.message : 'Could not upload category image', 'error');
     } finally {
       setUploadingId(null);
@@ -147,7 +168,7 @@ export function AdminCategoriesManager({ products, notify }: Props) {
     setDeletingId(category.id);
     try {
       await deleteCategory(category.id);
-      await refresh();
+      await refresh(true);
       notify('Category deleted', 'success');
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not delete category', 'error');
@@ -264,6 +285,7 @@ export function AdminCategoriesManager({ products, notify }: Props) {
                 className="hidden"
                 aria-label="Choose category image"
               />
+              <UploadProgressBar state={createUploadProgress.state} compact className="mt-2" />
             </div>
             <button
               type="button"
@@ -294,10 +316,10 @@ export function AdminCategoriesManager({ products, notify }: Props) {
               <p className="sr-only">Loading categories…</p>
               {Array.from({ length: 4 }).map((_, idx) => (
                 <div key={idx} className="flex items-center gap-3 py-1.5">
-                  <div className="h-11 w-14 shrink-0 rounded-xl animate-shimmer" />
+                  <div className="h-11 w-14 shrink-0 rounded-xl bg-slate-200/80 animate-shimmer" />
                   <div className="flex-1 space-y-1.5">
-                    <div className="h-3.5 w-36 rounded-lg animate-shimmer" />
-                    <div className="h-3 w-48 rounded-lg animate-shimmer" />
+                    <div className="h-3.5 w-36 rounded-lg bg-slate-200/80 animate-shimmer" />
+                    <div className="h-3 w-48 rounded-lg bg-slate-200/65 animate-shimmer" />
                   </div>
                 </div>
               ))}
@@ -357,7 +379,11 @@ export function AdminCategoriesManager({ products, notify }: Props) {
                             disabled={uploadingId === category.id}
                             className="inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-red-50 px-3 py-1.5 text-xs font-extrabold text-[#D9232D] transition hover:bg-red-100 disabled:opacity-60"
                           >
-                            <ImagePlus className="h-3.5 w-3.5" />
+                            {uploadingId === category.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <ImagePlus className="h-3.5 w-3.5" />
+                            )}
                             {uploadingId === category.id ? 'Uploading…' : 'Replace Image'}
                           </button>
                           <button
@@ -374,6 +400,9 @@ export function AdminCategoriesManager({ products, notify }: Props) {
                             {savingId === category.id ? 'Saving…' : 'Save Changes'}
                           </button>
                         </div>
+                        {uploadingId === category.id && (
+                          <UploadProgressBar state={replaceUploadProgress.state} compact />
+                        )}
                         <input
                           ref={editImageInputRef}
                           type="file"
@@ -457,18 +486,22 @@ export function AdminCategoriesManager({ products, notify }: Props) {
                                 )}
                                 {category.isActive ? 'Hide category' : 'Show category'}
                               </button>
-                              <button
-                                type="button"
-                                onClick={(event) => {
-                                  event.currentTarget.closest('details')?.removeAttribute('open');
-                                  void removeCategory(category);
-                                }}
-                                disabled={deletingId === category.id}
-                                className="flex min-h-9 w-full items-center gap-2 rounded-xl px-3 py-1.5 text-left text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                                {deletingId === category.id ? 'Deleting…' : 'Delete category'}
-                              </button>
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.currentTarget.closest('details')?.removeAttribute('open');
+                                    void removeCategory(category);
+                                  }}
+                                  disabled={deletingId === category.id}
+                                  className="flex min-h-9 w-full items-center gap-2 rounded-xl px-3 py-1.5 text-left text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                                >
+                                  {deletingId === category.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  )}
+                                  {deletingId === category.id ? 'Deleting…' : 'Delete category'}
+                                </button>
                             </div>
                           </details>
                         </div>

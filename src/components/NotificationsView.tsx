@@ -30,6 +30,7 @@ import { CouponDetailsView } from './CouponDetailsView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
 import { getCouponOfferForNotification, isCouponNotification } from '../lib/couponDisplay';
 import { NewProductNotificationDetails } from './NewProductNotificationDetails';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { SupportNotificationDetails } from './SupportNotificationDetails';
 import {
   getCustomerNotificationCategory,
@@ -298,16 +299,24 @@ export function NotificationsView({
       setCouponDetailsLoading(false);
       return () => { active = false; };
     }
-    setCouponOffer(null);
+    const cachedOffers = readSwrCache<CustomerCouponOffer[]>('public:customer-coupons');
+    const cachedMatch = cachedOffers ? getCouponOfferForNotification(selectedNotification, cachedOffers) : null;
+    if (cachedOffers !== undefined) {
+      setCouponOffer(cachedMatch);
+      setCouponDetailsLoading(false);
+    } else {
+      setCouponOffer(null);
+      setCouponDetailsLoading(true);
+    }
     setCouponDetailsError('');
-    setCouponDetailsLoading(true);
     void loadCustomerCouponOffers().then(({ data, error }) => {
       if (!active) return;
+      if (!error) writeSwrCache('public:customer-coupons', data);
       const matchedOffer = getCouponOfferForNotification(selectedNotification, data);
       setCouponOffer(matchedOffer);
       setCouponDetailsError(error || (matchedOffer ? '' : 'This coupon is no longer active or its details are unavailable.'));
     }).catch(() => {
-      if (active) setCouponDetailsError('Coupon details could not be loaded. Please try again.');
+      if (active && cachedOffers === undefined) setCouponDetailsError('Coupon details could not be loaded. Please try again.');
     }).finally(() => {
       if (active) setCouponDetailsLoading(false);
     });

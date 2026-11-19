@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertCircle, PackageSearch, RotateCw } from 'lucide-react';
 import { CloudLoader } from './CloudLoader';
+import { ProductGridSkeleton } from './AccountPageSkeleton';
 
 export type CatalogStatusKind = 'loading' | 'error' | 'empty';
 
@@ -11,13 +12,16 @@ interface CatalogStatusProps {
 }
 
 export const CatalogStatus: React.FC<CatalogStatusProps> = ({ state, onRetry, compact = false }) => {
-  const spacing = compact ? 'px-4 py-5' : 'px-6 py-10';
+  const spacing = compact ? 'px-4 py-5' : 'px-6 py-8';
   const baseClass = `w-full rounded-2xl border border-slate-200 bg-white text-center shadow-xs ${spacing}`;
 
   if (state === 'loading') {
     return (
-      <div className={baseClass} role="status" aria-live="polite">
-        <CloudLoader label="Loading products…" />
+      <div className="space-y-4">
+        <div className={baseClass} role="status" aria-live="polite">
+          <CloudLoader label="Loading products…" />
+        </div>
+        {!compact && <ProductGridSkeleton count={4} />}
       </div>
     );
   }

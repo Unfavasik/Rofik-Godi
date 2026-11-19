@@ -8,6 +8,7 @@ import {
   Clock3,
   CreditCard,
   FileText,
+  LoaderCircle,
   MapPin,
   Navigation,
   Package,
@@ -31,8 +32,10 @@ import { InvoiceTemplate } from './InvoiceTemplate';
 import { GuaranteeTerms } from './GuaranteeTerms';
 import { PickupQrCard } from './PickupQrCard';
 import { ConfirmDialog } from './ConfirmDialog';
+import { CustomerOrderDetailsSkeleton, CustomerOrdersListSkeleton } from './AccountPageSkeleton';
 import { formatInr, useI18n, type TranslationKey } from '../lib/i18n';
 import type { PreferredLanguage } from '../lib/customerPreferences';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 interface CustomerOrdersModalProps {
   orders: CustomerOrderRecord[];
@@ -99,20 +102,40 @@ const ProductThumb = ({ name, image, className = '' }: { name: string; image?: s
 
 const OrderTimeline = ({ orderId, status, createdAt }: { orderId: string; status: string; createdAt: string }) => {
   const { t, language } = useI18n();
-  const [history, setHistory] = useState<{ to_status: string; created_at: string }[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(true);
+  const historyCacheKey = `user:order-history:${orderId}`;
+  const [history, setHistory] = useState<{ to_status: string; created_at: string }[]>(
+    () => readSwrCache<{ to_status: string; created_at: string }[]>(historyCacheKey) ?? [],
+  );
+  const [historyLoading, setHistoryLoading] = useState(
+    () => readSwrCache(historyCacheKey) === undefined,
+  );
   const [historyError, setHistoryError] = useState(false);
 
   useEffect(() => {
     let active = true;
-    setHistoryLoading(true);
+    const cached = readSwrCache<{ to_status: string; created_at: string }[]>(historyCacheKey);
+    if (cached !== undefined) {
+      setHistory(cached);
+      setHistoryLoading(false);
+    } else {
+      setHistoryLoading(true);
+    }
     setHistoryError(false);
     void listMyOrderStatusHistory(orderId)
-      .then((rows) => { if (active) setHistory(rows); })
-      .catch(() => { if (active) setHistoryError(true); })
-      .finally(() => { if (active) setHistoryLoading(false); });
+      .then((rows) => {
+        if (active) {
+          setHistory(rows);
+          writeSwrCache(historyCacheKey, rows);
+        }
+      })
+      .catch(() => {
+        if (active && cached === undefined) setHistoryError(true);
+      })
+      .finally(() => {
+        if (active) setHistoryLoading(false);
+      });
     return () => { active = false; };
-  }, [orderId]);
+  }, [historyCacheKey, orderId]);
 
   const steps = getCustomerOrderTimeline(status, createdAt, history);
   const currentIndex = steps.findIndex((step) => step.state === 'current');
@@ -127,7 +150,15 @@ const OrderTimeline = ({ orderId, status, createdAt }: { orderId: string; status
         <div><p className="text-[8.5px] font-extrabold uppercase tracking-[0.16em] text-slate-400">{t('orders.progress')}</p><p className="mt-0.5 text-[12px] font-black text-slate-900">{statusName(status, t)}</p></div>
         <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[9px] font-extrabold text-[#c92330]">{currentIndex + 1} / {steps.length}</span>
       </div>
-      {historyLoading && <p role="status" className="mb-2 text-[11px] font-medium text-slate-500">{t('orders.loadingDates')}</p>}
+      {historyLoading && (
+        <p
+          role="status"
+          className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[10.5px] font-semibold text-slate-600"
+        >
+          <LoaderCircle className="h-3 w-3 animate-spin text-[#d9232d]" aria-hidden="true" />
+          {t('orders.loadingDates')}
+        </p>
+      )}
       {historyError && <p role="alert" className="mb-2 rounded-lg bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-900">{t('orders.datesFailed')}</p>}
       {!historyLoading && !historyError && history.length === 0 && <p className="mb-2 text-[11px] font-medium text-slate-500">{t('orders.noChanges')}</p>}
       {status === 'CANCELLED' && <p className="mb-2 rounded-lg bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-800">{t('orders.cancelledHelp')}</p>}
@@ -166,6 +197,8 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
   const [invoiceOrder, setInvoiceOrder] = useState<CustomerOrderRecord | null>(null);
   const selectedOrder = orders.find((order) => order.id === selectedOrderId)
     || (directOrder?.id === selectedOrderId ? directOrder : null);
+  const showOrderDetailsSkeleton =
+    !selectedOrder && Boolean(initialOrderSlug) && (directOrderLoading || loading) && !directOrderNotFound && !error;
   const completedCount = orders.filter((order) => isOrderComplete(order.status)).length;
   const activeCount = orders.filter((order) => !isOrderComplete(order.status) && order.status !== 'CANCELLED').length;
   const filteredOrders = useMemo(() => orders.filter((order) => {
@@ -230,27 +263,42 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
       return;
     }
     if (initialOrderHandled.current === lookupKey) return;
-    if (selectedOrderId) setSelectedOrderId(null);
-    setDirectOrder(null);
+    const slugCacheKey = `user:${currentUserId}:order-slug:${initialOrderSlug.toLowerCase()}`;
+    const cachedOrder = readSwrCache<CustomerOrderRecord>(slugCacheKey);
+    if (selectedOrderId && !cachedOrder) setSelectedOrderId(null);
+    if (cachedOrder) {
+      setDirectOrder(cachedOrder);
+      setSelectedOrderId(cachedOrder.id);
+      setDirectOrderLoading(false);
+      if (shouldAutoOpenInvoice()) {
+        setInvoiceOrder(cachedOrder);
+      }
+      onInitialOrderOpened?.();
+    } else {
+      setDirectOrder(null);
+      setDirectOrderLoading(true);
+    }
     setDirectOrderNotFound(false);
     let active = true;
     initialOrderHandled.current = lookupKey;
-    setDirectOrderLoading(true);
     void getMyOrderBySlug(currentUserId, initialOrderSlug)
       .then((result) => {
         if (!active) return;
         if (!result) {
-          setDirectOrderNotFound(true);
+          if (!cachedOrder) setDirectOrderNotFound(true);
           return;
         }
+        writeSwrCache(slugCacheKey, result);
         setDirectOrder(result);
         setSelectedOrderId(result.id);
-        if (shouldAutoOpenInvoice()) {
-          setInvoiceOrder(result);
+        if (!cachedOrder) {
+          if (shouldAutoOpenInvoice()) {
+            setInvoiceOrder(result);
+          }
+          onInitialOrderOpened?.();
         }
-        onInitialOrderOpened?.();
       })
-      .catch(() => { if (active) setDirectOrderNotFound(true); })
+      .catch(() => { if (active && !cachedOrder) setDirectOrderNotFound(true); })
       .finally(() => { if (active) setDirectOrderLoading(false); });
     return () => { active = false; };
   }, [currentUserId, initialOrderSlug, loading, onInitialOrderOpened, orders, selectedOrderId]);
@@ -274,13 +322,13 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
               {selectedOrder && <button type="button" onClick={() => { setSelectedOrderId(null); onBackToOrdersRoute?.(); }} aria-label={t('orders.backAll')} className="mt-0.5 grid h-8.5 w-8.5 shrink-0 place-items-center rounded-full bg-slate-50 text-slate-700 transition hover:bg-slate-100"><ArrowLeft className="h-4 w-4" /></button>}
               <div className="min-w-0">
                 <p className="flex items-center gap-1 text-[8.5px] font-extrabold uppercase tracking-[0.16em] text-[#cf2833]"><Store className="h-2.5 w-2.5 shrink-0" /><span className="truncate">{t('orders.pickupOrders')}</span></p>
-                <h2 id="customer-orders-title" className="mt-0.5 truncate text-[16px] font-black tracking-tight text-slate-900 sm:text-[17.5px]">{selectedOrder ? t('orders.details') : t('orders.title')}</h2>
-                <p className="truncate text-[10.5px] font-medium text-slate-500">{selectedOrder ? `Order #${selectedOrder.order_number}` : t('orders.subtitle')}</p>
+                <h2 id="customer-orders-title" className="mt-0.5 truncate text-[16px] font-black tracking-tight text-slate-900 sm:text-[17.5px]">{selectedOrder || showOrderDetailsSkeleton ? t('orders.details') : t('orders.title')}</h2>
+                <p className="truncate text-[10.5px] font-medium text-slate-500">{selectedOrder ? `Order #${selectedOrder.order_number}` : showOrderDetailsSkeleton ? t('common.loading') : t('orders.subtitle')}</p>
               </div>
             </div>
             <button type="button" onClick={onClose} aria-label={t('orders.close')} className="grid h-8.5 w-8.5 shrink-0 place-items-center rounded-full bg-slate-50 text-slate-700 transition hover:bg-slate-100"><X className="h-4 w-4" /></button>
           </div>
-          {!selectedOrder && (
+          {!selectedOrder && !showOrderDetailsSkeleton && (
             <div className="relative mt-2.5 grid grid-cols-3 gap-1.5 sm:gap-2">
               <SummaryTile label={t('orders.all')} value={orders.length} icon={<Package className="h-3 w-3" />} />
               <SummaryTile label={t('orders.inProgress')} value={activeCount} icon={<Clock3 className="h-3 w-3" />} />
@@ -294,9 +342,12 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
             <motion.div key="details" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.16 }} className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-2.5 sm:px-4 sm:py-3">
               <OrderDetails order={selectedOrder} products={products} customerName={customerName} reviews={reviews} onRefresh={onRefresh} onInvoice={() => openInvoice(selectedOrder)} onReview={onReview} onBuyAgain={onBuyAgain} onNeedHelp={onNeedHelp ? () => onNeedHelp(selectedOrder) : undefined} />
             </motion.div>
+          ) : showOrderDetailsSkeleton ? (
+            <motion.div key="details-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.14 }} className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-2.5 sm:px-4 sm:py-3">
+              <CustomerOrderDetailsSkeleton label={t('common.loading')} />
+            </motion.div>
           ) : (
             <motion.div key="list" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} transition={{ duration: 0.16 }} className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-2.5 sm:px-4 sm:py-3">
-              {directOrderLoading && <p role="status" className="mb-2 rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">{t('common.loading')}</p>}
               {directOrderNotFound && <p role="alert" className="mb-2 rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900">{t('orders.notFound')}</p>}
               <div className="mb-2.5 flex gap-1.5 overflow-x-auto pb-1 no-scrollbar" role="tablist" aria-label={t('orders.filterOrders')}>
                 {([
@@ -317,9 +368,7 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
                   <button type="button" onClick={() => void onRefresh?.()} className="mt-2.5 min-h-9 rounded-full bg-rose-700 px-3.5 py-1 text-xs font-extrabold text-white">{t('orders.tryAgain')}</button>
                 </div>
               ) : loading ? (
-                <div className="space-y-2" aria-label={t('common.loading')}>
-                  {[0, 1, 2].map((item) => <div key={item} className="h-[112px] animate-pulse rounded-xl border border-slate-100 bg-white" />)}
-                </div>
+                <CustomerOrdersListSkeleton count={3} label={t('common.loading')} />
               ) : filteredOrders.length === 0 ? (
                 <div className="grid min-h-[200px] place-items-center rounded-xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center">
                   <div><span className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-[#fff0ec] text-[#d94335]"><Package className="h-4.5 w-4.5" /></span><h3 className="mt-2.5 text-[14px] font-black text-slate-900">{orders.length ? t('orders.emptyFilter') : t('orders.emptyTitle')}</h3><p className="mx-auto mt-1 max-w-[240px] text-[11.5px] leading-relaxed text-slate-500">{orders.length ? t('orders.tryFilter') : t('orders.emptyBody')}</p></div>
@@ -490,7 +539,7 @@ export const OrderDetails = ({ order: sourceOrder, products = [], customerName, 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0"><p className="text-[11.5px] font-extrabold text-slate-900">{t('orders.buyAgainTitle')}</p><p className="mt-0.5 text-[9.5px] leading-snug text-slate-600">{t('orders.buyAgainHint')}</p></div>
           <button type="button" onClick={() => void handleBuyAgain()} disabled={buyAgainSubmitting} className="banner-cta-shine group/cta inline-flex min-h-8.5 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-3 text-[10.5px] font-extrabold text-white shadow-[0_5px_14px_-4px_rgba(217,35,45,0.35)] transition-all hover:brightness-105 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-60">
-            {buyAgainSubmitting ? <><Clock3 className="h-3.5 w-3.5 animate-spin" />{t('orders.adding')}</> : <><Package className="h-3.5 w-3.5 transition-transform duration-200 group-hover/cta:translate-x-0.5" />{t('orders.buyAgain')}</>}
+            {buyAgainSubmitting ? <><LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />{t('orders.adding')}</> : <><Package className="h-3.5 w-3.5 transition-transform duration-200 group-hover/cta:translate-x-0.5" />{t('orders.buyAgain')}</>}
           </button>
         </div>
         {buyAgainError && <p role="alert" className="mt-2 rounded-lg bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-800">{buyAgainError}</p>}
@@ -567,6 +616,7 @@ export const OrderDetails = ({ order: sourceOrder, products = [], customerName, 
         confirmLabel={cancelSubmitting ? t('orders.cancelling') : t('orders.confirmCancel')}
         cancelLabel={t('orders.keepOrder')}
         confirmDisabled={cancelSubmitting}
+        confirmLoading={cancelSubmitting}
         cancelDisabled={cancelSubmitting}
         onConfirm={() => { void handleCancelOrder(); }}
         onCancel={() => {

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BadgeCheck, Check, Eye, EyeOff, Star, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from './ConfirmDialog';
 import { deleteProductReview, listAdminProductReviews, setProductReviewPublished, type ProductReviewRecord } from '../lib/supabaseReviews';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 interface AdminReviewsViewProps {
   notify: (message: string) => void;
@@ -9,20 +10,29 @@ interface AdminReviewsViewProps {
 }
 
 export const AdminReviewsView: React.FC<AdminReviewsViewProps> = ({ notify, query }) => {
-  const [reviews, setReviews] = useState<ProductReviewRecord[] | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState<ProductReviewRecord[] | null>(
+    () => readSwrCache<ProductReviewRecord[]>('admin:reviews') ?? null,
+  );
+  const [loading, setLoading] = useState(
+    () => readSwrCache('admin:reviews') === undefined,
+  );
   const [productFilter, setProductFilter] = useState('all');
   const [ratingFilter, setRatingFilter] = useState('all');
   const [publicationFilter, setPublicationFilter] = useState<'all' | 'published' | 'hidden'>('all');
   const [verificationFilter, setVerificationFilter] = useState<'all' | 'verified' | 'unverified'>('all');
   const [pendingDelete, setPendingDelete] = useState<ProductReviewRecord | null>(null);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setReviews(await listAdminProductReviews());
+  const refresh = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    const loaded = await listAdminProductReviews();
+    if (loaded) writeSwrCache('admin:reviews', loaded);
+    setReviews(loaded);
     setLoading(false);
   }, []);
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    const hasCache = readSwrCache('admin:reviews') !== undefined;
+    void refresh(hasCache);
+  }, [refresh]);
   useEffect(() => {
     if (!query) return;
     setProductFilter('all');
@@ -47,13 +57,13 @@ export const AdminReviewsView: React.FC<AdminReviewsViewProps> = ({ notify, quer
   const togglePublished = async (review: ProductReviewRecord) => {
     const { error } = await setProductReviewPublished(review.id, !review.is_published);
     if (error) notify(error.message || 'Review moderation failed');
-    else { notify(review.is_published ? 'Review hidden from the storefront' : 'Review published'); await refresh(); }
+    else { notify(review.is_published ? 'Review hidden from the storefront' : 'Review published'); await refresh(true); }
   };
   const requestRemoveReview = (review: ProductReviewRecord) => setPendingDelete(review);
   const removeReview = async (review: ProductReviewRecord) => {
     const { error } = await deleteProductReview(review.id);
     if (error) notify(error.message || 'Review deletion failed');
-    else { notify('Review deleted'); await refresh(); }
+    else { notify('Review deleted'); await refresh(true); }
   };
 
   return <section className="max-w-full overflow-x-hidden">
@@ -74,7 +84,7 @@ export const AdminReviewsView: React.FC<AdminReviewsViewProps> = ({ notify, quer
       <select aria-label="Filter by publication" value={publicationFilter} onChange={(event) => setPublicationFilter(event.target.value as typeof publicationFilter)} className="min-h-9 max-w-full rounded-xl border border-slate-200/80 bg-slate-50/90 px-2.5 py-1.5 text-base font-bold text-slate-700 outline-none focus:border-[#D9232D] focus:bg-white sm:text-xs"><option value="all">Published and hidden</option><option value="published">Published</option><option value="hidden">Hidden</option></select>
       <select aria-label="Filter by verification" value={verificationFilter} onChange={(event) => setVerificationFilter(event.target.value as typeof verificationFilter)} className="min-h-9 max-w-full rounded-xl border border-slate-200/80 bg-slate-50/90 px-2.5 py-1.5 text-base font-bold text-slate-700 outline-none focus:border-[#D9232D] focus:bg-white sm:text-xs"><option value="all">All purchases</option><option value="verified">Verified purchase</option><option value="unverified">Not verified</option></select>
     </div>
-    {loading ? <div className="space-y-2.5"><p className="sr-only">Loading reviews…</p>{[0, 1, 2].map((row) => <div key={row} className="animate-pulse rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-xs"><div className="flex items-center justify-between"><div className="h-4 w-36 rounded-full bg-slate-200/80" /><div className="h-4 w-24 rounded-full bg-slate-200/70" /></div><div className="mt-2.5 h-3 w-48 rounded-full bg-slate-100" /><div className="mt-3 h-10 w-full rounded-xl bg-slate-100" /></div>)}</div> : reviews === null ? <p role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800">Could not load admin reviews. Sign in with a user that has a matching <code>admin_users</code> record.</p> : filtered.length === 0 ? <p className="rounded-2xl border border-slate-200/80 bg-white/95 py-10 text-center text-xs text-slate-500">No reviews match these filters.</p> : <div className="space-y-2.5">{filtered.map((review) => <article key={review.id} className="rounded-2xl border border-slate-200/80 bg-white/95 p-3.5 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.06)] backdrop-blur-md transition hover:border-red-100 sm:p-4">
+    {loading ? <div className="space-y-2.5"><p className="sr-only">Loading reviews…</p>{[0, 1, 2].map((row) => <div key={row} className="rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-xs"><div className="flex items-center justify-between"><div className="skeleton-shimmer h-4 w-36 rounded-full bg-slate-200/80" /><div className="skeleton-shimmer h-4 w-24 rounded-full bg-slate-200/70" /></div><div className="skeleton-shimmer mt-2.5 h-3 w-48 rounded-full bg-slate-200/60" /><div className="skeleton-shimmer mt-3 h-10 w-full rounded-xl bg-slate-200/60" /></div>)}</div> : reviews === null ? <p role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800">Could not load admin reviews. Sign in with a user that has a matching <code>admin_users</code> record.</p> : filtered.length === 0 ? <p className="rounded-2xl border border-slate-200/80 bg-white/95 py-10 text-center text-xs text-slate-500">No reviews match these filters.</p> : <div className="space-y-2.5">{filtered.map((review) => <article key={review.id} className="rounded-2xl border border-slate-200/80 bg-white/95 p-3.5 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.06)] backdrop-blur-md transition hover:border-red-100 sm:p-4">
       <div className="flex flex-col justify-between gap-2.5 sm:flex-row"><div className="min-w-0"><div className="flex flex-wrap items-center gap-1.5"><span className="text-xs font-black text-slate-900 sm:text-sm">{review.author_name || 'Customer'}</span>{review.is_verified_purchase && <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-200/80"><BadgeCheck className="h-3 w-3" />Verified purchase</span>}<span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ring-inset ${review.is_published ? 'bg-emerald-50 text-emerald-700 ring-emerald-200/80' : 'bg-amber-50 text-amber-700 ring-amber-200/80'}`}><span className="h-1.5 w-1.5 rounded-full bg-current" />{review.is_published ? 'Published' : 'Hidden'}</span></div><p className="mt-1 text-[11px] font-black text-[#D9232D]">{review.product_name || 'Product'}</p><p className="mt-0.5 break-all font-mono text-[10px] text-slate-400">Customer ID: {review.customer_id || 'Legacy review'} · Order ID: {review.order_id || 'Legacy review'}</p></div><div className="flex shrink-0 items-center gap-1 text-amber-500">{[1,2,3,4,5].map((value) => <Star key={value} className={`h-3.5 w-3.5 ${value <= review.rating ? 'fill-current' : 'text-slate-200'}`} />)}<span className="ml-1.5 text-[10.5px] font-bold text-slate-400">{new Date(review.created_at).toLocaleDateString('en-IN')}</span></div></div>
       {review.review_text && <p className="mt-3 break-words rounded-xl bg-slate-50/80 p-3 whitespace-pre-wrap text-xs leading-relaxed text-slate-600">“{review.review_text}”</p>}
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2.5"><button type="button" onClick={() => void togglePublished(review)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-slate-800">{review.is_published ? <><EyeOff className="h-3.5 w-3.5" />Hide</> : <><Eye className="h-3.5 w-3.5" />Publish</>}</button><button type="button" onClick={() => requestRemoveReview(review)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-red-200 px-3 py-1.5 text-[11px] font-bold text-red-700 transition hover:bg-red-50"><Trash2 className="h-3.5 w-3.5" />Delete</button><span className="ml-auto inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400"><Check className="h-3 w-3 text-emerald-600" />Verified flag is database-controlled</span></div>
@@ -88,7 +98,7 @@ const Metric: React.FC<{ label: string; value: number | string; loading?: boolea
     <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[#D9232D]/80 via-rose-400/50 to-transparent opacity-80" />
     <p className="text-[10.5px] font-bold text-slate-500">{label}</p>
     {loading ? (
-      <div className="mt-1.5 h-6 w-14 animate-pulse rounded-lg bg-slate-200/80" />
+      <div className="skeleton-shimmer mt-1.5 h-6 w-14 rounded-lg bg-slate-200/80" />
     ) : (
       <p className="mt-0.5 text-lg font-black tracking-tight tabular-nums text-slate-900 sm:text-xl">{value}</p>
     )}

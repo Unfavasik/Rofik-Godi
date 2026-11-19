@@ -17,6 +17,7 @@ import {
   type SupportMessageRecord,
   type SupportRequestRecord,
 } from '../lib/supabaseSupport';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 type SupportNotificationDetailsProps = {
   requestId: string | null;
@@ -67,10 +68,14 @@ export function SupportNotificationDetails({
   onViewConversation,
   onContactSupport,
 }: SupportNotificationDetailsProps) {
-  const [request, setRequest] = useState<SupportRequestRecord | null>(null);
-  const [latestReply, setLatestReply] = useState<SupportMessageRecord | null>(null);
-  const [latestMessageIsWorkshopReply, setLatestMessageIsWorkshopReply] = useState(false);
-  const [loading, setLoading] = useState(Boolean(requestId && isAuthenticated));
+  const notifCacheKey = requestId && isAuthenticated && userId ? `user:${userId}:support-notif:${requestId}` : '';
+  const initialCachedNotif = notifCacheKey
+    ? readSwrCache<{ request: SupportRequestRecord | null; latestReply: SupportMessageRecord | null; latestMessageIsWorkshopReply: boolean }>(notifCacheKey)
+    : undefined;
+  const [request, setRequest] = useState<SupportRequestRecord | null>(() => initialCachedNotif?.request ?? null);
+  const [latestReply, setLatestReply] = useState<SupportMessageRecord | null>(() => initialCachedNotif?.latestReply ?? null);
+  const [latestMessageIsWorkshopReply, setLatestMessageIsWorkshopReply] = useState(() => initialCachedNotif?.latestMessageIsWorkshopReply ?? false);
+  const [loading, setLoading] = useState(() => Boolean(requestId && isAuthenticated && !initialCachedNotif));
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -82,29 +87,48 @@ export function SupportNotificationDetails({
       setLoading(false);
       return () => { active = false; };
     }
-    setLoading(true);
+    const cached = notifCacheKey
+      ? readSwrCache<{ request: SupportRequestRecord | null; latestReply: SupportMessageRecord | null; latestMessageIsWorkshopReply: boolean }>(notifCacheKey)
+      : undefined;
+    if (cached) {
+      setRequest(cached.request);
+      setLatestReply(cached.latestReply);
+      setLatestMessageIsWorkshopReply(cached.latestMessageIsWorkshopReply);
+      setLoading(false);
+    } else {
+      setLoading(true);
+      setRequest(null);
+      setLatestReply(null);
+      setLatestMessageIsWorkshopReply(false);
+    }
     setError('');
-    setRequest(null);
-    setLatestReply(null);
-    setLatestMessageIsWorkshopReply(false);
     void Promise.all([getSupportRequest(requestId, userId), listSupportMessages(requestId, userId)])
       .then(([requestResult, messageResult]) => {
         if (!active) return;
         if (requestResult.error) throw requestResult.error;
         if (messageResult.error) throw messageResult.error;
-        setRequest(requestResult.data);
         const thread = messageResult.data;
-        setLatestMessageIsWorkshopReply(thread.at(-1)?.sender_role === 'admin');
-        setLatestReply([...thread].reverse().find((message) => message.sender_role === 'admin') || null);
+        const isWorkshopReply = thread.at(-1)?.sender_role === 'admin';
+        const reply = [...thread].reverse().find((message) => message.sender_role === 'admin') || null;
+        setRequest(requestResult.data);
+        setLatestMessageIsWorkshopReply(isWorkshopReply);
+        setLatestReply(reply);
+        if (notifCacheKey) {
+          writeSwrCache(notifCacheKey, {
+            request: requestResult.data,
+            latestReply: reply,
+            latestMessageIsWorkshopReply: isWorkshopReply,
+          });
+        }
       })
       .catch((loadError) => {
-        if (active) setError(loadError instanceof Error ? loadError.message : 'Support ticket details could not be loaded.');
+        if (active && !cached) setError(loadError instanceof Error ? loadError.message : 'Support ticket details could not be loaded.');
       })
       .finally(() => {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [isAuthenticated, requestId, userId]);
+  }, [isAuthenticated, notifCacheKey, requestId, userId]);
 
   const statusTone =
     request?.status === 'resolved' || latestMessageIsWorkshopReply

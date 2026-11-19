@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BadgeCheck, Star, X } from 'lucide-react';
+import { BadgeCheck, LoaderCircle, Star, X } from 'lucide-react';
 import { createProductReview, updateProductReview, type ProductReviewRecord } from '../lib/supabaseReviews';
 
 interface ReviewComposerProps {
@@ -53,7 +53,7 @@ export const ReviewComposer: React.FC<ReviewComposerProps> = ({ productId, order
         </label>
         <div className="mt-1 text-right text-[10px] text-slate-400">{reviewText.length}/2,000</div>
         {error && <p role="alert" className="mt-2.5 rounded-lg bg-red-50 p-2.5 text-xs font-medium text-red-700">{error}</p>}
-        <div className="mt-3 flex flex-wrap justify-end gap-2"><button type="button" onClick={onClose} className="min-h-10 rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-600">Cancel</button><button type="submit" disabled={busy} className="banner-cta-shine group/cta min-h-10 rounded-xl bg-[#d9232d] px-4 py-2 text-xs font-bold text-white shadow-sm shadow-red-600/20 transition hover:bg-[#b91c25] hover:shadow-md active:scale-[0.98] disabled:opacity-60">{busy ? 'Saving…' : review ? 'Save changes' : 'Submit review'}</button></div>
+        <div className="mt-3 flex flex-wrap justify-end gap-2"><button type="button" onClick={onClose} className="min-h-10 rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-600">Cancel</button><button type="submit" disabled={busy} className="banner-cta-shine group/cta inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-[#d9232d] px-4 py-2 text-xs font-bold text-white shadow-sm shadow-red-600/20 transition hover:bg-[#b91c25] hover:shadow-md active:scale-[0.98] disabled:opacity-60">{busy && <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}{busy ? 'Saving…' : review ? 'Save changes' : 'Submit review'}</button></div>
       </>}
     </form>
   </div>;

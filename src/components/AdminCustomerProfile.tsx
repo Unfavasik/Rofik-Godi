@@ -30,6 +30,7 @@ import { addAdminCustomerNoteAndNotify, loadAdminJsonSetting, saveAdminJsonSetti
 import { matchesAdminOrderToCustomer, type AdminOrderRecord } from '../lib/supabaseAdminOrders';
 import { PRODUCTS } from '../data/products';
 import type { Product } from '../types';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 type CustomerProfileTab = 'orders' | 'details' | 'notes';
 type CustomerNoteCategory = 'Important' | 'Delivery' | 'Payment' | 'Call' | 'General';
@@ -205,7 +206,9 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
   onOpenOrder,
 }) => {
   const [activeTab, setActiveTab] = useState<CustomerProfileTab>('orders');
-  const [notesByCustomer, setNotesByCustomer] = useState<NotesByCustomer>({});
+  const [notesByCustomer, setNotesByCustomer] = useState<NotesByCustomer>(
+    () => readSwrCache<NotesByCustomer>('admin:customer-notes') ?? {},
+  );
   const [notesLoading, setNotesLoading] = useState(false);
   const [notesSaving, setNotesSaving] = useState(false);
   const [notesError, setNotesError] = useState('');
@@ -222,20 +225,30 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
 
   useEffect(() => {
     let active = true;
-    setNotesLoading(true);
+    const cached = readSwrCache<NotesByCustomer>('admin:customer-notes');
+    if (cached !== undefined) {
+      setNotesByCustomer(cached);
+      setNotesLoading(false);
+    } else {
+      setNotesLoading(true);
+    }
     setNotesError('');
     void loadAdminJsonSetting<unknown>('admin_customer_notes', {})
       .then(({ data, error }) => {
         if (!active) return;
-        setNotesByCustomer(normalizeNotes(data));
+        const normalized = normalizeNotes(data);
+        setNotesByCustomer(normalized);
+        if (!error) writeSwrCache('admin:customer-notes', normalized);
         setNotesError(error?.message || '');
         setNotesLoading(false);
       })
       .catch((error: unknown) => {
         if (!active) return;
-        setNotesError(
-          error instanceof Error ? error.message : 'Customer notes could not be loaded.',
-        );
+        if (cached === undefined) {
+          setNotesError(
+            error instanceof Error ? error.message : 'Customer notes could not be loaded.',
+          );
+        }
         setNotesLoading(false);
       });
     return () => {
@@ -275,6 +288,7 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
         return false;
       }
       setNotesByCustomer(nextNotesByCustomer);
+      writeSwrCache('admin:customer-notes', nextNotesByCustomer);
       return true;
     } catch (error) {
       setNotesError(error instanceof Error ? error.message : 'Customer notes could not be saved.');
@@ -321,10 +335,14 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
         setNotesError('The server did not confirm note delivery. Please retry.');
         return;
       }
-      setNotesByCustomer((current) => ({
-        ...current,
-        [customer.id]: [data, ...(current[customer.id] || [])],
-      }));
+      setNotesByCustomer((current) => {
+        const next = {
+          ...current,
+          [customer.id]: [data, ...(current[customer.id] || [])],
+        };
+        writeSwrCache('admin:customer-notes', next);
+        return next;
+      });
       setNoteText('');
       pendingNoteRef.current = null;
     } catch (error) {

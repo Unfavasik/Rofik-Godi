@@ -20,6 +20,9 @@ import {
   type SupportOrderChoice,
   type SupportRequestCategory,
 } from '../lib/supabaseSupport';
+import { useUploadProgress } from '../lib/useUploadProgress';
+import { UploadProgressBar } from './UploadProgressBar';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 const categories: SupportRequestCategory[] = [
   'Order issue',
@@ -49,13 +52,19 @@ export const CustomerSupportRequestForm: React.FC<{
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [relatedOrderId, setRelatedOrderId] = useState('');
-  const [orders, setOrders] = useState<SupportOrderChoice[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(false);
+  const orderChoicesKey = `user:${expectedUserId || 'me'}:support-order-choices`;
+  const [orders, setOrders] = useState<SupportOrderChoice[]>(
+    () => (isAuthenticated ? readSwrCache<SupportOrderChoice[]>(orderChoicesKey) ?? [] : []),
+  );
+  const [ordersLoading, setOrdersLoading] = useState(
+    () => Boolean(isAuthenticated && readSwrCache(orderChoicesKey) === undefined),
+  );
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [attachmentError, setAttachmentError] = useState('');
   const [requestId, setRequestId] = useState('');
+  const attachmentUploadProgress = useUploadProgress('attachments');
   const messageLimit = compact ? 500 : 2000;
   const selectedOrder = orders.find((order) => order.id === relatedOrderId);
   const requestSubject = compact
@@ -68,19 +77,29 @@ export const CustomerSupportRequestForm: React.FC<{
   useEffect(() => {
     if (!isAuthenticated) return;
     let active = true;
-    setOrdersLoading(true);
+    const cached = readSwrCache<SupportOrderChoice[]>(orderChoicesKey);
+    if (cached !== undefined) {
+      setOrders(cached);
+      if (initialRelatedOrderId && cached.some((order) => order.id === initialRelatedOrderId)) {
+        setRelatedOrderId(initialRelatedOrderId);
+      }
+      setOrdersLoading(false);
+    } else {
+      setOrdersLoading(true);
+    }
     void listMySupportOrderChoices(expectedUserId).then((result) => {
       if (!active) return;
       setOrders(result.data);
+      if (!result.error) writeSwrCache(orderChoicesKey, result.data);
       if (initialRelatedOrderId && result.data.some((order) => order.id === initialRelatedOrderId)) {
         setRelatedOrderId(initialRelatedOrderId);
       }
-      if (result.error) setError(result.error.message);
+      if (result.error && cached === undefined) setError(result.error.message);
     }).catch(() => {
-      if (active) setError('Your orders could not be loaded; you can still submit without linking an order.');
+      if (active && cached === undefined) setError('Your orders could not be loaded; you can still submit without linking an order.');
     }).finally(() => { if (active) setOrdersLoading(false); });
     return () => { active = false; };
-  }, [expectedUserId, initialRelatedOrderId, isAuthenticated]);
+  }, [expectedUserId, initialRelatedOrderId, isAuthenticated, orderChoicesKey]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -88,6 +107,12 @@ export const CustomerSupportRequestForm: React.FC<{
     setSubmitting(true);
     setError('');
     setAttachmentError('');
+    if (files.length > 0) {
+      attachmentUploadProgress.startUpload(files[0].name, {
+        totalCount: files.length,
+        baseLabel: files.length === 1 ? 'attachment' : 'attachments',
+      });
+    }
     try {
       const result = await createCustomerSupportRequest({
         category,
@@ -98,8 +123,14 @@ export const CustomerSupportRequestForm: React.FC<{
         expectedUserId,
       });
       if (result.error) {
+        attachmentUploadProgress.resetUpload();
         setError(result.error.message);
       } else if (result.id) {
+        if (files.length > 0) {
+          attachmentUploadProgress.finishUpload(
+            result.attachmentError ? 'Saved (attachment retry available)' : 'Attachments uploaded',
+          );
+        }
         setRequestId(result.id);
         setAttachmentError(result.attachmentError?.message || '');
         setSubject('');
@@ -107,9 +138,11 @@ export const CustomerSupportRequestForm: React.FC<{
         setRelatedOrderId('');
         setFiles([]);
       } else {
+        attachmentUploadProgress.resetUpload();
         setError('Your request could not be confirmed. Please try again.');
       }
     } catch {
+      attachmentUploadProgress.resetUpload();
       setError('Support is temporarily unavailable. Please try again or use phone/WhatsApp.');
     } finally {
       setSubmitting(false);
@@ -445,6 +478,8 @@ export const CustomerSupportRequestForm: React.FC<{
           {error}
         </p>
       )}
+
+      <UploadProgressBar state={attachmentUploadProgress.state} compact />
 
       <button
         type="submit"

@@ -4,6 +4,8 @@ import type { AdminCustomer } from '../lib/supabaseAdmin';
 import { sendAdminNotification } from '../lib/supabaseAdmin';
 import { uploadStorefrontBannerImage } from '../lib/supabaseBanners';
 import { NotificationAudiencePicker, type NotificationAudience } from './NotificationAudiencePicker';
+import { useUploadProgress } from '../lib/useUploadProgress';
+import { UploadProgressBar } from './UploadProgressBar';
 
 const kinds = [
   { value: 'announcement', label: 'Announcement' },
@@ -32,16 +34,20 @@ export function AdminNotificationComposer({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const imageInput = useRef<HTMLInputElement>(null);
+  const imageUploadProgress = useUploadProgress('notification image');
 
   const uploadImage = async (file?: File) => {
     if (!file) return;
     setError('');
     setUploading(true);
+    imageUploadProgress.startUpload(file.name, { baseLabel: 'image' });
     try {
       const uploaded = await uploadStorefrontBannerImage(file);
+      imageUploadProgress.finishUpload('Image uploaded');
       setImageUrl(uploaded.url);
       notify('Notification image uploaded');
     } catch (uploadError) {
+      imageUploadProgress.resetUpload();
       setError(uploadError instanceof Error ? uploadError.message : 'Image upload failed.');
     } finally {
       setUploading(false);
@@ -148,6 +154,7 @@ export function AdminNotificationComposer({
               </button>
             </div>
             <p className="mt-1 text-[10px] text-slate-400">Upload JPG, PNG, WEBP or GIF (up to 10 MB); it is converted to WebP.</p>
+            <UploadProgressBar state={imageUploadProgress.state} compact className="mt-2" />
           </div>
           <NotificationAudiencePicker
             customers={customers}

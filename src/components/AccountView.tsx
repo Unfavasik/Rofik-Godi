@@ -26,6 +26,7 @@ import {
   SlidersHorizontal,
   ExternalLink,
   Bike,
+  LoaderCircle,
   Mail,
   CheckCircle2,
 } from 'lucide-react';
@@ -62,9 +63,12 @@ import { getInitials, validateProfileFields } from '../lib/profileValidation';
 import { ConfirmDialog } from './ConfirmDialog';
 import { PhoneNumberField } from './PhoneNumberField';
 import { VehicleModelPicker } from './VehicleModelPicker';
+import { UploadProgressBar } from './UploadProgressBar';
+import { useUploadProgress } from '../lib/useUploadProgress';
 import { getPhoneCountry, validatePhoneNumber, type CountryCode } from '../utils/phoneValidation';
 import { useI18n } from '../lib/i18n';
 import { AccountPageSkeleton, AccountProfileEditorSkeleton } from './AccountPageSkeleton';
+import { isImageLoaded, markImageLoaded, readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 interface AccountViewProps {
   currentUser?: UserProfile;
@@ -192,18 +196,33 @@ export const AccountView: React.FC<AccountViewProps> = ({
   const currentUserRef = useRef(currentUser);
   currentUserRef.current = currentUser;
 
-  const [customerOrders, setCustomerOrders] = useState<CustomerOrderRecord[]>([]);
+  const [customerOrders, setCustomerOrders] = useState<CustomerOrderRecord[]>(() =>
+    currentUser && !currentUser.isGuest
+      ? readSwrCache<CustomerOrderRecord[]>(`user:${currentUser.id}:orders`) ?? []
+      : [],
+  );
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState('');
-  const [myReviews, setMyReviews] = useState<ProductReviewRecord[]>([]);
-  const [summaryLoading, setSummaryLoading] = useState(() => Boolean(currentUser && !currentUser.isGuest));
-  const [heroAvatarLoaded, setHeroAvatarLoaded] = useState(false);
+  const [myReviews, setMyReviews] = useState<ProductReviewRecord[]>(() =>
+    currentUser && !currentUser.isGuest
+      ? readSwrCache<ProductReviewRecord[]>(`user:${currentUser.id}:reviews`) ?? []
+      : [],
+  );
+  const [summaryLoading, setSummaryLoading] = useState(() => {
+    if (!currentUser || currentUser.isGuest) return false;
+    return (
+      readSwrCache(`user:${currentUser.id}:orders`) === undefined ||
+      readSwrCache(`user:${currentUser.id}:reviews`) === undefined
+    );
+  });
+  const [heroAvatarLoaded, setHeroAvatarLoaded] = useState(() => isImageLoaded(currentUser?.avatar));
   const [vehicleCatalog, setVehicleCatalog] = useState<VehicleCatalogModel[]>(() => getCachedVehicleModels());
   const [garageImgError, setGarageImgError] = useState(false);
   const [reviewComposer, setReviewComposer] = useState<{ productId: string; orderId: string; orderNumber: string; productTitle: string; review?: ProductReviewRecord } | null>(null);
+  const avatarUploadProgress = useUploadProgress('profile photo');
 
   useEffect(() => {
-    setHeroAvatarLoaded(false);
+    setHeroAvatarLoaded(isImageLoaded(currentUser?.avatar));
   }, [currentUser?.avatar]);
 
   useEffect(() => {
@@ -231,15 +250,25 @@ export const AccountView: React.FC<AccountViewProps> = ({
       setOrdersError('');
       return () => { active = false; };
     }
+    const ordersKey = `user:${ordersUser.id}:orders`;
+    const reviewsKey = `user:${ordersUser.id}:reviews`;
+    const cachedOrders = readSwrCache<CustomerOrderRecord[]>(ordersKey);
+    const cachedReviews = readSwrCache<ProductReviewRecord[]>(reviewsKey);
+    if (cachedOrders !== undefined) setCustomerOrders(cachedOrders);
+    if (cachedReviews !== undefined) setMyReviews(cachedReviews);
     setOrdersError('');
-    setOrdersLoading(true);
+    setOrdersLoading(cachedOrders === undefined);
     void Promise.all([listMyOrders(ordersUser.id), listMyProductReviews(ordersUser.id)]).then(([orders, reviews]) => {
       if (active) {
         setCustomerOrders(orders);
         setMyReviews(reviews);
+        writeSwrCache(ordersKey, orders);
+        writeSwrCache(reviewsKey, reviews);
       }
     }).catch((error) => {
-      if (active) setOrdersError(error instanceof Error ? error.message : 'Your order history could not be loaded.');
+      if (active && cachedOrders === undefined) {
+        setOrdersError(error instanceof Error ? error.message : 'Your order history could not be loaded.');
+      }
     }).finally(() => {
       if (active) setOrdersLoading(false);
     });
@@ -256,18 +285,23 @@ export const AccountView: React.FC<AccountViewProps> = ({
     }
     const normalizedSlug = helpOrderSlug.toLowerCase();
     if (helpOrder?.order_slug?.toLowerCase() === normalizedSlug) {
-      if (!helpOrderLoading) return;
-      const timer = window.setTimeout(() => setHelpOrderLoading(false), 220);
-      return () => window.clearTimeout(timer);
+      setHelpOrderLoading(false);
+      return;
     }
     const fromList = customerOrders.find((order) => order.order_slug?.toLowerCase() === normalizedSlug);
     if (fromList) {
       setHelpOrder(fromList);
-      setHelpOrderLoading(true);
-      const timer = window.setTimeout(() => setHelpOrderLoading(false), 220);
-      return () => window.clearTimeout(timer);
+      setHelpOrderLoading(false);
+      return;
     }
     if (!currentUser || currentUser.isGuest) {
+      setHelpOrderLoading(false);
+      return;
+    }
+    const slugCacheKey = `user:${currentUser.id}:order-slug:${normalizedSlug}`;
+    const cachedOrder = readSwrCache<CustomerOrderRecord>(slugCacheKey);
+    if (cachedOrder) {
+      setHelpOrder(cachedOrder);
       setHelpOrderLoading(false);
       return;
     }
@@ -275,26 +309,33 @@ export const AccountView: React.FC<AccountViewProps> = ({
     setHelpOrderLoading(true);
     void getMyOrderBySlug(currentUser.id, normalizedSlug)
       .then((order) => {
-        if (active && order) setHelpOrder(order);
+        if (active && order) {
+          setHelpOrder(order);
+          writeSwrCache(slugCacheKey, order);
+        }
       })
       .catch(() => undefined)
       .finally(() => {
         if (active) setHelpOrderLoading(false);
       });
     return () => { active = false; };
-  }, [helpOrderSlug, helpOrder, helpOrderLoading, customerOrders, currentUser]);
+  }, [helpOrderSlug, helpOrder, customerOrders, currentUser]);
 
   const refreshCustomerOrders = useCallback(async () => {
     const ordersUser = currentUserRef.current;
     if (!ordersUser || ordersUser.isGuest) return;
-    setOrdersLoading(true);
+    const ordersKey = `user:${ordersUser.id}:orders`;
+    if (readSwrCache(ordersKey) === undefined) setOrdersLoading(true);
     setOrdersError('');
     try {
       const latestOrders = await listMyOrders(ordersUser.id);
       if (currentUserRef.current?.id !== ordersUser.id) return;
       setCustomerOrders(latestOrders);
+      writeSwrCache(ordersKey, latestOrders);
     } catch (error) {
-      setOrdersError(error instanceof Error ? error.message : 'Your order history could not be refreshed.');
+      if (readSwrCache(ordersKey) === undefined) {
+        setOrdersError(error instanceof Error ? error.message : 'Your order history could not be refreshed.');
+      }
     } finally {
       setOrdersLoading(false);
     }
@@ -311,14 +352,26 @@ export const AccountView: React.FC<AccountViewProps> = ({
       setSummaryLoading(false);
       return () => { active = false; };
     }
-    setSummaryLoading(true);
+    const ordersKey = `user:${summaryUser.id}:orders`;
+    const reviewsKey = `user:${summaryUser.id}:reviews`;
+    const cachedOrders = readSwrCache<CustomerOrderRecord[]>(ordersKey);
+    const cachedReviews = readSwrCache<ProductReviewRecord[]>(reviewsKey);
+    if (cachedOrders !== undefined) setCustomerOrders(cachedOrders);
+    if (cachedReviews !== undefined) setMyReviews(cachedReviews);
+    setSummaryLoading(cachedOrders === undefined || cachedReviews === undefined);
     void Promise.all([
       listMyOrders(summaryUser.id).catch(() => null),
       listMyProductReviews(summaryUser.id).catch(() => null),
     ]).then(([orders, reviews]) => {
       if (!active) return;
-      if (orders) setCustomerOrders(orders);
-      if (reviews) setMyReviews(reviews);
+      if (orders) {
+        setCustomerOrders(orders);
+        writeSwrCache(ordersKey, orders);
+      }
+      if (reviews) {
+        setMyReviews(reviews);
+        writeSwrCache(reviewsKey, reviews);
+      }
     }).finally(() => {
       if (active) setSummaryLoading(false);
     });
@@ -439,7 +492,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
       setProfileLoading(false);
       return () => { active = false; };
     }
-    const fallback = {
+    const profileKey = `user:${profileUser.id}:profile`;
+    const cachedProfile = readSwrCache<{ name: string; phone: string; phoneCountry: CountryCode; vehicle: string; avatar: string | null; email?: string }>(profileKey);
+    const fallback = cachedProfile ?? {
       name: profileUser.name || '',
       phone: profileUser.phone || '',
       phoneCountry: getPhoneCountry(profileUser.phone || ''),
@@ -448,16 +503,16 @@ export const AccountView: React.FC<AccountViewProps> = ({
     };
     setProfileName(fallback.name);
     setProfilePhone(fallback.phone);
-    setProfilePhoneCountry(getPhoneCountry(fallback.phone));
+    setProfilePhoneCountry(fallback.phoneCountry);
     setProfilePhoneTouched(false);
     hydrateProfileVehicle(fallback.vehicle);
-    setProfileEmail(profileUser.email || '');
+    setProfileEmail(cachedProfile?.email || profileUser.email || '');
     setProfileAvatarUrl(fallback.avatar);
     setProfileAvatarFile(null);
     setProfileSnapshot(fallback);
     setProfileMetadataSyncFailed(false);
     setProfileMessage('');
-    setProfileLoading(true);
+    setProfileLoading(!cachedProfile);
     void Promise.all([getMyProfile(profileUser.id), getMyAuthEmail()]).then(([profile, email]) => {
       if (!active) return;
       const loaded = {
@@ -472,11 +527,13 @@ export const AccountView: React.FC<AccountViewProps> = ({
       setProfilePhoneCountry(loaded.phoneCountry);
       setProfilePhoneTouched(false);
       hydrateProfileVehicle(loaded.vehicle);
-      setProfileEmail(email || profileUser.email || '');
+      const nextEmail = email || cachedProfile?.email || profileUser.email || '';
+      setProfileEmail(nextEmail);
       setProfileAvatarUrl(loaded.avatar);
       setProfileSnapshot(loaded);
+      writeSwrCache(profileKey, { ...loaded, email: nextEmail });
     }).catch(() => {
-      if (active) setProfileMessage('Could not load the saved profile. You can still edit and try saving.');
+      if (active && !cachedProfile) setProfileMessage('Could not load the saved profile. You can still edit and try saving.');
     }).finally(() => {
       if (active) setProfileLoading(false);
     });
@@ -495,8 +552,13 @@ export const AccountView: React.FC<AccountViewProps> = ({
     try {
       let nextAvatarUrl = profileAvatarUrl;
       if (profileAvatarFile) {
+        avatarUploadProgress.startUpload(profileAvatarFile.name, { baseLabel: 'profile photo' });
         const upload = await uploadMyAvatar(profileAvatarFile);
-        if (upload.error || !upload.data) throw upload.error || new Error('Avatar upload failed. Please try again.');
+        if (upload.error || !upload.data) {
+          avatarUploadProgress.resetUpload();
+          throw upload.error || new Error('Avatar upload failed. Please try again.');
+        }
+        avatarUploadProgress.finishUpload('Photo uploaded');
         uploadedAvatarUrl = upload.data.url;
         nextAvatarUrl = upload.data.url;
       }
@@ -536,6 +598,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
       setProfileAvatarFile(null);
       setProfileAvatarUrl(updated.avatar);
       setProfileSnapshot(updated);
+      writeSwrCache(`user:${currentUser.id}:profile`, { ...updated, email: profileEmail });
       setProfileMetadataSyncFailed(Boolean(metadataError));
       onProfileChange?.({ name: updated.name, phone: updated.phone, vehicle: updated.vehicle, avatar: updated.avatar || undefined });
       setProfileMessage(metadataError
@@ -787,13 +850,17 @@ export const AccountView: React.FC<AccountViewProps> = ({
                         <img
                           ref={(node) => {
                             if (node?.complete && node.naturalWidth > 0) {
+                              markImageLoaded(currentUser.avatar);
                               setHeroAvatarLoaded(true);
                             }
                           }}
                           src={currentUser.avatar}
                           alt={`${currentUser.name || 'Rider'} avatar`}
                           referrerPolicy="no-referrer"
-                          onLoad={() => setHeroAvatarLoaded(true)}
+                          onLoad={() => {
+                            markImageLoaded(currentUser.avatar);
+                            setHeroAvatarLoaded(true);
+                          }}
                           className={`h-full w-full object-cover transition-opacity duration-300 ${
                             heroAvatarLoaded ? 'opacity-100' : 'opacity-0'
                           }`}
@@ -1782,6 +1849,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
                       ))}
                     </div>
                   </div>
+
+                  <UploadProgressBar state={avatarUploadProgress.state} compact />
                 </div>
 
                 {/* Personal Information Card */}
@@ -2094,8 +2163,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
                           Object.keys(profileFieldErrors).length > 0
                         }
                         onClick={() => void handleSaveProfile()}
-                        className="banner-cta-shine h-8.5 rounded-lg bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] hover:brightness-105 hover:shadow-md px-3.5 text-[11px] font-extrabold text-white shadow-sm shadow-red-600/20 transition-all active:scale-95 whitespace-nowrap disabled:opacity-45"
+                        className="banner-cta-shine inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] hover:brightness-105 hover:shadow-md px-3.5 text-[11px] font-extrabold text-white shadow-sm shadow-red-600/20 transition-all active:scale-95 whitespace-nowrap disabled:opacity-45"
                       >
+                        {profileSaving && <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
                         {profileSaving ? 'Saving…' : 'Save changes'}
                       </button>
                     </div>

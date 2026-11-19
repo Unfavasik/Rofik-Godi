@@ -22,6 +22,7 @@ import {
   sendAccountDeletionEmail,
   type AccountDeletionRequest,
 } from '../lib/supabaseAccountDeletion';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 export interface AccountDeletionViewProps {
   onBack: () => void;
@@ -78,8 +79,11 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
   onOpenPrivacyPage,
   onOpenOrders,
 }) => {
-  const [request, setRequest] = useState<AccountDeletionRequest | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cachedDeletion = isAuthenticated
+    ? readSwrCache<{ request: AccountDeletionRequest | null }>('user:account-deletion')
+    : undefined;
+  const [request, setRequest] = useState<AccountDeletionRequest | null>(() => cachedDeletion?.request ?? null);
+  const [loading, setLoading] = useState(() => Boolean(isAuthenticated && cachedDeletion === undefined));
   const [saving, setSaving] = useState(false);
   const [reason, setReason] = useState('');
   const [feedback, setFeedback] = useState('');
@@ -93,14 +97,23 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
       setLoading(false);
       return;
     }
+    const cached = readSwrCache<{ request: AccountDeletionRequest | null }>('user:account-deletion');
+    if (cached !== undefined) {
+      setRequest(cached.request);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     void getMyAccountDeletionRequest()
       .then(({ data, error: loadError }) => {
         if (!active) return;
-        setRequest(data?.status === 'scheduled' ? data : null);
+        const next = data?.status === 'scheduled' ? data : null;
+        setRequest(next);
+        if (!loadError) writeSwrCache('user:account-deletion', { request: next });
         setError(loadError);
       })
       .catch(() => {
-        if (active) setError('We could not load your account status. Please try again.');
+        if (active && cached === undefined) setError('We could not load your account status. Please try again.');
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -141,7 +154,7 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
     if (result.error) {
       setError(result.error);
     } else if (result.scheduledFor) {
-      setRequest({
+      const nextRequest: AccountDeletionRequest = {
         user_id: '',
         status: 'scheduled',
         requested_at: new Date().toISOString(),
@@ -149,7 +162,9 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
         cancelled_at: null,
         reason: reason || null,
         feedback: feedback || null,
-      });
+      };
+      setRequest(nextRequest);
+      writeSwrCache('user:account-deletion', { request: nextRequest });
       setNotice(
         'Deletion request scheduled. Your account remains active and you can cancel any time over the next 7 days.',
       );
@@ -167,6 +182,7 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
       setError(result.error || 'We could not cancel the request. Please try again.');
     } else {
       setRequest(null);
+      writeSwrCache('user:account-deletion', { request: null });
       setUnderstood(false);
       setNotice('Deletion request cancelled. Your account and saved items remain active.');
       const emailResult = await sendAccountDeletionEmail('cancelled');

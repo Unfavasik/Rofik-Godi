@@ -33,6 +33,7 @@ import {
   NotificationAudiencePicker,
   type NotificationAudience,
 } from './NotificationAudiencePicker';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { AdminProductColorEditor } from './AdminProductColorEditor';
 import {
   DEFAULT_INSTALLATION,
@@ -163,8 +164,11 @@ export const AdminProductManager: React.FC<{
   focusProductId,
   onFocusHandled,
 }) => {
-  const [products, setProducts] = useState<Product[]>(() => initialProducts ?? []);
-  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const cachedAdminProducts = readSwrCache<Product[]>('admin:products');
+  const [products, setProducts] = useState<Product[]>(() => initialProducts ?? cachedAdminProducts ?? []);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>(() =>
+    initialProducts !== undefined || cachedAdminProducts !== undefined ? 'ready' : 'loading',
+  );
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<'all' | VehicleCategory>('all');
   const navigate = useNavigate();
@@ -177,33 +181,40 @@ export const AdminProductManager: React.FC<{
   const restoredDraftRef = useRef(false);
   const loadRequestRef = useRef(0);
 
-  const loadProducts = useCallback(async () => {
+  const loadProducts = useCallback(async (silent = false) => {
     const requestId = ++loadRequestRef.current;
-    setLoadState('loading');
+    if (!silent) setLoadState('loading');
     try {
       const remote = await loadAdminProducts();
       if (requestId !== loadRequestRef.current) return;
 
       setProducts(remote);
+      writeSwrCache('admin:products', remote);
       setLoadState('ready');
     } catch (cause) {
       if (requestId !== loadRequestRef.current) return;
-      setProducts([]);
-      setLoadState('error');
-      notify(
-        `Could not load products: ${cause instanceof Error ? cause.message : 'Unexpected network error'}`,
-      );
+      if (!silent) {
+        setProducts([]);
+        setLoadState('error');
+        notify(
+          `Could not load products: ${cause instanceof Error ? cause.message : 'Unexpected network error'}`,
+        );
+      }
     }
   }, [notify]);
   useEffect(() => {
-    void loadProducts();
+    const hasWarmData = initialProducts !== undefined || readSwrCache('admin:products') !== undefined;
+    void loadProducts(hasWarmData);
     return () => {
       loadRequestRef.current += 1;
     };
-  }, [loadProducts]);
+  }, [initialProducts, loadProducts]);
   useEffect(() => {
     onProductsChange?.(products);
-  }, [products, onProductsChange]);
+    if (loadState === 'ready') {
+      writeSwrCache('admin:products', products);
+    }
+  }, [products, loadState, onProductsChange]);
   useEffect(() => {
     try {
       sessionStorage.setItem(
@@ -569,8 +580,9 @@ export const AdminProductManager: React.FC<{
       {loadState === 'loading' && (
         <p
           role="status"
-          className="mb-3 rounded-xl border border-slate-200/80 bg-white/90 px-3.5 py-2 text-xs font-semibold text-slate-500 shadow-sm"
+          className="mb-3 inline-flex w-full items-center gap-2 rounded-xl border border-slate-200/80 bg-white/90 px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-sm"
         >
+          <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-[#D9232D]" aria-hidden="true" />
           Loading products…
         </p>
       )}
@@ -606,22 +618,22 @@ export const AdminProductManager: React.FC<{
             <tbody className="divide-y divide-slate-100">
               {loadState === 'loading' && filtered.length === 0
                 ? [0, 1, 2, 3].map((row) => (
-                    <tr key={row} className="animate-pulse">
+                    <tr key={row}>
                       <td className="px-4 py-2.5">
                         <div className="flex items-center gap-2.5">
-                          <div className="h-9 w-9 rounded-lg bg-slate-200/70" />
+                          <div className="skeleton-shimmer h-9 w-9 rounded-lg bg-slate-200/75" />
                           <div className="space-y-1.5">
-                            <div className="h-3.5 w-36 rounded-full bg-slate-200/80" />
-                            <div className="h-2.5 w-24 rounded-full bg-slate-100" />
+                            <div className="skeleton-shimmer h-3.5 w-36 rounded-full bg-slate-200/85" />
+                            <div className="skeleton-shimmer h-2.5 w-24 rounded-full bg-slate-200/60" />
                           </div>
                         </div>
                       </td>
-                      <td className="py-2.5"><div className="h-3 w-20 rounded-full bg-slate-200/70" /></td>
-                      <td className="py-2.5"><div className="h-3.5 w-14 rounded-full bg-slate-200/80" /></td>
-                      <td className="py-2.5"><div className="h-3 w-14 rounded-full bg-slate-100" /></td>
-                      <td className="py-2.5"><div className="h-5 w-20 rounded-full bg-slate-100" /></td>
-                      <td className="py-2.5"><div className="h-5 w-16 rounded-full bg-slate-200/70" /></td>
-                      <td className="py-2.5 pr-4"><div className="ml-auto h-6 w-20 rounded-lg bg-slate-100" /></td>
+                      <td className="py-2.5"><div className="skeleton-shimmer h-3 w-20 rounded-full bg-slate-200/75" /></td>
+                      <td className="py-2.5"><div className="skeleton-shimmer h-3.5 w-14 rounded-full bg-slate-200/85" /></td>
+                      <td className="py-2.5"><div className="skeleton-shimmer h-3 w-14 rounded-full bg-slate-200/65" /></td>
+                      <td className="py-2.5"><div className="skeleton-shimmer h-5 w-20 rounded-full bg-slate-200/65" /></td>
+                      <td className="py-2.5"><div className="skeleton-shimmer h-5 w-16 rounded-full bg-slate-200/75" /></td>
+                      <td className="py-2.5 pr-4"><div className="skeleton-shimmer ml-auto h-6 w-20 rounded-lg bg-slate-200/65" /></td>
                     </tr>
                   ))
                 : filtered.map((product) => (
@@ -758,7 +770,8 @@ const ProductOrderList: React.FC<{
       <p className="mt-1 text-[11px] text-slate-500">
         This sequence is the default order customers see in Home, Shop and Search.
         {saving && (
-          <span role="status" className="ml-2 font-bold text-[#D9232D]">
+          <span role="status" className="ml-2 inline-flex items-center gap-1 font-bold text-[#D9232D]">
+            <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
             Saving…
           </span>
         )}
@@ -839,7 +852,7 @@ const Summary: React.FC<{ label: string; value: string; tone: string; loading?: 
     <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#D9232D]/80 via-rose-400/50 to-transparent opacity-80" />
     <p className="text-[10.5px] font-bold text-slate-500">{label}</p>
     {loading ? (
-      <div className="mt-1.5 h-6 w-14 animate-pulse rounded-lg bg-slate-200/80" />
+      <div className="skeleton-shimmer mt-1.5 h-6 w-14 rounded-lg bg-slate-200/80" />
     ) : (
       <p className={`mt-0.5 text-xl font-black tracking-tight tabular-nums ${tone}`}>{value}</p>
     )}
@@ -921,8 +934,9 @@ const AdminConnectionPanel: React.FC<{ notify: (message: string) => void }> = ({
           />
           <button
             disabled={busy}
-            className="min-h-11 shrink-0 rounded-xl bg-slate-900 px-4 py-2.5 text-[11px] font-bold text-white disabled:opacity-60"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-[11px] font-bold text-white disabled:opacity-60"
           >
+            {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
             {busy ? 'Connecting...' : 'Sign in'}
           </button>
         </div>
@@ -1470,7 +1484,10 @@ const ProductEditor: React.FC<{
             className="banner-cta-shine inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-[#D9232D] px-4 py-1.5 text-xs font-bold text-white shadow-sm shadow-red-600/20 transition hover:bg-[#b91822] hover:shadow-md active:scale-[0.98] disabled:opacity-60"
           >
             {saving ? (
-              'Saving...'
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                Saving...
+              </>
             ) : (
               <>
                 <Check className="h-3.5 w-3.5" />

@@ -272,7 +272,39 @@ function InfoCard({ icon, label, title, detail }: { icon: ReactNode; label: stri
 }
 
 function LoadingOrders() {
-  return <div className="space-y-2.5" aria-label="Loading orders">{[0, 1, 2].map((key) => <div key={key} className="skeleton-shimmer h-[108px] rounded-2xl bg-[#eceae7]" />)}</div>;
+  return (
+    <div className="space-y-2.5" role="status" aria-live="polite" aria-label="Loading orders">
+      <span className="sr-only">Loading orders…</span>
+      {[0, 1, 2].map((key) => (
+        <div
+          key={key}
+          className="overflow-hidden rounded-2xl border border-[#eceae7] bg-white p-3 sm:p-3.5 space-y-2.5"
+        >
+          <div className="flex items-start gap-2.5">
+            <div className="flex shrink-0 -space-x-2">
+              <div className="skeleton-shimmer h-9 w-9 rounded-lg border-2 border-white bg-[#eceae7]" />
+              <div className="skeleton-shimmer h-9 w-9 rounded-lg border-2 border-white bg-[#e4e1dd]" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="skeleton-shimmer h-3 w-20 rounded bg-[#eceae7]" />
+                <div className="skeleton-shimmer h-4 w-18 rounded-full bg-[#f4ece6]" />
+              </div>
+              <div className="skeleton-shimmer h-3.5 w-40 max-w-full rounded bg-[#e8e5e1]" />
+              <div className="skeleton-shimmer h-2.5 w-28 rounded bg-[#f0eeeb]" />
+            </div>
+          </div>
+          <div className="flex items-center justify-between border-t border-[#f0efed] pt-2">
+            <div className="space-y-1">
+              <div className="skeleton-shimmer h-2 w-14 rounded bg-[#f0eeeb]" />
+              <div className="skeleton-shimmer h-3.5 w-16 rounded bg-[#e6e3df]" />
+            </div>
+            <div className="skeleton-shimmer h-3.5 w-16 rounded bg-[#f0eeeb]" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function EmptyOrders({ hasOrders, onShop }: { hasOrders: boolean; onShop: () => void }) {

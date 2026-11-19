@@ -7,6 +7,7 @@ import {
   Eye,
   EyeOff,
   ImagePlus,
+  Loader2,
   Motorbike,
   Plus,
   RefreshCw,
@@ -28,6 +29,9 @@ import {
   type VehicleCatalogType,
 } from '../lib/supabaseVehicleCatalog';
 import { getBrandInitials, getBrandLogoUrl } from '../lib/brandLogos';
+import { useUploadProgress } from '../lib/useUploadProgress';
+import { UploadProgressBar } from './UploadProgressBar';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 type Props = { notify: (message: string, tone?: 'success' | 'error' | 'info') => void };
 
@@ -46,7 +50,9 @@ function BrandLogo({ brand }: { brand: string }) {
 
 export function AdminVehicleCatalogManager({ notify }: Props) {
   const navigate = useNavigate();
-  const [models, setModels] = useState<VehicleCatalogModel[]>([]);
+  const [models, setModels] = useState<VehicleCatalogModel[]>(
+    () => readSwrCache<VehicleCatalogModel[]>('admin:vehicle-models') ?? [],
+  );
   const [brand, setBrand] = useState('');
   const [name, setName] = useState('');
   const [type, setType] = useState<VehicleCatalogType>('bike');
@@ -55,23 +61,30 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
   const [selectedBrand, setSelectedBrand] = useState('');
   const [showAllBrands, setShowAllBrands] = useState(false);
   const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'active' | 'hidden'>('all');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(
+    () => readSwrCache('admin:vehicle-models') === undefined,
+  );
   const [creating, setCreating] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploadingModelId, setUploadingModelId] = useState<string | null>(null);
   const [brandUpdating, setBrandUpdating] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const createImageInputRef = useRef<HTMLInputElement | null>(null);
+  const createUploadProgress = useUploadProgress('model image');
+  const rowUploadProgress = useUploadProgress('model image');
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  const refresh = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     const result = await loadVehicleModels({ includeHidden: true });
     if (result.error) notify(`Could not load vehicle models: ${result.error.message}`, 'error');
+    else writeSwrCache('admin:vehicle-models', result.data);
     setModels(result.data);
     setLoading(false);
   }, [notify]);
 
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    void refresh(readSwrCache('admin:vehicle-models') !== undefined);
+  }, [refresh]);
 
   const typeModels = models.filter((model) => model.type === selectedType);
   const typeBrands = Array.from(new Set(typeModels.map((model) => model.brand))).sort();
@@ -92,12 +105,18 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
     let createdModel: VehicleCatalogModel | null = null;
     try {
       createdModel = await createVehicleModel({ brand: cleanBrand, name: cleanName, type, image: '' });
+      const pendingFile = imageFile;
       setBrand(''); setName(''); setImageFile(null);
-      if (imageFile) await uploadVehicleModelImage(createdModel.id, imageFile);
-      await refresh();
+      if (pendingFile) {
+        createUploadProgress.startUpload(pendingFile.name, { baseLabel: 'model image' });
+        await uploadVehicleModelImage(createdModel.id, pendingFile);
+        createUploadProgress.finishUpload('Model image uploaded');
+      }
+      await refresh(true);
       notify('Vehicle model added to Supabase', 'success');
     } catch (error) {
-      await refresh();
+      createUploadProgress.resetUpload();
+      await refresh(true);
       notify(error instanceof Error ? (createdModel ? `Model added, but image upload failed: ${error.message}` : error.message) : 'Could not add vehicle model', 'error');
     } finally {
       setCreating(false);
@@ -107,7 +126,7 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
   const toggleModel = async (model: VehicleCatalogModel) => {
     try {
       await updateVehicleModel(model.id, { isActive: !model.isActive });
-      await refresh();
+      await refresh(true);
       notify(model.isActive ? 'Model hidden from customers' : 'Model visible to customers', 'success');
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not update visibility', 'error');
@@ -124,7 +143,7 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
     setBrandUpdating(true);
     try {
       await setVehicleBrandVisibility(selectedBrand, selectedType, makeVisible);
-      await refresh();
+      await refresh(true);
       notify(makeVisible ? `${selectedBrand} is now visible to customers` : `${selectedBrand} hidden from customers`, 'success');
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not update company visibility', 'error');
@@ -139,11 +158,14 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
     event.target.value = '';
     if (!file || !modelId) return;
     setUploadingModelId(modelId);
+    rowUploadProgress.startUpload(file.name, { baseLabel: 'model image' });
     try {
       const result = await uploadVehicleModelImage(modelId, file);
-      await refresh();
+      rowUploadProgress.finishUpload('Model image uploaded');
+      await refresh(true);
       notify(`Image converted to WebP and saved (${Math.round(result.bytes / 1024)} KB)`, 'success');
     } catch (error) {
+      rowUploadProgress.resetUpload();
       notify(error instanceof Error ? error.message : 'Could not upload model image', 'error');
     } finally {
       setUploadingModelId(null);
@@ -154,7 +176,7 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
     if (!window.confirm(`Remove ${model.name} from the vehicle catalog?`)) return;
     try {
       await deleteVehicleModel(model.id);
-      await refresh();
+      await refresh(true);
       notify('Vehicle model removed', 'success');
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not remove model', 'error');
@@ -278,6 +300,7 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
                 className="hidden"
                 aria-label="Choose vehicle model image"
               />
+              <UploadProgressBar state={createUploadProgress.state} compact className="mt-2" />
             </div>
             <button
               type="button"
@@ -493,10 +516,10 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
               <p className="sr-only">Loading vehicle catalog…</p>
               {Array.from({ length: 4 }).map((_, idx) => (
                 <div key={idx} className="flex items-center gap-3 py-1.5">
-                  <div className="h-11 w-16 shrink-0 rounded-xl animate-shimmer" />
+                  <div className="h-11 w-16 shrink-0 rounded-xl bg-slate-200/80 animate-shimmer" />
                   <div className="flex-1 space-y-1.5">
-                    <div className="h-3 w-24 rounded-lg animate-shimmer" />
-                    <div className="h-3.5 w-44 rounded-lg animate-shimmer" />
+                    <div className="h-3 w-24 rounded-lg bg-slate-200/70 animate-shimmer" />
+                    <div className="h-3.5 w-44 rounded-lg bg-slate-200/85 animate-shimmer" />
                   </div>
                 </div>
               ))}
@@ -514,6 +537,7 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
                   Tap a model to manage fitment or image
                 </span>
               </div>
+              <UploadProgressBar state={rowUploadProgress.state} compact className="mb-2.5" />
               <div className="divide-y divide-slate-100 overflow-visible rounded-2xl border border-slate-200/85 bg-white px-3.5 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.07)] sm:px-4">
                 {filtered.length === 0 ? (
                   <div className="px-4 py-10 text-center">
@@ -622,7 +646,11 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
                               disabled={uploadingModelId === model.id}
                               className="flex min-h-9 w-full items-center gap-2 rounded-xl px-3 py-1.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                             >
-                              <Upload className="h-3.5 w-3.5" />
+                              {uploadingModelId === model.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#D9232D]" />
+                              ) : (
+                                <Upload className="h-3.5 w-3.5" />
+                              )}
                               {uploadingModelId === model.id ? 'Uploading…' : 'Upload image'}
                             </button>
                             <button

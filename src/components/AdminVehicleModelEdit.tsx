@@ -27,6 +27,9 @@ import {
   type VehicleCatalogModel,
   type VehicleCatalogType,
 } from '../lib/supabaseVehicleCatalog';
+import { useUploadProgress } from '../lib/useUploadProgress';
+import { UploadProgressBar } from './UploadProgressBar';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 type Props = {
   modelId: string;
@@ -37,29 +40,48 @@ const MAX_DESCRIPTION_LENGTH = 200;
 
 export function AdminVehicleModelEdit({ modelId, notify }: Props) {
   const navigate = useNavigate();
-  const [model, setModel] = useState<VehicleCatalogModel | null>(null);
-  const [brand, setBrand] = useState('');
-  const [name, setName] = useState('');
-  const [type, setType] = useState<VehicleCatalogType>('bike');
-  const [slug, setSlug] = useState('');
+  const cachedModels = readSwrCache<VehicleCatalogModel[]>('admin:vehicle-models');
+  const cachedFound = cachedModels?.find((item) => item.id === modelId) || null;
+  const [model, setModel] = useState<VehicleCatalogModel | null>(cachedFound);
+  const [brand, setBrand] = useState(cachedFound?.brand || '');
+  const [name, setName] = useState(cachedFound?.name || '');
+  const [type, setType] = useState<VehicleCatalogType>(cachedFound?.type || 'bike');
+  const [slug, setSlug] = useState(cachedFound?.slug || slugifyVehicleModelName(cachedFound?.name || ''));
   const [slugEdited, setSlugEdited] = useState(false);
-  const [description, setDescription] = useState('');
-  const [isActive, setIsActive] = useState(true);
-  const [allBrands, setAllBrands] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [description, setDescription] = useState(cachedFound?.shortDescription || '');
+  const [isActive, setIsActive] = useState(Boolean(cachedFound?.isActive ?? true));
+  const [allBrands, setAllBrands] = useState<string[]>(() =>
+    cachedModels ? Array.from(new Set(cachedModels.map((item) => item.brand))).sort() : [],
+  );
+  const [loading, setLoading] = useState(!cachedFound);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [removingImage, setRemovingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const imageUploadProgress = useUploadProgress('model image');
 
   useEffect(() => {
     let active = true;
+    const cached = readSwrCache<VehicleCatalogModel[]>('admin:vehicle-models');
+    const cachedMatch = cached?.find((item) => item.id === modelId) || null;
+    if (cachedMatch) {
+      setModel(cachedMatch);
+      setBrand(cachedMatch.brand);
+      setName(cachedMatch.name);
+      setType(cachedMatch.type);
+      setSlug(cachedMatch.slug || slugifyVehicleModelName(cachedMatch.name));
+      setDescription(cachedMatch.shortDescription || '');
+      setIsActive(Boolean(cachedMatch.isActive));
+      if (cached) setAllBrands(Array.from(new Set(cached.map((item) => item.brand))).sort());
+      setLoading(false);
+    }
     void loadVehicleModels({ includeHidden: true }).then(({ data, error }) => {
       if (!active) return;
       if (error) {
-        notify(`Could not load model: ${error.message}`, 'error');
+        if (!cachedMatch) notify(`Could not load model: ${error.message}`, 'error');
       } else {
+        writeSwrCache('admin:vehicle-models', data);
         const found = data.find((item) => item.id === modelId) || null;
         setModel(found);
         setBrand(found?.brand || '');
@@ -74,7 +96,7 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
       setLoading(false);
     }).catch((error: unknown) => {
       if (!active) return;
-      notify(error instanceof Error ? error.message : 'Could not load vehicle model', 'error');
+      if (!cachedMatch) notify(error instanceof Error ? error.message : 'Could not load vehicle model', 'error');
       setLoading(false);
     });
     return () => { active = false; };
@@ -126,11 +148,14 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
       return;
     }
     setUploading(true);
+    imageUploadProgress.startUpload(file.name, { baseLabel: 'model image' });
     try {
       const result = await uploadVehicleModelImage(model.id, file);
+      imageUploadProgress.finishUpload('Model image uploaded');
       setModel((current) => current ? { ...current, image: result.url } : current);
       notify(`Image saved as WebP (${Math.round(result.bytes / 1024)} KB)`, 'success');
     } catch (error) {
+      imageUploadProgress.resetUpload();
       notify(error instanceof Error ? error.message : 'Could not upload model image', 'error');
     } finally {
       setUploading(false);
@@ -216,7 +241,8 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <h2 className="min-w-0 truncate pt-0.5 text-base font-extrabold leading-tight tracking-tight text-slate-900">{displayName}</h2>
                 <label className="inline-flex min-h-8 shrink-0 cursor-pointer items-center gap-1 rounded-full bg-[#FCEBEB] px-2.5 py-1 text-[10.5px] font-extrabold text-[#db1a24] transition hover:bg-red-100">
-                  <Pencil className="h-3 w-3" />{uploading ? 'Uploading…' : 'Change Image'}
+                  {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Pencil className="h-3 w-3" />}
+                  {uploading ? 'Uploading…' : 'Change Image'}
                   <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} disabled={uploading} className="hidden" aria-label="Change vehicle model image" />
                 </label>
               </div>
@@ -296,11 +322,12 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
               <div className="mx-auto grid h-[72px] w-[96px] shrink-0 place-items-center rounded-lg border border-slate-200 bg-white text-slate-300 sm:mx-0"><ImageIcon className="h-6 w-6" /></div>
             )}
             <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="flex min-h-9 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg py-1.5 text-center transition hover:opacity-80 disabled:opacity-60">
-              <CloudUpload className={`h-7 w-7 text-[#db1a24] ${uploading ? 'animate-pulse' : ''}`} />
+              {uploading ? <Loader2 className="h-7 w-7 animate-spin text-[#db1a24]" /> : <CloudUpload className="h-7 w-7 text-[#db1a24]" />}
               <span className="text-xs font-extrabold text-slate-900">{uploading ? 'Uploading…' : 'Replace Image'}</span>
               <span className="text-[10.5px] font-medium text-slate-400">Tap to upload or choose from gallery</span>
             </button>
           </div>
+          <UploadProgressBar state={imageUploadProgress.state} compact />
         </section>
 
         <section className="space-y-2.5 rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm">
@@ -325,7 +352,8 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
 
         <div className="grid grid-cols-1 gap-2.5 pt-1 sm:grid-cols-2 sm:gap-3">
           <button type="button" onClick={() => void removeModel()} disabled={deleting || saving} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-[#FCEBEB] px-3 py-2 text-xs font-extrabold text-[#db1a24] transition hover:bg-red-100 disabled:opacity-50">
-            <Trash2 className="h-3.5 w-3.5" />{deleting ? 'Deleting…' : 'Delete Model'}
+            {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+            {deleting ? 'Deleting…' : 'Delete Model'}
           </button>
           <button type="button" onClick={() => void saveChanges()} disabled={saving || deleting || !brand.trim() || !name.trim()} className="banner-cta-shine inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-[#db1a24] px-3 py-2 text-xs font-extrabold text-white shadow-sm shadow-red-600/20 transition hover:bg-[#c4151e] hover:shadow-md active:scale-[0.98] disabled:opacity-50">
             {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}{saving ? 'Saving…' : 'Save Changes'}

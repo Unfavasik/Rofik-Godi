@@ -10,8 +10,10 @@ import {
   Eye,
   EyeOff,
   Image,
+  LoaderCircle,
   Pencil,
   Plus,
+  RefreshCw,
   Tag,
   Trash2,
   Type,
@@ -37,6 +39,9 @@ import {
 import { AdminNotificationComposer } from './AdminNotificationComposer';
 import { BannerLinkPicker } from './BannerLinkPicker';
 import { ConfirmDialog } from './ConfirmDialog';
+import { AdminBannerGridSkeleton } from './AccountPageSkeleton';
+import { UploadProgressBar } from './UploadProgressBar';
+import { useUploadProgress } from '../lib/useUploadProgress';
 import {
   deleteAdminNotificationCampaign,
   loadAdminNotificationCampaigns,
@@ -47,6 +52,7 @@ import {
   matchesNotificationCategoryToggle,
   type NotificationCategoryToggleFilter,
 } from '../lib/notificationCategory';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 const money = (value: number) => `₹${value.toLocaleString('en-IN')}`;
 const dateLabel = (value: string) =>
@@ -184,9 +190,13 @@ const SCHEDULE_BADGE_META: Record<
 };
 
 export function BannersView({ notify }: { notify: (message: string) => void }) {
-  const [banners, setBanners] = useState<StoreBanner[]>([]);
+  const [banners, setBanners] = useState<StoreBanner[]>(
+    () => readSwrCache<StoreBanner[]>('admin:banners') ?? [],
+  );
   const [draft, setDraft] = useState<StoreBanner | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(
+    () => readSwrCache('admin:banners') === undefined,
+  );
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<StoreBanner | null>(null);
@@ -203,11 +213,22 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
 
   useEffect(() => {
     let active = true;
+    const cached = readSwrCache<StoreBanner[]>('admin:banners');
+    if (cached !== undefined) {
+      setBanners(cached);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     void loadAdminJsonSetting<StoreBanner[]>('store_banners', []).then((result) => {
       if (!active) return;
-      if (result.error)
-        notify('Could not load banner settings. Verify your admin access and database migration.');
-      else setBanners(Array.isArray(result.data) ? result.data : []);
+      if (result.error) {
+        if (cached === undefined) notify('Could not load banner settings. Verify your admin access and database migration.');
+      } else {
+        const nextBanners = Array.isArray(result.data) ? result.data : [];
+        setBanners(nextBanners);
+        writeSwrCache('admin:banners', nextBanners);
+      }
       setLoading(false);
     });
     return () => {
@@ -224,6 +245,7 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
       return false;
     }
     setBanners(next);
+    writeSwrCache('admin:banners', next);
     notify('Banner settings saved');
     return true;
   };
@@ -276,6 +298,8 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
     );
   };
 
+  const bannerUploadProgress = useUploadProgress('banner image');
+
   const uploadImage = async (file?: File) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -287,11 +311,14 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
       return;
     }
     setUploadingImage(true);
+    bannerUploadProgress.startUpload(file.name, { baseLabel: 'banner image' });
     try {
       const result = await uploadStorefrontBannerImage(file);
+      bannerUploadProgress.finishUpload('Banner image uploaded');
       setField('imageUrl', result.url);
       notify('Banner image uploaded');
     } catch (error) {
+      bannerUploadProgress.resetUpload();
       notify(`Banner image upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setUploadingImage(false);
@@ -460,9 +487,7 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-xs text-slate-400">
-          Loading banners…
-        </div>
+        <AdminBannerGridSkeleton count={3} />
       ) : banners.length ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {banners.map((banner, index) => {
@@ -1031,8 +1056,9 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                         />
                       </div>
                       {uploadingImage && (
-                        <div className="absolute inset-0 grid place-items-center bg-white/75 text-[11px] font-bold text-slate-700">
-                          Uploading…
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-white/80 text-[11px] font-bold text-slate-700 backdrop-blur-[1px]">
+                          <LoaderCircle className="h-5 w-5 animate-spin text-[#D9232D]" />
+                          <span>Uploading…</span>
                         </div>
                       )}
                       <div className="absolute right-2.5 top-2.5 flex gap-1.5">
@@ -1062,7 +1088,11 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                       className="grid aspect-[3/2] w-full place-items-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 text-center transition-colors hover:border-[#D9232D] hover:bg-red-50/40 disabled:opacity-50"
                     >
                       <span className="pointer-events-none px-4">
-                        <Upload className="mx-auto h-6 w-6 text-slate-400" />
+                        {uploadingImage ? (
+                          <LoaderCircle className="mx-auto h-6 w-6 animate-spin text-[#D9232D]" />
+                        ) : (
+                          <Upload className="mx-auto h-6 w-6 text-slate-400" />
+                        )}
                         <span className="mt-2 block text-[11px] font-bold text-slate-600">
                           {uploadingImage ? 'Uploading…' : 'Click or drop an image to upload'}
                         </span>
@@ -1072,6 +1102,7 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                       </span>
                     </button>
                   )}
+                  <UploadProgressBar state={bannerUploadProgress.state} compact className="mt-2" />
                 </div>
                 <input
                   ref={imageInputRef}
@@ -1286,8 +1317,9 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
               </button>
               <button
                 disabled={saving}
-                className="banner-cta-shine min-h-9 rounded-xl bg-[#D9232D] hover:bg-[#B91C1C] px-4 py-1.5 text-xs font-bold text-white shadow-xs transition-all active:scale-[0.98] disabled:opacity-50"
+                className="banner-cta-shine inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl bg-[#D9232D] hover:bg-[#B91C1C] px-4 py-1.5 text-xs font-bold text-white shadow-xs transition-all active:scale-[0.98] disabled:opacity-50"
               >
+                {saving && <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
                 {saving ? 'Saving…' : 'Save banner'}
               </button>
             </div>
@@ -1299,6 +1331,9 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
         title="Delete this banner?"
         message={`This will remove “${pendingDelete?.title || 'this banner'}” and its uploaded image from Supabase Storage when it is not used elsewhere.`}
         confirmLabel={deleting ? 'Deleting…' : 'Delete banner'}
+        confirmDisabled={deleting}
+        confirmLoading={deleting}
+        cancelDisabled={deleting}
         onConfirm={() => void confirmRemove()}
         onCancel={() => { if (!deleting) setPendingDelete(null); }}
       />
@@ -1325,8 +1360,12 @@ export function NotificationsView({
   focusCampaignId?: string | null;
   onFocusHandled?: () => void;
 }) {
-  const [campaigns, setCampaigns] = useState<AdminNotificationCampaign[]>([]);
-  const [campaignsLoading, setCampaignsLoading] = useState(true);
+  const [campaigns, setCampaigns] = useState<AdminNotificationCampaign[]>(
+    () => readSwrCache<AdminNotificationCampaign[]>('admin:campaigns') ?? [],
+  );
+  const [campaignsLoading, setCampaignsLoading] = useState(
+    () => readSwrCache('admin:campaigns') === undefined,
+  );
   const [campaignsError, setCampaignsError] = useState('');
   const [pendingCampaign, setPendingCampaign] = useState<AdminNotificationCampaign | null>(null);
   const [deletingCampaign, setDeletingCampaign] = useState(false);
@@ -1343,21 +1382,22 @@ export function NotificationsView({
     campaigns.filter((campaign) => matchesNotificationCategoryToggle(campaign, category)).length +
     notifications.filter((item) => matchesNotificationCategoryToggle(item, category)).length;
 
-  const refreshCampaigns = useCallback(async () => {
-    setCampaignsLoading(true);
+  const refreshCampaigns = useCallback(async (silent = false) => {
+    if (!silent) setCampaignsLoading(true);
     try {
       const response = await loadAdminNotificationCampaigns();
       setCampaigns(response.data);
+      if (!response.error) writeSwrCache('admin:campaigns', response.data);
       setCampaignsError(response.error?.message || '');
     } catch (error) {
-      setCampaignsError(error instanceof Error ? error.message : 'Could not load sent notifications.');
+      if (!silent) setCampaignsError(error instanceof Error ? error.message : 'Could not load sent notifications.');
     } finally {
       setCampaignsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void refreshCampaigns();
+    void refreshCampaigns(readSwrCache('admin:campaigns') !== undefined);
   }, [refreshCampaigns]);
 
   const handledFocusId = useRef<string | null>(null);
@@ -1383,7 +1423,11 @@ export function NotificationsView({
         setCampaignsError(result.error.message);
         return;
       }
-      setCampaigns((current) => current.filter((item) => item.campaign_id !== pendingCampaign.campaign_id));
+      setCampaigns((current) => {
+        const next = current.filter((item) => item.campaign_id !== pendingCampaign.campaign_id);
+        writeSwrCache('admin:campaigns', next);
+        return next;
+      });
       onCampaignDeleted(pendingCampaign.campaign_id);
       notify(`Notification removed from ${result.count} recipient inbox${result.count === 1 ? '' : 'es'}.`);
       if (result.storageError) {
@@ -1470,7 +1514,8 @@ export function NotificationsView({
             <h3 className="mt-0.5 font-display text-sm font-black text-slate-900">Notifications sent to customers</h3>
             <p className="mt-0.5 text-[11px] font-medium text-slate-500">Delete a campaign to remove it from every recipient’s inbox.</p>
           </div>
-          <button type="button" onClick={() => void refreshCampaigns()} disabled={campaignsLoading} className="min-h-9 self-start rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-extrabold text-slate-700 shadow-2xs transition hover:bg-slate-50 disabled:opacity-50 sm:self-auto">
+          <button type="button" onClick={() => void refreshCampaigns()} disabled={campaignsLoading} className="inline-flex min-h-9 items-center gap-1.5 self-start rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-extrabold text-slate-700 shadow-2xs transition hover:bg-slate-50 disabled:opacity-50 sm:self-auto">
+            <RefreshCw className={`h-3.5 w-3.5 ${campaignsLoading ? 'animate-spin text-[#D9232D]' : ''}`} aria-hidden="true" />
             {campaignsLoading ? 'Refreshing…' : 'Refresh history'}
           </button>
         </div>
@@ -1481,10 +1526,10 @@ export function NotificationsView({
               <p className="sr-only">Loading sent notifications…</p>
               {Array.from({ length: 2 }).map((_, idx) => (
                 <div key={idx} className="flex items-center gap-3 py-1.5">
-                  <div className="h-12 w-14 shrink-0 rounded-xl animate-shimmer" />
+                  <div className="h-12 w-14 shrink-0 rounded-xl bg-slate-200/80 animate-shimmer" />
                   <div className="min-w-0 flex-1 space-y-2">
-                    <div className="h-3.5 w-44 max-w-full rounded-lg animate-shimmer" />
-                    <div className="h-3 w-64 max-w-full rounded-lg animate-shimmer" />
+                    <div className="h-3.5 w-44 max-w-full rounded-lg bg-slate-200/80 animate-shimmer" />
+                    <div className="h-3 w-64 max-w-full rounded-lg bg-slate-200/65 animate-shimmer" />
                   </div>
                 </div>
               ))}

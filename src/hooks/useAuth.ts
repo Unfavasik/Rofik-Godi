@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { UserProfile } from '../types';
 import { supabase } from '../lib/supabase';
 import { getMyProfile } from '../lib/supabaseCustomer';
+import { clearSwrCache } from '../lib/swrCache';
 
 export type AuthStatus = 'AUTH_LOADING' | 'AUTHENTICATED' | 'UNAUTHENTICATED';
 
@@ -67,6 +68,7 @@ export function useAuth() {
       setAuthStatus('UNAUTHENTICATED');
       setIsAdmin(false);
       clearCachedAdminVerification();
+      clearSwrCache();
     };
 
     const applySession = (user: { id: string; email?: string; user_metadata?: Record<string, unknown> }) => {
@@ -81,8 +83,8 @@ export function useAuth() {
         isGuest: false,
       });
       setAuthStatus('AUTHENTICATED');
-      setIsAdmin(null);
       const cachedAdmin = readCachedAdminVerification(user.id);
+      setIsAdmin(cachedAdmin);
       const adminPromise = cachedAdmin === null
         ? checkIsAdmin().then((admin) => {
           writeCachedAdminVerification(user.id, admin);

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { QrCode } from 'lucide-react';
+import { LoaderCircle, QrCode } from 'lucide-react';
 import type { CustomerOrderRecord } from '../types';
 import { canShowPickupQr } from '../lib/orderPresentation';
 import { issueMyStorePickupToken } from '../lib/supabaseOrders';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 interface PickupQrCardProps {
   order: CustomerOrderRecord;
@@ -11,8 +12,13 @@ interface PickupQrCardProps {
 }
 
 export function PickupQrCard({ order, onRefresh }: PickupQrCardProps) {
-  const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const qrCacheKey = `user:pickup-qr:${order.order_number}`;
+  const [token, setToken] = useState<string | null>(() =>
+    canShowPickupQr(order.status) ? readSwrCache<string>(qrCacheKey) ?? null : null,
+  );
+  const [loading, setLoading] = useState(() =>
+    Boolean(canShowPickupQr(order.status) && readSwrCache(qrCacheKey) === undefined),
+  );
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
 
@@ -25,30 +31,37 @@ export function PickupQrCard({ order, onRefresh }: PickupQrCardProps) {
     }
 
     let active = true;
-    setToken(null);
+    const cached = retry === 0 ? readSwrCache<string>(qrCacheKey) : undefined;
+    if (cached) {
+      setToken(cached);
+      setLoading(false);
+    } else {
+      setToken(null);
+      setLoading(true);
+    }
     setError('');
-    setLoading(true);
     void issueMyStorePickupToken(order.order_number)
       .then(({ data, error: tokenError }) => {
         if (!active) return;
         if (tokenError) {
-          setError(tokenError.message || 'Pickup QR could not be loaded.');
+          if (!cached) setError(tokenError.message || 'Pickup QR could not be loaded.');
         } else if (!data) {
           setError('This order is no longer waiting for pickup. Refresh your orders.');
           void onRefresh?.();
         } else {
           setToken(data);
+          writeSwrCache(qrCacheKey, data);
         }
       })
       .catch((reason: unknown) => {
-        if (active) setError(reason instanceof Error ? reason.message : 'Pickup QR could not be loaded.');
+        if (active && !cached) setError(reason instanceof Error ? reason.message : 'Pickup QR could not be loaded.');
       })
       .finally(() => {
         if (active) setLoading(false);
       });
 
     return () => { active = false; };
-  }, [order.order_number, order.status, onRefresh, retry]);
+  }, [order.order_number, order.status, onRefresh, qrCacheKey, retry]);
 
   if (!canShowPickupQr(order.status)) return null;
 
@@ -62,7 +75,16 @@ export function PickupQrCard({ order, onRefresh }: PickupQrCardProps) {
         </div>
       </div>
       {loading ? (
-        <div className="grid min-h-24 place-items-center rounded-lg bg-slate-50 text-[10.5px] font-semibold text-slate-500">Loading your secure QR…</div>
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex flex-col items-center gap-2 rounded-lg bg-emerald-50/50 p-2.5"
+        >
+          <div className="skeleton-shimmer grid h-[104px] w-[104px] place-items-center rounded-lg border border-emerald-200/70 bg-white">
+            <LoaderCircle className="h-5 w-5 animate-spin text-emerald-600" aria-hidden="true" />
+          </div>
+          <span className="text-[10px] font-semibold text-slate-600">Loading your secure QR…</span>
+        </div>
       ) : token ? (
         <div className="flex flex-col items-center gap-2 rounded-lg bg-emerald-50/60 p-2.5">
           <div className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm">

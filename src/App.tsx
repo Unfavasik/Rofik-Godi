@@ -82,6 +82,7 @@ import { usePwaInstallPrompt } from './hooks/usePwaInstallPrompt';
 import { usePushNotifications } from './hooks/usePushNotifications';
 import { listMyNotifications, listMyWishlist, toggleWishlist } from './lib/supabaseCustomer';
 import { readCustomerNotificationCountCache, writeCustomerNotificationCountCache } from './lib/localCache';
+import { readSwrCache, writeSwrCache } from './lib/swrCache';
 import { CloudLoader } from './components/CloudLoader';
 const FilterSortModal = lazy(() => import('./components/FilterSortModal').then((module) => ({ default: module.FilterSortModal })));
 const LAST_ROUTE_KEY = 'rofik-godi:last-route:v1';
@@ -728,10 +729,18 @@ export default function App() {
   useEffect(() => {
     if (!couponRouteCode) return;
     let active = true;
-    setCouponRouteLoading(true);
-    setCouponRouteOffer(null);
-    void loadCustomerCouponOffers().then(({ data }) => {
+    const cachedOffers = readSwrCache<CustomerCouponOffer[]>('public:customer-coupons');
+    const cachedOffer = cachedOffers?.find((item) => item.code.toLowerCase() === couponRouteCode.toLowerCase()) || null;
+    if (cachedOffers !== undefined) {
+      setCouponRouteOffer(cachedOffer);
+      setCouponRouteLoading(false);
+    } else {
+      setCouponRouteLoading(true);
+      setCouponRouteOffer(null);
+    }
+    void loadCustomerCouponOffers().then(({ data, error }) => {
       if (!active) return;
+      if (!error) writeSwrCache('public:customer-coupons', data);
       const offer = data?.find((item) => item.code.toLowerCase() === couponRouteCode.toLowerCase()) || null;
       setCouponRouteOffer(offer);
       setCouponRouteLoading(false);

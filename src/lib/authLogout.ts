@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { supabase } from './supabase';
 import { clearCustomerNotificationCache } from './localCache';
+import { clearSwrCache } from './swrCache';
 
 type LocalSignOut = (options: { scope: 'local' }) => Promise<{ error: unknown | null }>;
 
@@ -22,6 +23,8 @@ export async function signOutCurrentDevice(signOut: LocalSignOut | null): Promis
       // Sign-out should still work if the device is offline; stale FCM tokens are pruned by FCM errors.
     }
   }
+
+  clearSwrCache();
 
   try {
     const { error } = await signOut({ scope: 'local' });

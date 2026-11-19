@@ -21,6 +21,7 @@ import { getMyOrderByNumber } from '../lib/supabaseOrders';
 import type { CustomerOrderRecord } from '../types';
 import { formatInr, useI18n, type TranslationKey } from '../lib/i18n';
 import { isOrderComplete } from '../lib/orderPresentation';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 const money = formatInr;
 const orderDate = (value: string, locale: string) => {
@@ -93,8 +94,10 @@ export function OrderNotificationDetails({
   const { t, language } = useI18n();
   const locale = language === 'bn' ? 'bn-IN' : 'en-IN';
   const [viewportHeight, setViewportHeight] = useState<number | null>(null);
-  const [order, setOrder] = useState<CustomerOrderRecord | null>(initialOrder || null);
-  const [loading, setLoading] = useState(!initialOrder);
+  const orderCacheKey = userId && orderNumber ? `user:${userId}:order-number:${orderNumber.toUpperCase()}` : '';
+  const initialCachedOrder = !initialOrder && orderCacheKey ? readSwrCache<CustomerOrderRecord>(orderCacheKey) : undefined;
+  const [order, setOrder] = useState<CustomerOrderRecord | null>(() => initialOrder || initialCachedOrder || null);
+  const [loading, setLoading] = useState(() => !initialOrder && !initialCachedOrder);
   const [loadError, setLoadError] = useState(false);
   const autoBuyAgainHandledRef = useRef(false);
   const [buyAgainLoading, setBuyAgainLoading] = useState(false);
@@ -118,26 +121,34 @@ export function OrderNotificationDetails({
     let active = true;
     if (initialOrder) {
       setOrder(initialOrder);
+      if (orderCacheKey) writeSwrCache(orderCacheKey, initialOrder);
       setLoading(false);
       setLoadError(false);
       return () => { active = false; };
     }
-    setLoading(true);
+    const cached = orderCacheKey ? readSwrCache<CustomerOrderRecord>(orderCacheKey) : undefined;
+    if (cached) {
+      setOrder(cached);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     setLoadError(false);
     void getMyOrderByNumber(userId, orderNumber)
       .then((result) => {
         if (!active) return;
         setOrder(result);
+        if (result && orderCacheKey) writeSwrCache(orderCacheKey, result);
         setLoadError(!result);
       })
       .catch(() => {
-        if (active) setLoadError(true);
+        if (active && !cached) setLoadError(true);
       })
       .finally(() => {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [initialOrder, orderNumber, userId]);
+  }, [initialOrder, orderCacheKey, orderNumber, userId]);
 
   const viewportStyle = { height: viewportHeight ? `${viewportHeight}px` : '100dvh' };
   const phoneHref = `tel:${WORKSHOP_INFO.phone.replace(/[^+\d]/g, '')}`;

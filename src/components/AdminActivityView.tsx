@@ -33,6 +33,7 @@ import {
   type ActivityFeedSource,
   type SupportRequestStatus,
 } from '../lib/supabaseAdminActivity';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 type FeedFilter = 'all' | 'orders' | 'support' | 'reviews' | 'customers' | 'products' | 'coupons' | 'campaigns';
 type FeedCategory = Exclude<FeedFilter, 'all'>;
@@ -185,15 +186,16 @@ export const AdminActivityView: React.FC<{
   supportOnly?: boolean;
   initialSupportRequestId?: string | null;
 }> = ({ onViewOrder, onViewReview, onViewCustomer, onViewProduct, onViewCoupon, onViewCampaign, adminUserId, notify, supportOnly = false, initialSupportRequestId = null }) => {
-  const [events, setEvents] = useState<AdminActivityEvent[]>([]);
+  const initialActivityCache = readSwrCache<{ events: AdminActivityEvent[]; hasMore: boolean }>('admin:activity:customer');
+  const [events, setEvents] = useState<AdminActivityEvent[]>(() => initialActivityCache?.events ?? []);
   const [mode, setMode] = useState<FeedMode>('notifications');
   const [filter, setFilter] = useState<FeedFilter>('all');
   const [query, setQuery] = useState('');
   const [unreadOnly, setUnreadOnly] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !initialActivityCache);
   const [busy, setBusy] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
+  const [hasMore, setHasMore] = useState(() => initialActivityCache?.hasMore ?? false);
   const [error, setError] = useState('');
   const [selectedSupport, setSelectedSupport] = useState<AdminActivityEvent | null>(null);
 
@@ -209,11 +211,16 @@ export const AdminActivityView: React.FC<{
         const result = await loadAdminActivityEvents(200, undefined, source);
         if (result.error) setError(result.error.message);
         else {
-          setEvents((current) => mergeEventRows(current, result.data));
-          setHasMore(result.data.length === 200);
+          const nextHasMore = result.data.length === 200;
+          setEvents((current) => {
+            const next = mergeEventRows(current, result.data);
+            writeSwrCache(`admin:activity:${source}`, { events: next, hasMore: nextHasMore });
+            return next;
+          });
+          setHasMore(nextHasMore);
         }
       } catch {
-        setError('Activity could not be loaded. Check your connection and try again.');
+        if (!silent) setError('Activity could not be loaded. Check your connection and try again.');
       } finally {
         if (!silent) setLoading(false);
       }
@@ -230,8 +237,13 @@ export const AdminActivityView: React.FC<{
       const result = await loadAdminActivityEvents(200, { createdAt: oldest.created_at, id: oldest.id }, feedSource);
       if (result.error) setError(result.error.message);
       else {
-        setEvents((current) => mergeEventRows(current, result.data));
-        setHasMore(result.data.length === 200);
+        const nextHasMore = result.data.length === 200;
+        setEvents((current) => {
+          const next = mergeEventRows(current, result.data);
+          writeSwrCache(`admin:activity:${feedSource}`, { events: next, hasMore: nextHasMore });
+          return next;
+        });
+        setHasMore(nextHasMore);
       }
     } catch {
       setError('Older activity could not be loaded. Please try again.');
@@ -241,20 +253,33 @@ export const AdminActivityView: React.FC<{
   };
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    const cached = readSwrCache<{ events: AdminActivityEvent[]; hasMore: boolean }>(`admin:activity:${feedSource}`);
+    if (cached) {
+      setEvents(cached.events);
+      setHasMore(cached.hasMore);
+      setLoading(false);
+    }
+    void refresh(Boolean(cached), feedSource);
+  }, [feedSource, refresh]);
 
   const switchMode = (next: FeedMode) => {
     if (next === mode) return;
+    const nextSource: ActivityFeedSource = next === 'log' ? 'admin' : 'customer';
+    const cached = readSwrCache<{ events: AdminActivityEvent[]; hasMore: boolean }>(`admin:activity:${nextSource}`);
     setMode(next);
     setFilter('all');
     setQuery('');
     setUnreadOnly(false);
-    setEvents([]);
-    setHasMore(false);
     setSelectedSupport(null);
-    setLoading(true);
-    void refresh(false, next === 'log' ? 'admin' : 'customer');
+    if (cached) {
+      setEvents(cached.events);
+      setHasMore(cached.hasMore);
+      setLoading(false);
+    } else {
+      setEvents([]);
+      setHasMore(false);
+      setLoading(true);
+    }
   };
 
   useEffect(() => {
@@ -517,14 +542,14 @@ export const AdminActivityView: React.FC<{
           {[0, 1, 2].map((row) => (
             <div
               key={row}
-              className="animate-pulse rounded-2xl border border-slate-200/80 bg-white/95 p-5 shadow-xs"
+              className="rounded-2xl border border-slate-200/80 bg-white/95 p-5 shadow-xs"
             >
               <div className="flex gap-4">
-                <div className="h-11 w-11 shrink-0 rounded-2xl bg-slate-200/80" />
+                <div className="skeleton-shimmer h-11 w-11 shrink-0 rounded-2xl bg-slate-200/80" />
                 <div className="flex-1 space-y-2.5">
-                  <div className="h-3.5 w-28 rounded-full bg-slate-200/70" />
-                  <div className="h-4 w-56 rounded-full bg-slate-200/80" />
-                  <div className="h-3 w-full max-w-md rounded-full bg-slate-100" />
+                  <div className="skeleton-shimmer h-3.5 w-28 rounded-full bg-slate-200/70" />
+                  <div className="skeleton-shimmer h-4 w-56 rounded-full bg-slate-200/80" />
+                  <div className="skeleton-shimmer h-3 w-full max-w-md rounded-full bg-slate-200/60" />
                 </div>
               </div>
             </div>

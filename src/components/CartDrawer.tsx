@@ -5,6 +5,7 @@ import { loadCustomerCouponOffers, validateCustomerCoupon, type CustomerCouponOf
 import { getUnappliedCouponOffers } from '../lib/couponDisplay';
 import { MAX_ORDER_ITEM_QUANTITY } from '../lib/cart';
 import { useI18n } from '../lib/i18n';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import {
   X,
   ShoppingBag,
@@ -46,8 +47,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; subtotal: number; total: number } | null>(null);
   const [couponError, setCouponError] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
-  const [couponOffers, setCouponOffers] = useState<CustomerCouponOffer[]>([]);
-  const [couponOffersLoading, setCouponOffersLoading] = useState(false);
+  const [couponOffers, setCouponOffers] = useState<CustomerCouponOffer[]>(
+    () => readSwrCache<CustomerCouponOffer[]>('public:customer-coupons') ?? [],
+  );
+  const [couponOffersLoading, setCouponOffersLoading] = useState(
+    () => readSwrCache('public:customer-coupons') === undefined,
+  );
   const [couponOffersError, setCouponOffersError] = useState('');
 
   useEffect(() => {
@@ -62,12 +67,19 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   useEffect(() => {
     if (!isOpen || items.length === 0) return;
     let cancelled = false;
-    setCouponOffersLoading(true);
+    const cached = readSwrCache<CustomerCouponOffer[]>('public:customer-coupons');
+    if (cached !== undefined) {
+      setCouponOffers(cached);
+      setCouponOffersLoading(false);
+    } else {
+      setCouponOffersLoading(true);
+    }
     setCouponOffersError('');
     void loadCustomerCouponOffers().then((response) => {
       if (cancelled) return;
       setCouponOffers(response.data);
       setCouponOffersError(response.error);
+      if (!response.error) writeSwrCache('public:customer-coupons', response.data);
       setCouponOffersLoading(false);
     });
     return () => { cancelled = true; };

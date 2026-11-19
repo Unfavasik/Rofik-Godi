@@ -11,6 +11,7 @@ import { translate, useI18n } from '../lib/i18n';
 import type { SettingsSectionRoute } from '../lib/appRoutes';
 import { AccountDeletionView } from './AccountDeletionView';
 import { SettingsCouponsSkeleton, SettingsPageSkeleton } from './AccountPageSkeleton';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -164,8 +165,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   // States for sub-pages
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
   const [selectedCouponOffer, setSelectedCouponOffer] = useState<CustomerCouponOffer | null>(null);
-  const [couponOffers, setCouponOffers] = useState<CustomerCouponOffer[]>([]);
-  const [couponOffersLoading, setCouponOffersLoading] = useState(false);
+  const [couponOffers, setCouponOffers] = useState<CustomerCouponOffer[]>(
+    () => readSwrCache<CustomerCouponOffer[]>('public:customer-coupons') ?? [],
+  );
+  const [couponOffersLoading, setCouponOffersLoading] = useState(
+    () => readSwrCache('public:customer-coupons') === undefined,
+  );
   const [couponOffersError, setCouponOffersError] = useState('');
   const preferenceOwnerId = currentUserId || 'guest-user';
   const [notificationState, setNotificationState] = useState<CustomerNotificationPreferences>(() => readCustomerAppPreferences(preferenceOwnerId).notifications);
@@ -193,14 +198,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   useEffect(() => {
     if (section !== 'coupons') return;
     let active = true;
-    setCouponOffersLoading(true);
+    const cached = readSwrCache<CustomerCouponOffer[]>('public:customer-coupons');
+    if (cached !== undefined) {
+      setCouponOffers(cached);
+      setCouponOffersLoading(false);
+    } else {
+      setCouponOffersLoading(true);
+    }
     setCouponOffersError('');
     void loadCustomerCouponOffers().then(({ data, error }) => {
       if (!active) return;
       setCouponOffers(data);
       setCouponOffersError(error);
+      if (!error) writeSwrCache('public:customer-coupons', data);
     }).catch(() => {
-      if (active) setCouponOffersError('Offers are temporarily unavailable. Please try again later.');
+      if (active && cached === undefined) setCouponOffersError('Offers are temporarily unavailable. Please try again later.');
     }).finally(() => {
       if (active) setCouponOffersLoading(false);
     });

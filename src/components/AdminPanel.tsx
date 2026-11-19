@@ -18,6 +18,7 @@ import {
   Filter,
   Image,
   LayoutDashboard,
+  LoaderCircle,
   Menu,
   MessageSquareText,
   MoreHorizontal,
@@ -80,6 +81,16 @@ import type { Product } from '../types';
 import { supabase } from '../lib/supabase';
 import { getOrderStatusLabel, isOrderComplete } from '../lib/orderPresentation';
 import { getAdminCouponIdFromPath, getAdminCustomerIdFromPath, getAdminOrderIdFromPath, getAdminProductIdFromPath, getAdminSectionFromPath, getAdminSupportRequestIdFromPath, getAdminVehicleModelIdFromPath, getPathForAdminCoupon, getPathForAdminCustomer, getPathForAdminOrder, getPathForAdminProduct, getPathForAdminSection, isAdminNotificationComposePath, type AdminSectionRoute } from '../lib/appRoutes';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+
+type AdminWorkspaceCache = {
+  orders: AdminOrderRecord[];
+  products: Product[];
+  customers: AdminCustomer[];
+  metrics: Record<string, number> | null;
+  notifications: AdminNotification[];
+  activityUnreadCount: number;
+};
 
 type AdminSection = AdminSectionRoute;
 type OrderStatus = AdminOrderRecord['status'];
@@ -206,7 +217,7 @@ function MetricCard({
       </div>
       <p className="mt-2.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{label}</p>
       {loading ? (
-        <div className="mt-1.5 h-6 w-24 rounded-lg animate-shimmer" aria-hidden="true" />
+        <div className="mt-1.5 h-6 w-24 rounded-lg bg-slate-200/80 animate-shimmer" aria-hidden="true" />
       ) : (
         <p className="mt-0.5 font-display text-lg font-black tracking-tight text-slate-900 tabular-nums md:text-xl">{value}</p>
       )}
@@ -307,6 +318,13 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
         loadAdminActivityUnreadCount(),
       ]);
     const errors: string[] = [];
+    const nextOrders = orderResult.error ? undefined : orderResult.data;
+    const nextProducts = productResult.error ? undefined : (productResult.data ?? undefined);
+    const nextCustomers = customerResult.error ? undefined : customerResult.data;
+    const nextMetrics = metricResult.error ? undefined : (metricResult.data ?? undefined);
+    const nextNotifications = notificationResult.error ? undefined : notificationResult.data;
+    const nextActivityUnreadCount = activityResult.error ? undefined : activityResult.count;
+
     if (orderResult.error) errors.push(`Orders: ${orderResult.error.message}`);
     else setOrders(orderResult.data);
     if (productResult.error) errors.push(`Products: ${productResult.error.message}`);
@@ -320,10 +338,30 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     else setNotifications(notificationResult.data);
     if (activityResult.error) errors.push(`Activity: ${activityResult.error.message}`);
     else setActivityUnreadCount(activityResult.count);
+    const workspaceKey = `admin:${authData.user.id}:workspace`;
+    const previousCache = readSwrCache<AdminWorkspaceCache>(workspaceKey);
+    writeSwrCache<AdminWorkspaceCache>(workspaceKey, {
+      orders: nextOrders ?? previousCache?.orders ?? [],
+      products: nextProducts ?? previousCache?.products ?? PRODUCTS,
+      customers: nextCustomers ?? previousCache?.customers ?? [],
+      metrics: nextMetrics ?? previousCache?.metrics ?? null,
+      notifications: nextNotifications ?? previousCache?.notifications ?? [],
+      activityUnreadCount: nextActivityUnreadCount ?? previousCache?.activityUnreadCount ?? 0,
+    });
     setError(errors.join(' · '));
   }, []);
   useEffect(() => {
     if (!adminUserId) return;
+    const cached = readSwrCache<AdminWorkspaceCache>(`admin:${adminUserId}:workspace`);
+    if (cached) {
+      setOrders(cached.orders);
+      setProducts(cached.products);
+      setCustomers(cached.customers);
+      setCustomersLoaded(true);
+      if (cached.metrics) setMetrics(cached.metrics);
+      setNotifications(cached.notifications);
+      setActivityUnreadCount(cached.activityUnreadCount);
+    }
     void refresh();
     const refreshTimer = window.setInterval(() => void refresh(), 30_000);
     return () => window.clearInterval(refreshTimer);
@@ -409,13 +447,18 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
       setCustomerAvatarUrl(null);
       return () => { active = false; };
     }
-    setCustomerAvatarUrl(null);
+    const avatarCacheKey = `admin:customer-avatar:${selectedCustomerId}`;
+    const cachedAvatar = readSwrCache<{ url: string | null }>(avatarCacheKey);
+    setCustomerAvatarUrl(cachedAvatar ? cachedAvatar.url : null);
     void loadAdminCustomerAvatar(selectedCustomerId)
       .then(({ data, error: avatarError }) => {
-        if (active) setCustomerAvatarUrl(avatarError ? null : data);
+        if (!active) return;
+        const nextUrl = avatarError ? null : data;
+        setCustomerAvatarUrl(nextUrl);
+        if (!avatarError) writeSwrCache(avatarCacheKey, { url: nextUrl });
       })
       .catch(() => {
-        if (active) setCustomerAvatarUrl(null);
+        if (active && !cachedAvatar) setCustomerAvatarUrl(null);
       });
     return () => { active = false; };
   }, [selectedCustomerId]);
@@ -2326,22 +2369,22 @@ function CustomersView({
                 ? Array.from({ length: 4 }).map((_, index) => (
                     <tr key={index}>
                       <td className="px-4 py-2.5">
-                        <div className="h-4 w-32 rounded-lg animate-shimmer" />
+                        <div className="h-4 w-32 rounded-lg bg-slate-200/80 animate-shimmer" />
                       </td>
                       <td className="py-2.5">
-                        <div className="h-4 w-40 rounded-lg animate-shimmer" />
+                        <div className="h-4 w-40 rounded-lg bg-slate-200/80 animate-shimmer" />
                       </td>
                       <td className="py-2.5">
-                        <div className="h-4 w-10 rounded-lg animate-shimmer" />
+                        <div className="h-4 w-10 rounded-lg bg-slate-200/70 animate-shimmer" />
                       </td>
                       <td className="py-2.5">
-                        <div className="h-4 w-16 rounded-lg animate-shimmer" />
+                        <div className="h-4 w-16 rounded-lg bg-slate-200/80 animate-shimmer" />
                       </td>
                       <td className="py-2.5">
-                        <div className="h-4 w-24 rounded-lg animate-shimmer" />
+                        <div className="h-4 w-24 rounded-lg bg-slate-200/70 animate-shimmer" />
                       </td>
                       <td className="py-2.5 pr-4 text-right">
-                        <div className="ml-auto h-7 w-8 rounded-lg animate-shimmer" />
+                        <div className="ml-auto h-7 w-8 rounded-lg bg-slate-200/70 animate-shimmer" />
                       </td>
                     </tr>
                   ))
@@ -2449,7 +2492,11 @@ function SettingsAdmin({
             onClick={() => void save()}
             className="banner-cta-shine inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-[#D9232D] px-4 py-2 text-[11px] font-extrabold text-white shadow-sm shadow-red-600/20 transition hover:bg-red-700 hover:shadow-md active:scale-[0.98] disabled:opacity-50"
           >
-            <Check className="h-3.5 w-3.5" />
+            {saving ? (
+              <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <Check className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
             {saving ? 'Saving...' : 'Save changes'}
           </button>
         }

@@ -3,6 +3,8 @@ import { Camera, ChevronLeft, Loader2 } from 'lucide-react';
 import { UserProfile } from '../types';
 import { saveMyProfile, uploadMyAvatar, deleteMyAvatar } from '../lib/supabaseCustomer';
 import { validateProfileFields } from '../lib/profileValidation';
+import { useUploadProgress } from '../lib/useUploadProgress';
+import { UploadProgressBar } from './UploadProgressBar';
 import signupAvatar from '../assets/onboarding/signup.webp';
 
 interface SignupProfilePageProps {
@@ -22,20 +24,30 @@ export const SignupProfilePage: React.FC<SignupProfilePageProps> = ({ user, onCo
   const [formError, setFormError] = useState('');
   const previousAvatarRef = useRef<string | null>(user.avatar || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarUploadProgress = useUploadProgress('photo');
 
   const handleAvatarPick = async (file: File | undefined) => {
     if (!file) return;
     setUploading(true);
     setFormError('');
-    const result = await uploadMyAvatar(file);
-    if (result.error || !result.data) {
-      setFormError(result.error?.message || 'Could not upload the photo. Please try again.');
-    } else {
-      setAvatarUrl(result.data.url);
-      void deleteMyAvatar(previousAvatarRef.current);
-      previousAvatarRef.current = result.data.url;
+    avatarUploadProgress.startUpload(file.name, { baseLabel: 'profile photo' });
+    try {
+      const result = await uploadMyAvatar(file);
+      if (result.error || !result.data) {
+        avatarUploadProgress.resetUpload();
+        setFormError(result.error?.message || 'Could not upload the photo. Please try again.');
+      } else {
+        avatarUploadProgress.finishUpload('Photo uploaded');
+        setAvatarUrl(result.data.url);
+        void deleteMyAvatar(previousAvatarRef.current);
+        previousAvatarRef.current = result.data.url;
+      }
+    } catch {
+      avatarUploadProgress.resetUpload();
+      setFormError('Could not upload the photo. Please try again.');
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   };
 
   const handleSave = async () => {
@@ -132,6 +144,11 @@ export const SignupProfilePage: React.FC<SignupProfilePageProps> = ({ user, onCo
               void handleAvatarPick(event.target.files?.[0]);
               event.target.value = '';
             }}
+          />
+          <UploadProgressBar
+            state={avatarUploadProgress.state}
+            compact
+            className="mt-2.5 w-full max-w-[260px]"
           />
         </div>
 

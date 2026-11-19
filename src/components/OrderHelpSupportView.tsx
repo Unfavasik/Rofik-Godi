@@ -53,6 +53,9 @@ import {
   type SupportRequestCategory,
   type SupportRequestRecord,
 } from '../lib/supabaseSupport';
+import { useUploadProgress } from '../lib/useUploadProgress';
+import { UploadProgressBar } from './UploadProgressBar';
+import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 export interface OrderHelpSupportViewProps {
   order?: CustomerOrderRecord | null;
@@ -187,10 +190,16 @@ export function OrderHelpSupportView({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [createdTicketId, setCreatedTicketId] = useState<string | null>(null);
-  const [orderTickets, setOrderTickets] = useState<SupportRequestRecord[]>([]);
-  const [ticketsLoading, setTicketsLoading] = useState(false);
+  const ticketCacheKey = currentUserId && order?.id ? `user:${currentUserId}:order-help-tickets:${order.id}` : '';
+  const [orderTickets, setOrderTickets] = useState<SupportRequestRecord[]>(
+    () => (ticketCacheKey ? readSwrCache<SupportRequestRecord[]>(ticketCacheKey) ?? [] : []),
+  );
+  const [ticketsLoading, setTicketsLoading] = useState(
+    () => Boolean(ticketCacheKey && readSwrCache(ticketCacheKey) === undefined),
+  );
   const [isInternalStoreMapOpen, setIsInternalStoreMapOpen] = useState(false);
   const [isInternalInvoiceOpen, setIsInternalInvoiceOpen] = useState(false);
+  const attachmentUploadProgress = useUploadProgress('attachments');
 
   const resolutionPanelRef = useRef<HTMLElement | null>(null);
   const messageTextareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -249,11 +258,19 @@ export function OrderHelpSupportView({
   useEffect(() => {
     if (!isAuthenticated || !currentUserId || !order) return;
     let active = true;
-    setTicketsLoading(true);
+    const cached = ticketCacheKey ? readSwrCache<SupportRequestRecord[]>(ticketCacheKey) : undefined;
+    if (cached !== undefined) {
+      setOrderTickets(cached);
+      setTicketsLoading(false);
+    } else {
+      setTicketsLoading(true);
+    }
     void listMySupportRequests(currentUserId)
       .then((res) => {
         if (!active) return;
-        setOrderTickets(filterOrderSupportRequests(res.data, order));
+        const filtered = filterOrderSupportRequests(res.data, order);
+        setOrderTickets(filtered);
+        if (ticketCacheKey) writeSwrCache(ticketCacheKey, filtered);
       })
       .catch(() => {
         // Non-blocking: user can still submit or open chat if ticket history fails.
@@ -264,7 +281,7 @@ export function OrderHelpSupportView({
     return () => {
       active = false;
     };
-  }, [currentUserId, isAuthenticated, order, createdTicketId]);
+  }, [currentUserId, isAuthenticated, order, createdTicketId, ticketCacheKey]);
 
   const copyOrderId = async () => {
     if (!order) return;
@@ -340,6 +357,12 @@ export function OrderHelpSupportView({
     if (!canSubmitInline) return;
     setSubmitting(true);
     setSubmitError('');
+    if (files.length > 0) {
+      attachmentUploadProgress.startUpload(files[0].name, {
+        totalCount: files.length,
+        baseLabel: files.length === 1 ? 'attachment' : 'attachments',
+      });
+    }
     try {
       const result = await createCustomerSupportRequest({
         category: resolution.topic.supportCategory,
@@ -350,8 +373,14 @@ export function OrderHelpSupportView({
         expectedUserId: currentUserId,
       });
       if (result.error) {
+        attachmentUploadProgress.resetUpload();
         setSubmitError(result.error.message);
       } else if (result.id) {
+        if (files.length > 0) {
+          attachmentUploadProgress.finishUpload(
+            result.attachmentError ? 'Ticket saved (attachment retry available)' : 'Attachments uploaded',
+          );
+        }
         setCreatedTicketId(result.id);
         setMessage('');
         setFiles([]);
@@ -359,9 +388,11 @@ export function OrderHelpSupportView({
           setFileError(result.attachmentError.message);
         }
       } else {
+        attachmentUploadProgress.resetUpload();
         setSubmitError('Could not confirm your support ticket. Please try again.');
       }
     } catch {
+      attachmentUploadProgress.resetUpload();
       setSubmitError(
         'Support service is temporarily unavailable. Please try WhatsApp or Call below.',
       );
@@ -1172,6 +1203,8 @@ export function OrderHelpSupportView({
                         {submitError || fileError}
                       </p>
                     )}
+
+                    <UploadProgressBar state={attachmentUploadProgress.state} compact />
 
                     <div className="flex flex-col gap-2.5 pt-1 sm:flex-row sm:items-center">
                       <button

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Download, FileText, Image as ImageIcon, X } from 'lucide-react';
+import { Download, FileText, Image as ImageIcon, LoaderCircle, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 type AttachmentMeta = { path: string; name: string; size: number; mime_type: string };
@@ -53,7 +53,7 @@ export function AdminSupportReplyPreview({ details }: AdminSupportReplyPreviewPr
           return url ? <button key={attachment.path} type="button" onClick={() => setPreview({ name: attachment.name, url })} className="group overflow-hidden rounded-xl border border-sky-100 bg-white text-left" aria-label={`Preview ${attachment.name}`}>
             <img src={url} alt={attachment.name} className="h-28 w-full object-cover transition group-hover:scale-105" loading="lazy" />
             <span className="flex items-center gap-1.5 px-2 py-1.5 text-[10px] font-semibold text-slate-600"><ImageIcon className="h-3.5 w-3.5 shrink-0 text-sky-600" /><span className="truncate">{attachment.name}</span></span>
-          </button> : <div key={attachment.path} className="grid h-28 place-items-center rounded-xl border border-sky-100 bg-white text-[10px] text-slate-400">Loading image…</div>;
+          </button> : <div key={attachment.path} role="status" className="skeleton-shimmer flex h-28 flex-col items-center justify-center gap-1.5 rounded-xl border border-sky-100 bg-slate-100/90 text-[10px] font-semibold text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin text-sky-600" aria-hidden="true" /><span>Loading image…</span></div>;
         })}
       </div>}
       {files.length > 0 && <div className="mt-2 space-y-1">{files.map((attachment) => <div key={attachment.path} className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-2 text-[10px] font-semibold text-slate-600"><FileText className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 flex-1 truncate">{attachment.name}</span></div>)}</div>}

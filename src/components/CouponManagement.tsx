@@ -39,6 +39,7 @@ import {
 } from '../lib/supabaseCoupons';
 import { loadAdminCustomers, type AdminCustomer } from '../lib/supabaseAdmin';
 import { ConfirmDialog } from './ConfirmDialog';
+import { invalidateSwrCache, readSwrCache, writeSwrCache } from '../lib/swrCache';
 
 const IST = 'Asia/Kolkata';
 const categories = [
@@ -125,10 +126,11 @@ export const CouponManagement: React.FC<{
   focusCouponId?: string | null;
   onFocusHandled?: () => void;
 }> = ({ notify, focusCouponId, onFocusHandled }) => {
-  const [coupons, setCoupons] = useState<CouponRecord[]>([]);
-  const [products, setProducts] = useState<CouponProductChoice[]>([]);
-  const [customers, setCustomers] = useState<AdminCustomer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const initialCouponCache = readSwrCache<{ coupons: CouponRecord[]; products: CouponProductChoice[]; customers: AdminCustomer[] }>('admin:coupons');
+  const [coupons, setCoupons] = useState<CouponRecord[]>(() => initialCouponCache?.coupons ?? []);
+  const [products, setProducts] = useState<CouponProductChoice[]>(() => initialCouponCache?.products ?? []);
+  const [customers, setCustomers] = useState<AdminCustomer[]>(() => initialCouponCache?.customers ?? []);
+  const [loading, setLoading] = useState(() => !initialCouponCache);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'All' | CouponStatus>('All');
@@ -141,22 +143,30 @@ export const CouponManagement: React.FC<{
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [pendingAction, setPendingAction] = useState<{ type: 'disable' | 'delete'; coupon: CouponRecord } | null>(null);
 
-  const refresh = async () => {
-    setLoading(true);
+  const refresh = async (silent = false) => {
+    if (!silent) setLoading(true);
     const [couponResponse, productResponse, customerResponse] = await Promise.all([loadAdminCoupons(), loadCouponProducts(), loadAdminCustomers()]);
     setLoading(false);
     if (couponResponse.error) {
-      setError(couponResponse.error);
-      setCoupons([]);
+      if (!silent) {
+        setError(couponResponse.error);
+        setCoupons([]);
+      }
       return;
     }
     setError('');
     setCoupons(couponResponse.data);
+    const nextProducts = productResponse.error ? products : productResponse.data;
+    const nextCustomers = customerResponse.error ? customers : customerResponse.data;
     if (!productResponse.error) setProducts(productResponse.data);
     if (!customerResponse.error) setCustomers(customerResponse.data);
+    writeSwrCache('admin:coupons', { coupons: couponResponse.data, products: nextProducts, customers: nextCustomers });
   };
 
-  useEffect(() => { void refresh(); }, []);
+  useEffect(() => {
+    void refresh(readSwrCache('admin:coupons') !== undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const counts = useMemo(() => {
     const now = Date.now();
@@ -235,15 +245,17 @@ export const CouponManagement: React.FC<{
   const handleDisable = async (coupon: CouponRecord) => {
     const response = await disableAdminCoupon(coupon.id);
     if (response.error) { notify(response.error); return; }
+    invalidateSwrCache('public:customer-coupons');
     notify(`${coupon.code} disabled`);
-    await refresh();
+    await refresh(true);
   };
 
   const handleDelete = async (coupon: CouponRecord) => {
     const response = await deleteUnusedAdminCoupon(coupon.id);
     if (response.error) { notify(response.error); return; }
+    invalidateSwrCache('public:customer-coupons');
     notify(`${coupon.code} deleted`);
-    await refresh();
+    await refresh(true);
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -290,9 +302,10 @@ export const CouponManagement: React.FC<{
           : ` ${notificationResponse.count} customer notification${notificationResponse.count === 1 ? '' : 's'} sent.`;
       }
     }
+    invalidateSwrCache('public:customer-coupons');
     notify(`Coupon ${code} ${form.id ? 'updated' : 'created'} successfully.${notificationMessage}`);
     setForm(null);
-    await refresh();
+    await refresh(true);
   };
 
   const filteredProducts = products.filter((product) => product.name.toLowerCase().includes(productSearch.toLowerCase()));
@@ -319,7 +332,7 @@ export const CouponManagement: React.FC<{
         <div className="flex max-w-full min-w-0 items-center gap-1.5 overflow-x-auto pb-1 md:pb-0"><Filter className="h-3.5 w-3.5 shrink-0 text-slate-400" />{filters.map((value) => <button key={value} onClick={() => setFilter(value)} className={`shrink-0 min-h-8 whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-black transition ${filter === value ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-50 text-slate-500 ring-1 ring-slate-200/80 hover:bg-slate-100'}`}>{value === 'All' ? `All (${coupons.length})` : `${statusLabels[value]} (${counts[value] || 0})`}</button>)}</div>
       </div>
       <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_10px_28px_-16px_rgba(15,23,42,0.06)] backdrop-blur-md">
-        {loading ? <div className="divide-y divide-slate-100"><div className="flex items-center justify-center gap-2 py-5 text-xs font-bold text-slate-400"><Loader2 className="h-4 w-4 animate-spin text-[#D9232D]" />Loading coupons…</div>{[0, 1, 2].map((row) => <div key={row} className="grid grid-cols-1 animate-pulse gap-3 px-4 py-3.5 md:grid-cols-4"><div className="flex items-center gap-3"><div className="h-9 w-9 rounded-xl bg-slate-200/70" /><div className="space-y-1.5"><div className="h-3.5 w-24 rounded-full bg-slate-200/80" /><div className="h-2.5 w-32 rounded-full bg-slate-100" /></div></div><div className="space-y-1.5"><div className="h-2.5 w-20 rounded-full bg-slate-100" /><div className="h-3 w-28 rounded-full bg-slate-200/70" /></div><div className="h-5 w-20 rounded-full bg-slate-200/70" /><div className="ml-auto h-7 w-20 rounded-lg bg-slate-100" /></div>)}</div> : visibleCoupons.length === 0 ? <div className="px-6 py-12 text-center"><span className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-[#D9232D]"><Tag className="h-4 w-4" /></span><h3 className="mt-3 text-sm font-black text-slate-800">{coupons.length ? 'No coupons match this view' : 'No coupons yet'}</h3><p className="mt-1 text-xs text-slate-500">Create a coupon to start a campaign; usage limits are enforced by the database.</p>{!coupons.length && <button onClick={openCreate} className="banner-cta-shine mt-3 min-h-9 rounded-xl bg-[#D9232D] px-3.5 py-1.5 text-xs font-black text-white shadow-sm shadow-red-600/20 transition hover:bg-[#b91822] active:scale-[0.98]"><Plus className="mr-1 inline h-3.5 w-3.5" />Create your first coupon</button>}</div> : <div className="divide-y divide-slate-100">{visibleCoupons.map((coupon) => <CouponRow key={coupon.id} coupon={coupon} onEdit={() => openEdit(coupon)} onDetails={() => void showDetails(coupon)} onDisable={() => requestDisable(coupon)} onDelete={() => requestDelete(coupon)} notify={notify} />)}</div>}
+        {loading ? <div className="divide-y divide-slate-100"><div className="flex items-center justify-center gap-2 py-5 text-xs font-bold text-slate-400"><Loader2 className="h-4 w-4 animate-spin text-[#D9232D]" />Loading coupons…</div>{[0, 1, 2].map((row) => <div key={row} className="grid grid-cols-1 gap-3 px-4 py-3.5 md:grid-cols-4"><div className="flex items-center gap-3"><div className="skeleton-shimmer h-9 w-9 rounded-xl bg-slate-200/75" /><div className="space-y-1.5"><div className="skeleton-shimmer h-3.5 w-24 rounded-full bg-slate-200/85" /><div className="skeleton-shimmer h-2.5 w-32 rounded-full bg-slate-200/60" /></div></div><div className="space-y-1.5"><div className="skeleton-shimmer h-2.5 w-20 rounded-full bg-slate-200/60" /><div className="skeleton-shimmer h-3 w-28 rounded-full bg-slate-200/75" /></div><div className="skeleton-shimmer h-5 w-20 rounded-full bg-slate-200/75" /><div className="skeleton-shimmer ml-auto h-7 w-20 rounded-lg bg-slate-200/65" /></div>)}</div> : visibleCoupons.length === 0 ? <div className="px-6 py-12 text-center"><span className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-[#D9232D]"><Tag className="h-4 w-4" /></span><h3 className="mt-3 text-sm font-black text-slate-800">{coupons.length ? 'No coupons match this view' : 'No coupons yet'}</h3><p className="mt-1 text-xs text-slate-500">Create a coupon to start a campaign; usage limits are enforced by the database.</p>{!coupons.length && <button onClick={openCreate} className="banner-cta-shine mt-3 min-h-9 rounded-xl bg-[#D9232D] px-3.5 py-1.5 text-xs font-black text-white shadow-sm shadow-red-600/20 transition hover:bg-[#b91822] active:scale-[0.98]"><Plus className="mr-1 inline h-3.5 w-3.5" />Create your first coupon</button>}</div> : <div className="divide-y divide-slate-100">{visibleCoupons.map((coupon) => <CouponRow key={coupon.id} coupon={coupon} onEdit={() => openEdit(coupon)} onDetails={() => void showDetails(coupon)} onDisable={() => requestDisable(coupon)} onDelete={() => requestDelete(coupon)} notify={notify} />)}</div>}
       </div>
       <p className="flex items-center gap-2 text-[11px] font-medium text-slate-400"><ShieldGlyph />Coupon checks and final order totals are calculated by secure Supabase functions, not by this page.</p>
     </>}
@@ -336,7 +349,7 @@ const Metric: React.FC<{ label: string; value: string; icon: React.ReactNode; to
     <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${tone}`}>{icon}</span>
     <p className="mt-2.5 text-[10.5px] font-bold text-slate-500">{label}</p>
     {loading ? (
-      <div className="mt-1.5 h-5 w-14 animate-pulse rounded-lg bg-slate-200/80" />
+      <div className="skeleton-shimmer mt-1.5 h-5 w-14 rounded-lg bg-slate-200/80" />
     ) : (
       <p className="mt-0.5 text-lg font-black tracking-tight tabular-nums text-slate-900">{value}</p>
     )}

@@ -10,6 +10,8 @@ import {
 } from '../lib/productColors';
 import { BottomSheet } from './BottomSheet';
 import { DEFAULT_INSTALLATION } from '../lib/productColors';
+import { useUploadProgress } from '../lib/useUploadProgress';
+import { UploadProgressBar } from './UploadProgressBar';
 
 type ProductColor = Product['colors'][number];
 type LocalColor = ProductColor & { nameTouched?: boolean };
@@ -49,6 +51,7 @@ export const AdminProductColorEditor: React.FC<Props> = ({
   const [urlDrafts, setUrlDrafts] = useState<Record<number, string>>({});
   const [detailsIndex, setDetailsIndex] = useState<number | null>(null);
   const [copyFrom, setCopyFrom] = useState('');
+  const uploadProgress = useUploadProgress('images');
   const coverColorIndex = colors.findIndex((color) => (color.images || []).some(Boolean));
   const getLocal = (color: ProductColor): LocalColor => {
     const local = color as LocalColor;
@@ -90,8 +93,16 @@ export const AdminProductColorEditor: React.FC<Props> = ({
     event.currentTarget.value = '';
     if (!Number.isInteger(index) || !files.length || !onUploadFiles) return;
     setUploadingIndex(index);
+    uploadProgress.startUpload(files[0].name, {
+      totalCount: files.length,
+      baseLabel: files.length === 1 ? 'image' : 'images',
+    });
     try {
-      updateImages(index, [...(colors[index]?.images || []), ...(await onUploadFiles(files))]);
+      const urls = await onUploadFiles(files);
+      updateImages(index, [...(colors[index]?.images || []), ...urls]);
+      uploadProgress.finishUpload(files.length === 1 ? 'Image uploaded' : 'Images uploaded');
+    } catch {
+      uploadProgress.resetUpload();
     } finally {
       setUploadingIndex(null);
     }
@@ -321,6 +332,9 @@ export const AdminProductColorEditor: React.FC<Props> = ({
                   </button>
                 </div>
               </div>
+              {uploadingIndex === index && (
+                <UploadProgressBar state={uploadProgress.state} compact className="mt-2" />
+              )}
               <div className="mt-2">
                 <button
                   type="button"
