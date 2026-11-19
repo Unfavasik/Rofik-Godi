@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { BadgeCheck, ChevronRight, Star } from 'lucide-react';
+import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { BadgeCheck, ChevronDown, ChevronRight, Star } from 'lucide-react';
 import {
   filterAndSortReviews,
   getMyReviewContext,
@@ -7,10 +7,12 @@ import {
   isVerifiedProductReview,
   listPublishedReviews,
   REVIEW_FILTER_OPTIONS,
+  REVIEW_RATING_FILTER_OPTIONS,
   type ProductRatingSummary,
   type ProductReviewRecord,
   type ReviewEligibleOrder,
   type ReviewFilterMode,
+  type ReviewRatingFilter,
 } from '../lib/supabaseReviews';
 import { getPathForCustomerOrder } from '../lib/appRoutes';
 import { ReviewComposer } from './ReviewComposer';
@@ -28,6 +30,7 @@ interface ProductReviewsProps {
   initialOrders?: ReviewEligibleOrder[];
   initialSummary?: ProductRatingSummary | null;
   initialFilter?: ReviewFilterMode;
+  initialRatingFilter?: ReviewRatingFilter;
 }
 
 const summaryCounts = (summary: ProductRatingSummary) => [
@@ -49,7 +52,9 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
   initialOrders,
   initialSummary = null,
   initialFilter = 'most-recent',
+  initialRatingFilter = 'all',
 }) => {
+  const ratingSelectId = useId();
   const hasInitialData = initialReviews !== undefined || initialOrders !== undefined;
   const publicCacheKey = `public:product-reviews:${productId}`;
   const userCacheKey = isAuthenticated && customerId ? `user:${customerId}:review-ctx:${productId}` : '';
@@ -67,6 +72,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
   const [composer, setComposer] = useState<{ order: ReviewEligibleOrder; review?: ProductReviewRecord } | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [activeFilter, setActiveFilter] = useState<ReviewFilterMode>(initialFilter);
+  const [ratingFilter, setRatingFilter] = useState<ReviewRatingFilter>(initialRatingFilter);
 
   const refresh = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -117,8 +123,8 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
   );
 
   const filteredReviews = useMemo(
-    () => filterAndSortReviews(reviews, activeFilter, productId, verifiedOwnOrderIds),
-    [reviews, activeFilter, productId, verifiedOwnOrderIds],
+    () => filterAndSortReviews(reviews, activeFilter, productId, verifiedOwnOrderIds, ratingFilter),
+    [reviews, activeFilter, productId, verifiedOwnOrderIds, ratingFilter],
   );
 
   const navigateToOrderHistory = (
@@ -160,50 +166,109 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
           <div className="mt-1 text-[10px] text-slate-500">{summary?.review_count || 0} reviews</div>
         </div>
         <div className="space-y-1">
-          {[5, 4, 3, 2, 1].map((value, index) => {
+          {([5, 4, 3, 2, 1] as const).map((value, index) => {
             const count = counts[index] || 0;
             const percent = summary?.review_count ? Math.round((count * 100) / summary.review_count) : 0;
+            const isActiveStar = ratingFilter === value;
             return (
-              <div key={value} className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                <span className="w-7">{value} ★</span>
+              <button
+                key={value}
+                type="button"
+                aria-pressed={isActiveStar}
+                onClick={() => setRatingFilter((current) => (current === value ? 'all' : value))}
+                className={`flex w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-[10px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+                  isActiveStar
+                    ? 'bg-rose-50 font-bold text-[#D9232D]'
+                    : 'text-slate-500 hover:bg-slate-100/80 hover:text-slate-700'
+                }`}
+              >
+                <span className="w-7 text-left">{value} ★</span>
                 <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
-                  <span className="block h-full rounded-full bg-amber-400" style={{ width: `${percent}%` }} />
+                  <span
+                    className={`block h-full rounded-full ${isActiveStar ? 'bg-[#D9232D]' : 'bg-amber-400'}`}
+                    style={{ width: `${percent}%` }}
+                  />
                 </span>
-                <span className="w-7 text-right">{percent}%</span>
-              </div>
+                <span className="w-7 text-right tabular-nums">{percent}%</span>
+              </button>
             );
           })}
         </div>
       </div>
 
       {/* Review Filter & Sort Bar */}
-      <div
-        role="group"
-        aria-label="Filter and sort customer reviews"
-        className="mt-3 flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"
-      >
-        {REVIEW_FILTER_OPTIONS.map((option) => {
-          const isSelected = activeFilter === option.id;
-          return (
-            <button
-              key={option.id}
-              type="button"
-              aria-pressed={isSelected}
-              onClick={() => setActiveFilter(option.id)}
-              className={`inline-flex min-h-9 shrink-0 items-center gap-1 rounded-xl border px-3 text-[11px] font-bold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
-                isSelected
-                  ? 'border-rose-200 bg-rose-50 text-[#D9232D] shadow-2xs'
-                  : 'border-slate-200/90 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900'
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <div
+          role="group"
+          aria-label="Filter and sort customer reviews"
+          className="flex min-w-0 items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"
+        >
+          {REVIEW_FILTER_OPTIONS.map((option) => {
+            const isSelected = activeFilter === option.id;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => setActiveFilter(option.id)}
+                className={`inline-flex min-h-9 shrink-0 items-center gap-1 rounded-xl border px-3 text-[11px] font-bold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+                  isSelected
+                    ? 'border-rose-200 bg-rose-50 text-[#D9232D] shadow-2xs'
+                    : 'border-slate-200/90 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                {option.id === 'verified-only' && <BadgeCheck className="h-3.5 w-3.5 shrink-0" />}
+                {option.id === 'highest-rating' && (
+                  <Star className="h-3 w-3 shrink-0 fill-current" />
+                )}
+                <span>{option.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex shrink-0 items-center gap-1.5">
+          <label
+            htmlFor={ratingSelectId}
+            className="text-[11px] font-bold text-slate-500 whitespace-nowrap"
+          >
+            Filter by Rating
+          </label>
+          <div className="relative">
+            <Star
+              aria-hidden="true"
+              className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${
+                ratingFilter === 'all'
+                  ? 'text-slate-400'
+                  : 'fill-amber-400 text-amber-400'
+              }`}
+            />
+            <select
+              id={ratingSelectId}
+              aria-label="Filter by Rating"
+              value={String(ratingFilter)}
+              onChange={(event) => {
+                const raw = event.target.value;
+                setRatingFilter(raw === 'all' ? 'all' : (Number(raw) as ReviewRatingFilter));
+              }}
+              className={`min-h-9 appearance-none rounded-xl border pl-7 pr-7 text-base sm:text-[11px] font-bold outline-none transition focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+                ratingFilter === 'all'
+                  ? 'border-slate-200/90 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                  : 'border-rose-200 bg-rose-50 text-[#D9232D] shadow-2xs'
               }`}
             >
-              {option.id === 'verified-only' && <BadgeCheck className="h-3.5 w-3.5 shrink-0" />}
-              {option.id === 'highest-rating' && (
-                <Star className="h-3 w-3 shrink-0 fill-current" />
-              )}
-              <span>{option.label}</span>
-            </button>
-          );
-        })}
+              {REVIEW_RATING_FILTER_OPTIONS.map((option) => (
+                <option key={String(option.value)} value={String(option.value)}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              aria-hidden="true"
+              className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
+            />
+          </div>
+        </div>
       </div>
 
       <div className="mt-3 space-y-2.5">
@@ -284,9 +349,22 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
             );
           })
         ) : reviews.length > 0 ? (
-          <p className="rounded-xl border border-dashed border-slate-200 px-3 py-5 text-center text-xs text-slate-500">
-            No reviews match the selected filter yet.
-          </p>
+          <div className="rounded-xl border border-dashed border-slate-200 px-3 py-5 text-center">
+            <p className="text-xs text-slate-500">
+              {ratingFilter === 'all'
+                ? 'No reviews match the selected filter yet.'
+                : `No ${ratingFilter}-star reviews match the selected filter yet.`}
+            </p>
+            {ratingFilter !== 'all' && (
+              <button
+                type="button"
+                onClick={() => setRatingFilter('all')}
+                className="mt-2 inline-flex min-h-8 items-center rounded-lg border border-rose-200 bg-rose-50 px-3 text-[11px] font-bold text-[#D9232D] transition hover:bg-rose-100"
+              >
+                Show all ratings
+              </button>
+            )}
+          </div>
         ) : (
           <p className="rounded-xl border border-dashed border-slate-200 px-3 py-5 text-center text-xs text-slate-500">
             No published reviews yet. Be the first verified customer to share your experience.

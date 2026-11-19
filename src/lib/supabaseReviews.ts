@@ -16,11 +16,24 @@ export interface ProductReviewRecord {
 }
 
 export type ReviewFilterMode = 'most-recent' | 'highest-rating' | 'verified-only';
+export type ReviewRatingFilter = 'all' | 1 | 2 | 3 | 4 | 5;
 
 export const REVIEW_FILTER_OPTIONS: ReadonlyArray<{ id: ReviewFilterMode; label: string }> = [
   { id: 'most-recent', label: 'Most Recent' },
   { id: 'highest-rating', label: 'Highest Rating' },
   { id: 'verified-only', label: 'Verified Purchases Only' },
+];
+
+export const REVIEW_RATING_FILTER_OPTIONS: ReadonlyArray<{
+  value: ReviewRatingFilter;
+  label: string;
+}> = [
+  { value: 'all', label: 'All Ratings' },
+  { value: 5, label: '5 Stars' },
+  { value: 4, label: '4 Stars' },
+  { value: 3, label: '3 Stars' },
+  { value: 2, label: '2 Stars' },
+  { value: 1, label: '1 Star' },
 ];
 
 export function isVerifiedProductReview(
@@ -39,13 +52,19 @@ export function filterAndSortReviews(
   mode: ReviewFilterMode,
   productId?: string,
   verifiedOrderIds?: ReadonlySet<string>,
+  ratingFilter: ReviewRatingFilter = 'all',
 ): ProductReviewRecord[] {
-  const base =
+  const byVerification =
     mode === 'verified-only'
       ? reviews.filter((review) =>
           isVerifiedProductReview(review, productId || review.product_id, verifiedOrderIds),
         )
       : [...reviews];
+
+  const base =
+    ratingFilter === 'all'
+      ? byVerification
+      : byVerification.filter((review) => review.rating === ratingFilter);
 
   return base.sort((a, b) => {
     if (mode === 'highest-rating' && b.rating !== a.rating) {

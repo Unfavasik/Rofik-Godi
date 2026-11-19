@@ -45,6 +45,7 @@ import { ProductReviews } from './ProductReviews';
 import { BottomSheet } from './BottomSheet';
 import { getColorDetails } from '../lib/productColors';
 import { getBrandInitials, getBrandLogoUrl } from '../lib/brandLogos';
+import { getPathForProduct } from '../lib/appRoutes';
 import {
   getCachedVehicleModels,
   loadVehicleModels,
@@ -52,6 +53,76 @@ import {
   type VehicleCatalogModel,
   type VehicleCatalogType,
 } from '../lib/supabaseVehicleCatalog';
+
+export interface ProductSharePayload {
+  title: string;
+  text: string;
+  url: string;
+}
+
+export function buildProductSharePayload(
+  product: Pick<Product, 'id' | 'title' | 'price'>,
+  unitPrice?: number,
+  origin?: string,
+): ProductSharePayload {
+  const effectivePrice =
+    typeof unitPrice === 'number' && Number.isFinite(unitPrice) ? unitPrice : product.price;
+  const formattedPrice = `₹${Number(effectivePrice || 0).toLocaleString('en-IN')}`;
+  const productPath = getPathForProduct(product.id);
+  const resolvedOrigin =
+    origin ??
+    (typeof window !== 'undefined' &&
+    window.location?.origin &&
+    window.location.origin !== 'null'
+      ? window.location.origin
+      : '');
+  const url = resolvedOrigin
+    ? `${resolvedOrigin.replace(/\/$/, '')}${productPath}`
+    : typeof window !== 'undefined' && window.location?.href
+      ? window.location.href
+      : productPath;
+
+  return {
+    title: product.title,
+    text: `Check out ${product.title} for ${formattedPrice} at Rofik Godi Centre`,
+    url,
+  };
+}
+
+export async function shareProductDetails(
+  payload: ProductSharePayload,
+  nav: {
+    share?: (data: ShareData) => Promise<void>;
+    clipboard?: { writeText?: (text: string) => Promise<void> };
+  } | undefined = typeof navigator !== 'undefined' ? navigator : undefined,
+): Promise<'shared' | 'copied' | 'cancelled' | 'unsupported'> {
+  if (typeof nav?.share === 'function') {
+    try {
+      await nav.share({
+        title: payload.title,
+        text: payload.text,
+        url: payload.url,
+      });
+      return 'shared';
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return 'cancelled';
+      }
+      // Fall through to clipboard when Web Share is blocked or unavailable in the current context.
+    }
+  }
+
+  if (typeof nav?.clipboard?.writeText === 'function') {
+    try {
+      await nav.clipboard.writeText(`${payload.text}\n${payload.url}`);
+      return 'copied';
+    } catch {
+      return 'unsupported';
+    }
+  }
+
+  return 'unsupported';
+}
 
 interface ProductDetailModalProps {
   products: Product[];
@@ -198,9 +269,18 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [copiedShareLink, setCopiedShareLink] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState<'idle' | 'shared' | 'copied'>('idle');
+  const shareTimerRef = useRef<number | null>(null);
   const [heartPulseKey, setHeartPulseKey] = useState(0);
   const [dragOffsetX, setDragOffsetX] = useState(0);
+
+  useEffect(() => {
+    return () => {
+      if (shareTimerRef.current !== null && typeof window !== 'undefined') {
+        window.clearTimeout(shareTimerRef.current);
+      }
+    };
+  }, []);
 
   const currentIndex = useMemo(
     () => orderedProducts.findIndex((item) => item.id === product.id),
@@ -579,16 +659,19 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
   };
 
   const shareProduct = async () => {
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: product.title, url: window.location.href });
-      } else if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(window.location.href);
-        setCopiedShareLink(true);
-        window.setTimeout(() => setCopiedShareLink(false), 2000);
+    const payload = buildProductSharePayload(product, unitPrice);
+    const result = await shareProductDetails(payload);
+    if (result === 'shared' || result === 'copied') {
+      setShareFeedback(result);
+      if (shareTimerRef.current !== null && typeof window !== 'undefined') {
+        window.clearTimeout(shareTimerRef.current);
       }
-    } catch {
-      // The share sheet can be dismissed without changing page state.
+      if (typeof window !== 'undefined') {
+        shareTimerRef.current = window.setTimeout(() => {
+          setShareFeedback('idle');
+          shareTimerRef.current = null;
+        }, 2000);
+      }
     }
   };
 
@@ -731,21 +814,27 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
             <div className="flex shrink-0 items-center gap-1 rounded-xl border border-white/90 bg-white/65 p-1 shadow-[0_6px_20px_-8px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md">
               <button
                 type="button"
-                aria-label="Share product"
+                data-testid="pdp-header-share-btn"
+                aria-label={`Share ${product.title}`}
                 onClick={() => void shareProduct()}
-                className={`inline-flex h-8.5 min-w-8.5 items-center justify-center gap-1.5 rounded-lg border px-2 text-xs font-bold transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] sm:h-9 sm:min-w-9 ${
-                  copiedShareLink
+                className={`inline-flex h-8.5 min-w-8.5 items-center justify-center gap-1.5 rounded-lg border px-2 text-xs font-bold transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] sm:h-9 sm:min-w-9 sm:px-2.5 ${
+                  shareFeedback !== 'idle'
                     ? 'border-emerald-200/90 bg-emerald-50/95 text-emerald-700 shadow-2xs'
                     : 'border-white/90 bg-white/85 text-slate-700 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.08)] hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D]'
                 }`}
               >
-                {copiedShareLink ? (
+                {shareFeedback !== 'idle' ? (
                   <>
                     <Check className="h-3.5 w-3.5 text-emerald-600" />
-                    <span className="text-[11px] font-extrabold text-emerald-700">Copied</span>
+                    <span className="text-[11px] font-extrabold text-emerald-700">
+                      {shareFeedback === 'shared' ? 'Shared' : 'Copied'}
+                    </span>
                   </>
                 ) : (
-                  <Share2 className="h-4 w-4" />
+                  <>
+                    <Share2 className="h-4 w-4 shrink-0" />
+                    <span className="hidden text-[11px] font-bold sm:inline">Share</span>
+                  </>
                 )}
               </button>
 
@@ -996,6 +1085,30 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                           }`}
                         />
                         <span>{isWishlisted ? 'Liked' : 'Like'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        data-testid="pdp-share-button"
+                        aria-label="Share product"
+                        onClick={() => void shareProduct()}
+                        className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold backdrop-blur-xs transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+                          shareFeedback !== 'idle'
+                            ? 'border-emerald-200 bg-emerald-50/90 text-emerald-700'
+                            : 'border-white/90 bg-white/80 text-slate-700 shadow-2xs hover:border-rose-200 hover:bg-rose-50/70 hover:text-[#D9232D]'
+                        }`}
+                      >
+                        {shareFeedback !== 'idle' ? (
+                          <>
+                            <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                            <span>{shareFeedback === 'shared' ? 'Shared' : 'Copied'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Share2 className="h-3.5 w-3.5 shrink-0" />
+                            <span>Share</span>
+                          </>
+                        )}
                       </button>
 
                       <button

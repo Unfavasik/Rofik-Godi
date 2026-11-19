@@ -1,36 +1,42 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { BadgeCheck, ChevronRight, Star } from 'lucide-react';
+import React, { useEffect, useId, useMemo, useState } from 'react';
+import { BadgeCheck, ChevronDown, ChevronRight, Star } from 'lucide-react';
 import {
   filterAndSortReviews,
   isVerifiedProductReview,
   listPublishedReviews,
   REVIEW_FILTER_OPTIONS,
+  REVIEW_RATING_FILTER_OPTIONS,
   type ProductReviewRecord,
   type ReviewFilterMode,
+  type ReviewRatingFilter,
 } from '../lib/supabaseReviews';
 
 interface CustomerReviewsProps {
   onOpenOrderHistory?: () => void;
   initialReviews?: ProductReviewRecord[];
   initialFilter?: ReviewFilterMode;
+  initialRatingFilter?: ReviewRatingFilter;
 }
 
 export const CustomerReviews: React.FC<CustomerReviewsProps> = ({
   onOpenOrderHistory,
   initialReviews,
   initialFilter = 'most-recent',
+  initialRatingFilter = 'all',
 }) => {
+  const ratingSelectId = useId();
   const [reviews, setReviews] = useState<ProductReviewRecord[]>(initialReviews ?? []);
   const [activeFilter, setActiveFilter] = useState<ReviewFilterMode>(initialFilter);
+  const [ratingFilter, setRatingFilter] = useState<ReviewRatingFilter>(initialRatingFilter);
 
   useEffect(() => {
     if (initialReviews !== undefined) return;
-    void listPublishedReviews(undefined, 12).then(setReviews);
+    void listPublishedReviews(undefined, 24).then(setReviews);
   }, [initialReviews]);
 
   const displayedReviews = useMemo(
-    () => filterAndSortReviews(reviews, activeFilter).slice(0, 6),
-    [reviews, activeFilter],
+    () => filterAndSortReviews(reviews, activeFilter, undefined, undefined, ratingFilter).slice(0, 6),
+    [reviews, activeFilter, ratingFilter],
   );
 
   if (!reviews.length) return null;
@@ -44,33 +50,78 @@ export const CustomerReviews: React.FC<CustomerReviewsProps> = ({
         </div>
 
         {/* Review Filter & Sort Controls */}
-        <div
-          role="group"
-          aria-label="Filter and sort customer reviews"
-          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"
-        >
-          {REVIEW_FILTER_OPTIONS.map((option) => {
-            const isSelected = activeFilter === option.id;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                aria-pressed={isSelected}
-                onClick={() => setActiveFilter(option.id)}
-                className={`inline-flex min-h-8 shrink-0 items-center gap-1 rounded-xl border px-2.5 text-[11px] font-bold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
-                  isSelected
-                    ? 'border-rose-200 bg-rose-50 text-[#D9232D] shadow-2xs'
-                    : 'border-slate-200/90 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900'
+        <div className="flex flex-wrap items-center gap-2">
+          <div
+            role="group"
+            aria-label="Filter and sort customer reviews"
+            className="flex min-w-0 items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"
+          >
+            {REVIEW_FILTER_OPTIONS.map((option) => {
+              const isSelected = activeFilter === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => setActiveFilter(option.id)}
+                  className={`inline-flex min-h-8 shrink-0 items-center gap-1 rounded-xl border px-2.5 text-[11px] font-bold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+                    isSelected
+                      ? 'border-rose-200 bg-rose-50 text-[#D9232D] shadow-2xs'
+                      : 'border-slate-200/90 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  {option.id === 'verified-only' && <BadgeCheck className="h-3.5 w-3.5 shrink-0" />}
+                  {option.id === 'highest-rating' && (
+                    <Star className="h-3 w-3 shrink-0 fill-current" />
+                  )}
+                  <span>{option.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1.5">
+            <label
+              htmlFor={ratingSelectId}
+              className="text-[11px] font-bold text-slate-500 whitespace-nowrap"
+            >
+              Filter by Rating
+            </label>
+            <div className="relative">
+              <Star
+                aria-hidden="true"
+                className={`pointer-events-none absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 ${
+                  ratingFilter === 'all'
+                    ? 'text-slate-400'
+                    : 'fill-amber-400 text-amber-400'
+                }`}
+              />
+              <select
+                id={ratingSelectId}
+                aria-label="Filter by Rating"
+                value={String(ratingFilter)}
+                onChange={(event) => {
+                  const raw = event.target.value;
+                  setRatingFilter(raw === 'all' ? 'all' : (Number(raw) as ReviewRatingFilter));
+                }}
+                className={`min-h-8 appearance-none rounded-xl border pl-6.5 pr-6.5 text-base sm:text-[11px] font-bold outline-none transition focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+                  ratingFilter === 'all'
+                    ? 'border-slate-200/90 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                    : 'border-rose-200 bg-rose-50 text-[#D9232D] shadow-2xs'
                 }`}
               >
-                {option.id === 'verified-only' && <BadgeCheck className="h-3.5 w-3.5 shrink-0" />}
-                {option.id === 'highest-rating' && (
-                  <Star className="h-3 w-3 shrink-0 fill-current" />
-                )}
-                <span>{option.label}</span>
-              </button>
-            );
-          })}
+                {REVIEW_RATING_FILTER_OPTIONS.map((option) => (
+                  <option key={String(option.value)} value={String(option.value)}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                aria-hidden="true"
+                className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -137,9 +188,22 @@ export const CustomerReviews: React.FC<CustomerReviewsProps> = ({
           })}
         </div>
       ) : (
-        <p className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-5 text-center text-xs text-slate-500">
-          No reviews match the selected filter yet.
-        </p>
+        <div className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-5 text-center">
+          <p className="text-xs text-slate-500">
+            {ratingFilter === 'all'
+              ? 'No reviews match the selected filter yet.'
+              : `No ${ratingFilter}-star reviews match the selected filter yet.`}
+          </p>
+          {ratingFilter !== 'all' && (
+            <button
+              type="button"
+              onClick={() => setRatingFilter('all')}
+              className="mt-2 inline-flex min-h-8 items-center rounded-lg border border-rose-200 bg-rose-50 px-3 text-[11px] font-bold text-[#D9232D] transition hover:bg-rose-100"
+            >
+              Show all ratings
+            </button>
+          )}
+        </div>
       )}
     </section>
   );

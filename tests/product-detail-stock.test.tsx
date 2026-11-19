@@ -1,7 +1,11 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
-import { ProductDetailModal } from '../src/components/ProductDetailModal';
+import { describe, expect, it, vi } from 'vitest';
+import {
+  buildProductSharePayload,
+  ProductDetailModal,
+  shareProductDetails,
+} from '../src/components/ProductDetailModal';
 import { ProductReviews } from '../src/components/ProductReviews';
 import { CustomerReviews } from '../src/components/CustomerReviews';
 import { PRODUCTS } from '../src/data/products';
@@ -280,6 +284,98 @@ describe('product availability awareness and product detail page UI/UX', () => {
     expect(productReviewsVerifiedHtml).not.toContain('Newest Unverified');
   });
 
+  it('filters CustomerReviews and ProductReviews using the Filter by Rating dropdown', () => {
+    const product = PRODUCTS[0]!;
+    const sampleReviews = [
+      {
+        id: 'rev-5',
+        product_id: product.id,
+        order_id: 'ord-5',
+        customer_id: 'cust-5',
+        author_name: 'Five Star Rider',
+        rating: 5,
+        review_text: 'Excellent grip and waterproof stitching.',
+        is_verified_purchase: true,
+        is_published: true,
+        created_at: '2026-11-12T10:00:00Z',
+        product_name: product.title,
+      },
+      {
+        id: 'rev-3',
+        product_id: product.id,
+        order_id: 'ord-3',
+        customer_id: 'cust-3',
+        author_name: 'Three Star Rider',
+        rating: 3,
+        review_text: 'Good fit, average cushion softness.',
+        is_verified_purchase: true,
+        is_published: true,
+        created_at: '2026-11-11T10:00:00Z',
+        product_name: product.title,
+      },
+      {
+        id: 'rev-1',
+        product_id: product.id,
+        order_id: '',
+        customer_id: 'cust-1',
+        author_name: 'One Star Guest',
+        rating: 1,
+        review_text: 'Wrong size ordered.',
+        is_verified_purchase: false,
+        is_published: true,
+        created_at: '2026-11-10T10:00:00Z',
+        product_name: product.title,
+      },
+    ];
+
+    expect(
+      filterAndSortReviews(sampleReviews, 'most-recent', product.id, undefined, 3).map((r) => r.id),
+    ).toEqual(['rev-3']);
+    expect(
+      filterAndSortReviews(sampleReviews, 'verified-only', product.id, undefined, 1),
+    ).toEqual([]);
+
+    const productReviewsThreeStarHtml = renderToStaticMarkup(
+      <ProductReviews
+        productId={product.id}
+        productTitle={product.title}
+        isAuthenticated={false}
+        onRequestLogin={() => {}}
+        initialReviews={sampleReviews}
+        initialRatingFilter={3}
+      />,
+    );
+    expect(productReviewsThreeStarHtml).toContain('Filter by Rating');
+    expect(productReviewsThreeStarHtml).toContain('aria-label="Filter by Rating"');
+    expect(productReviewsThreeStarHtml).toContain('All Ratings');
+    expect(productReviewsThreeStarHtml).toContain('5 Stars');
+    expect(productReviewsThreeStarHtml).toContain('1 Star');
+    expect(productReviewsThreeStarHtml).toContain('Three Star Rider');
+    expect(productReviewsThreeStarHtml).not.toContain('Five Star Rider');
+    expect(productReviewsThreeStarHtml).not.toContain('One Star Guest');
+
+    const productReviewsEmptyStarHtml = renderToStaticMarkup(
+      <ProductReviews
+        productId={product.id}
+        productTitle={product.title}
+        isAuthenticated={false}
+        onRequestLogin={() => {}}
+        initialReviews={sampleReviews}
+        initialRatingFilter={2}
+      />,
+    );
+    expect(productReviewsEmptyStarHtml).toContain('No 2-star reviews match the selected filter yet.');
+    expect(productReviewsEmptyStarHtml).toContain('Show all ratings');
+
+    const customerReviewsFiveStarHtml = renderToStaticMarkup(
+      <CustomerReviews initialReviews={sampleReviews} initialRatingFilter={5} />,
+    );
+    expect(customerReviewsFiveStarHtml).toContain('Filter by Rating');
+    expect(customerReviewsFiveStarHtml).toContain('aria-label="Filter by Rating"');
+    expect(customerReviewsFiveStarHtml).toContain('Five Star Rider');
+    expect(customerReviewsFiveStarHtml).not.toContain('Three Star Rider');
+  });
+
   it('renders swipe-to-view adjacent product navigation matching the browseProducts list order and boundaries', () => {
     const subset = PRODUCTS.slice(0, 3);
     expect(subset.length).toBe(3);
@@ -329,5 +425,54 @@ describe('product availability awareness and product detail page UI/UX', () => {
     expect(lastHtml).toContain('3 / 3');
     expect(lastHtml).toContain(`Previous product: ${subset[1]!.title}`);
     expect(lastHtml).toContain('data-testid="pdp-next-product" disabled=""');
+  });
+
+  it('renders a Share button in ProductDetailModal and shares product name, price, and URL via the Web Share API with clipboard fallback', async () => {
+    const product = PRODUCTS[0]!;
+    const html = renderDetails(product);
+    expect(html).toContain('data-testid="pdp-share-button"');
+    expect(html).toContain('data-testid="pdp-header-share-btn"');
+    expect(html).toContain('>Share<');
+
+    const payload = buildProductSharePayload(
+      product,
+      1250,
+      'https://rofik-godi.pages.dev',
+    );
+    expect(payload.title).toBe(product.title);
+    expect(payload.text).toContain(product.title);
+    expect(payload.text).toContain('₹1,250');
+    expect(payload.url).toBe(
+      `https://rofik-godi.pages.dev/shop/products/${encodeURIComponent(product.id)}`,
+    );
+
+    const shareMock = vi.fn().mockResolvedValue(undefined);
+    const clipboardMock = vi.fn().mockResolvedValue(undefined);
+    const sharedResult = await shareProductDetails(payload, {
+      share: shareMock,
+      clipboard: { writeText: clipboardMock },
+    });
+    expect(sharedResult).toBe('shared');
+    expect(shareMock).toHaveBeenCalledWith({
+      title: payload.title,
+      text: payload.text,
+      url: payload.url,
+    });
+    expect(clipboardMock).not.toHaveBeenCalled();
+
+    const abortError = new Error('Share canceled');
+    abortError.name = 'AbortError';
+    const cancelledResult = await shareProductDetails(payload, {
+      share: vi.fn().mockRejectedValue(abortError),
+      clipboard: { writeText: clipboardMock },
+    });
+    expect(cancelledResult).toBe('cancelled');
+    expect(clipboardMock).not.toHaveBeenCalled();
+
+    const fallbackResult = await shareProductDetails(payload, {
+      clipboard: { writeText: clipboardMock },
+    });
+    expect(fallbackResult).toBe('copied');
+    expect(clipboardMock).toHaveBeenCalledWith(`${payload.text}\n${payload.url}`);
   });
 });
