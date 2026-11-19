@@ -151,10 +151,6 @@ interface ProductDetailModalProps {
     customEmbroideryText?: string,
   ) => void;
   onSelectProduct?: (p: Product) => void;
-  /** Ordered shop/catalog list used for swipe-to-view adjacent product navigation. */
-  browseProducts?: Product[];
-  /** Navigates to an adjacent product in the list while preserving return route state. */
-  onNavigateAdjacentProduct?: (p: Product) => void;
   onQuickAdd?: (p: Product) => void;
   onNotifyMe?: (p: Product) => void | Promise<void>;
   isAuthenticated?: boolean;
@@ -178,21 +174,9 @@ const localProductImages: Record<string, string[]> = {
 const MAX_EMBROIDERY_CHARS = 12;
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = (props) => {
-  const [swipeDirection, setSwipeDirection] = useState<-1 | 0 | 1>(0);
-  const { product, browseProducts, products, onNavigateAdjacentProduct, onSelectProduct } = props;
-
-  const orderedProducts = useMemo(() => {
-    const source = browseProducts?.length ? browseProducts : products;
-    if (!product) return source;
-    return source.some((item) => item.id === product.id) ? source : products;
-  }, [browseProducts, products, product]);
+  const { product } = props;
 
   if (!product) return null;
-
-  const handleNavigateAdjacent = (target: Product, direction: -1 | 1) => {
-    setSwipeDirection(direction);
-    (onNavigateAdjacentProduct ?? onSelectProduct)?.(target);
-  };
 
   // The colour is part of the key so opening the same product with a different
   // ?color= deep link re-initialises the selection.
@@ -202,13 +186,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = (props) => 
         key={`${product.id}:${props.initialColorName ?? ''}`}
         {...props}
         product={product}
-        orderedProducts={orderedProducts}
-        swipeDirection={swipeDirection}
-        onNavigateAdjacent={handleNavigateAdjacent}
-        onSelectRelatedProduct={(related) => {
-          setSwipeDirection(0);
-          onSelectProduct?.(related);
-        }}
       />
     </div>
   );
@@ -216,19 +193,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = (props) => 
 
 interface InternalProductDetailPageProps extends ProductDetailModalProps {
   product: Product;
-  orderedProducts: Product[];
-  swipeDirection: -1 | 0 | 1;
-  onNavigateAdjacent: (target: Product, direction: -1 | 1) => void;
-  onSelectRelatedProduct: (target: Product) => void;
 }
 
 const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
   product,
   products,
-  orderedProducts,
-  swipeDirection,
-  onNavigateAdjacent,
-  onSelectRelatedProduct,
+  onSelectProduct,
   onClose,
   onAddToCart,
   cartItems = [],
@@ -272,7 +242,6 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
   const [shareFeedback, setShareFeedback] = useState<'idle' | 'shared' | 'copied'>('idle');
   const shareTimerRef = useRef<number | null>(null);
   const [heartPulseKey, setHeartPulseKey] = useState(0);
-  const [dragOffsetX, setDragOffsetX] = useState(0);
 
   useEffect(() => {
     return () => {
@@ -281,30 +250,6 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
       }
     };
   }, []);
-
-  const currentIndex = useMemo(
-    () => orderedProducts.findIndex((item) => item.id === product.id),
-    [orderedProducts, product.id],
-  );
-  const prevProduct = currentIndex > 0 ? orderedProducts[currentIndex - 1] ?? null : null;
-  const nextProduct =
-    currentIndex >= 0 && currentIndex < orderedProducts.length - 1
-      ? orderedProducts[currentIndex + 1] ?? null
-      : null;
-
-  useEffect(() => {
-    [prevProduct, nextProduct].forEach((adjacent) => {
-      if (!adjacent) return;
-      const src =
-        adjacent.colors?.[0]?.images?.[0] ||
-        localProductImages[adjacent.id]?.[0] ||
-        adjacent.image;
-      if (src) {
-        const preloaded = new Image();
-        preloaded.src = src;
-      }
-    });
-  }, [prevProduct, nextProduct]);
 
   const swipeStartX = useRef<number | null>(null);
   const swipeStartY = useRef<number | null>(null);
@@ -421,121 +366,6 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
   const scrollContainerRef = useRef<HTMLElement | null>(null);
   const gallerySectionRef = useRef<HTMLElement | null>(null);
   const colorHighlightTimerRef = useRef<number | null>(null);
-  const pageSwipeRef = useRef<{
-    startX: number;
-    startY: number;
-    startTime: number;
-    startedInGallery: boolean;
-    intent: 'pending' | 'horizontal' | 'vertical';
-  } | null>(null);
-
-  useEffect(() => {
-    if (swipeDirection !== 0 && scrollContainerRef.current && typeof scrollContainerRef.current.scrollTo === 'function') {
-      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
-    }
-  }, [product.id, swipeDirection]);
-
-  useEffect(() => {
-    if (isLightboxOpen || detailSheet !== null) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'SELECT' ||
-          target.isContentEditable)
-      ) {
-        return;
-      }
-      if (event.key === 'ArrowLeft' && prevProduct) {
-        event.preventDefault();
-        onNavigateAdjacent(prevProduct, -1);
-      } else if (event.key === 'ArrowRight' && nextProduct) {
-        event.preventDefault();
-        onNavigateAdjacent(nextProduct, 1);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [detailSheet, isLightboxOpen, nextProduct, onNavigateAdjacent, prevProduct]);
-
-  const handlePageTouchStart = (event: React.TouchEvent<HTMLElement>) => {
-    if (isLightboxOpen || detailSheet !== null || (!prevProduct && !nextProduct) || event.touches.length !== 1) {
-      pageSwipeRef.current = null;
-      return;
-    }
-    const target = event.target as HTMLElement | null;
-    if (target?.closest('input, textarea, select, [data-no-product-swipe="true"]')) {
-      pageSwipeRef.current = null;
-      return;
-    }
-    const touch = event.touches[0];
-    pageSwipeRef.current = {
-      startX: touch.clientX,
-      startY: touch.clientY,
-      startTime: Date.now(),
-      startedInGallery: Boolean(target?.closest('[data-gallery-carousel="true"]')),
-      intent: 'pending',
-    };
-  };
-
-  const handlePageTouchMove = (event: React.TouchEvent<HTMLElement>) => {
-    const state = pageSwipeRef.current;
-    if (!state || event.touches.length !== 1) return;
-    const touch = event.touches[0];
-    const dx = touch.clientX - state.startX;
-    const dy = touch.clientY - state.startY;
-
-    if (state.intent === 'pending') {
-      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
-      if (Math.abs(dy) >= Math.abs(dx)) {
-        state.intent = 'vertical';
-        return;
-      }
-      if (Math.abs(dx) > Math.abs(dy) * 1.15) {
-        if (state.startedInGallery && images.length > 1) {
-          const galleryCanSwipe =
-            (dx < 0 && activeImageIndex < images.length - 1) ||
-            (dx > 0 && activeImageIndex > 0);
-          if (galleryCanSwipe) {
-            state.intent = 'vertical';
-            return;
-          }
-        }
-        state.intent = 'horizontal';
-      } else {
-        return;
-      }
-    }
-
-    if (state.intent !== 'horizontal') return;
-    const atBoundary = (dx > 0 && !prevProduct) || (dx < 0 && !nextProduct);
-    const nextOffset = atBoundary
-      ? Math.max(-36, Math.min(36, dx * 0.24))
-      : Math.max(-145, Math.min(145, dx * 0.72));
-    setDragOffsetX(nextOffset);
-  };
-
-  const handlePageTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
-    const state = pageSwipeRef.current;
-    pageSwipeRef.current = null;
-    if (!state || state.intent !== 'horizontal') {
-      if (dragOffsetX !== 0) setDragOffsetX(0);
-      return;
-    }
-    const touch = event.changedTouches[0];
-    const dx = touch ? touch.clientX - state.startX : 0;
-    const elapsed = Date.now() - state.startTime;
-    const isSwipeCommit = Math.abs(dx) >= 60 || (Math.abs(dx) >= 34 && elapsed < 260);
-    setDragOffsetX(0);
-    if (!isSwipeCommit) return;
-    if (dx < 0 && nextProduct) {
-      onNavigateAdjacent(nextProduct, 1);
-    } else if (dx > 0 && prevProduct) {
-      onNavigateAdjacent(prevProduct, -1);
-    }
-  };
 
   useEffect(() => {
     return () => {
@@ -866,120 +696,16 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
           </div>
         </header>
 
-        {/* Live Swipe-to-View Edge Preview Pill */}
-        {Math.abs(dragOffsetX) > 14 && (
-          <div
-            aria-hidden="true"
-            className={`pointer-events-none fixed top-1/2 z-50 flex max-w-[230px] -translate-y-1/2 items-center gap-2 rounded-2xl border border-white/95 bg-white/92 px-3 py-2 text-xs font-extrabold text-slate-900 shadow-xl backdrop-blur-md ${
-              dragOffsetX > 0 ? 'left-3' : 'right-3'
-            }`}
-          >
-            {dragOffsetX > 0 ? (
-              <>
-                <ChevronLeft className="h-4 w-4 shrink-0 text-[#D9232D]" />
-                {prevProduct ? (
-                  <>
-                    <img
-                      src={localProductImages[prevProduct.id]?.[0] ?? prevProduct.image}
-                      alt=""
-                      className="h-7 w-7 shrink-0 rounded-lg object-cover"
-                    />
-                    <span className="truncate">{prevProduct.title}</span>
-                  </>
-                ) : (
-                  <span className="text-slate-500">First item</span>
-                )}
-              </>
-            ) : (
-              <>
-                {nextProduct ? (
-                  <>
-                    <span className="truncate">{nextProduct.title}</span>
-                    <img
-                      src={localProductImages[nextProduct.id]?.[0] ?? nextProduct.image}
-                      alt=""
-                      className="h-7 w-7 shrink-0 rounded-lg object-cover"
-                    />
-                  </>
-                ) : (
-                  <span className="text-slate-500">Last item</span>
-                )}
-                <ChevronRight className="h-4 w-4 shrink-0 text-[#D9232D]" />
-              </>
-            )}
-          </div>
-        )}
-
         {/* Scrollable Storefront Canvas */}
         <motion.main
           ref={scrollContainerRef}
-          initial={
-            swipeDirection === 0
-              ? { opacity: 0, y: 8, x: 0 }
-              : { opacity: 0.25, x: swipeDirection > 0 ? 92 : -92, y: 0 }
-          }
-          animate={{
-            opacity: dragOffsetX !== 0 ? Math.max(0.75, 1 - Math.abs(dragOffsetX) / 420) : 1,
-            x: dragOffsetX,
-            y: 0,
-          }}
-          transition={
-            dragOffsetX !== 0
-              ? { duration: 0 }
-              : { duration: 0.24, ease: [0.22, 1, 0.36, 1] }
-          }
-          onTouchStart={handlePageTouchStart}
-          onTouchMove={handlePageTouchMove}
-          onTouchEnd={handlePageTouchEnd}
-          onTouchCancel={handlePageTouchEnd}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
           aria-label={`${product.title} product details`}
           className="product-scroll min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain"
         >
           <div className="mx-auto w-full max-w-5xl space-y-4 px-3.5 pb-6 pt-3 sm:px-5 lg:space-y-5 lg:py-5">
-            {orderedProducts.length > 1 && currentIndex >= 0 && (
-              <nav
-                aria-label="Browse adjacent products"
-                data-testid="pdp-adjacent-nav"
-                className="classic-glass flex items-center justify-between gap-2 rounded-xl border border-white/90 bg-white/75 px-2 py-1 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md"
-              >
-                <button
-                  type="button"
-                  data-testid="pdp-prev-product"
-                  disabled={!prevProduct}
-                  onClick={() => prevProduct && onNavigateAdjacent(prevProduct, -1)}
-                  aria-label={
-                    prevProduct ? `Previous product: ${prevProduct.title}` : 'No previous product'
-                  }
-                  className="inline-flex min-h-8 min-w-0 max-w-[38%] items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold text-slate-700 transition hover:bg-white hover:text-[#D9232D] active:scale-95 disabled:pointer-events-none disabled:opacity-35 sm:px-2.5 sm:text-xs"
-                >
-                  <ChevronLeft className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{prevProduct ? prevProduct.title : 'First'}</span>
-                </button>
-
-                <span className="shrink-0 text-[11px] font-extrabold text-slate-500 tabular-nums">
-                  {currentIndex + 1} / {orderedProducts.length}
-                  <span className="hidden font-semibold text-slate-400 sm:inline">
-                    {' '}
-                    · Swipe to browse
-                  </span>
-                </span>
-
-                <button
-                  type="button"
-                  data-testid="pdp-next-product"
-                  disabled={!nextProduct}
-                  onClick={() => nextProduct && onNavigateAdjacent(nextProduct, 1)}
-                  aria-label={
-                    nextProduct ? `Next product: ${nextProduct.title}` : 'No next product'
-                  }
-                  className="inline-flex min-h-8 min-w-0 max-w-[38%] items-center justify-end gap-1 rounded-lg px-2 py-1 text-[11px] font-bold text-slate-700 transition hover:bg-white hover:text-[#D9232D] active:scale-95 disabled:pointer-events-none disabled:opacity-35 sm:px-2.5 sm:text-xs"
-                >
-                  <span className="truncate">{nextProduct ? nextProduct.title : 'Last'}</span>
-                  <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-                </button>
-              </nav>
-            )}
-
             {/* Desktop Split Grid: Sticky Left Gallery + Contiguous Right Purchase Module */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start lg:gap-6">
               {/* Left Gallery Column */}
@@ -1125,10 +851,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
 
                   {/* Frosted Thumbnail Rail */}
                   {images.length > 1 && (
-                    <div
-                      data-no-product-swipe="true"
-                      className="mt-2 flex gap-2 overflow-x-auto no-scrollbar pb-0.5"
-                    >
+                    <div className="mt-2 flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
                       {images.map((image, index) => (
                         <button
                           type="button"
@@ -1902,7 +1625,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                       onAdd={() => onQuickAdd?.(item)}
                       onNotifyMe={() => onNotifyMe?.(item)}
                       onOpenCart={onOpenCart}
-                      onSelect={() => onSelectRelatedProduct(item)}
+                      onSelect={() => onSelectProduct?.(item)}
                     />
                   ))}
                 </div>

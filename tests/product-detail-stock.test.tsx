@@ -376,55 +376,11 @@ describe('product availability awareness and product detail page UI/UX', () => {
     expect(customerReviewsFiveStarHtml).not.toContain('Three Star Rider');
   });
 
-  it('renders swipe-to-view adjacent product navigation matching the browseProducts list order and boundaries', () => {
-    const subset = PRODUCTS.slice(0, 3);
-    expect(subset.length).toBe(3);
-
-    const firstHtml = renderToStaticMarkup(
-      <ProductDetailModal
-        products={PRODUCTS}
-        browseProducts={subset}
-        product={subset[0]!}
-        onClose={() => {}}
-        onAddToCart={() => {}}
-        isWishlisted={false}
-        onToggleWishlist={() => {}}
-      />,
-    );
-    expect(firstHtml).toContain('data-testid="pdp-adjacent-nav"');
-    expect(firstHtml).toContain('1 / 3');
-    expect(firstHtml).toContain('data-testid="pdp-prev-product" disabled=""');
-    expect(firstHtml).toContain(`Next product: ${subset[1]!.title}`);
-
-    const middleHtml = renderToStaticMarkup(
-      <ProductDetailModal
-        products={PRODUCTS}
-        browseProducts={subset}
-        product={subset[1]!}
-        onClose={() => {}}
-        onAddToCart={() => {}}
-        isWishlisted={false}
-        onToggleWishlist={() => {}}
-      />,
-    );
-    expect(middleHtml).toContain('2 / 3');
-    expect(middleHtml).toContain(`Previous product: ${subset[0]!.title}`);
-    expect(middleHtml).toContain(`Next product: ${subset[2]!.title}`);
-
-    const lastHtml = renderToStaticMarkup(
-      <ProductDetailModal
-        products={PRODUCTS}
-        browseProducts={subset}
-        product={subset[2]!}
-        onClose={() => {}}
-        onAddToCart={() => {}}
-        isWishlisted={false}
-        onToggleWishlist={() => {}}
-      />,
-    );
-    expect(lastHtml).toContain('3 / 3');
-    expect(lastHtml).toContain(`Previous product: ${subset[1]!.title}`);
-    expect(lastHtml).toContain('data-testid="pdp-next-product" disabled=""');
+  it('does not render an adjacent product navigation bar in ProductDetailModal', () => {
+    const html = renderDetails(PRODUCTS[0]!);
+    expect(html).not.toContain('data-testid="pdp-adjacent-nav"');
+    expect(html).not.toContain('data-testid="pdp-prev-product"');
+    expect(html).not.toContain('data-testid="pdp-next-product"');
   });
 
   it('renders a Share button in ProductDetailModal and shares product name, price, and URL via the Web Share API with clipboard fallback', async () => {
