@@ -45,6 +45,7 @@ import { ProductReviews } from './ProductReviews';
 import { BottomSheet } from './BottomSheet';
 import { PRODUCT_IMAGE_ZOOM_TRANSITION, PRODUCT_IMAGE_ZOOM_VARIANTS } from './ProductCard';
 import { getProductBadgeInfo, ProductCornerRibbon } from './ProductCornerRibbon';
+import { CartBadge } from './CartBadge';
 import { getColorDetails } from '../lib/productColors';
 import { getBrandInitials, getBrandLogoUrl } from '../lib/brandLogos';
 import { getPathForProduct } from '../lib/appRoutes';
@@ -682,11 +683,10 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                 className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/95 bg-white/80 text-slate-800 shadow-[0_6px_18px_-8px_rgba(15,23,42,0.22),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md transition-all duration-180 hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95"
               >
                 <ShoppingCart className="h-4 w-4" />
-                {cartCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 grid h-4.5 min-w-4.5 place-items-center rounded-full border-2 border-white bg-[#D9232D] px-1 text-[9.5px] font-extrabold text-white shadow-xs tabular-nums">
-                    {cartCount}
-                  </span>
-                )}
+                <CartBadge
+                  count={cartCount}
+                  className="absolute -right-0.5 -top-0.5 grid h-4.5 min-w-4.5 place-items-center rounded-full border-2 border-white bg-[#D9232D] px-1 text-[9.5px] font-extrabold text-white shadow-xs tabular-nums"
+                />
               </button>
             </div>
           </div>

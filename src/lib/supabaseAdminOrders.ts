@@ -1,7 +1,106 @@
 import { supabase } from './supabase';
-import type { CustomerOrderRecord } from '../types';
+import type { CustomerOrderRecord, Product } from '../types';
 import { resolveVehicleFitment } from './checkoutVehicleFitment';
 import { getCachedVehicleModels, loadVehicleModels, type VehicleCatalogModel } from './supabaseVehicleCatalog';
+
+type ProductImageRow = {
+  id?: unknown;
+  image_url?: unknown;
+  additional_images?: unknown;
+  colors_json?: unknown;
+};
+
+const imageForProductRow = (row?: ProductImageRow | null, colorName?: string | null): string | null => {
+  if (!row) return null;
+  const normalizedColor = String(colorName || '').trim().toLowerCase();
+  const colors = Array.isArray(row.colors_json) ? row.colors_json : [];
+  if (normalizedColor) {
+    const selected = colors.find(
+      (entry) =>
+        entry &&
+        typeof entry === 'object' &&
+        String((entry as Record<string, unknown>).name || '').trim().toLowerCase() === normalizedColor,
+    ) as Record<string, unknown> | undefined;
+    const images = Array.isArray(selected?.images) ? selected.images : [];
+    const matched = images.find((image): image is string => typeof image === 'string' && Boolean(image.trim()));
+    if (matched) return matched.trim();
+  }
+  const primary = typeof row.image_url === 'string' ? row.image_url.trim() : '';
+  if (primary) return primary;
+  const additional = Array.isArray(row.additional_images)
+    ? row.additional_images.find((image): image is string => typeof image === 'string' && Boolean(image.trim()))
+    : undefined;
+  if (additional) return additional.trim();
+  for (const entry of colors) {
+    if (!entry || typeof entry !== 'object') continue;
+    const images = Array.isArray((entry as Record<string, unknown>).images)
+      ? ((entry as Record<string, unknown>).images as unknown[])
+      : [];
+    const candidate = images.find((image): image is string => typeof image === 'string' && Boolean(image.trim()));
+    if (candidate) return candidate.trim();
+  }
+  return null;
+};
+
+export function getProductPrimaryImage(
+  product?: Pick<Product, 'image' | 'additionalImages' | 'colors'> | null,
+  colorName?: string | null,
+): string | null {
+  if (!product) return null;
+  const normalizedColor = String(colorName || '').trim().toLowerCase();
+  if (normalizedColor && Array.isArray(product.colors)) {
+    const matchedColor = product.colors.find(
+      (entry) => String(entry?.name || '').trim().toLowerCase() === normalizedColor,
+    );
+    const colorImage = matchedColor?.images?.find(
+      (image): image is string => typeof image === 'string' && Boolean(image.trim()),
+    );
+    if (colorImage) return colorImage.trim();
+  }
+  if (typeof product.image === 'string' && product.image.trim()) {
+    return product.image.trim();
+  }
+  const additional = product.additionalImages?.find(
+    (image): image is string => typeof image === 'string' && Boolean(image.trim()),
+  );
+  if (additional) return additional.trim();
+  if (Array.isArray(product.colors)) {
+    for (const color of product.colors) {
+      const candidate = color?.images?.find(
+        (image): image is string => typeof image === 'string' && Boolean(image.trim()),
+      );
+      if (candidate) return candidate.trim();
+    }
+  }
+  return null;
+}
+
+export function resolveOrderItemProductImage(
+  item: {
+    product_id?: string | null;
+    product_name?: string;
+    color?: string | null;
+    image_url?: string | null;
+  },
+  productsById: Map<string, Product>,
+  productsByName: Map<string, Product>,
+): string | null {
+  const byId = item.product_id ? productsById.get(item.product_id) : undefined;
+  const byIdImage = getProductPrimaryImage(byId, item.color);
+  if (byIdImage) return byIdImage;
+
+  const normalizedName = String(item.product_name || '').trim().toLowerCase();
+  if (normalizedName) {
+    const byName = productsByName.get(normalizedName);
+    const byNameImage = getProductPrimaryImage(byName, item.color);
+    if (byNameImage) return byNameImage;
+  }
+
+  if (typeof item.image_url === 'string' && item.image_url.trim()) {
+    return item.image_url.trim();
+  }
+  return null;
+}
 
 const missingOrderOptionColumns = (error: { message?: string } | null) => Boolean(error && /selected_thickness|selected_stitch|custom_embroidery_text/i.test(error.message || ''));
 const missingVehicleSnapshotColumns = (error: { message?: string } | null) => Boolean(error && /vehicle_type|vehicle_company|vehicle_image_url/i.test(error.message || ''));
@@ -43,6 +142,7 @@ export type AdminOrderRecord = {
     product_id?: string | null;
     product_name?: string;
     color?: string | null;
+    image_url?: string | null;
     quantity?: number;
     unit_price?: number;
     selected_thickness?: string | null;
@@ -190,6 +290,35 @@ export async function loadAdminOrders(orderId?: string, matchOrderNumber = false
     }
   }
 
+  const productImagesById = new Map<string, ProductImageRow>();
+  const productIds = Array.from(
+    new Set(
+      data.flatMap((row) =>
+        Array.isArray(row.order_items)
+          ? (row.order_items as Array<{ product_id?: unknown }>)
+              .map((item) => String(item.product_id || '').trim())
+              .filter(Boolean)
+          : [],
+      ),
+    ),
+  );
+  if (productIds.length) {
+    try {
+      const { data: productRows } = await supabase
+        .from('products')
+        .select('id,image_url,additional_images,colors_json')
+        .in('id', productIds);
+      if (Array.isArray(productRows)) {
+        productRows.forEach((productRow) => {
+          const id = String((productRow as ProductImageRow).id || '').trim();
+          if (id) productImagesById.set(id, productRow as ProductImageRow);
+        });
+      }
+    } catch {
+      // Product image hydration is best-effort; views also match against loaded catalog products.
+    }
+  }
+
   return {
     data: data.map((row) => {
       const customer = String(row.customer_name || 'Customer');
@@ -199,6 +328,7 @@ export async function loadAdminOrders(orderId?: string, matchOrderNumber = false
             product_id?: string | null;
             product_name?: string;
             color?: string | null;
+            image_url?: string | null;
             quantity?: number;
             unit_price?: number;
             selected_thickness?: string | null;
@@ -206,11 +336,18 @@ export async function loadAdminOrders(orderId?: string, matchOrderNumber = false
             custom_embroidery_text?: string | null;
           }>)
         : [];
-      const normalizedItems = items.map((item) => ({
-        ...item,
-        quantity: Number(item.quantity || 0),
-        unit_price: Number(item.unit_price || 0),
-      }));
+      const normalizedItems = items.map((item) => {
+        const productId = String(item.product_id || '').trim();
+        const hydratedImage = productId
+          ? imageForProductRow(productImagesById.get(productId), item.color)
+          : null;
+        return {
+          ...item,
+          image_url: hydratedImage || (typeof item.image_url === 'string' ? item.image_url : null),
+          quantity: Number(item.quantity || 0),
+          unit_price: Number(item.unit_price || 0),
+        };
+      });
       const statusHistory = Array.isArray(row.order_status_history)
         ? (row.order_status_history as Array<{
             id?: string;

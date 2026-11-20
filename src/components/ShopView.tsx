@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { ArrowLeft, Search, ShoppingCart, SlidersHorizontal, ArrowUpDown, LayoutGrid, List } from 'lucide-react';
+import { ArrowLeft, Bike, Search, ShoppingCart, SlidersHorizontal, ArrowUpDown, LayoutGrid, List } from 'lucide-react';
 import type { Product } from '../types';
 import { ProductCard } from './ProductCard';
 import { ProductCardErrorBoundary } from './ProductCardErrorBoundary';
 import { CatalogStatus } from './CatalogStatus';
+import { CartBadge } from './CartBadge';
 
 interface ShopViewProps {
   products: Product[];
@@ -24,6 +25,8 @@ interface ShopViewProps {
   activeFilterCount: number;
   onOpenSort: () => void;
   onOpenFilter: () => void;
+  activeVehicleFilter?: string | null;
+  onOpenVehicleFinder?: () => void;
 }
 
 const isRenderableProduct = (value: unknown): value is Product => {
@@ -60,6 +63,8 @@ export const ShopView: React.FC<ShopViewProps> = ({
   activeFilterCount,
   onOpenSort,
   onOpenFilter,
+  activeVehicleFilter,
+  onOpenVehicleFinder,
 }) => {
   const [category, setCategory] = useState('All');
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
@@ -100,9 +105,12 @@ export const ShopView: React.FC<ShopViewProps> = ({
           </button>
           <button aria-label="Go to Cart" onClick={onOpenCart} className="relative grid min-h-10 min-w-10 place-items-center rounded-full">
             <ShoppingCart className="h-5 w-5" />
-            <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#e61e25] text-[9.5px] font-bold text-white">
-              {cartCount}
-            </span>
+            <CartBadge
+              count={cartCount}
+              showZero
+              className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#e61e25] px-1 text-[9.5px] font-bold text-white shadow-xs tabular-nums"
+              ringColorClassName="bg-[#e61e25]/45"
+            />
           </button>
         </div>
       </header>
@@ -141,6 +149,21 @@ export const ShopView: React.FC<ShopViewProps> = ({
             <SlidersHorizontal className="h-3.5 w-3.5" /> Filter
             {activeFilterCount > 0 && <span className="grid h-4 min-w-4 place-items-center rounded-full bg-[#e61e25] px-1 text-[9px] font-extrabold text-white">{activeFilterCount}</span>}
           </button>
+          {onOpenVehicleFinder && (
+            <button
+              type="button"
+              onClick={onOpenVehicleFinder}
+              aria-label="Open Vehicle Fitment Finder"
+              className={`flex min-h-9.5 items-center gap-1.5 rounded-full border px-3 py-1 text-[11.5px] font-semibold transition-colors whitespace-nowrap ${
+                activeVehicleFilter
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-rose-200 hover:text-[#D9232D]'
+              }`}
+            >
+              <Bike className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span className="max-w-[120px] truncate">{activeVehicleFilter || 'Fitment'}</span>
+            </button>
+          )}
         </div>
         <div className="flex shrink-0 gap-1">
           <button onClick={() => setLayout('grid')} aria-label="Grid view" aria-pressed={layout === 'grid'} className={`grid min-h-9.5 min-w-9.5 place-items-center rounded-lg ${layout === 'grid' ? 'bg-[#e61e25] text-white' : 'text-slate-500'}`}>

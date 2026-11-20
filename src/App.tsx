@@ -14,7 +14,7 @@ import { Header } from './components/Header';
 import { HeroBanner } from './components/HeroBanner';
 import { CategorySection, type CategoryFilter } from './components/CategorySection';
 import { CatalogStatus } from './components/CatalogStatus';
-import { VehicleFinder } from './components/VehicleFinder';
+import { VehicleFinderSheet, VehicleFitmentTriggerBar } from './components/VehicleFinder';
 import { ProductCard } from './components/ProductCard';
 import { PwaInstallCard } from './components/PwaInstallCard';
 const ProductDetailModal = lazy(() => import('./components/ProductDetailModal').then((module) => ({ default: module.ProductDetailModal })));
@@ -799,6 +799,7 @@ export default function App() {
   const [homeFilters, setHomeFilters] = useState<FilterState>(INITIAL_FILTERS);
   const [isHomeSortOpen, setIsHomeSortOpen] = useState(false);
   const [isHomeFilterOpen, setIsHomeFilterOpen] = useState(false);
+  const [isVehicleFinderOpen, setIsVehicleFinderOpen] = useState(false);
 
   // Modals & Drawers
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -1856,6 +1857,8 @@ export default function App() {
             activeFilterCount={activeHomeFiltersCount}
             onOpenSort={() => setIsHomeSortOpen(true)}
             onOpenFilter={() => setIsHomeFilterOpen(true)}
+            activeVehicleFilter={vehicleFilter}
+            onOpenVehicleFinder={() => setIsVehicleFinderOpen(true)}
           />
         ) : activeTab === 'search' ? (
           <motion.main
@@ -2034,13 +2037,13 @@ export default function App() {
               }}
             />
 
-            {/* Vehicle Compatibility Filter Tool */}
-            <VehicleFinder
-              onFilterVehicle={(model) => {
-                setVehicleFilter(model);
-                if (model) scrollToShop();
-              }}
+            {/* Compact 1-Row Vehicle Fitment Trigger Bar (opens full sheet modal) */}
+            <VehicleFitmentTriggerBar
               activeVehicleFilter={vehicleFilter}
+              savedVehicle={currentUser.isGuest ? null : currentUser.vehicle}
+              matchingCount={vehicleFilter ? filteredProducts.length : undefined}
+              onOpen={() => setIsVehicleFinderOpen(true)}
+              onClear={() => setVehicleFilter(null)}
             />
 
             {/* Popular Picks Horizontal Scroll (from user image) */}
@@ -2663,6 +2666,19 @@ export default function App() {
           }}
           matchingCount={filteredProducts.length}
         />}
+
+        {/* 🏍️ Vehicle Fitment Finder Modal Sheet (accessible from Home & Shop) */}
+        <VehicleFinderSheet
+          open={isVehicleFinderOpen}
+          onClose={() => setIsVehicleFinderOpen(false)}
+          onFilterVehicle={(model) => {
+            setVehicleFilter(model);
+            if (model && activeTab === 'home') scrollToShop();
+          }}
+          activeVehicleFilter={vehicleFilter}
+          products={catalogProducts}
+          savedVehicle={currentUser.isGuest ? null : currentUser.vehicle}
+        />
         </Suspense>
 
         {/* 🔐 Login Required Modal (Triggered on Guest Checkout / Account Access) */}

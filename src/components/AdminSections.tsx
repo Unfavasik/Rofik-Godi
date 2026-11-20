@@ -11,6 +11,7 @@ import {
   EyeOff,
   Image,
   LoaderCircle,
+  Package,
   Pencil,
   Plus,
   RefreshCw,
@@ -22,7 +23,10 @@ import {
 import type { Product, VehicleCategory } from '../types';
 import type { AdminNotification } from '../lib/supabaseAdmin';
 import { loadAdminJsonSetting, saveAdminJsonSetting } from '../lib/supabaseAdmin';
-import type { AdminOrderRecord } from '../lib/supabaseAdminOrders';
+import {
+  resolveOrderItemProductImage,
+  type AdminOrderRecord,
+} from '../lib/supabaseAdminOrders';
 import {
   BANNER_FONT_OPTIONS,
   deleteProductImageIfUnreferenced,
@@ -1648,28 +1652,91 @@ export function NotificationsView({
   );
 }
 
+function TopProductThumbnail({ src, alt }: { src: string | null; alt: string }) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const showImage = Boolean(src && failedSrc !== src);
+  return (
+    <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200/80 bg-slate-50 shadow-2xs">
+      {showImage ? (
+        <img
+          src={src!}
+          alt={alt}
+          loading="lazy"
+          onError={() => setFailedSrc(src)}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <Package className="h-4 w-4 text-slate-300" />
+      )}
+    </div>
+  );
+}
+
 export function ReportsView({
   metrics,
   orders,
+  products = [],
   onExport,
   onNavigate,
 }: {
   metrics: Record<string, number> | null;
   orders: AdminOrderRecord[];
+  products?: Product[];
   onExport: () => void;
   onNavigate: (section: 'orders' | 'products' | 'customers') => void;
 }) {
+  const productsById = new Map(products.map((product) => [product.id, product]));
+  const productsByName = new Map(
+    products.map((product) => [product.title.trim().toLowerCase(), product]),
+  );
+
   const paidOrders = orders.filter(
     (order) => order.paymentStatus === 'PAID' || order.status === 'COMPLETED',
   );
-  const items = new Map<string, number>();
+  const items = new Map<
+    string,
+    {
+      key: string;
+      name: string;
+      categoryLabel: string | null;
+      quantity: number;
+      revenue: number;
+      image: string | null;
+    }
+  >();
   paidOrders.forEach((order) =>
     order.items.forEach((item) => {
-      const name = item.product_name || 'Product';
-      items.set(name, (items.get(name) || 0) + Number(item.quantity || 1));
+      const rawName = (item.product_name || 'Product').trim() || 'Product';
+      const normalizedName = rawName.toLowerCase();
+      const matchedProduct =
+        (item.product_id ? productsById.get(item.product_id) : undefined) ||
+        productsByName.get(normalizedName);
+      const key = matchedProduct?.id || normalizedName;
+      const quantity = Number(item.quantity || 1);
+      const revenue = Number(item.unit_price || 0) * quantity;
+      const resolvedImage = resolveOrderItemProductImage(item, productsById, productsByName);
+      const existing = items.get(key);
+      if (existing) {
+        existing.quantity += quantity;
+        existing.revenue += revenue;
+        if (!existing.image && resolvedImage) existing.image = resolvedImage;
+        if (!existing.categoryLabel && matchedProduct?.categoryLabel) {
+          existing.categoryLabel = matchedProduct.categoryLabel;
+        }
+      } else {
+        items.set(key, {
+          key,
+          name: matchedProduct?.title || rawName,
+          categoryLabel: matchedProduct?.categoryLabel || null,
+          quantity,
+          revenue,
+          image: resolvedImage,
+        });
+      }
     }),
   );
-  const leaders = [...items.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const leaders = [...items.values()].sort((a, b) => b.quantity - a.quantity).slice(0, 5);
+  const maxLeaderQty = Math.max(1, ...leaders.map((leader) => leader.quantity));
   return (
     <section>
       <div className="relative mb-4 overflow-hidden rounded-2xl border border-slate-200/85 bg-gradient-to-br from-white via-white to-rose-50/35 p-3.5 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.08)] sm:p-4">
@@ -1749,19 +1816,45 @@ export function ReportsView({
         <div className="min-w-0 rounded-2xl border border-slate-200/85 bg-white p-4 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.07)] sm:p-5">
           <h3 className="font-display text-sm font-black text-slate-900">Top selling products</h3>
           <div className="mt-2.5 divide-y divide-slate-100">
-            {leaders.map(([name, quantity], idx) => (
-              <div key={name} className="flex items-center justify-between gap-3 py-2 text-xs">
-                <span className="flex min-w-0 items-center gap-2">
-                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-red-50 font-mono text-[10px] font-black text-[#D9232D]">
-                    0{idx + 1}
-                  </span>
-                  <span className="truncate font-extrabold text-slate-800">{name}</span>
-                </span>
-                <b className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-700 tabular-nums">
-                  {quantity} sold
-                </b>
-              </div>
-            ))}
+            {leaders.map((leader, idx) => {
+              const sharePct = Math.max(12, Math.round((leader.quantity / maxLeaderQty) * 100));
+              return (
+                <div key={leader.key} className="py-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="relative shrink-0">
+                      <TopProductThumbnail src={leader.image} alt={leader.name} />
+                      <span className="absolute -left-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-md bg-[#D9232D] font-mono text-[9.5px] font-black text-white shadow-xs ring-2 ring-white">
+                        0{idx + 1}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="min-w-0 truncate text-xs font-extrabold text-slate-900">
+                          {leader.name}
+                        </span>
+                        <b className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-700 tabular-nums">
+                          {leader.quantity} sold
+                        </b>
+                      </div>
+                      <div className="mt-0.5 flex items-center justify-between gap-2 text-[10.5px] font-semibold text-slate-400">
+                        <span className="truncate">{leader.categoryLabel || 'Seat cover & accessory'}</span>
+                        {leader.revenue > 0 && (
+                          <span className="shrink-0 font-bold text-slate-600 tabular-nums">
+                            {money(leader.revenue)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#D9232D] to-rose-400"
+                          style={{ width: `${sharePct}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
             {!leaders.length && (
               <p className="py-8 text-center text-xs font-semibold text-slate-400">
                 No completed or paid item data in the latest 100 orders.

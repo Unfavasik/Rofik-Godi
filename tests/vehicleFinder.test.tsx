@@ -3,7 +3,7 @@ import path from 'node:path';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { VehicleFinder } from '../src/components/VehicleFinder';
+import { VehicleFinder, VehicleFitmentTriggerBar } from '../src/components/VehicleFinder';
 
 // The catalog moved from a static data file into the vehicle_models table;
 // the seed migration is now the source of truth these checks guard.
@@ -63,5 +63,49 @@ describe('Vehicle Fitment Finder', () => {
     expect(html).toContain('aria-label="Select model"');
     expect(html).toContain('Toto / Cab');
     expect(html).toContain('Find Covers');
+    expect(html).toContain('01. Company');
+    expect(html).toContain('02. Model');
+    expect(html).toContain('100% Fit Guarantee');
+  });
+
+  it('shows the 1-tap saved ride shortcut and active filter confirmation', () => {
+    const html = renderToStaticMarkup(
+      <VehicleFinder
+        onFilterVehicle={() => {}}
+        activeVehicleFilter="Royal Enfield Classic 350"
+        savedVehicle="Honda Activa 6G"
+      />,
+    );
+    expect(html).toContain('My ride: Honda Activa 6G');
+    expect(html).toContain('Showing covers for');
+    expect(html).toContain('Royal Enfield Classic 350');
+    expect(html).toContain('Reset');
+  });
+
+  it('renders the compact 1-row Home trigger bar in both default and active states', () => {
+    const idleHtml = renderToStaticMarkup(
+      <VehicleFitmentTriggerBar
+        activeVehicleFilter={null}
+        savedVehicle="Honda Activa 6G"
+        onOpen={() => {}}
+        onClear={() => {}}
+      />,
+    );
+    expect(idleHtml).toContain('Vehicle Fitment Finder');
+    expect(idleHtml).toContain('Saved ride: Honda Activa 6G');
+    expect(idleHtml).toContain('Select ride');
+
+    const activeHtml = renderToStaticMarkup(
+      <VehicleFitmentTriggerBar
+        activeVehicleFilter="Hero Splendor Plus"
+        matchingCount={4}
+        onOpen={() => {}}
+        onClear={() => {}}
+      />,
+    );
+    expect(activeHtml).toContain('Fitted for Hero Splendor Plus');
+    expect(activeHtml).toContain('4 compatible covers');
+    expect(activeHtml).toContain('Change');
+    expect(activeHtml).toContain('aria-label="Clear vehicle filter"');
   });
 });

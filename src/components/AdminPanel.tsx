@@ -57,6 +57,7 @@ import {
   completePickupOrderManually,
   getNextPickupOrderStatus,
   matchesAdminOrderSearch,
+  resolveOrderItemProductImage,
   toCustomerOrderRecord,
   updatePickupOrderStatus,
   verifyPickupPayment,
@@ -1087,6 +1088,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
             <ReportsView
               metrics={metrics}
               orders={orders}
+              products={products}
               onExport={exportReport}
               onNavigate={goTo}
             />
@@ -1335,22 +1337,45 @@ function Overview({
   });
   const totalSevenDaySales = salesDays.reduce((sum, day) => sum + day.amount, 0);
   const maxSales = Math.max(1, ...salesDays.map((day) => day.amount));
-  const topProducts = new Map<string, { quantity: number; revenue: number }>();
+  const productsById = new Map(products.map((product) => [product.id, product]));
+  const productsByName = new Map(
+    products.map((product) => [product.title.trim().toLowerCase(), product]),
+  );
+  const topProducts = new Map<
+    string,
+    { key: string; name: string; quantity: number; revenue: number; image: string | null }
+  >();
   orders.forEach((order) =>
     order.items.forEach((item) => {
-      const name = item.product_name || 'Product';
-      const current = topProducts.get(name) || { quantity: 0, revenue: 0 };
+      const rawName = (item.product_name || 'Product').trim() || 'Product';
+      const normalizedName = rawName.toLowerCase();
+      const matchedProduct =
+        (item.product_id ? productsById.get(item.product_id) : undefined) ||
+        productsByName.get(normalizedName);
+      const key = matchedProduct?.id || normalizedName;
+      const current = topProducts.get(key);
       const quantity = Number(item.quantity || 1);
-      topProducts.set(name, {
-        quantity: current.quantity + quantity,
-        revenue: current.revenue + Number(item.unit_price || 0) * quantity,
-      });
+      const revenue = Number(item.unit_price || 0) * quantity;
+      const resolvedImage = resolveOrderItemProductImage(item, productsById, productsByName);
+      if (current) {
+        current.quantity += quantity;
+        current.revenue += revenue;
+        if (!current.image && resolvedImage) current.image = resolvedImage;
+      } else {
+        topProducts.set(key, {
+          key,
+          name: matchedProduct?.title || rawName,
+          quantity,
+          revenue,
+          image: resolvedImage,
+        });
+      }
     }),
   );
-  const bestsellers = [...topProducts.entries()]
-    .sort((a, b) => b[1].quantity - a[1].quantity)
+  const bestsellers = [...topProducts.values()]
+    .sort((a, b) => b.quantity - a.quantity)
     .slice(0, 5);
-  const maxBestsellerQty = Math.max(1, ...bestsellers.map(([, item]) => item.quantity));
+  const maxBestsellerQty = Math.max(1, ...bestsellers.map((item) => item.quantity));
 
   const statuses: Array<{ key: OrderStatus; label: string; color: string }> = [
     { key: 'NEW', label: 'New', color: '#f59e0b' },
@@ -1697,18 +1722,32 @@ function Overview({
             </button>
           </div>
           <div className="mt-3 divide-y divide-slate-100">
-            {bestsellers.map(([name, product], index) => {
+            {bestsellers.map((product, index) => {
               const pct = Math.max(12, Math.round((product.quantity / maxBestsellerQty) * 100));
               return (
-                <div key={name} className="py-2">
+                <div key={product.key} className="py-2">
                   <div className="flex items-center gap-2.5">
-                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-red-50 font-mono text-[11px] font-black text-[#D9232D] ring-1 ring-red-100">
-                      0{index + 1}
-                    </span>
+                    <div className="relative shrink-0">
+                      <div className="grid h-9 w-9 place-items-center overflow-hidden rounded-xl border border-slate-200/80 bg-slate-50 shadow-2xs">
+                        {product.image ? (
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <Package className="h-4 w-4 text-slate-300" />
+                        )}
+                      </div>
+                      <span className="absolute -left-1.5 -top-1.5 grid h-4.5 w-4.5 place-items-center rounded-md bg-[#D9232D] font-mono text-[9px] font-black text-white shadow-xs ring-2 ring-white">
+                        0{index + 1}
+                      </span>
+                    </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
                         <span className="min-w-0 truncate text-[11.5px] font-extrabold text-slate-900">
-                          {name}
+                          {product.name}
                         </span>
                         <span className="shrink-0 text-right">
                           <b className="text-[11.5px] font-black text-slate-900 tabular-nums">
@@ -1830,6 +1869,10 @@ function OrdersView({
   const visibleOrders = orders.filter((order) => matchesAdminOrderSearch(order, orderSearch));
   const productsById = useMemo(
     () => new Map(products.map((product) => [product.id, product])),
+    [products],
+  );
+  const productsByName = useMemo(
+    () => new Map(products.map((product) => [product.title.trim().toLowerCase(), product])),
     [products],
   );
 
@@ -2053,9 +2096,7 @@ function OrdersView({
               <div className="mt-3 flex items-center gap-2.5 rounded-xl border border-slate-100 bg-[#F8FAFC] p-2">
                 <div className="flex shrink-0 items-center">
                   {previews.slice(0, 3).map((item, index) => {
-                    const image = item.product_id
-                      ? productsById.get(item.product_id)?.image
-                      : undefined;
+                    const image = resolveOrderItemProductImage(item, productsById, productsByName);
                     return (
                       <div
                         key={`${item.product_id || item.product_name}-${index}`}

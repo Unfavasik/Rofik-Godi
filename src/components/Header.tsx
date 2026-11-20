@@ -8,6 +8,7 @@ import { useVoiceSearch } from '../hooks/useVoiceSearch';
 import { saveRecentSearchTerm } from '../lib/voiceSearch';
 import { VoiceSearchBanner } from './VoiceSearchBanner';
 import { VoiceSearchHint } from './VoiceSearchHint';
+import { CartBadge } from './CartBadge';
 
 interface HeaderProps {
   cartCount: number;
@@ -159,16 +160,10 @@ export const Header: React.FC<HeaderProps> = ({
             title="Shopping Cart"
           >
             <ShoppingBag className="w-4 h-4 text-slate-900" />
-            {cartCount > 0 && (
-              <motion.span
-                key={cartCount}
-                initial={{ scale: 0.5 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 w-4 h-4 bg-[#D9232D] text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs"
-              >
-                {cartCount}
-              </motion.span>
-            )}
+            <CartBadge
+              count={cartCount}
+              className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-[#D9232D] text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs tabular-nums"
+            />
           </button>
         </div>
       </div>
