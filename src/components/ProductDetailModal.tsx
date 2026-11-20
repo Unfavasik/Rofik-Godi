@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
   ArrowLeft,
   Bike,
@@ -43,6 +43,7 @@ import { useProductGuaranteeDate } from '../lib/productGuarantee';
 import { GuaranteeTerms } from './GuaranteeTerms';
 import { ProductReviews } from './ProductReviews';
 import { BottomSheet } from './BottomSheet';
+import { PRODUCT_IMAGE_ZOOM_TRANSITION, PRODUCT_IMAGE_ZOOM_VARIANTS } from './ProductCard';
 import { getProductBadgeInfo, ProductCornerRibbon } from './ProductCornerRibbon';
 import { getColorDetails } from '../lib/productColors';
 import { getBrandInitials, getBrandLogoUrl } from '../lib/brandLogos';
@@ -2060,8 +2061,14 @@ const SuggestionCard: React.FC<{
     }
   };
   const badgeInfo = getProductBadgeInfo(product);
+  const shouldReduceMotion = useReducedMotion();
   return (
-    <article className="relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/90 bg-white/80 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.14)] backdrop-blur-md transition hover:border-rose-200/80 hover:bg-white">
+    <motion.article
+      initial="rest"
+      animate="rest"
+      whileHover={shouldReduceMotion ? undefined : 'hover'}
+      className="relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/90 bg-white/80 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.14)] backdrop-blur-md transition hover:border-rose-200/80 hover:bg-white"
+    >
       {badgeInfo && (
         <ProductCornerRibbon
           label={badgeInfo.label}
@@ -2074,10 +2081,12 @@ const SuggestionCard: React.FC<{
         onClick={onSelect}
         className="block aspect-square w-full overflow-hidden bg-slate-100"
       >
-        <img
+        <motion.img
           src={localProductImages[product.id]?.[0] ?? product.image}
           alt={product.title}
-          className="h-full w-full object-cover transition duration-300 hover:scale-[1.03]"
+          variants={PRODUCT_IMAGE_ZOOM_VARIANTS}
+          transition={PRODUCT_IMAGE_ZOOM_TRANSITION}
+          className="h-full w-full object-cover will-change-transform"
         />
       </button>
       <div className="flex flex-1 flex-col justify-between p-2.5">
@@ -2161,6 +2170,6 @@ const SuggestionCard: React.FC<{
           </div>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 };

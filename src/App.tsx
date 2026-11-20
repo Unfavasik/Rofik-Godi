@@ -23,9 +23,9 @@ const CartDrawer = lazy(() => import('./components/CartDrawer').then((module) =>
 const CheckoutModal = lazy(() => import('./components/CheckoutModal').then((module) => ({ default: module.CheckoutModal })));
 const WishlistModal = lazy(() => import('./components/WishlistModal').then((module) => ({ default: module.WishlistModal })));
 import { StoreLocationView } from './components/StoreLocationView';
-const PrivacyPolicyView = lazy(() => import('./components/PrivacyPolicyView').then((module) => ({ default: module.PrivacyPolicyView })));
-const TermsConditionsView = lazy(() => import('./components/TermsConditionsView').then((module) => ({ default: module.TermsConditionsView })));
-const PersonalDataView = lazy(() => import('./components/PersonalDataView').then((module) => ({ default: module.PersonalDataView })));
+import { PrivacyPolicyView } from './components/PrivacyPolicyView';
+import { TermsConditionsView } from './components/TermsConditionsView';
+import { PersonalDataView } from './components/PersonalDataView';
 const CouponDetailsView = lazy(() => import('./components/CouponDetailsView').then((module) => ({ default: module.CouponDetailsView })));
 const AccountView = lazy(() => import('./components/AccountView').then((module) => ({ default: module.AccountView })));
 import {
@@ -65,6 +65,10 @@ import {
   MessageCircle,
   Flame,
   ArrowUpDown,
+  Bell,
+  Truck,
+  X,
+  ChevronRight,
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { NATIVE_AUTH_CALLBACK_URL } from './lib/oauthRedirect';
@@ -81,29 +85,53 @@ import { useCatalog } from './hooks/useCatalog';
 import { usePwaInstallPrompt } from './hooks/usePwaInstallPrompt';
 import { usePushNotifications } from './hooks/usePushNotifications';
 import { listMyNotifications, listMyWishlist, toggleWishlist } from './lib/supabaseCustomer';
-import { readCustomerNotificationCountCache, writeCustomerNotificationCountCache } from './lib/localCache';
+import {
+  CUSTOMER_NOTIFICATIONS_UPDATED_EVENT,
+  notifyCustomerNotificationsUpdated,
+  notifyCustomerOrdersUpdated,
+  readCustomerNotificationCache,
+  readCustomerNotificationCountCache,
+  writeCustomerNotificationCache,
+  writeCustomerNotificationCountCache,
+  type CachedCustomerNotification,
+} from './lib/localCache';
+import { getCustomerNotificationCategory } from './lib/notificationCategory';
 import { readSwrCache, writeSwrCache } from './lib/swrCache';
 import { CloudLoader } from './components/CloudLoader';
 const FilterSortModal = lazy(() => import('./components/FilterSortModal').then((module) => ({ default: module.FilterSortModal })));
 const LAST_ROUTE_KEY = 'rofik-godi:last-route:v1';
 const SCROLL_KEY = 'rofik-godi:scroll:v1';
+const isOverlayRouteKind = (kind: ReturnType<typeof resolveAppRoute>['kind']) =>
+  kind === 'store' ||
+  kind === 'store-navigation' ||
+  kind === 'privacy' ||
+  kind === 'terms' ||
+  kind === 'personal-data';
+
 export default function App() {
   const location = useLocation();
   const routerNavigate = useNavigate();
   // Capture the outgoing page's scroll position before the DOM swaps, so the
   // route-level restore effect can put the customer back exactly where they
-  // left when they return (e.g. Account -> Coupons -> Back).
+  // left when they return (e.g. Settings -> About -> Back).
   const outgoingRouteRef = useRef({ pathname: location.pathname, search: location.search });
   outgoingRouteRef.current = { pathname: location.pathname, search: location.search };
+  // Guard against child effects resetting window.scrollY to 0 on the incoming
+  // route before App's location effect runs and accidentally overwriting the
+  // already-captured outgoing scroll offset.
+  const savedOutgoingScrollKeyRef = useRef<string | null>(null);
   // The cast keeps react-router's two overloads (path and delta) while the
   // implementation only needs the path form.
   const navigate = useCallback(((to: To | number, options?: NavigateOptions) => {
     try {
       const { pathname, search } = outgoingRouteRef.current;
-      const key = `${SCROLL_KEY}:${pathname}${search}`;
-      const value = String(window.scrollY);
-      sessionStorage.setItem(key, value);
-      localStorage.setItem(key, value);
+      if (!isOverlayRouteKind(resolveAppRoute(pathname).kind)) {
+        const key = `${SCROLL_KEY}:${pathname}${search}`;
+        const value = String(window.scrollY);
+        sessionStorage.setItem(key, value);
+        localStorage.setItem(key, value);
+        savedOutgoingScrollKeyRef.current = key;
+      }
     } catch {
       // Scroll restoration is best-effort when storage is unavailable.
     }
@@ -111,21 +139,17 @@ export default function App() {
   }) as NavigateFunction, [routerNavigate]);
   const resolvedRoute = resolveAppRoute(location.pathname);
   const backgroundRoute = useMemo(() => {
-    const isOverlayRoute =
-      resolvedRoute.kind === 'store' ||
-      resolvedRoute.kind === 'store-navigation' ||
-      resolvedRoute.kind === 'privacy' ||
-      resolvedRoute.kind === 'terms' ||
-      resolvedRoute.kind === 'personal-data';
-    if (isOverlayRoute) {
-      const state = location.state as { returnTo?: unknown } | null;
-      const returnTo =
-        typeof state?.returnTo === 'string' && state.returnTo.startsWith('/')
-          ? state.returnTo.split('?')[0]
-          : null;
-      if (returnTo) {
-        const candidate = resolveAppRoute(returnTo);
-        if (candidate.kind !== 'not-found') return candidate;
+    if (isOverlayRouteKind(resolvedRoute.kind)) {
+      const state = location.state as { returnTo?: unknown; originReturnTo?: unknown } | null;
+      const candidatePath =
+        typeof state?.originReturnTo === 'string' && state.originReturnTo.startsWith('/')
+          ? state.originReturnTo.split('?')[0]
+          : typeof state?.returnTo === 'string' && state.returnTo.startsWith('/')
+            ? state.returnTo.split('?')[0]
+            : null;
+      if (candidatePath) {
+        const candidate = resolveAppRoute(candidatePath);
+        if (candidate.kind !== 'not-found' && !isOverlayRouteKind(candidate.kind)) return candidate;
       }
     }
     return resolvedRoute;
@@ -192,8 +216,13 @@ export default function App() {
     const previous = previousLocationRef.current;
     previousLocationRef.current = location;
     if (previous.pathname === location.pathname && previous.search === location.search) return;
+    const key = `${SCROLL_KEY}:${previous.pathname}${previous.search}`;
+    if (savedOutgoingScrollKeyRef.current === key) {
+      savedOutgoingScrollKeyRef.current = null;
+      return;
+    }
+    if (isOverlayRouteKind(resolveAppRoute(previous.pathname).kind)) return;
     try {
-      const key = `${SCROLL_KEY}:${previous.pathname}${previous.search}`;
       const value = String(window.scrollY);
       sessionStorage.setItem(key, value);
       localStorage.setItem(key, value);
@@ -202,9 +231,15 @@ export default function App() {
     }
   }, [location]);
   useEffect(() => {
+    // Overlay routes scroll inside their own fixed inset-0 container; never reset
+    // the underlying page's window scroll position when an overlay opens.
+    if (isOverlayRouteKind(resolveAppRoute(location.pathname).kind)) return;
     const key = `${SCROLL_KEY}:${location.pathname}${location.search}`;
     let savedValue = NaN;
-    try { savedValue = Number(sessionStorage.getItem(key) || localStorage.getItem(key)); } catch { /* optional persistence */ }
+    try {
+      const raw = sessionStorage.getItem(key) ?? localStorage.getItem(key);
+      if (raw !== null && raw !== '') savedValue = Number(raw);
+    } catch { /* optional persistence */ }
     const restore = () => { if (Number.isFinite(savedValue)) window.scrollTo(0, savedValue); };
     restore();
     // Product grids and images grow after the first paint, so a single restore
@@ -232,10 +267,32 @@ export default function App() {
       window.addEventListener('touchstart', stopRetrying, { passive: true });
       window.addEventListener('keydown', stopRetrying);
     }
-    const save = () => { try { const value = String(window.scrollY); sessionStorage.setItem(key, value); localStorage.setItem(key, value); } catch { /* optional persistence */ } };
+    let scrollRaf: number | null = null;
+    const save = () => {
+      try {
+        const value = String(window.scrollY);
+        sessionStorage.setItem(key, value);
+        localStorage.setItem(key, value);
+      } catch { /* optional persistence */ }
+    };
+    const onScroll = () => {
+      if (scrollRaf !== null) return;
+      scrollRaf = window.requestAnimationFrame(() => {
+        scrollRaf = null;
+        save();
+      });
+    };
     const hidden = () => { if (document.visibilityState === 'hidden') save(); };
-    window.addEventListener('pagehide', save); document.addEventListener('visibilitychange', hidden);
-    return () => { stopRetrying(); window.removeEventListener('pagehide', save); document.removeEventListener('visibilitychange', hidden); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('pagehide', save);
+    document.addEventListener('visibilitychange', hidden);
+    return () => {
+      stopRetrying();
+      if (scrollRaf !== null) window.cancelAnimationFrame(scrollRaf);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('pagehide', save);
+      document.removeEventListener('visibilitychange', hidden);
+    };
   }, [location.pathname, location.search]);
   useEffect(() => {
     if (!supabase) return;
@@ -363,20 +420,80 @@ export default function App() {
   }, [currentUser.id, currentUser.isGuest]);
 
   const [notificationCount, setNotificationCount] = useState(() => currentUser.isGuest ? 0 : readCustomerNotificationCountCache(currentUser.id) ?? 0);
-  const refreshNotificationCount = () => {
-    if (currentUser.isGuest) {
+  const [liveNotificationToast, setLiveNotificationToast] = useState<{
+    id: string;
+    kind: string;
+    title: string;
+    body: string;
+    actionUrl: string | null;
+  } | null>(null);
+  const liveToastTimerRef = useRef<number | null>(null);
+  const lastOrderUpdateToastKeyRef = useRef<{ key: string; at: number }>({ key: '', at: 0 });
+
+  const showLiveNotificationToast = useCallback((toast: {
+    id: string;
+    kind: string;
+    title: string;
+    body: string;
+    actionUrl: string | null;
+  }) => {
+    setLiveNotificationToast(toast);
+    if (liveToastTimerRef.current !== null) window.clearTimeout(liveToastTimerRef.current);
+    liveToastTimerRef.current = window.setTimeout(() => {
+      setLiveNotificationToast((current) => (current?.id === toast.id ? null : current));
+      liveToastTimerRef.current = null;
+    }, 6000);
+  }, []);
+
+  useEffect(() => () => {
+    if (liveToastTimerRef.current !== null) window.clearTimeout(liveToastTimerRef.current);
+  }, []);
+
+  const refreshNotificationCount = useCallback((notifyViews = false) => {
+    if (currentUser.isGuest || !currentUser.id) {
       setNotificationCount(0);
       return;
     }
-    void listMyNotifications(currentUser.id).then((notifications) => {
-      const preferences = readCustomerAppPreferences(currentUser.id).notifications;
+    const targetUserId = currentUser.id;
+    void listMyNotifications(targetUserId).then((notifications) => {
+      const preferences = readCustomerAppPreferences(targetUserId).notifications;
       const count = notifications.filter((notification) =>
         !notification.read_at && isNotificationEnabledByPreferences(preferences, notification),
       ).length;
       setNotificationCount(count);
-      writeCustomerNotificationCountCache(currentUser.id, count);
+      writeCustomerNotificationCountCache(targetUserId, count);
+      writeCustomerNotificationCache(targetUserId, notifications as CachedCustomerNotification[]);
+      if (notifyViews) notifyCustomerNotificationsUpdated(targetUserId);
     }).catch(() => {});
-  };
+  }, [currentUser.id, currentUser.isGuest]);
+
+  const handleCustomerOrderPlaced = useCallback((placedOrder?: { orderId?: string }) => {
+    if (currentUser.isGuest || !currentUser.id) return;
+    const targetUserId = currentUser.id;
+    notifyCustomerOrdersUpdated(targetUserId);
+    refreshNotificationCount(true);
+    // Re-sync shortly after commit so the database trigger's new-order notification
+    // is reflected in both the unread badge and cached inbox immediately.
+    window.setTimeout(() => {
+      refreshNotificationCount(true);
+      notifyCustomerOrdersUpdated(targetUserId);
+    }, 900);
+    if (placedOrder?.orderId) {
+      const orderNumber = placedOrder.orderId;
+      const preferences = readCustomerAppPreferences(targetUserId).notifications;
+      if (preferences.orderUpdates) {
+        lastOrderUpdateToastKeyRef.current = { key: `${orderNumber}:NEW`, at: Date.now() };
+        showLiveNotificationToast({
+          id: `order-placed-${orderNumber}`,
+          kind: 'order',
+          title: 'Order placed',
+          body: `Your order #${orderNumber} has been received. We’ll notify you as soon as it is updated.`,
+          actionUrl: '/notifications',
+        });
+      }
+    }
+  }, [currentUser.id, currentUser.isGuest, refreshNotificationCount, showLiveNotificationToast]);
+
   useEffect(() => {
     let active = true;
     if (currentUser.isGuest || !supabase || !currentUser.id) {
@@ -385,20 +502,22 @@ export default function App() {
         active = false;
       };
     }
-    const cachedCount = readCustomerNotificationCountCache(currentUser.id);
+    const userId = currentUser.id;
+    const cachedCount = readCustomerNotificationCountCache(userId);
     if (cachedCount !== null) setNotificationCount(cachedCount);
     const notificationClient = supabase;
     const seenInsertIds = new Set<string>();
     let pendingCountRefresh: number | null = null;
     const refreshCount = () => {
-      void listMyNotifications(currentUser.id).then((notifications) => {
+      void listMyNotifications(userId).then((notifications) => {
         if (active) {
-          const preferences = readCustomerAppPreferences(currentUser.id).notifications;
+          const preferences = readCustomerAppPreferences(userId).notifications;
           const count = notifications.filter((notification) =>
             !notification.read_at && isNotificationEnabledByPreferences(preferences, notification),
           ).length;
           setNotificationCount(count);
-          writeCustomerNotificationCountCache(currentUser.id, count);
+          writeCustomerNotificationCountCache(userId, count);
+          writeCustomerNotificationCache(userId, notifications as CachedCustomerNotification[]);
         }
       }).catch(() => { if (active && cachedCount === null) setNotificationCount(0); });
     };
@@ -409,47 +528,155 @@ export default function App() {
     const refreshWhenVisible = () => {
       if (document.visibilityState === 'visible') refreshCount();
     };
+    const refreshOnNotificationEvent = (event: Event) => {
+      const detail = (event as CustomEvent<{ userId?: string }>).detail;
+      if (detail?.userId && detail.userId !== userId) return;
+      scheduleCountRefresh();
+    };
     refreshCount();
     window.addEventListener(CUSTOMER_PREFERENCES_CHANGED_EVENT, refreshCount);
+    window.addEventListener(CUSTOMER_NOTIFICATIONS_UPDATED_EVENT, refreshOnNotificationEvent);
     window.addEventListener('focus', refreshWhenVisible);
     document.addEventListener('visibilitychange', refreshWhenVisible);
     const channel = notificationClient
-      .channel(`notifications-user-${currentUser.id}`)
+      .channel(`notifications-user-${userId}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'notifications',
-        filter: `user_id=eq.${currentUser.id}`,
+        filter: `user_id=eq.${userId}`,
       }, (payload) => {
-        const row = payload.new as { id?: unknown; kind?: unknown; title?: unknown; body?: unknown; read_at?: unknown };
+        const row = payload.new as {
+          id?: unknown;
+          kind?: unknown;
+          title?: unknown;
+          body?: unknown;
+          action_url?: unknown;
+          image_url?: unknown;
+          read_at?: unknown;
+          created_at?: unknown;
+          expires_at?: unknown;
+        };
         if (typeof row.id !== 'string' || seenInsertIds.has(row.id)) return;
         seenInsertIds.add(row.id);
-        if (!row.read_at && typeof row.kind === 'string' && typeof row.title === 'string' && typeof row.body === 'string' && isNotificationEnabledByPreferences(
-          readCustomerAppPreferences(currentUser.id).notifications,
-          {
-            kind: row.kind,
-            title: row.title,
-            body: row.body,
-          },
+        const kind = typeof row.kind === 'string' ? row.kind : 'general';
+        const title = typeof row.title === 'string' ? row.title : '';
+        const body = typeof row.body === 'string' ? row.body : '';
+        const actionUrl = typeof row.action_url === 'string' ? row.action_url : null;
+        if (title && body) {
+          const cached = readCustomerNotificationCache(userId);
+          if (!cached.some((entry) => entry.id === row.id)) {
+            writeCustomerNotificationCache(userId, [
+              {
+                id: row.id,
+                kind,
+                title,
+                body,
+                action_url: actionUrl,
+                image_url: typeof row.image_url === 'string' ? row.image_url : null,
+                read_at: typeof row.read_at === 'string' ? row.read_at : null,
+                created_at: typeof row.created_at === 'string' ? row.created_at : new Date().toISOString(),
+                expires_at: typeof row.expires_at === 'string' ? row.expires_at : null,
+              },
+              ...cached,
+            ]);
+          }
+          notifyCustomerNotificationsUpdated(userId);
+        }
+        const category = getCustomerNotificationCategory({ kind, title, body, action_url: actionUrl });
+        if (category === 'Orders') {
+          notifyCustomerOrdersUpdated(userId);
+        }
+        if (!row.read_at && title && body && isNotificationEnabledByPreferences(
+          readCustomerAppPreferences(userId).notifications,
+          { kind, title, body, action_url: actionUrl },
         )) {
           setNotificationCount((current) => {
             const count = current + 1;
-            writeCustomerNotificationCountCache(currentUser.id, count);
+            writeCustomerNotificationCountCache(userId, count);
             return count;
+          });
+          const orderNumMatch = `${title} ${body}`.match(/\bRGC-[A-Z0-9]{8,32}\b/i)?.[0]?.toUpperCase();
+          if (orderNumMatch) {
+            lastOrderUpdateToastKeyRef.current = { key: `${orderNumMatch}:${title.toUpperCase()}`, at: Date.now() };
+          }
+          showLiveNotificationToast({
+            id: row.id,
+            kind,
+            title,
+            body,
+            actionUrl,
           });
         }
         scheduleCountRefresh();
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'orders',
+        filter: `user_id=eq.${userId}`,
+      }, (payload) => {
+        const nextRow = payload.new as {
+          id?: unknown;
+          order_number?: unknown;
+          order_slug?: unknown;
+          status?: unknown;
+          payment_status?: unknown;
+        };
+        const prevRow = payload.old as {
+          status?: unknown;
+          payment_status?: unknown;
+        };
+        const statusChanged = typeof nextRow.status === 'string' && nextRow.status !== prevRow?.status;
+        const paymentChanged =
+          typeof nextRow.payment_status === 'string' &&
+          nextRow.payment_status.toUpperCase() === 'PAID' &&
+          String(prevRow?.payment_status || '').toUpperCase() !== 'PAID';
+        if (!statusChanged && !paymentChanged) return;
+        notifyCustomerOrdersUpdated(userId);
+        scheduleCountRefresh();
+        const orderNumber = typeof nextRow.order_number === 'string' ? nextRow.order_number : '';
+        const orderSlug = typeof nextRow.order_slug === 'string' && /^[0-9a-f]{32}$/i.test(nextRow.order_slug)
+          ? nextRow.order_slug.toLowerCase()
+          : '';
+        const actionUrl = orderSlug ? `/my-order/order/${orderSlug}` : '/my-orders';
+        const preferences = readCustomerAppPreferences(userId).notifications;
+        if (!preferences.orderUpdates || !orderNumber) return;
+        const dedupeKey = `${orderNumber.toUpperCase()}:${statusChanged ? String(nextRow.status) : 'PAID'}`;
+        if (lastOrderUpdateToastKeyRef.current.key === dedupeKey && Date.now() - lastOrderUpdateToastKeyRef.current.at < 4000) {
+          return;
+        }
+        const statusCopy: Record<string, { title: string; body: string }> = {
+          CONFIRMED: { title: 'Order confirmed', body: `Your order #${orderNumber} is confirmed. We’ll keep you updated.` },
+          PREPARING: { title: 'Your order is being prepared', body: `Your order #${orderNumber} is being prepared at Rofik Godi Centre.` },
+          READY_FOR_PICKUP: { title: 'Your order is ready for pickup', body: `Your order #${orderNumber} is ready at Rofik Godi Centre.` },
+          PICKED_UP: { title: 'Order picked up', body: `Your order #${orderNumber} has been marked as picked up.` },
+          COMPLETED: { title: 'Order completed', body: `Order #${orderNumber} has been successfully completed.` },
+          CANCELLED: { title: 'Order cancelled', body: `Your order #${orderNumber} has been cancelled.` },
+        };
+        const copy = statusChanged
+          ? statusCopy[String(nextRow.status)] || { title: 'Order update', body: `Your order #${orderNumber} status was updated.` }
+          : { title: 'Payment confirmed', body: `Payment for order #${orderNumber} has been confirmed.` };
+        lastOrderUpdateToastKeyRef.current = { key: dedupeKey, at: Date.now() };
+        showLiveNotificationToast({
+          id: `order-live-${orderNumber}-${Date.now()}`,
+          kind: 'order',
+          title: copy.title,
+          body: copy.body,
+          actionUrl,
+        });
       })
       .subscribe();
     return () => {
       active = false;
       if (pendingCountRefresh !== null) window.clearTimeout(pendingCountRefresh);
       window.removeEventListener(CUSTOMER_PREFERENCES_CHANGED_EVENT, refreshCount);
+      window.removeEventListener(CUSTOMER_NOTIFICATIONS_UPDATED_EVENT, refreshOnNotificationEvent);
       window.removeEventListener('focus', refreshWhenVisible);
       document.removeEventListener('visibilitychange', refreshWhenVisible);
       void notificationClient.removeChannel(channel);
     };
-  }, [currentUser.id, currentUser.isGuest]);
+  }, [currentUser.id, currentUser.isGuest, showLiveNotificationToast]);
 
   // Navigation & View State
   const tabToRoute = useCallback((tab: RouteTab) => getPathForTab(tab), []);
@@ -588,9 +815,9 @@ export default function App() {
   const [isCustomBuilderOpen, setIsCustomBuilderOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isStoreInfoOpen, setIsStoreInfoOpen] = useState(false);
-  const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
-  const [isTermsConditionsOpen, setIsTermsConditionsOpen] = useState(false);
-  const [isPersonalDataOpen, setIsPersonalDataOpen] = useState(false);
+  const isPrivacyPolicyOpen = resolvedRoute.kind === 'privacy';
+  const isTermsConditionsOpen = resolvedRoute.kind === 'terms';
+  const isPersonalDataOpen = resolvedRoute.kind === 'personal-data';
   const [couponRouteCode, setCouponRouteCode] = useState<string | null>(null);
   const [couponRouteOffer, setCouponRouteOffer] = useState<CustomerCouponOffer | null>(null);
   const [couponRouteLoading, setCouponRouteLoading] = useState(false);
@@ -696,9 +923,6 @@ export default function App() {
       navigate(route.canonicalPath, { replace: true });
     }
     setIsCheckoutOpen(route.kind === 'checkout');
-    setIsPrivacyPolicyOpen(route.kind === 'privacy');
-    setIsTermsConditionsOpen(route.kind === 'terms');
-    setIsPersonalDataOpen(route.kind === 'personal-data');
     setIsStoreInfoOpen(route.kind === 'store' || route.kind === 'store-navigation');
     setCouponRouteCode(route.kind === 'coupon' ? route.couponCode : null);
     if (route.kind !== 'product') {
@@ -781,11 +1005,27 @@ export default function App() {
     navigate(returnRoute.canonicalPath);
   }, [location.pathname, location.state, navigate]);
   const openPageRoute = useCallback((path: string) => {
-    navigate(path, { state: { returnTo: location.pathname } });
-  }, [location.pathname, navigate]);
+    const state = location.state as { returnTo?: unknown; originReturnTo?: unknown } | null;
+    const currentIsOverlay = isOverlayRouteKind(resolveAppRoute(location.pathname).kind);
+    const originReturnTo =
+      currentIsOverlay && typeof state?.originReturnTo === 'string' && state.originReturnTo.startsWith('/')
+        ? state.originReturnTo
+        : currentIsOverlay && typeof state?.returnTo === 'string' && state.returnTo.startsWith('/')
+          ? state.returnTo
+          : location.pathname;
+    navigate(path, { state: { returnTo: location.pathname, originReturnTo } });
+  }, [location.pathname, location.state, navigate]);
   const navigateBackToPage = useCallback((fallback: string) => {
-    const state = location.state as { returnTo?: unknown } | null;
+    const state = location.state as { returnTo?: unknown; originReturnTo?: unknown } | null;
     const returnTo = typeof state?.returnTo === 'string' && state.returnTo.startsWith('/') ? state.returnTo : fallback;
+    const originReturnTo =
+      typeof state?.originReturnTo === 'string' && state.originReturnTo.startsWith('/')
+        ? state.originReturnTo
+        : undefined;
+    if (originReturnTo && isOverlayRouteKind(resolveAppRoute(returnTo.split('?')[0]).kind)) {
+      navigate(returnTo, { state: { returnTo: originReturnTo, originReturnTo } });
+      return;
+    }
     navigate(returnTo);
   }, [location.state, navigate]);
   const openWishlistPage = () => {
@@ -1447,6 +1687,53 @@ export default function App() {
     <MotionConfig reducedMotion="user">
     <I18nProvider language={uiLanguage}>
     <div className="min-h-screen w-full overflow-x-hidden bg-[#F0F2F5] flex justify-center selection:bg-[#D9232D] selection:text-white font-sans antialiased text-[#1E232A]">
+      {/* Live in-app notification toast banner */}
+      {liveNotificationToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-[95] flex justify-center px-3 pointer-events-none"
+        >
+          <div className="pointer-events-auto flex w-full max-w-md items-start gap-2.5 rounded-2xl border border-white/75 bg-white/92 p-3 shadow-[0_18px_40px_-14px_rgba(15,23,42,0.28)] backdrop-blur-xl ring-1 ring-slate-200/80">
+            <button
+              type="button"
+              onClick={() => {
+                const target = getNotificationTargetPath(liveNotificationToast.actionUrl);
+                setLiveNotificationToast(null);
+                setIsCheckoutOpen(false);
+                navigate(target || '/notifications');
+              }}
+              className="flex min-w-0 flex-1 items-start gap-2.5 text-left"
+            >
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-[#D9232D] ring-1 ring-rose-100">
+                {liveNotificationToast.kind.toLowerCase().includes('order') ? (
+                  <Truck className="h-4.5 w-4.5" aria-hidden="true" />
+                ) : (
+                  <Bell className="h-4.5 w-4.5" aria-hidden="true" />
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13px] font-extrabold tracking-tight text-slate-900">
+                  {liveNotificationToast.title}
+                </span>
+                <span className="mt-0.5 line-clamp-2 block text-[11.5px] leading-snug text-slate-600">
+                  {liveNotificationToast.body}
+                </span>
+              </span>
+              <ChevronRight className="mt-2.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setLiveNotificationToast(null)}
+              aria-label="Dismiss notification"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-xl text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* App Container (Mobile Frame or Full Width based on toggle) */}
       <div
         onClickCapture={handleAppHapticTap}
@@ -2233,7 +2520,7 @@ export default function App() {
         {isCheckoutOpen && <CheckoutModal
           isOpen={isCheckoutOpen}
           userId={currentUser.id}
-          onOrderPlaced={refreshNotificationCount}
+          onOrderPlaced={handleCustomerOrderPlaced}
           onClose={() => {
             const returnPath = checkoutReturnPath;
             const returnState = checkoutReturnState;
@@ -2309,15 +2596,21 @@ export default function App() {
           </div>
         )}
 
-        {/* 🔐 Personal Data Processing Modal / Slide-over (signup consent) */}
+        {/* 🔐 Personal Data Processing In-App Overlay (no splash/router loader) */}
         {isPersonalDataOpen && (
-          <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
-            <Suspense fallback={<SplashScreen />}>
-              <PersonalDataView
-                onBack={() => navigateBackToPage('/signup')}
-                onOpenStoreInfo={() => openPageRoute('/store-map')}
-              />
-            </Suspense>
+          <div className="fixed inset-0 z-50 bg-[#F8FAFC] overflow-y-auto">
+            <PersonalDataView
+              onBack={() => navigateBackToPage('/settings')}
+              onOpenStoreInfo={() => openPageRoute('/store-map')}
+              onOpenPrivacy={() => openPageRoute('/privacy-policy')}
+              onOpenTerms={() => openPageRoute('/terms-and-conditions')}
+              onOpenDeleteAccount={() => navigate(getPathForSettingsSection('delete-account'))}
+              primaryCtaLabel={
+                (location.state as { returnTo?: unknown } | null)?.returnTo === '/signup'
+                  ? 'Back to Sign Up'
+                  : 'Back & Continue'
+              }
+            />
           </div>
         )}
 

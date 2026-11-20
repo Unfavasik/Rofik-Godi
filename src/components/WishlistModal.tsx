@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Product } from '../types';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { X, Heart, Trash2, ShoppingBag, Star, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 import { WishlistPageSkeleton } from './AccountPageSkeleton';
+import { PRODUCT_IMAGE_ZOOM_TRANSITION, PRODUCT_IMAGE_ZOOM_VARIANTS } from './ProductCard';
 import { getProductBadgeInfo, ProductCornerRibbon } from './ProductCornerRibbon';
 
 interface WishlistModalProps {
@@ -29,6 +30,7 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
   onOpenCart,
 }) => {
   const [activeFilter, setActiveFilter] = useState<string>('all');
+  const shouldReduceMotion = useReducedMotion();
 
   const categories = useMemo(() => {
     const map = new Map<string, string>();
@@ -216,8 +218,11 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                 const badgeInfo = getProductBadgeInfo(p);
 
                 return (
-                  <div
+                  <motion.div
                     key={p.id}
+                    initial="rest"
+                    animate="rest"
+                    whileHover={shouldReduceMotion ? undefined : 'hover'}
                     className="group relative overflow-hidden bg-white/95 backdrop-blur-md rounded-xl p-2.5 border border-slate-200/80 hover:border-rose-200/90 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.07)] flex gap-2.5 transition-all duration-200 hover:-translate-y-0.5"
                   >
                     {badgeInfo && (
@@ -234,10 +239,12 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                       }}
                       className="relative w-16 h-16 rounded-xl bg-slate-100 border border-slate-200/70 overflow-hidden flex-shrink-0 cursor-pointer"
                     >
-                      <img
+                      <motion.img
                         src={p.image}
                         alt={p.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        variants={PRODUCT_IMAGE_ZOOM_VARIANTS}
+                        transition={PRODUCT_IMAGE_ZOOM_TRANSITION}
+                        className="w-full h-full object-cover will-change-transform"
                       />
                       {!badgeInfo && savings > 0 && (
                         <span className="absolute bottom-1 left-1 rounded bg-[#D9232D] px-1 py-0.5 text-[8.5px] font-black text-white shadow-2xs">
@@ -323,7 +330,7 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                         </button>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })
             )}

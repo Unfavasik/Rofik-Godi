@@ -113,8 +113,14 @@ export async function listMyNotifications(expectedUserId?: string) {
   const { data: userData, error: authError } = await supabase.auth.getUser();
   if (authError) throw authError;
   if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return [];
-  const now = new Date().toISOString();
-  const { data, error } = await supabase.from('notifications').select('id,kind,title,body,action_url,image_url,read_at,created_at,expires_at').eq('user_id', userData.user.id).gt('expires_at', now).order('created_at', { ascending: false }).limit(50);
+  // Server-side RLS (notifications_own_read_active) already filters expired rows
+  // using database now(), avoiding false filtering when a device clock is skewed.
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('id,kind,title,body,action_url,image_url,read_at,created_at,expires_at')
+    .eq('user_id', userData.user.id)
+    .order('created_at', { ascending: false })
+    .limit(50);
   if (error) throw error;
   return data || [];
 }

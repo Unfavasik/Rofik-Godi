@@ -69,6 +69,7 @@ import { getPhoneCountry, validatePhoneNumber, type CountryCode } from '../utils
 import { useI18n } from '../lib/i18n';
 import { AccountPageSkeleton, AccountProfileEditorSkeleton } from './AccountPageSkeleton';
 import { isImageLoaded, markImageLoaded, readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { CUSTOMER_ORDERS_UPDATED_EVENT } from '../lib/localCache';
 
 interface AccountViewProps {
   currentUser?: UserProfile;
@@ -340,6 +341,20 @@ export const AccountView: React.FC<AccountViewProps> = ({
       setOrdersLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    const ordersUser = currentUserRef.current;
+    if (!ordersUser || ordersUser.isGuest || typeof window === 'undefined') return;
+    const handleOrdersUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<{ userId?: string }>).detail;
+      if (detail?.userId && detail.userId !== ordersUser.id) return;
+      void refreshCustomerOrders();
+    };
+    window.addEventListener(CUSTOMER_ORDERS_UPDATED_EVENT, handleOrdersUpdated);
+    return () => {
+      window.removeEventListener(CUSTOMER_ORDERS_UPDATED_EVENT, handleOrdersUpdated);
+    };
+  }, [currentUser?.id, currentUser?.isGuest, refreshCustomerOrders]);
 
   // Load live order and review counts for the account page summary; the orders
   // modal refreshes the same lists again when it opens.

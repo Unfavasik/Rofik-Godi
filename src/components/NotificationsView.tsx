@@ -47,6 +47,7 @@ import {
   type CustomerNotificationPreferences,
 } from '../lib/customerPreferences';
 import {
+  CUSTOMER_NOTIFICATIONS_UPDATED_EVENT,
   readCustomerNotificationCache,
   writeCustomerNotificationCache,
   type CachedCustomerNotification,
@@ -277,11 +278,18 @@ export function NotificationsView({
     const syncWhenVisible = () => {
       if (document.visibilityState === 'visible') setLoadAttempt((attempt) => attempt + 1);
     };
+    const syncOnEvent = (event: Event) => {
+      const detail = (event as CustomEvent<{ userId?: string }>).detail;
+      if (detail?.userId && detail.userId !== userId) return;
+      setLoadAttempt((attempt) => attempt + 1);
+    };
     window.addEventListener('focus', syncWhenVisible);
     document.addEventListener('visibilitychange', syncWhenVisible);
+    window.addEventListener(CUSTOMER_NOTIFICATIONS_UPDATED_EVENT, syncOnEvent);
     return () => {
       window.removeEventListener('focus', syncWhenVisible);
       document.removeEventListener('visibilitychange', syncWhenVisible);
+      window.removeEventListener(CUSTOMER_NOTIFICATIONS_UPDATED_EVENT, syncOnEvent);
       void notificationClient.removeChannel(channel);
     };
   }, [userId, isGuest]);

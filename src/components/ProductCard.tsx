@@ -1,10 +1,22 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Product } from '../types';
 import { Heart, Plus, Star, ShoppingCart, ImageOff } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { getProductAvailability, isProductSellable } from '../lib/productAvailability';
 import { formatInr, useI18n } from '../lib/i18n';
 import { getProductBadgeInfo, ProductCornerRibbon } from './ProductCornerRibbon';
+
+export const PRODUCT_IMAGE_ZOOM_VARIANTS = {
+  rest: { scale: 1 },
+  hover: { scale: 1.07 },
+} as const;
+
+export const PRODUCT_IMAGE_ZOOM_TRANSITION = {
+  type: 'spring' as const,
+  stiffness: 280,
+  damping: 26,
+  mass: 0.75,
+};
 
 const loadedImageSrcs = new Set<string>();
 const formatPrice = formatInr;
@@ -55,16 +67,19 @@ const ProductImage: React.FC<{ src: string | null | undefined; alt: string; vari
   return (
     <>
       {!isLoaded && <div className="skeleton-shimmer absolute inset-0 z-0 bg-gray-200" />}
-      <img
+      <motion.img
         ref={imgRef}
         src={imageSrc}
         alt={alt}
+        data-testid="product-card-image"
+        variants={PRODUCT_IMAGE_ZOOM_VARIANTS}
+        transition={PRODUCT_IMAGE_ZOOM_TRANSITION}
         onLoad={() => {
           loadedImageSrcs.add(imageSrc);
           setIsLoaded(true);
         }}
         onError={() => setHasFailed(true)}
-        className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`w-full h-full object-cover will-change-transform transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
         loading="lazy"
         decoding="async"
       />
@@ -130,13 +145,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   };
   // Determine diagonal corner ribbon badge label and color
   const badgeInfo = getProductBadgeInfo(product, t);
+  const shouldReduceMotion = useReducedMotion();
 
   // ----------------------------------------------------------------------
   // LIST VIEW (Screen 3 in mockup - horizontal rows)
   // ----------------------------------------------------------------------
   if (layoutMode === 'list') {
     return (
-      <article
+      <motion.article
+        initial="rest"
+        animate="rest"
+        whileHover={shouldReduceMotion ? undefined : 'hover'}
         className="w-full bg-white rounded-xl p-2 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:border-rose-200/80 md:hover:-translate-y-0.5 md:hover:shadow-[0_12px_24px_-8px_rgba(15,23,42,0.12)] flex items-center justify-between gap-2.5 relative overflow-hidden group cursor-pointer transition-all duration-300 ease-out will-change-transform select-none"
       >
         <ProductCardOpenButton product={product} onSelectProduct={onSelectProduct} />
@@ -233,7 +252,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             ) : t('product.notifyShort')}
           </motion.button>
         </div>
-      </article>
+      </motion.article>
     );
   }
 
@@ -241,7 +260,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   // GRID & SHELF VIEW (Screen 2 in mockup - 2-column cards)
   // ----------------------------------------------------------------------
   return (
-    <article
+    <motion.article
+      initial="rest"
+      animate="rest"
+      whileHover={shouldReduceMotion ? undefined : 'hover'}
       className={`${
         layoutMode === 'shelf' ? 'flex-shrink-0 w-[138px] sm:w-[152px]' : 'w-full'
       } bg-white rounded-xl p-1.5 sm:p-2 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:border-rose-200/80 md:hover:-translate-y-1 md:hover:scale-[1.02] md:hover:shadow-[0_14px_28px_-10px_rgba(15,23,42,0.13),0_4px_12px_-4px_rgba(217,35,45,0.08)] flex flex-col justify-between relative overflow-hidden group cursor-pointer transition-all duration-300 ease-out will-change-transform select-none`}
@@ -335,6 +357,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           ) : t('product.notifyShort')}
         </motion.button>
       </div>
-    </article>
+    </motion.article>
   );
 };

@@ -83,27 +83,59 @@ function base64UrlEncode(bytes: Uint8Array) {
   return btoa(binary).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 
+function getAcceptedProjectSecrets(): string[] {
+  const secrets = new Set<string>();
+  const raw = Deno.env.get('SUPABASE_SECRET_KEYS');
+  if (raw) {
+    try {
+      const keys = JSON.parse(raw) as Record<string, unknown>;
+      if (typeof keys.default === 'string' && keys.default.trim()) secrets.add(keys.default.trim());
+      if (typeof keys.service_role === 'string' && keys.service_role.trim()) secrets.add(keys.service_role.trim());
+    } catch {
+      // Ignore malformed JSON and rely on explicit env vars below.
+    }
+  }
+  const serviceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim();
+  if (serviceRole) secrets.add(serviceRole);
+  const webhookSecret = Deno.env.get('PUSH_WEBHOOK_SECRET')?.trim();
+  if (webhookSecret) secrets.add(webhookSecret);
+  return [...secrets];
+}
+
 function getDefaultProjectSecret() {
   const raw = Deno.env.get('SUPABASE_SECRET_KEYS');
   if (raw) {
     try {
-      const keys = JSON.parse(raw);
-      if (typeof keys.default === 'string') return keys.default;
+      const keys = JSON.parse(raw) as Record<string, unknown>;
+      if (typeof keys.default === 'string' && keys.default.trim()) return keys.default.trim();
+      if (typeof keys.service_role === 'string' && keys.service_role.trim()) return keys.service_role.trim();
     } catch {
-      return '';
+      // Fall through to SUPABASE_SERVICE_ROLE_KEY.
     }
   }
-  return Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  return Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim() || '';
 }
 
-function hasValidProjectSecret(apiKey: string | null) {
-  const expected = getDefaultProjectSecret();
-  if (!apiKey || !expected || apiKey.length !== expected.length) return false;
+function constantTimeMatch(candidate: string, expected: string) {
+  if (!candidate || !expected || candidate.length !== expected.length) return false;
   let difference = 0;
   for (let index = 0; index < expected.length; index += 1) {
-    difference |= apiKey.charCodeAt(index) ^ expected.charCodeAt(index);
+    difference |= candidate.charCodeAt(index) ^ expected.charCodeAt(index);
   }
   return difference === 0;
+}
+
+function hasValidProjectSecret(request: Request) {
+  const accepted = getAcceptedProjectSecrets();
+  if (!accepted.length) return false;
+  const authHeader = request.headers.get('authorization') || '';
+  const bearerToken = authHeader.toLowerCase().startsWith('bearer ') ? authHeader.slice(7).trim() : '';
+  const candidates = [
+    request.headers.get('apikey')?.trim() || '',
+    request.headers.get('x-webhook-secret')?.trim() || '',
+    bearerToken,
+  ].filter(Boolean);
+  return candidates.some((candidate) => accepted.some((expected) => constantTimeMatch(candidate, expected)));
 }
 
 async function getFcmAccessToken(serviceAccount: FirebaseServiceAccount) {
@@ -301,8 +333,9 @@ function isCategoryEnabledInMetadata(metadata: Record<string, unknown>, category
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405);
-  // Database Webhooks send the project's default secret key in the `apikey` header.
-  if (!hasValidProjectSecret(request.headers.get('apikey'))) return jsonResponse({ error: 'Unauthorized' }, 401);
+  // Database Webhooks send the project's secret key in `apikey` or `Authorization`,
+  // and custom pg_net triggers may authenticate with `x-webhook-secret`.
+  if (!hasValidProjectSecret(request)) return jsonResponse({ error: 'Unauthorized' }, 401);
 
   let payload: WebhookPayload;
   try {
@@ -381,10 +414,11 @@ Deno.serve(async (request) => {
     ? `${notification.title} ${notification.body} ${notification.action_url || ''}`
         .match(/\bRGC-[A-Z0-9]{8,32}\b/i)?.[0]?.toUpperCase() || null
     : null;
-  // Admin-bound order pushes must deep link into the admin workspace; legacy
-  // triggers write customer-facing action links for admin recipients.
+  // Admin-bound legacy order alerts deep link into the admin workspace, while
+  // explicit customer order deep links (/my-order/order/<slug>) remain intact.
   let actionUrl = notification.action_url || '';
-  if (orderNumber && !/^\/admin\/orders\//i.test(actionUrl) && (await isAdminRecipient(supabase, notification.user_id))) {
+  const isCustomerOrderDeepLink = /^\/(?:my-orders|myorder|my-order)\/order\/[0-9a-f]{32}$/i.test(actionUrl);
+  if (orderNumber && !isCustomerOrderDeepLink && !/^\/admin\/orders\//i.test(actionUrl) && (await isAdminRecipient(supabase, notification.user_id))) {
     actionUrl = `/admin/orders/${orderNumber}`;
   }
   for (const device of devices) {
@@ -429,7 +463,7 @@ Deno.serve(async (request) => {
         priority: styledAndroidClient || notification.kind === 'order' ? 'HIGH' : 'NORMAL',
         ...(!styledAndroidClient ? {
           notification: {
-            channel_id: 'rofik-godi-updates-premium-v1',
+            channel_id: 'rofik-godi-updates',
             sound: 'rofik_notification',
             icon: 'ic_stat_rofik',
             color: '#D9232D',

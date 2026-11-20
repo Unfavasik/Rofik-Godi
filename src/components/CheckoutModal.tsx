@@ -60,7 +60,7 @@ interface CheckoutModalProps {
   onCouponChange?: (discount: number, couponCode: string, quote?: { subtotal: number; total: number } | null) => void;
   onClearCart: () => void;
   userId: string;
-  onOrderPlaced: () => void;
+  onOrderPlaced: (order?: OrderDetails) => void;
   onUpdateQuantity: (cartItemId: string, newQuantity: number) => void;
 }
 type VehicleType = CheckoutVehicleType;
@@ -484,7 +484,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setStep(3);
       onClearCart();
       onCouponChange?.(0, '', null);
-      onOrderPlaced();
+      onOrderPlaced(savedOrder);
       confetti({
         particleCount: 70,
         spread: 58,

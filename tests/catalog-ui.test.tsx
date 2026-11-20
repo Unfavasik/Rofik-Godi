@@ -2,7 +2,11 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { CatalogStatus } from '../src/components/CatalogStatus';
-import { ProductCard } from '../src/components/ProductCard';
+import {
+  ProductCard,
+  PRODUCT_IMAGE_ZOOM_TRANSITION,
+  PRODUCT_IMAGE_ZOOM_VARIANTS,
+} from '../src/components/ProductCard';
 import { ShopView } from '../src/components/ShopView';
 import { SearchView } from '../src/components/SearchView';
 import { Header } from '../src/components/Header';
@@ -305,5 +309,17 @@ describe('catalog feedback', () => {
     expect(activeHtml).toContain('data-purpose="promotional-banner"');
     expect(activeHtml).toContain('Monsoon Seat Sale');
     expect(activeHtml).toContain('Shop Now');
+  });
+
+  it.each(['grid', 'list', 'shelf'] as const)('uses Framer Motion hover zoom variants instead of conflicting CSS scale on %s product card images', (layoutMode) => {
+    expect(PRODUCT_IMAGE_ZOOM_VARIANTS.rest.scale).toBe(1);
+    expect(PRODUCT_IMAGE_ZOOM_VARIANTS.hover.scale).toBeGreaterThan(1);
+    expect(PRODUCT_IMAGE_ZOOM_VARIANTS.hover.scale).toBeLessThanOrEqual(1.1);
+    expect(PRODUCT_IMAGE_ZOOM_TRANSITION.type).toBe('spring');
+
+    const html = renderCard(sampleProduct, layoutMode);
+    expect(html).toContain('data-testid="product-card-image"');
+    expect(html).toContain('will-change-transform');
+    expect(html).not.toContain('group-hover:scale-105');
   });
 });

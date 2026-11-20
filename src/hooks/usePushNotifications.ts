@@ -5,6 +5,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { supabase } from '../lib/supabase';
 import { getNotificationTargetPath } from '../lib/notificationTarget';
+import { notifyCustomerNotificationsUpdated, notifyCustomerOrdersUpdated } from '../lib/localCache';
 
 const DEFAULT_ANDROID_CHANNEL_ID = 'rofik-godi-updates';
 const STYLED_ANDROID_CHANNEL_ID = 'rofik-godi-styled-v1';
@@ -57,6 +58,14 @@ export function usePushNotifications(userId: string | null, navigate: (path: str
             orderSlug: notification.data?.order_slug || notification.data?.orderSlug,
           });
         }));
+        listeners.push(await PushNotifications.addListener('pushNotificationReceived', (notification) => {
+          notifyCustomerNotificationsUpdated(userId ?? undefined);
+          const kind = String(notification.data?.kind || '').toLowerCase();
+          const type = String(notification.data?.type || '').toLowerCase();
+          if (kind.includes('order') || type.includes('order') || type.includes('pickup') || type.includes('payment')) {
+            notifyCustomerOrdersUpdated(userId ?? undefined);
+          }
+        }));
         if (!active || !userId || !supabase) return;
 
         let appVersion = '';
@@ -89,6 +98,18 @@ export function usePushNotifications(userId: string | null, navigate: (path: str
           lights: true,
           lightColor: '#D9232D',
         });
+        if (notificationChannelId !== DEFAULT_ANDROID_CHANNEL_ID) {
+          await PushNotifications.createChannel({
+            id: DEFAULT_ANDROID_CHANNEL_ID,
+            name: 'Rofik Godi order alerts',
+            description: 'Order updates and offers from Rofik Godi Centre',
+            importance: 4,
+            sound: 'default',
+            vibration: true,
+            lights: true,
+            lightColor: '#D9232D',
+          }).catch(() => undefined);
+        }
         listeners.push(await PushNotifications.addListener('registration', async ({ value }) => {
           if (!active || !supabase) return;
           const { error } = await supabase.from('push_devices').upsert({

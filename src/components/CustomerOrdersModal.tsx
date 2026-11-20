@@ -135,7 +135,7 @@ const OrderTimeline = ({ orderId, status, createdAt }: { orderId: string; status
         if (active) setHistoryLoading(false);
       });
     return () => { active = false; };
-  }, [historyCacheKey, orderId]);
+  }, [historyCacheKey, orderId, status]);
 
   const steps = getCustomerOrderTimeline(status, createdAt, history);
   const currentIndex = steps.findIndex((step) => step.state === 'current');

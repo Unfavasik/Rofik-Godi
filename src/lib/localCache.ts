@@ -3,6 +3,24 @@ import type { Product } from '../types';
 const PUBLIC_CATALOG_KEY = 'rofik-godi:public-catalog:v2';
 export const CATALOG_CHANGED_EVENT = 'rofik-godi:catalog-changed';
 export const notifyCatalogChanged = () => window.dispatchEvent(new Event(CATALOG_CHANGED_EVENT));
+export const CUSTOMER_NOTIFICATIONS_UPDATED_EVENT = 'rofik-godi:customer-notifications-updated';
+export const CUSTOMER_ORDERS_UPDATED_EVENT = 'rofik-godi:customer-orders-updated';
+export const notifyCustomerNotificationsUpdated = (userId?: string) => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.dispatchEvent(new CustomEvent(CUSTOMER_NOTIFICATIONS_UPDATED_EVENT, { detail: { userId } }));
+  } catch {
+    // Listeners still sync via Realtime and focus events when CustomEvent is unavailable.
+  }
+};
+export const notifyCustomerOrdersUpdated = (userId?: string) => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.dispatchEvent(new CustomEvent(CUSTOMER_ORDERS_UPDATED_EVENT, { detail: { userId } }));
+  } catch {
+    // Listeners still sync via focus and polling when CustomEvent is unavailable.
+  }
+};
 const NOTIFICATION_CACHE_VERSION = 1;
 const NOTIFICATION_LIMIT = 50;
 
@@ -53,13 +71,11 @@ export function readCustomerNotificationCache(userId: string): CachedCustomerNot
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    const now = Date.now();
     return parsed.filter((item): item is CachedCustomerNotification => {
       if (item === null || typeof item !== 'object') return false;
       const row = item as Record<string, unknown>;
       if (typeof row.id !== 'string' || typeof row.kind !== 'string' || typeof row.title !== 'string' ||
           typeof row.body !== 'string' || typeof row.created_at !== 'string') return false;
-      if (typeof row.expires_at === 'string' && Date.parse(row.expires_at) <= now) return false;
       return true;
     }).slice(0, NOTIFICATION_LIMIT);
   } catch {

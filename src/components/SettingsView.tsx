@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2, Search, ChevronDown, ShoppingBag, MapPin, CreditCard, Wrench, HelpCircle, Clock3, Phone, CheckCircle2, Trash2, Sparkles } from 'lucide-react';
+import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2, Search, ChevronDown, ShoppingBag, MapPin, CreditCard, Wrench, HelpCircle, Clock3, Phone, CheckCircle2, Trash2, Sparkles, ExternalLink, Layers3, Award } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
+import { PersonalDataView } from './PersonalDataView';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
 import { CouponDetailsView } from './CouponDetailsView';
 import { WORKSHOP_INFO } from '../data/products';
@@ -103,29 +104,31 @@ interface SectionPageProps {
   children: React.ReactNode;
 }
 
-/** Full-screen shell for routed settings sub-sections, matching the app's glassmorphic page header pattern. */
-const SectionPage: React.FC<SectionPageProps> = ({ title, subtitle, eyebrow = 'Workspace · Settings', onBack, children }) => (
-  <div className="w-full max-w-full flex-1 overflow-x-hidden bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] min-h-full flex flex-col animate-fade-in font-sans">
-    <section className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/90 px-3.5 py-2.5 backdrop-blur-md shadow-[0_4px_20px_-10px_rgba(15,23,42,0.05)]" data-purpose="page-header">
-      <div className="mx-auto flex w-full max-w-3xl items-center gap-2.5">
+/** Full-screen shell for routed settings sub-sections, matching the app's Classic Glass page header pattern. */
+const SectionPage: React.FC<SectionPageProps> = ({ title, subtitle, eyebrow = 'Settings', onBack, children }) => (
+  <div className="w-full max-w-full flex-1 overflow-x-hidden bg-gradient-to-b from-[#F8FAFC] via-[#F5F7FB] to-[#FFF6F7] min-h-full flex flex-col animate-fade-in font-sans">
+    <section className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/88 px-4 py-2.5 backdrop-blur-xl shadow-[0_6px_24px_-18px_rgba(15,23,42,0.14)] sm:px-6" data-purpose="page-header">
+      <div className="mx-auto flex w-full max-w-3xl items-center gap-3">
         <button
           onClick={onBack}
           aria-label="Back to settings"
-          className="h-10 w-10 rounded-xl bg-slate-100/90 hover:bg-rose-50 hover:text-[#D9232D] text-slate-800 flex items-center justify-center transition-all active:scale-95 shrink-0"
+          className="h-11 w-11 rounded-xl border border-slate-200/80 bg-white/90 hover:border-rose-200 hover:bg-rose-50 hover:text-[#D9232D] text-slate-800 flex items-center justify-center shadow-[0_2px_8px_-4px_rgba(15,23,42,0.1)] transition-all active:scale-95 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D]"
           type="button"
         >
           <BackArrow />
         </button>
         <div className="min-w-0 flex-1">
-          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50/90 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#D9232D] ring-1 ring-inset ring-rose-100">
-            {eyebrow}
-          </span>
-          <h1 className="mt-0.5 text-[18px] sm:text-[19px] font-black text-slate-900 tracking-tight leading-tight truncate">{title}</h1>
+          <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500">
+            <span className="font-bold text-[#D9232D]">Settings</span>
+            <span aria-hidden="true">·</span>
+            <span className="truncate">{eyebrow}</span>
+          </p>
+          <h1 className="mt-0.5 text-[18px] sm:text-[19px] font-black text-slate-950 tracking-tight leading-tight truncate">{title}</h1>
           <p className="text-[11.5px] text-slate-500 font-medium truncate">{subtitle}</p>
         </div>
       </div>
     </section>
-    <div className="mx-auto w-full max-w-3xl flex-1 px-3.5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-3 space-y-2.5">{children}</div>
+    <div className="mx-auto w-full max-w-3xl flex-1 px-4 pb-[max(3rem,env(safe-area-inset-bottom))] pt-4 space-y-3.5 sm:px-6">{children}</div>
   </div>
 );
 
@@ -151,7 +154,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const { t } = useI18n();
   const [localSection, setLocalSection] = useState<SettingsSectionRoute | null>(null);
   const section = activeSection ?? localSection;
+  const savedHubScrollYRef = useRef<number | null>(null);
+  const previousSectionRef = useRef<SettingsSectionRoute | null>(section);
+
   const openSection = (next: SettingsSectionRoute) => {
+    if (!section && typeof window !== 'undefined') {
+      savedHubScrollYRef.current = window.scrollY;
+    }
     if (onOpenSection) onOpenSection(next);
     else setLocalSection(next);
   };
@@ -160,7 +169,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     else setLocalSection(null);
   };
 
-  const [activeDialog, setActiveDialog] = useState<'logout' | 'privacy' | 'terms' | null>(null);
+  const [activeDialog, setActiveDialog] = useState<'logout' | 'privacy' | 'terms' | 'personal-data' | null>(null);
 
   // States for sub-pages
   const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
@@ -190,9 +199,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     setHapticFeedback(preferences.hapticFeedback);
   }, [preferenceOwnerId]);
 
-  // Section pages replace the hub, so always land at the top of the page.
-  useEffect(() => {
-    if (section) window.scrollTo({ top: 0 });
+  // Start sub-section pages at the top, and restore the exact Settings hub scroll position when returning.
+  useLayoutEffect(() => {
+    const prev = previousSectionRef.current;
+    previousSectionRef.current = section;
+    if (typeof window === 'undefined') return;
+    if (section && !prev) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      return;
+    }
+    if (!section && prev && savedHubScrollYRef.current !== null) {
+      const targetY = savedHubScrollYRef.current;
+      window.scrollTo({ top: targetY, left: 0, behavior: 'auto' });
+      const frame = window.requestAnimationFrame(() => {
+        window.scrollTo({ top: targetY, left: 0, behavior: 'auto' });
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
   }, [section]);
 
   useEffect(() => {
@@ -483,41 +506,215 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   }
 
   if (section === 'about') {
+    const workshopYears = Math.max(18, new Date().getFullYear() - 2007);
+    const telHref = `tel:${WORKSHOP_INFO.phone.replace(/[^+\d]/g, '')}`;
+    const whatsappHref = `https://wa.me/${WORKSHOP_INFO.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent('Hello Rofik Godi Centre, I would like to ask about seat covers and fitment.')}`;
+
+    const craftPillars = [
+      {
+        icon: Layers3,
+        title: 'Automotive-Grade Rexine',
+        detail: 'Weather-resistant materials selected to hold grip and color through heat and monsoon rain.',
+      },
+      {
+        icon: Award,
+        title: 'High-Tensile Precision Stitching',
+        detail: 'Reinforced seams and neat piping built for daily commuting and commercial Toto routes.',
+      },
+      {
+        icon: ShieldCheck,
+        title: 'Comfort-Tuned Foam & On-Spot Fitment',
+        detail: 'Density options tailored to your seat shape with complimentary workshop installation.',
+      },
+    ];
+
     return (
-      <SectionPage title={t('settings.about')} subtitle="The people and craft behind your ride comfort" eyebrow="Our Workshop" onBack={closeSection}>
-        <section className="relative overflow-hidden rounded-2xl bg-[#17223B] shadow-[0_10px_24px_rgba(23,34,59,0.2)]">
-          <img src="/images/rofik-godi-store.webp" alt="Rofik Godi Centre workshop" className="h-32 w-full object-cover opacity-75" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#17223B] via-[#17223B]/35 to-transparent" />
-          <div className="absolute bottom-3 left-3.5 right-3.5 flex items-end gap-2.5 text-white">
-            <img src="/images/rofik-center-splash.webp" alt="Rofik Godi Centre logo" className="h-12 w-12 rounded-xl border border-white/30 object-cover shadow-lg" />
-            <div><p className="text-[9px] font-bold uppercase tracking-[0.18em] text-blue-200">Since 2007</p><h2 className="mt-0.5 text-lg font-black tracking-tight">Rofik Godi Centre</h2></div>
+      <SectionPage title={t('settings.about')} subtitle="The craft and people behind your ride comfort" eyebrow="Our Workshop" onBack={closeSection}>
+        {/* Editorial Workshop Hero */}
+        <section className="relative overflow-hidden rounded-2xl border border-slate-900/10 bg-[#141D33] shadow-[0_18px_40px_-22px_rgba(15,23,42,0.5)]">
+          <img
+            src="/images/rofik-godi-store.webp"
+            alt="Rofik Godi Centre workshop in Berhampore"
+            className="h-48 w-full object-cover opacity-80 sm:h-56"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/95 via-[#0F172A]/45 to-transparent" />
+          <div className="absolute inset-x-4 bottom-4 flex items-end gap-3.5 text-white sm:inset-x-5 sm:bottom-5">
+            <img
+              src="/images/rofik-center-splash.webp"
+              alt="Rofik Godi Centre emblem"
+              className="h-14 w-14 shrink-0 rounded-2xl border border-white/25 object-cover shadow-lg sm:h-16 sm:w-16"
+            />
+            <div className="min-w-0">
+              <p className="flex flex-wrap items-center gap-x-1.5 text-[11px] font-semibold text-rose-200/95">
+                <span>Est. 2007</span>
+                <span aria-hidden="true">·</span>
+                <span>Berhampore, Murshidabad</span>
+              </p>
+              <h2 className="mt-0.5 text-[21px] font-black leading-tight tracking-tight [text-wrap:balance] sm:text-2xl">
+                {WORKSHOP_INFO.name}
+              </h2>
+              <p className="mt-1 text-[12px] leading-snug text-slate-200/90 sm:text-[12.5px]">
+                Custom bike, scooter &amp; Toto seat tailoring crafted for everyday Indian roads.
+              </p>
+            </div>
           </div>
         </section>
 
-        <section className="rounded-2xl border border-slate-200/80 bg-white/95 p-3.5 shadow-[0_6px_18px_-12px_rgba(15,23,42,0.06)]">
-          <p className="text-[12.5px] leading-[1.6] text-slate-600"><strong className="text-slate-900">Local craftsmanship, made for Indian roads.</strong> We create comfortable, durable seat covers and custom seat solutions for motorcycles, scooters and Toto e-rickshaws across Murshidabad.</p>
-          <p className="mt-2 text-[12.5px] leading-[1.6] text-slate-600">From a quick fitment to a fully customized finish, our workshop combines practical materials, careful stitching and hands-on service so every ride feels better.</p>
+        {/* Quiet Quantitative Proof Bar */}
+        <section
+          aria-label="Workshop highlights"
+          className="grid grid-cols-3 divide-x divide-slate-200/80 rounded-2xl border border-slate-200/80 bg-white/95 py-3.5 shadow-[0_8px_22px_-18px_rgba(15,23,42,0.14)] backdrop-blur-md"
+        >
+          <div className="px-3 text-center">
+            <p className="text-[19px] font-black tracking-tight text-[#D9232D] tabular-nums sm:text-xl">4.8 / 5</p>
+            <p className="mt-0.5 text-[11px] font-semibold text-slate-500">Rider rating</p>
+          </div>
+          <div className="px-3 text-center">
+            <p className="text-[19px] font-black tracking-tight text-slate-950 tabular-nums sm:text-xl">{workshopYears}+ yrs</p>
+            <p className="mt-0.5 text-[11px] font-semibold text-slate-500">Craft since 2007</p>
+          </div>
+          <div className="px-3 text-center">
+            <p className="text-[19px] font-black tracking-tight text-slate-950 tabular-nums sm:text-xl">{WORKSHOP_INFO.services.length}</p>
+            <p className="mt-0.5 text-[11px] font-semibold text-slate-500">Core services</p>
+          </div>
         </section>
 
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-xl border border-slate-200/80 bg-white/95 p-2.5 text-center shadow-2xs"><p className="text-base font-black text-[#D9232D]">4.8</p><p className="mt-0.5 text-[9px] font-bold text-slate-400">CUSTOMER RATING</p></div>
-          <div className="rounded-xl border border-slate-200/80 bg-white/95 p-2.5 text-center shadow-2xs"><p className="text-base font-black text-[#D9232D]">12+</p><p className="mt-0.5 text-[9px] font-bold text-slate-400">YEARS OF CRAFT</p></div>
-          <div className="rounded-xl border border-slate-200/80 bg-white/95 p-2.5 text-center shadow-2xs"><p className="text-base font-black text-[#D9232D]">4</p><p className="mt-0.5 text-[9px] font-bold text-slate-400">CORE SERVICES</p></div>
-        </div>
+        {/* Story & Craft Standards */}
+        <section className="rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.14)] backdrop-blur-md sm:p-5">
+          <div className="space-y-2">
+            <h2 className="text-[15px] font-black tracking-tight text-slate-950 sm:text-[16px]">
+              Local craftsmanship, built for everyday riding
+            </h2>
+            <p className="text-[13px] leading-[1.65] text-slate-600 sm:text-[13.5px]">
+              At <strong className="font-bold text-slate-900">{WORKSHOP_INFO.name}</strong>, we design and stitch durable, comfortable seat covers and custom seat upgrades for motorcycles, scooters, and Toto e-rickshaws across Murshidabad.
+            </p>
+            <p className="text-[13px] leading-[1.65] text-slate-600 sm:text-[13.5px]">
+              From a quick same-day fitment to custom piping, foam reinforcement, and personalized machine embroidery, every cover is cut and finished hands-on at our Berhampore workshop.
+            </p>
+          </div>
 
-        <section className="rounded-2xl border border-slate-200/80 bg-white/95 p-3.5 shadow-[0_6px_18px_-12px_rgba(15,23,42,0.06)]">
-          <div className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-50 text-[#D9232D]"><Wrench className="h-4 w-4" /></span><div><h2 className="text-[13px] font-black text-slate-900">What we do</h2><p className="text-[10px] text-slate-500">Workshop services for your vehicle</p></div></div>
-          <div className="mt-2.5 space-y-1.5">{WORKSHOP_INFO.services.map((service) => <div key={service} className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2 text-[11px] font-medium leading-snug text-slate-600"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />{service}</div>)}</div>
+          <div className="mt-4 divide-y divide-slate-100 border-t border-slate-100 pt-1">
+            {craftPillars.map((pillar) => {
+              const Icon = pillar.icon;
+              return (
+                <div key={pillar.title} className="flex items-start gap-3 py-3 last:pb-0.5">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-[#D9232D] ring-1 ring-inset ring-rose-100">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-[13px] font-extrabold text-slate-900">{pillar.title}</h3>
+                    <p className="mt-0.5 text-[12px] leading-relaxed text-slate-500">{pillar.detail}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </section>
 
-        <section className="rounded-2xl border border-blue-100 bg-blue-50 p-3.5">
-          <div className="flex items-start gap-2.5"><ShieldCheck className="mt-0.5 h-4.5 w-4.5 shrink-0 text-blue-600" /><div><h2 className="text-[13px] font-black text-slate-900">Built for everyday riding</h2><p className="mt-0.5 text-[11px] leading-relaxed text-slate-600">We use durable rexine, high-tensile thread and comfort-focused foam options selected for local weather and road conditions.</p></div></div>
+        {/* Numbered Workshop Services */}
+        <section className="rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.14)] backdrop-blur-md sm:p-5">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-[#D9232D] ring-1 ring-inset ring-rose-100">
+              <Wrench className="h-4 w-4" />
+            </span>
+            <div>
+              <h2 className="text-[15px] font-black text-slate-950">What we do at the workshop</h2>
+              <p className="text-[11.5px] font-medium text-slate-500">Tailoring and on-spot installation for your vehicle</p>
+            </div>
+          </div>
+          <ol className="mt-3.5 divide-y divide-slate-100 border-t border-slate-100">
+            {WORKSHOP_INFO.services.map((service, index) => (
+              <li key={service} className="flex items-start gap-3 py-2.5 last:pb-0.5">
+                <span className="mt-0.5 text-[11.5px] font-black text-[#D9232D] tabular-nums">
+                  {String(index + 1).padStart(2, '0')}.
+                </span>
+                <span className="text-[13px] font-semibold leading-snug text-slate-700">{service}</span>
+              </li>
+            ))}
+          </ol>
         </section>
 
-        <section className="rounded-2xl border border-slate-200/80 bg-white/95 p-3.5 shadow-2xs">
-          <h2 className="text-[13px] font-black text-slate-900">Visit the workshop</h2>
-          <div className="mt-2.5 space-y-1.5 text-[11px] font-medium text-slate-600"><p className="flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#D9232D]" />{WORKSHOP_INFO.address}</p><p className="flex items-center gap-2"><Clock3 className="h-4 w-4 shrink-0 text-blue-600" />{WORKSHOP_INFO.workingHours}</p><p className="flex items-center gap-2"><Phone className="h-4 w-4 shrink-0 text-emerald-600" />{WORKSHOP_INFO.phone} · {WORKSHOP_INFO.phoneAlt}</p></div>
-          {onOpenStoreInfo && <button type="button" onClick={() => onOpenStoreInfo()} className="banner-cta-shine group/cta mt-3 flex w-full min-h-11 items-center justify-center gap-2 rounded-xl bg-[#D9232D] py-2.5 text-xs font-bold text-white shadow-sm shadow-red-600/20 transition-all hover:bg-red-700 hover:shadow-md active:scale-[0.98]"><MapPin className="h-4 w-4 transition-transform duration-200 group-hover/cta:scale-110" />Open store map</button>}
+        {/* Visit & Contact Workshop */}
+        <section className="rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.14)] backdrop-blur-md sm:p-5">
+          <h2 className="text-[15px] font-black text-slate-950">Visit the workshop</h2>
+          <p className="mt-0.5 text-[12px] text-slate-500">Drop in for free on-spot seat fitment or custom order pickup</p>
+
+          <div className="mt-3.5 space-y-2.5 text-[12.5px] font-medium text-slate-600">
+            <p className="flex items-start gap-2.5">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#D9232D]" />
+              <span className="leading-relaxed">{WORKSHOP_INFO.address}</span>
+            </p>
+            <p className="flex items-center gap-2.5">
+              <Clock3 className="h-4 w-4 shrink-0 text-slate-500" />
+              <span className="tabular-nums">{WORKSHOP_INFO.workingHours}</span>
+            </p>
+            <p className="flex items-center gap-2.5">
+              <Phone className="h-4 w-4 shrink-0 text-emerald-600" />
+              <span className="tabular-nums">{WORKSHOP_INFO.phone} · {WORKSHOP_INFO.phoneAlt}</span>
+            </p>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3.5">
+            <a
+              href={telHref}
+              className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 text-[12px] font-bold text-slate-800 transition-colors hover:border-slate-300 hover:bg-slate-50 whitespace-nowrap"
+            >
+              <Phone className="h-3.5 w-3.5 text-[#D9232D]" />
+              <span>Call Workshop</span>
+            </a>
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#1F9D55] px-3.5 text-[12px] font-extrabold text-white transition-colors hover:bg-[#178245] whitespace-nowrap"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              <span>WhatsApp</span>
+              <ExternalLink className="h-3 w-3 opacity-80" />
+            </a>
+          </div>
+
+          {onOpenStoreInfo && (
+            <button
+              type="button"
+              onClick={() => onOpenStoreInfo()}
+              className="banner-cta-shine group/cta mt-2.5 flex w-full min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91822] py-2.5 text-[13px] font-extrabold text-white shadow-[0_10px_20px_-12px_rgba(217,35,45,0.6)] transition-all hover:brightness-105 active:scale-[0.99]"
+            >
+              <MapPin className="h-4 w-4 transition-transform duration-200 group-hover/cta:scale-110" />
+              <span>Open store map</span>
+            </button>
+          )}
+        </section>
+
+        {/* Policies & Transparency Quick Links */}
+        <section
+          aria-label="Workshop policies and legal links"
+          className="grid grid-cols-1 gap-2 sm:grid-cols-3"
+        >
+          <button
+            type="button"
+            onClick={() => (onOpenPrivacyPage ? onOpenPrivacyPage() : setActiveDialog('privacy'))}
+            className="flex min-h-11 items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-white/95 px-3.5 py-2.5 text-left text-[12px] font-extrabold text-slate-800 transition-colors hover:border-rose-200 hover:text-[#D9232D]"
+          >
+            <span>Privacy Policy</span>
+            <ChevronRight />
+          </button>
+          <button
+            type="button"
+            onClick={() => (onOpenTermsPage ? onOpenTermsPage() : setActiveDialog('terms'))}
+            className="flex min-h-11 items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-white/95 px-3.5 py-2.5 text-left text-[12px] font-extrabold text-slate-800 transition-colors hover:border-rose-200 hover:text-[#D9232D]"
+          >
+            <span>Terms &amp; Conditions</span>
+            <ChevronRight />
+          </button>
+          <button
+            type="button"
+            onClick={() => (onOpenPersonalData ? onOpenPersonalData() : setActiveDialog('personal-data'))}
+            className="flex min-h-11 items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-white/95 px-3.5 py-2.5 text-left text-[12px] font-extrabold text-slate-800 transition-colors hover:border-rose-200 hover:text-[#D9232D]"
+          >
+            <span>Personal Data</span>
+            <ChevronRight />
+          </button>
         </section>
       </SectionPage>
     );
@@ -803,15 +1000,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             title={t('settings.terms')}
             subtitle={t('settings.appRules')}
           />
-          {onOpenPersonalData && (
-            <SettingsRow
-              onClick={onOpenPersonalData}
-              iconBg="bg-[#F4ECFF]"
-              icon={<ShieldCheck className="w-5 h-5 text-[#7C3AED]" />}
-              title="Personal Data"
-              subtitle="How your data is processed"
-            />
-          )}
+          <SettingsRow
+            onClick={() => (onOpenPersonalData ? onOpenPersonalData() : setActiveDialog('personal-data'))}
+            iconBg="bg-[#F4ECFF]"
+            icon={<ShieldCheck className="w-5 h-5 text-[#7C3AED]" />}
+            title="Personal Data"
+            subtitle="How your data is processed"
+          />
           <SettingsRow
             onClick={() => openSection('about')}
             iconBg="bg-[#EBF5FF]"
@@ -912,6 +1107,29 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               onBack={() => setActiveDialog(null)}
               onOpenStoreInfo={onOpenStoreInfo}
               onOpenPrivacy={() => (onOpenPrivacyPage ? onOpenPrivacyPage() : setActiveDialog('privacy'))}
+              onOpenDeleteAccount={() => {
+                setActiveDialog(null);
+                openSection('delete-account');
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {activeDialog === 'personal-data' && (
+          <motion.div
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+            className="fixed inset-0 z-50 overflow-y-auto bg-[#F8FAFC]"
+          >
+            <PersonalDataView
+              onBack={() => setActiveDialog(null)}
+              onOpenStoreInfo={onOpenStoreInfo}
+              onOpenPrivacy={() => (onOpenPrivacyPage ? onOpenPrivacyPage() : setActiveDialog('privacy'))}
+              onOpenTerms={() => (onOpenTermsPage ? onOpenTermsPage() : setActiveDialog('terms'))}
               onOpenDeleteAccount={() => {
                 setActiveDialog(null);
                 openSection('delete-account');

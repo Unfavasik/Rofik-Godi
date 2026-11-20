@@ -6,6 +6,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PrivacyPolicyView } from '../src/components/PrivacyPolicyView';
 import { TermsConditionsView } from '../src/components/TermsConditionsView';
+import { PersonalDataView } from '../src/components/PersonalDataView';
+import { SettingsView } from '../src/components/SettingsView';
+import { I18nProvider } from '../src/lib/i18n';
 import { WORKSHOP_INFO } from '../src/data/products';
 
 describe('Privacy Policy & Terms & Conditions content and UI/UX upgrade', () => {
@@ -158,5 +161,78 @@ describe('Privacy Policy & Terms & Conditions content and UI/UX upgrade', () => 
     expect(layoutSrc).toContain('scrollIntoView');
     expect(layoutSrc).toContain('IntersectionObserver');
     expect(layoutSrc).toContain('prefers-reduced-motion');
+  });
+
+  it('renders PersonalDataView with the unified Classic Glass LegalDocumentLayout, all 6 consent sections, Quick Jump, search, and cross-links', () => {
+    const html = renderToStaticMarkup(
+      <PersonalDataView
+        onBack={vi.fn()}
+        onOpenStoreInfo={vi.fn()}
+        onOpenPrivacy={vi.fn()}
+        onOpenTerms={vi.fn()}
+        onOpenDeleteAccount={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain('bg-[#F8FAFC]');
+    expect(html).toContain('select-text');
+    expect(html).toContain('Updated November 2026');
+    expect(html).toContain('6 sections');
+    expect(html).toContain('Showing 6 of 6');
+    expect(html).toContain('aria-label="Quick Jump navigation"');
+    expect(html).toContain('What This Consent Covers');
+    expect(html).toContain('Why We Process Your Data');
+    expect(html).toContain('Consent Is Voluntary &amp; Withdrawable');
+    expect(html).toContain('How Your Data Is Stored &amp; Protected');
+    expect(html).toContain('Sharing &amp; Your Data Rights');
+    expect(html).toContain('Questions About Your Data');
+    expect(html).toContain('Read Privacy Policy');
+    expect(html).toContain('Read Terms &amp; Conditions');
+    expect(html).toContain('Back &amp; Continue');
+    expect(html).not.toContain('Updated Oct 2026');
+  });
+
+  it('renders the redesigned About Us settings page with workshop hero, tabular metrics, numbered services, and policy links', () => {
+    const html = renderToStaticMarkup(
+      <I18nProvider language="en">
+        <SettingsView
+          onBack={vi.fn()}
+          activeSection="about"
+          isAuthenticated={true}
+          onOpenStoreInfo={vi.fn()}
+          onOpenPrivacyPage={vi.fn()}
+          onOpenTermsPage={vi.fn()}
+          onOpenPersonalData={vi.fn()}
+        />
+      </I18nProvider>,
+    );
+
+    expect(html).toContain('Est. 2007');
+    expect(html).toContain('Berhampore, Murshidabad');
+    expect(html).toContain('4.8 / 5');
+    expect(html).toContain('What we do at the workshop');
+    expect(html).toContain('01.');
+    expect(html).toContain('Open store map');
+    expect(html).toContain('Call Workshop');
+    expect(html).toContain('Privacy Policy');
+    expect(html).toContain('Terms &amp; Conditions');
+    expect(html).toContain('Personal Data');
+  });
+
+  it('embeds PersonalDataView statically without a SplashScreen Suspense fallback and preserves Settings scroll position', () => {
+    const appSrc = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/App.tsx'),
+      'utf8',
+    );
+    const settingsSrc = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/SettingsView.tsx'),
+      'utf8',
+    );
+
+    expect(appSrc).toContain("import { PersonalDataView } from './components/PersonalDataView';");
+    expect(appSrc).not.toContain("lazy(() => import('./components/PersonalDataView')");
+    expect(appSrc).toContain('savedOutgoingScrollKeyRef');
+    expect(appSrc).toContain('isOverlayRouteKind');
+    expect(settingsSrc).toContain('savedHubScrollYRef');
   });
 });

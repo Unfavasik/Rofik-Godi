@@ -22,6 +22,7 @@ import type { CustomerOrderRecord } from '../types';
 import { formatInr, useI18n, type TranslationKey } from '../lib/i18n';
 import { isOrderComplete } from '../lib/orderPresentation';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { CUSTOMER_ORDERS_UPDATED_EVENT } from '../lib/localCache';
 
 const money = formatInr;
 const orderDate = (value: string, locale: string) => {
@@ -102,6 +103,20 @@ export function OrderNotificationDetails({
   const autoBuyAgainHandledRef = useRef(false);
   const [buyAgainLoading, setBuyAgainLoading] = useState(false);
   const [buyAgainError, setBuyAgainError] = useState('');
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  useEffect(() => {
+    if (!userId || typeof window === 'undefined') return;
+    const handleOrdersUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<{ userId?: string }>).detail;
+      if (detail?.userId && detail.userId !== userId) return;
+      setRefreshTick((tick) => tick + 1);
+    };
+    window.addEventListener(CUSTOMER_ORDERS_UPDATED_EVENT, handleOrdersUpdated);
+    return () => {
+      window.removeEventListener(CUSTOMER_ORDERS_UPDATED_EVENT, handleOrdersUpdated);
+    };
+  }, [userId]);
 
   useEffect(() => {
     const updateVisibleHeight = () => {
@@ -119,7 +134,7 @@ export function OrderNotificationDetails({
 
   useEffect(() => {
     let active = true;
-    if (initialOrder) {
+    if (initialOrder && refreshTick === 0) {
       setOrder(initialOrder);
       if (orderCacheKey) writeSwrCache(orderCacheKey, initialOrder);
       setLoading(false);
@@ -130,7 +145,7 @@ export function OrderNotificationDetails({
     if (cached) {
       setOrder(cached);
       setLoading(false);
-    } else {
+    } else if (!initialOrder) {
       setLoading(true);
     }
     setLoadError(false);
@@ -142,13 +157,13 @@ export function OrderNotificationDetails({
         setLoadError(!result);
       })
       .catch(() => {
-        if (active && !cached) setLoadError(true);
+        if (active && !cached && !initialOrder) setLoadError(true);
       })
       .finally(() => {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [initialOrder, orderCacheKey, orderNumber, userId]);
+  }, [initialOrder, orderCacheKey, orderNumber, refreshTick, userId]);
 
   const viewportStyle = { height: viewportHeight ? `${viewportHeight}px` : '100dvh' };
   const phoneHref = `tel:${WORKSHOP_INFO.phone.replace(/[^+\d]/g, '')}`;
