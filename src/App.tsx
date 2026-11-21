@@ -46,7 +46,8 @@ import { SearchView } from './components/SearchView';
 const NotificationsView = lazy(() => import('./components/NotificationsView').then((module) => ({ default: module.NotificationsView })));
 import { ShopView } from './components/ShopView';
 import { getHomeSearchPromptTerms } from './lib/searchProducts';
-import { buildReorderCartItems, createDefaultCartItem, getCartItemUnitPrice, hasMatchingCartItem, MAX_ORDER_ITEM_QUANTITY, refreshCartFromCatalog, toggleCartItem } from './lib/cart';
+import { addOrMergeCartItem, buildReorderCartItems, createDefaultCartItem, getCartItemUnitPrice, hasMatchingCartItem, MAX_ORDER_ITEM_QUANTITY, refreshCartFromCatalog, toggleCartItem } from './lib/cart';
+import { isProductSellable } from './lib/productAvailability';
 import { isOrderComplete } from './lib/orderPresentation';
 import { createMyStockAlert } from './lib/supabaseStockAlerts';
 import { Outlet, useLocation, useNavigate, type NavigateFunction, type NavigateOptions, type To } from 'react-router-dom';
@@ -1336,6 +1337,26 @@ export default function App() {
     }
   };
 
+  const handleMoveWishlistToCart = (productsToMove: Product | Product[]) => {
+    const list = (Array.isArray(productsToMove) ? productsToMove : [productsToMove]).filter((p) =>
+      isProductSellable(p),
+    );
+    if (!list.length) return;
+    const movedIds = new Set(list.map((p) => p.id));
+    setCart((current) =>
+      list.reduce(
+        (nextCart, product) => addOrMergeCartItem(nextCart, createDefaultCartItem(product)),
+        current,
+      ),
+    );
+    setWishlist((current) => current.filter((item) => !movedIds.has(item.id)));
+    if (!currentUser.isGuest && supabase) {
+      list.forEach((product) => {
+        void toggleWishlist(product.id, true);
+      });
+    }
+  };
+
   const handleUpdateQuantity = (cartItemId: string, newQty: number) => {
     if (newQty <= 0) {
       setCart((current) => current.filter((i) => i.cartItemId !== cartItemId));
@@ -2558,7 +2579,9 @@ export default function App() {
           onRemoveWishlist={(p) => handleToggleWishlist(p)}
           onSelectProduct={openProductRoute}
           onAddToCart={handleToggleDefaultCartItem}
+          onMoveToCart={handleMoveWishlistToCart}
           isInCart={isQuickAddInCart}
+          cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
           onOpenCart={handleOpenCart}
         />}
 

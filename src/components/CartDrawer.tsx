@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { CartItem } from '../types';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { loadCustomerCouponOffers, validateCustomerCoupon, type CustomerCouponOffer } from '../lib/supabaseCoupons';
-import { getUnappliedCouponOffers } from '../lib/couponDisplay';
+import {
+  getCouponOfferStatus,
+  getUnappliedCouponOffers,
+  sortCouponOffersByEligibility,
+} from '../lib/couponDisplay';
 import { MAX_ORDER_ITEM_QUANTITY } from '../lib/cart';
 import { useI18n } from '../lib/i18n';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
@@ -10,11 +14,15 @@ import {
   X,
   ShoppingBag,
   Trash2,
-  Tag,
+  TicketPercent,
   ArrowRight,
   Store,
   Sparkles,
-  Check,
+  CheckCircle2,
+  AlertCircle,
+  Lock,
+  ChevronDown,
+  ChevronUp,
   ShieldCheck,
   Loader2,
 } from 'lucide-react';
@@ -43,10 +51,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onDismissReorderNotice,
 }) => {
   const { t, formatMoney, language } = useI18n();
+  const prefersReducedMotion = useReducedMotion();
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; subtotal: number; total: number } | null>(null);
   const [couponError, setCouponError] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [applyingOfferCode, setApplyingOfferCode] = useState<string | null>(null);
+  const [showAllOffers, setShowAllOffers] = useState(false);
   const [couponOffers, setCouponOffers] = useState<CustomerCouponOffer[]>(
     () => readSwrCache<CustomerCouponOffer[]>('public:customer-coupons') ?? [],
   );
@@ -97,16 +108,24 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const displayedSubtotal = appliedCoupon?.subtotal ?? subtotal;
   const discount = appliedCoupon ? appliedCoupon.discount : 0;
   const grandTotal = appliedCoupon?.total ?? Math.max(0, subtotal - discount);
-  const eligibleCouponOffers = getUnappliedCouponOffers(couponOffers, appliedCoupon?.code);
+  const eligibleCouponOffers = sortCouponOffersByEligibility(
+    getUnappliedCouponOffers(couponOffers, appliedCoupon?.code),
+    subtotal,
+  );
+  const visibleCouponOffers = showAllOffers ? eligibleCouponOffers : eligibleCouponOffers.slice(0, 2);
+  const couponErrorId = 'cart-coupon-error';
 
-  const handleApplyCoupon = async (selectedCode = couponCode) => {
-    const code = selectedCode.trim().toUpperCase().replace(/\s+/g, '');
+  const handleApplyCoupon = async (selectedCode?: string) => {
+    const isFromOfferCard = typeof selectedCode === 'string';
+    const rawCode = isFromOfferCard ? selectedCode : couponCode;
+    const code = rawCode.trim().toUpperCase().replace(/\s+/g, '');
     if (!code) {
       setCouponError(t('cart.emptyCouponCode'));
       return;
     }
     setCouponError('');
     setIsApplyingCoupon(true);
+    setApplyingOfferCode(isFromOfferCard ? code : null);
     try {
       const quote = await validateCustomerCoupon(code, items, userId);
       if (!quote.valid) {
@@ -122,6 +141,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       setCouponError(t('cart.couponUnavailable'));
     } finally {
       setIsApplyingCoupon(false);
+      setApplyingOfferCode(null);
     }
   };
 
@@ -303,91 +323,300 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
             {/* Coupons Section */}
             {items.length > 0 && (
-              <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 mt-2.5">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] font-black text-gray-900 flex items-center gap-1">
-                    <Tag className="w-3.5 h-3.5 text-[#D9232D]" />
-                    <span>🎟️ {t('cart.haveCoupon')}</span>
-                  </span>
-                  {appliedCoupon && (
-                    <button
-                      onClick={handleRemoveCoupon}
-                      className="min-h-8 px-2 text-[10px] font-bold text-red-600 hover:underline"
+              <section
+                aria-labelledby="cart-coupon-heading"
+                data-testid="cart-coupon-section"
+                className="mt-2 rounded-xl border border-slate-200/85 bg-white/95 p-2.5 shadow-[0_4px_14px_-10px_rgba(15,23,42,0.12)]"
+              >
+                {/* Compact Single-Row Header */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <div className="grid h-6 w-6 shrink-0 place-items-center rounded-lg border border-rose-100/90 bg-rose-50 text-[#D9232D]">
+                      <TicketPercent className="h-3.5 w-3.5" aria-hidden="true" />
+                    </div>
+                    <h4
+                      id="cart-coupon-heading"
+                      className="truncate text-[11.5px] font-black tracking-tight text-slate-900"
                     >
-                      {t('cart.remove')}
+                      {t('cart.haveCoupon')}
+                    </h4>
+                  </div>
+                  {appliedCoupon ? (
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      className="inline-flex h-6.5 shrink-0 items-center gap-0.5 rounded-md px-1.5 text-[10.5px] font-bold text-[#D9232D] transition-colors hover:bg-rose-50 active:scale-[0.97]"
+                    >
+                      <X className="h-3 w-3" aria-hidden="true" />
+                      <span>{t('cart.remove')}</span>
                     </button>
+                  ) : eligibleCouponOffers.length > 0 ? (
+                    <span className="shrink-0 text-[10px] font-bold text-emerald-700 tabular-nums">
+                      {t('cart.available', { count: eligibleCouponOffers.length })}
+                    </span>
+                  ) : null}
+                </div>
+
+                {/* Applied Ticket OR Compact Input Form */}
+                <div className="mt-2">
+                  <AnimatePresence mode="wait" initial={false}>
+                    {appliedCoupon ? (
+                      <motion.div
+                        key="applied-coupon"
+                        role="status"
+                        aria-live="polite"
+                        data-testid="cart-coupon-applied"
+                        initial={prefersReducedMotion ? false : { opacity: 0, y: 3 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={prefersReducedMotion ? undefined : { opacity: 0, y: -3 }}
+                        transition={{ duration: 0.15, ease: 'easeOut' }}
+                        className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-emerald-200/90 bg-gradient-to-r from-emerald-50/95 via-white to-emerald-50/60 px-2.5 py-1.5"
+                      >
+                        <div className="flex min-w-0 items-center gap-2">
+                          <div className="grid h-6.5 w-6.5 shrink-0 place-items-center rounded-md bg-emerald-600 text-white">
+                            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-[11px] font-black leading-tight text-emerald-950">
+                              {t('cart.applied', { code: appliedCoupon.code })}
+                            </p>
+                            <p className="truncate text-[9.5px] font-semibold text-emerald-700 tabular-nums">
+                              {t('cart.savedOnOrder', { amount: formatMoney(appliedCoupon.discount) })}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="shrink-0 whitespace-nowrap text-[12px] font-black text-emerald-700 tabular-nums">
+                          −{formatMoney(appliedCoupon.discount)}
+                        </span>
+                      </motion.div>
+                    ) : (
+                      <motion.form
+                        key="coupon-form"
+                        initial={prefersReducedMotion ? false : { opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+                        transition={{ duration: 0.14 }}
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          void handleApplyCoupon();
+                        }}
+                        noValidate
+                        className={`flex min-w-0 items-center gap-1 rounded-lg border p-0.5 transition-all ${
+                          couponError
+                            ? 'border-rose-300 bg-rose-50/40 focus-within:border-[#D9232D] focus-within:bg-white focus-within:ring-2 focus-within:ring-rose-100'
+                            : 'border-slate-200/90 bg-slate-50/80 focus-within:border-[#D9232D] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#D9232D]/12'
+                        }`}
+                      >
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onChange={(e) => {
+                            setCouponCode(e.target.value.toUpperCase());
+                            if (couponError) setCouponError('');
+                          }}
+                          placeholder={t('cart.enterCoupon')}
+                          aria-label={t('cart.enterCoupon')}
+                          aria-invalid={Boolean(couponError)}
+                          aria-describedby={couponError ? couponErrorId : undefined}
+                          disabled={isApplyingCoupon}
+                          autoCapitalize="characters"
+                          autoComplete="off"
+                          spellCheck={false}
+                          className="h-8 min-w-0 flex-1 bg-transparent px-2 text-base font-bold uppercase tracking-[0.05em] text-slate-900 placeholder:text-xs placeholder:font-medium placeholder:normal-case placeholder:tracking-normal placeholder:text-slate-400 focus:outline-none disabled:opacity-60 sm:text-[11.5px] sm:placeholder:text-[11px]"
+                        />
+                        {couponCode.length > 0 && !isApplyingCoupon && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCouponCode('');
+                              if (couponError) setCouponError('');
+                            }}
+                            aria-label={t('cart.clearCoupon')}
+                            className="grid h-6.5 w-6.5 shrink-0 place-items-center rounded-md text-slate-400 transition-colors hover:bg-slate-200/70 hover:text-slate-700"
+                          >
+                            <X className="h-3 w-3" aria-hidden="true" />
+                          </button>
+                        )}
+                        <button
+                          type="submit"
+                          disabled={isApplyingCoupon}
+                          className={`banner-cta-shine inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-md px-3 text-[11px] font-extrabold text-white transition-all active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap ${
+                            couponCode.trim().length > 0
+                              ? 'bg-[#D9232D] hover:bg-[#be1d26]'
+                              : 'bg-slate-900 hover:bg-slate-800'
+                          }`}
+                        >
+                          {isApplyingCoupon && !applyingOfferCode ? (
+                            <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                          ) : (
+                            t('cart.apply')
+                          )}
+                        </button>
+                      </motion.form>
+                    )}
+                  </AnimatePresence>
+
+                  {couponError && (
+                    <div
+                      id={couponErrorId}
+                      role="alert"
+                      aria-live="polite"
+                      data-testid="cart-coupon-error"
+                      className="mt-1.5 flex items-start gap-1.5 rounded-lg border border-rose-200/90 bg-rose-50/90 px-2 py-1.5 text-[10.5px] font-semibold text-rose-700"
+                    >
+                      <AlertCircle className="mt-0.5 h-3 w-3 shrink-0 text-[#D9232D]" aria-hidden="true" />
+                      <span className="min-w-0 break-words">{couponError}</span>
+                    </div>
                   )}
                 </div>
 
-                {appliedCoupon ? (
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2 flex items-center justify-between text-emerald-800 text-[11.5px] font-bold">
-                    <span className="flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      {t('cart.applied', { code: appliedCoupon.code })}
-                    </span>
-                    <span>-{formatMoney(appliedCoupon.discount)}</span>
-                  </div>
-                ) : (
-                  <div className="flex min-w-0 gap-2">
-                    <input
-                      type="text"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      placeholder={t('cart.enterCoupon')}
-                      className="min-h-10 min-w-0 flex-1 bg-white text-base sm:text-xs font-bold uppercase rounded-xl px-3 py-1.5 border border-gray-200 focus:outline-none focus:border-[#D9232D]"
-                    />
-                    <button
-                      disabled={isApplyingCoupon}
-                      onClick={() => void handleApplyCoupon()}
-                      className="banner-cta-shine min-h-10 shrink-0 bg-gray-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl hover:bg-black hover:shadow-sm active:scale-95 transition-all disabled:opacity-60"
-                    >
-                      {isApplyingCoupon ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t('cart.apply')}
-                    </button>
-                  </div>
-                )}
+                {/* Compact Offers List */}
+                {!(appliedCoupon && !couponOffersLoading && !couponOffersError && eligibleCouponOffers.length === 0) && (
+                  <div className="mt-2 border-t border-slate-100 pt-2">
+                    {couponOffersLoading ? (
+                      <div aria-busy="true">
+                        <span className="sr-only">{t('cart.loadingCoupons')}</span>
+                        <div className="h-11 rounded-lg border border-slate-100 bg-slate-50/90 animate-pulse" />
+                      </div>
+                    ) : couponOffersError ? (
+                      <div className="flex items-center gap-1.5 rounded-lg border border-amber-200/80 bg-amber-50/80 px-2 py-1.5 text-[10px] font-semibold text-amber-900">
+                        <AlertCircle className="h-3 w-3 shrink-0 text-amber-600" aria-hidden="true" />
+                        <span>{couponOffersError}</span>
+                      </div>
+                    ) : eligibleCouponOffers.length === 0 ? (
+                      <p className="py-1 text-center text-[10.5px] font-medium text-slate-400">
+                        {t('cart.noEligibleCoupons')}
+                      </p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {visibleCouponOffers.map((offer) => {
+                          const status = getCouponOfferStatus(offer, subtotal);
+                          const isThisOfferApplying = isApplyingCoupon && applyingOfferCode === offer.code.trim().toUpperCase();
+                          const formattedExpiry = new Intl.DateTimeFormat(
+                            language === 'bn' ? 'bn-IN' : 'en-IN',
+                            { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' },
+                          ).format(new Date(offer.expires_at));
+                          const discountHeadline =
+                            offer.discount_type === 'PERCENTAGE'
+                              ? `${offer.discount_value}% ${t('cart.off')}`
+                              : `${formatMoney(offer.discount_value)} ${t('cart.off')}`;
 
-                {couponError && (
-                  <p className="text-[10px] font-semibold text-red-600 mt-1.5">{couponError}</p>
-                )}
+                          return (
+                            <div
+                              key={offer.code}
+                              data-testid={`cart-coupon-offer-${offer.code}`}
+                              className={`rounded-lg border border-l-[3px] px-2.5 py-1.5 transition-all ${
+                                status.isUnlocked
+                                  ? 'border-slate-200/85 border-l-[#D9232D] bg-white hover:border-[#D9232D]/40'
+                                  : 'border-slate-200/70 border-l-slate-300 bg-slate-50/70'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                                    <span
+                                      className={`text-[11.5px] font-black tracking-tight tabular-nums ${
+                                        status.isUnlocked ? 'text-slate-900' : 'text-slate-600'
+                                      }`}
+                                    >
+                                      {discountHeadline}
+                                    </span>
+                                    <span
+                                      className={`rounded border border-dashed px-1.5 py-px font-mono text-[9.5px] font-extrabold tracking-wide ${
+                                        status.isUnlocked
+                                          ? 'border-[#D9232D]/35 bg-rose-50/70 text-[#D9232D]'
+                                          : 'border-slate-300 bg-white text-slate-500'
+                                      }`}
+                                    >
+                                      {offer.code}
+                                    </span>
+                                    {status.isUnlocked && status.estimatedSavings !== null && status.estimatedSavings > 0 ? (
+                                      <span className="text-[10px] font-bold text-emerald-700 tabular-nums">
+                                        {t('cart.estimatedSavings', { amount: formatMoney(status.estimatedSavings) })}
+                                      </span>
+                                    ) : offer.discount_type === 'PERCENTAGE' && offer.max_discount !== null && offer.max_discount > 0 ? (
+                                      <span className="text-[9.5px] font-semibold text-slate-500 tabular-nums">
+                                        {t('cart.upTo', { amount: formatMoney(offer.max_discount) })}
+                                      </span>
+                                    ) : null}
+                                  </div>
 
-                {!(appliedCoupon && !couponOffersLoading && !couponOffersError && eligibleCouponOffers.length === 0) && <div className="mt-3 border-t border-gray-200 pt-3">
-                  <div className="mb-2 flex items-center justify-between">
-                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-gray-500">{t('cart.eligibleOffers')}</p>
-                    {eligibleCouponOffers.length > 0 && <span className="text-[10px] font-semibold text-emerald-600">{t('cart.available', { count: eligibleCouponOffers.length })}</span>}
-                  </div>
-                  {couponOffersLoading ? (
-                    <p className="rounded-xl bg-white px-3 py-2 text-[10px] font-semibold text-gray-400">{t('cart.loadingCoupons')}</p>
-                  ) : couponOffersError ? (
-                    <p className="rounded-xl bg-amber-50 px-3 py-2 text-[10px] font-semibold text-amber-800">{couponOffersError}</p>
-                  ) : eligibleCouponOffers.length === 0 ? (
-                    <p className="rounded-xl bg-white px-3 py-2 text-[10px] font-semibold text-gray-400">{t('cart.noEligibleCoupons')}</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {eligibleCouponOffers.map((offer) => (
-                        <button
-                          key={offer.code}
-                          type="button"
-                          onClick={() => void handleApplyCoupon(offer.code)}
-                          disabled={isApplyingCoupon}
-                          className="w-full rounded-xl border border-red-100 bg-gradient-to-r from-red-50 to-orange-50 p-2.5 text-left transition hover:border-red-200 hover:shadow-sm disabled:opacity-60"
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-mono text-[11px] font-black tracking-wide text-[#D9232D]">{offer.code}</span>
-                            <span className="rounded bg-[#D9232D] px-1.5 py-0.5 text-[9px] font-extrabold text-white">
-                              {offer.discount_type === 'PERCENTAGE' ? `${offer.discount_value}% ${t('cart.off')}` : `${formatMoney(offer.discount_value)} ${t('cart.off')}`}
+                                  {status.isUnlocked ? (
+                                    <p className="mt-0.5 truncate text-[9.5px] font-medium text-slate-500 tabular-nums">
+                                      {status.minimumOrder > 0
+                                        ? t('cart.minimumOrder', { amount: formatMoney(status.minimumOrder) })
+                                        : t('cart.noMinimum')}
+                                      {offer.discount_type === 'PERCENTAGE' && offer.max_discount !== null && offer.max_discount > 0
+                                        ? ` · ${t('cart.upTo', { amount: formatMoney(offer.max_discount) })}`
+                                        : ''}
+                                      {' · '}
+                                      {t('cart.validUntil', { date: formattedExpiry })}
+                                    </p>
+                                  ) : (
+                                    <div className="mt-0.5">
+                                      <p className="text-[9.5px] font-bold text-amber-800 tabular-nums">
+                                        {t('cart.addMoreToUnlock', { amount: formatMoney(status.remainingAmount) })}
+                                      </p>
+                                      <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-slate-200/85">
+                                        <div
+                                          className="h-full rounded-full bg-[#D9232D]/75 transition-all duration-200"
+                                          style={{ width: `${status.progressPercent}%` }}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {status.isUnlocked ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => void handleApplyCoupon(offer.code)}
+                                    disabled={isApplyingCoupon}
+                                    aria-label={`${t('cart.apply')} ${offer.code}`}
+                                    className="inline-flex h-7 shrink-0 items-center justify-center rounded-md border border-rose-200/90 bg-rose-50/90 px-2.5 text-[10.5px] font-extrabold text-[#D9232D] transition-all hover:border-[#D9232D] hover:bg-[#D9232D] hover:text-white active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
+                                  >
+                                    {isThisOfferApplying ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                                    ) : (
+                                      t('cart.apply')
+                                    )}
+                                  </button>
+                                ) : (
+                                  <span
+                                    className="grid h-6.5 w-6.5 shrink-0 place-items-center rounded-md bg-slate-200/70 text-slate-400"
+                                    aria-hidden="true"
+                                  >
+                                    <Lock className="h-3 w-3" />
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {eligibleCouponOffers.length > 2 && (
+                          <button
+                            type="button"
+                            onClick={() => setShowAllOffers((prev) => !prev)}
+                            className="flex h-7 w-full items-center justify-center gap-1 rounded-lg border border-slate-200/80 bg-slate-50/80 text-[10.5px] font-bold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                          >
+                            <span>
+                              {showAllOffers
+                                ? t('cart.showFewerOffers')
+                                : t('cart.showAllOffers', { count: eligibleCouponOffers.length })}
                             </span>
-                          </div>
-                          <p className="mt-1 text-[10px] font-medium text-gray-600">
-                            {offer.minimum_order_value > 0 ? t('cart.minimumOrder', { amount: formatMoney(offer.minimum_order_value) }) : t('cart.noMinimum')} · {t('cart.validUntil', { date: new Intl.DateTimeFormat(language === 'bn' ? 'bn-IN' : 'en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' }).format(new Date(offer.expires_at)) })}
-                          </p>
-                          <p className="mt-1 text-[9.5px] font-bold text-[#D9232D]">{t('cart.tapToApply')}</p>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>}
-
-              </div>
+                            {showAllOffers ? (
+                              <ChevronUp className="h-3 w-3" aria-hidden="true" />
+                            ) : (
+                              <ChevronDown className="h-3 w-3" aria-hidden="true" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
             )}
           </div>
 
