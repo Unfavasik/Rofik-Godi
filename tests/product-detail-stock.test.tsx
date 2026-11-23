@@ -410,13 +410,13 @@ describe('product availability awareness and product detail page UI/UX', () => {
     const payload = buildProductSharePayload(
       product,
       1250,
-      'https://rofik-godi.pages.dev',
+      'https://rofikgodicenter.pages.dev',
     );
     expect(payload.title).toBe(product.title);
     expect(payload.text).toContain(product.title);
     expect(payload.text).toContain('₹1,250');
     expect(payload.url).toBe(
-      `https://rofik-godi.pages.dev/shop/products/${encodeURIComponent(product.id)}`,
+      `https://rofikgodicenter.pages.dev/shop/products/${encodeURIComponent(product.id)}`,
     );
 
     const shareMock = vi.fn().mockResolvedValue(undefined);

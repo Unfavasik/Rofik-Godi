@@ -7,7 +7,7 @@ describe('notification target routing', () => {
       '/notifications?order=RGC-ABCDEF123456',
     );
     expect(
-      getNotificationTargetPath('https://rofik-godi.pages.dev/my-order/order/RGC-ABCDEF123456'),
+      getNotificationTargetPath('https://rofikgodicenter.pages.dev/my-order/order/RGC-ABCDEF123456'),
     ).toBe('/notifications?order=RGC-ABCDEF123456');
   });
 

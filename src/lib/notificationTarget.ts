@@ -1,4 +1,4 @@
-const SITE_ORIGIN = 'https://rofik-godi.pages.dev';
+const SITE_ORIGIN = 'https://rofikgodicenter.pages.dev';
 const ORDER_NUMBER_PATTERN = /\bRGC-[A-Z0-9]{8,32}\b/i;
 const CUSTOMER_ORDER_PATH = /^\/(?:my|my-orders?|myorder)(?:\/|$)/i;
 const ORDER_SLUG_PATH = /^\/(?:my-orders|myorder|my-order)\/order\/([0-9a-f]{32})$/i;

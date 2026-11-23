@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const allowedOrigins = new Set([
-  "https://rofik-godi.pages.dev",
+  "https://rofikgodicenter.pages.dev",
   "https://localhost",
   "http://localhost",
   "capacitor://localhost",

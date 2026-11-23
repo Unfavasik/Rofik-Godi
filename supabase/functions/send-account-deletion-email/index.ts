@@ -3,7 +3,7 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts';
 
-const APP_URL = 'https://rofik-godi.pages.dev';
+const APP_URL = 'https://rofikgodicenter.pages.dev';
 const STORE_NAME = 'ROFIK GODI CENTRE';
 const STORE_SUBTITLE = 'LOCAL RIDE ESSENTIALS';
 const STORE_EMAIL = 'rofikgodicentre.store@gmail.com';

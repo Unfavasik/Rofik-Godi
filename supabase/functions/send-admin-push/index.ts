@@ -18,7 +18,7 @@ type ActivityEvent = {
 };
 type AdminPushToken = { token: string; user_id: string };
 
-const SITE = 'https://rofik-godi.pages.dev';
+const SITE = 'https://rofikgodicenter.pages.dev';
 const FIREBASE_PROJECT_ID = 'rofik-godi-centre';
 let accessTokenCache = '';
 let accessTokenExpiresAt = 0;

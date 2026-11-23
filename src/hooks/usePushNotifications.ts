@@ -10,7 +10,7 @@ import { notifyCustomerNotificationsUpdated, notifyCustomerOrdersUpdated } from 
 const DEFAULT_ANDROID_CHANNEL_ID = 'rofik-godi-updates';
 const STYLED_ANDROID_CHANNEL_ID = 'rofik-godi-styled-v1';
 const STYLED_ANDROID_VERSION = '1.1.39';
-const SITE_ORIGIN = 'https://rofik-godi.pages.dev';
+const SITE_ORIGIN = 'https://rofikgodicenter.pages.dev';
 
 function isVersionAtLeast(version: string, minimum: string) {
   const actual = version.split('.').map((part) => Number.parseInt(part, 10) || 0);

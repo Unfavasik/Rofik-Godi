@@ -220,7 +220,7 @@ public final class RofikMessagingService extends FirebaseMessagingService {
         if (TextUtils.isEmpty(raw)) return null;
         Uri uri = Uri.parse(raw.trim());
         if (raw.startsWith("/") && !raw.startsWith("//") && uri.getAuthority() == null && !raw.contains("\\")) return raw;
-        if ("https".equalsIgnoreCase(uri.getScheme()) && "rofik-godi.pages.dev".equalsIgnoreCase(uri.getHost())) {
+        if ("https".equalsIgnoreCase(uri.getScheme()) && "rofikgodicenter.pages.dev".equalsIgnoreCase(uri.getHost())) {
             String path = uri.getEncodedPath();
             if (TextUtils.isEmpty(path)) path = "/";
             if (uri.getEncodedQuery() != null) path += "?" + uri.getEncodedQuery();
