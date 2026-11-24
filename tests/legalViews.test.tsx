@@ -217,6 +217,11 @@ describe('Privacy Policy & Terms & Conditions content and UI/UX upgrade', () => 
     expect(html).toContain('Privacy Policy');
     expect(html).toContain('Terms &amp; Conditions');
     expect(html).toContain('Personal Data');
+    expect(html).toContain('Powered by');
+    expect(html).toContain('aria-label="Srishti Labs"');
+    expect(html).toContain('data-testid="srishti-halftone-logo-canvas"');
+    expect(html).toContain('data-tone="light"');
+    expect(html).not.toContain('bg-[#141416]');
   });
 
   it('embeds PersonalDataView statically without a SplashScreen Suspense fallback and preserves Settings scroll position', () => {

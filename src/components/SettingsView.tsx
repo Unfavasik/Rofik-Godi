@@ -13,6 +13,7 @@ import type { SettingsSectionRoute } from '../lib/appRoutes';
 import { AccountDeletionView } from './AccountDeletionView';
 import { SettingsCouponsSkeleton, SettingsPageSkeleton } from './AccountPageSkeleton';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { SrishtiLabsLogo } from './SrishtiLabsLogo';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -716,6 +717,26 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <ChevronRight />
           </button>
         </section>
+
+        {/* Powered by Srishti Labs */}
+        <footer
+          aria-label="Powered by Srishti Labs"
+          className="flex flex-col items-center justify-center gap-1 pt-4 pb-2 text-center"
+        >
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">
+            Powered by
+          </p>
+          <SrishtiLabsLogo
+            transparent
+            tone="light"
+            compact
+            align="center"
+            dotPitch={6.6}
+            animated
+            interactive
+            className="w-[186px] sm:w-[210px]"
+          />
+        </footer>
       </SectionPage>
     );
   }
