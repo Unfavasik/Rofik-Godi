@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Loader2, Plus, Sparkles, Trash2, Upload, X } from 'lucide-react';
+import { Loader2, Plus, Trash2, Upload, Wand2, X } from 'lucide-react';
 import type { Product } from '../types';
 import { autofillProductDetailsFromImage } from '../lib/productImageAutofill';
 import {
@@ -340,12 +340,12 @@ export const AdminProductColorEditor: React.FC<Props> = ({
                   type="button"
                   onClick={() => void autoFillDetails(index)}
                   disabled={!images.length || autoFillIndex !== null || uploadingIndex !== null}
-                  className="inline-flex min-h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-[10px] font-bold text-violet-900 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex min-h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1.5 text-[10px] font-bold text-slate-800 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {autoFillIndex === index ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <Sparkles className="h-3.5 w-3.5" />
+                    <Wand2 className="h-3.5 w-3.5 text-slate-600" />
                   )}
                   {autoFillIndex === index ? 'Analyzing image…' : 'Auto-fill details from image'}
                 </button>

@@ -14,7 +14,6 @@ import {
   Printer,
   ShieldAlert,
   ShieldCheck,
-  Sparkles,
   Wrench,
   XCircle,
 } from 'lucide-react';
@@ -447,9 +446,8 @@ export const InvoiceTemplate: React.FC<{
                 <span className="font-mono text-xs font-black tracking-tight">RGC</span>
               </div>
               <div className="min-w-0">
-                <p className="inline-flex items-center gap-1 whitespace-nowrap text-[10px] font-bold text-[#BE123C] sm:text-[10.5px]">
-                  <Sparkles className="h-3 w-3 shrink-0" />
-                  <span>Custom Seat Cover Workshop</span>
+                <p className="whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.12em] text-[#D9232D] sm:text-[10.5px]">
+                  Custom Seat Cover Workshop
                 </p>
                 <h1 className="mt-0.5 text-[15.5px] leading-tight font-extrabold tracking-tight text-slate-950 break-words sm:text-2xl">
                   {store.name}
@@ -914,15 +912,7 @@ export const InvoiceTemplate: React.FC<{
 
             <div className="grid grid-cols-1 gap-2.5 p-3 sm:grid-cols-2 sm:gap-2.5 sm:p-3.5">
               {invoiceTerms.clauses.map((clause, idx) => {
-                const badgePalette = [
-                  'bg-rose-100 text-[#BE123C]',
-                  'bg-emerald-100 text-[#047857]',
-                  'bg-sky-100 text-sky-800',
-                  'bg-amber-100 text-amber-800',
-                  'bg-indigo-100 text-indigo-800',
-                  'bg-teal-100 text-teal-800',
-                  'bg-[#FFE4E6] text-[#9F1239]',
-                ][idx % 7];
+                const badgePalette = 'bg-slate-100 text-slate-700';
 
                 return (
                   <div

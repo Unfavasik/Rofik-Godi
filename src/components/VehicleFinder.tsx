@@ -335,13 +335,6 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
 
   const content = (
     <>
-      {!isSheet && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[#D9232D]/[0.06] blur-3xl"
-        />
-      )}
-
       {/* Header Row */}
       <div className="relative z-10 flex flex-wrap items-start justify-between gap-2.5">
         {isSheet ? (
@@ -793,27 +786,27 @@ export const VehicleFitmentTriggerBar: React.FC<VehicleFitmentTriggerBarProps> =
               </span>
             )
           ) : (
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#D9232D] text-white shadow-[0_6px_14px_-6px_rgba(217,35,45,0.65)]">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-[#D9232D] ring-1 ring-inset ring-rose-200/70">
               <ShieldCheck className="h-4.5 w-4.5" aria-hidden="true" />
             </span>
           )}
 
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-black leading-tight text-slate-900">
+            <p className="truncate text-[13px] font-extrabold leading-tight text-slate-900">
               {activeVehicleFilter ? `Fitted for ${activeVehicleFilter}` : 'Vehicle Fitment Finder'}
             </p>
             <p className="mt-0.5 truncate text-[11px] font-medium text-slate-500">
               {activeVehicleFilter
                 ? matchingCount !== undefined
-                  ? `${matchingCount} compatible ${matchingCount === 1 ? 'cover' : 'covers'} · 100% Fit Guarantee`
-                  : 'Showing compatible covers · 100% Fit Guarantee'
+                  ? `${matchingCount} compatible ${matchingCount === 1 ? 'cover' : 'covers'} found`
+                  : 'Showing compatible seat covers'
                 : savedVehicle?.trim()
-                  ? `Saved ride: ${savedVehicle.trim()} · 100% Fit Guarantee`
-                  : 'Bike, Scooty & Toto · 100% Fit Guarantee'}
+                  ? `Saved ride: ${savedVehicle.trim()}`
+                  : 'Bike, Scooter & Toto fitment'}
             </p>
           </div>
 
-          <span className="inline-flex shrink-0 items-center gap-0.5 text-xs font-extrabold text-[#D9232D] whitespace-nowrap">
+          <span className="inline-flex shrink-0 items-center gap-0.5 text-xs font-bold text-[#D9232D] whitespace-nowrap">
             <span>{activeVehicleFilter ? 'Change' : 'Select ride'}</span>
             <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
           </span>

@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2, Search, ChevronDown, ShoppingBag, MapPin, CreditCard, Wrench, HelpCircle, Clock3, Phone, CheckCircle2, Trash2, Sparkles, ExternalLink, Layers3, Award } from 'lucide-react';
+import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2, Search, ChevronDown, ShoppingBag, MapPin, CreditCard, Wrench, HelpCircle, Clock3, Phone, CheckCircle2, Trash2, ExternalLink, Layers3, Award } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { PersonalDataView } from './PersonalDataView';
@@ -65,17 +65,17 @@ const SettingsRow: React.FC<SettingsRowProps> = ({ icon, iconBg, title, subtitle
   <button
     onClick={onClick}
     type="button"
-    className={`group/row w-full flex items-center justify-between p-2.5 sm:p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-[0_6px_18px_-12px_rgba(15,23,42,0.06)] border border-slate-200/80 hover:border-rose-200/80 hover:bg-white active:scale-[0.99] transition-all duration-150 text-left ${
+    className={`group/row w-full flex items-center justify-between p-2.5 sm:p-3 bg-white rounded-xl shadow-[0_1px_3px_rgba(15,23,42,0.03)] border border-slate-200/85 hover:border-slate-300 hover:bg-slate-50/40 active:scale-[0.99] transition-colors duration-150 text-left ${
       danger ? 'hover:bg-rose-50/40 hover:border-rose-200' : ''
     }`}
   >
     <div className="flex items-center space-x-3 min-w-0 pr-2">
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ring-1 ring-inset ring-black/[0.04] transition-transform group-hover/row:scale-105 ${iconBg}`}>{icon}</div>
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${iconBg}`}>{icon}</div>
       <div className="min-w-0">
         <div className="flex items-center gap-1.5">
-          <h2 className={`text-[13px] font-extrabold leading-snug truncate ${danger ? 'text-[#D9232D]' : 'text-slate-900'}`}>{title}</h2>
+          <h2 className={`text-[13px] font-bold leading-snug truncate ${danger ? 'text-[#D9232D]' : 'text-slate-900'}`}>{title}</h2>
           {badge && (
-            <span className="shrink-0 rounded-full bg-rose-50 px-2 py-0.5 text-[9.5px] font-extrabold text-[#D9232D] ring-1 ring-inset ring-rose-200/70">
+            <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[9.5px] font-bold text-slate-700 ring-1 ring-inset ring-slate-200/70 tabular-nums">
               {badge}
             </span>
           )}
@@ -89,9 +89,8 @@ const SettingsRow: React.FC<SettingsRowProps> = ({ icon, iconBg, title, subtitle
 
 const SettingsGroup: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
   <div className="space-y-1.5">
-    <div className="flex items-center gap-1.5 px-1 pt-0.5">
-      <span className="h-1.5 w-1.5 rounded-full bg-[#D9232D]" />
-      <h2 className="text-[10.5px] font-black uppercase tracking-[0.14em] text-slate-500">{label}</h2>
+    <div className="px-1 pt-1">
+      <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">{label}</h2>
     </div>
     <div className="space-y-1.5">{children}</div>
   </div>
@@ -105,10 +104,10 @@ interface SectionPageProps {
   children: React.ReactNode;
 }
 
-/** Full-screen shell for routed settings sub-sections, matching the app's Classic Glass page header pattern. */
+/** Full-screen shell for routed settings sub-sections. */
 const SectionPage: React.FC<SectionPageProps> = ({ title, subtitle, eyebrow = 'Settings', onBack, children }) => (
-  <div className="w-full max-w-full flex-1 overflow-x-hidden bg-gradient-to-b from-[#F8FAFC] via-[#F5F7FB] to-[#FFF6F7] min-h-full flex flex-col animate-fade-in font-sans">
-    <section className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/88 px-4 py-2.5 backdrop-blur-xl shadow-[0_6px_24px_-18px_rgba(15,23,42,0.14)] sm:px-6" data-purpose="page-header">
+  <div className="w-full max-w-full flex-1 overflow-x-hidden bg-[#F8F9FB] min-h-full flex flex-col animate-fade-in font-sans">
+    <section className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 px-4 py-2.5 backdrop-blur-md sm:px-6" data-purpose="page-header">
       <div className="mx-auto flex w-full max-w-3xl items-center gap-3">
         <button
           onClick={onBack}
@@ -324,20 +323,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {settingsNotice && <p role="status" className="rounded-xl border border-emerald-200/80 bg-emerald-50/90 px-3 py-2 text-[11px] font-bold leading-relaxed text-emerald-800">{settingsNotice}</p>}
         <div className="space-y-2">
           {[
-            { key: 'offers', label: 'Festival Discounts & Coupons', desc: 'Alerts about seasonal flash sales & discounts', icon: <Tag className="h-4 w-4 fill-current text-[#E51E2B]" />, tone: 'bg-red-50' },
-            { key: 'orderUpdates', label: 'Order Status & Tracking', desc: 'Realtime updates when stitching starts or completes', icon: <Truck className="h-4 w-4 text-[#E51E2B]" />, tone: 'bg-rose-50' },
-            { key: 'workshopAlerts', label: 'Support & Workshop Replies', desc: 'Responses to your support requests', icon: <MessageCircle className="h-4 w-4 text-[#E51E2B]" />, tone: 'bg-rose-50' },
-            { key: 'systemUpdates', label: 'Product & Account Updates', desc: 'New products, profile and service notices', icon: <Package className="h-4 w-4 text-purple-600" />, tone: 'bg-purple-50' },
+            { key: 'offers', label: 'Festival Discounts & Coupons', desc: 'Alerts about seasonal flash sales & discounts', icon: <Tag className="h-4 w-4 text-slate-700" />, tone: 'bg-slate-100' },
+            { key: 'orderUpdates', label: 'Order Status & Tracking', desc: 'Realtime updates when stitching starts or completes', icon: <Truck className="h-4 w-4 text-slate-700" />, tone: 'bg-slate-100' },
+            { key: 'workshopAlerts', label: 'Support & Workshop Replies', desc: 'Responses to your support requests', icon: <MessageCircle className="h-4 w-4 text-slate-700" />, tone: 'bg-slate-100' },
+            { key: 'systemUpdates', label: 'Product & Account Updates', desc: 'New products, profile and service notices', icon: <Package className="h-4 w-4 text-slate-700" />, tone: 'bg-slate-100' },
           ].map((item) => {
             const checked = notificationState[item.key as keyof typeof notificationState];
             return (
-              <div key={item.key} className="flex justify-between items-center p-3 bg-white/95 backdrop-blur-md rounded-xl border border-slate-200/80 shadow-[0_6px_18px_-12px_rgba(15,23,42,0.06)] transition hover:border-rose-200/80">
+              <div key={item.key} className="flex justify-between items-center p-3 bg-white rounded-xl border border-slate-200/85 shadow-[0_1px_3px_rgba(15,23,42,0.03)]">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ring-black/[0.04] ${item.tone}`}>{item.icon}</div>
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${item.tone}`}>{item.icon}</div>
                   <div className="min-w-0 pr-2">
                     <div className="flex items-center gap-1.5">
-                      <div className="text-[12.5px] font-extrabold text-slate-900 truncate">{item.label}</div>
-                      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase ${checked ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/70' : 'bg-slate-100 text-slate-500'}`}>
+                      <div className="text-[12.5px] font-bold text-slate-900 truncate">{item.label}</div>
+                      <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase ${checked ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/70' : 'bg-slate-100 text-slate-500'}`}>
                         {checked ? 'Active' : 'Muted'}
                       </span>
                     </div>
@@ -350,9 +349,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   aria-label={item.label}
                   aria-checked={checked}
                   onClick={() => setNotificationState({ ...notificationState, [item.key]: !checked })}
-                  className={`relative ml-2.5 h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? 'bg-[#E51E2B]' : 'bg-slate-200'}`}
+                  className={`relative ml-2.5 h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? 'bg-[#D9232D]' : 'bg-slate-200'}`}
                 >
-                  <span className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform ${checked ? 'translate-x-5.5' : 'translate-x-0.5'}`} />
+                  <span className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-5.5' : 'translate-x-0.5'}`} />
                 </button>
               </div>
             );
@@ -363,7 +362,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         <button
           onClick={saveNotifications}
-          className="w-full min-h-11 py-2.5 bg-gradient-to-r from-[#D9232D] to-[#B91822] text-white text-xs font-black rounded-xl shadow-md shadow-red-600/20 hover:brightness-105 active:scale-[0.99] transition-all"
+          className="w-full min-h-11 py-2.5 bg-[#D9232D] hover:bg-[#BE1C25] text-white text-xs font-bold rounded-xl active:scale-[0.99] transition-colors"
         >
           Save Preferences
         </button>
@@ -746,7 +745,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {
         label: 'Orders & pickup',
         icon: ShoppingBag,
-        tone: 'bg-rose-50 text-[#D9232D]',
+        tone: 'bg-slate-100 text-slate-700',
         items: [
           { q: 'How do I place an order?', a: 'Choose a product, select your vehicle fitment, add any available customization, then add it to your cart and complete checkout.' },
           { q: 'Where can I see my order status?', a: 'Open Account → Order history. Select an order to see its status timeline, payment details, pickup information and invoice.' },
@@ -756,7 +755,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {
         label: 'Products & fitment',
         icon: Wrench,
-        tone: 'bg-violet-50 text-violet-600',
+        tone: 'bg-slate-100 text-slate-700',
         items: [
           { q: 'How does on-spot fitting work?', a: 'Free on-spot seat fitment is available at our workshop. Contact the team before travelling so we can confirm timing and availability.' },
           { q: 'How do I find the right vehicle model?', a: 'Use Vehicle Fitment Finder on the shop or home page. Select your vehicle category, company and model before choosing a cover.' },
@@ -767,7 +766,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {
         label: 'Payment & after-sales',
         icon: CreditCard,
-        tone: 'bg-blue-50 text-blue-600',
+        tone: 'bg-slate-100 text-slate-700',
         items: [
           { q: 'Which payment methods are supported?', a: 'Available payment options are shown during checkout. Your order page also shows the payment method and payment status.' },
           { q: 'Can I change or cancel an order?', a: 'Open the order details as soon as possible. Cancellation or changes depend on the preparation status; contact support for help.' },
@@ -777,7 +776,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {
         label: 'Store & app',
         icon: MapPin,
-        tone: 'bg-emerald-50 text-emerald-600',
+        tone: 'bg-slate-100 text-slate-700',
         items: [
           { q: 'Where is Rofik Godi Centre?', a: `${WORKSHOP_INFO.address}. We are open ${WORKSHOP_INFO.workingHours}.`, action: 'store' },
           { q: 'How does the store map work?', a: 'Open Store map to see the workshop, check drive, bike or walking time from your location, and start turn-by-turn directions.' },
@@ -835,33 +834,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   /* -------------------------------- Settings hub ------------------------------- */
 
   return (
-    <div className="w-full max-w-full flex-1 overflow-x-hidden bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] min-h-full flex flex-col animate-fade-in font-sans">
+    <div className="w-full max-w-full flex-1 overflow-x-hidden bg-[#F8F9FB] min-h-full flex flex-col animate-fade-in font-sans">
       {/* BEGIN: NavigationHeader */}
-      <section className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/90 px-3.5 py-2.5 backdrop-blur-md shadow-[0_4px_20px_-10px_rgba(15,23,42,0.05)]" data-purpose="page-header">
+      <section className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 px-3.5 py-2.5 backdrop-blur-md" data-purpose="page-header">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
             <button
               onClick={onBack}
               aria-label={t('common.back')}
-              className="h-10 w-10 rounded-xl bg-slate-100/90 hover:bg-rose-50 hover:text-[#D9232D] text-slate-800 flex items-center justify-center transition-all active:scale-95 shrink-0"
+              className="h-10 w-10 rounded-xl border border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-800 flex items-center justify-center transition-colors active:scale-95 shrink-0"
               type="button"
             >
               <BackArrow />
             </button>
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#D9232D] ring-1 ring-inset ring-rose-100">
-                  <Sparkles className="h-2.5 w-2.5" /> Rider Controls
-                </span>
-              </div>
-              <h1 className="mt-0.5 text-[19px] sm:text-[20px] font-black text-slate-900 tracking-tight leading-tight truncate">{t('settings.title')}</h1>
+              <h1 className="text-[18px] sm:text-[19px] font-extrabold text-slate-950 tracking-tight leading-tight truncate">{t('settings.title')}</h1>
               <p className="text-[11.5px] text-slate-500 font-medium truncate">
                 {t('settings.subtitle')}
               </p>
             </div>
           </div>
           <div className="hidden xs:flex flex-col items-end gap-1 shrink-0">
-            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-extrabold text-slate-700">
+            <span className="rounded-lg border border-slate-200/80 bg-slate-50 px-2.5 py-1 text-[10.5px] font-bold text-slate-700">
               {languageLabel}
             </span>
           </div>
@@ -872,36 +866,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {pwaInstallCard && <div className="mx-auto w-full max-w-3xl px-3.5 pt-2.5">{pwaInstallCard}</div>}
 
       {/* BEGIN: SettingsMenuList */}
-      <nav aria-label={t('settings.title')} className="mx-auto w-full max-w-3xl flex-1 px-3.5 space-y-4 mt-2.5 pb-8">
+      <nav aria-label={t('settings.title')} className="mx-auto w-full max-w-3xl flex-1 px-3.5 space-y-4 mt-3 pb-8">
         <SettingsGroup label="Preferences">
           <SettingsRow
             onClick={() => openSection('notifications')}
-            iconBg="bg-[#FEECEC]"
-            icon={<Bell className="w-5 h-5 text-[#EF4444]" />}
+            iconBg="bg-slate-100 text-slate-700"
+            icon={<Bell className="w-4.5 h-4.5" />}
             title={t('settings.notifications')}
             subtitle={t('settings.offersUpdates')}
             badge={`${enabledNotificationsCount}/4 on`}
           />
           <SettingsRow
             onClick={() => openSection('app')}
-            iconBg="bg-[#F4ECFF]"
-            icon={
-              <svg className="w-5 h-5 text-[#8B5CF6]" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  clipRule="evenodd"
-                  d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75 0 3.328 1.666 6.27 4.21 8.04.425.297.982.164 1.25-.297a7.518 7.518 0 0 1 1.236-1.512c.563-.526 1.4-.78 2.146-.628.706.143 1.428.217 2.158.217 4.97 0 9-4.03 9-9 0-3.66-2.186-6.81-5.326-8.223A9.704 9.704 0 0 0 12 2.25zM6.75 11.25a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm3.75-3a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm4.5 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm3.75 3a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"
-                  fillRule="evenodd"
-                />
-              </svg>
-            }
+            iconBg="bg-slate-100 text-slate-700"
+            icon={<Globe className="w-4.5 h-4.5" />}
             title={t('settings.appSettings')}
             subtitle={t('settings.appSettingsHint')}
             badge={languageLabel}
           />
           <SettingsRow
             onClick={() => void handleShareApp()}
-            iconBg="bg-[#EAF2FE]"
-            icon={<Share2 className="w-5 h-5 text-[#2563EB]" />}
+            iconBg="bg-slate-100 text-slate-700"
+            icon={<Share2 className="w-4.5 h-4.5" />}
             title="Invite friends"
             subtitle="Share the app with other riders"
           />
@@ -910,24 +896,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <SettingsGroup label="Offers & activity">
           <SettingsRow
             onClick={() => { setSelectedCouponOffer(null); openSection('coupons'); }}
-            iconBg="bg-[#FEECEC]"
-            icon={
-              <svg className="w-5 h-5 text-[#EF4444]" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  clipRule="evenodd"
-                  d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2.5a1.5 1.5 0 0 0 0 3V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2.5a1.5 1.5 0 0 0 0-3V6zm5.5 3a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-5.2 2.7a.75.75 0 0 1 0-1.06l5-5a.75.75 0 1 1 1.06 1.06l-5 5a.75.75 0 0 1-1.06 0z"
-                  fillRule="evenodd"
-                />
-              </svg>
-            }
+            iconBg="bg-slate-100 text-slate-700"
+            icon={<Tag className="w-4.5 h-4.5" />}
             title={t('settings.coupons')}
             subtitle={t('settings.saveMore')}
           />
           {onOpenWishlist && (
             <SettingsRow
               onClick={onOpenWishlist}
-              iconBg="bg-[#FDECEC]"
-              icon={<Heart className="w-5 h-5 text-[#E51E2B]" />}
+              iconBg="bg-slate-100 text-slate-700"
+              icon={<Heart className="w-4.5 h-4.5" />}
               title="Wishlist"
               subtitle="Saved seat covers & favorites"
             />
@@ -937,23 +915,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               if (onOpenOrders) onOpenOrders();
               else openSection('help');
             }}
-            iconBg="bg-[#F0EEFF]"
-            icon={
-              <svg className="w-5 h-5 text-[#6366F1]" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                <path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            }
+            iconBg="bg-slate-100 text-slate-700"
+            icon={<Clock3 className="w-4.5 h-4.5" />}
             title={t('settings.orderHistory')}
             subtitle={t('settings.pastPurchases')}
           />
           <SettingsRow
             onClick={() => openSection('reviews')}
-            iconBg="bg-[#FFF6E5]"
-            icon={
-              <svg className="w-5 h-5 text-[#F59E0B]" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-              </svg>
-            }
+            iconBg="bg-slate-100 text-slate-700"
+            icon={<Star className="w-4.5 h-4.5" />}
             title={t('settings.reviews')}
             subtitle={t('settings.reviewPurchases')}
           />
@@ -962,28 +932,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <SettingsGroup label="Workshop & support">
           <SettingsRow
             onClick={() => onOpenContactSupport?.()}
-            iconBg="bg-[#EBF5FF]"
-            icon={
-              <svg className="w-5 h-5 text-[#2563EB]" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  clipRule="evenodd"
-                  d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 0 1-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 0 0 6.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 0 1 1.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5z"
-                  fillRule="evenodd"
-                />
-              </svg>
-            }
+            iconBg="bg-slate-100 text-slate-700"
+            icon={<Phone className="w-4.5 h-4.5" />}
             title="Contact Support"
             subtitle="Message the workshop team"
           />
           {onOpenStoreInfo && (
             <SettingsRow
               onClick={onOpenStoreInfo}
-              iconBg="bg-[#E8F8F0]"
-              icon={
-                <svg className="w-5 h-5 text-[#10B981]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M3 9l1.5-5.25h15L21 9M3 9v10.5A1.5 1.5 0 004.5 21h15a1.5 1.5 0 001.5-1.5V9M3 9h18M9 21v-6h6v6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              }
+              iconBg="bg-slate-100 text-slate-700"
+              icon={<MapPin className="w-4.5 h-4.5" />}
               title="Store & Workshop"
               subtitle="Timings, location and store details"
             />
@@ -993,29 +951,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <SettingsGroup label="Legal & about">
           <SettingsRow
             onClick={() => onOpenPrivacyPage ? onOpenPrivacyPage() : setActiveDialog('privacy')}
-            iconBg="bg-[#E8F8F0]"
-            icon={
-              <svg className="w-5 h-5 text-[#10B981]" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  clipRule="evenodd"
-                  d="M12 2.25c-4.28 0-8 2.053-8 2.053s.25 9.07 8 17.447c7.75-8.377 8-17.447 8-17.447s-3.72-2.053-8-2.053zm3.707 7.957a.75.75 0 0 0-1.06-1.06L10.75 13.043l-1.397-1.396a.75.75 0 1 0-1.06 1.06l1.927 1.927a.75.75 0 0 0 1.06 0l4.427-4.427z"
-                  fillRule="evenodd"
-                />
-              </svg>
-            }
+            iconBg="bg-slate-100 text-slate-700"
+            icon={<ShieldCheck className="w-4.5 h-4.5" />}
             title={t('settings.privacy')}
             subtitle={t('settings.dataSecurity')}
           />
           <SettingsRow
             onClick={() => onOpenTermsPage ? onOpenTermsPage() : setActiveDialog('terms')}
-            iconBg="bg-[#EBF5FF]"
+            iconBg="bg-slate-100 text-slate-700"
             icon={
-              <svg className="w-5 h-5 text-[#3B82F6]" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  clipRule="evenodd"
-                  d="M5.625 1.5H9a3.75 3.75 0 0 1 3.75 3.75v1.875H18a2.25 2.25 0 0 1 2.25 2.25v10.5A2.25 2.25 0 0 1 18 22.125H6a2.25 2.25 0 0 1-2.25-2.25V3.75A2.25 2.25 0 0 1 5.625 1.5zm3.75 12a.75.75 0 0 0 0 1.5h6.75a.75.75 0 0 0 0-1.5H9.375zm0 3.75a.75.75 0 0 0 0 1.5h6.75a.75.75 0 0 0 0-1.5H9.375zm0-7.5a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3z"
-                  fillRule="evenodd"
-                />
+              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             }
             title={t('settings.terms')}
@@ -1023,35 +969,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           />
           <SettingsRow
             onClick={() => (onOpenPersonalData ? onOpenPersonalData() : setActiveDialog('personal-data'))}
-            iconBg="bg-[#F4ECFF]"
-            icon={<ShieldCheck className="w-5 h-5 text-[#7C3AED]" />}
+            iconBg="bg-slate-100 text-slate-700"
+            icon={<Layers3 className="w-4.5 h-4.5" />}
             title="Personal Data"
             subtitle="How your data is processed"
           />
           <SettingsRow
             onClick={() => openSection('about')}
-            iconBg="bg-[#EBF5FF]"
-            icon={
-              <svg className="w-5 h-5 text-[#3B82F6]" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  clipRule="evenodd"
-                  d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022zM12 9a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z"
-                  fillRule="evenodd"
-                />
-              </svg>
-            }
+            iconBg="bg-slate-100 text-slate-700"
+            icon={<Award className="w-4.5 h-4.5" />}
             title={t('settings.about')}
             subtitle={t('settings.ourStory')}
           />
           <SettingsRow
             onClick={() => openSection('help')}
-            iconBg="bg-[#FEECEC]"
-            icon={
-              <svg className="w-5 h-5 text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="9.5" />
-                <path d="M9.879 9.879a3 3 0 114.242 2.828c-.566.377-.871.868-.871 1.543V15m0 3h.01" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            }
+            iconBg="bg-slate-100 text-slate-700"
+            icon={<HelpCircle className="w-4.5 h-4.5" />}
             title={t('settings.help')}
             subtitle="Common questions"
           />
@@ -1061,8 +994,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <SettingsRow
             danger
             onClick={() => openSection('delete-account')}
-            iconBg="bg-[#FFF1F2]"
-            icon={<Trash2 className="w-5 h-5 text-[#D9232D]" />}
+            iconBg="bg-rose-50 text-[#D9232D]"
+            icon={<Trash2 className="w-4.5 h-4.5" />}
             title="Delete account"
             subtitle="Schedule deletion with a 7-day grace period"
           />
@@ -1073,9 +1006,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               setLogoutError('');
               setActiveDialog('logout');
             }}
-            iconBg="bg-[#FEECEC]"
+            iconBg="bg-rose-50 text-[#D9232D]"
             icon={
-              <svg className="w-5 h-5 text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                 <path d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             }

@@ -205,7 +205,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
   return (
     <section
-      className="mb-4 px-3.5 sm:px-5"
+      className="relative -mt-px mb-2 px-3.5 pt-3.5 pb-6 sm:px-5 sm:pt-4 sm:pb-7 bg-[linear-gradient(180deg,#090808_0%,#121112_20%,#454448_52%,#C4C4C9_79%,#EDEDEF_91%,#FDFDFD_100%)]"
       data-purpose="promotional-banner"
       aria-roledescription="carousel"
       aria-label="Featured promotions"
@@ -224,7 +224,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
         className="group relative focus:outline-none"
       >
         {/* Gradient + Classic Glass Effect Card */}
-        <div className="classic-glass relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/95 via-rose-50/45 to-slate-100/90 shadow-[0_12px_32px_-14px_rgba(15,23,42,0.12),0_4px_14px_-6px_rgba(217,35,45,0.08)] ring-1 ring-slate-900/[0.07] transition-all duration-500 hover:shadow-[0_18px_40px_-14px_rgba(217,35,45,0.16)]">
+        <div className="classic-glass relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/95 via-rose-50/45 to-slate-100/90 shadow-[0_18px_40px_-14px_rgba(9,8,8,0.34),0_6px_16px_-6px_rgba(15,23,42,0.14)] ring-1 ring-white/25 transition-all duration-500 hover:shadow-[0_22px_46px_-14px_rgba(9,8,8,0.4)]">
           {/* Specular Inner Frosted Glass Rim */}
           <div
             aria-hidden="true"
@@ -358,7 +358,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                     e.stopPropagation();
                     handleActivateSlideLink();
                   }}
-                  className="banner-cta-shine pointer-events-auto group/cta font-banner-outfit shrink-0 inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91C1C] pl-3.5 pr-1.5 py-1.5 text-[11px] font-extrabold tracking-[-0.01em] text-white shadow-[0_8px_20px_-4px_rgba(217,35,45,0.45)] ring-1 ring-white/40 backdrop-blur-md transition-all active:scale-95 sm:pl-4 sm:pr-1.5 sm:py-1.5 sm:text-[12px]"
+                  className="banner-cta-shine pointer-events-auto group/cta font-accent shrink-0 inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91C1C] pl-3.5 pr-1.5 py-1.5 text-[11px] font-bold tracking-[-0.01em] text-white shadow-[0_8px_20px_-4px_rgba(217,35,45,0.45)] ring-1 ring-white/40 backdrop-blur-md transition-all active:scale-95 sm:pl-4 sm:pr-1.5 sm:py-1.5 sm:text-[12px]"
                 >
                   <span>{slide.buttonLabel || 'Shop now'}</span>
                   <span className="grid h-5 w-5 place-items-center rounded-full bg-white/20 text-white ring-1 ring-white/30 transition-transform duration-200 group-hover/cta:translate-x-0.5">
@@ -494,7 +494,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                     e.stopPropagation();
                     handleActivateSlideLink();
                   }}
-                  className="banner-cta-shine group/cta relative font-banner-outfit shrink-0 inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91C1C] pl-4 pr-1.5 py-1.5 text-[11.5px] font-extrabold tracking-[-0.01em] text-white shadow-[0_8px_20px_-4px_rgba(217,35,45,0.42)] ring-1 ring-white/40 transition-all hover:shadow-[0_10px_24px_-4px_rgba(217,35,45,0.55)] active:scale-95 sm:pl-4.5 sm:pr-1.5 sm:py-1.5 sm:text-[12.5px]"
+                  className="banner-cta-shine group/cta relative font-accent shrink-0 inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91C1C] pl-4 pr-1.5 py-1.5 text-[11.5px] font-bold tracking-[-0.01em] text-white shadow-[0_8px_20px_-4px_rgba(217,35,45,0.42)] ring-1 ring-white/40 transition-all hover:shadow-[0_10px_24px_-4px_rgba(217,35,45,0.55)] active:scale-95 sm:pl-4.5 sm:pr-1.5 sm:py-1.5 sm:text-[12.5px]"
                 >
                   <span>{slide.buttonLabel || 'Shop now'}</span>
                   <span className="grid h-5 w-5 sm:h-5.5 sm:w-5.5 place-items-center rounded-full bg-white/20 text-white ring-1 ring-white/35 backdrop-blur-xs transition-transform duration-200 group-hover/cta:translate-x-0.5">

@@ -1,0 +1,159 @@
+# Rofik Godi Centre — Full AI, AEO & GEO Knowledge Reference
+
+> Canonical Source: https://rofikgodicenter.pages.dev/
+> Concise Index: https://rofikgodicenter.pages.dev/llms.txt
+> Last Updated: November 2026
+> Platform Engineering: Powered by Srishti Labs
+
+---
+
+## 1. Entity Identity & Local SEO / GEO Profile
+
+- **Official Brand Name:** Rofik Godi Centre (alternate spellings: Rofik Godi Center, ROFIK GODI CENTRE, রফিক গদি সেন্টার)
+- **Category:** Local Automotive Upholstery Workshop, Motorcycle/Scooter/E-Rickshaw Seat Cover Manufacturer & Retail Store (`AutoPartsStore`, `LocalBusiness`)
+- **Year Established:** 2007 (18+ years of hands-on seat tailoring experience in Murshidabad)
+- **Physical Address:** Kadbeltal, Petrol Pump More, Raninagar, Keshobnagar, Berhampore, West Bengal 742101, India
+- **GPS Coordinates:** Latitude `24.0973125`, Longitude `88.2735625`
+- **Google Plus Code:** `37WF+WC`
+- **Google Maps URL:** https://maps.app.goo.gl/8r2bxtfEfwicEp6Q7?g_st=ac
+- **Primary Phone / WhatsApp:** +91 94348 86786
+- **Alternate Phone:** +91 97753 33555
+- **Support Email:** support@rofikgodi.com
+- **Opening Hours:** Monday – Sunday, 8:00 AM – 9:30 PM IST (Open 7 days a week)
+- **Primary Service Areas:** Raninagar, Keshobnagar, Berhampore, Murshidabad district, and riders visiting from across West Bengal
+- **Customer Rating:** 4.8 / 5 based on 128+ verified local customer reviews
+- **App & Storefront Languages:** English (`en-IN`), Bengali / বাংলা (`bn-IN`)
+- **Bilingual Local Search Terms:** bike seat cover Berhampore, scooter seat cover Raninagar, toto seat cover Berhampore, e-rickshaw godi Murshidabad, gel seat cushion West Bengal, waterproof bike seat cover, বাইক সিট কভার বহরমপুর, স্কুটি সিট কভার, টোটো সিট কভার বহরমপুর, রফিক গদি সেন্টার
+
+---
+
+## 2. Core Craftsmanship Standards & Workshop Services
+
+Rofik Godi Centre manufactures, tailors, and fits seat covers hands-on at its Berhampore workshop:
+
+1. **Free On-Spot Seat Fitment at Workshop:** Every seat cover purchased for store pickup includes complimentary professional installation and tensioning at the workshop.
+2. **Custom Foam Modification & Tailbone Cutout:** Density customization (10mm–30mm PU foam, rebonded high-density 32-density orthopedic foam, and touring gel-infused pads) shaped for commuting and long-hour Toto driving.
+3. **High-Tensile Precision Stitching & Piping:** Automotive-grade waterproof rexine/leatherette with UV protection, heat-sealed seams, reinforced piping, and anti-slip grip panels built for heat and monsoon rain.
+4. **Same-Day Store Pickup & Expert Fitment:** Fast order preparation with QR-verified collection and on-site inspection before leaving the workshop.
+
+---
+
+## 3. Complete Core Product Catalog & Specifications
+
+*Note: Prices below reflect the baseline catalog in INR (₹). Live storefront prices, stock levels, color variants, and active promotional coupons at `https://rofikgodicenter.pages.dev/shop` are the real-time source of truth.*
+
+### 3.1 Bike & Scooter Seat Covers
+
+1. **Premium Bike Seat Cover** (`rg-prod-01`)
+   - URL: https://rofikgodicenter.pages.dev/shop/products/rg-prod-01
+   - Base Price: ₹499 (MRP ₹799)
+   - Highlights: 100% waterproof heavy rexine with UV protection, triple-stitched high-tension seams with piping, anti-fatigue high-density PU foam (12mm), heat barrier layer, elastic cord + velcro straps.
+   - Colors: Jet Black & Crimson Red, Stealth Matte Black, Vintage Tan Brown, Royal Blue Sport.
+   - Stitch Patterns: Quilted Diamond, Ribbed Sport, Double Red Stripe, Clean Minimal.
+   - Foam Upgrade Options: Standard Cushioning 10mm (+₹0), Super Comfort Double Foam 18mm (+₹150), Touring Gel-Infused Pad 25mm (+₹350).
+
+2. **Sport Bike Seat Cover** (`rg-prod-02`) — *Bestseller*
+   - URL: https://rofikgodicenter.pages.dev/shop/products/rg-prod-02
+   - Base Price: ₹599 (MRP ₹899)
+   - Highlights: High-traction anti-slip honeycomb center panel, waterproof sealed inner borders, reinforced red contrast stitching, universal under-seat buckle lock.
+   - Colors: Black with Red Line, Pure Carbon Black, Espresso Brown.
+   - Stitch Patterns: Sport Edge, Single Border Stitched, Ribbed Commuter.
+   - Foam Upgrade Options: Standard Commuter 8mm (+₹0), Extra Soft Padding 15mm (+₹120).
+
+3. **Classic Seat Cover** (`rg-prod-05`)
+   - URL: https://rofikgodicenter.pages.dev/shop/products/rg-prod-05
+   - Base Price: ₹549 (MRP ₹799)
+   - Highlights: Handcrafted synthetic leatherette with classic diamond cross-stitching, double piping, weatherproof rexine, and soft inner foam.
+   - Colors: Carbon Black & Crimson Red, All Black.
+   - Foam Upgrade Options: Standard Padding (+₹0), Extra Soft 14mm (+₹100).
+
+4. **Waterproof Seat Cover** (`rg-prod-06`) — *Bestseller*
+   - URL: https://rofikgodicenter.pages.dev/shop/products/rg-prod-06
+   - Base Price: ₹649 (MRP ₹949)
+   - Highlights: Monsoon-grade 100% waterproof heavy taffeta & rexine, heat-sealed inner border seams, instant wipe-dry surface, UV crack protection.
+   - Colors: Matte Black, Dark Carbon.
+   - Foam Upgrade Options: Standard Waterproof (+₹0), Heavy Double Layer (+₹120).
+
+### 3.2 Toto & E-Rickshaw Commercial Seat Covers
+
+5. **Toto Seat Cover** (`rg-prod-03`)
+   - URL: https://rofikgodicenter.pages.dev/shop/products/rg-prod-03
+   - Base Price: ₹699 (MRP ₹1,099)
+   - Highlights: Commercial-grade 1.2mm thick rexine built for high daily passenger volume, tear-proof edge beading, 100% washable mud-resistant surface, waterproof tarpaulin lining.
+   - Colors: Vintage Tan Brown, Crimson Red & Black, Emerald Green & Black.
+   - Compatibility: Yatri, Mayuri, Saarthi, CityLife, and Universal Toto passenger benches.
+   - Foam Upgrade Options: Heavy Commercial 15mm (+₹0), Ultra Soft Passenger Godi 22mm (+₹200).
+
+6. **Toto Driver Comfort Godi Seat & Backrest** (`rg-prod-07`) — *Bestseller*
+   - URL: https://rofikgodicenter.pages.dev/shop/products/rg-prod-07
+   - Base Price: ₹799 (MRP ₹1,100)
+   - Highlights: Engineered for 10–14 hour daily e-rickshaw shifts with ergonomic tailbone relief contour, heat-insulating rebonded foam core, heavy-duty zipper for foam replacement/washing, and side utility pouch.
+   - Colors: Solid Black & Red Trim, Dark Navy Blue, Forest Green.
+   - Compatibility: All Indian E-Rickshaw driver cabins, Auto Rickshaws (Bajaj / Piaggio), Loading Tempo driver seats.
+   - Foam Upgrade Options: Standard Driver High Density 20mm (+₹0), Heavy Duty 32-Density Ortho Foam 30mm (+₹200).
+
+### 3.3 Ride Comfort Cushions & Accessories
+
+7. **Gel Seat Cushion** (`rg-prod-04`) — *Bestseller*
+   - URL: https://rofikgodicenter.pages.dev/shop/products/rg-prod-04
+   - Base Price: ₹799 (MRP ₹1,299)
+   - Highlights: Medical-grade polymer honeycomb gel core absorbs road vibrations, breathable 3D air mesh prevents sweating, dual buckle straps, non-slip silicone base.
+   - Compatibility: All Motorcycles, All Scooters, Toto Driver Seats.
+   - Thickness Options: Standard Comfort 20mm (+₹0), Touring Max Cushion 30mm (+₹180).
+
+8. **AirFlow 3D Honeycomb Mesh Seat Pad** (`rg-prod-08`) — *Bestseller*
+   - URL: https://rofikgodicenter.pages.dev/shop/products/rg-prod-08
+   - Base Price: ₹499 (MRP ₹700)
+   - Highlights: Universal clip-on 3D polyester air-mesh pad that stays cool under direct Indian summer sun, shock-absorbing micro-springs, machine washable, installs in 15 seconds.
+   - Thickness Options: Single Layer Air Mesh 8mm (+₹0), Double Layer Heavy Air Mesh 14mm (+₹100).
+
+9. **Custom Tailored Bike Seat Cover** (`rg-prod-09`)
+   - URL: https://rofikgodicenter.pages.dev/shop/products/rg-prod-09
+   - Base Price: ₹1,099 (MRP ₹1,499)
+   - Highlights: Carbon-weave textured leatherette, 14mm memory foam, contrast piping, handcrafted durability for 3+ years.
+   - Foam Upgrade Options: Single Layer Foam 12mm (+₹0), Double Thick Foam Cushion 20mm (+₹180).
+
+---
+
+## 4. Supported Vehicle Fitment Catalog (30+ Brands, 230+ Models)
+
+Customers can filter exact model fitment using the in-app **Vehicle Fitment Finder** and save vehicles in **My Fitment Garage**:
+
+- **Motorcycles:** Hero MotoCorp (Splendor Plus, HF Deluxe, Passion Plus, Glamour, Xtreme 125R/160R/250R, Xpulse 200/210, Karizma XMR), Honda (Shine 100/125, SP 125/160, Unicorn, Hornet 2.0, Livo, CB350/CB350RS, NX200/500), Bajaj (Pulsar 125/150/180/220F/N125/N160/N250/NS125/NS160/NS200/NS400Z/RS200, Platina 100/110, CT 110X, Freedom 125, Avenger 220, Dominar 250/400), Royal Enfield (Classic 350/650, Bullet 350/650, Hunter 350, Meteor 350, Super Meteor 650, Himalayan 450, Guerrilla 450, Interceptor 650, Continental GT 650, Shotgun 650, Scram 440, Bear 650), TVS (Apache RTR 160/180/200/310, Apache RR 310, Raider 125, Ronin, Radeon, Sport, Star City Plus, XL 100), Yamaha (MT-15 V2, R15 V4/R15S, FZ-S Fi/FZ-X/FZ-Fi, XSR 155), Suzuki (Gixxer 155/250/SF, V-Strom SX), KTM (Duke 160/200/250/390, RC 160/200/390, Adventure 250/390), Jawa, Yezdi, Triumph (Speed 400, Scrambler 400 X, Speed T4, Trident 660), Husqvarna, Harley-Davidson (X440), Kawasaki, Benelli, BMW Motorrad, BSA, Ducati, Aprilia, Keeway, QJ Motor.
+- **Scooters & Electric Two-Wheelers:** Honda (Activa 110 6G, Activa 125, Activa e:, Dio 110/125, QC1), TVS (Jupiter 110/125, Ntorq 125/150, iQube, Zest 110), Suzuki (Access 125, e-Access, Burgman Street 125, Avenis 125), Hero (Destini 110/125, Pleasure Plus, Xoom 110/125/160), Yamaha (Ray ZR 125, Fascino 125, Aerox 155), Ola Electric (S1 Pro, S1 X, S1 Z, Roadster series), Ather (450S, 450X, 450 Apex, Rizta), Bajaj Chetak, Vespa, Vida (V2, VX2), Kinetic Green (E-Luna, Zing, Zulu), Ampere, River Indie, Pure EV, Revolt, Simple Energy, Ultraviolette, Oben, Okinawa, Matter, VLF.
+- **Toto & E-Rickshaws:** Yatri E-Rickshaw, Mayuri E-Rickshaw, Saarthi / CityLife, Universal Toto Driver & 4-Seater Passenger Benches, Bajaj / Piaggio Auto Rickshaws.
+
+---
+
+## 5. Store Pickup, Payment, Cancellation & Guarantee Policies
+
+- **Store Pickup Only (No Shipping):** All orders must be collected in person at Rofik Godi Centre in Berhampore. Customers show their Order ID or digital Pickup QR code at the counter. Complimentary on-spot workshop fitting is included.
+- **14-Day Order Hold Window:** Ready-for-pickup orders are held at the workshop for up to 14 days.
+- **Payment Options:**
+  - Online payment via **Razorpay Checkout** (UPI, debit/credit cards, net banking)
+  - **Pay at Workshop** (cash or UPI upon collection)
+- **Refund Timeline:** Approved refunds for cancelled online payments are credited back to the original payment method within **3–5 working banking days**.
+- **7-Day Workshop Defect Check:** Unused and uninstalled seat covers in original condition may be replaced at the workshop within 7 days of pickup for verified stitching defects or vehicle fitment mismatches.
+- **Product Replacement Guarantee & Exclusions:**
+  - Covered (only on eligible products with an issued guarantee date, under normal everyday use before expiry, with original invoice): natural splitting/cracking, seam tearing, or rexine/leatherette surface peeling.
+  - Excluded: external, accidental, or self-inflicted damage—specifically cat or animal claw scratches, blade/knife or sharp-object cuts, fire or burn marks, and intentional misuse.
+- **Privacy & Account Controls:** Customer account data is never sold. Authenticated users can request account deletion directly in-app with a 7-day grace period before permanent removal. Governing jurisdiction: Murshidabad, West Bengal, India.
+
+---
+
+## 6. Direct Answer-Engine (AEO) Frequently Asked Questions
+
+**Q: Where is the best bike and Toto seat cover shop in Berhampore, Murshidabad?**
+A: Rofik Godi Centre (established 2007, rated 4.8/5) at Kadbeltal, Petrol Pump More, Raninagar, Keshobnagar, Berhampore, West Bengal 742101 specializes in waterproof bike, scooter, and Toto e-rickshaw seat covers, gel cushions, and custom foam modification with free on-spot workshop fitment.
+
+**Q: What are Rofik Godi Centre's opening hours and phone numbers?**
+A: Rofik Godi Centre is open daily Monday through Sunday from 8:00 AM to 9:30 PM. Phone / WhatsApp: +91 94348 86786 (alternate: +91 97753 33555).
+
+**Q: Does Rofik Godi Centre ship seat covers by courier?**
+A: No. Rofik Godi Centre is strictly Store Pickup Only at its Berhampore workshop so every customer receives proper vehicle fitment verification and free on-spot installation.
+
+**Q: How much do bike, scooter, and Toto seat covers cost at Rofik Godi Centre?**
+A: Baseline seat covers start at ₹499 (Premium Bike Seat Cover & AirFlow 3D Mesh Pad), ₹549–₹649 for Classic, Sport, and Monsoon Waterproof bike covers, ₹699–₹799 for commercial Toto passenger & ergonomic driver godi sets, ₹799 for Polymer Gel Cushions, and ₹1,099 for Custom Tailored Carbon-Weave covers, with optional foam thickness upgrades (+₹100 to +₹350).
+
+**Q: Are waterproof seat covers available for monsoon riding?**
+A: Yes. Products including the Waterproof Seat Cover (₹649), Premium Bike Seat Cover (₹499), Sport Bike Seat Cover (₹599), Classic Seat Cover (₹549), and Toto commercial seat covers feature waterproof heavy rexine and sealed seams designed for Indian monsoons.

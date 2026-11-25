@@ -64,7 +64,6 @@ import {
   List,
   PhoneCall,
   MessageCircle,
-  Flame,
   ArrowUpDown,
   Bell,
   Truck,
@@ -74,6 +73,7 @@ import {
 import { supabase } from './lib/supabase';
 import { NATIVE_AUTH_CALLBACK_URL } from './lib/oauthRedirect';
 import { getPathForCustomerOrder, getPathForNotificationsSettings, getPathForOrderHelp, getPathForPhase, getPathForProduct, getPathForSettingsSection, getPathForStoreNavigation, getPathForTab, isAdminPath, requiresCustomerAuthentication, resolveAppRoute, shouldRedirectAdminToWorkspace, type RouteTab } from './lib/appRoutes';
+import { applyRouteSeoMeta, resolveRouteSeoMeta } from './lib/seoMetadata';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from './lib/supabaseCoupons';
 import { getNotificationTargetPath } from './lib/notificationTarget';
 import { signOutCurrentDevice } from './lib/authLogout';
@@ -813,6 +813,14 @@ export default function App() {
   const pendingStockAlertProductRef = useRef<string | null>(null);
   const stockAlertRequestLockRef = useRef(false);
   const stockAlertFeedbackTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    applyRouteSeoMeta(
+      resolveRouteSeoMeta(location.pathname, {
+        product: selectedProduct,
+      }),
+    );
+  }, [location.pathname, selectedProduct]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isCustomBuilderOpen, setIsCustomBuilderOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
@@ -2067,27 +2075,25 @@ export default function App() {
               onClear={() => setVehicleFilter(null)}
             />
 
-            {/* Popular Picks Horizontal Scroll (from user image) */}
+            {/* Popular Picks Horizontal Scroll */}
             {selectedCategory === 'all' && !searchQuery && !vehicleFilter && (
               <section className="px-3.5 sm:px-5 mb-4" data-purpose="popular-picks">
-                <div className="flex justify-between items-baseline mb-2">
-                  <div className="flex items-center gap-1.5">
-                    <Flame className="w-4 h-4 text-[#D9232D]" />
-                    <div>
-                      <h3 className="text-[15px] sm:text-base font-black text-gray-900 tracking-tight">
-                        {translate(uiLanguage, 'home.popularPicks')}
-                      </h3>
-                      <p className="text-[11px] text-gray-400 font-medium">
-                        {translate(uiLanguage, 'home.favourites')}
-                      </p>
-                    </div>
+                <div className="flex justify-between items-baseline mb-2.5">
+                  <div>
+                    <h3 className="text-[15px] sm:text-base font-extrabold text-slate-900 tracking-tight">
+                      {translate(uiLanguage, 'home.popularPicks')}
+                    </h3>
+                    <p className="text-[11.5px] text-slate-500 font-medium">
+                      {translate(uiLanguage, 'home.favourites')}
+                    </p>
                   </div>
                   <button
+                    type="button"
                     onClick={scrollToShop}
-                    className="text-[11.5px] font-bold text-[#D9232D] hover:text-red-700 flex items-center space-x-1 cursor-pointer"
+                    className="text-[11.5px] font-bold text-[#D9232D] hover:text-[#BE1C25] flex items-center gap-1 cursor-pointer transition-colors"
                   >
                     <span>{translate(uiLanguage, 'home.seeAll')}</span>
-                    <span className="text-xs">→</span>
+                    <span aria-hidden="true" className="text-xs">→</span>
                   </button>
                 </div>
 
@@ -2099,7 +2105,7 @@ export default function App() {
                 ) : catalogProducts.length === 0 ? (
                   <CatalogStatus state="empty" compact />
                 ) : (
-                  <div className="flex space-x-2.5 overflow-x-auto no-scrollbar pb-2.5 pt-1 -mx-3.5 px-3.5 sm:-mx-5 sm:px-5">
+                  <div className="flex space-x-2.5 overflow-x-auto no-scrollbar pb-2.5 pt-0.5 -mx-3.5 px-3.5 sm:-mx-5 sm:px-5">
                     {catalogProducts.slice(0, 4).map((prod) => (
                       <ProductCard
                         key={prod.id}
@@ -2121,64 +2127,74 @@ export default function App() {
 
             {/* Full Shop / Product Catalog Section */}
             <section id="shop-section" className="px-3.5 sm:px-5 mb-5">
-              <div className="mb-2">
+              <div className="mb-2.5">
                 <div>
-                  <h3 className="text-[15px] sm:text-base font-black text-gray-900 tracking-tight">
+                  <h3 className="text-[15px] sm:text-base font-extrabold text-slate-900 tracking-tight">
                     {selectedCategory === 'all'
                       ? 'All Seat Covers & Essentials'
-                      : `${selectedCategory.toUpperCase()} COLLECTION`}
+                      : `${selectedCategory.charAt(0).toUpperCase()}${selectedCategory.slice(1)} Collection`}
                   </h3>
-                  <p className="text-[11px] text-gray-400 font-medium">
+                  <p className="text-[11.5px] text-slate-500 font-medium tabular-nums">
                     {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}{' '}
                     available
                   </p>
                 </div>
               </div>
 
-              {/* Sort & Filter toolbar — identical to the /shop page */}
-              <div className="flex items-center justify-between mb-2.5">
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsHomeSortOpen(true)}
-                      aria-label="Sort products"
-                      className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold"
-                    >
-                      <ArrowUpDown className="h-3.5 w-3.5" /> {SORT_LABELS[sortBy]?.label || 'Sort'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsHomeFilterOpen(true)}
-                      aria-label="Filter products"
-                      className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold"
-                    >
-                      <SlidersHorizontal className="h-3.5 w-3.5" /> Filter
-                      {activeHomeFiltersCount > 0 && (
-                        <span className="grid h-4 min-w-4 place-items-center rounded-full bg-[#e61e25] px-1 text-[9px] font-extrabold text-white">
-                          {activeHomeFiltersCount}
-                        </span>
-                      )}
-                    </button>
-                  </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => setShopLayoutMode('grid')}
-                      aria-label="Grid view"
-                      aria-pressed={shopLayoutMode === 'grid'}
-                      className={`rounded-lg p-1.5 ${shopLayoutMode === 'grid' ? 'bg-[#e61e25] text-white' : 'text-slate-500'}`}
-                    >
-                      <LayoutGrid className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => setShopLayoutMode('list')}
-                      aria-label="List view"
-                      aria-pressed={shopLayoutMode === 'list'}
-                      className={`rounded-lg p-1.5 ${shopLayoutMode === 'list' ? 'bg-[#e61e25] text-white' : 'text-slate-500'}`}
-                    >
-                      <List className="h-4 w-4" />
-                    </button>
-                  </div>
+              {/* Sort & Filter toolbar — unified with /shop */}
+              <div className="flex items-center justify-between gap-2 mb-2.5">
+                <div className="flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsHomeSortOpen(true)}
+                    aria-label="Sort products"
+                    className="flex min-h-9 items-center gap-1.5 rounded-xl border border-slate-200/85 bg-white hover:border-slate-300 px-3 py-1 text-[11.5px] font-semibold text-slate-700 transition-colors cursor-pointer"
+                  >
+                    <ArrowUpDown className="h-3.5 w-3.5 text-slate-500" /> {SORT_LABELS[sortBy]?.label || 'Sort'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsHomeFilterOpen(true)}
+                    aria-label="Filter products"
+                    className="flex min-h-9 items-center gap-1.5 rounded-xl border border-slate-200/85 bg-white hover:border-slate-300 px-3 py-1 text-[11.5px] font-semibold text-slate-700 transition-colors cursor-pointer"
+                  >
+                    <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" /> Filter
+                    {activeHomeFiltersCount > 0 && (
+                      <span className="grid h-4 min-w-4 place-items-center rounded-full bg-[#D9232D] px-1 text-[9px] font-bold text-white tabular-nums">
+                        {activeHomeFiltersCount}
+                      </span>
+                    )}
+                  </button>
                 </div>
+                <div className="flex shrink-0 items-center rounded-xl bg-slate-200/70 p-0.5 border border-slate-200/80">
+                  <button
+                    type="button"
+                    onClick={() => setShopLayoutMode('grid')}
+                    aria-label="Grid view"
+                    aria-pressed={shopLayoutMode === 'grid'}
+                    className={`grid h-8 w-8 place-items-center rounded-lg transition-all cursor-pointer ${
+                      shopLayoutMode === 'grid'
+                        ? 'bg-white text-[#D9232D] shadow-2xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShopLayoutMode('list')}
+                    aria-label="List view"
+                    aria-pressed={shopLayoutMode === 'list'}
+                    className={`grid h-8 w-8 place-items-center rounded-lg transition-all cursor-pointer ${
+                      shopLayoutMode === 'list'
+                        ? 'bg-white text-[#D9232D] shadow-2xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <List className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
 
               {/* Active Filter Chips */}
               {(selectedCategory !== 'all' ||

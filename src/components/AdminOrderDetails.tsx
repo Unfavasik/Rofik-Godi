@@ -82,8 +82,8 @@ const statusHero = (status: string) => {
     title: 'Order confirmed',
     description: 'The store has confirmed this order.',
     icon: CheckCircle2,
-    tone: 'border-indigo-200 bg-indigo-50 text-indigo-800',
-    iconTone: 'bg-white text-indigo-700',
+    tone: 'border-sky-200 bg-sky-50 text-sky-900',
+    iconTone: 'bg-white text-sky-700',
   };
   return {
     title: 'Order received',

@@ -25,7 +25,6 @@ import {
   Printer,
   Send,
   ShieldCheck,
-  Sparkles,
   Store,
   Ticket,
   X,
@@ -137,11 +136,11 @@ const topicIcons: Record<
 
 const topicIconTone: Record<OrderHelpTopicId, string> = {
   order_status: 'border-rose-200/80 bg-rose-50 text-[#D9232D]',
-  payment_issue: 'border-amber-200/80 bg-amber-50 text-amber-700',
-  change_order: 'border-violet-200/80 bg-violet-50 text-violet-700',
-  pickup_store: 'border-emerald-200/80 bg-emerald-50 text-emerald-700',
-  return_exchange: 'border-blue-200/80 bg-blue-50 text-blue-700',
-  other_help: 'border-sky-200/80 bg-sky-50 text-sky-700',
+  payment_issue: 'border-slate-200/80 bg-slate-100 text-slate-700',
+  change_order: 'border-slate-200/80 bg-slate-100 text-slate-700',
+  pickup_store: 'border-slate-200/80 bg-slate-100 text-slate-700',
+  return_exchange: 'border-slate-200/80 bg-slate-100 text-slate-700',
+  other_help: 'border-slate-200/80 bg-slate-100 text-slate-700',
 };
 
 const ticketStatusBadge = (status: SupportRequestRecord['status']) => {
@@ -990,17 +989,14 @@ export function OrderHelpSupportView({
                 ref={resolutionPanelRef}
                 data-testid="order-help-resolution-panel"
                 aria-label={`${resolution.topic.title} resolution and support form`}
-                className="classic-glass overflow-hidden rounded-2xl border border-white/90 bg-gradient-to-br from-white/95 via-white/90 to-rose-50/45 p-3.5 shadow-[0_14px_34px_-20px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.96)] sm:p-4"
+                className="overflow-hidden rounded-2xl border border-slate-200/85 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-4"
               >
                 {/* Resolution Guidance Header */}
                 <div className="flex flex-col gap-3 border-b border-slate-200/75 pb-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 flex-1">
-                    <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#D9232D] ring-1 ring-inset ring-rose-200/70">
-                      <Sparkles className="h-3 w-3 shrink-0" />
-                      <span className="truncate">
-                        Step 2 · {resolution.topic.title} ({resolution.topic.supportCategory})
-                      </span>
-                    </span>
+                    <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#D9232D] truncate">
+                      Step 2 · {resolution.topic.title} ({resolution.topic.supportCategory})
+                    </p>
                     <h3 className="mt-2 text-sm font-black tracking-tight text-slate-950 sm:text-base">
                       {resolution.heading}
                     </h3>

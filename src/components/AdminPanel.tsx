@@ -192,16 +192,15 @@ function MetricCard({
     <Wrapper
       type={onClick ? 'button' : undefined}
       onClick={onClick}
-      className={`group relative overflow-hidden rounded-xl border border-slate-200/85 bg-white/95 p-3.5 text-left shadow-[0_6px_20px_-14px_rgba(15,23,42,0.08)] backdrop-blur-md transition-all duration-300 md:hover:-translate-y-0.5 md:hover:border-red-200/80 md:hover:shadow-[0_12px_28px_-14px_rgba(217,35,45,0.12)] ${onClick ? 'w-full cursor-pointer' : ''}`}
+      className={`group relative overflow-hidden rounded-xl border border-slate-200/85 bg-white p-3.5 text-left shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition-colors duration-200 md:hover:border-slate-300 ${onClick ? 'w-full cursor-pointer' : ''}`}
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[#D9232D]/80 via-rose-400/50 to-transparent opacity-75 transition-opacity group-hover:opacity-100" />
       <div className="flex items-start justify-between gap-2.5">
-        <div className={`flex h-8 w-8 items-center justify-center rounded-xl ring-1 ring-inset ring-black/5 transition-transform duration-300 group-hover:scale-105 ${tone}`}>
+        <div className={`flex h-8 w-8 items-center justify-center rounded-xl transition-colors ${tone}`}>
           <Icon className="h-4 w-4" />
         </div>
         {change ? (
           <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold tabular-nums ${positive ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/70' : 'bg-rose-50 text-rose-600 ring-1 ring-rose-200/70'}`}
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums ${positive ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/70' : 'bg-rose-50 text-rose-600 ring-1 ring-rose-200/70'}`}
           >
             {positive ? (
               <ArrowUpRight className="h-3 w-3" />
@@ -211,19 +210,19 @@ function MetricCard({
             {change}
           </span>
         ) : onClick ? (
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-colors group-hover:bg-red-50 group-hover:text-[#D9232D]">
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-slate-50 text-slate-400 transition-colors group-hover:bg-slate-100 group-hover:text-slate-700">
             <ChevronRight className="h-3.5 w-3.5" />
           </span>
         ) : null}
       </div>
-      <p className="mt-2.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-slate-400">{label}</p>
+      <p className="mt-2.5 text-[10.5px] font-bold uppercase tracking-[0.06em] text-slate-500">{label}</p>
       {loading ? (
         <div className="mt-1.5 h-6 w-24 rounded-lg bg-slate-200/80 animate-shimmer" aria-hidden="true" />
       ) : (
-        <p className="mt-0.5 font-display text-lg font-black tracking-tight text-slate-900 tabular-nums md:text-xl">{value}</p>
+        <p className="mt-0.5 font-display text-lg font-extrabold tracking-tight text-slate-950 tabular-nums md:text-xl">{value}</p>
       )}
       {sublabel && (
-        <p className="mt-1 truncate text-[10.5px] font-semibold text-slate-500">{sublabel}</p>
+        <p className="mt-1 truncate text-[10.5px] font-medium text-slate-500">{sublabel}</p>
       )}
     </Wrapper>
   );
@@ -240,18 +239,16 @@ function PageIntro({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="relative mb-4 overflow-hidden rounded-2xl border border-slate-200/85 bg-gradient-to-br from-white via-white to-rose-50/35 p-3.5 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.08)] sm:px-4 sm:py-3.5">
-      <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-red-500/[0.05] blur-2xl" />
-      <div className="relative flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+    <div className="mb-4 rounded-2xl border border-slate-200/85 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:px-4 sm:py-3.5">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div className="min-w-0">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200/70 bg-red-50/80 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-[#D9232D]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#D9232D]" />
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#D9232D]">
             {eyebrow}
-          </span>
-          <h2 className="mt-1.5 font-display text-lg font-black tracking-tight text-slate-900 md:text-xl">
+          </p>
+          <h2 className="mt-1 font-display text-lg font-extrabold tracking-tight text-slate-950 md:text-xl">
             {title}
           </h2>
-          <p className="mt-0.5 max-w-2xl text-[11px] font-medium leading-relaxed text-slate-500">{description}</p>
+          <p className="mt-0.5 max-w-2xl text-[11.5px] font-medium leading-relaxed text-slate-500">{description}</p>
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </div>
@@ -766,9 +763,9 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
                       key={id}
                       onClick={() => goTo(id)}
                       aria-current={active ? 'page' : undefined}
-                      className={`group relative flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-1.5 text-left text-[11.5px] font-bold transition-all ${
+                      className={`group relative flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-1.5 text-left text-[11.5px] font-bold transition-colors ${
                         active
-                          ? 'bg-gradient-to-r from-red-50/95 via-rose-50/60 to-white text-[#D9232D] shadow-2xs ring-1 ring-red-200/70'
+                          ? 'bg-rose-50/85 text-[#D9232D] ring-1 ring-rose-200/70'
                           : 'text-slate-600 hover:bg-slate-100/75 hover:text-slate-900'
                       }`}
                     >
@@ -782,7 +779,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
                         <span
                           className={`grid h-6 w-6 shrink-0 place-items-center rounded-lg transition-colors ${
                             active
-                              ? 'bg-[#D9232D] text-white shadow-2xs shadow-red-500/20'
+                              ? 'bg-[#D9232D] text-white'
                               : 'bg-slate-100/80 text-slate-500 group-hover:bg-white group-hover:text-slate-800'
                           }`}
                         >
@@ -1436,7 +1433,7 @@ function Overview({
           value={String(metrics?.total_orders ?? orders.length)}
           sublabel={`${activeQueueCount} active in pickup queue`}
           icon={ClipboardList}
-          tone="bg-blue-50 text-blue-600"
+          tone="bg-slate-100 text-slate-700"
           onClick={() => onNavigate('orders')}
         />
         <MetricCard
@@ -1444,7 +1441,7 @@ function Overview({
           value={metrics ? money(metrics.total_revenue) : '—'}
           sublabel={metrics ? `${metrics.verified_payments ?? 0} verified payments` : 'Syncing revenue ledger'}
           icon={Wallet}
-          tone="bg-red-50 text-[#D9232D]"
+          tone="bg-rose-50 text-[#D9232D]"
           onClick={() => onNavigate('reports')}
         />
         <MetricCard
@@ -1452,7 +1449,7 @@ function Overview({
           value={String(metrics?.total_customers ?? '—')}
           sublabel="Registered store accounts"
           icon={Users}
-          tone="bg-violet-50 text-violet-600"
+          tone="bg-slate-100 text-slate-700"
           onClick={() => onNavigate('customers')}
         />
         <MetricCard
@@ -1460,7 +1457,7 @@ function Overview({
           value={String(metrics?.total_products ?? products.length)}
           sublabel={`${inStockCount} published in storefront`}
           icon={Package}
-          tone="bg-emerald-50 text-emerald-600"
+          tone="bg-slate-100 text-slate-700"
           onClick={() => onNavigate('products')}
         />
       </div>
@@ -1574,9 +1571,9 @@ function Overview({
                   </span>
                   <div className="relative flex w-full flex-1 items-end justify-center">
                     <div
-                      className={`w-full max-w-[36px] rounded-t-lg transition-all duration-300 ${
+                      className={`w-full max-w-[36px] rounded-t-lg transition-colors duration-200 ${
                         day.amount > 0
-                          ? 'bg-gradient-to-t from-[#D9232D] via-[#e54850] to-[#fca5a5] shadow-xs group-hover:brightness-105'
+                          ? 'bg-[#D9232D] group-hover:bg-[#BE1C25]'
                           : 'bg-slate-200/75'
                       }`}
                       style={{ height: `${barPct}%` }}

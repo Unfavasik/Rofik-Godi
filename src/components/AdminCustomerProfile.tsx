@@ -53,10 +53,10 @@ const noteCategories: Array<{ label: CustomerNoteCategory; icon: LucideIcon }> =
 ];
 
 const categoryClasses: Record<CustomerNoteCategory, string> = {
-  Important: 'bg-rose-50 text-rose-700 ring-rose-100',
-  Delivery: 'bg-blue-50 text-blue-700 ring-blue-100',
-  Payment: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
-  Call: 'bg-violet-50 text-violet-700 ring-violet-100',
+  Important: 'bg-rose-50 text-[#D9232D] ring-rose-200/70',
+  Delivery: 'bg-slate-100 text-slate-700 ring-slate-200',
+  Payment: 'bg-emerald-50 text-emerald-700 ring-emerald-200/70',
+  Call: 'bg-slate-100 text-slate-700 ring-slate-200',
   General: 'bg-slate-100 text-slate-600 ring-slate-200',
 };
 
@@ -431,10 +431,9 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
         </button>
       </div>
 
-      <header className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-50 via-[#f1f8ff] to-blue-50 p-3.5 shadow-[0_10px_30px_rgba(36,99,160,.06)] sm:p-4">
-        <div className="pointer-events-none absolute -right-12 -top-20 h-48 w-48 rounded-full bg-white/70 blur-2xl" />
-        <div className="relative flex flex-col gap-3.5 sm:flex-row sm:items-center">
-          <div className="relative mx-auto grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full bg-blue-600 text-xl font-black text-white shadow-[0_8px_20px_rgba(37,99,235,.22)] sm:mx-0 sm:h-20 sm:w-20 sm:text-2xl">
+      <header className="rounded-2xl border border-slate-200/85 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-4">
+        <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center">
+          <div className="relative mx-auto grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full bg-slate-900 text-xl font-extrabold text-white ring-2 ring-slate-100 sm:mx-0 sm:h-20 sm:w-20 sm:text-2xl">
             <span aria-hidden="true">{initials || 'C'}</span>
             {avatarUrl && (
               <img
@@ -450,7 +449,7 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
           </div>
           <div className="min-w-0 flex-1 text-center sm:text-left">
             <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-              <h3 className="max-w-full truncate text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+              <h3 className="max-w-full truncate text-lg font-extrabold tracking-tight text-slate-950 sm:text-xl">
                 {customer.name}
               </h3>
             </div>
@@ -459,7 +458,7 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
                 <Mail className="h-3.5 w-3.5 shrink-0 text-slate-500" />
                 <span className="truncate">{customer.email || 'Email not available'}</span>
               </span>
-              <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1.5 tabular-nums">
                 <Phone className="h-3.5 w-3.5 shrink-0 text-slate-500" />
                 <span>{customer.phone || 'Phone not available'}</span>
               </span>
@@ -468,7 +467,7 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
           <button
             type="button"
             onClick={() => setEditNoticeOpen(true)}
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 self-center rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-white sm:self-start"
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 self-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100 sm:self-start"
           >
             <Pencil className="h-3.5 w-3.5" />
             Edit
@@ -481,25 +480,25 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
           icon={ShoppingBag}
           label="Total orders"
           value={Number(customer.orderCount || 0).toLocaleString('en-IN')}
-          tone="bg-blue-50"
+          tone="bg-slate-100"
         />
         <SummaryTile
           icon={IndianRupee}
           label="Total spending"
           value={money(customer.totalSpent)}
-          tone="bg-emerald-50"
+          tone="bg-rose-50"
         />
         <SummaryTile
           icon={CalendarDays}
           label="Customer since"
           value={dateLabel(customer.createdAt, false)}
-          tone="bg-violet-50"
+          tone="bg-slate-100"
         />
         <SummaryTile
           icon={RefreshCw}
           label="Status"
           value={customer.status || 'New'}
-          tone="bg-orange-50"
+          tone="bg-slate-100"
         />
       </div>
 
@@ -689,25 +688,25 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
               icon={ShoppingBag}
               label="Total orders"
               value={Number(customer.orderCount || 0).toLocaleString('en-IN')}
-              tone="bg-blue-50"
+              tone="bg-slate-100"
             />
             <SummaryTile
               icon={CheckCircle2}
               label="Completed in history"
               value={completedOrders.toLocaleString('en-IN')}
-              tone="bg-emerald-50"
+              tone="bg-slate-100"
             />
             <SummaryTile
               icon={Clock3}
               label="New in history"
               value={newOrders.toLocaleString('en-IN')}
-              tone="bg-violet-50"
+              tone="bg-slate-100"
             />
             <SummaryTile
               icon={BarChart3}
               label="Average order value"
               value={money(averageOrderValue)}
-              tone="bg-orange-50"
+              tone="bg-rose-50"
             />
           </div>
           <p className="mt-2.5 text-[10px] text-slate-400">

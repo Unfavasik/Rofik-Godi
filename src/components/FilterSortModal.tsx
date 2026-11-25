@@ -6,10 +6,9 @@ import {
   SlidersHorizontal,
   ArrowUpDown,
   RotateCcw,
-  Sparkles,
   Droplets,
   Star,
-  Flame,
+  Award,
   CheckCircle2,
   Scissors,
 } from 'lucide-react';
@@ -380,13 +379,13 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <Droplets className="w-4 h-4 text-blue-500" />
+                        <Droplets className={`w-4 h-4 ${draftFilters.waterproofOnly ? 'text-[#D9232D]' : 'text-slate-500'}`} />
                         <span className="text-[12px] font-bold">100% Waterproof</span>
                       </div>
                       <div
                         className={`w-4 h-4 rounded-md border flex items-center justify-center ${
                           draftFilters.waterproofOnly
-                            ? 'bg-blue-600 border-blue-600 text-white'
+                            ? 'bg-[#D9232D] border-[#D9232D] text-white'
                             : 'border-slate-300'
                         }`}
                       >
@@ -403,14 +402,14 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                           bestsellerOnly: !prev.bestsellerOnly,
                         }))
                       }
-                      className={`p-2.5 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
+                      className={`p-2.5 rounded-xl border flex items-center justify-between transition-colors cursor-pointer ${
                         draftFilters.bestsellerOnly
-                          ? 'bg-red-50/80 border-red-300 text-[#D9232D]'
+                          ? 'bg-rose-50/70 border-rose-300 text-[#D9232D]'
                           : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <Flame className="w-4 h-4 text-red-500" />
+                        <Award className={`w-4 h-4 ${draftFilters.bestsellerOnly ? 'text-[#D9232D]' : 'text-slate-500'}`} />
                         <span className="text-[12px] font-bold">Bestsellers</span>
                       </div>
                       <div
@@ -433,20 +432,20 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                           inStockOnly: !prev.inStockOnly,
                         }))
                       }
-                      className={`p-2.5 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
+                      className={`p-2.5 rounded-xl border flex items-center justify-between transition-colors cursor-pointer ${
                         draftFilters.inStockOnly
-                          ? 'bg-emerald-50/80 border-emerald-300 text-emerald-700'
+                          ? 'bg-rose-50/70 border-rose-300 text-[#D9232D]'
                           : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        <CheckCircle2 className={`w-4 h-4 ${draftFilters.inStockOnly ? 'text-[#D9232D]' : 'text-slate-500'}`} />
                         <span className="text-[12px] font-bold">In Stock Only</span>
                       </div>
                       <div
                         className={`w-4 h-4 rounded-md border flex items-center justify-center ${
                           draftFilters.inStockOnly
-                            ? 'bg-emerald-600 border-emerald-600 text-white'
+                            ? 'bg-[#D9232D] border-[#D9232D] text-white'
                             : 'border-slate-300'
                         }`}
                       >
@@ -463,20 +462,20 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                           customizableOnly: !prev.customizableOnly,
                         }))
                       }
-                      className={`p-2.5 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
+                      className={`p-2.5 rounded-xl border flex items-center justify-between transition-colors cursor-pointer ${
                         draftFilters.customizableOnly
-                          ? 'bg-purple-50/80 border-purple-300 text-purple-700'
+                          ? 'bg-rose-50/70 border-rose-300 text-[#D9232D]'
                           : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <Scissors className="w-4 h-4 text-purple-500" />
+                        <Scissors className={`w-4 h-4 ${draftFilters.customizableOnly ? 'text-[#D9232D]' : 'text-slate-500'}`} />
                         <span className="text-[12px] font-bold">Custom Fit Ready</span>
                       </div>
                       <div
                         className={`w-4 h-4 rounded-md border flex items-center justify-center ${
                           draftFilters.customizableOnly
-                            ? 'bg-purple-600 border-purple-600 text-white'
+                            ? 'bg-[#D9232D] border-[#D9232D] text-white'
                             : 'border-slate-300'
                         }`}
                       >
@@ -571,9 +570,8 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                 <button
                   type="button"
                   onClick={handleApply}
-                  className="min-h-10 flex-[2] py-2 px-4 rounded-xl bg-[#D9232D] hover:bg-red-700 text-white font-black text-xs shadow-sm transition-all active:scale-98 cursor-pointer text-center flex items-center justify-center gap-1.5 whitespace-nowrap tabular-nums"
+                  className="min-h-10 flex-[2] py-2 px-4 rounded-xl bg-[#D9232D] hover:bg-[#BE1C25] text-white font-bold text-xs transition-colors active:scale-98 cursor-pointer text-center flex items-center justify-center gap-1.5 whitespace-nowrap tabular-nums"
                 >
-                  <Sparkles className="w-3.5 h-3.5 shrink-0" />
                   <span>
                     Show {draftMatchingCount} {draftMatchingCount === 1 ? 'Result' : 'Results'}
                   </span>

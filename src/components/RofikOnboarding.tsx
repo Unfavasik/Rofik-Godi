@@ -141,7 +141,6 @@ export default function RofikOnboarding({ onFinish }: Props) {
       onPointerMove={onMove}
       onPointerUp={onUp}
       onPointerCancel={onUp}
-      style={{ fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif' }}
       className="relative mx-auto h-[100dvh] w-full max-w-[440px] touch-pan-y select-none overflow-hidden bg-white sm:my-4 sm:h-[min(calc(100dvh_-_2rem),880px)] sm:rounded-[36px] sm:shadow-2xl"
     >
       {/* Artwork fits the width at the top; its bottom fades into the slide colour, so the text sits below the character */}

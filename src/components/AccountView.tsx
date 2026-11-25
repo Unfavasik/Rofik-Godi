@@ -18,7 +18,7 @@ import {
   Trash2,
   Star,
   ShoppingBag,
-  Sparkles,
+  Wrench,
   LogOut,
   ArrowLeft,
   Bell,
@@ -829,31 +829,21 @@ export const AccountView: React.FC<AccountViewProps> = ({
       <main className="mx-auto w-full max-w-3xl px-3.5 sm:px-5 space-y-3">
         {/* BEGIN: ProfileHeroCard */}
         <section
-          className="group relative overflow-hidden rounded-2xl bg-white border border-slate-200/90 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.08)] transition-all duration-200"
+          className="group relative overflow-hidden rounded-2xl bg-white border border-slate-200/85 shadow-[0_1px_4px_rgba(15,23,42,0.04)] transition-all duration-200"
           data-purpose="profile-hero-card"
         >
-          {/* Subtle Top Ambient Workshop Accent Band */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-br from-[#FFF0F2] via-[#FFF7F8] to-transparent"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[#D9232D]/[0.06] blur-2xl"
-          />
-
-          <div className="relative p-3.5 sm:p-4 space-y-2.5">
+          <div className="relative p-3.5 sm:p-4 space-y-3">
             {/* Top Row: Avatar + Name + Primary Action */}
             <div className="flex items-center gap-3">
-              {/* Interactive Avatar with Dual Ring & Camera Badge */}
+              {/* Interactive Avatar with Crisp Ring & Camera Badge */}
               <button
                 type="button"
                 onClick={() => (isGuest && onOpenLogin ? onOpenLogin() : handleProtectedAction('profile'))}
                 aria-label={isGuest ? t('account.login') : t('account.editProfile')}
                 className="relative h-14 w-14 sm:h-15 sm:w-15 shrink-0 rounded-full text-left transition-transform active:scale-95 focus:outline-none"
               >
-                <div className="h-full w-full rounded-full bg-gradient-to-br from-[#D9232D] via-[#F43F5E] to-[#FDA4AF] p-[2.5px] shadow-[0_6px_16px_rgba(217,35,45,0.18)]">
-                  <div className="relative h-full w-full rounded-full bg-[#FFF5F6] ring-2 ring-white flex items-center justify-center overflow-hidden">
+                <div className="h-full w-full rounded-full bg-slate-100 p-[2px] ring-1 ring-slate-200/90">
+                  <div className="relative h-full w-full rounded-full bg-rose-50/70 ring-2 ring-white flex items-center justify-center overflow-hidden">
                     {currentUser?.avatar ? (
                       <>
                         {!heroAvatarLoaded && (
@@ -960,46 +950,28 @@ export const AccountView: React.FC<AccountViewProps> = ({
               </div>
             )}
 
-            {/* Profile Completeness Nudge (when signed in & < 100%) OR Guest Sign-in Callout */}
-            {isGuest ? (
-              <div className="rounded-xl bg-gradient-to-r from-rose-50/90 via-rose-50/50 to-slate-50 border border-rose-200/70 p-2.5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5">
-                <div className="min-w-0">
-                  <p className="text-xs font-extrabold text-slate-900 truncate">{t('account.unlock')}</p>
-                  <p className="text-[11px] font-medium text-slate-500 truncate mt-0.5">
-                    Save your bike model, track live orders &amp; get custom seat recommendations
-                  </p>
+            {/* Profile Completeness Nudge (signed-in accounts < 100%) */}
+            {!isGuest && accountProfileCompletion.percent < 100 && (
+              <button
+                type="button"
+                onClick={() => handleProtectedAction('profile')}
+                className="w-full rounded-xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/75 px-3 py-2 text-left transition-colors group/complete"
+              >
+                <div className="flex items-center justify-between gap-2 text-[11px]">
+                  <span className="font-bold text-slate-700 truncate">
+                    {accountProfileCompletion.missingLabel}
+                  </span>
+                  <span className="shrink-0 font-extrabold text-[#D9232D] tabular-nums">
+                    {accountProfileCompletion.percent}%
+                  </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={onOpenLogin}
-                  className="shrink-0 min-h-9 rounded-lg bg-white border border-rose-200 px-3 py-1.5 text-xs font-extrabold text-[#D9232D] hover:bg-rose-50 transition-colors"
-                >
-                  Sign in
-                </button>
-              </div>
-            ) : (
-              accountProfileCompletion.percent < 100 && (
-                <button
-                  type="button"
-                  onClick={() => handleProtectedAction('profile')}
-                  className="w-full rounded-xl bg-slate-50/90 hover:bg-rose-50/40 border border-slate-200/70 hover:border-rose-200/80 px-3 py-2 text-left transition-colors group/complete"
-                >
-                  <div className="flex items-center justify-between gap-2 text-[11px]">
-                    <span className="font-bold text-slate-700 truncate">
-                      {accountProfileCompletion.missingLabel}
-                    </span>
-                    <span className="shrink-0 font-extrabold text-[#D9232D] tabular-nums">
-                      {accountProfileCompletion.percent}%
-                    </span>
-                  </div>
-                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-200/80">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#D9232D] to-[#FB7185] transition-all duration-300"
-                      style={{ width: `${accountProfileCompletion.percent}%` }}
-                    />
-                  </div>
-                </button>
-              )
+                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-200/80">
+                  <div
+                    className="h-full rounded-full bg-[#D9232D] transition-all duration-300"
+                    style={{ width: `${accountProfileCompletion.percent}%` }}
+                  />
+                </div>
+              </button>
             )}
 
             {/* Interactive "My Fitment Garage" Sub-Card with Vehicle Photo */}
@@ -1087,11 +1059,11 @@ export const AccountView: React.FC<AccountViewProps> = ({
             <button
               type="button"
               onClick={onOpenWishlist}
-              className="py-2 px-2 flex flex-col items-center justify-center hover:bg-white active:bg-slate-100/70 transition-colors"
+              className="py-2.5 px-2 flex flex-col items-center justify-center hover:bg-white active:bg-slate-100/70 transition-colors"
             >
               <div className="flex items-center gap-1 text-slate-900">
-                <Heart className="h-3.5 w-3.5 text-[#7C3AED]" aria-hidden="true" />
-                <span className="text-[14px] font-black tabular-nums leading-none">{wishlistCount}</span>
+                <Heart className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
+                <span className="text-[14px] font-extrabold tabular-nums leading-none">{wishlistCount}</span>
               </div>
               <span className="mt-0.5 text-[10.5px] font-semibold text-slate-500">Saved</span>
             </button>
@@ -1099,10 +1071,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
             <button
               type="button"
               onClick={() => handleProtectedAction('orders')}
-              className="py-2 px-2 flex flex-col items-center justify-center hover:bg-white active:bg-slate-100/70 transition-colors"
+              className="py-2.5 px-2 flex flex-col items-center justify-center hover:bg-white active:bg-slate-100/70 transition-colors"
             >
               <div className="flex items-center gap-1 text-slate-900">
-                <Star className="h-3.5 w-3.5 text-[#D97706]" aria-hidden="true" />
+                <Star className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
                 {summaryLoading ? (
                   <span
                     aria-hidden="true"
@@ -1110,7 +1082,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                     className="skeleton-shimmer inline-block h-4 w-6 rounded bg-slate-200/85"
                   />
                 ) : (
-                  <span className="text-[14px] font-black tabular-nums leading-none">{myReviews.length}</span>
+                  <span className="text-[14px] font-extrabold tabular-nums leading-none">{myReviews.length}</span>
                 )}
               </div>
               <span className="mt-0.5 text-[10.5px] font-semibold text-slate-500">Reviews</span>
@@ -1123,14 +1095,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
         <section className="space-y-2" data-purpose="account-categories">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-[13px] font-extrabold tracking-tight text-slate-900">{t('account.yourAccount')}</h2>
-            <p className="text-[11px] font-medium text-slate-400">{t('account.manageExperience')}</p>
+            <p className="text-[11px] font-medium text-slate-500">{t('account.manageExperience')}</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" data-purpose="quick-navigation-grid">
             {/* 1. My Orders */}
             <button
               type="button"
               onClick={() => handleProtectedAction('orders')}
-              className="min-h-12 bg-white rounded-xl p-2.5 flex items-center gap-2 border border-slate-200/80 shadow-2xs hover:border-slate-300 active:scale-[0.98] transition-all text-left"
+              className="min-h-12 bg-white rounded-xl p-2.5 flex items-center gap-2 border border-slate-200/85 shadow-[0_1px_2px_rgba(15,23,42,0.03)] hover:border-slate-300 active:scale-[0.98] transition-all text-left"
             >
               <div className="h-8 w-8 rounded-lg bg-rose-50 flex items-center justify-center text-[#D9232D] shrink-0">
                 <Package className="w-4 h-4" />
@@ -1155,10 +1127,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
             <button
               type="button"
               onClick={onOpenWishlist}
-              className="min-h-12 bg-white rounded-xl p-2.5 flex items-center gap-2 border border-slate-200/80 shadow-2xs hover:border-slate-300 active:scale-[0.98] transition-all text-left"
+              className="min-h-12 bg-white rounded-xl p-2.5 flex items-center gap-2 border border-slate-200/85 shadow-[0_1px_2px_rgba(15,23,42,0.03)] hover:border-slate-300 active:scale-[0.98] transition-all text-left"
             >
-              <div className="h-8 w-8 rounded-lg bg-[#F3EEFD] flex items-center justify-center text-[#7C3AED] shrink-0">
-                <Heart className="w-4 h-4 fill-current" />
+              <div className="h-8 w-8 rounded-lg bg-slate-100/90 flex items-center justify-center text-slate-700 shrink-0">
+                <Heart className="w-4 h-4" />
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-[12.5px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.wishlist')}</h3>
@@ -1174,9 +1146,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
               type="button"
               onClick={() => (onOpenCouponsPage ? onOpenCouponsPage() : handleProtectedAction('settings'))}
               aria-label={t('account.coupons')}
-              className="min-h-12 bg-white rounded-xl p-2.5 flex items-center gap-2 border border-slate-200/80 shadow-2xs hover:border-slate-300 active:scale-[0.98] transition-all text-left"
+              className="min-h-12 bg-white rounded-xl p-2.5 flex items-center gap-2 border border-slate-200/85 shadow-[0_1px_2px_rgba(15,23,42,0.03)] hover:border-slate-300 active:scale-[0.98] transition-all text-left"
             >
-              <div className="h-8 w-8 rounded-lg bg-[#FFF4E0] flex items-center justify-center text-[#D97706] shrink-0">
+              <div className="h-8 w-8 rounded-lg bg-slate-100/90 flex items-center justify-center text-slate-700 shrink-0">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path
                     clipRule="evenodd"
@@ -1196,9 +1168,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
             <button
               type="button"
               onClick={() => handleProtectedAction('settings')}
-              className="min-h-12 bg-white rounded-xl p-2.5 flex items-center gap-2 border border-slate-200/80 shadow-2xs hover:border-slate-300 active:scale-[0.98] transition-all text-left"
+              className="min-h-12 bg-white rounded-xl p-2.5 flex items-center gap-2 border border-slate-200/85 shadow-[0_1px_2px_rgba(15,23,42,0.03)] hover:border-slate-300 active:scale-[0.98] transition-all text-left"
             >
-              <div className="h-8 w-8 rounded-lg bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] shrink-0">
+              <div className="h-8 w-8 rounded-lg bg-slate-100/90 flex items-center justify-center text-slate-700 shrink-0">
                 <SlidersHorizontal className="w-4 h-4" />
               </div>
               <div className="min-w-0 flex-1">
@@ -1215,7 +1187,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
         <section className="space-y-1.5" data-purpose="activity-services">
           <h2 className="px-1 text-[13px] font-extrabold tracking-tight text-slate-900">{t('account.activityServices')}</h2>
 
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs divide-y divide-slate-100 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200/85 shadow-[0_1px_2px_rgba(15,23,42,0.03)] divide-y divide-slate-100 overflow-hidden">
             {/* My reviews */}
             <button
               type="button"
@@ -1223,8 +1195,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
               className="w-full min-h-12 px-3 py-2.5 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-[#FFF7E6] flex items-center justify-center text-[#B45309] shrink-0">
-                  <Star className="w-4 h-4 fill-current" />
+                <div className="w-8 h-8 rounded-lg bg-slate-100/90 flex items-center justify-center text-slate-700 shrink-0">
+                  <Star className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-[13px] font-bold text-slate-900 leading-tight truncate">{t('account.myReviews')}</h3>
@@ -1251,8 +1223,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
               className="w-full min-h-12 px-3 py-2.5 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-[#EAF7EF] flex items-center justify-center text-[#15803D] shrink-0">
-                  <Star className="w-4 h-4 fill-current" />
+                <div className="w-8 h-8 rounded-lg bg-slate-100/90 flex items-center justify-center text-slate-700 shrink-0">
+                  <Star className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-[13px] font-bold text-slate-900 leading-tight truncate">{t('account.ratingStore')}</h3>
@@ -1269,7 +1241,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
               className="w-full min-h-12 px-3 py-2.5 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-[#EBF5FF] flex items-center justify-center text-[#2563EB] shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-slate-100/90 flex items-center justify-center text-slate-700 shrink-0">
                   <MessageCircle className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
@@ -1287,8 +1259,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
               className="w-full min-h-12 px-3 py-2.5 flex items-center justify-between hover:bg-slate-50/80 active:bg-slate-100/70 transition-colors text-left"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-[#F3EEFD] flex items-center justify-center text-[#7C3AED] shrink-0">
-                  <Sparkles className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-lg bg-slate-100/90 flex items-center justify-center text-slate-700 shrink-0">
+                  <Wrench className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-[13px] font-bold text-slate-900 leading-tight truncate">{t('account.customSeat')}</h3>
@@ -1686,27 +1658,29 @@ export const AccountView: React.FC<AccountViewProps> = ({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
-            className="fixed inset-0 z-50 flex w-full max-w-full flex-col bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] overflow-hidden"
+            className="fixed inset-0 z-50 flex w-full max-w-full flex-col bg-[#F8F9FB] overflow-hidden"
           >
-            {/* Clean Classic Glass Top Bar */}
-            <div className="sticky top-0 z-20 px-3.5 pt-2 pb-1.5 sm:px-5">
+            {/* Clean Top Bar */}
+            <div className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 px-3.5 py-2.5 backdrop-blur-md sm:px-5">
               <div className="mx-auto flex max-w-[540px] items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={requestCloseProfile}
-                  disabled={profileSaving}
-                  aria-label="Close profile editor"
-                  className="classic-glass inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/85 bg-white/85 text-slate-800 shadow-[0_6px_18px_-8px_rgba(15,23,42,0.16)] backdrop-blur-xl transition-all hover:bg-white hover:text-[#D9232D] active:scale-95 disabled:opacity-50"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-                <h3 id="profile-modal-title" className="sr-only">
-                  Edit Profile
-                </h3>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <button
+                    type="button"
+                    onClick={requestCloseProfile}
+                    disabled={profileSaving}
+                    aria-label="Close profile editor"
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/85 bg-white text-slate-800 shadow-2xs transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 active:scale-95 disabled:opacity-50"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </button>
+                  <h3 id="profile-modal-title" className="text-[15px] font-bold tracking-tight text-slate-950 truncate">
+                    Edit Profile
+                  </h3>
+                </div>
                 {profileDirty && !profileLoading && (
-                  <span className="classic-glass inline-flex items-center gap-1.5 rounded-lg border border-amber-200/85 bg-amber-50/90 px-2 py-0.5 text-[10px] font-extrabold text-amber-800 shadow-2xs backdrop-blur-md">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-                    <span>Editing</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200/85 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                    <span>Unsaved</span>
                   </span>
                 )}
               </div>
@@ -1714,7 +1688,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
             <div className="overflow-y-auto overflow-x-hidden flex-1 no-scrollbar text-slate-800">
               <div
-                className={`mx-auto w-full max-w-[540px] px-3.5 sm:px-5 pt-1 space-y-3 ${
+                className={`mx-auto w-full max-w-[540px] px-3.5 sm:px-5 pt-3 space-y-3 ${
                   profileDirty || profileSaving ? 'pb-20' : 'pb-6'
                 }`}
               >
@@ -1722,21 +1696,16 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   <AccountProfileEditorSkeleton />
                 ) : (
                   <>
-                {/* Sleek Live Rider Profile Card */}
-                <div className="relative overflow-hidden rounded-[22px] border border-rose-200/75 bg-gradient-to-br from-white via-[#FFF9FA] to-[#FFF2F4] p-3.5 sm:p-4 shadow-[0_10px_28px_-16px_rgba(217,35,45,0.14)] space-y-3">
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-[#D9232D]/[0.05] blur-2xl"
-                  />
-
-                  <div className="relative flex items-center gap-3">
+                {/* Live Rider Profile Card */}
+                <div className="rounded-2xl border border-slate-200/85 bg-white p-3.5 sm:p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] space-y-3">
+                  <div className="flex items-center gap-3">
                     <div className="relative shrink-0">
                       <button
                         type="button"
                         disabled={profileSaving || profileLoading}
                         onClick={() => avatarFileInputRef.current?.click()}
                         aria-label="Choose profile photo"
-                        className="group/avatar relative grid h-15 w-15 sm:h-16 sm:w-16 place-items-center overflow-hidden rounded-full border-2 border-white bg-gradient-to-br from-[#FFE4E6] to-[#FECDD3] text-base font-black text-[#D9232D] shadow-[0_6px_16px_rgba(217,35,45,0.16)] transition-transform active:scale-95 disabled:opacity-60"
+                        className="group/avatar relative grid h-15 w-15 sm:h-16 sm:w-16 place-items-center overflow-hidden rounded-full border-2 border-white bg-slate-100 text-base font-extrabold text-slate-800 ring-1 ring-slate-200/85 transition-transform active:scale-95 disabled:opacity-60"
                       >
                         {profileAvatarUrl ? (
                           <img
@@ -1759,7 +1728,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                       </button>
                       <span
                         aria-hidden="true"
-                        className="pointer-events-none absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-[#D9232D] text-white ring-2 ring-white shadow-2xs"
+                        className="pointer-events-none absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-slate-900 text-white ring-2 ring-white"
                       >
                         <Camera className="h-2.5 w-2.5" />
                       </span>
@@ -1767,10 +1736,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-[13.5px] font-black tracking-tight text-slate-950 truncate">
+                        <p className="text-[13.5px] font-extrabold tracking-tight text-slate-950 truncate">
                           {profileName.trim() || 'Rider Profile Photo'}
                         </p>
-                        <span className="shrink-0 rounded-md bg-rose-50 border border-rose-200/80 px-1.5 py-0.5 text-[9.5px] font-extrabold text-[#D9232D] tabular-nums">
+                        <span className="shrink-0 rounded-md bg-slate-100 border border-slate-200/80 px-1.5 py-0.5 text-[9.5px] font-bold text-slate-700 tabular-nums">
                           {editorProfileCompletion}% complete
                         </span>
                       </div>
@@ -1778,14 +1747,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
                       {/* Live Identity & Fitment Preview Chips */}
                       <div className="mt-1 flex flex-wrap items-center gap-1">
                         {profilePhone.trim() && (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-white border border-slate-200/80 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 tabular-nums">
-                            <Phone className="h-2.5 w-2.5 text-[#D9232D]" />
+                          <span className="inline-flex items-center gap-1 rounded-md bg-slate-50 border border-slate-200/80 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 tabular-nums">
+                            <Phone className="h-2.5 w-2.5 text-slate-500" />
                             {profilePhone.trim()}
                           </span>
                         )}
                         {profileVehicle.trim() && (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-white border border-rose-200/75 px-1.5 py-0.5 text-[10px] font-semibold text-[#D9232D] truncate max-w-full">
-                            <Bike className="h-2.5 w-2.5 shrink-0" />
+                          <span className="inline-flex items-center gap-1 rounded-md bg-slate-50 border border-slate-200/80 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 truncate max-w-full">
+                            <Bike className="h-2.5 w-2.5 shrink-0 text-[#D9232D]" />
                             <span className="truncate">{profileVehicle.trim()}</span>
                           </span>
                         )}
@@ -1812,7 +1781,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                           aria-label="Upload profile photo"
                           disabled={profileSaving || profileLoading}
                           onClick={() => avatarFileInputRef.current?.click()}
-                          className="banner-cta-shine inline-flex h-8 items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#D9232D] to-[#B91822] hover:brightness-105 px-2.5 text-[10.5px] font-extrabold text-white shadow-2xs transition-all active:scale-95 disabled:opacity-50"
+                          className="banner-cta-shine inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#D9232D] hover:bg-[#BE1C25] px-2.5 text-[10.5px] font-bold text-white transition-colors active:scale-95 disabled:opacity-50"
                         >
                           <Camera className="h-3 w-3" aria-hidden="true" /> Change photo
                         </button>
@@ -1826,7 +1795,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                               setProfileAvatarUrl(null);
                               setProfileMessage('');
                             }}
-                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-rose-200/90 bg-white hover:bg-rose-50 px-2.5 text-[10.5px] font-bold text-[#D9232D] transition-all active:scale-95 disabled:opacity-50"
+                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:text-[#D9232D] px-2.5 text-[10.5px] font-semibold text-slate-700 transition-colors active:scale-95 disabled:opacity-50"
                           >
                             <Trash2 className="h-3 w-3" aria-hidden="true" /> Remove photo
                           </button>
@@ -1836,10 +1805,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   </div>
 
                   {/* Compact Completeness Bar & Checklist */}
-                  <div className="rounded-xl bg-white/90 border border-rose-100/90 px-2.5 py-2 space-y-1.5">
-                    <div className="h-1 w-full overflow-hidden rounded-full bg-rose-100/90">
+                  <div className="rounded-xl bg-slate-50/90 border border-slate-200/75 px-2.5 py-2 space-y-1.5">
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-slate-200/80">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-[#D9232D] to-[#FB7185] transition-all duration-300"
+                        className="h-full rounded-full bg-[#D9232D] transition-all duration-300"
                         style={{ width: `${editorProfileCompletion}%` }}
                       />
                     </div>
@@ -1855,7 +1824,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                           className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9.5px] font-bold ${
                             step.done
                               ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/70'
-                              : 'bg-slate-100 text-slate-500'
+                              : 'bg-white text-slate-500 ring-1 ring-inset ring-slate-200/80'
                           }`}
                         >
                           <CheckCircle2 className={`h-2.5 w-2.5 ${step.done ? 'text-emerald-600' : 'text-slate-400'}`} />
@@ -1869,13 +1838,13 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 </div>
 
                 {/* Personal Information Card */}
-                <div className="rounded-[22px] border border-slate-200/80 bg-white/95 backdrop-blur-md p-3.5 sm:p-4 shadow-[0_6px_22px_-12px_rgba(15,23,42,0.06)] space-y-3">
+                <div className="rounded-2xl border border-slate-200/85 bg-white p-3.5 sm:p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] space-y-3">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                     <div>
-                      <h4 className="text-xs font-black text-slate-900">Personal Details</h4>
+                      <h4 className="text-xs font-extrabold text-slate-900">Personal Details</h4>
                       <p className="text-[10.5px] text-slate-500">Used on invoices, order pickup &amp; support</p>
                     </div>
-                    <div className="h-7 w-7 rounded-lg bg-rose-50 text-[#D9232D] flex items-center justify-center shrink-0">
+                    <div className="h-7 w-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
                       <User className="h-3.5 w-3.5" aria-hidden="true" />
                     </div>
                   </div>
@@ -1899,7 +1868,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                       aria-invalid={Boolean(profileFieldErrors.full_name)}
                       aria-describedby={profileFieldErrors.full_name ? 'profile-name-error' : undefined}
                       disabled={profileLoading || profileSaving}
-                      className="h-9.5 w-full bg-slate-50/90 text-[12.5px] font-semibold text-slate-900 rounded-xl px-3 py-1.5 border border-slate-200/90 transition-all focus:bg-white focus:outline-none focus:border-[#D9232D] focus:ring-2 focus:ring-rose-100"
+                      className="h-9.5 w-full bg-slate-50/90 text-[12.5px] font-semibold text-slate-900 rounded-xl px-3 py-1.5 border border-slate-200/90 transition-all focus:bg-white focus:outline-none focus:border-[#D9232D] focus:ring-2 focus:ring-[#D9232D]/15"
                     />
                     {profileFieldErrors.full_name && (
                       <p id="profile-name-error" role="alert" className="mt-1 text-[10.5px] font-medium text-red-600">
@@ -1951,16 +1920,16 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
                 {/* Vehicle Fitment Card */}
                 <section
-                  className="space-y-3 rounded-[22px] border border-slate-200/80 bg-white/95 backdrop-blur-md p-3.5 sm:p-4 shadow-[0_6px_22px_-12px_rgba(15,23,42,0.06)]"
+                  className="space-y-3 rounded-2xl border border-slate-200/85 bg-white p-3.5 sm:p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)]"
                   aria-label="Vehicle fitment"
                 >
                   <div className="flex items-start justify-between gap-2.5 border-b border-slate-100 pb-2.5">
                     <div className="flex items-center gap-2.5">
-                      <div className="h-7 w-7 rounded-lg bg-rose-50 text-[#D9232D] flex items-center justify-center shrink-0">
+                      <div className="h-7 w-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
                         <Bike className="h-3.5 w-3.5" aria-hidden="true" />
                       </div>
                       <div>
-                        <p className="text-xs font-black text-slate-900">
+                        <p className="text-xs font-extrabold text-slate-900">
                           Vehicle for fitment <span className="font-normal text-slate-400">(optional)</span>
                         </p>
                         <p className="text-[10.5px] leading-snug text-slate-500">
@@ -1978,7 +1947,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                           setProfileVehicle('');
                           setProfileMessage('');
                         }}
-                        className="shrink-0 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 px-2.5 text-[10px] font-bold text-[#D9232D] transition-colors"
+                        className="shrink-0 h-7 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 text-[10px] font-bold text-slate-700 transition-colors"
                       >
                         Clear
                       </button>
@@ -2004,9 +1973,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
                             setProfileVehicle('');
                             setProfileMessage('');
                           }}
-                          className={`h-8 rounded-lg border px-1.5 text-[10.5px] font-bold transition-all ${
+                          className={`h-8 rounded-lg border px-1.5 text-[10.5px] font-bold transition-colors ${
                             active
-                              ? 'border-[#D9232D] bg-gradient-to-r from-[#D9232D] to-[#B91822] text-white shadow-2xs'
+                              ? 'border-[#D9232D] bg-[#D9232D] text-white'
                               : 'border-slate-200/80 bg-slate-50/90 text-slate-600 hover:bg-slate-100'
                           }`}
                         >
@@ -2152,11 +2121,11 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   exit={{ y: 28, opacity: 0 }}
                   transition={{ duration: 0.2, ease: 'easeOut' }}
                   data-testid="profile-unsaved-bar"
-                  className="border-t border-slate-200/85 bg-white/95 backdrop-blur-xl px-3.5 py-2.5 pb-[max(0.65rem,env(safe-area-inset-bottom))] shadow-[0_-10px_28px_-12px_rgba(15,23,42,0.12)]"
+                  className="border-t border-slate-200/85 bg-white/95 backdrop-blur-xl px-3.5 py-2.5 pb-[max(0.65rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.1)]"
                 >
                   <div className="mx-auto flex max-w-[540px] flex-wrap sm:flex-nowrap items-center justify-between gap-2">
                     <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-bold text-slate-700 truncate">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#D9232D] animate-pulse" />
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#D9232D]" />
                       <span className="truncate">Unsaved profile changes</span>
                     </span>
                     <div className="flex items-center gap-1.5 shrink-0 ml-auto">
@@ -2178,7 +2147,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                           Object.keys(profileFieldErrors).length > 0
                         }
                         onClick={() => void handleSaveProfile()}
-                        className="banner-cta-shine inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] hover:brightness-105 hover:shadow-md px-3.5 text-[11px] font-extrabold text-white shadow-sm shadow-red-600/20 transition-all active:scale-95 whitespace-nowrap disabled:opacity-45"
+                        className="banner-cta-shine inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg bg-[#D9232D] hover:bg-[#BE1C25] px-3.5 text-[11px] font-bold text-white transition-colors active:scale-95 whitespace-nowrap disabled:opacity-45"
                       >
                         {profileSaving && <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
                         {profileSaving ? 'Saving…' : 'Save changes'}

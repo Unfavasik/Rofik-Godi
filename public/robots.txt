@@ -1,17 +1,95 @@
+# Rofik Godi Centre — Search, Answer & Generative Engine Crawl Policy
+# Canonical Host: https://rofikgodicenter.pages.dev/
+# AI/LLM Index: https://rofikgodicenter.pages.dev/llms.txt
+# Full AI Reference: https://rofikgodicenter.pages.dev/llms-full.txt
+
 User-agent: *
 Allow: /
+Allow: /home
+Allow: /shop
+Allow: /shop/products/
+Allow: /custom
+Allow: /search
+Allow: /store-map
+Allow: /settings/about
+Allow: /settings/help
+Allow: /privacy-policy
+Allow: /terms-and-conditions
+Allow: /personal-data
+Allow: /llms.txt
+Allow: /llms-full.txt
 Disallow: /admin
 Disallow: /account
 Disallow: /profile
 Disallow: /wishlist
-Disallow: /cart
+Allow: /cart
+Allow: /checkout
+Disallow: /my-orders
+Disallow: /my-order
+Disallow: /myorder
+Disallow: /support
+Disallow: /contact-support
 Disallow: /notifications
 Disallow: /notification
 Disallow: /signup
 Disallow: /onboarding
 Disallow: /Onboarding
-Disallow: /signup/onboarding
-Disallow: /signup/loading
 Disallow: /auth/
+
+# Explicitly welcome AI Search & Answer Engine crawlers on public pages & llms.txt
+User-agent: GPTBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin
+Disallow: /account
+Disallow: /profile
+Disallow: /checkout
+Disallow: /my-orders
+
+User-agent: OAI-SearchBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin
+Disallow: /account
+Disallow: /checkout
+
+User-agent: ChatGPT-User
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin
+Disallow: /account
+
+User-agent: ClaudeBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin
+Disallow: /account
+Disallow: /checkout
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin
+Disallow: /account
+Disallow: /checkout
+
+User-agent: Google-Extended
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin
+Disallow: /account
+
+User-agent: Applebot-Extended
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin
+Disallow: /account
 
 Sitemap: https://rofikgodicenter.pages.dev/sitemap.xml

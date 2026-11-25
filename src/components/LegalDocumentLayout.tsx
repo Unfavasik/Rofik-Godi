@@ -377,13 +377,9 @@ export const LegalDocumentLayout: React.FC<LegalDocumentLayoutProps> = ({
       </header>
 
       <main className="mx-auto max-w-3xl space-y-4 px-4 pb-[max(4.5rem,env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-5">
-        {/* Classic Glass Editorial Hero Summary Card */}
-        <section className="relative overflow-hidden rounded-2xl border border-white/90 bg-gradient-to-br from-white/95 via-white/92 to-rose-50/45 p-4 shadow-[0_14px_34px_-22px_rgba(15,23,42,0.16)] ring-1 ring-slate-200/70 backdrop-blur-md sm:p-5">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-14 -top-14 h-40 w-40 rounded-full bg-[#D9232D]/[0.06] blur-3xl"
-          />
-          <div className="relative space-y-2">
+        {/* Editorial Hero Summary Card */}
+        <section className="rounded-2xl border border-slate-200/85 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-5">
+          <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11.5px] font-semibold text-slate-500 tabular-nums">
               <span className="font-bold text-[#D9232D]">{WORKSHOP_INFO.name}</span>
               <span aria-hidden="true">·</span>

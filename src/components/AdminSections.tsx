@@ -179,8 +179,8 @@ const SCHEDULE_BADGE_META: Record<
   },
   scheduled: {
     label: 'Scheduled',
-    badgeClass: 'bg-indigo-600/90 text-white shadow-2xs',
-    dotClass: 'bg-indigo-200',
+    badgeClass: 'bg-sky-600/90 text-white shadow-2xs',
+    dotClass: 'bg-sky-200',
   },
   expired: {
     label: 'Ended',
@@ -455,7 +455,7 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
               <span>{counts.live} live</span>
             </span>
             <span className="text-slate-300">·</span>
-            <span className="inline-flex items-center gap-1 text-indigo-700">
+            <span className="inline-flex items-center gap-1 text-sky-700">
               <Clock className="h-3 w-3" aria-hidden="true" />
               <span>{counts.scheduled} scheduled</span>
             </span>
@@ -510,7 +510,7 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                   scheduleState === 'live'
                     ? 'border-slate-200/90'
                     : scheduleState === 'scheduled'
-                      ? 'border-indigo-200/90'
+                      ? 'border-sky-200/90'
                       : 'border-slate-200/60 opacity-85'
                 }`}
               >
@@ -622,7 +622,7 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                   className={`flex items-center justify-between gap-2 border-b px-3.5 py-2 text-[10.5px] font-semibold ${
                     hasSchedule
                       ? scheduleState === 'scheduled'
-                        ? 'border-indigo-100 bg-indigo-50/60 text-indigo-800'
+                        ? 'border-sky-100 bg-sky-50/70 text-sky-900'
                         : scheduleState === 'expired'
                           ? 'border-rose-100 bg-rose-50/60 text-rose-700'
                           : 'border-emerald-100 bg-emerald-50/50 text-emerald-800'
@@ -844,15 +844,13 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                       />
                     </>
                   ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-rose-100/80 via-white to-amber-50/70">
-                      <div className="banner-ambient-pulse pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#D9232D]/15 blur-2xl" />
-                    </div>
+                    <div className="absolute inset-0 bg-slate-100" />
                   )}
 
                   {/* Bottom-Right Frosted Carousel Dot Indicators & Poster-Only CTA */}
                   <div className="absolute inset-x-3.5 bottom-3 z-20 flex items-center justify-between gap-3 sm:inset-x-4">
                     {!(draft.title.trim() || draft.subtitle.trim() || !draft.imageUrl) ? (
-                      <div className="banner-cta-shine shrink-0 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91C1C] pl-3 pr-1.5 py-1 text-[10.5px] font-extrabold text-white shadow-md ring-1 ring-white/40">
+                      <div className="banner-cta-shine shrink-0 inline-flex items-center gap-1.5 rounded-full bg-[#D9232D] pl-3 pr-1.5 py-1 text-[10.5px] font-bold text-white shadow-sm ring-1 ring-white/35">
                         <span>{draft.buttonLabel.trim() || 'Shop now'}</span>
                         <span className="grid h-5 w-5 place-items-center rounded-full bg-white/20 text-white">
                           <ArrowRight className="h-3 w-3" />
@@ -871,17 +869,9 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                   </div>
                 </div>
 
-                {/* Bottom Stage: Gradient + Classic Glass Effect Editorial Panel */}
+                {/* Bottom Stage: Clean Editorial Panel */}
                 {(draft.title.trim() || draft.subtitle.trim() || !draft.imageUrl) && (
-                  <div className="relative z-20 flex flex-col gap-2.5 border-t border-white/90 bg-gradient-to-br from-white/92 via-rose-50/65 to-slate-100/90 px-4 py-3.5 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#D9232D]/35 to-transparent"
-                    />
-                    <div
-                      aria-hidden="true"
-                      className="banner-ambient-pulse pointer-events-none absolute -left-8 -top-4 h-20 w-36 rounded-full bg-rose-400/15 blur-2xl"
-                    />
+                  <div className="relative z-20 flex flex-col gap-2.5 border-t border-slate-200/80 bg-white px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="relative min-w-0 flex-1">
                       {(draft.title.trim() || !draft.imageUrl) && (
                         <p
@@ -901,7 +891,7 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
                     </div>
 
                     <div className="relative flex items-center justify-end sm:shrink-0">
-                      <div className="banner-cta-shine shrink-0 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91C1C] pl-3.5 pr-1.5 py-1 text-[10.5px] font-extrabold text-white shadow-[0_8px_18px_-4px_rgba(217,35,45,0.4)] ring-1 ring-white/40">
+                      <div className="banner-cta-shine shrink-0 inline-flex items-center gap-1.5 rounded-full bg-[#D9232D] pl-3.5 pr-1.5 py-1 text-[10.5px] font-bold text-white shadow-sm">
                         <span>{draft.buttonLabel.trim() || 'Shop now'}</span>
                         <span className="grid h-5 w-5 place-items-center rounded-full bg-white/20 text-white">
                           <ArrowRight className="h-3 w-3" />

@@ -11,8 +11,8 @@ import {
   Plus,
   Search,
   ShieldCheck,
-  Sparkles,
   Trash2,
+  Wand2,
   X,
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -1506,10 +1506,10 @@ const ProductEditor: React.FC<{
               Set default product details here. A colour can override each value from its own Edit
               details sheet. Compatible vehicles are picked with the dedicated vehicle picker.
             </p>
-            <div className="overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-indigo-50 shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-50/90">
               <div className="flex items-start gap-2.5 p-3.5 pb-2.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-200">
-                  <Sparkles className="h-4 w-4" />
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white">
+                  <Wand2 className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-extrabold text-slate-900 sm:text-sm">Gemini AI autofill</p>
@@ -1523,18 +1523,18 @@ const ProductEditor: React.FC<{
                   type="button"
                   onClick={() => void autoFillDetailsFromImage()}
                   disabled={imageAssistBusy || !derived.image}
-                  className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-3.5 py-2 text-xs font-extrabold text-white shadow-md shadow-violet-200 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-55"
+                  className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 px-3.5 py-2 text-xs font-bold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-55"
                 >
                   {imageAssistBusy ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Sparkles className="h-4 w-4" />
+                    <Wand2 className="h-4 w-4" />
                   )}
                   {imageAssistBusy ? 'Analyzing with Gemini…' : 'Generate details with Gemini'}
                 </button>
                 <p
                   aria-live="polite"
-                  className={`mt-2.5 text-[11px] leading-relaxed ${imageAssistError ? 'text-rose-700' : 'text-violet-900'}`}
+                  className={`mt-2.5 text-[11px] leading-relaxed ${imageAssistError ? 'text-rose-700' : 'text-slate-700'}`}
                 >
                   {imageAssistMessage ||
                     (derived.image

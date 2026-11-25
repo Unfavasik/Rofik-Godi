@@ -119,7 +119,6 @@ export default function Onboarding({ onFinish }: Props) {
       onPointerMove={onMove}
       onPointerUp={onUp}
       onPointerCancel={onUp}
-      style={{ fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif' }}
       className="relative mx-auto flex h-[100dvh] w-full max-w-[400px] touch-pan-y select-none flex-col overflow-hidden bg-white text-[#0F1B3D] sm:my-4 sm:h-[min(calc(100dvh_-_2rem),820px)] sm:rounded-3xl sm:shadow-2xl"
     >
       {/* Illustration */}

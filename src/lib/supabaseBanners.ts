@@ -27,26 +27,26 @@ export const BANNER_FONT_OPTIONS: Array<{
 }> = [
   {
     id: 'outfit',
-    label: 'Outfit Geometric',
-    familyName: 'Outfit',
-    className: 'font-banner-outfit font-extrabold',
+    label: 'Plus Jakarta Bold',
+    familyName: 'Plus Jakarta Sans',
+    className: 'font-banner-outfit font-bold',
   },
   {
     id: 'syne',
-    label: 'Syne Display',
-    familyName: 'Syne',
+    label: 'Plus Jakarta ExtraBold',
+    familyName: 'Plus Jakarta Sans',
     className: 'font-banner-syne font-extrabold',
   },
   {
     id: 'serif',
-    label: 'Playfair Editorial',
-    familyName: 'Playfair Display',
-    className: 'font-banner-serif font-bold italic',
+    label: 'Plus Jakarta Editorial',
+    familyName: 'Plus Jakarta Sans',
+    className: 'font-banner-serif font-semibold',
   },
   {
     id: 'tech',
-    label: 'Space Grotesk',
-    familyName: 'Space Grotesk',
+    label: 'Manrope Sharp',
+    familyName: 'Manrope',
     className: 'font-banner-tech font-bold',
   },
 ];
@@ -63,12 +63,12 @@ export function getBannerFontClass(fontStyle?: BannerFontStyle | string | null):
     case 'syne':
       return 'font-banner-syne font-extrabold tracking-[-0.025em]';
     case 'serif':
-      return 'font-banner-serif font-bold italic tracking-[-0.01em]';
+      return 'font-banner-serif font-semibold tracking-[-0.015em]';
     case 'tech':
-      return 'font-banner-tech font-bold tracking-[-0.022em]';
+      return 'font-banner-tech font-bold tracking-[-0.02em]';
     case 'outfit':
     default:
-      return 'font-banner-outfit font-extrabold tracking-[-0.02em]';
+      return 'font-banner-outfit font-bold tracking-[-0.02em]';
   }
 }
 

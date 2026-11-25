@@ -48,7 +48,7 @@ function buildSampledDots(
 
   let fontSize = compact ? 152 : 132;
   const fontFamily =
-    '"Space Grotesk", "Inter", "Plus Jakarta Sans", system-ui, -apple-system, sans-serif';
+    '"Plus Jakarta Sans", "Manrope", "DM Sans", system-ui, -apple-system, sans-serif';
   ctx.font = `800 ${fontSize}px ${fontFamily}`;
 
   const measured = ctx.measureText(LOGO_TEXT).width;

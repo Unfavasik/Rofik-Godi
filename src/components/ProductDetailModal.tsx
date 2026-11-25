@@ -23,7 +23,6 @@ import {
   Share2,
   ShieldCheck,
   ShoppingCart,
-  Sparkles,
   Star,
   Store,
   Wrench,
@@ -577,18 +576,18 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
   } as const;
   const detailMeta = {
     features: {
-      Icon: Sparkles,
-      accent: 'bg-amber-50 text-amber-600',
+      Icon: CircleCheck,
+      accent: 'bg-slate-100 text-slate-700',
       helper: 'What makes it special',
     },
     compatibility: {
       Icon: CarFront,
-      accent: 'bg-blue-50 text-blue-600',
+      accent: 'bg-slate-100 text-slate-700',
       helper: 'Fits these vehicles',
     },
     materials: {
       Icon: Layers3,
-      accent: 'bg-emerald-50 text-emerald-600',
+      accent: 'bg-slate-100 text-slate-700',
       helper: 'Build and finish',
     },
     stitchPatterns: {

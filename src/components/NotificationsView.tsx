@@ -119,7 +119,7 @@ const toneFor = (item: NotificationItem) => {
   if (value.includes('order') || value.includes('pickup')) return 'bg-rose-100/80 text-[#D9232D]';
   if (value.includes('offer') || value.includes('promo') || value.includes('coupon')) return 'bg-rose-100/80 text-[#D9232D]';
   if (value.includes('review')) return 'bg-amber-100/70 text-amber-600';
-  if (value.includes('arrival') || value.includes('product')) return 'bg-purple-100/70 text-purple-700';
+  if (value.includes('arrival') || value.includes('product')) return 'bg-slate-100 text-slate-700';
   return 'bg-slate-100 text-slate-700';
 };
 
@@ -1148,8 +1148,8 @@ function NotificationSettingsView({
       key: 'systemUpdates' as const,
       title: 'Product & Account Updates',
       description: 'New products, profile and service notices',
-      icon: <Package className="h-4.5 w-4.5 text-purple-600" />,
-      tone: 'bg-purple-50',
+      icon: <Package className="h-4.5 w-4.5 text-slate-700" />,
+      tone: 'bg-slate-100',
     },
   ];
 

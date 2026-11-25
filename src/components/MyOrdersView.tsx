@@ -91,7 +91,6 @@ export function MyOrdersView({ orders, loading, products, reviews, customerName,
     >
       <div className="flex h-full w-full max-w-full sm:max-w-[800px] flex-col overflow-hidden overflow-x-hidden bg-[#f7f6f4] shadow-[0_24px_80px_rgba(0,0,0,0.35)] sm:h-[min(660px,88vh)] sm:rounded-2xl">
         <header className="relative shrink-0 overflow-hidden bg-[#17191d] px-3.5 py-2.5 text-white sm:px-5 sm:py-3">
-          <div className="pointer-events-none absolute -right-14 -top-24 h-56 w-56 rounded-full bg-[#d9232d]/25 blur-3xl" />
           <div className="relative flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-white/55"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#ef4b54]" /> <span className="truncate">Your ride, in good hands</span></p>
@@ -205,7 +204,6 @@ function OrderDetails({ order, products, reviews, customerName, onBack, onReview
     </div>
     <div className="mx-auto w-full max-w-[560px] space-y-2.5 p-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:space-y-3 sm:p-4 sm:pb-6">
       <section className={`relative overflow-hidden rounded-xl p-3 text-white shadow-sm sm:p-3.5 ${cancelled ? 'bg-[#33343a]' : complete ? 'bg-[#17251f]' : 'bg-[#23252a]'}`}>
-        <div className="pointer-events-none absolute -right-5 -top-14 h-36 w-36 rounded-full bg-[#d9232d]/25 blur-3xl" />
         <div className="relative flex items-start justify-between gap-2.5">
           <div className="min-w-0"><p className="text-[8.5px] font-bold uppercase tracking-[0.18em] text-white/50">{cancelled ? 'Order update' : complete ? 'All set' : 'We’re on it'}</p><h1 className="mt-1 text-[16px] font-black tracking-[-0.03em] sm:text-[18px]">{cancelled ? 'Order cancelled' : complete ? 'Order completed' : 'Your order is moving.'}</h1><p className="mt-0.5 max-w-[340px] text-[10.5px] leading-4 text-white/65">{cancelled ? 'This order was cancelled. Need a hand? Contact our workshop.' : complete ? 'Your order is complete. Thanks for riding with us.' : 'We’ll update you here as your order gets prepared for pickup.'}</p></div>
           <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${cancelled ? 'bg-white/10 text-white/70' : complete ? 'bg-emerald-400/15 text-emerald-300' : 'bg-[#ed4049]/15 text-[#ff777d]'}`}>{cancelled ? <X className="h-4 w-4" /> : complete ? <CheckCircle2 className="h-4 w-4" /> : <PackageCheck className="h-4 w-4" />}</div>

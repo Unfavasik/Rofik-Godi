@@ -88,40 +88,47 @@ export const ShopView: React.FC<ShopViewProps> = ({
   }, [activeCategory, renderableProducts]);
 
   return (
-    <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#f8f9fc] pb-[max(1.5rem,env(safe-area-inset-bottom))] text-slate-800">
+    <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#F8F9FB] pb-[max(1.5rem,env(safe-area-inset-bottom))] text-slate-900">
       <header className="flex items-center justify-between gap-2 px-3.5 pb-1.5 pt-2.5 sm:px-5">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <button onClick={onBack} aria-label="Go back" className="grid min-h-10 min-w-10 shrink-0 place-items-center rounded-full">
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Go back"
+            className="grid min-h-10 min-w-10 shrink-0 place-items-center rounded-xl text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+          >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="min-w-0">
-            <h1 className="truncate text-lg font-bold leading-none">Shop</h1>
-            <p className="mt-0.5 truncate text-[10.5px] font-medium text-slate-400">Home / Shop</p>
+            <h1 className="truncate text-[18px] font-extrabold tracking-tight leading-none text-slate-900">Shop</h1>
+            <p className="mt-0.5 truncate text-[11px] font-medium text-slate-500">Seat covers &amp; workshop essentials</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <button onClick={() => onSearch('')} aria-label="Search" className="grid min-h-10 min-w-10 place-items-center rounded-full">
-            <Search className="h-4.5 w-4.5" />
-          </button>
-          <button aria-label="Go to Cart" onClick={onOpenCart} className="relative grid min-h-10 min-w-10 place-items-center rounded-full">
-            <ShoppingCart className="h-5 w-5" />
+          <button
+            type="button"
+            aria-label="Go to Cart"
+            onClick={onOpenCart}
+            className="relative grid min-h-10 min-w-10 place-items-center rounded-full bg-white border border-slate-200/85 text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer"
+          >
+            <ShoppingCart className="h-4.5 w-4.5" />
             <CartBadge
               count={cartCount}
               showZero
-              className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#e61e25] px-1 text-[9.5px] font-bold text-white shadow-xs tabular-nums"
-              ringColorClassName="bg-[#e61e25]/45"
+              className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#D9232D] px-1 text-[9.5px] font-bold text-white border-2 border-white shadow-xs tabular-nums"
+              ringColorClassName="bg-[#D9232D]/45"
             />
           </button>
         </div>
       </header>
 
       <div className="mt-1.5 px-3.5 sm:px-5">
-        <div className="flex min-h-10 items-center rounded-full border border-slate-200/60 bg-[#f1f3f7] px-3.5 py-1">
+        <div className="flex min-h-10 items-center rounded-xl border border-slate-200/85 bg-white px-3 py-1 shadow-[0_1px_2px_rgba(15,23,42,0.03)] focus-within:border-[#D9232D] focus-within:ring-2 focus-within:ring-[#D9232D]/15 transition-all">
           <Search className="h-4 w-4 shrink-0 text-slate-400" />
           <input
             aria-label="Search seat covers"
             onChange={(event) => onSearch(event.target.value)}
-            className="ml-2 min-h-8 w-full min-w-0 bg-transparent text-base sm:text-[13px] outline-none placeholder:text-slate-400"
+            className="ml-2 min-h-8 w-full min-w-0 bg-transparent text-base sm:text-[13px] text-slate-900 outline-none placeholder:text-slate-400"
             placeholder="Search seat covers, cushions..."
           />
         </div>
@@ -131,57 +138,96 @@ export const ShopView: React.FC<ShopViewProps> = ({
         {categories.map((item) => (
           <button
             key={item}
+            type="button"
             onClick={() => setCategory(item)}
             aria-pressed={activeCategory === item}
-            className={`min-h-8 shrink-0 rounded-full px-3.5 py-1 text-[11.5px] font-semibold ${activeCategory === item ? 'bg-[#e61e25] text-white' : 'bg-[#eceef3] text-slate-700'}`}
+            className={`min-h-8.5 shrink-0 rounded-lg px-3 py-1 text-[11.5px] font-semibold transition-colors cursor-pointer ${
+              activeCategory === item
+                ? 'bg-[#D9232D] text-white shadow-[0_1px_2px_rgba(217,35,45,0.25)]'
+                : 'bg-white border border-slate-200/85 text-slate-700 hover:border-slate-300 hover:text-slate-950'
+            }`}
           >
             {item}
           </button>
         ))}
       </nav>
 
-      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 px-3.5 sm:px-5">
-        <div className="flex min-w-0 flex-wrap gap-1.5">
-          <button type="button" onClick={onOpenSort} aria-label="Sort products" className="flex min-h-9.5 items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11.5px] font-semibold">
-            <ArrowUpDown className="h-3.5 w-3.5" /> {sortLabel}
-          </button>
-          <button type="button" onClick={onOpenFilter} aria-label="Filter products" className="flex min-h-9.5 items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11.5px] font-semibold">
-            <SlidersHorizontal className="h-3.5 w-3.5" /> Filter
-            {activeFilterCount > 0 && <span className="grid h-4 min-w-4 place-items-center rounded-full bg-[#e61e25] px-1 text-[9px] font-extrabold text-white">{activeFilterCount}</span>}
-          </button>
-          {onOpenVehicleFinder && (
-            <button
-              type="button"
-              onClick={onOpenVehicleFinder}
-              aria-label="Open Vehicle Fitment Finder"
-              className={`flex min-h-9.5 items-center gap-1.5 rounded-full border px-3 py-1 text-[11.5px] font-semibold transition-colors whitespace-nowrap ${
-                activeVehicleFilter
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                  : 'border-slate-200 bg-white text-slate-700 hover:border-rose-200 hover:text-[#D9232D]'
-              }`}
-            >
-              <Bike className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              <span className="max-w-[120px] truncate">{activeVehicleFilter || 'Fitment'}</span>
-            </button>
+      <div className="no-scrollbar mt-2.5 flex max-w-full items-center gap-1.5 overflow-x-auto px-3.5 sm:px-5">
+        <button
+          type="button"
+          onClick={onOpenSort}
+          aria-label="Sort products"
+          className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200/85 bg-white hover:border-slate-300 px-3 py-1 text-[11.5px] font-semibold text-slate-700 transition-colors whitespace-nowrap cursor-pointer"
+        >
+          <ArrowUpDown className="h-3.5 w-3.5 text-slate-500" /> {sortLabel}
+        </button>
+        <button
+          type="button"
+          onClick={onOpenFilter}
+          aria-label="Filter products"
+          className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200/85 bg-white hover:border-slate-300 px-3 py-1 text-[11.5px] font-semibold text-slate-700 transition-colors whitespace-nowrap cursor-pointer"
+        >
+          <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" /> Filter
+          {activeFilterCount > 0 && (
+            <span className="grid h-4 min-w-4 place-items-center rounded-full bg-[#D9232D] px-1 text-[9px] font-bold text-white tabular-nums">
+              {activeFilterCount}
+            </span>
           )}
-        </div>
-        <div className="flex shrink-0 gap-1">
-          <button onClick={() => setLayout('grid')} aria-label="Grid view" aria-pressed={layout === 'grid'} className={`grid min-h-9.5 min-w-9.5 place-items-center rounded-lg ${layout === 'grid' ? 'bg-[#e61e25] text-white' : 'text-slate-500'}`}>
-            <LayoutGrid className="h-4 w-4" />
+        </button>
+        {onOpenVehicleFinder && (
+          <button
+            type="button"
+            onClick={onOpenVehicleFinder}
+            aria-label="Open Vehicle Fitment Finder"
+            className={`flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border px-3 py-1 text-[11.5px] font-semibold transition-colors whitespace-nowrap cursor-pointer ${
+              activeVehicleFilter
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                : 'border-slate-200/85 bg-white text-slate-700 hover:border-slate-300 hover:text-slate-950'
+            }`}
+          >
+            <Bike className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="max-w-[120px] truncate">{activeVehicleFilter || 'Fitment'}</span>
           </button>
-          <button onClick={() => setLayout('list')} aria-label="List view" aria-pressed={layout === 'list'} className={`grid min-h-9.5 min-w-9.5 place-items-center rounded-lg ${layout === 'list' ? 'bg-[#e61e25] text-white' : 'text-slate-500'}`}>
-            <List className="h-4 w-4" />
+        )}
+      </div>
+
+      <div className="mt-2.5 flex items-center justify-between gap-2 px-3.5 sm:px-5">
+        <p className="text-[11.5px] font-medium text-slate-500 tabular-nums" aria-live="polite">
+          {isLoading && renderableProducts.length === 0
+            ? 'Loading products…'
+            : error && renderableProducts.length === 0
+              ? 'Products unavailable'
+              : `${visibleProducts.length} ${visibleProducts.length === 1 ? 'product' : 'products'} found`}
+        </p>
+        <div className="flex shrink-0 items-center rounded-xl bg-slate-200/70 p-0.5 border border-slate-200/80">
+          <button
+            type="button"
+            onClick={() => setLayout('grid')}
+            aria-label="Grid view"
+            aria-pressed={layout === 'grid'}
+            className={`grid h-7.5 w-7.5 place-items-center rounded-lg transition-all cursor-pointer ${
+              layout === 'grid'
+                ? 'bg-white text-[#D9232D] shadow-2xs'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setLayout('list')}
+            aria-label="List view"
+            aria-pressed={layout === 'list'}
+            className={`grid h-7.5 w-7.5 place-items-center rounded-lg transition-all cursor-pointer ${
+              layout === 'list'
+                ? 'bg-white text-[#D9232D] shadow-2xs'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <List className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
-
-      <p className="mt-2 px-3.5 sm:px-5 text-[11.5px] font-medium text-slate-500" aria-live="polite">
-        {isLoading && renderableProducts.length === 0
-          ? 'Loading products…'
-          : error && renderableProducts.length === 0
-            ? 'Products unavailable'
-            : `${visibleProducts.length} ${visibleProducts.length === 1 ? 'product' : 'products'} found`}
-      </p>
 
       {error && <div className="px-3.5 sm:px-5 pt-2.5"><CatalogStatus state="error" onRetry={onRetry} /></div>}
       {isLoading && renderableProducts.length === 0 && <div className="px-3.5 sm:px-5 pt-2.5"><CatalogStatus state="loading" /></div>}
