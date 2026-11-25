@@ -21,6 +21,7 @@ import { CustomerSupportRequestForm } from './CustomerSupportRequestForm';
 import { SupportConversation } from './SupportConversation';
 import { SupportTicketListSkeleton } from './AccountPageSkeleton';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 
 type StatusFilter = 'all' | 'open' | 'in_progress' | 'resolved';
 
@@ -286,27 +287,28 @@ export const SupportCenter: React.FC<{
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-full flex-1 flex-col overflow-x-hidden bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-      {/* Frosted Glass Top Header */}
-      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 px-3 py-2.5 backdrop-blur-md shadow-[0_4px_20px_-10px_rgba(15,23,42,0.06)] sm:px-5">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2.5">
+      {/* Edge-to-Edge Vignette Top Header */}
+      <header className="sticky top-0 z-20 relative isolate overflow-hidden bg-[#090808] px-3 pt-[max(0.65rem,env(safe-area-inset-top))] pb-2.5 sm:px-5">
+        <VignetteBarBackdrop variant="top" />
+        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2.5">
           <div className="flex min-w-0 items-center gap-2.5">
             <button
               type="button"
               onClick={onBack}
               aria-label="Back to account"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200/85 bg-slate-50/90 text-slate-700 shadow-2xs transition-all hover:border-rose-200 hover:bg-rose-50 hover:text-[#D9232D] active:scale-95"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-all hover:bg-white/22 active:scale-95"
             >
               <ArrowLeft className="h-4.5 w-4.5" />
             </button>
-            <div className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#FFE4E6] to-[#FECDD3] text-[#D9232D] ring-1 ring-inset ring-rose-200/70 sm:flex">
+            <div className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/18 bg-white/14 text-[#FF4D58] backdrop-blur-md sm:flex">
               <Headphones className="h-4.5 w-4.5" />
             </div>
             <div className="min-w-0">
-              <p className="text-[10.5px] font-bold text-[#D9232D]">Customer care</p>
-              <h1 className="truncate text-lg font-black tracking-tight text-slate-900 sm:text-xl text-balance">
+              <p className="text-[10.5px] font-bold text-rose-300">Customer care</p>
+              <h1 className="truncate text-lg font-black tracking-tight text-white sm:text-xl text-balance">
                 My support
               </h1>
-              <p className="truncate text-[11.5px] font-medium text-slate-500">
+              <p className="truncate text-[11.5px] font-medium text-white/70">
                 Your requests, replies and order follow-up in one place.
               </p>
             </div>
@@ -317,7 +319,7 @@ export const SupportCenter: React.FC<{
               type="button"
               onClick={() => void refresh(true)}
               aria-label="Refresh support requests"
-              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200/90 bg-white px-3 text-xs font-extrabold text-slate-700 shadow-2xs transition-colors hover:border-rose-200 hover:bg-rose-50/50 hover:text-[#D9232D] whitespace-nowrap shrink-0"
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-white/18 bg-white/14 px-3 text-xs font-extrabold text-white backdrop-blur-md transition-colors hover:bg-white/22 whitespace-nowrap shrink-0"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Refresh</span>
@@ -328,7 +330,7 @@ export const SupportCenter: React.FC<{
                 setSelectedId(null);
                 setShowNewRequest((value) => !value);
               }}
-              className="banner-cta-shine group/cta inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-3.5 text-xs font-extrabold text-white shadow-sm shadow-rose-600/25 transition-all hover:brightness-105 hover:shadow-md active:scale-95 sm:flex-none whitespace-nowrap shrink-0"
+              className="banner-cta-shine group/cta inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-3.5 text-xs font-extrabold text-white shadow-sm shadow-rose-600/25 transition-all hover:brightness-105 hover:shadow-md active:scale-95 sm:flex-none whitespace-nowrap shrink-0"
             >
               <Plus className="h-4 w-4 transition-transform duration-200 group-hover/cta:scale-110" /> New request
             </button>
@@ -336,7 +338,9 @@ export const SupportCenter: React.FC<{
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col space-y-3 px-3 pt-3 sm:px-5">
+      <div className="relative -mt-px flex flex-1 flex-col">
+        <VignettePageCurtain />
+        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col space-y-3 px-3 pt-3 sm:px-5">
         {error && (
           <div
             role="alert"
@@ -572,6 +576,7 @@ export const SupportCenter: React.FC<{
               </div>
             )}
           </section>
+        </div>
         </div>
       </div>
     </main>

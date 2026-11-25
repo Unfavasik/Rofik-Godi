@@ -18,6 +18,7 @@ import {
   type SupportRequestRecord,
 } from '../lib/supabaseSupport';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 
 type SupportNotificationDetailsProps = {
   requestId: string | null;
@@ -149,31 +150,34 @@ export function SupportNotificationDetails({
 
   return (
     <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#F8FAFC] pb-[max(2rem,env(safe-area-inset-bottom))] font-sans text-slate-900">
-      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-        <div className="mx-auto flex min-h-[58px] w-full max-w-2xl items-center gap-3 px-3 py-2 sm:px-5">
+      <header className="sticky top-0 z-20 relative isolate overflow-hidden bg-[#090808] pt-[env(safe-area-inset-top)] text-white">
+        <VignetteBarBackdrop variant="top" />
+        <div className="relative z-10 mx-auto flex min-h-[58px] w-full max-w-2xl items-center gap-3 px-3 py-2 sm:px-5">
           <button
             type="button"
             onClick={onBack}
             aria-label="Back to notifications"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-slate-700 transition-colors hover:bg-slate-100 active:scale-95"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-colors hover:bg-white/22 active:scale-95"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="min-w-0 flex-1 truncate text-[19px] sm:text-[21px] font-extrabold tracking-tight text-slate-900">
+          <h1 className="min-w-0 flex-1 truncate text-[19px] sm:text-[21px] font-extrabold tracking-tight text-white">
             Notification Details
           </h1>
           <button
             type="button"
             onClick={onContactSupport}
             aria-label="Contact support"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200/85 bg-white text-slate-700 transition-colors hover:bg-slate-50 active:scale-95"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-colors hover:bg-white/22 active:scale-95"
           >
             <Headphones className="h-5 w-5" />
           </button>
         </div>
       </header>
 
-      <div className="mx-auto max-w-2xl space-y-3.5 px-3 pt-4 sm:px-5 sm:pt-5">
+      <div className="relative -mt-px">
+        <VignettePageCurtain className="h-[220px] sm:h-[250px]" />
+        <div className="relative z-10 mx-auto max-w-2xl space-y-3.5 px-3 pt-4 sm:px-5 sm:pt-5">
         <section className="rounded-3xl border border-rose-100/90 bg-gradient-to-br from-[#FFF1F2] via-white to-[#FFF8F8] p-4 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.08)] sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#D9232D] shadow-2xs ring-1 ring-rose-100">
@@ -309,6 +313,7 @@ export function SupportNotificationDetails({
             <span>Contact Support</span>
           </button>
         </div>
+      </div>
       </div>
     </main>
   );

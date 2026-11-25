@@ -36,6 +36,7 @@ import { CustomerOrderDetailsSkeleton, CustomerOrdersListSkeleton } from './Acco
 import { formatInr, useI18n, type TranslationKey } from '../lib/i18n';
 import type { PreferredLanguage } from '../lib/customerPreferences';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 
 interface CustomerOrdersModalProps {
   orders: CustomerOrderRecord[];
@@ -314,22 +315,23 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 12, scale: 0.99 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="relative z-10 flex h-[100dvh] max-h-[760px] w-full max-w-full flex-col overflow-hidden overflow-x-hidden bg-[#f7f7f8] shadow-2xl sm:h-[85vh] sm:max-w-[540px] sm:rounded-2xl sm:border sm:border-white/70"
+        className="relative z-10 flex h-[100dvh] w-full max-w-full flex-col overflow-hidden overflow-x-hidden bg-[#f7f7f8] shadow-2xl sm:h-[85vh] sm:max-h-[760px] sm:max-w-[540px] sm:rounded-2xl sm:border sm:border-white/70"
       >
-        <header className="relative shrink-0 border-b border-slate-100 bg-white px-3.5 py-2.5 sm:px-4">
-          <div className="relative flex items-start justify-between gap-2">
-            <div className="flex min-w-0 items-start gap-2">
-              {selectedOrder && <button type="button" onClick={() => { setSelectedOrderId(null); onBackToOrdersRoute?.(); }} aria-label={t('orders.backAll')} className="mt-0.5 grid h-8.5 w-8.5 shrink-0 place-items-center rounded-full bg-slate-50 text-slate-700 transition hover:bg-slate-100"><ArrowLeft className="h-4 w-4" /></button>}
+        <header className="relative isolate shrink-0 overflow-hidden bg-[#090808] px-3.5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 text-white sm:px-4">
+          <VignetteBarBackdrop variant="top" />
+          <div className="relative z-10 flex items-start justify-between gap-2">
+            <div className="flex min-w-0 items-start gap-2.5">
+              {selectedOrder && <button type="button" onClick={() => { setSelectedOrderId(null); onBackToOrdersRoute?.(); }} aria-label={t('orders.backAll')} className="mt-0.5 grid h-8.5 w-8.5 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition hover:bg-white/22"><ArrowLeft className="h-4 w-4" /></button>}
               <div className="min-w-0">
-                <p className="flex items-center gap-1 text-[8.5px] font-extrabold uppercase tracking-[0.16em] text-[#cf2833]"><Store className="h-2.5 w-2.5 shrink-0" /><span className="truncate">{t('orders.pickupOrders')}</span></p>
-                <h2 id="customer-orders-title" className="mt-0.5 truncate text-[16px] font-black tracking-tight text-slate-900 sm:text-[17.5px]">{selectedOrder || showOrderDetailsSkeleton ? t('orders.details') : t('orders.title')}</h2>
-                <p className="truncate text-[10.5px] font-medium text-slate-500">{selectedOrder ? `Order #${selectedOrder.order_number}` : showOrderDetailsSkeleton ? t('common.loading') : t('orders.subtitle')}</p>
+                <p className="flex items-center gap-1 text-[8.5px] font-extrabold uppercase tracking-[0.16em] text-rose-300"><Store className="h-2.5 w-2.5 shrink-0" /><span className="truncate">{t('orders.pickupOrders')}</span></p>
+                <h2 id="customer-orders-title" className="mt-0.5 truncate text-[16px] font-black tracking-tight text-white sm:text-[17.5px]">{selectedOrder || showOrderDetailsSkeleton ? t('orders.details') : t('orders.title')}</h2>
+                <p className="truncate text-[10.5px] font-medium text-white/70">{selectedOrder ? `Order #${selectedOrder.order_number}` : showOrderDetailsSkeleton ? t('common.loading') : t('orders.subtitle')}</p>
               </div>
             </div>
-            <button type="button" onClick={onClose} aria-label={t('orders.close')} className="grid h-8.5 w-8.5 shrink-0 place-items-center rounded-full bg-slate-50 text-slate-700 transition hover:bg-slate-100"><X className="h-4 w-4" /></button>
+            <button type="button" onClick={onClose} aria-label={t('orders.close')} className="grid h-8.5 w-8.5 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition hover:bg-white/22"><X className="h-4 w-4" /></button>
           </div>
           {!selectedOrder && !showOrderDetailsSkeleton && (
-            <div className="relative mt-2.5 grid grid-cols-3 gap-1.5 sm:gap-2">
+            <div className="relative z-10 mt-2.5 grid grid-cols-3 gap-1.5 sm:gap-2">
               <SummaryTile label={t('orders.all')} value={orders.length} icon={<Package className="h-3 w-3" />} />
               <SummaryTile label={t('orders.inProgress')} value={activeCount} icon={<Clock3 className="h-3 w-3" />} />
               <SummaryTile label={t('orders.completed')} value={completedCount} icon={<CheckCircle2 className="h-3 w-3" />} />
@@ -339,15 +341,23 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
 
         <AnimatePresence mode="wait" initial={false}>
           {selectedOrder ? (
-            <motion.div key="details" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.16 }} className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-2.5 sm:px-4 sm:py-3">
-              <OrderDetails order={selectedOrder} products={products} customerName={customerName} reviews={reviews} onRefresh={onRefresh} onInvoice={() => openInvoice(selectedOrder)} onReview={onReview} onBuyAgain={onBuyAgain} onNeedHelp={onNeedHelp ? () => onNeedHelp(selectedOrder) : undefined} />
+            <motion.div key="details" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.16 }} className="relative -mt-px min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-3 sm:px-4 sm:py-3.5">
+              <VignettePageCurtain className="h-[210px] sm:h-[240px]" />
+              <div className="relative z-10">
+                <OrderDetails order={selectedOrder} products={products} customerName={customerName} reviews={reviews} onRefresh={onRefresh} onInvoice={() => openInvoice(selectedOrder)} onReview={onReview} onBuyAgain={onBuyAgain} onNeedHelp={onNeedHelp ? () => onNeedHelp(selectedOrder) : undefined} />
+              </div>
             </motion.div>
           ) : showOrderDetailsSkeleton ? (
-            <motion.div key="details-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.14 }} className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-2.5 sm:px-4 sm:py-3">
-              <CustomerOrderDetailsSkeleton label={t('common.loading')} />
+            <motion.div key="details-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.14 }} className="relative -mt-px min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-3 sm:px-4 sm:py-3.5">
+              <VignettePageCurtain className="h-[210px] sm:h-[240px]" />
+              <div className="relative z-10">
+                <CustomerOrderDetailsSkeleton label={t('common.loading')} />
+              </div>
             </motion.div>
           ) : (
-            <motion.div key="list" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} transition={{ duration: 0.16 }} className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-2.5 sm:px-4 sm:py-3">
+            <motion.div key="list" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} transition={{ duration: 0.16 }} className="relative -mt-px min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-3 sm:px-4 sm:py-3.5">
+              <VignettePageCurtain className="h-[210px] sm:h-[240px]" />
+              <div className="relative z-10">
               {directOrderNotFound && <p role="alert" className="mb-2 rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900">{t('orders.notFound')}</p>}
               <div className="mb-2.5 flex gap-1.5 overflow-x-auto pb-1 no-scrollbar" role="tablist" aria-label={t('orders.filterOrders')}>
                 {([
@@ -356,8 +366,8 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
                   ['completed', 'orders.completed', completedCount],
                   ['cancelled', 'orders.cancelled', orders.filter((order) => order.status === 'CANCELLED').length],
                 ] as [OrderFilter, TranslationKey, number][]).map(([value, labelKey, count]) => (
-                  <button key={value} type="button" role="tab" aria-selected={filter === value} onClick={() => setFilter(value)} className={`inline-flex min-h-8 shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-extrabold transition ${filter === value ? 'bg-[#d94335] text-white shadow-[0_4px_12px_rgba(217,67,53,0.2)]' : 'border border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}>
-                    {t(labelKey)}<span className={`rounded-full px-1.5 py-0.5 text-[9px] ${filter === value ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{count}</span>
+                  <button key={value} type="button" role="tab" aria-selected={filter === value} onClick={() => setFilter(value)} className={`inline-flex min-h-8 shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-extrabold transition ${filter === value ? 'bg-white text-slate-950 shadow-[0_4px_12px_rgba(0,0,0,0.22)]' : 'border border-white/20 bg-white/14 text-white/90 backdrop-blur-md hover:bg-white/22'}`}>
+                    {t(labelKey)}<span className={`rounded-full px-1.5 py-0.5 text-[9px] ${filter === value ? 'bg-[#D9232D]/12 text-[#D9232D]' : 'bg-white/15 text-white'}`}>{count}</span>
                   </button>
                 ))}
               </div>
@@ -370,7 +380,7 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
               ) : loading ? (
                 <CustomerOrdersListSkeleton count={3} label={t('common.loading')} />
               ) : filteredOrders.length === 0 ? (
-                <div className="grid min-h-[200px] place-items-center rounded-xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center">
+                <div className="grid min-h-[200px] place-items-center rounded-xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center shadow-[0_10px_28px_-14px_rgba(15,23,42,0.16)]">
                   <div><span className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-[#fff0ec] text-[#d94335]"><Package className="h-4.5 w-4.5" /></span><h3 className="mt-2.5 text-[14px] font-black text-slate-900">{orders.length ? t('orders.emptyFilter') : t('orders.emptyTitle')}</h3><p className="mx-auto mt-1 max-w-[240px] text-[11.5px] leading-relaxed text-slate-500">{orders.length ? t('orders.tryFilter') : t('orders.emptyBody')}</p></div>
                 </div>
               ) : (
@@ -379,6 +389,7 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
                 </div>
               )}
               <p className="mt-3 flex items-center justify-center gap-1.5 pb-1 text-[10px] font-medium text-slate-400"><ShieldCheck className="h-3.5 w-3.5" />{t('orders.private')}</p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -394,9 +405,9 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
 };
 
 const SummaryTile = ({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) => (
-  <div className="rounded-lg border border-slate-100 bg-[#fafafa] px-2 py-1.5">
-    <div className="flex items-center gap-1 text-slate-500">{icon}<span className="text-[8.5px] font-bold">{label}</span></div>
-    <p className="mt-0.5 text-[14px] font-black leading-none text-slate-900">{value}</p>
+  <div className="rounded-xl border border-white/15 bg-white/[0.08] px-2.5 py-2 backdrop-blur-md">
+    <div className="flex items-center gap-1 text-white/75">{icon}<span className="text-[8.5px] font-bold">{label}</span></div>
+    <p className="mt-1 text-[14px] font-black leading-none text-white tabular-nums">{value}</p>
   </div>
 );
 

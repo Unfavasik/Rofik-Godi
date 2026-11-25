@@ -33,6 +33,7 @@ import {
 import { CustomerOrderRecord, Product, UserProfile } from '../types';
 import { getMyOrderBySlug, listMyOrders } from '../lib/supabaseOrders';
 import { listMyProductReviews, type ProductReviewRecord } from '../lib/supabaseReviews';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import { ReviewComposer } from './ReviewComposer';
 import { AvatarCropModal } from './AvatarCropModal';
 import { CustomerOrdersModal, type BuyAgainResult } from './CustomerOrdersModal';
@@ -791,42 +792,47 @@ export const AccountView: React.FC<AccountViewProps> = ({
   }
 
   return (
-    <div className="w-full max-w-full flex-1 flex flex-col space-y-3 pb-10 overflow-x-hidden animate-fade-in text-slate-800 bg-[#F8FAFC]">
-      {/* Account Page Title & Top Actions */}
-      <section className="mx-auto w-full max-w-3xl px-3.5 sm:px-5 pt-3 pb-0.5 flex justify-between items-center gap-2" data-purpose="account-header">
-        <div>
-          <h1 className="text-[22px] sm:text-[24px] font-black tracking-tight text-slate-900 leading-none">{t('account.title')}</h1>
-          <p className="text-[11.5px] text-slate-500 font-medium mt-1 tracking-tight">
-            {isGuest ? t('account.guestSubtitle') : t('account.subtitle')}
-          </p>
+    <div className="w-full max-w-full flex-1 flex flex-col pb-10 overflow-x-hidden animate-fade-in text-slate-800 bg-[#F8FAFC]">
+      {/* Account Edge-to-Edge Vignette Top Bar */}
+      <header className="sticky top-0 z-30 relative isolate w-full overflow-hidden bg-[#090808] pt-[env(safe-area-inset-top)]" data-purpose="account-header">
+        <VignetteBarBackdrop variant="top" />
+        <div className="relative z-10 mx-auto w-full max-w-3xl px-3.5 sm:px-5 pt-3 pb-3 flex justify-between items-center gap-2">
+          <div>
+            <h1 className="text-[20px] sm:text-[22px] font-extrabold tracking-tight text-white leading-none">{t('account.title')}</h1>
+            <p className="text-[11.5px] text-white/70 font-medium mt-1 tracking-tight">
+              {isGuest ? t('account.guestSubtitle') : t('account.subtitle')}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => (onOpenNotifications ? onOpenNotifications() : onOpenSupportPage?.())}
+              aria-label={t('account.supportRequests')}
+              className="relative min-h-10 min-w-10 h-10 w-10 rounded-full bg-white/14 hover:bg-white/22 border border-white/18 backdrop-blur-md flex items-center justify-center text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] transition-all active:scale-95 cursor-pointer"
+            >
+              <Bell className="h-4.5 w-4.5" />
+              {notificationCount > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#FF4D58] ring-2 ring-[#181412]"
+                />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleProtectedAction('settings')}
+              aria-label={t('account.settings')}
+              className="min-h-10 min-w-10 h-10 w-10 rounded-full bg-white/14 hover:bg-white/22 border border-white/18 backdrop-blur-md flex items-center justify-center text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] transition-all active:scale-95 cursor-pointer"
+            >
+              <Settings className="h-4.5 w-4.5" />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => (onOpenNotifications ? onOpenNotifications() : onOpenSupportPage?.())}
-            aria-label={t('account.supportRequests')}
-            className="relative min-h-10 min-w-10 h-10 w-10 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-700 shadow-2xs transition-all active:scale-95"
-          >
-            <Bell className="h-4.5 w-4.5" />
-            {notificationCount > 0 && (
-              <span
-                aria-hidden="true"
-                className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#D9232D] ring-2 ring-white"
-              />
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={() => handleProtectedAction('settings')}
-            aria-label={t('account.settings')}
-            className="min-h-10 min-w-10 h-10 w-10 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-700 shadow-2xs transition-all active:scale-95"
-          >
-            <Settings className="h-4.5 w-4.5" />
-          </button>
-        </div>
-      </section>
+      </header>
 
-      <main className="mx-auto w-full max-w-3xl px-3.5 sm:px-5 space-y-3">
+      <div className="relative -mt-px flex-1">
+        <VignettePageCurtain className="h-[250px] sm:h-[280px]" />
+        <main className="relative z-10 mx-auto w-full max-w-3xl px-3.5 sm:px-5 pt-3.5 space-y-3">
         {/* BEGIN: ProfileHeroCard */}
         <section
           className="group relative overflow-hidden rounded-2xl bg-white border border-slate-200/85 shadow-[0_1px_4px_rgba(15,23,42,0.04)] transition-all duration-200"
@@ -1520,6 +1526,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
         </section>
         {/* END: MoreOptionsSection */}
       </main>
+      </div>
 
       {/* Sub-Modals for Account Features */}
       <AnimatePresence>
@@ -1591,24 +1598,28 @@ export const AccountView: React.FC<AccountViewProps> = ({
         {activeModal === 'pickupStore' && (
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveModal(null)} className="fixed inset-0 bg-black/60 backdrop-blur-xs" />
-            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="relative w-full max-w-full sm:max-w-[400px] max-h-[90dvh] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              <div className="flex justify-between items-center gap-2 px-4 py-3 border-b border-gray-100 bg-white">
-                <div className="flex min-w-0 items-center gap-2">
-                  <div className="w-8 h-8 shrink-0 rounded-full bg-[#ECF8F1] flex items-center justify-center text-[#16A34A]">
-                    <MapPin className="w-4 h-4" />
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="relative w-full max-w-full sm:max-w-[400px] max-h-[90dvh] bg-[#F8FAFC] rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              <div className="relative isolate overflow-hidden bg-[#090808] px-4 py-3 text-white">
+                <VignetteBarBackdrop variant="top" />
+                <div className="relative z-10 flex justify-between items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <div className="w-8.5 h-8.5 shrink-0 rounded-full border border-white/18 bg-white/14 backdrop-blur-md flex items-center justify-center text-emerald-300">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-[14.5px] font-black text-white truncate">Pickup Store</h3>
+                      <p className="text-[11px] text-white/70 truncate">Store pickup location and hours</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-[14.5px] font-black text-gray-900 truncate">Pickup Store</h3>
-                    <p className="text-[11px] text-gray-400 truncate">Store pickup location and hours</p>
-                  </div>
+                  <button type="button" onClick={() => setActiveModal(null)} aria-label="Close pickup store details" className="w-9 h-9 shrink-0 rounded-full border border-white/18 bg-white/14 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/22 transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <button type="button" onClick={() => setActiveModal(null)} aria-label="Close pickup store details" className="w-9 h-9 shrink-0 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors">
-                  <X className="w-4 h-4" />
-                </button>
               </div>
 
-              <div className="overflow-y-auto overflow-x-hidden px-4 py-3 space-y-2.5 flex-1 no-scrollbar">
-                <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 space-y-1.5 relative">
+              <div className="relative -mt-px overflow-y-auto overflow-x-hidden px-4 py-3 space-y-2.5 flex-1 no-scrollbar">
+                <VignettePageCurtain className="h-[150px]" />
+                <div className="relative z-10 bg-white border border-slate-200/80 rounded-2xl p-3.5 space-y-1.5 shadow-[0_10px_28px_-14px_rgba(15,23,42,0.18)]">
                   <div className="flex justify-between items-center gap-2">
                     <span className="text-[11px] font-extrabold tracking-wide text-[#16A34A]">Pickup Location</span>
                     <span className="text-[10px] font-semibold text-emerald-700">Free store pickup</span>
@@ -1660,35 +1671,37 @@ export const AccountView: React.FC<AccountViewProps> = ({
             transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
             className="fixed inset-0 z-50 flex w-full max-w-full flex-col bg-[#F8F9FB] overflow-hidden"
           >
-            {/* Clean Top Bar */}
-            <div className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 px-3.5 py-2.5 backdrop-blur-md sm:px-5">
-              <div className="mx-auto flex max-w-[540px] items-center justify-between gap-2">
+            {/* Edge-to-Edge Vignette Top Bar */}
+            <div className="sticky top-0 z-20 relative isolate overflow-hidden bg-[#090808] px-3.5 pt-[max(0.65rem,env(safe-area-inset-top))] pb-2.5 sm:px-5">
+              <VignetteBarBackdrop variant="top" />
+              <div className="relative z-10 mx-auto flex max-w-[540px] items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <button
                     type="button"
                     onClick={requestCloseProfile}
                     disabled={profileSaving}
                     aria-label="Close profile editor"
-                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/85 bg-white text-slate-800 shadow-2xs transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 active:scale-95 disabled:opacity-50"
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-colors hover:bg-white/22 active:scale-95 disabled:opacity-50"
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </button>
-                  <h3 id="profile-modal-title" className="text-[15px] font-bold tracking-tight text-slate-950 truncate">
+                  <h3 id="profile-modal-title" className="text-[15px] font-bold tracking-tight text-white truncate">
                     Edit Profile
                   </h3>
                 </div>
                 {profileDirty && !profileLoading && (
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200/85 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/35 bg-amber-400/15 px-2.5 py-0.5 text-[10px] font-bold text-amber-200 backdrop-blur-md">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                     <span>Unsaved</span>
                   </span>
                 )}
               </div>
             </div>
 
-            <div className="overflow-y-auto overflow-x-hidden flex-1 no-scrollbar text-slate-800">
+            <div className="relative -mt-px overflow-y-auto overflow-x-hidden flex-1 no-scrollbar text-slate-800">
+              <VignettePageCurtain className="h-[220px] sm:h-[250px]" />
               <div
-                className={`mx-auto w-full max-w-[540px] px-3.5 sm:px-5 pt-3 space-y-3 ${
+                className={`relative z-10 mx-auto w-full max-w-[540px] px-3.5 sm:px-5 pt-3.5 space-y-3 ${
                   profileDirty || profileSaving ? 'pb-20' : 'pb-6'
                 }`}
               >
@@ -1697,7 +1710,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 ) : (
                   <>
                 {/* Live Rider Profile Card */}
-                <div className="rounded-2xl border border-slate-200/85 bg-white p-3.5 sm:p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] space-y-3">
+                <div className="rounded-2xl border border-slate-200/85 bg-white p-3.5 sm:p-4 shadow-[0_12px_28px_-14px_rgba(15,23,42,0.18)] space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="relative shrink-0">
                       <button

@@ -110,6 +110,7 @@ const isOverlayRouteKind = (kind: ReturnType<typeof resolveAppRoute>['kind']) =>
   kind === 'personal-data';
 
 export default function App() {
+  const [hasActiveBanner, setHasActiveBanner] = useState(false);
   const location = useLocation();
   const routerNavigate = useNavigate();
   // Capture the outgoing page's scroll position before the DOM swaps, so the
@@ -1716,7 +1717,7 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
     <I18nProvider language={uiLanguage}>
-    <div className="min-h-screen w-full overflow-x-hidden bg-[#F0F2F5] flex justify-center selection:bg-[#D9232D] selection:text-white font-sans antialiased text-[#1E232A]">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[#FDFDFD] flex justify-center selection:bg-[#D9232D] selection:text-white font-sans antialiased text-[#1E232A]">
       {/* Live in-app notification toast banner */}
       {liveNotificationToast && (
         <div
@@ -1764,12 +1765,12 @@ export default function App() {
         </div>
       )}
 
-      {/* App Container (Mobile Frame or Full Width based on toggle) */}
+      {/* App Container (Edge-to-Edge Full Width or Mobile Frame toggle) */}
       <div
         onClickCapture={handleAppHapticTap}
-        className={`w-full min-w-0 overflow-x-hidden bg-[#FDFDFD] min-h-screen flex flex-col relative shadow-2xl transition-all duration-300 ${
+        className={`w-full min-w-0 overflow-x-hidden bg-[#FDFDFD] min-h-screen flex flex-col relative transition-all duration-300 ${
           hidesBottomNavigation ? '' : 'pb-20 sm:pb-22'
-        } ${isMobileFrameMode ? 'max-w-[440px]' : 'max-w-7xl'}`}
+        } ${isMobileFrameMode ? 'max-w-[440px] shadow-2xl' : 'w-full'}`}
       >
         {/* Main Header */}
         {!hidesBottomNavigation &&
@@ -2053,6 +2054,7 @@ export default function App() {
             <HeroBanner
               onExploreClick={scrollToShop}
               onBannerClick={handleBannerClick}
+              onVisibilityChange={setHasActiveBanner}
             />
 
             {pwaInstall.visible && <div className="mb-3 px-3.5 sm:px-5"><PwaInstallCard visible={pwaInstall.visible} canInstall={pwaInstall.canInstall} isIOSSafari={pwaInstall.isIOSSafari} isInstalling={pwaInstall.isInstalling} installError={pwaInstall.installError} onInstall={pwaInstall.install} onDismiss={pwaInstall.dismiss} /></div>}
@@ -2060,6 +2062,7 @@ export default function App() {
             {/* Categories Section */}
             <CategorySection
               selectedCategory={selectedCategory}
+              vignetteBackdrop={!hasActiveBanner}
               onSelectCategory={(cat) => {
                 setSelectedCategory(cat);
                 if (cat !== 'all') scrollToShop();

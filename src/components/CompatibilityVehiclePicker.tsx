@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Bike, Check, Loader2, Motorbike, Search, X } from 'lucide-react';
 import { getCachedVehicleModels, loadVehicleModels, type VehicleCatalogModel } from '../lib/supabaseVehicleCatalog';
 import { getBrandInitials, getBrandLogoUrl } from '../lib/brandLogos';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 
 type Props = {
   open: boolean;
@@ -110,19 +111,24 @@ export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }:
   const selectedNames = Array.from(picked).sort((a, b) => a.localeCompare(b));
 
   return (
-    <div className="fixed inset-0 z-[70] flex w-full max-w-full flex-col overflow-x-hidden bg-white" role="dialog" aria-modal="true" aria-label="Compatible vehicles picker">
-      <header className="flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#FCEBEB] text-[#D9232D]"><Bike className="h-5 w-5" /></span>
-        <div className="min-w-0 flex-1">
-          <h2 className="truncate text-[17px] font-extrabold tracking-tight text-slate-900">Compatible vehicles</h2>
-          <p className="truncate text-[11px] font-medium text-slate-500">Choose the bikes this seat cover fits</p>
+    <div className="fixed inset-0 z-[70] flex w-full max-w-full flex-col overflow-x-hidden bg-[#F8FAFC]" role="dialog" aria-modal="true" aria-label="Compatible vehicles picker">
+      <header className="relative isolate shrink-0 overflow-hidden bg-[#090808] px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 text-white">
+        <VignetteBarBackdrop variant="top" />
+        <div className="relative z-10 flex items-center gap-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/18 bg-white/14 text-rose-300 backdrop-blur-md"><Bike className="h-5 w-5" /></span>
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-[17px] font-extrabold tracking-tight text-white">Compatible vehicles</h2>
+            <p className="truncate text-[11px] font-medium text-white/70">Choose the bikes this seat cover fits</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close compatible vehicles picker" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition hover:bg-white/22">
+            <X className="h-5 w-5" />
+          </button>
         </div>
-        <button type="button" onClick={onClose} aria-label="Close compatible vehicles picker" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100">
-          <X className="h-5 w-5" />
-        </button>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-4 pt-4">
+      <div className="relative -mt-px min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-4 pt-4">
+        <VignettePageCurtain className="h-[190px]" />
+        <div className="relative z-10">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -130,7 +136,7 @@ export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }:
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search bike or scooter..."
             aria-label="Search bike or scooter"
-            className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-base sm:text-[13px] font-semibold text-slate-700 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#D9232D] focus:bg-white focus:ring-2 focus:ring-red-50"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-base sm:text-[13px] font-semibold text-slate-700 outline-none shadow-[0_8px_22px_-12px_rgba(15,23,42,0.2)] transition placeholder:font-normal placeholder:text-slate-400 focus:border-[#D9232D] focus:bg-white focus:ring-2 focus:ring-red-50"
           />
         </div>
 
@@ -238,6 +244,7 @@ export function CompatibilityVehiclePicker({ open, selected, onApply, onClose }:
             </p>
           </div>
         )}
+        </div>
       </div>
 
       <footer className="grid shrink-0 grid-cols-2 gap-2.5 border-t border-slate-100 bg-white px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">

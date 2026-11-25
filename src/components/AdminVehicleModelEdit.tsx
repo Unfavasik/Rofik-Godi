@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import {
   deleteVehicleModel,
   loadVehicleModels,
@@ -202,20 +203,21 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
 
   return (
     <section className="min-h-full w-full max-w-full overflow-x-hidden bg-[#F4F5F9]">
-      <header className="bg-[#db1a24] px-4 pb-4 pt-3 text-white sm:px-5">
-        <div className="flex items-center gap-2 sm:gap-2.5">
-          <button type="button" onClick={() => navigate('/admin/Vehicle')} aria-label="Back to vehicle models" className="-ml-1 grid size-9 shrink-0 place-items-center rounded-full text-white transition hover:bg-white/10">
+      <header className="relative isolate overflow-hidden bg-[#090808] px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-4 text-white sm:px-5">
+        <VignetteBarBackdrop variant="top" />
+        <div className="relative z-10 flex items-center gap-2 sm:gap-2.5">
+          <button type="button" onClick={() => navigate('/admin/Vehicle')} aria-label="Back to vehicle models" className="-ml-1 grid size-9 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition hover:bg-white/22">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-base font-extrabold tracking-tight sm:text-lg">Edit Vehicle Model</h1>
-            <p className="mt-0.5 truncate text-[11px] text-white/85">Update model details, image and status</p>
+            <p className="mt-0.5 truncate text-[11px] text-white/75">Update model details, image and status</p>
           </div>
           <details className="relative shrink-0">
-            <summary aria-label="More options" className="grid size-9 cursor-pointer list-none place-items-center rounded-full text-white transition hover:bg-white/10 [&::-webkit-details-marker]:hidden">
+            <summary aria-label="More options" className="grid size-9 cursor-pointer list-none place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition hover:bg-white/22 [&::-webkit-details-marker]:hidden">
               <EllipsisVertical className="h-4 w-4" />
             </summary>
-            <div className="absolute right-0 top-10 z-30 w-44 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
+            <div className="absolute right-0 top-10 z-30 w-44 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white p-1.5 text-slate-900 shadow-xl">
               <button type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); void removeModel(); }} className="flex min-h-9 w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50">
                 <Trash2 className="h-3.5 w-3.5" />Delete model
               </button>
@@ -224,7 +226,9 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-[440px] space-y-3 px-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3.5 sm:px-4">
+      <div className="relative -mt-px">
+        <VignettePageCurtain className="h-[180px]" />
+        <div className="relative z-10 mx-auto w-full max-w-[440px] space-y-3 px-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3.5 sm:px-4">
         <section className="rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm" aria-label="Vehicle summary">
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:gap-3">
             <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="Change model image" className="relative h-[72px] w-[96px] shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
@@ -359,6 +363,7 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
             {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}{saving ? 'Saving…' : 'Save Changes'}
           </button>
         </div>
+      </div>
       </div>
 
       <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} className="hidden" aria-label="Upload vehicle model image" />

@@ -23,6 +23,7 @@ import { formatInr, useI18n, type TranslationKey } from '../lib/i18n';
 import { isOrderComplete } from '../lib/orderPresentation';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { CUSTOMER_ORDERS_UPDATED_EVENT } from '../lib/localCache';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 
 const money = formatInr;
 const orderDate = (value: string, locale: string) => {
@@ -206,19 +207,22 @@ export function OrderNotificationDetails({
     return (
       <main className={screenClass} style={viewportStyle}>
         <OrderHeader orderNumber={orderNumber} onBack={onBack} />
-        <div className="mx-auto min-h-0 w-full max-w-2xl flex-1 space-y-3 overflow-y-auto p-4 sm:p-5" aria-label={t('common.loading')}>
-          <div className="rounded-3xl border border-slate-200/85 bg-white p-5 space-y-3">
-            <div className="skeleton-shimmer h-12 w-12 rounded-2xl bg-rose-50" />
-            <div className="skeleton-shimmer h-6 w-2/3 rounded-lg bg-slate-200/80" />
-            <div className="skeleton-shimmer h-4 w-full rounded bg-slate-100" />
-          </div>
-          <div className="rounded-3xl border border-slate-200/85 bg-white p-5 space-y-3">
-            <div className="skeleton-shimmer h-4 w-32 rounded bg-slate-200/75" />
-            <div className="skeleton-shimmer h-10 w-full rounded-xl bg-slate-100" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="skeleton-shimmer h-24 rounded-3xl border border-slate-200/85 bg-white" />
-            <div className="skeleton-shimmer h-24 rounded-3xl border border-slate-200/85 bg-white" />
+        <div className="relative -mt-px min-h-0 w-full flex-1 overflow-y-auto" aria-label={t('common.loading')}>
+          <VignettePageCurtain className="h-[220px] sm:h-[250px]" />
+          <div className="relative z-10 mx-auto w-full max-w-2xl space-y-3 p-4 sm:p-5">
+            <div className="rounded-3xl border border-slate-200/85 bg-white p-5 space-y-3">
+              <div className="skeleton-shimmer h-12 w-12 rounded-2xl bg-rose-50" />
+              <div className="skeleton-shimmer h-6 w-2/3 rounded-lg bg-slate-200/80" />
+              <div className="skeleton-shimmer h-4 w-full rounded bg-slate-100" />
+            </div>
+            <div className="rounded-3xl border border-slate-200/85 bg-white p-5 space-y-3">
+              <div className="skeleton-shimmer h-4 w-32 rounded bg-slate-200/75" />
+              <div className="skeleton-shimmer h-10 w-full rounded-xl bg-slate-100" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="skeleton-shimmer h-24 rounded-3xl border border-slate-200/85 bg-white" />
+              <div className="skeleton-shimmer h-24 rounded-3xl border border-slate-200/85 bg-white" />
+            </div>
           </div>
         </div>
       </main>
@@ -229,18 +233,21 @@ export function OrderNotificationDetails({
     return (
       <main className={screenClass} style={viewportStyle}>
         <OrderHeader orderNumber={orderNumber} onBack={onBack} />
-        <div className="mx-auto w-full max-w-2xl flex-1 p-4 sm:p-5">
-          <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            {t('notification.orderLoadFailed')}
+        <div className="relative -mt-px w-full flex-1">
+          <VignettePageCurtain className="h-[220px] sm:h-[250px]" />
+          <div className="relative z-10 mx-auto w-full max-w-2xl p-4 sm:p-5">
+            <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              {t('notification.orderLoadFailed')}
+            </div>
+            <button
+              type="button"
+              onClick={() => onOpenMyOrders()}
+              className="banner-cta-shine group/cta mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#D9232D] px-4 text-sm font-extrabold text-white shadow-sm hover:brightness-105 active:scale-[0.98]"
+            >
+              <span>{t('notification.openMyOrders')}</span>
+              <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => onOpenMyOrders()}
-            className="banner-cta-shine group/cta mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#D9232D] px-4 text-sm font-extrabold text-white shadow-sm hover:brightness-105 active:scale-[0.98]"
-          >
-            <span>{t('notification.openMyOrders')}</span>
-            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
-          </button>
         </div>
       </main>
     );
@@ -262,7 +269,9 @@ export function OrderNotificationDetails({
     <main className={screenClass} style={viewportStyle}>
       <OrderHeader orderNumber={order.order_number} onBack={onBack} />
 
-      <div className="mx-auto min-h-0 w-full max-w-2xl flex-1 space-y-3.5 overflow-x-hidden overflow-y-auto overscroll-contain px-3 pb-4 pt-4 sm:space-y-4 sm:px-5 sm:pt-5">
+      <div className="relative -mt-px min-h-0 w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
+        <VignettePageCurtain className="h-[220px] sm:h-[250px]" />
+        <div className="relative z-10 mx-auto w-full max-w-2xl space-y-3.5 px-3 pb-4 pt-4 sm:space-y-4 sm:px-5 sm:pt-5">
         <section className="relative isolate overflow-hidden rounded-3xl border border-rose-100/90 bg-gradient-to-br from-[#FFF1F2] via-white to-[#FFF8F7] p-4 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.08)] sm:p-5">
           <PackageCheck aria-hidden="true" className="pointer-events-none absolute right-4 top-6 h-24 w-24 rotate-[-8deg] text-[#D9232D]/[0.07] sm:right-6 sm:h-28 sm:w-28" />
           <div className="relative flex items-center justify-between gap-3">
@@ -434,6 +443,7 @@ export function OrderNotificationDetails({
             </a>
           </div>
         </section>
+        </div>
       </div>
 
       <footer className="shrink-0 border-t border-slate-200/80 bg-white/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-6px_20px_rgba(15,23,42,0.06)] backdrop-blur-md sm:px-5">
@@ -481,23 +491,24 @@ export function OrderNotificationDetails({
 function OrderHeader({ orderNumber, onBack }: { orderNumber: string; onBack: () => void }) {
   const { t } = useI18n();
   return (
-    <header className="relative z-10 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-      <div className="mx-auto flex min-h-[58px] w-full max-w-2xl shrink-0 items-center gap-3 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 sm:px-5">
+    <header className="relative isolate z-10 shrink-0 overflow-hidden bg-[#090808] text-white">
+      <VignetteBarBackdrop variant="top" />
+      <div className="relative z-10 mx-auto flex min-h-[58px] w-full max-w-2xl shrink-0 items-center gap-3 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 sm:px-5">
         <button
           type="button"
           onClick={onBack}
           aria-label={t('notification.back')}
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition hover:bg-white/22 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 active:scale-95"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#D9232D]">{t('notification.header')}</p>
-          <h1 className="truncate text-[19px] font-black leading-tight tracking-tight text-slate-900 sm:text-[21px]">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-rose-300">{t('notification.header')}</p>
+          <h1 className="truncate text-[19px] font-black leading-tight tracking-tight text-white sm:text-[21px]">
             {t('notification.orderUpdate')}
           </h1>
         </div>
-        <span className="max-w-[44%] shrink-0 truncate font-mono text-xs font-bold tabular-nums text-slate-600">
+        <span className="max-w-[44%] shrink-0 truncate rounded-full border border-white/18 bg-white/14 px-2.5 py-1 font-mono text-xs font-bold tabular-nums text-white backdrop-blur-md">
           #{orderNumber}
         </span>
       </div>

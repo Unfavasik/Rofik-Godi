@@ -5,6 +5,7 @@ import { ProductCard } from './ProductCard';
 import { ProductCardErrorBoundary } from './ProductCardErrorBoundary';
 import { CatalogStatus } from './CatalogStatus';
 import { CartBadge } from './CartBadge';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 
 interface ShopViewProps {
   products: Product[];
@@ -89,70 +90,79 @@ export const ShopView: React.FC<ShopViewProps> = ({
 
   return (
     <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#F8F9FB] pb-[max(1.5rem,env(safe-area-inset-bottom))] text-slate-900">
-      <header className="flex items-center justify-between gap-2 px-3.5 pb-1.5 pt-2.5 sm:px-5">
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <button
-            type="button"
-            onClick={onBack}
-            aria-label="Go back"
-            className="grid min-h-10 min-w-10 shrink-0 place-items-center rounded-xl text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div className="min-w-0">
-            <h1 className="truncate text-[18px] font-extrabold tracking-tight leading-none text-slate-900">Shop</h1>
-            <p className="mt-0.5 truncate text-[11px] font-medium text-slate-500">Seat covers &amp; workshop essentials</p>
+      <header className="sticky top-0 z-30 relative isolate w-full overflow-hidden bg-[#090808] pt-[env(safe-area-inset-top)]">
+        <VignetteBarBackdrop variant="top" />
+
+        <div className="relative z-10 flex items-center justify-between gap-2 px-3.5 pb-2 pt-3 sm:px-5">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label="Go back"
+              className="grid min-h-10 min-w-10 shrink-0 place-items-center rounded-full bg-white/14 hover:bg-white/22 border border-white/18 backdrop-blur-md text-white transition-colors active:scale-95 cursor-pointer"
+            >
+              <ArrowLeft className="h-4.5 w-4.5" />
+            </button>
+            <div className="min-w-0">
+              <h1 className="truncate text-[18px] font-extrabold tracking-tight leading-none text-white">Shop</h1>
+              <p className="mt-0.5 truncate text-[11px] font-medium text-white/70">Seat covers &amp; workshop essentials</p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              aria-label="Go to Cart"
+              onClick={onOpenCart}
+              className="relative grid min-h-10 min-w-10 place-items-center rounded-full bg-white/14 hover:bg-white/22 border border-white/18 backdrop-blur-md text-white transition-colors active:scale-95 cursor-pointer"
+            >
+              <ShoppingCart className="h-4.5 w-4.5" />
+              <CartBadge
+                count={cartCount}
+                showZero
+                className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#D9232D] px-1 text-[9.5px] font-bold text-white border-2 border-[#181412] shadow-xs tabular-nums"
+                ringColorClassName="bg-[#D9232D]/45"
+              />
+            </button>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            aria-label="Go to Cart"
-            onClick={onOpenCart}
-            className="relative grid min-h-10 min-w-10 place-items-center rounded-full bg-white border border-slate-200/85 text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer"
-          >
-            <ShoppingCart className="h-4.5 w-4.5" />
-            <CartBadge
-              count={cartCount}
-              showZero
-              className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#D9232D] px-1 text-[9.5px] font-bold text-white border-2 border-white shadow-xs tabular-nums"
-              ringColorClassName="bg-[#D9232D]/45"
+
+        <div className="relative z-10 px-3.5 pb-3 sm:px-5">
+          <div className="flex min-h-10 items-center rounded-full border border-white/20 bg-white/14 backdrop-blur-md px-3.5 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] focus-within:border-white/55 focus-within:ring-2 focus-within:ring-white/20 transition-all">
+            <Search className="h-4 w-4 shrink-0 text-white/75" />
+            <input
+              aria-label="Search seat covers"
+              onChange={(event) => onSearch(event.target.value)}
+              className="ml-2 min-h-8 w-full min-w-0 bg-transparent text-base sm:text-[13px] text-white outline-none placeholder:text-white/65"
+              placeholder="Search seat covers, cushions..."
             />
-          </button>
+          </div>
         </div>
       </header>
 
-      <div className="mt-1.5 px-3.5 sm:px-5">
-        <div className="flex min-h-10 items-center rounded-xl border border-slate-200/85 bg-white px-3 py-1 shadow-[0_1px_2px_rgba(15,23,42,0.03)] focus-within:border-[#D9232D] focus-within:ring-2 focus-within:ring-[#D9232D]/15 transition-all">
-          <Search className="h-4 w-4 shrink-0 text-slate-400" />
-          <input
-            aria-label="Search seat covers"
-            onChange={(event) => onSearch(event.target.value)}
-            className="ml-2 min-h-8 w-full min-w-0 bg-transparent text-base sm:text-[13px] text-slate-900 outline-none placeholder:text-slate-400"
-            placeholder="Search seat covers, cushions..."
-          />
+      <div className="relative -mt-px flex-1">
+        <VignettePageCurtain className="h-[220px] sm:h-[250px]" />
+
+        <div className="relative z-10 pt-3">
+          <nav aria-label="Product categories" className="no-scrollbar flex max-w-full gap-1.5 overflow-x-auto px-3.5 sm:px-5">
+            {categories.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setCategory(item)}
+                aria-pressed={activeCategory === item}
+                className={`min-h-8.5 shrink-0 rounded-full px-3.5 py-1 text-[11.5px] font-semibold transition-all cursor-pointer ${
+                  activeCategory === item
+                    ? 'bg-white text-slate-950 shadow-[0_6px_18px_-6px_rgba(9,8,8,0.45)]'
+                    : 'bg-white/16 border border-white/22 backdrop-blur-md text-white hover:bg-white/25'
+                }`}
+              >
+                {item}
+              </button>
+            ))}
+          </nav>
         </div>
-      </div>
 
-      <nav aria-label="Product categories" className="no-scrollbar mt-2.5 flex max-w-full gap-1.5 overflow-x-auto px-3.5 sm:px-5">
-        {categories.map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => setCategory(item)}
-            aria-pressed={activeCategory === item}
-            className={`min-h-8.5 shrink-0 rounded-lg px-3 py-1 text-[11.5px] font-semibold transition-colors cursor-pointer ${
-              activeCategory === item
-                ? 'bg-[#D9232D] text-white shadow-[0_1px_2px_rgba(217,35,45,0.25)]'
-                : 'bg-white border border-slate-200/85 text-slate-700 hover:border-slate-300 hover:text-slate-950'
-            }`}
-          >
-            {item}
-          </button>
-        ))}
-      </nav>
-
-      <div className="no-scrollbar mt-2.5 flex max-w-full items-center gap-1.5 overflow-x-auto px-3.5 sm:px-5">
+        <div className="relative z-10 no-scrollbar mt-2.5 flex max-w-full items-center gap-1.5 overflow-x-auto px-3.5 sm:px-5">
         <button
           type="button"
           onClick={onOpenSort}
@@ -191,8 +201,8 @@ export const ShopView: React.FC<ShopViewProps> = ({
         )}
       </div>
 
-      <div className="mt-2.5 flex items-center justify-between gap-2 px-3.5 sm:px-5">
-        <p className="text-[11.5px] font-medium text-slate-500 tabular-nums" aria-live="polite">
+      <div className="relative z-10 mt-2.5 flex items-center justify-between gap-2 px-3.5 sm:px-5">
+        <p className="text-[11.5px] font-medium text-slate-600 tabular-nums" aria-live="polite">
           {isLoading && renderableProducts.length === 0
             ? 'Loading products…'
             : error && renderableProducts.length === 0
@@ -237,7 +247,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
         </p>
       )}
       {visibleProducts.length > 0 && (
-        <section aria-label="Products Catalog" className={`px-3.5 sm:px-5 py-2 ${layout === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-2.5' : 'grid grid-cols-1 lg:grid-cols-2 gap-2.5'}`}>
+        <section aria-label="Products Catalog" className={`relative z-10 px-3.5 sm:px-5 py-2 ${layout === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-2.5' : 'grid grid-cols-1 lg:grid-cols-2 gap-2.5'}`}>
           {visibleProducts.map((product) => (
             <ProductCardErrorBoundary key={product.id} productTitle={product.title}>
               <ProductCard
@@ -255,6 +265,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
           ))}
         </section>
       )}
+      </div>
     </main>
   );
 };

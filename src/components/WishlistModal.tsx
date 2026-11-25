@@ -8,7 +8,6 @@ import {
   ShoppingBag,
   ShoppingCart,
   Star,
-  Sparkles,
   CheckCircle2,
   ArrowRight,
 } from 'lucide-react';
@@ -16,6 +15,7 @@ import { WishlistPageSkeleton } from './AccountPageSkeleton';
 import { PRODUCT_IMAGE_ZOOM_TRANSITION, PRODUCT_IMAGE_ZOOM_VARIANTS } from './ProductCard';
 import { getProductBadgeInfo, ProductCornerRibbon } from './ProductCornerRibbon';
 import { CartBadge } from './CartBadge';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import { getProductAvailability, isProductSellable } from '../lib/productAvailability';
 
 interface WishlistModalProps {
@@ -150,23 +150,19 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           className="relative w-full max-w-full sm:max-w-[440px] bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] h-full shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden text-slate-800"
         >
-          {/* Glassmorphic Sticky Header */}
-          <div className="sticky top-0 z-20 px-3.5 py-2.5 border-b border-slate-200/80 bg-white/92 backdrop-blur-md shadow-[0_4px_20px_-10px_rgba(15,23,42,0.06)]">
-            <div className="flex justify-between items-center gap-2.5">
+          {/* Edge-to-Edge Vignette Sticky Header */}
+          <div className="sticky top-0 z-20 relative isolate overflow-hidden bg-[#090808] px-3.5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+            <VignetteBarBackdrop variant="top" />
+            <div className="relative z-10 flex justify-between items-center gap-2.5">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FFE4E6] to-[#FECDD3] flex items-center justify-center text-[#D9232D] shadow-2xs ring-1 ring-inset ring-rose-200/70 shrink-0">
-                  <Heart className="w-4 h-4 fill-[#D9232D]" />
+                <div className="w-9 h-9 rounded-full bg-white/14 border border-white/18 backdrop-blur-md flex items-center justify-center text-[#FF4D58] shrink-0">
+                  <Heart className="w-4 h-4 fill-[#FF4D58]" />
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#D9232D] ring-1 ring-inset ring-rose-100">
-                      <Sparkles className="h-2.5 w-2.5" /> Saved Garage
-                    </span>
-                  </div>
-                  <h3 className="mt-0.5 text-[15px] font-black text-slate-900 leading-tight truncate">
+                  <h3 className="text-[15px] font-extrabold text-white leading-tight truncate">
                     Your Wishlist
                   </h3>
-                  <p className="text-[10.5px] text-slate-500 font-semibold tabular-nums">
+                  <p className="text-[10.5px] text-white/70 font-semibold tabular-nums">
                     {wishlist.length} {wishlist.length === 1 ? 'item' : 'items'} saved
                     {wishlist.length > 0 && ` · ₹${totalSavedValue.toLocaleString('en-IN')}`}
                   </p>
@@ -178,20 +174,20 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                   type="button"
                   onClick={onOpenCart}
                   aria-label={`Open cart, ${cartCount} items`}
-                  className="relative h-9 w-9 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-[#D9232D] text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+                  className="relative h-9 w-9 rounded-full border border-white/18 bg-white/14 hover:bg-white/22 text-white backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer"
                   title="Open Cart"
                 >
                   <ShoppingCart className="w-4 h-4" />
                   <CartBadge
                     count={cartCount}
-                    className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-[#D9232D] text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs tabular-nums"
+                    className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-[#D9232D] text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#181412] shadow-xs tabular-nums"
                   />
                 </button>
                 <button
                   type="button"
                   onClick={onClose}
                   aria-label="Close wishlist"
-                  className="h-9 w-9 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-[#D9232D] text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+                  className="h-9 w-9 rounded-full border border-white/18 bg-white/14 hover:bg-white/22 text-white backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -199,14 +195,14 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
             </div>
 
             {!isLoading && wishlist.length > 0 && (
-              <div className="mt-2.5 flex max-w-full items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+              <div className="relative z-10 mt-2.5 flex max-w-full items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
                 <button
                   type="button"
                   onClick={() => setActiveFilter('all')}
-                  className={`min-h-8 shrink-0 rounded-full px-3 py-1 text-[10.5px] font-extrabold transition-all ${
+                  className={`min-h-8 shrink-0 rounded-full px-3 py-1 text-[10.5px] font-bold transition-all ${
                     activeFilter === 'all'
-                      ? 'bg-[#D9232D] text-white shadow-2xs'
-                      : 'bg-slate-100/90 text-slate-600 hover:bg-slate-200/70'
+                      ? 'bg-white text-slate-950 shadow-2xs'
+                      : 'bg-white/14 border border-white/18 text-white/85 hover:bg-white/22'
                   }`}
                 >
                   All ({wishlist.length})
@@ -214,10 +210,10 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setActiveFilter('in-stock')}
-                  className={`min-h-8 shrink-0 rounded-full px-3 py-1 text-[10.5px] font-extrabold transition-all ${
+                  className={`min-h-8 shrink-0 rounded-full px-3 py-1 text-[10.5px] font-bold transition-all ${
                     activeFilter === 'in-stock'
-                      ? 'bg-[#D9232D] text-white shadow-2xs'
-                      : 'bg-slate-100/90 text-slate-600 hover:bg-slate-200/70'
+                      ? 'bg-white text-slate-950 shadow-2xs'
+                      : 'bg-white/14 border border-white/18 text-white/85 hover:bg-white/22'
                   }`}
                 >
                   In Stock ({movableItems.length})
@@ -227,10 +223,10 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                     key={catKey}
                     type="button"
                     onClick={() => setActiveFilter(catKey)}
-                    className={`min-h-8 shrink-0 rounded-full px-3 py-1 text-[10.5px] font-extrabold transition-all ${
+                    className={`min-h-8 shrink-0 rounded-full px-3 py-1 text-[10.5px] font-bold transition-all ${
                       activeFilter === catKey
-                        ? 'bg-[#D9232D] text-white shadow-2xs'
-                        : 'bg-slate-100/90 text-slate-600 hover:bg-slate-200/70'
+                        ? 'bg-white text-slate-950 shadow-2xs'
+                        : 'bg-white/14 border border-white/18 text-white/85 hover:bg-white/22'
                     }`}
                   >
                     {catLabel}
@@ -268,11 +264,13 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
           </AnimatePresence>
 
           {/* List */}
-          <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3.5 py-3 space-y-2.5 no-scrollbar">
+          <div className="relative -mt-px min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto no-scrollbar bg-[#F8FAFC]">
+            <VignettePageCurtain className="h-[230px] sm:h-[250px]" />
+            <div className="relative z-10 px-3.5 py-3 space-y-2.5">
             {isLoading ? (
               <WishlistPageSkeleton />
             ) : wishlist.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center py-12 px-4">
+              <div className="min-h-[340px] flex flex-col items-center justify-center text-center py-12 px-4 rounded-2xl bg-white/95 border border-slate-100 shadow-[0_12px_28px_-16px_rgba(9,8,8,0.22)]">
                 <div className="relative mb-3">
                   <div className="w-15 h-15 rounded-2xl bg-gradient-to-br from-rose-50 via-white to-rose-100/80 border border-rose-200/70 shadow-[0_12px_28px_-12px_rgba(217,35,45,0.18)] flex items-center justify-center text-[#D9232D]">
                     <Heart className="w-7 h-7" />
@@ -452,6 +450,7 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                 })}
               </AnimatePresence>
             )}
+            </div>
           </div>
 
           {/* Sticky Bottom Bar when wishlist has items */}

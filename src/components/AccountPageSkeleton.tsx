@@ -1,4 +1,5 @@
 import React from 'react';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 
 /**
  * Full-page shimmer skeleton for the Account page (matches AccountView layout:
@@ -247,18 +248,21 @@ export const SettingsPageSkeleton: React.FC = () => {
       aria-label="Loading settings"
       className="w-full flex-1 bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] min-h-full flex flex-col space-y-3 pb-8"
     >
-      <div className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/90 px-3.5 py-2.5 backdrop-blur-md">
-        <div className="mx-auto flex max-w-3xl items-center gap-2.5">
-          <div className="skeleton-shimmer h-10 w-10 rounded-xl bg-slate-100" />
+      <div className="sticky top-0 z-20 relative isolate overflow-hidden bg-[#090808] px-3.5 pt-[max(0.65rem,env(safe-area-inset-top))] pb-2.5">
+        <VignetteBarBackdrop variant="top" />
+        <div className="relative z-10 mx-auto flex max-w-3xl items-center gap-2.5">
+          <div className="skeleton-shimmer h-10 w-10 rounded-full bg-white/15" />
           <div className="space-y-1 flex-1">
-            <div className="skeleton-shimmer h-4.5 w-32 rounded-lg bg-slate-200/85" />
-            <div className="skeleton-shimmer h-2.5 w-44 rounded-md bg-slate-200/65" />
+            <div className="skeleton-shimmer h-4.5 w-32 rounded-lg bg-white/20" />
+            <div className="skeleton-shimmer h-2.5 w-44 rounded-md bg-white/12" />
           </div>
-          <div className="skeleton-shimmer h-6 w-20 rounded-full bg-rose-50" />
+          <div className="skeleton-shimmer h-6 w-20 rounded-full bg-white/15" />
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-3xl px-3.5 space-y-4 pt-1">
+      <div className="relative -mt-3">
+        <VignettePageCurtain className="h-[190px]" />
+      <div className="relative z-10 mx-auto w-full max-w-3xl px-3.5 space-y-4 pt-3">
         {[
           { group: 'Preferences', rows: 3 },
           { group: 'Offers & activity', rows: 4 },
@@ -286,6 +290,7 @@ export const SettingsPageSkeleton: React.FC = () => {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
@@ -379,20 +384,23 @@ export const ContactSupportPageSkeleton: React.FC = () => {
       aria-label="Loading contact support"
       className="min-h-dvh w-full flex-1 bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] pb-8"
     >
-      <div className="sticky top-0 z-20 border-b border-slate-200/75 bg-white/90 px-3.5 py-2.5 backdrop-blur-md">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-2.5">
+      <div className="sticky top-0 z-20 relative isolate overflow-hidden bg-[#090808] px-3.5 pt-[max(0.65rem,env(safe-area-inset-top))] pb-2.5">
+        <VignetteBarBackdrop variant="top" />
+        <div className="relative z-10 mx-auto flex max-w-4xl items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5">
-            <div className="skeleton-shimmer h-10 w-10 rounded-xl bg-slate-100" />
+            <div className="skeleton-shimmer h-10 w-10 rounded-full bg-white/15" />
             <div className="space-y-1">
-              <div className="skeleton-shimmer h-4 w-40 rounded bg-slate-200/85" />
-              <div className="skeleton-shimmer h-2.5 w-28 rounded bg-slate-200/65" />
+              <div className="skeleton-shimmer h-4 w-40 rounded bg-white/20" />
+              <div className="skeleton-shimmer h-2.5 w-28 rounded bg-white/12" />
             </div>
           </div>
-          <div className="skeleton-shimmer h-9 w-24 rounded-xl bg-rose-50" />
+          <div className="skeleton-shimmer h-9 w-24 rounded-full bg-white/15" />
         </div>
       </div>
 
-      <div className="mx-auto max-w-4xl px-3.5 pt-3.5 grid gap-3.5 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.9fr)]">
+      <div className="relative -mt-px">
+        <VignettePageCurtain className="h-[190px]" />
+      <div className="relative z-10 mx-auto max-w-4xl px-3.5 pt-3.5 grid gap-3.5 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.9fr)]">
         <div className="space-y-3">
           <div className="rounded-2xl border border-rose-200/70 bg-gradient-to-br from-[#FFF4F5] via-white to-[#FCECEF] p-3.5 flex items-start gap-2.5">
             <div className="skeleton-shimmer h-10 w-10 shrink-0 rounded-xl bg-rose-100" />
@@ -428,6 +436,7 @@ export const ContactSupportPageSkeleton: React.FC = () => {
             </div>
           ))}
         </div>
+      </div>
       </div>
     </div>
   );

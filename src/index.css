@@ -30,15 +30,13 @@
     min-height: 100%;
     overflow-x: hidden;
     overflow-x: clip;
-    background-color: #D9232D;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+    background-color: #090808;
   }
 
   body {
     min-height: 100vh;
     font-family: var(--font-sans);
-    background-color: #D9232D;
+    background-color: #090808;
     color: #13161B;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-tap-highlight-color: transparent;
@@ -71,6 +69,10 @@ svg,
 video,
 canvas {
   max-width: 100%;
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Custom Typography Utilities */

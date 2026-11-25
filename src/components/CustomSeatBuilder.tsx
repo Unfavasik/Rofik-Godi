@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Scissors, Layers, ShoppingBag, Bike, CarFront, Type } from 'lucide-react';
 import { VEHICLE_BRANDS } from '../data/products';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import { Product } from '../types';
 
 interface CustomSeatBuilderProps {
@@ -92,34 +93,37 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-          className="relative w-full max-w-full sm:max-w-[440px] max-h-[92dvh] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden border border-slate-200/85"
+          className="relative w-full max-w-full sm:max-w-[440px] h-full sm:h-auto sm:max-h-[92dvh] bg-white rounded-none sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden sm:border sm:border-slate-200/85"
         >
-          {/* Top Bar */}
-          <div className="flex shrink-0 justify-between items-center gap-2.5 px-4 py-3 bg-slate-950 text-white border-b border-slate-800">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <div className="w-8 h-8 shrink-0 rounded-xl bg-[#D9232D] flex items-center justify-center text-white">
+          {/* Vignette Top Bar */}
+          <div className="relative isolate flex shrink-0 justify-between items-center gap-2.5 overflow-hidden bg-[#090808] px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 text-white">
+            <VignetteBarBackdrop variant="top" />
+            <div className="relative z-10 flex min-w-0 items-center gap-2.5">
+              <div className="w-8.5 h-8.5 shrink-0 rounded-full bg-white/14 border border-white/18 backdrop-blur-md flex items-center justify-center text-white">
                 <Scissors className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-[14.5px] font-extrabold tracking-tight leading-tight truncate">
+                <h3 className="text-[14.5px] font-extrabold tracking-tight leading-tight truncate text-white">
                   Custom Seat &amp; Godi Studio
                 </h3>
-                <p className="text-[11px] text-slate-400 truncate">Tailored by master craftsmen at Rofik Godi</p>
+                <p className="text-[11px] text-white/70 truncate">Tailored by master craftsmen at Rofik Godi</p>
               </div>
             </div>
             <button
               onClick={onClose}
               aria-label="Close custom seat studio"
-              className="h-9 w-9 shrink-0 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+              className="relative z-10 h-9 w-9 shrink-0 rounded-full border border-white/18 bg-white/14 hover:bg-white/22 text-white backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Form Options Body */}
-          <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-3.5 space-y-4 no-scrollbar pb-5 text-slate-800">
+          <div className="relative -mt-px min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto no-scrollbar bg-white text-slate-800">
+            <VignettePageCurtain className="h-[200px] sm:h-[220px]" />
+            <div className="relative z-10 px-4 pt-3.5 pb-5 space-y-4">
             {/* Step 1: Vehicle selection */}
-            <div>
+            <div className="rounded-2xl border border-slate-200/80 bg-white/95 p-3 shadow-[0_10px_24px_-14px_rgba(9,8,8,0.25)] backdrop-blur-md">
               <label className="text-[12.5px] font-extrabold text-slate-900 block mb-2">
                 1. Select vehicle
               </label>
@@ -301,6 +305,7 @@ export const CustomSeatBuilder: React.FC<CustomSeatBuilderProps> = ({
                 placeholder="Optional e.g. RIDER 07"
                 className="min-h-10 w-full bg-white text-slate-900 text-base sm:text-[13px] font-extrabold tracking-widest uppercase rounded-xl px-3 py-1.5 border border-slate-200 focus:outline-none focus:border-[#D9232D]"
               />
+            </div>
             </div>
           </div>
 

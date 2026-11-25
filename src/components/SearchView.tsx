@@ -27,6 +27,7 @@ import { CatalogStatus } from './CatalogStatus';
 import { FilterSortModal } from './FilterSortModal';
 import { VoiceSearchBanner } from './VoiceSearchBanner';
 import { VoiceSearchHint } from './VoiceSearchHint';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import type { PreferredLanguage } from '../lib/customerPreferences';
 import { useVoiceSearch } from '../hooks/useVoiceSearch';
 import { persistRecentSearchTerms, readRecentSearchTerms } from '../lib/voiceSearch';
@@ -239,23 +240,24 @@ export const SearchView: React.FC<SearchViewProps> = ({
 
   return (
     <div className="flex-1 flex w-full max-w-full flex-col overflow-x-hidden bg-[#F8FAFC] pb-[max(2.5rem,env(safe-area-inset-bottom))] min-h-dvh text-slate-900">
-      {/* Compact Sticky Top Search Bar */}
-      <div className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-        <div className="mx-auto w-full max-w-5xl px-3.5 py-2">
+      {/* Compact Sticky Edge-to-Edge Vignette Top Search Bar */}
+      <div className="sticky top-0 z-30 relative isolate w-full overflow-hidden bg-[#090808] pt-[env(safe-area-inset-top)]">
+        <VignetteBarBackdrop variant="top" />
+        <div className="relative z-10 mx-auto w-full max-w-5xl px-3.5 py-2.5">
           <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={onBackToHome}
               aria-label="Go back"
               title="Go back"
               type="button"
-              className="min-h-10 min-w-10 rounded-full border border-slate-200/80 bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-800 transition-colors active:scale-95 shrink-0 cursor-pointer"
+              className="min-h-10 min-w-10 rounded-full border border-white/18 bg-white/14 hover:bg-white/22 backdrop-blur-md flex items-center justify-center text-white transition-colors active:scale-95 shrink-0 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
 
             {/* Search Input Form */}
             <form onSubmit={handleSearchSubmit} className="relative min-w-0 flex-1 flex items-center">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
+              <Search className="w-4 h-4 text-white/75 absolute left-3.5 pointer-events-none" />
               <input
                 ref={searchInputRef}
                 type="text"
@@ -272,9 +274,9 @@ export const SearchView: React.FC<SearchViewProps> = ({
                   }
                 }}
                 placeholder="Search by bike model, seat cover, or cushion..."
-                className={`min-h-10 w-full bg-[#F8FAFC] hover:bg-slate-100/70 focus:bg-white border border-slate-200/90 focus:border-[#D9232D] focus:ring-2 focus:ring-[#D9232D]/15 rounded-xl pl-9 ${
+                className={`min-h-10 w-full bg-white/14 hover:bg-white/18 focus:bg-white/20 backdrop-blur-md border border-white/20 focus:border-white/55 focus:ring-2 focus:ring-white/20 rounded-full pl-9.5 ${
                   searchQuery ? 'pr-20' : 'pr-11'
-                } py-1.5 text-base sm:text-[13px] font-medium text-slate-900 placeholder:text-slate-400 focus:outline-hidden transition-all`}
+                } py-1.5 text-base sm:text-[13px] font-medium text-white placeholder:text-white/65 focus:outline-hidden transition-all`}
                 enterKeyHint="search"
               />
               <AnimatePresence>
@@ -290,7 +292,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                     }}
                     aria-label="Clear search query"
                     title="Clear search"
-                    className="absolute right-9 flex h-8 w-8 items-center justify-center text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200/60 transition-all cursor-pointer"
+                    className="absolute right-9.5 flex h-8 w-8 items-center justify-center text-white/75 hover:text-white rounded-full hover:bg-white/15 transition-all cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </motion.button>
@@ -310,10 +312,10 @@ export const SearchView: React.FC<SearchViewProps> = ({
                       ? 'Search by voice'
                       : 'Voice search unavailable in this browser'
                 }
-                className={`absolute right-1 flex h-8 w-8 items-center justify-center rounded-lg transition-all cursor-pointer ${
+                className={`absolute right-1.5 flex h-8 w-8 items-center justify-center rounded-full transition-all cursor-pointer ${
                   voiceSearch.isListening
                     ? 'voice-mic-pulse bg-[#D9232D] text-white shadow-xs'
-                    : 'text-slate-500 hover:text-[#D9232D] hover:bg-rose-50'
+                    : 'text-white/80 hover:text-white hover:bg-white/15'
                 }`}
               >
                 <Mic className="w-4 h-4" />
@@ -325,10 +327,10 @@ export const SearchView: React.FC<SearchViewProps> = ({
               type="button"
               onClick={() => setIsFilterModalOpen(true)}
               aria-label="Open product filters"
-              className={`min-h-10 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+              className={`min-h-10 shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border backdrop-blur-md ${
                 activeFiltersCount > 0
-                  ? 'bg-rose-50 border-rose-200 text-[#D9232D]'
-                  : 'bg-slate-50 hover:bg-slate-100 border-slate-200/90 text-slate-700'
+                  ? 'bg-white text-slate-950 border-white'
+                  : 'bg-white/14 hover:bg-white/22 border-white/18 text-white'
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
@@ -346,6 +348,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
             visible={showVoiceHint}
             onDismiss={voiceSearch.dismissHint}
             alignClassName="pr-12 sm:pr-24"
+            tone="dark"
           />
 
           <VoiceSearchBanner
@@ -359,7 +362,9 @@ export const SearchView: React.FC<SearchViewProps> = ({
       </div>
 
       {/* Scrollable Main Content Container */}
-      <div className="mx-auto w-full max-w-5xl flex-1 px-3.5 pt-2.5">
+      <div className="relative -mt-px w-full flex-1">
+        <VignettePageCurtain className="h-[210px] sm:h-[240px]" />
+        <div className="relative z-10 mx-auto w-full max-w-5xl flex-1 px-3.5 pt-3">
         {/* Live Autocomplete Suggestions While Typing */}
         {liveSuggestions.length > 0 && (
           <div
@@ -1009,6 +1014,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
               ))}
           </div>
         )}
+        </div>
       </div>
 
       {/* Filter and Sort Modals */}

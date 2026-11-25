@@ -10,6 +10,7 @@ import {
 import { MAX_ORDER_ITEM_QUANTITY } from '../lib/cart';
 import { useI18n } from '../lib/i18n';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import {
   X,
   ShoppingBag,
@@ -174,15 +175,16 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           tabIndex={-1}
           className="relative w-full max-w-full sm:max-w-[420px] bg-white h-full shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden"
         >
-          {/* Header */}
-          <div className="flex shrink-0 justify-between items-center px-3.5 py-2.5 sm:px-4 border-b border-gray-100 bg-white">
-            <div className="flex items-center gap-2">
-              <div className="w-7.5 h-7.5 rounded-full bg-[#FEECEC] flex items-center justify-center text-[#D9232D]">
-                <ShoppingBag className="w-3.5 h-3.5" />
+          {/* Edge-to-Edge Vignette Header */}
+          <div className="relative isolate flex shrink-0 justify-between items-center overflow-hidden bg-[#090808] px-3.5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 sm:px-4">
+            <VignetteBarBackdrop variant="top" />
+            <div className="relative z-10 flex items-center gap-2.5">
+              <div className="w-8.5 h-8.5 rounded-full bg-white/14 border border-white/18 backdrop-blur-md flex items-center justify-center text-white">
+                <ShoppingBag className="w-4 h-4" />
               </div>
               <div>
-                <h3 id="cart-dialog-title" className="text-[14px] font-black text-gray-900 leading-tight">{t('cart.title')}</h3>
-                <p className="text-[10.5px] text-gray-400 font-medium">
+                <h3 id="cart-dialog-title" className="text-[14.5px] font-extrabold text-white leading-tight">{t('cart.title')}</h3>
+                <p className="text-[10.5px] text-white/70 font-medium">
                   {t('cart.selectedItems', { count: items.length })}
                 </p>
               </div>
@@ -191,32 +193,37 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               type="button"
               onClick={onClose}
               aria-label={t('common.close')}
-              className="h-9 w-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center transition-colors"
+              className="relative z-10 h-9 w-9 rounded-full border border-white/18 bg-white/14 hover:bg-white/22 text-white backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Store Pickup Banner */}
-          <div className="border-b border-gray-100 bg-red-50 px-4 py-2">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-800"><Store className="h-3.5 w-3.5 text-[#D9232D]" />🏪 {t('cart.pickupTitle')}</div>
-            <p className="mt-0.5 pl-5 text-[10px] text-gray-500">{t('cart.pickupHint')}</p>
-          </div>
+          {/* Scrollable Edge-to-Edge Vignette Canvas */}
+          <div className="relative -mt-px min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto no-scrollbar bg-white">
+            <VignettePageCurtain className="h-[235px] sm:h-[260px]" />
+            <div className="relative z-10 px-3.5 pt-3 pb-4 space-y-2.5 sm:px-4">
+              {/* Store Pickup Floating Pill Card */}
+              <div className="rounded-2xl border border-white/80 bg-white/95 px-3.5 py-2.5 shadow-[0_10px_26px_-14px_rgba(9,8,8,0.28)] backdrop-blur-md">
+                <div className="flex items-center gap-1.5 text-[11.5px] font-bold text-slate-900">
+                  <Store className="h-3.5 w-3.5 text-[#D9232D]" />
+                  <span>{t('cart.pickupTitle')}</span>
+                </div>
+                <p className="mt-0.5 pl-5 text-[10.5px] text-slate-500">{t('cart.pickupHint')}</p>
+              </div>
 
-          {reorderNotice && <div role="status" aria-live="polite" className="mx-3.5 mt-2.5 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-relaxed text-amber-950">
-            <p className="min-w-0 flex-1">{reorderNotice}</p>
-            {onDismissReorderNotice && <button type="button" onClick={onDismissReorderNotice} aria-label={t('cart.dismissReorder')} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-amber-900 hover:bg-amber-100"><X className="h-3.5 w-3.5" aria-hidden="true" /></button>}
-          </div>}
+              {reorderNotice && <div role="status" aria-live="polite" className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-relaxed text-amber-950 shadow-xs">
+                <p className="min-w-0 flex-1">{reorderNotice}</p>
+                {onDismissReorderNotice && <button type="button" onClick={onDismissReorderNotice} aria-label={t('cart.dismissReorder')} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-amber-900 hover:bg-amber-100"><X className="h-3.5 w-3.5" aria-hidden="true" /></button>}
+              </div>}
 
-          {/* Items List / Empty State */}
-          <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3.5 py-3 space-y-2.5 no-scrollbar sm:px-4">
-            {items.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center py-12">
-                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mb-3">
+              {items.length === 0 ? (
+              <div className="min-h-[340px] flex flex-col items-center justify-center text-center py-12 rounded-2xl bg-white/95 border border-slate-100 shadow-[0_12px_28px_-16px_rgba(9,8,8,0.22)] px-4">
+                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
                   <ShoppingBag className="w-8 h-8" />
                 </div>
-                <h4 className="text-[15px] font-black text-gray-800 mb-1">{t('cart.emptyTitle')}</h4>
-                <p className="text-[12px] text-gray-500 max-w-[220px] mb-4">
+                <h4 className="text-[15px] font-black text-slate-900 mb-1">{t('cart.emptyTitle')}</h4>
+                <p className="text-[12px] text-slate-500 max-w-[220px] mb-4">
                   {t('cart.emptyBody')}
                 </p>
                 <button
@@ -618,6 +625,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 )}
               </section>
             )}
+            </div>
           </div>
 
           {/* Bottom Billing Breakdown & Checkout CTA */}

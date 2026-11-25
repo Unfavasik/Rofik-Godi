@@ -9,7 +9,7 @@ import { saveRecentSearchTerm } from '../lib/voiceSearch';
 import { VoiceSearchBanner } from './VoiceSearchBanner';
 import { VoiceSearchHint } from './VoiceSearchHint';
 import { CartBadge } from './CartBadge';
-import topbarVignetteBg from '../assets/images/topbar_vignette_blur_bg_1795611325931.jpg';
+import { VignetteBarBackdrop } from './VignetteBarBackdrop';
 
 interface HeaderProps {
   cartCount: number;
@@ -91,21 +91,8 @@ export const Header: React.FC<HeaderProps> = ({
   const showVoiceHint = !voiceSearch.isListening && !voiceSearch.error && !voiceSearch.isHintDismissed;
 
   return (
-    <header className="relative isolate w-full flex flex-col overflow-hidden bg-[#090808] shadow-[0_10px_28px_-14px_rgba(9,8,8,0.45)] sticky top-0 z-40 transition-all">
-      {/* Heavily Blurred Atmospheric Background Image + Radial & Edge Vignette */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden bg-[#090808]">
-        <img
-          src={topbarVignetteBg}
-          alt=""
-          referrerPolicy="no-referrer"
-          decoding="async"
-          className="h-full w-full object-cover object-[50%_26%] scale-[1.45] blur-[32px] brightness-[0.9] saturate-[1.2] select-none"
-        />
-        {/* Radial Vignette Overlay (soft warm glow at top-center, deep charcoal-espresso vignette on corners & edges) */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_85%_90%_at_50%_15%,rgba(34,26,20,0.12)_0%,rgba(16,13,11,0.58)_62%,rgba(9,8,8,0.92)_100%)]" />
-        {/* Soft Vertical Depth Scrim fading cleanly to #090808 at bottom edge */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/22 via-black/18 via-58% to-[#090808]" />
-      </div>
+    <header className="relative isolate w-full flex flex-col overflow-hidden bg-[#090808] pt-[env(safe-area-inset-top)] sticky top-0 z-40 transition-all">
+      <VignetteBarBackdrop variant="top" />
 
       {/* Top Main Bar */}
       <div className="relative z-10 flex min-w-0 items-center justify-between gap-2 px-3.5 pt-3 pb-2 sm:px-5">

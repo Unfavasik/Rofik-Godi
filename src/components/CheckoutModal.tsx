@@ -37,6 +37,7 @@ import { validateProfileName } from '../lib/profileValidation';
 import { getPhoneCountry, validatePhoneNumber, type CountryCode } from '../utils/phoneValidation';
 import { PhoneNumberField } from './PhoneNumberField';
 import { VehicleModelPicker } from './VehicleModelPicker';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import { MAX_ORDER_ITEM_QUANTITY } from '../lib/cart';
 import { formatInr, useI18n } from '../lib/i18n';
 import { loadCustomerCouponOffers, type CustomerCouponOffer } from '../lib/supabaseCoupons';
@@ -667,18 +668,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 14 }}
           transition={{ duration: 0.2 }}
-          className="relative flex max-h-[96dvh] w-full max-w-full flex-col overflow-hidden rounded-t-2xl bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] text-slate-900 shadow-2xl sm:max-h-[92vh] sm:max-w-[960px] sm:rounded-2xl"
+          className="relative flex h-full sm:h-auto max-h-dvh sm:max-h-[92vh] w-full max-w-full flex-col overflow-hidden rounded-none bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] text-slate-900 shadow-2xl sm:max-w-[960px] sm:rounded-2xl"
         >
-          {/* Frosted Header & Step Progress */}
-          <header className="shrink-0 border-b border-slate-200/80 bg-white/92 backdrop-blur-md">
-            <div className="flex min-w-0 items-center justify-between gap-2.5 px-4 py-2.5 sm:px-5">
+          {/* Edge-to-Edge Vignette Header & Step Progress */}
+          <header className="relative isolate shrink-0 overflow-hidden bg-[#090808] pt-[env(safe-area-inset-top)]">
+            <VignetteBarBackdrop variant="top" />
+            <div className="relative z-10 flex min-w-0 items-center justify-between gap-2.5 px-4 py-2.5 sm:px-5">
               <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#FFE4E6] to-[#FECDD3] text-[#D9232D] ring-1 ring-inset ring-rose-200/70">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/18 bg-white/14 text-[#FF4D58] backdrop-blur-md">
                   <Store className="h-4.5 w-4.5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[10px] font-extrabold text-[#D9232D]">Rofik Godi Centre</p>
-                  <h2 className="truncate text-[15px] font-black tracking-tight text-slate-900 sm:text-base">
+                  <p className="truncate text-[10px] font-extrabold text-rose-300">Rofik Godi Centre</p>
+                  <h2 className="truncate text-[15px] font-black tracking-tight text-white sm:text-base">
                     {step === 3 ? t('checkout.placedTitle') : t('checkout.title')}
                   </h2>
                 </div>
@@ -687,22 +689,22 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 type="button"
                 onClick={onClose}
                 aria-label={t('common.close')}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100/90 text-slate-600 transition-colors hover:bg-rose-50 hover:text-[#D9232D]"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-colors hover:bg-white/22"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             {step < 3 && (
-              <div className="flex min-w-0 items-center gap-2.5 border-t border-slate-100 px-4 py-2 sm:px-5">
-                <span className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-200/80">
+              <div className="relative z-10 flex min-w-0 items-center gap-2.5 border-t border-white/12 px-4 py-2 sm:px-5">
+                <span className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-white/18">
                   <i
-                    className={`block h-full rounded-full bg-gradient-to-r from-[#D9232D] to-[#FB7185] transition-all duration-300 ${
+                    className={`block h-full rounded-full bg-gradient-to-r from-[#FF4D58] to-[#FB7185] transition-all duration-300 ${
                       step === 1 ? 'w-1/2' : 'w-full'
                     }`}
                   />
                 </span>
-                <span className="shrink-0 whitespace-nowrap text-[10.5px] font-bold text-slate-600 tabular-nums">
+                <span className="shrink-0 whitespace-nowrap text-[10.5px] font-bold text-white/80 tabular-nums">
                   {step === 1 ? t('checkout.progressPickup') : t('checkout.progressPayment')} · {step}/2
                 </span>
               </div>
@@ -710,7 +712,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           </header>
 
           {/* Scrollable Body */}
-          <main className="no-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3.5 py-3 sm:px-5 sm:py-4">
+          <main className="no-scrollbar relative -mt-px min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-[#F8FAFC]">
+            <VignettePageCurtain className="h-[220px] sm:h-[250px]" />
+            <div className="relative z-10 px-3.5 py-3 sm:px-5 sm:py-4">
             {profileLoad === 'loading' && step < 3 && (
               <CheckoutPageSkeleton label={t('checkout.loading')} />
             )}
@@ -1254,6 +1258,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 {submissionError}
               </p>
             )}
+            </div>
           </main>
 
           {/* Compact Sticky Action Footer */}

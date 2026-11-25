@@ -43,6 +43,7 @@ import { AdminProductManager } from './AdminProductManager';
 import { AdminVehicleCatalogManager } from './AdminVehicleCatalogManager';
 import { AdminVehicleModelEdit } from './AdminVehicleModelEdit';
 import { CouponManagement } from './CouponManagement';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import { AdminReviewsView } from './AdminReviewsView';
 import { InvoiceTemplate } from './InvoiceTemplate';
 import { AdminOrderDetails } from './AdminOrderDetails';
@@ -838,38 +839,40 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
 
       {/* Main Content Area */}
       <div className="min-w-0 lg:pl-[228px]">
-        <header className="sticky top-0 z-30 flex min-h-[56px] items-center justify-between gap-2 border-b border-slate-200/80 bg-white/85 px-3 pt-[env(safe-area-inset-top)] shadow-[0_4px_20px_-14px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:px-6">
+        <header className="sticky top-0 z-30 relative isolate overflow-hidden bg-[#090808] pt-[env(safe-area-inset-top)]">
+          <VignetteBarBackdrop variant="top" />
+          <div className="relative z-10 flex min-h-[56px] items-center justify-between gap-2 px-3 sm:px-6">
           <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
             <button
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-slate-200/80 bg-white text-slate-600 shadow-2xs hover:bg-slate-50 lg:hidden"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md hover:bg-white/22 lg:hidden"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open navigation"
             >
               <Menu className="h-4 w-4" />
             </button>
             <div className="min-w-0">
-              <p className="hidden text-[9px] font-extrabold uppercase tracking-[0.16em] text-slate-400 sm:block">
+              <p className="hidden text-[9px] font-extrabold uppercase tracking-[0.16em] text-white/60 sm:block">
                 Rofik Godi Workspace
               </p>
-              <h1 className="truncate font-display text-base font-black tracking-tight text-slate-900">{headerTitle}</h1>
+              <h1 className="truncate font-display text-base font-black tracking-tight text-white">{headerTitle}</h1>
             </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
             {/* Global Search Box */}
-            <div className="hidden items-center gap-2 rounded-xl border border-slate-200/90 bg-slate-50/90 px-2.5 py-1.5 shadow-2xs transition focus-within:border-red-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-red-100 md:flex">
-              <Search className="h-3.5 w-3.5 text-slate-400" />
+            <div className="hidden items-center gap-2 rounded-full border border-white/18 bg-white/14 px-3 py-1.5 backdrop-blur-md transition focus-within:border-white/40 focus-within:bg-white/20 md:flex">
+              <Search className="h-3.5 w-3.5 text-white/70" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search orders or customers..."
-                className="w-40 bg-transparent text-[11.5px] font-semibold text-slate-800 outline-none placeholder:font-medium placeholder:text-slate-400"
+                className="w-40 bg-transparent text-[11.5px] font-semibold text-white outline-none placeholder:font-medium placeholder:text-white/60"
               />
               {query && (
                 <button
                   type="button"
                   onClick={() => setQuery('')}
-                  className="rounded-full bg-slate-200/80 p-0.5 text-slate-500 hover:text-slate-800"
+                  className="rounded-full bg-white/18 p-0.5 text-white/80 hover:text-white"
                   aria-label="Clear search"
                 >
                   <X className="h-3 w-3" />
@@ -883,11 +886,11 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
               onClick={() => setCommandOpen(true)}
               title="Open Quick Command Palette (Ctrl+K)"
               aria-label="Open Quick Command Palette"
-              className="inline-flex min-h-9 h-9 items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-600 shadow-2xs transition hover:border-red-200 hover:bg-red-50/40 hover:text-[#D9232D]"
+              className="inline-flex min-h-9 h-9 items-center gap-1.5 rounded-full border border-white/18 bg-white/14 px-2.5 py-1.5 text-[11px] font-bold text-white backdrop-blur-md transition hover:bg-white/22"
             >
-              <Command className="h-3.5 w-3.5 text-[#D9232D]" />
+              <Command className="h-3.5 w-3.5 text-rose-300" />
               <span className="hidden sm:inline">Jump</span>
-              <kbd className="hidden rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[9.5px] font-bold text-slate-500 lg:inline">
+              <kbd className="hidden rounded bg-white/15 px-1.5 py-0.5 font-mono text-[9.5px] font-bold text-white/80 lg:inline">
                 ⌘K
               </kbd>
             </button>
@@ -899,9 +902,9 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
               disabled={isRefreshing}
               title="Refresh live workspace data"
               aria-label="Refresh workspace"
-              className="grid h-9 w-9 place-items-center rounded-xl border border-slate-200/90 bg-white text-slate-500 shadow-2xs transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 disabled:opacity-50"
+              className="grid h-9 w-9 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition hover:bg-white/22 disabled:opacity-50"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-[#D9232D]' : ''}`} />
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-rose-300' : ''}`} />
             </button>
 
             {/* Activity Notification Bell */}
@@ -909,11 +912,11 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
               <button
                 onClick={() => goTo('activity')}
                 aria-label={`Open activity notifications${activityUnreadCount ? `, ${activityUnreadCount} unread` : ''}`}
-                className="relative grid h-9 w-9 place-items-center rounded-xl border border-slate-200/90 bg-white text-slate-600 shadow-2xs transition hover:border-red-200 hover:bg-red-50/40 hover:text-[#D9232D]"
+                className="relative grid h-9 w-9 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition hover:bg-white/22"
               >
                 <Bell className="h-3.5 w-3.5" />
                 {activityUnreadCount > 0 && (
-                  <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-[#D9232D] px-1 py-0.5 text-[9px] font-black leading-none text-white tabular-nums shadow-xs">
+                  <span className="absolute -right-1 -top-1 min-w-4 rounded-full border border-[#181412] bg-[#D9232D] px-1 py-0.5 text-[9px] font-black leading-none text-white tabular-nums shadow-xs">
                     {activityUnreadCount > 99 ? '99+' : activityUnreadCount}
                   </span>
                 )}
@@ -922,15 +925,18 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
 
             <button
               onClick={() => onBackToStore ? onBackToStore() : navigate('/home')}
-              className="hidden min-h-9 items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white px-3 py-1.5 text-[11px] font-extrabold text-slate-700 shadow-2xs transition hover:border-red-200 hover:bg-red-50/40 hover:text-[#D9232D] sm:inline-flex"
+              className="hidden min-h-9 items-center gap-1.5 rounded-full border border-white/18 bg-white/14 px-3 py-1.5 text-[11px] font-extrabold text-white backdrop-blur-md transition hover:bg-white/22 sm:inline-flex"
             >
-              <Store className="h-3.5 w-3.5 text-[#D9232D]" />
+              <Store className="h-3.5 w-3.5 text-rose-300" />
               Preview store
             </button>
           </div>
+          </div>
         </header>
 
-        <main className="mx-auto w-full min-w-0 max-w-[1320px] p-3 pb-[max(5rem,calc(4.5rem+env(safe-area-inset-bottom)))] sm:p-5 md:p-6 md:pb-20">
+        <div className="relative -mt-px">
+          <VignettePageCurtain className="h-[190px] sm:h-[220px]" />
+          <main className="relative z-10 mx-auto w-full min-w-0 max-w-[1320px] p-3 pb-[max(5rem,calc(4.5rem+env(safe-area-inset-bottom)))] sm:p-5 md:p-6 md:pb-20">
           {error && (
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-red-200/90 bg-gradient-to-r from-red-50 via-rose-50/80 to-white px-3.5 py-2.5 text-[11px] font-semibold text-red-800 shadow-2xs">
               <span className="flex items-center gap-2">
@@ -1101,6 +1107,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
             />
           )}
         </main>
+        </div>
       </div>
 
       {/* Floating Glass Quick-Action Toolbar */}

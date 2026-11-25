@@ -14,6 +14,7 @@ import { AccountDeletionView } from './AccountDeletionView';
 import { SettingsCouponsSkeleton, SettingsPageSkeleton } from './AccountPageSkeleton';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { SrishtiLabsLogo } from './SrishtiLabsLogo';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -87,10 +88,10 @@ const SettingsRow: React.FC<SettingsRowProps> = ({ icon, iconBg, title, subtitle
   </button>
 );
 
-const SettingsGroup: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+const SettingsGroup: React.FC<{ label: string; children: React.ReactNode; lightLabel?: boolean }> = ({ label, children, lightLabel }) => (
   <div className="space-y-1.5">
     <div className="px-1 pt-1">
-      <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">{label}</h2>
+      <h2 className={`text-[11px] font-bold uppercase tracking-[0.12em] ${lightLabel ? 'text-white/80' : 'text-slate-500'}`}>{label}</h2>
     </div>
     <div className="space-y-1.5">{children}</div>
   </div>
@@ -107,28 +108,32 @@ interface SectionPageProps {
 /** Full-screen shell for routed settings sub-sections. */
 const SectionPage: React.FC<SectionPageProps> = ({ title, subtitle, eyebrow = 'Settings', onBack, children }) => (
   <div className="w-full max-w-full flex-1 overflow-x-hidden bg-[#F8F9FB] min-h-full flex flex-col animate-fade-in font-sans">
-    <section className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 px-4 py-2.5 backdrop-blur-md sm:px-6" data-purpose="page-header">
-      <div className="mx-auto flex w-full max-w-3xl items-center gap-3">
+    <section className="sticky top-0 z-20 relative isolate overflow-hidden bg-[#090808] px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 sm:px-6" data-purpose="page-header">
+      <VignetteBarBackdrop variant="top" />
+      <div className="relative z-10 mx-auto flex w-full max-w-3xl items-center gap-3">
         <button
           onClick={onBack}
           aria-label="Back to settings"
-          className="h-11 w-11 rounded-xl border border-slate-200/80 bg-white/90 hover:border-rose-200 hover:bg-rose-50 hover:text-[#D9232D] text-slate-800 flex items-center justify-center shadow-[0_2px_8px_-4px_rgba(15,23,42,0.1)] transition-all active:scale-95 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D]"
+          className="h-10 w-10 rounded-full border border-white/18 bg-white/14 hover:bg-white/22 text-white flex items-center justify-center backdrop-blur-md transition-all active:scale-95 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 cursor-pointer"
           type="button"
         >
           <BackArrow />
         </button>
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500">
-            <span className="font-bold text-[#D9232D]">Settings</span>
+          <p className="flex items-center gap-1.5 text-[11px] font-semibold text-white/65">
+            <span className="font-bold text-rose-300">Settings</span>
             <span aria-hidden="true">·</span>
             <span className="truncate">{eyebrow}</span>
           </p>
-          <h1 className="mt-0.5 text-[18px] sm:text-[19px] font-black text-slate-950 tracking-tight leading-tight truncate">{title}</h1>
-          <p className="text-[11.5px] text-slate-500 font-medium truncate">{subtitle}</p>
+          <h1 className="mt-0.5 text-[18px] sm:text-[19px] font-extrabold text-white tracking-tight leading-tight truncate">{title}</h1>
+          <p className="text-[11.5px] text-white/70 font-medium truncate">{subtitle}</p>
         </div>
       </div>
     </section>
-    <div className="mx-auto w-full max-w-3xl flex-1 px-4 pb-[max(3rem,env(safe-area-inset-bottom))] pt-4 space-y-3.5 sm:px-6">{children}</div>
+    <div className="relative -mt-px flex-1 flex flex-col">
+      <VignettePageCurtain className="h-[210px] sm:h-[240px]" />
+      <div className="relative z-10 mx-auto w-full max-w-3xl flex-1 px-4 pb-[max(3rem,env(safe-area-inset-bottom))] pt-4 space-y-3.5 sm:px-6">{children}</div>
+    </div>
   </div>
 );
 
@@ -836,26 +841,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   return (
     <div className="w-full max-w-full flex-1 overflow-x-hidden bg-[#F8F9FB] min-h-full flex flex-col animate-fade-in font-sans">
       {/* BEGIN: NavigationHeader */}
-      <section className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 px-3.5 py-2.5 backdrop-blur-md" data-purpose="page-header">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-2.5">
+      <section className="sticky top-0 z-20 relative isolate overflow-hidden bg-[#090808] px-3.5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3" data-purpose="page-header">
+        <VignetteBarBackdrop variant="top" />
+        <div className="relative z-10 mx-auto flex w-full max-w-3xl items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
             <button
               onClick={onBack}
               aria-label={t('common.back')}
-              className="h-10 w-10 rounded-xl border border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-800 flex items-center justify-center transition-colors active:scale-95 shrink-0"
+              className="h-10 w-10 rounded-full border border-white/18 bg-white/14 hover:bg-white/22 text-white backdrop-blur-md flex items-center justify-center transition-colors active:scale-95 shrink-0 cursor-pointer"
               type="button"
             >
               <BackArrow />
             </button>
             <div className="min-w-0">
-              <h1 className="text-[18px] sm:text-[19px] font-extrabold text-slate-950 tracking-tight leading-tight truncate">{t('settings.title')}</h1>
-              <p className="text-[11.5px] text-slate-500 font-medium truncate">
+              <h1 className="text-[18px] sm:text-[19px] font-extrabold text-white tracking-tight leading-tight truncate">{t('settings.title')}</h1>
+              <p className="text-[11.5px] text-white/70 font-medium truncate">
                 {t('settings.subtitle')}
               </p>
             </div>
           </div>
           <div className="hidden xs:flex flex-col items-end gap-1 shrink-0">
-            <span className="rounded-lg border border-slate-200/80 bg-slate-50 px-2.5 py-1 text-[10.5px] font-bold text-slate-700">
+            <span className="rounded-full border border-white/18 bg-white/14 backdrop-blur-md px-2.5 py-1 text-[10.5px] font-bold text-white">
               {languageLabel}
             </span>
           </div>
@@ -863,11 +869,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </section>
       {/* END: NavigationHeader */}
 
-      {pwaInstallCard && <div className="mx-auto w-full max-w-3xl px-3.5 pt-2.5">{pwaInstallCard}</div>}
+      <div className="relative -mt-px flex-1 flex flex-col">
+        <VignettePageCurtain className="h-[230px] sm:h-[260px]" />
 
-      {/* BEGIN: SettingsMenuList */}
-      <nav aria-label={t('settings.title')} className="mx-auto w-full max-w-3xl flex-1 px-3.5 space-y-4 mt-3 pb-8">
-        <SettingsGroup label="Preferences">
+        {pwaInstallCard && <div className="relative z-10 mx-auto w-full max-w-3xl px-3.5 pt-2.5">{pwaInstallCard}</div>}
+
+        {/* BEGIN: SettingsMenuList */}
+        <nav aria-label={t('settings.title')} className="relative z-10 mx-auto w-full max-w-3xl flex-1 px-3.5 space-y-4 mt-3 pb-8">
+          <SettingsGroup label="Preferences" lightLabel>
           <SettingsRow
             onClick={() => openSection('notifications')}
             iconBg="bg-slate-100 text-slate-700"
@@ -1019,9 +1028,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </nav>
       {/* END: SettingsMenuList */}
 
-      <p className="pb-5 text-center text-[10px] font-medium text-gray-400">Rofik Godi Centre • App version 1.0.0</p>
+      <p className="relative z-10 pb-5 text-center text-[10px] font-medium text-gray-400">Rofik Godi Centre • App version 1.0.0</p>
 
-      {settingsNotice && <p role="status" className="mx-auto w-full max-w-3xl px-3.5 mb-4 rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-medium leading-relaxed text-emerald-800">{settingsNotice}</p>}
+      {settingsNotice && <p role="status" className="relative z-10 mx-auto w-full max-w-3xl px-3.5 mb-4 rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-medium leading-relaxed text-emerald-800">{settingsNotice}</p>}
+      </div>
 
       {/* --- DIALOGS (logout confirmation + offline privacy/terms fallback) --- */}
 

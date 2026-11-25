@@ -36,6 +36,7 @@ import { isOrderComplete } from '../lib/orderPresentation';
 import { GuaranteeTerms } from './GuaranteeTerms';
 import { InvoiceTemplate } from './InvoiceTemplate';
 import { StoreLocationView } from './StoreLocationView';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import {
   ORDER_HELP_TOPICS,
   buildOrderHelpWhatsappUrl,
@@ -412,35 +413,36 @@ export function OrderHelpSupportView({
       aria-label="Help and support"
       aria-busy={isSkeleton}
     >
-      {/* Classic Glass Sticky Top Bar */}
+      {/* Edge-to-Edge Vignette Sticky Top Bar */}
       <header
         data-testid="order-help-topbar"
-        className="classic-glass sticky top-0 z-30 border-b border-white/85 bg-gradient-to-r from-white/95 via-white/90 to-rose-50/60 px-3 py-2 shadow-[0_10px_28px_-16px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl sm:px-5 sm:py-2.5"
+        className="sticky top-0 z-30 relative isolate overflow-hidden bg-[#090808] px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 sm:px-5 sm:pb-2.5"
       >
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-2">
+        <VignetteBarBackdrop variant="top" />
+        <div className="relative z-10 mx-auto flex w-full max-w-5xl items-center justify-between gap-2">
           {/* Left: Frosted Back Button + Order Help Identity Capsule */}
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <button
               type="button"
               onClick={onBack}
               aria-label="Go back"
-              className="group flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/95 bg-white/90 text-slate-800 shadow-[0_4px_12px_-6px_rgba(15,23,42,0.14),inset_0_1px_0_rgba(255,255,255,0.98)] backdrop-blur-md transition-all duration-200 hover:-translate-x-0.5 hover:border-rose-200/90 hover:bg-rose-50/90 hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95 sm:h-10 sm:w-10"
+              className="group flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-all duration-200 hover:-translate-x-0.5 hover:bg-white/22 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 active:scale-95 sm:h-10 sm:w-10"
             >
               <ArrowLeft className="h-4.5 w-4.5 stroke-[2.25] transition-transform duration-200 group-hover:-translate-x-0.5" />
             </button>
 
-            <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/90 bg-white/80 py-1 pl-2 pr-2.5 shadow-[0_4px_14px_-8px_rgba(15,23,42,0.1),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md sm:flex-initial sm:pr-3.5">
-              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-rose-50 text-[#D9232D] ring-1 ring-rose-200/70">
+            <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/15 bg-white/10 py-1 pl-2 pr-2.5 backdrop-blur-md sm:flex-initial sm:pr-3.5">
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white/14 text-[#FF4D58] ring-1 ring-white/15">
                 <Headset className="h-3.5 w-3.5" />
               </span>
               <div className="min-w-0 flex-1">
-                <h1 className="truncate text-xs font-black leading-tight text-slate-950 sm:text-[13px]">
+                <h1 className="truncate text-xs font-black leading-tight text-white sm:text-[13px]">
                   Help &amp; Support
                 </h1>
                 {isSkeleton ? (
-                  <div className="skeleton-shimmer mt-0.5 h-3 w-20 rounded-md bg-rose-100/90" />
+                  <div className="skeleton-shimmer mt-0.5 h-3 w-20 rounded-md bg-white/20" />
                 ) : (
-                  <p className="truncate font-mono text-[10px] font-extrabold leading-tight text-[#D9232D] tabular-nums">
+                  <p className="truncate font-mono text-[10px] font-extrabold leading-tight text-rose-300 tabular-nums">
                     #{safeOrder.order_number}
                   </p>
                 )}
@@ -448,16 +450,16 @@ export function OrderHelpSupportView({
             </div>
           </div>
 
-          {/* Right: Classic Glass Action Dock */}
-          <div className="flex shrink-0 items-center gap-1.5 rounded-xl border border-white/90 bg-white/75 p-1 shadow-[0_6px_18px_-8px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md">
+          {/* Right: Frosted Action Dock */}
+          <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-white/10 p-1 backdrop-blur-md">
             {onOpenSupportRequests && (
               <button
                 type="button"
                 onClick={onOpenSupportRequests}
                 aria-label="My support tickets"
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/90 bg-white/90 px-2 text-[11px] font-extrabold text-slate-700 shadow-2xs transition hover:border-rose-200 hover:text-[#D9232D]"
+                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-white/18 bg-white/14 px-2.5 text-[11px] font-extrabold text-white transition hover:bg-white/22"
               >
-                <Ticket className="h-3.5 w-3.5 text-[#D9232D]" />
+                <Ticket className="h-3.5 w-3.5 text-rose-300" />
                 <span className="hidden sm:inline">My Tickets</span>
                 {orderTickets.length > 0 && (
                   <span className="grid h-4 min-w-4 place-items-center rounded-full bg-[#D9232D] px-1 text-[9px] font-extrabold text-white tabular-nums">
@@ -469,9 +471,9 @@ export function OrderHelpSupportView({
             <a
               href={phoneHref}
               aria-label="Call workshop support desk"
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-emerald-200/85 bg-emerald-50/90 px-2 text-[11px] font-extrabold text-emerald-700 transition hover:bg-emerald-100/80"
+              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-emerald-400/35 bg-emerald-500/20 px-2.5 text-[11px] font-extrabold text-emerald-100 transition hover:bg-emerald-500/30"
             >
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
               <span className="hidden sm:inline">Workshop Desk</span>
               <Phone className="h-3.5 w-3.5 sm:hidden" />
             </a>
@@ -479,6 +481,9 @@ export function OrderHelpSupportView({
         </div>
       </header>
 
+      <div className="relative -mt-px">
+        <VignettePageCurtain className="h-[220px] sm:h-[250px]" />
+        <div className="relative z-10">
       {isSkeleton ? (
         <div
           data-testid="order-help-skeleton"
@@ -1487,6 +1492,8 @@ export function OrderHelpSupportView({
           </div>
         </div>
       )}
+        </div>
+      </div>
       {isInternalStoreMapOpen && (
         <StoreLocationView onClose={() => setIsInternalStoreMapOpen(false)} />
       )}

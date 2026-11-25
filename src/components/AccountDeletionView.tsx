@@ -23,6 +23,7 @@ import {
   type AccountDeletionRequest,
 } from '../lib/supabaseAccountDeletion';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 
 export interface AccountDeletionViewProps {
   onBack: () => void;
@@ -193,32 +194,35 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
 
   return (
     <div className="min-h-full w-full max-w-full flex-1 overflow-x-hidden bg-[#F8FAFC] font-sans text-slate-900">
-      {/* Sticky Sub-Page Header */}
+      {/* Sticky Edge-to-Edge Vignette Sub-Page Header */}
       <header
         data-purpose="page-header"
-        className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 backdrop-blur-md"
+        className="sticky top-0 z-20 relative isolate overflow-hidden bg-[#090808] pt-[env(safe-area-inset-top)] text-white"
       >
-        <div className="mx-auto flex w-full max-w-4xl items-center gap-3 px-4 py-3 sm:px-6">
+        <VignetteBarBackdrop variant="top" />
+        <div className="relative z-10 mx-auto flex w-full max-w-4xl items-center gap-3 px-4 py-3 sm:px-6">
           <button
             type="button"
             onClick={onBack}
             aria-label="Back to settings"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-slate-200/80 bg-slate-50 text-slate-800 transition-colors hover:bg-rose-50 hover:text-[#D9232D] active:scale-95 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#D9232D]"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-colors hover:bg-white/22 active:scale-95 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white/70"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#D9232D]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-rose-300">
               Account &amp; Privacy
             </p>
-            <h1 className="truncate text-lg sm:text-xl font-black tracking-tight text-slate-900">
+            <h1 className="truncate text-lg sm:text-xl font-black tracking-tight text-white">
               Delete account
             </h1>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-4xl px-4 pb-[max(2.75rem,env(safe-area-inset-bottom))] pt-5 sm:px-6 sm:pt-7">
+      <div className="relative -mt-px">
+        <VignettePageCurtain className="h-[220px] sm:h-[250px]" />
+        <main className="relative z-10 mx-auto w-full max-w-4xl px-4 pb-[max(2.75rem,env(safe-area-inset-bottom))] pt-5 sm:px-6 sm:pt-7">
         {/* Status & Validation Feedback */}
         {notice && (
           <div
@@ -702,6 +706,7 @@ export const AccountDeletionView: React.FC<AccountDeletionViewProps> = ({
           </div>
         )}
       </main>
+      </div>
     </div>
   );
 };

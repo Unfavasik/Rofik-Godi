@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { SupportConversation } from './SupportConversation';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import { AdminSupportReplyPreview } from './AdminSupportReplyPreview';
 import {
   loadAdminActivityEvents,
@@ -817,28 +818,33 @@ export const AdminActivityView: React.FC<{
             role="dialog"
             aria-modal="true"
             aria-labelledby="support-detail-title"
-            className="flex max-h-[92dvh] w-full max-w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:max-w-3xl sm:rounded-2xl"
+            className="flex max-h-[92dvh] w-full max-w-full flex-col overflow-hidden rounded-t-2xl bg-[#F8FAFC] shadow-2xl sm:max-w-3xl sm:rounded-2xl"
           >
-            <header className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-100 bg-white/95 px-4 py-3 backdrop-blur sm:px-5">
-              <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#D9232D]">
-                  Customer support · {formatDate(selectedSupport.created_at)}
-                </p>
-                <h2 id="support-detail-title" className="mt-0.5 break-words text-base font-black text-slate-900 sm:text-lg">
-                  {textValue(selectedSupport.details.subject, 'Support request')}
-                </h2>
+            <header className="relative isolate shrink-0 overflow-hidden bg-[#090808] px-4 py-3 text-white sm:px-5">
+              <VignetteBarBackdrop variant="top" />
+              <div className="relative z-10 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-rose-300">
+                    Customer support · {formatDate(selectedSupport.created_at)}
+                  </p>
+                  <h2 id="support-detail-title" className="mt-0.5 break-words text-base font-black text-white sm:text-lg">
+                    {textValue(selectedSupport.details.subject, 'Support request')}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSupport(null)}
+                  aria-label="Close support request"
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md hover:bg-white/22"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setSelectedSupport(null)}
-                aria-label="Close support request"
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-slate-500 hover:bg-slate-100"
-              >
-                <X className="h-4 w-4" />
-              </button>
             </header>
-            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-5">
-              <div className="grid grid-cols-1 gap-2.5 rounded-xl bg-slate-50 p-3 sm:grid-cols-2">
+            <div className="relative -mt-px min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-5">
+              <VignettePageCurtain className="h-[150px]" />
+              <div className="relative z-10 space-y-4">
+              <div className="grid grid-cols-1 gap-2.5 rounded-xl border border-slate-200/80 bg-white p-3 shadow-xs sm:grid-cols-2">
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
                     Customer
@@ -902,6 +908,7 @@ export const AdminActivityView: React.FC<{
               <p className="text-[11px] leading-5 text-slate-400">
                 Replies appear in the customer’s private support thread and inbox. Status changes also send an in-app update and are recorded in this activity feed.
               </p>
+              </div>
             </div>
           </section>
         </div>

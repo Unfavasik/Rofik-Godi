@@ -23,6 +23,7 @@ import {
 import type { Product } from '../types';
 import { InvoiceTemplate } from './InvoiceTemplate';
 import { AdminCustomerAvatar } from './AdminCustomerAvatar';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import {
   completePickupOrderManually,
   getAdminOrderTimelineEvents,
@@ -363,19 +364,20 @@ export function AdminOrderDetails({
           transition={isDesktopLayout && !prefersReducedMotion ? { duration: 0.2, ease: 'easeOut' } : { duration: 0 }}
           className="relative z-10 flex h-[100dvh] w-full max-w-[540px] flex-col overflow-hidden border-l border-slate-200 bg-[#F6F8FB] shadow-2xl max-sm:border-l-0 max-sm:shadow-none"
         >
-          <header className="shrink-0 border-b border-slate-200 bg-white px-4 py-2.5 sm:px-5">
-            <div className="flex items-center gap-2.5">
-              <button type="button" onClick={onClose} aria-label="Back to orders" className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 active:scale-95">
+          <header className="relative isolate shrink-0 overflow-hidden bg-[#090808] px-4 pt-[max(0.65rem,env(safe-area-inset-top))] pb-2.5 text-white sm:px-5">
+            <VignetteBarBackdrop variant="top" />
+            <div className="relative z-10 flex items-center gap-2.5">
+              <button type="button" onClick={onClose} aria-label="Back to orders" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition hover:bg-white/22 active:scale-95">
                 <ArrowLeft className="h-4 w-4" />
               </button>
               <div className="min-w-0 flex-1">
-                <h2 id="admin-order-details-title" className="truncate text-sm font-black tracking-tight text-[#0F172A] sm:text-base">Order Details</h2>
-                <p className="mt-0.5 flex min-w-0 items-center gap-1 text-[10px] text-slate-500"><span className="shrink-0 font-semibold">Order ID</span><span className="truncate font-mono font-bold text-slate-700">#{order.orderNumber}</span></p>
+                <h2 id="admin-order-details-title" className="truncate text-sm font-black tracking-tight text-white sm:text-base">Order Details</h2>
+                <p className="mt-0.5 flex min-w-0 items-center gap-1 text-[10px] text-white/70"><span className="shrink-0 font-semibold">Order ID</span><span className="truncate font-mono font-bold text-white">#{order.orderNumber}</span></p>
               </div>
               <StatusBadge status={order.status} />
               <details className="relative shrink-0">
-                <summary aria-label="Order actions" className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 [&::-webkit-details-marker]:hidden"><MoreHorizontal className="h-4 w-4" /></summary>
-                <div className="absolute right-0 top-full z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+                <summary aria-label="Order actions" className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md hover:bg-white/22 [&::-webkit-details-marker]:hidden"><MoreHorizontal className="h-4 w-4" /></summary>
+                <div className="absolute right-0 top-full z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white p-1 text-slate-900 shadow-xl">
                   <button type="button" onClick={() => void copyOrderNumber()} className="flex min-h-9 w-full items-center gap-2 rounded-lg px-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50"><Copy className="h-3.5 w-3.5 text-slate-400" />Copy order number</button>
                   {order.status === 'READY_FOR_PICKUP' && <button type="button" onClick={() => void completeWithoutQr()} disabled={busyAction !== null} className="flex min-h-9 w-full items-center gap-2 rounded-lg px-2.5 text-left text-xs font-bold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"><Check className="h-3.5 w-3.5" />Complete without QR</button>}
                   {pendingPayment && <button type="button" onClick={() => void verifyPayment()} disabled={busyAction !== null} className="flex min-h-9 w-full items-center gap-2 rounded-lg px-2.5 text-left text-xs font-bold text-emerald-700 hover:bg-emerald-50"><CreditCard className="h-3.5 w-3.5" />Verify payment</button>}
@@ -396,8 +398,9 @@ export function AdminOrderDetails({
             </div>
           </nav>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3.5 sm:px-5 sm:py-4" id={`order-tab-${activeTab}`} role="tabpanel" tabIndex={0} aria-label={`${tabs.find((tab) => tab.id === activeTab)?.label} details`}>
-            <motion.div key={activeTab} initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: prefersReducedMotion ? 0 : 0.16 }}>
+          <div className="relative -mt-px min-h-0 flex-1 overflow-y-auto px-4 py-3.5 sm:px-5 sm:py-4" id={`order-tab-${activeTab}`} role="tabpanel" tabIndex={0} aria-label={`${tabs.find((tab) => tab.id === activeTab)?.label} details`}>
+            <VignettePageCurtain className="h-[150px]" />
+            <motion.div className="relative z-10" key={activeTab} initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: prefersReducedMotion ? 0 : 0.16 }}>
               {tabContent[activeTab]()}
             </motion.div>
           </div>

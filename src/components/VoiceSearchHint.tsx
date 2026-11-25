@@ -28,18 +28,18 @@ export const VoiceSearchHint: React.FC<VoiceSearchHintProps> = ({
     >
       <p
         className={`min-w-0 text-right text-[11px] leading-snug ${
-          isDark ? 'text-white/70' : 'text-slate-500'
+          isDark ? 'text-white/85' : 'text-slate-500'
         }`}
       >
-        <span className={`font-semibold ${isDark ? 'text-white/95' : 'text-slate-700'}`}>Say:</span>{' '}
+        <span className={`font-semibold ${isDark ? 'text-white' : 'text-slate-700'}`}>Say:</span>{' '}
         <span>&ldquo;Show me bike covers&rdquo;</span>
-        <span aria-hidden="true" className={`mx-1 ${isDark ? 'text-white/35' : 'text-slate-300'}`}>
+        <span aria-hidden="true" className={`mx-1 ${isDark ? 'text-white/45' : 'text-slate-300'}`}>
           ·
         </span>
         <span>&ldquo;Activa seat cover&rdquo;</span>
         <span
           aria-hidden="true"
-          className={`hidden sm:inline mx-1 ${isDark ? 'text-white/35' : 'text-slate-300'}`}
+          className={`hidden sm:inline mx-1 ${isDark ? 'text-white/45' : 'text-slate-300'}`}
         >
           ·
         </span>
@@ -53,7 +53,7 @@ export const VoiceSearchHint: React.FC<VoiceSearchHintProps> = ({
         title="Dismiss tip"
         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors cursor-pointer ${
           isDark
-            ? 'text-white/65 hover:bg-white/15 hover:text-white'
+            ? 'text-white/80 hover:bg-white/18 hover:text-white'
             : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700'
         }`}
       >

@@ -10,11 +10,13 @@ import {
   type StorefrontBanner,
 } from '../lib/supabaseBanners';
 import { isSupabaseConfigured } from '../lib/supabase';
+import { VIGNETTE_FADE_STAGE_CLASS } from './VignetteBarBackdrop';
 
 interface HeroBannerProps {
   onExploreClick: () => void;
   onBannerClick: (url: string) => void;
   initialBanners?: StorefrontBanner[];
+  onVisibilityChange?: (visible: boolean) => void;
 }
 
 const SLIDE_DURATION_MS = 6000;
@@ -41,6 +43,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   onExploreClick,
   onBannerClick,
   initialBanners,
+  onVisibilityChange,
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState<StorefrontBanner[]>(
@@ -186,8 +189,14 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
     }
   };
 
+  const isVisible = bannersLoaded && Boolean(slide);
+
+  useEffect(() => {
+    onVisibilityChange?.(isVisible);
+  }, [isVisible, onVisibilityChange]);
+
   // Do not show a placeholder or fallback banner until/unless admin has configured an active banner.
-  if (!bannersLoaded || !slide) {
+  if (!isVisible || !slide) {
     return null;
   }
 
@@ -205,7 +214,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
   return (
     <section
-      className="relative -mt-px mb-2 px-3.5 pt-3.5 pb-6 sm:px-5 sm:pt-4 sm:pb-7 bg-[linear-gradient(180deg,#090808_0%,#121112_20%,#454448_52%,#C4C4C9_79%,#EDEDEF_91%,#FDFDFD_100%)]"
+      className={`relative -mt-px mb-2 px-3.5 pt-3.5 pb-6 sm:px-5 sm:pt-4 sm:pb-7 ${VIGNETTE_FADE_STAGE_CLASS}`}
       data-purpose="promotional-banner"
       aria-roledescription="carousel"
       aria-label="Featured promotions"

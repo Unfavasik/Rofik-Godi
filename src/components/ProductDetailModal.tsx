@@ -30,6 +30,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { CartItem, Product } from '../types';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import {
   createDefaultCartItem,
   getCartItemUnitPrice,
@@ -620,39 +621,40 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
   return (
     <AnimatePresence>
       <div className="relative flex min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden">
-        {/* Classic Glass Top Sticky Header */}
+        {/* Edge-to-Edge Vignette Top Sticky Header */}
         <header
           data-testid="pdp-classic-glass-topbar"
-          className="classic-glass relative z-30 shrink-0 border-x-0 border-t-0 border-b border-white/80 bg-white/70 backdrop-blur-2xl shadow-[0_10px_30px_-18px_rgba(15,23,42,0.16)]"
+          className="relative isolate z-30 shrink-0 overflow-hidden bg-[#090808] pt-[env(safe-area-inset-top)]"
         >
-          <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-3 px-3.5 sm:px-5">
-            {/* Left: Classic Glass Back Button */}
+          <VignetteBarBackdrop variant="top" />
+          <div className="relative z-10 mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-3 px-3.5 sm:px-5">
+            {/* Left: Frosted Glass Back Button */}
             <button
               type="button"
               onClick={onClose}
               aria-label="Go back"
-              className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/95 bg-white/80 text-slate-800 shadow-[0_6px_18px_-8px_rgba(15,23,42,0.22),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md transition-all duration-180 hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95"
+              className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-all duration-180 hover:bg-white/22 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 active:scale-95"
             >
               <ArrowLeft className="h-4.5 w-4.5 stroke-[2.25] transition-transform duration-180 group-hover:-translate-x-0.5" />
             </button>
 
-            {/* Right: Frosted Classic Glass Action Controls */}
+            {/* Right: Frosted Glass Action Controls */}
             <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
                 data-testid="pdp-header-share-btn"
                 aria-label={`Share ${product.title}`}
                 onClick={() => void shareProduct()}
-                className={`inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full border px-2.5 text-xs font-bold backdrop-blur-md transition-all duration-180 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
+                className={`inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full border px-2.5 text-xs font-bold backdrop-blur-md transition-all duration-180 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${
                   shareFeedback !== 'idle'
-                    ? 'border-emerald-200/90 bg-emerald-50/90 text-emerald-700 shadow-[0_6px_16px_-8px_rgba(16,185,129,0.35)]'
-                    : 'border-white/95 bg-white/80 text-slate-700 shadow-[0_6px_18px_-8px_rgba(15,23,42,0.22),inset_0_1px_0_rgba(255,255,255,0.95)] hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D]'
+                    ? 'border-emerald-300/60 bg-emerald-500/25 text-emerald-100'
+                    : 'border-white/18 bg-white/14 text-white hover:bg-white/22'
                 }`}
               >
                 {shareFeedback !== 'idle' ? (
                   <>
-                    <Check className="h-4 w-4 text-emerald-600" />
-                    <span className="text-[11px] font-extrabold text-emerald-700">
+                    <Check className="h-4 w-4 text-emerald-300" />
+                    <span className="text-[11px] font-extrabold text-emerald-100">
                       {shareFeedback === 'shared' ? 'Shared' : 'Copied'}
                     </span>
                   </>
@@ -669,7 +671,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                   type="button"
                   aria-label="Search products"
                   onClick={onOpenSearch}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/95 bg-white/80 text-slate-700 shadow-[0_6px_18px_-8px_rgba(15,23,42,0.22),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md transition-all duration-180 hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-all duration-180 hover:bg-white/22 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 active:scale-95"
                 >
                   <Search className="h-4 w-4" />
                 </button>
@@ -679,12 +681,12 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                 type="button"
                 aria-label={`Open cart, ${cartCount} items`}
                 onClick={onOpenCart}
-                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/95 bg-white/80 text-slate-800 shadow-[0_6px_18px_-8px_rgba(15,23,42,0.22),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md transition-all duration-180 hover:border-rose-200/80 hover:bg-white hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95"
+                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-all duration-180 hover:bg-white/22 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 active:scale-95"
               >
                 <ShoppingCart className="h-4 w-4" />
                 <CartBadge
                   count={cartCount}
-                  className="absolute -right-0.5 -top-0.5 grid h-4.5 min-w-4.5 place-items-center rounded-full border-2 border-white bg-[#D9232D] px-1 text-[9.5px] font-extrabold text-white shadow-xs tabular-nums"
+                  className="absolute -right-0.5 -top-0.5 grid h-4.5 min-w-4.5 place-items-center rounded-full border-2 border-[#181412] bg-[#D9232D] px-1 text-[9.5px] font-extrabold text-white shadow-xs tabular-nums"
                 />
               </button>
             </div>
@@ -698,9 +700,10 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           aria-label={`${product.title} product details`}
-          className="product-scroll min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain"
+          className="product-scroll relative -mt-px min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-[#F8FAFC]"
         >
-          <div className="mx-auto w-full max-w-5xl space-y-4 px-3.5 pb-6 pt-3.5 sm:px-5 lg:space-y-5 lg:py-5">
+          <VignettePageCurtain className="h-[220px] sm:h-[250px]" />
+          <div className="relative z-10 mx-auto w-full max-w-5xl space-y-4 px-3.5 pb-6 pt-3.5 sm:px-5 lg:space-y-5 lg:py-5">
             {/* Desktop Split Grid: Sticky Classic Glass Gallery + Contiguous Purchase Module */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start lg:gap-6">
               {/* Left Gallery Column */}

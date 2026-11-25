@@ -16,6 +16,7 @@ import { INITIAL_FILTERS, SORT_LABELS } from '../data/filterOptions';
 import type { FilterState, SortOption } from '../data/filterOptions';
 import type { Product } from '../types';
 import { filterAndSortSearchProducts } from '../lib/searchProducts';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 export { INITIAL_FILTERS, SORT_LABELS } from '../data/filterOptions';
 export type { FilterState, SortOption } from '../data/filterOptions';
 
@@ -105,37 +106,40 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-              className="relative w-full max-w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden text-gray-800 max-h-[85dvh]"
+              className="relative w-full max-w-full sm:max-w-md bg-[#F8FAFC] rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden text-gray-800 max-h-[85dvh]"
             >
-              {/* Sheet Grab Handle on Mobile */}
-              <div className="sm:hidden w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2.5 mb-0.5 shrink-0" />
-
               {/* Header */}
-              <div className="flex shrink-0 justify-between items-center gap-2.5 px-4 py-2.5 border-b border-gray-100">
-                <div className="flex min-w-0 items-center gap-2">
-                  <div className="w-7.5 h-7.5 shrink-0 rounded-full bg-red-50 flex items-center justify-center text-[#D9232D]">
-                    <ArrowUpDown className="w-3.5 h-3.5" />
+              <div className="relative isolate shrink-0 overflow-hidden bg-[#090808] px-4 pt-2.5 pb-3 text-white">
+                <VignetteBarBackdrop variant="top" />
+                <div className="relative z-10 sm:hidden w-10 h-1 bg-white/30 rounded-full mx-auto mb-2 shrink-0" />
+                <div className="relative z-10 flex justify-between items-center gap-2.5">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <div className="w-8 h-8 shrink-0 rounded-full border border-white/18 bg-white/14 backdrop-blur-md flex items-center justify-center text-rose-300">
+                      <ArrowUpDown className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-[14px] font-black text-white leading-tight truncate">
+                        Sort Products
+                      </h3>
+                      <p className="text-[10.5px] text-white/70 font-medium truncate">
+                        Select how you want to order results
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-[14px] font-black text-gray-900 leading-tight truncate">
-                      Sort Products
-                    </h3>
-                    <p className="text-[10.5px] text-gray-400 font-medium truncate">
-                      Select how you want to order results
-                    </p>
-                  </div>
+                  <button
+                    onClick={onCloseSort}
+                    aria-label="Close sort options"
+                    className="h-9 w-9 shrink-0 rounded-full border border-white/18 bg-white/14 hover:bg-white/22 text-white backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <button
-                  onClick={onCloseSort}
-                  aria-label="Close sort options"
-                  className="h-9 w-9 shrink-0 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
               </div>
 
               {/* Options List */}
-              <div className="min-h-0 min-w-0 p-2.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] overflow-x-hidden overflow-y-auto space-y-1">
+              <div className="relative -mt-px min-h-0 min-w-0 p-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] overflow-x-hidden overflow-y-auto">
+                <VignettePageCurtain className="h-[140px]" />
+                <div className="relative z-10 space-y-1.5">
                 {(Object.keys(SORT_LABELS) as SortOption[]).map((opt) => {
                   const isSelected = currentSort === opt;
                   const item = SORT_LABELS[opt];
@@ -150,8 +154,8 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                       }}
                       className={`w-full text-left p-2.5 rounded-xl transition-all flex items-center justify-between border cursor-pointer ${
                         isSelected
-                          ? 'bg-red-50/70 border-red-200 text-[#D9232D] shadow-2xs'
-                          : 'bg-white hover:bg-gray-50 border-gray-100 text-gray-800'
+                          ? 'bg-red-50 border-red-200 text-[#D9232D] shadow-2xs'
+                          : 'bg-white hover:bg-gray-50 border-gray-100 text-gray-800 shadow-[0_4px_14px_-8px_rgba(15,23,42,0.12)]'
                       }`}
                     >
                       <div className="pr-3">
@@ -163,7 +167,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                             </span>
                           )}
                         </div>
-                        <div className="text-[11px] text-gray-400 mt-0.5">{item.desc}</div>
+                        <div className="text-[11px] text-gray-500 mt-0.5">{item.desc}</div>
                       </div>
                       <div
                         className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all flex-shrink-0 ${
@@ -177,6 +181,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                     </button>
                   );
                 })}
+                </div>
               </div>
             </motion.div>
           </div>
@@ -202,50 +207,53 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-              className="relative w-full max-w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden text-gray-800 max-h-[90dvh]"
+              className="relative w-full max-w-full sm:max-w-lg bg-[#F8FAFC] rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col z-10 overflow-hidden overflow-x-hidden text-gray-800 max-h-[90dvh]"
             >
-              {/* Mobile grab bar */}
-              <div className="sm:hidden w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2.5 mb-0.5 shrink-0" />
-
               {/* Modal Header */}
-              <div className="flex shrink-0 justify-between items-center gap-2 px-4 py-2.5 border-b border-gray-100 bg-white sticky top-0 z-10">
-                <div className="flex min-w-0 items-center gap-2">
-                  <div className="w-7.5 h-7.5 shrink-0 rounded-full bg-red-50 flex items-center justify-center text-[#D9232D]">
-                    <SlidersHorizontal className="w-3.5 h-3.5" />
+              <div className="relative isolate shrink-0 overflow-hidden bg-[#090808] px-4 pt-2.5 pb-3 text-white sticky top-0 z-10">
+                <VignetteBarBackdrop variant="top" />
+                <div className="relative z-10 sm:hidden w-10 h-1 bg-white/30 rounded-full mx-auto mb-2 shrink-0" />
+                <div className="relative z-10 flex justify-between items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <div className="w-8 h-8 shrink-0 rounded-full border border-white/18 bg-white/14 backdrop-blur-md flex items-center justify-center text-rose-300">
+                      <SlidersHorizontal className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-[14px] font-black text-white leading-tight truncate">
+                        Filter Products
+                      </h3>
+                      <p className="text-[10.5px] text-white/70 font-medium truncate">
+                        Refine by vehicle, price, features & rating
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-[14px] font-black text-gray-900 leading-tight truncate">
-                      Filter Products
-                    </h3>
-                    <p className="text-[10.5px] text-gray-400 font-medium truncate">
-                      Refine by vehicle, price, features & rating
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex shrink-0 items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    className="min-h-8.5 text-[11px] font-bold text-gray-400 hover:text-[#D9232D] transition-colors flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-red-50/50 cursor-pointer"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                    Reset
-                  </button>
-                  <button
-                    onClick={onCloseFilter}
-                    aria-label="Close filter options"
-                    className="h-9 w-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={handleReset}
+                      className="min-h-8.5 text-[11px] font-bold text-white/80 hover:text-white transition-colors flex items-center gap-1 px-2.5 py-1 rounded-full border border-white/15 bg-white/10 hover:bg-white/20 backdrop-blur-md cursor-pointer"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      Reset
+                    </button>
+                    <button
+                      onClick={onCloseFilter}
+                      aria-label="Close filter options"
+                      className="h-9 w-9 rounded-full border border-white/18 bg-white/14 hover:bg-white/22 text-white backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {/* Filter Body with Scrollable Categories */}
-              <div className="min-h-0 min-w-0 flex-1 p-3.5 sm:p-4 overflow-x-hidden overflow-y-auto space-y-3.5 text-[12.5px]">
+              <div className="relative -mt-px min-h-0 min-w-0 flex-1 p-3.5 sm:p-4 overflow-x-hidden overflow-y-auto text-[12.5px]">
+                <VignettePageCurtain className="h-[150px]" />
+                <div className="relative z-10 space-y-3.5">
                 {/* 1. Category Selection */}
-                <div>
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.14)]">
                   <label className="block text-[11px] font-black text-gray-800 uppercase tracking-wider mb-2">
                     Vehicle Category
                   </label>
@@ -555,6 +563,7 @@ export const FilterSortModal: React.FC<FilterSortModalProps> = ({
                       );
                     })}
                   </div>
+                </div>
                 </div>
               </div>
 

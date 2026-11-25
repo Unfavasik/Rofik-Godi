@@ -18,6 +18,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { WORKSHOP_INFO } from '../data/products';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 
 export interface LegalClauseItem {
   label: string;
@@ -287,52 +288,55 @@ export const LegalDocumentLayout: React.FC<LegalDocumentLayoutProps> = ({
       ref={rootRef}
       className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#F8FAFC] bg-gradient-to-b from-[#F8FAFC] via-[#F5F7FB] to-[#FFF6F7] text-slate-900 select-text font-sans"
     >
-      {/* Persistent Sticky Classic Glass Top Header + Quick Jump Menu */}
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/88 backdrop-blur-xl shadow-[0_6px_24px_-18px_rgba(15,23,42,0.16)]">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
+      {/* Persistent Sticky Edge-to-Edge Vignette Top Header + Quick Jump Menu */}
+      <header className="sticky top-0 z-30">
+        <div className="relative isolate overflow-hidden bg-[#090808] pt-[env(safe-area-inset-top)]">
+          <VignetteBarBackdrop variant="top" />
+          <div className="relative z-10 mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
+            <div className="flex min-w-0 items-center gap-3">
+              <button
+                type="button"
+                onClick={onBack}
+                aria-label="Go back"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-all hover:bg-white/22 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 active:scale-95"
+              >
+                <ArrowLeft className="h-4.5 w-4.5 stroke-[2.2]" />
+              </button>
+              <div className="min-w-0">
+                <h1 className="truncate text-[16px] font-black tracking-tight text-white sm:text-[17px]">
+                  {documentTitle}
+                </h1>
+                <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] font-semibold text-white/70">
+                  <span className="font-bold text-rose-300">{WORKSHOP_INFO.name}</span>
+                  <span aria-hidden="true">·</span>
+                  <span className="truncate">{documentSubtitle}</span>
+                </p>
+              </div>
+            </div>
+
             <button
               type="button"
-              onClick={onBack}
-              aria-label="Go back"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200/80 bg-white/90 text-slate-800 shadow-[0_2px_8px_-4px_rgba(15,23,42,0.1)] transition-all hover:border-rose-200 hover:bg-rose-50 hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95"
+              onClick={() => void handleShare()}
+              aria-label={`Copy ${documentTitle} link`}
+              className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border border-white/18 bg-white/14 px-3 text-[11.5px] font-bold text-white backdrop-blur-md transition-colors hover:bg-white/22 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 active:scale-95 whitespace-nowrap"
             >
-              <ArrowLeft className="h-4.5 w-4.5 stroke-[2.2]" />
+              {copiedLink ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-emerald-300" />
+                  <span className="text-emerald-200">Copied</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="h-3.5 w-3.5 text-white/90" />
+                  <span className="hidden sm:inline">Copy link</span>
+                </>
+              )}
             </button>
-            <div className="min-w-0">
-              <h1 className="truncate text-[16px] font-black tracking-tight text-slate-950 sm:text-[17px]">
-                {documentTitle}
-              </h1>
-              <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] font-semibold text-slate-500">
-                <span className="font-bold text-[#D9232D]">{WORKSHOP_INFO.name}</span>
-                <span aria-hidden="true">·</span>
-                <span className="truncate">{documentSubtitle}</span>
-              </p>
-            </div>
           </div>
-
-          <button
-            type="button"
-            onClick={() => void handleShare()}
-            aria-label={`Copy ${documentTitle} link`}
-            className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white/90 px-3 text-[11.5px] font-bold text-slate-700 shadow-[0_2px_8px_-5px_rgba(15,23,42,0.1)] transition-colors hover:border-rose-200 hover:bg-rose-50/60 hover:text-[#D9232D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] active:scale-95 whitespace-nowrap"
-          >
-            {copiedLink ? (
-              <>
-                <Check className="h-3.5 w-3.5 text-emerald-600" />
-                <span className="text-emerald-700">Copied</span>
-              </>
-            ) : (
-              <>
-                <Share2 className="h-3.5 w-3.5 text-slate-600" />
-                <span className="hidden sm:inline">Copy link</span>
-              </>
-            )}
-          </button>
         </div>
 
         {/* Persistent Quick Jump Bar */}
-        <div className="border-t border-slate-100/90 bg-slate-50/75">
+        <div className="border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
           <nav
             aria-label="Quick Jump navigation"
             className="mx-auto flex max-w-3xl items-center gap-1.5 overflow-x-auto no-scrollbar px-4 py-2 sm:px-6"
@@ -376,7 +380,9 @@ export const LegalDocumentLayout: React.FC<LegalDocumentLayoutProps> = ({
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl space-y-4 px-4 pb-[max(4.5rem,env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-5">
+      <div className="relative -mt-px">
+        <VignettePageCurtain className="h-[190px] sm:h-[220px]" />
+        <main className="relative z-10 mx-auto max-w-3xl space-y-4 px-4 pb-[max(4.5rem,env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-5">
         {/* Editorial Hero Summary Card */}
         <section className="rounded-2xl border border-slate-200/85 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] sm:p-5">
           <div className="space-y-2">
@@ -681,6 +687,7 @@ export const LegalDocumentLayout: React.FC<LegalDocumentLayoutProps> = ({
           <p className="text-[11.5px] leading-relaxed text-slate-500">{acceptanceNote}</p>
         </section>
       </main>
+      </div>
     </div>
   );
 };

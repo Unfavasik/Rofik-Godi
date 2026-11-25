@@ -4,6 +4,8 @@ import { VehicleCategory } from '../types';
 import { useI18n, type TranslationKey } from '../lib/i18n';
 import { useStorefrontCategories } from '../lib/supabaseCategories';
 
+import { VIGNETTE_FADE_STAGE_CLASS } from './VignetteBarBackdrop';
+
 // Category keys are usually one of the VehicleCategory values, but admins can
 // add custom categories; the extra (string & {}) branch keeps autocomplete
 // for the known keys while allowing those custom keys.
@@ -12,6 +14,7 @@ export type CategoryFilter = VehicleCategory | 'all' | (string & {});
 interface CategorySectionProps {
   selectedCategory: CategoryFilter;
   onSelectCategory: (cat: CategoryFilter) => void;
+  vignetteBackdrop?: boolean;
 }
 
 type CategoryCard = {
@@ -51,6 +54,7 @@ const renderCategoryFallbackIcon = (id: string, isActive: boolean) => {
 export const CategorySection: React.FC<CategorySectionProps> = ({
   selectedCategory,
   onSelectCategory,
+  vignetteBackdrop = false,
 }) => {
   const { t } = useI18n();
   const { categories: stored, ready } = useStorefrontCategories();
@@ -70,19 +74,42 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
       }));
 
   return (
-    <section className="px-3.5 sm:px-5 mb-4" data-purpose="category-list">
+    <section
+      className={
+        vignetteBackdrop
+          ? `relative -mt-px mb-3 px-3.5 pt-3.5 pb-6 sm:px-5 sm:pt-4 sm:pb-7 ${VIGNETTE_FADE_STAGE_CLASS}`
+          : 'px-3.5 sm:px-5 mb-4'
+      }
+      data-purpose="category-list"
+    >
       <div className="flex justify-between items-baseline mb-2.5">
         <div>
-          <h3 className="text-[15px] sm:text-base font-extrabold text-slate-900 tracking-tight">
+          <h3
+            className={`text-[15px] sm:text-base font-extrabold tracking-tight ${
+              vignetteBackdrop ? 'text-white' : 'text-slate-900'
+            }`}
+          >
             {t('home.shopByCategory')}
           </h3>
-          <p className="text-[11.5px] text-slate-500 font-medium">{t('home.categoryHint')}</p>
+          <p
+            className={`text-[11.5px] font-medium ${
+              vignetteBackdrop ? 'text-white/75' : 'text-slate-500'
+            }`}
+          >
+            {t('home.categoryHint')}
+          </p>
         </div>
         <button
           type="button"
           onClick={() => onSelectCategory('all')}
           className={`text-[11.5px] font-bold flex items-center gap-1 transition-colors cursor-pointer ${
-            selectedCategory === 'all' ? 'text-[#D9232D]' : 'text-slate-500 hover:text-slate-900'
+            vignetteBackdrop
+              ? selectedCategory === 'all'
+                ? 'text-rose-300 hover:text-white'
+                : 'text-white/75 hover:text-white'
+              : selectedCategory === 'all'
+                ? 'text-[#D9232D]'
+                : 'text-slate-500 hover:text-slate-900'
           }`}
         >
           <span>{selectedCategory === 'all' ? t('home.showingAll') : t('home.viewAll')}</span>
@@ -104,8 +131,10 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
               onClick={() => onSelectCategory(isActive ? 'all' : cat.id)}
               className={`relative w-full rounded-xl px-1.5 py-2.5 sm:p-2.5 flex flex-col items-center justify-center gap-1.5 text-center transition-all cursor-pointer border group select-none active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9232D] ${
                 isActive
-                  ? 'bg-rose-50/55 border-[#D9232D] shadow-[0_2px_8px_rgba(217,35,45,0.08)]'
-                  : 'bg-white border-slate-200/85 hover:border-slate-300 hover:bg-slate-50/60 shadow-[0_1px_2px_rgba(15,23,42,0.03)]'
+                  ? 'bg-rose-50/95 border-[#D9232D] shadow-[0_6px_18px_rgba(217,35,45,0.16)]'
+                  : vignetteBackdrop
+                    ? 'bg-white/98 border-white/85 hover:border-white hover:bg-white shadow-[0_14px_28px_-14px_rgba(9,8,8,0.34),0_2px_8px_rgba(15,23,42,0.08)]'
+                    : 'bg-white border-slate-200/85 hover:border-slate-300 hover:bg-slate-50/60 shadow-[0_1px_2px_rgba(15,23,42,0.03)]'
               }`}
             >
               <div

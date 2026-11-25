@@ -23,6 +23,7 @@ import type { CustomerOrderRecord, Product } from '../types';
 import type { ProductReviewRecord } from '../lib/supabaseReviews';
 import { downloadOrderInvoice } from '../lib/orderInvoice';
 import { getOrderStatusLabel, isOrderComplete } from '../lib/orderPresentation';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 
 interface MyOrdersViewProps {
   orders: CustomerOrderRecord[];
@@ -90,32 +91,34 @@ export function MyOrdersView({ orders, loading, products, reviews, customerName,
       aria-labelledby="my-orders-title"
     >
       <div className="flex h-full w-full max-w-full sm:max-w-[800px] flex-col overflow-hidden overflow-x-hidden bg-[#f7f6f4] shadow-[0_24px_80px_rgba(0,0,0,0.35)] sm:h-[min(660px,88vh)] sm:rounded-2xl">
-        <header className="relative shrink-0 overflow-hidden bg-[#17191d] px-3.5 py-2.5 text-white sm:px-5 sm:py-3">
-          <div className="relative flex items-start justify-between gap-3">
+        <header className="relative isolate shrink-0 overflow-hidden bg-[#090808] px-3.5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 text-white sm:px-5 sm:pb-3.5">
+          <VignetteBarBackdrop variant="top" />
+          <div className="relative z-10 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-white/55"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#ef4b54]" /> <span className="truncate">Your ride, in good hands</span></p>
+              <p className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-white/65"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#ef4b54]" /> <span className="truncate">Your ride, in good hands</span></p>
               <h2 id="my-orders-title" className="mt-1 text-[17px] font-black tracking-[-0.03em] sm:text-[19px]">My orders<span className="text-[#ed4049]">.</span></h2>
-              <p className="mt-0.5 text-[11px] text-white/60">Track your fitment, revisit past orders and keep every receipt close.</p>
+              <p className="mt-0.5 text-[11px] text-white/70">Track your fitment, revisit past orders and keep every receipt close.</p>
             </div>
-            <button type="button" onClick={onClose} aria-label="Close orders" className="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/75 transition hover:bg-white/10 hover:text-white"><X className="h-4 w-4" /></button>
+            <button type="button" onClick={onClose} aria-label="Close orders" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition hover:bg-white/22"><X className="h-4 w-4" /></button>
           </div>
-          <div className="relative mt-2.5 grid grid-cols-3 gap-1.5 sm:max-w-[420px] sm:gap-2">
+          <div className="relative z-10 mt-2.5 grid grid-cols-3 gap-1.5 sm:max-w-[420px] sm:gap-2">
             <SummaryStat label="Total orders" value={orders.length} icon={<ShoppingBag className="h-3.5 w-3.5" />} />
             <SummaryStat label="In progress" value={counts['In progress']} icon={<Clock3 className="h-3.5 w-3.5" />} />
             <SummaryStat label="Completed" value={counts.Completed} icon={<BadgeCheck className="h-3.5 w-3.5" />} />
           </div>
         </header>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[minmax(280px,0.82fr)_minmax(0,1.3fr)]">
-          <section className={`min-h-0 min-w-0 flex-col overflow-x-hidden border-[#e9e7e4] bg-[#fbfaf9] md:border-r ${selectedOrder ? 'hidden md:flex' : 'flex'}`} aria-label="Order list">
-            <div className="shrink-0 border-b border-[#e9e7e4] px-3.5 py-2.5 sm:px-4">
-              <label className="flex min-h-10 items-center gap-2 rounded-xl border border-[#e7e5e2] bg-white px-2.5 text-[#86868b] focus-within:border-[#d9232d]/40 focus-within:ring-2 focus-within:ring-[#d9232d]/10">
+        <div className="relative -mt-px grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[minmax(280px,0.82fr)_minmax(0,1.3fr)]">
+          <VignettePageCurtain className="h-[190px] sm:h-[220px]" />
+          <section className={`relative z-10 min-h-0 min-w-0 flex-col overflow-x-hidden border-[#e9e7e4] bg-transparent md:border-r ${selectedOrder ? 'hidden md:flex' : 'flex'}`} aria-label="Order list">
+            <div className="shrink-0 px-3.5 py-2.5 sm:px-4">
+              <label className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-2.5 text-[#86868b] shadow-[0_8px_22px_-12px_rgba(15,23,42,0.22)] focus-within:border-[#d9232d]/40 focus-within:ring-2 focus-within:ring-[#d9232d]/10">
                 <Search className="h-3.5 w-3.5 shrink-0" />
                 <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find an order or product" className="min-w-0 flex-1 bg-transparent text-base sm:text-xs font-medium text-[#24262a] outline-none placeholder:text-[#a1a1a7]" aria-label="Find an order or product" />
                 {query && <button type="button" onClick={() => setQuery('')} aria-label="Clear search" className="grid min-h-9 min-w-9 -mr-1.5 place-items-center"><X className="h-3.5 w-3.5" /></button>}
               </label>
-              <div className="no-scrollbar mt-2.5 flex max-w-full gap-1 overflow-x-auto" role="tablist" aria-label="Filter orders">
-                {filters.map((name) => <button key={name} type="button" role="tab" aria-selected={filter === name} onClick={() => setFilter(name)} className={`min-h-9 shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition ${filter === name ? 'bg-[#202227] text-white' : 'bg-transparent text-[#777980] hover:bg-[#eeece9]'}`}>{name}<span className={`ml-1.5 ${filter === name ? 'text-white/60' : 'text-[#a1a1a7]'}`}>{counts[name]}</span></button>)}
+              <div className="no-scrollbar mt-2.5 flex max-w-full gap-1.5 overflow-x-auto" role="tablist" aria-label="Filter orders">
+                {filters.map((name) => <button key={name} type="button" role="tab" aria-selected={filter === name} onClick={() => setFilter(name)} className={`min-h-9 shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition ${filter === name ? 'bg-white text-slate-950 shadow-sm' : 'border border-white/20 bg-white/15 text-white/90 backdrop-blur-md hover:bg-white/25'}`}>{name}<span className={`ml-1.5 ${filter === name ? 'text-[#D9232D]' : 'text-white/75'}`}>{counts[name]}</span></button>)}
               </div>
             </div>
             <div className="no-scrollbar min-h-0 min-w-0 flex-1 space-y-2 overflow-x-hidden overflow-y-auto p-3 sm:p-3.5">
@@ -123,10 +126,10 @@ export function MyOrdersView({ orders, loading, products, reviews, customerName,
                 <OrderCard key={order.id} order={order} products={productById} selected={selectedOrderId === order.id} onSelect={() => setSelectedOrderId(order.id)} />
               ))}
             </div>
-            <div className="hidden shrink-0 items-center gap-2 border-t border-[#e9e7e4] px-4 py-2.5 text-[10px] font-medium text-[#96969b] md:flex"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Securely linked to your account</div>
+            <div className="hidden shrink-0 items-center gap-2 border-t border-[#e9e7e4] bg-[#fbfaf9] px-4 py-2.5 text-[10px] font-medium text-[#96969b] md:flex"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Securely linked to your account</div>
           </section>
 
-          <section className={`no-scrollbar min-h-0 min-w-0 flex-col overflow-x-hidden overflow-y-auto bg-[#f7f6f4] ${selectedOrder ? 'flex' : 'hidden md:flex'}`} aria-label="Order details">
+          <section className={`relative z-10 no-scrollbar min-h-0 min-w-0 flex-col overflow-x-hidden overflow-y-auto bg-transparent ${selectedOrder ? 'flex' : 'hidden md:flex'}`} aria-label="Order details">
             {selectedOrder ? <OrderDetails
               order={selectedOrder}
               products={productById}

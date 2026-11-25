@@ -32,6 +32,7 @@ import { getCouponOfferForNotification, isCouponNotification } from '../lib/coup
 import { NewProductNotificationDetails } from './NewProductNotificationDetails';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { SupportNotificationDetails } from './SupportNotificationDetails';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import {
   getCustomerNotificationCategory,
   getNotificationRowSurfaceClass,
@@ -645,22 +646,25 @@ export function NotificationsView({
       }
       return (
         <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#F8FAFC] pb-[max(2rem,env(safe-area-inset-bottom))] font-sans text-slate-900">
-          <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-            <div className="mx-auto flex min-h-[52px] w-full max-w-2xl items-center gap-2.5 px-3 py-1.5 sm:px-5">
+          <header className="sticky top-0 z-20 relative isolate overflow-hidden bg-[#090808] pt-[env(safe-area-inset-top)]">
+            <VignetteBarBackdrop variant="top" />
+            <div className="relative z-10 mx-auto flex min-h-[52px] w-full max-w-2xl items-center gap-2.5 px-3 py-1.5 sm:px-5">
               <button
                 type="button"
                 onClick={() => setSelectedNotification(null)}
                 aria-label="Back to notifications"
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-700 transition-colors hover:bg-slate-100 active:scale-95"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-colors hover:bg-white/22 active:scale-95"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <h1 className="truncate text-[18px] sm:text-[19px] font-extrabold tracking-tight text-slate-900">
+              <h1 className="truncate text-[18px] sm:text-[19px] font-extrabold tracking-tight text-white">
                 Coupon Details
               </h1>
             </div>
           </header>
-          <section className="mx-auto max-w-2xl px-4 py-4 sm:px-5">
+          <div className="relative -mt-px">
+            <VignettePageCurtain />
+            <section className="relative z-10 mx-auto max-w-2xl px-4 py-4 sm:px-5">
             {couponDetailsLoading ? (
               <div className="space-y-3 rounded-2xl border border-slate-200/85 bg-white p-5 shadow-xs" aria-busy="true" aria-label="Loading offer details">
                 <div className="skeleton-shimmer mx-auto h-11 w-11 rounded-xl bg-rose-100/70" />
@@ -687,6 +691,7 @@ export function NotificationsView({
               </div>
             )}
           </section>
+          </div>
         </main>
       );
     }
@@ -703,22 +708,25 @@ export function NotificationsView({
     const detailCategory = getCustomerNotificationCategory(selectedNotification);
     return (
       <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#F8FAFC] pb-[max(2rem,env(safe-area-inset-bottom))] font-sans text-slate-900">
-        <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-          <div className="mx-auto flex min-h-[52px] w-full max-w-2xl items-center gap-2.5 px-3 py-1.5 sm:px-5">
+        <header className="sticky top-0 z-20 relative isolate overflow-hidden bg-[#090808] pt-[env(safe-area-inset-top)]">
+          <VignetteBarBackdrop variant="top" />
+          <div className="relative z-10 mx-auto flex min-h-[52px] w-full max-w-2xl items-center gap-2.5 px-3 py-1.5 sm:px-5">
             <button
               type="button"
               onClick={() => setSelectedNotification(null)}
               aria-label="Back to notifications"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-700 transition-colors hover:bg-slate-100 active:scale-95"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-colors hover:bg-white/22 active:scale-95"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <h1 className="truncate text-[18px] sm:text-[19px] font-extrabold tracking-tight text-slate-900">
+            <h1 className="truncate text-[18px] sm:text-[19px] font-extrabold tracking-tight text-white">
               Notification Details
             </h1>
           </div>
         </header>
-        <div className="mx-auto max-w-2xl px-3.5 py-3.5 sm:px-5 sm:py-4">
+        <div className="relative -mt-px">
+          <VignettePageCurtain />
+          <div className="relative z-10 mx-auto max-w-2xl px-3.5 py-3.5 sm:px-5 sm:py-4">
           <section className="rounded-2xl border border-slate-200/85 bg-white p-4 shadow-[0_6px_20px_-12px_rgba(15,23,42,0.08)] sm:p-5">
             {selectedNotification.image_url && (
               <img
@@ -760,30 +768,32 @@ export function NotificationsView({
             )}
           </section>
         </div>
+        </div>
       </main>
     );
   }
 
   return (
     <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#F8FAFC] pb-[max(2rem,env(safe-area-inset-bottom))] text-slate-900 font-sans">
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-        <div className="mx-auto flex min-h-[52px] w-full max-w-2xl items-center gap-2 px-3 py-1.5 sm:px-5">
+      <header className="sticky top-0 z-30 relative isolate overflow-hidden bg-[#090808] pt-[env(safe-area-inset-top)]">
+        <VignetteBarBackdrop variant="top" />
+        <div className="relative z-10 mx-auto flex min-h-[52px] w-full max-w-2xl items-center gap-2 px-3 py-1.5 sm:px-5">
           <button
             type="button"
             onClick={onBack}
             aria-label="Go back"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-700 transition-colors hover:bg-slate-100 active:scale-95"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-colors hover:bg-white/22 active:scale-95"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-[18px] sm:text-[19px] font-black tracking-tight text-slate-900 leading-tight">
+            <h1 className="truncate text-[18px] sm:text-[19px] font-black tracking-tight text-white leading-tight">
               Notifications
             </h1>
             {!isGuest && !loading && (
-              <p className="text-[11px] font-semibold text-slate-500 tabular-nums">
+              <p className="text-[11px] font-semibold text-white/70 tabular-nums">
                 {totalUnreadCount > 0 ? (
-                  <span className="text-[#D9232D]">{totalUnreadCount} unread</span>
+                  <span className="text-rose-300">{totalUnreadCount} unread</span>
                 ) : (
                   'All caught up'
                 )}
@@ -795,9 +805,9 @@ export function NotificationsView({
               type="button"
               onClick={() => void handleMarkAllRead()}
               disabled={markingAllRead}
-              className="inline-flex min-h-10 shrink-0 items-center gap-1 rounded-xl px-2 py-1.5 text-[11.5px] font-bold text-[#D9232D] transition-colors hover:bg-rose-50 active:scale-95 disabled:opacity-50 whitespace-nowrap"
+              className="inline-flex min-h-10 shrink-0 items-center gap-1 rounded-full border border-white/18 bg-white/14 px-2.5 py-1.5 text-[11.5px] font-bold text-white backdrop-blur-md transition-colors hover:bg-white/22 active:scale-95 disabled:opacity-50 whitespace-nowrap"
             >
-              <CheckCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <CheckCheck className="h-4 w-4 shrink-0 text-rose-300" aria-hidden="true" />
               <span>Mark all read</span>
             </button>
           )}
@@ -805,13 +815,14 @@ export function NotificationsView({
             type="button"
             onClick={() => (onOpenSettingsRoute ? onOpenSettingsRoute() : setShowSettings(true))}
             aria-label="Notification settings"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-slate-200/85 bg-white text-slate-700 transition-colors hover:bg-slate-50 active:scale-95"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-colors hover:bg-white/22 active:scale-95"
           >
             <Settings className="h-4.5 w-4.5" />
           </button>
         </div>
 
-        <div className="mx-auto w-full max-w-2xl border-t border-slate-100 px-3 py-2 sm:px-5">
+        <div className="relative z-10 border-t border-white/10 bg-white/95 backdrop-blur-md">
+          <div className="mx-auto w-full max-w-2xl px-3 py-2 sm:px-5">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div
               role="tablist"
@@ -872,10 +883,13 @@ export function NotificationsView({
               </button>
             )}
           </div>
+          </div>
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-2xl px-3 pt-3 sm:px-5">
+      <div className="relative -mt-px">
+        <VignettePageCurtain className="h-[190px] sm:h-[220px]" />
+        <div className="relative z-10 mx-auto w-full max-w-2xl px-3 pt-3 sm:px-5">
 
         {deleteError && (
           <p role="alert" className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-semibold text-rose-800">
@@ -1075,6 +1089,7 @@ export function NotificationsView({
             ))}
           </div>
         )}
+        </div>
       </div>
     </main>
   );
@@ -1162,26 +1177,29 @@ function NotificationSettingsView({
 
   return (
     <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[#F8FAFC] pb-[max(2rem,env(safe-area-inset-bottom))] text-slate-900 font-sans">
-      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-        <div className="mx-auto flex min-h-[52px] w-full max-w-2xl items-center gap-2.5 px-3 py-1.5 sm:px-5">
+      <header className="sticky top-0 z-20 relative isolate overflow-hidden bg-[#090808] pt-[env(safe-area-inset-top)]">
+        <VignetteBarBackdrop variant="top" />
+        <div className="relative z-10 mx-auto flex min-h-[52px] w-full max-w-2xl items-center gap-2.5 px-3 py-1.5 sm:px-5">
           <button
             type="button"
             onClick={onBack}
             aria-label="Go back"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-700 transition-colors hover:bg-slate-100 active:scale-95"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-colors hover:bg-white/22 active:scale-95"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="min-w-0">
-            <h1 className="truncate text-[18px] sm:text-[19px] font-extrabold leading-tight tracking-tight text-slate-900">
+            <h1 className="truncate text-[18px] sm:text-[19px] font-extrabold leading-tight tracking-tight text-white">
               Notification Settings
             </h1>
-            <p className="text-[11.5px] text-slate-500">Choose what appears in your in-app inbox</p>
+            <p className="text-[11.5px] text-white/70">Choose what appears in your in-app inbox</p>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-2xl space-y-3 px-3 pt-3 sm:px-5">
+      <div className="relative -mt-px">
+        <VignettePageCurtain />
+        <div className="relative z-10 mx-auto max-w-2xl space-y-3 px-3 pt-3 sm:px-5">
         <section className="flex items-center gap-3 rounded-2xl border border-rose-100 bg-gradient-to-r from-[#FFF1F2] via-white to-[#FFF7F7] p-3.5 shadow-2xs sm:p-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-100/80 text-[#D9232D]">
             <Bell className="h-5 w-5" />
@@ -1254,6 +1272,7 @@ function NotificationSettingsView({
         >
           Save Preferences
         </button>
+        </div>
       </div>
     </main>
   );

@@ -11,6 +11,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import type { CustomerCouponOffer } from '../lib/supabaseCoupons';
+import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 
 interface CouponDetailsViewProps {
   offer: CustomerCouponOffer;
@@ -109,26 +110,29 @@ export function CouponDetailsView({ offer, onBack, onShopNow }: CouponDetailsVie
       className="fixed inset-x-0 top-0 z-[90] flex min-h-0 flex-col overflow-hidden bg-[#F8FAFC] font-sans text-slate-900"
       style={{ height: viewportHeight ? `${viewportHeight}px` : '100dvh' }}
     >
-      <header className="shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-        <div className="mx-auto flex min-h-[52px] w-full max-w-2xl items-center gap-2.5 px-3 pt-[max(0.4rem,env(safe-area-inset-top))] pb-1.5 sm:px-5">
+      <header className="relative isolate shrink-0 overflow-hidden bg-[#090808] text-white">
+        <VignetteBarBackdrop variant="top" />
+        <div className="relative z-10 mx-auto flex min-h-[54px] w-full max-w-2xl items-center gap-2.5 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 sm:px-5">
           <button
             type="button"
             onClick={onBack}
             aria-label="Back"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 active:scale-95"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition hover:bg-white/22 active:scale-95"
           >
             <ArrowLeft className="h-5 w-5" strokeWidth={2.3} />
           </button>
-          <h1 className="truncate text-[18px] sm:text-[19px] font-extrabold tracking-tight text-slate-900">
+          <h1 className="truncate text-[18px] sm:text-[19px] font-extrabold tracking-tight text-white">
             Coupon Details
           </h1>
         </div>
       </header>
 
-      <div className="mx-auto min-h-0 w-full max-w-2xl flex-1 space-y-3 overflow-x-hidden overflow-y-auto overscroll-contain px-3 pb-24 pt-3 sm:px-5 sm:pt-4">
+      <div className="relative -mt-px min-h-0 w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
+        <VignettePageCurtain className="h-[220px] sm:h-[250px]" />
+        <div className="relative z-10 mx-auto w-full max-w-2xl space-y-3 px-3 pb-24 pt-3.5 sm:px-5 sm:pt-4">
         <section
           aria-label={`${offer.code} coupon offer`}
-          className="relative overflow-hidden rounded-2xl border border-rose-200/80 bg-gradient-to-b from-[#FFF1F2] via-[#FFF6F7] to-white px-4 pb-3.5 pt-4 shadow-[0_8px_22px_-14px_rgba(217,35,45,0.2)] sm:px-5 sm:pb-4 sm:pt-5"
+          className="relative overflow-hidden rounded-2xl border border-rose-200/80 bg-gradient-to-b from-[#FFF1F2] via-[#FFF6F7] to-white px-4 pb-3.5 pt-4 shadow-[0_12px_28px_-14px_rgba(15,23,42,0.22)] sm:px-5 sm:pb-4 sm:pt-5"
         >
           <span aria-hidden="true" className="absolute -left-3 top-[50%] h-6 w-6 -translate-y-1/2 rounded-full border-r border-rose-200/80 bg-[#F8FAFC] sm:-left-3.5 sm:h-7 sm:w-7" />
           <span aria-hidden="true" className="absolute -right-3 top-[50%] h-6 w-6 -translate-y-1/2 rounded-full border-l border-rose-200/80 bg-[#F8FAFC] sm:-right-3.5 sm:h-7 sm:w-7" />
@@ -199,6 +203,7 @@ export function CouponDetailsView({ offer, onBack, onShopNow }: CouponDetailsVie
           <DetailRow icon={<UserRound />} label="Applicable For" value={eligibilityText(offer.eligibility)} />
           <DetailRow icon={<FileText />} label="Terms & Conditions" value={terms.join(' ')} compact />
         </section>
+        </div>
       </div>
 
       <footer className="shrink-0 border-t border-slate-200/80 bg-white/95 px-3 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] shadow-[0_-6px_20px_rgba(15,23,42,0.06)] backdrop-blur-md sm:px-5">

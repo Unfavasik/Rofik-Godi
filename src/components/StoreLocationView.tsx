@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { WORKSHOP_INFO } from '../data/products';
 import { useI18n } from '../lib/i18n';
+import { VignetteBarBackdrop } from './VignetteBarBackdrop';
 
 const STORE_IMAGE = '/images/rofik-godi-store.webp';
 const BRAND_ICON = '/images/rofik-center-splash.webp';
@@ -840,7 +841,8 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
 
   return (
     <div className="fixed inset-0 z-[95] flex flex-col overflow-x-hidden bg-[#F8FAFC] font-sans" role="dialog" aria-modal="true" aria-label="Visit our store">
-      <header className="flex shrink-0 items-center gap-3 border-b border-slate-100 bg-white px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+      <header className="relative isolate flex shrink-0 items-center gap-3 overflow-hidden bg-[#090808] px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 shadow-[0_10px_28px_-14px_rgba(9,8,8,0.5)]">
+        <VignetteBarBackdrop variant="top" />
         <button
           type="button"
           onClick={() => {
@@ -851,14 +853,14 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
             onClose();
           }}
           aria-label="Go back"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100/80 text-slate-700 transition-transform hover:bg-slate-200/80 active:scale-95"
+          className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-transform hover:bg-white/22 active:scale-95"
         >
           <ArrowLeft className="h-5 w-5" strokeWidth={2.2} />
         </button>
-        <img src={BRAND_ICON} alt="" className="h-9 w-9 rounded-lg object-cover" />
-        <div className="min-w-0">
-          <h1 className="truncate text-base font-black leading-tight tracking-tight text-slate-900">ROFIK GODI CENTRE</h1>
-          <p className="text-[9px] font-bold tracking-[0.18em] text-slate-400">BIKE &bull; TOTO &bull; SEAT COVERS</p>
+        <img src={BRAND_ICON} alt="" className="relative z-10 h-9 w-9 rounded-lg object-cover ring-1 ring-white/20" />
+        <div className="relative z-10 min-w-0">
+          <h1 className="truncate text-base font-black leading-tight tracking-tight text-white">ROFIK GODI CENTRE</h1>
+          <p className="text-[9px] font-bold tracking-[0.18em] text-white/65">BIKE &bull; TOTO &bull; SEAT COVERS</p>
         </div>
       </header>
 
