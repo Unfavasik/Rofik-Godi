@@ -30,6 +30,7 @@
     min-height: 100%;
     overflow-x: hidden;
     overflow-x: clip;
+    overscroll-behavior-y: contain;
     background-color: #090808;
   }
 

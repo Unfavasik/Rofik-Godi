@@ -99,6 +99,9 @@ import {
 import { getCustomerNotificationCategory } from './lib/notificationCategory';
 import { readSwrCache, writeSwrCache } from './lib/swrCache';
 import { CloudLoader } from './components/CloudLoader';
+import { PullToRefresh } from './components/PullToRefresh';
+import { computeNextDockScrollState, type DockScrollState } from './lib/dockScrollVisibility';
+import { PULL_TO_REFRESH_EVENT } from './lib/pullToRefresh';
 const FilterSortModal = lazy(() => import('./components/FilterSortModal').then((module) => ({ default: module.FilterSortModal })));
 const LAST_ROUTE_KEY = 'rofik-godi:last-route:v1';
 const SCROLL_KEY = 'rofik-godi:scroll:v1';
@@ -108,6 +111,43 @@ const isOverlayRouteKind = (kind: ReturnType<typeof resolveAppRoute>['kind']) =>
   kind === 'privacy' ||
   kind === 'terms' ||
   kind === 'personal-data';
+
+function useScrollDirection(resetKey: string): boolean {
+  const [isHidden, setIsHidden] = useState(false);
+  const stateRef = useRef<DockScrollState>({
+    isHidden: false,
+    anchorY: typeof window !== 'undefined' ? Math.max(0, window.scrollY) : 0,
+  });
+
+  useEffect(() => {
+    const currentY = typeof window !== 'undefined' ? Math.max(0, window.scrollY) : 0;
+    stateRef.current = { isHidden: false, anchorY: currentY };
+    setIsHidden(false);
+  }, [resetKey]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let rafId: number | null = null;
+
+    const onScroll = () => {
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        const next = computeNextDockScrollState(stateRef.current, window.scrollY);
+        stateRef.current = next;
+        setIsHidden((prev) => (prev === next.isHidden ? prev : next.isHidden));
+      });
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (rafId !== null) window.cancelAnimationFrame(rafId);
+    };
+  }, []);
+
+  return isHidden;
+}
 
 export default function App() {
   const [hasActiveBanner, setHasActiveBanner] = useState(false);
@@ -683,6 +723,7 @@ export default function App() {
   // Navigation & View State
   const tabToRoute = useCallback((tab: RouteTab) => getPathForTab(tab), []);
   const [activeTab, setActiveTab] = useState<RouteTab>(() => backgroundRoute.tab);
+  const isBottomNavHidden = useScrollDirection(`${activeTab}:${location.pathname}`);
   useEffect(() => {
     setAppPhase(phaseFromPath(location.pathname));
     setActiveTab(backgroundRoute.tab);
@@ -1623,6 +1664,49 @@ export default function App() {
   );
 
   // Haptics are an optional progressive enhancement: browsers without Vibration API stay silent.
+  const handleGlobalPullRefresh = useCallback(async () => {
+    retryCatalog();
+    const tasks: Array<Promise<unknown>> = [
+      loadCustomerCouponOffers()
+        .then(({ data, error }) => {
+          if (!error) writeSwrCache('public:customer-coupons', data);
+        })
+        .catch(() => {}),
+    ];
+
+    if (!currentUser.isGuest && currentUser.id) {
+      const targetUserId = currentUser.id;
+      refreshNotificationCount(true);
+      notifyCustomerOrdersUpdated(targetUserId);
+      tasks.push(
+        listMyWishlist()
+          .then((rows) => {
+            const ids = new Set(rows.map((row) => row.product_id));
+            setWishlist(catalogProducts.filter((product) => ids.has(product.id)));
+          })
+          .catch(() => {}),
+      );
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(PULL_TO_REFRESH_EVENT));
+    }
+
+    await Promise.race([
+      Promise.allSettled(tasks),
+      new Promise<void>((resolve) => {
+        window.setTimeout(resolve, 1500);
+      }),
+    ]);
+  }, [
+    catalogProducts,
+    currentUser.id,
+    currentUser.isGuest,
+    refreshNotificationCount,
+    retryCatalog,
+    setWishlist,
+  ]);
+
   const handleAppHapticTap = (event: React.MouseEvent<HTMLDivElement>) => {
     if (!prefersHapticFeedback(currentUser.id) || typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return;
     const target = event.target instanceof Element ? event.target : null;
@@ -1634,6 +1718,11 @@ export default function App() {
   // Phase 1: Product introduction. On each fresh unauthenticated app open, complete this before guest browsing.
   if (isAdminPath(location.pathname)) {
     return (
+      <>
+      <PullToRefresh
+        onRefresh={handleGlobalPullRefresh}
+        hapticsEnabled={prefersHapticFeedback(currentUser.id)}
+      />
       <AdminAccessGate
         authStatus={authStatus}
         isAdmin={isAdmin}
@@ -1659,6 +1748,7 @@ export default function App() {
           />
         </Suspense>
       </AdminAccessGate>
+      </>
     );
   }
 
@@ -1718,6 +1808,12 @@ export default function App() {
     <MotionConfig reducedMotion="user">
     <I18nProvider language={uiLanguage}>
     <div className="min-h-screen w-full overflow-x-hidden bg-[#FDFDFD] flex justify-center selection:bg-[#D9232D] selection:text-white font-sans antialiased text-[#1E232A]">
+      {/* Global Pull-to-Refresh across all pages */}
+      <PullToRefresh
+        onRefresh={handleGlobalPullRefresh}
+        hapticsEnabled={prefersHapticFeedback(currentUser.id)}
+      />
+
       {/* Live in-app notification toast banner */}
       {liveNotificationToast && (
         <div
@@ -2468,6 +2564,7 @@ export default function App() {
             <BottomNav
               activeTab={activeTab as 'home' | 'shop' | 'custom' | 'wishlist' | 'account' | 'cart'}
               setActiveTab={(tab) => setActiveTab(tab as RouteTab)}
+              isHidden={isBottomNavHidden}
               cartCount={cart.reduce((s, i) => s + i.quantity, 0)}
               wishlistCount={wishlist.length}
               onOpenCart={() => {
