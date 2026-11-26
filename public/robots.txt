@@ -11,3 +11,4 @@ Disallow: /notifications
 Disallow: /auth/
 
 Sitemap: https://rofikgodicenter.pages.dev/sitemap.xml
+Sitemap: https://rofikgodicenter.pages.dev/sitemap.txt
