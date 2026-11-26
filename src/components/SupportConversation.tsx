@@ -23,6 +23,7 @@ import { SupportConversationSkeleton } from './AccountPageSkeleton';
 import { useUploadProgress } from '../lib/useUploadProgress';
 import { UploadProgressBar } from './UploadProgressBar';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 const QUICK_REPLIES = [
   'Any update on this?',
@@ -134,6 +135,7 @@ export const SupportConversation: React.FC<{
   useEffect(() => {
     const cached = readSwrCache(threadCacheKey);
     void refresh(Boolean(cached));
+    return subscribePullToRefresh(() => refresh(true));
   }, [refresh, threadCacheKey]);
 
   useEffect(() => {

@@ -18,6 +18,7 @@ import { getPathForCustomerOrder } from '../lib/appRoutes';
 import { ReviewComposer } from './ReviewComposer';
 import { ProductReviewsSkeleton } from './AccountPageSkeleton';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 interface ProductReviewsProps {
   productId: string;
@@ -108,6 +109,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
       setMyReviews(cachedUser.reviews);
     }
     void refresh(Boolean(cachedPublic));
+    return subscribePullToRefresh(() => refresh(true));
   }, [hasInitialData, publicCacheKey, refresh, userCacheKey]);
 
   const counts = summary ? summaryCounts(summary) : [0, 0, 0, 0, 0];

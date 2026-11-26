@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { lazy, Suspense, useState, useMemo, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import React, { Suspense, useState, useMemo, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { motion, MotionConfig } from 'motion/react';
+import { lazyWithRetry } from './lib/lazyWithRetry';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
@@ -17,17 +18,17 @@ import { CatalogStatus } from './components/CatalogStatus';
 import { VehicleFinderSheet, VehicleFitmentTriggerBar } from './components/VehicleFinder';
 import { ProductCard } from './components/ProductCard';
 import { PwaInstallCard } from './components/PwaInstallCard';
-const ProductDetailModal = lazy(() => import('./components/ProductDetailModal').then((module) => ({ default: module.ProductDetailModal })));
-const CustomSeatBuilder = lazy(() => import('./components/CustomSeatBuilder').then((module) => ({ default: module.CustomSeatBuilder })));
-const CartDrawer = lazy(() => import('./components/CartDrawer').then((module) => ({ default: module.CartDrawer })));
-const CheckoutModal = lazy(() => import('./components/CheckoutModal').then((module) => ({ default: module.CheckoutModal })));
-const WishlistModal = lazy(() => import('./components/WishlistModal').then((module) => ({ default: module.WishlistModal })));
+const ProductDetailModal = lazyWithRetry(() => import('./components/ProductDetailModal').then((module) => ({ default: module.ProductDetailModal })));
+const CustomSeatBuilder = lazyWithRetry(() => import('./components/CustomSeatBuilder').then((module) => ({ default: module.CustomSeatBuilder })));
+const CartDrawer = lazyWithRetry(() => import('./components/CartDrawer').then((module) => ({ default: module.CartDrawer })));
+const CheckoutModal = lazyWithRetry(() => import('./components/CheckoutModal').then((module) => ({ default: module.CheckoutModal })));
+const WishlistModal = lazyWithRetry(() => import('./components/WishlistModal').then((module) => ({ default: module.WishlistModal })));
 import { StoreLocationView } from './components/StoreLocationView';
 import { PrivacyPolicyView } from './components/PrivacyPolicyView';
 import { TermsConditionsView } from './components/TermsConditionsView';
 import { PersonalDataView } from './components/PersonalDataView';
-const CouponDetailsView = lazy(() => import('./components/CouponDetailsView').then((module) => ({ default: module.CouponDetailsView })));
-const AccountView = lazy(() => import('./components/AccountView').then((module) => ({ default: module.AccountView })));
+const CouponDetailsView = lazyWithRetry(() => import('./components/CouponDetailsView').then((module) => ({ default: module.CouponDetailsView })));
+const AccountView = lazyWithRetry(() => import('./components/AccountView').then((module) => ({ default: module.AccountView })));
 import {
   AccountPageSkeleton,
   AccountProfileEditorSkeleton,
@@ -35,15 +36,15 @@ import {
   SettingsPageSkeleton,
   SupportCenterPageSkeleton,
 } from './components/AccountPageSkeleton';
-const CustomerReviews = lazy(() => import('./components/CustomerReviews').then((module) => ({ default: module.CustomerReviews })));
+const CustomerReviews = lazyWithRetry(() => import('./components/CustomerReviews').then((module) => ({ default: module.CustomerReviews })));
 import { BottomNav } from './components/BottomNav';
 import { SplashScreen } from './components/SplashScreen';
-const Onboarding = lazy(() => import('./components/Onboarding'));
-const RofikOnboarding = lazy(() => import('./components/RofikOnboarding'));
-const AuthScreen = lazy(() => import('./components/AuthScreen').then((module) => ({ default: module.AuthScreen })));
-const LoginRequiredModal = lazy(() => import('./components/LoginRequiredModal').then((module) => ({ default: module.LoginRequiredModal })));
+import Onboarding from './components/Onboarding';
+const RofikOnboarding = lazyWithRetry(() => import('./components/RofikOnboarding'));
+const AuthScreen = lazyWithRetry(() => import('./components/AuthScreen').then((module) => ({ default: module.AuthScreen })));
+const LoginRequiredModal = lazyWithRetry(() => import('./components/LoginRequiredModal').then((module) => ({ default: module.LoginRequiredModal })));
 import { SearchView } from './components/SearchView';
-const NotificationsView = lazy(() => import('./components/NotificationsView').then((module) => ({ default: module.NotificationsView })));
+const NotificationsView = lazyWithRetry(() => import('./components/NotificationsView').then((module) => ({ default: module.NotificationsView })));
 import { ShopView } from './components/ShopView';
 import { getHomeSearchPromptTerms } from './lib/searchProducts';
 import { addOrMergeCartItem, buildReorderCartItems, createDefaultCartItem, getCartItemUnitPrice, hasMatchingCartItem, MAX_ORDER_ITEM_QUANTITY, refreshCartFromCatalog, toggleCartItem } from './lib/cart';
@@ -51,7 +52,7 @@ import { isProductSellable } from './lib/productAvailability';
 import { isOrderComplete } from './lib/orderPresentation';
 import { createMyStockAlert } from './lib/supabaseStockAlerts';
 import { Outlet, useLocation, useNavigate, type NavigateFunction, type NavigateOptions, type To } from 'react-router-dom';
-const AdminPanel = lazy(() =>
+const AdminPanel = lazyWithRetry(() =>
   import('./components/AdminPanel').then((module) => ({ default: module.AdminPanel })),
 );
 import { AdminAccessGate } from './components/AdminAccessGate';
@@ -85,7 +86,7 @@ import { useCart } from './hooks/useCart';
 import { useCatalog } from './hooks/useCatalog';
 import { usePwaInstallPrompt } from './hooks/usePwaInstallPrompt';
 import { usePushNotifications } from './hooks/usePushNotifications';
-import { listMyNotifications, listMyWishlist, toggleWishlist } from './lib/supabaseCustomer';
+import { getMyProfile, listMyNotifications, listMyWishlist, toggleWishlist } from './lib/supabaseCustomer';
 import {
   CUSTOMER_NOTIFICATIONS_UPDATED_EVENT,
   notifyCustomerNotificationsUpdated,
@@ -97,12 +98,12 @@ import {
   type CachedCustomerNotification,
 } from './lib/localCache';
 import { getCustomerNotificationCategory } from './lib/notificationCategory';
-import { readSwrCache, writeSwrCache } from './lib/swrCache';
+import { invalidateSwrCache, invalidateSwrCachePrefix, readSwrCache, writeSwrCache } from './lib/swrCache';
 import { CloudLoader } from './components/CloudLoader';
 import { PullToRefresh } from './components/PullToRefresh';
 import { computeNextDockScrollState, type DockScrollState } from './lib/dockScrollVisibility';
-import { PULL_TO_REFRESH_EVENT } from './lib/pullToRefresh';
-const FilterSortModal = lazy(() => import('./components/FilterSortModal').then((module) => ({ default: module.FilterSortModal })));
+import { dispatchPullToRefresh, subscribePullToRefresh } from './lib/pullToRefresh';
+const FilterSortModal = lazyWithRetry(() => import('./components/FilterSortModal').then((module) => ({ default: module.FilterSortModal })));
 const LAST_ROUTE_KEY = 'rofik-godi:last-route:v1';
 const SCROLL_KEY = 'rofik-godi:scroll:v1';
 const isOverlayRouteKind = (kind: ReturnType<typeof resolveAppRoute>['kind']) =>
@@ -491,13 +492,13 @@ export default function App() {
     if (liveToastTimerRef.current !== null) window.clearTimeout(liveToastTimerRef.current);
   }, []);
 
-  const refreshNotificationCount = useCallback((notifyViews = false) => {
+  const refreshNotificationCount = useCallback((notifyViews = false): Promise<void> => {
     if (currentUser.isGuest || !currentUser.id) {
       setNotificationCount(0);
-      return;
+      return Promise.resolve();
     }
     const targetUserId = currentUser.id;
-    void listMyNotifications(targetUserId).then((notifications) => {
+    return listMyNotifications(targetUserId).then((notifications) => {
       const preferences = readCustomerAppPreferences(targetUserId).notifications;
       const count = notifications.filter((notification) =>
         !notification.read_at && isNotificationEnabledByPreferences(preferences, notification),
@@ -1013,14 +1014,20 @@ export default function App() {
       setCouponRouteLoading(true);
       setCouponRouteOffer(null);
     }
-    void loadCustomerCouponOffers().then(({ data, error }) => {
-      if (!active) return;
-      if (!error) writeSwrCache('public:customer-coupons', data);
-      const offer = data?.find((item) => item.code.toLowerCase() === couponRouteCode.toLowerCase()) || null;
-      setCouponRouteOffer(offer);
-      setCouponRouteLoading(false);
-    });
-    return () => { active = false; };
+    const refreshCouponRoute = () =>
+      loadCustomerCouponOffers().then(({ data, error }) => {
+        if (!active) return;
+        if (!error) writeSwrCache('public:customer-coupons', data);
+        const offer = data?.find((item) => item.code.toLowerCase() === couponRouteCode.toLowerCase()) || null;
+        setCouponRouteOffer(offer);
+        setCouponRouteLoading(false);
+      });
+    void refreshCouponRoute();
+    const unsubscribePtr = subscribePullToRefresh(refreshCouponRoute);
+    return () => {
+      active = false;
+      unsubscribePtr();
+    };
   }, [couponRouteCode]);
 
   const openProductRoute = useCallback((product: Product) => {
@@ -1665,8 +1672,14 @@ export default function App() {
 
   // Haptics are an optional progressive enhancement: browsers without Vibration API stay silent.
   const handleGlobalPullRefresh = useCallback(async () => {
-    retryCatalog();
+    invalidateSwrCache('public:customer-coupons');
+    invalidateSwrCachePrefix('public:product-reviews:');
+    if (isAdminPath(location.pathname)) {
+      invalidateSwrCachePrefix('admin:');
+    }
+
     const tasks: Array<Promise<unknown>> = [
+      retryCatalog(),
       loadCustomerCouponOffers()
         .then(({ data, error }) => {
           if (!error) writeSwrCache('public:customer-coupons', data);
@@ -1674,36 +1687,58 @@ export default function App() {
         .catch(() => {}),
     ];
 
+    if (supabase) {
+      tasks.push(supabase.auth.getSession().catch(() => undefined));
+    }
+
     if (!currentUser.isGuest && currentUser.id) {
       const targetUserId = currentUser.id;
-      refreshNotificationCount(true);
+      invalidateSwrCachePrefix(`user:${targetUserId}:`);
+      invalidateSwrCachePrefix('user:order-history:');
       notifyCustomerOrdersUpdated(targetUserId);
       tasks.push(
+        refreshNotificationCount(true),
         listMyWishlist()
           .then((rows) => {
             const ids = new Set(rows.map((row) => row.product_id));
             setWishlist(catalogProducts.filter((product) => ids.has(product.id)));
           })
           .catch(() => {}),
+        getMyProfile(targetUserId)
+          .then((profile) => {
+            if (!profile) return;
+            setCurrentUser((current) =>
+              current.id === targetUserId
+                ? {
+                    ...current,
+                    name: profile.full_name?.trim() || current.name,
+                    phone: profile.phone || current.phone,
+                    avatar: profile.avatar_url || undefined,
+                    vehicle: profile.vehicle_model || current.vehicle,
+                  }
+                : current,
+            );
+          })
+          .catch(() => {}),
       );
     }
 
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent(PULL_TO_REFRESH_EVENT));
-    }
+    tasks.push(dispatchPullToRefresh(4500));
 
     await Promise.race([
       Promise.allSettled(tasks),
       new Promise<void>((resolve) => {
-        window.setTimeout(resolve, 1500);
+        window.setTimeout(resolve, 4500);
       }),
     ]);
   }, [
     catalogProducts,
     currentUser.id,
     currentUser.isGuest,
+    location.pathname,
     refreshNotificationCount,
     retryCatalog,
+    setCurrentUser,
     setWishlist,
   ]);
 

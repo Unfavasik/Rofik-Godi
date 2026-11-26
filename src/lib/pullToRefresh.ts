@@ -53,8 +53,61 @@ export function classifyTouchDirection(
   return 'pull';
 }
 
+export interface PullRefreshEventDetail {
+  waitUntil: (promise: Promise<unknown>) => void;
+}
+
+/**
+ * Dispatches the global pull-to-refresh event and waits for all mounted views/modals
+ * that register refresh promises via `waitUntil(...)` (bounded by `timeoutMs`).
+ */
+export async function dispatchPullToRefresh(timeoutMs = 4500): Promise<void> {
+  if (typeof window === 'undefined') return;
+  const pending: Array<Promise<unknown>> = [];
+  const detail: PullRefreshEventDetail = {
+    waitUntil: (promise) => {
+      pending.push(Promise.resolve(promise).catch(() => undefined));
+    },
+  };
+  window.dispatchEvent(new CustomEvent<PullRefreshEventDetail>(PULL_TO_REFRESH_EVENT, { detail }));
+  if (pending.length === 0) return;
+
+  await Promise.race([
+    Promise.allSettled(pending),
+    new Promise<void>((resolve) => {
+      window.setTimeout(resolve, timeoutMs);
+    }),
+  ]);
+}
+
+/**
+ * Subscribes a view/modal loader to global pull-to-refresh events and automatically
+ * registers its returned Promise with the active pull-to-refresh cycle.
+ */
+export function subscribePullToRefresh(handler: () => Promise<unknown> | unknown): () => void {
+  if (typeof window === 'undefined') return () => {};
+  const listener = (event: Event) => {
+    const customEvent = event as CustomEvent<PullRefreshEventDetail | undefined>;
+    const task = Promise.resolve().then(() => handler());
+    if (customEvent.detail && typeof customEvent.detail.waitUntil === 'function') {
+      customEvent.detail.waitUntil(task);
+    } else {
+      void task.catch(() => undefined);
+    }
+  };
+  window.addEventListener(PULL_TO_REFRESH_EVENT, listener);
+  return () => window.removeEventListener(PULL_TO_REFRESH_EVENT, listener);
+}
+
 const BLOCKED_TARGET_SELECTOR =
   'input, textarea, select, canvas, [contenteditable="true"], [role="slider"], [data-no-pull-refresh="true"]';
+
+function getWindowScrollTop(): number {
+  if (typeof window === 'undefined') return 0;
+  const scrollingTop =
+    typeof document !== 'undefined' ? (document.scrollingElement?.scrollTop ?? 0) : 0;
+  return Math.max(window.scrollY || 0, scrollingTop || 0);
+}
 
 /**
  * Determines whether a pull-to-refresh gesture can start from the given touch target.
@@ -66,7 +119,7 @@ const BLOCKED_TARGET_SELECTOR =
 export function isPullAllowedForTarget(target: EventTarget | null): boolean {
   if (typeof window === 'undefined') return false;
   if (typeof Element === 'undefined' || !(target instanceof Element)) {
-    return window.scrollY <= 1;
+    return getWindowScrollTop() <= 1;
   }
   if (target.closest(BLOCKED_TARGET_SELECTOR)) return false;
 
@@ -82,11 +135,17 @@ export function isPullAllowedForTarget(target: EventTarget | null): boolean {
       return false;
     }
     if (style.position === 'fixed') {
-      insideFixedOverlay = true;
-      break;
+      const rect = current.getBoundingClientRect();
+      const isFullViewportOverlay =
+        current.getAttribute('role') === 'dialog' ||
+        (rect.width >= window.innerWidth * 0.75 && rect.height >= window.innerHeight * 0.75);
+      if (isFullViewportOverlay) {
+        insideFixedOverlay = true;
+        break;
+      }
     }
     current = current.parentElement;
   }
 
-  return insideFixedOverlay ? true : window.scrollY <= 1;
+  return insideFixedOverlay ? true : getWindowScrollTop() <= 1;
 }

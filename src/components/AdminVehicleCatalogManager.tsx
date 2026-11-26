@@ -32,6 +32,7 @@ import { getBrandInitials, getBrandLogoUrl } from '../lib/brandLogos';
 import { useUploadProgress } from '../lib/useUploadProgress';
 import { UploadProgressBar } from './UploadProgressBar';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 type Props = { notify: (message: string, tone?: 'success' | 'error' | 'info') => void };
 
@@ -84,6 +85,7 @@ export function AdminVehicleCatalogManager({ notify }: Props) {
 
   useEffect(() => {
     void refresh(readSwrCache('admin:vehicle-models') !== undefined);
+    return subscribePullToRefresh(() => refresh(true));
   }, [refresh]);
 
   const typeModels = models.filter((model) => model.type === selectedType);

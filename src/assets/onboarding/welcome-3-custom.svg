@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" fill="none">
+  <defs>
+    <linearGradient id="w3Bg" x1="300" y1="0" x2="300" y2="800" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F2FBF6"/>
+      <stop offset="48%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <radialGradient id="w3Glow" cx="50%" cy="35%" r="44%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.16"/>
+      <stop offset="60%" stop-color="#E11D2E" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="w3Seat" x1="210" y1="160" x2="390" y2="490" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#272B33"/>
+      <stop offset="100%" stop-color="#0E1014"/>
+    </linearGradient>
+    <pattern id="w3Quilt" width="22" height="22" patternUnits="userSpaceOnUse">
+      <path d="M11 0 L22 11 L11 22 L0 11 Z" fill="none" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="1"/>
+    </pattern>
+    <filter id="w3Shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="20" stdDeviation="16" flood-color="#0F172A" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <rect width="600" height="800" fill="url(#w3Bg)"/>
+  <circle cx="300" cy="295" r="245" fill="url(#w3Glow)"/>
+
+  <!-- Celebratory Minimalist Geometric Confetti -->
+  <rect x="128" y="164" width="16" height="16" rx="4" transform="rotate(24 128 164)" fill="#E11D2E"/>
+  <circle cx="468" cy="186" r="10" fill="#10B981"/>
+  <rect x="444" y="422" width="18" height="10" rx="5" transform="rotate(-22 444 422)" fill="#F59E0B"/>
+  <circle cx="136" cy="414" r="8" fill="#0F172A" fill-opacity="0.24"/>
+  <circle cx="204" cy="126" r="7" fill="#F59E0B"/>
+  <rect x="394" y="132" width="14" height="14" rx="4" transform="rotate(-18 394 132)" fill="#FF4D58" fill-opacity="0.7"/>
+
+  <!-- Gleaming Ready-to-Ride Quilted Seat Cover -->
+  <g filter="url(#w3Shadow)">
+    <path d="M300 144 C348 144 378 180 381 240 C384 298 370 344 375 404 C380 468 366 522 328 536 C312 542 288 542 272 536 C234 522 220 468 225 404 C230 344 216 298 219 240 C222 180 252 144 300 144 Z" fill="url(#w3Seat)" stroke="#39414E" stroke-width="2.5"/>
+    <path d="M300 176 C332 176 348 206 349 256 C350 304 340 348 340 398 C340 444 350 482 326 502 C312 512 288 512 274 502 C250 482 260 444 260 398 C260 348 250 304 251 256 C252 206 268 176 300 176 Z" fill="#D9232D"/>
+    <path d="M300 176 C332 176 348 206 349 256 C350 304 340 348 340 398 C340 444 350 482 326 502 C312 512 288 512 274 502 C250 482 260 444 260 398 C260 348 250 304 251 256 C252 206 268 176 300 176 Z" fill="url(#w3Quilt)"/>
+  </g>
+
+  <!-- Crisp Emerald All-Set Check Medallion -->
+  <g transform="translate(300, 344)" filter="url(#w3Shadow)">
+    <circle r="76" fill="#FFFFFF"/>
+    <circle r="64" fill="#10B981"/>
+    <path d="M-24 2 L-7 19 L26 -16" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

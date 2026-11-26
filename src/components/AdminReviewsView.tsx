@@ -3,6 +3,7 @@ import { BadgeCheck, Check, Eye, EyeOff, Star, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from './ConfirmDialog';
 import { deleteProductReview, listAdminProductReviews, setProductReviewPublished, type ProductReviewRecord } from '../lib/supabaseReviews';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 interface AdminReviewsViewProps {
   notify: (message: string) => void;
@@ -32,6 +33,7 @@ export const AdminReviewsView: React.FC<AdminReviewsViewProps> = ({ notify, quer
   useEffect(() => {
     const hasCache = readSwrCache('admin:reviews') !== undefined;
     void refresh(hasCache);
+    return subscribePullToRefresh(() => refresh(true));
   }, [refresh]);
   useEffect(() => {
     if (!query) return;

@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" fill="none">
+  <defs>
+    <linearGradient id="bg1" x1="300" y1="0" x2="300" y2="800" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#130E0E"/>
+      <stop offset="34%" stop-color="#271716"/>
+      <stop offset="68%" stop-color="#F7F1EE"/>
+      <stop offset="100%" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <radialGradient id="spotWarm1" cx="50%" cy="32%" r="52%">
+      <stop offset="0%" stop-color="#E11D2E" stop-opacity="0.34"/>
+      <stop offset="48%" stop-color="#8A3A28" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#130E0E" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bokeh1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F7C59F" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#F7C59F" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="seatBody1" x1="185" y1="150" x2="415" y2="565" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2E323A"/>
+      <stop offset="42%" stop-color="#17191E"/>
+      <stop offset="100%" stop-color="#0B0C0F"/>
+    </linearGradient>
+    <linearGradient id="seatCenterRed" x1="300" y1="175" x2="300" y2="525" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#EF3142"/>
+      <stop offset="55%" stop-color="#C81222"/>
+      <stop offset="100%" stop-color="#8C0A16"/>
+    </linearGradient>
+    <linearGradient id="seatHighlight" x1="210" y1="170" x2="390" y2="410" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.28"/>
+      <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="pedestalGrad" x1="300" y1="530" x2="300" y2="660" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#EFE7E3"/>
+    </linearGradient>
+    <pattern id="diamondQuilt1" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M12 0 L24 12 L12 24 L0 12 Z" fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="1.2"/>
+      <circle cx="12" cy="12" r="1.1" fill="#090808" fill-opacity="0.38"/>
+    </pattern>
+    <filter id="softShadow1" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="22" stdDeviation="18" flood-color="#1A0A0C" flood-opacity="0.28"/>
+    </filter>
+    <clipPath id="centerPanelClip1">
+      <path d="M300 176 C338 176 355 210 356 265 C357 316 346 362 346 418 C346 468 358 512 332 536 C318 548 282 548 268 536 C242 512 254 468 254 418 C254 362 243 316 244 265 C245 210 262 176 300 176 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Layered Editorial Backdrop -->
+  <rect width="600" height="800" fill="url(#bg1)"/>
+  <ellipse cx="300" cy="240" rx="340" ry="260" fill="url(#spotWarm1)"/>
+  <circle cx="110" cy="145" r="95" fill="url(#bokeh1)"/>
+  <circle cx="500" cy="190" r="115" fill="url(#bokeh1)"/>
+
+  <!-- Precision Fitment Radar Rings -->
+  <circle cx="300" cy="360" r="210" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="1.5" stroke-dasharray="6 10"/>
+  <circle cx="300" cy="360" r="162" stroke="#E11D2E" stroke-opacity="0.22" stroke-width="1.5"/>
+
+  <!-- Soft Studio Plinth -->
+  <ellipse cx="300" cy="602" rx="190" ry="38" fill="#1E1415" fill-opacity="0.09"/>
+  <ellipse cx="300" cy="590" rx="164" ry="30" fill="url(#pedestalGrad)" stroke="#FFFFFF" stroke-width="2"/>
+  <ellipse cx="300" cy="586" rx="122" ry="18" fill="#181213" fill-opacity="0.12"/>
+
+  <!-- Sculpted Ergonomic Bike/Scooter Seat Cover (Top-Down Studio Hero) -->
+  <g filter="url(#softShadow1)">
+    <!-- Outer Matte Black Bolster Shell -->
+    <path d="M300 132 C354 132 388 176 392 244 C396 308 380 358 386 426 C392 496 378 564 334 580 C316 586 284 586 266 580 C222 564 208 496 214 426 C220 358 204 308 208 244 C212 176 246 132 300 132 Z" fill="url(#seatBody1)" stroke="#3D434F" stroke-width="2.5"/>
+
+    <!-- Crimson Precision Piping Seam -->
+    <path d="M300 144 C346 144 376 184 380 248 C384 308 369 356 374 422 C379 486 367 550 328 565 C313 571 287 571 272 565 C233 550 221 486 226 422 C231 356 216 308 220 248 C224 184 254 144 300 144 Z" fill="none" stroke="#EF3142" stroke-width="2.6" stroke-opacity="0.88"/>
+
+    <!-- Center Crimson Diamond-Quilted Comfort Panel -->
+    <path d="M300 176 C338 176 355 210 356 265 C357 316 346 362 346 418 C346 468 358 512 332 536 C318 548 282 548 268 536 C242 512 254 468 254 418 C254 362 243 316 244 265 C245 210 262 176 300 176 Z" fill="url(#seatCenterRed)"/>
+    <g clip-path="url(#centerPanelClip1)">
+      <rect x="235" y="170" width="130" height="385" fill="url(#diamondQuilt1)"/>
+      <!-- Lumbar Sculpted Contour Line -->
+      <path d="M242 355 Q300 374 358 355" fill="none" stroke="#090808" stroke-opacity="0.48" stroke-width="5"/>
+      <path d="M242 359 Q300 378 358 359" fill="none" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="1.5"/>
+    </g>
+
+    <!-- Side Anti-Slip Ribbed Grip Accent -->
+    <g stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="2" stroke-linecap="round">
+      <line x1="224" y1="265" x2="238" y2="270"/>
+      <line x1="222" y1="282" x2="236" y2="287"/>
+      <line x1="221" y1="299" x2="235" y2="304"/>
+      <line x1="223" y1="316" x2="237" y2="321"/>
+      <line x1="376" y1="265" x2="362" y2="270"/>
+      <line x1="378" y1="282" x2="364" y2="287"/>
+      <line x1="379" y1="299" x2="365" y2="304"/>
+      <line x1="377" y1="316" x2="363" y2="321"/>
+    </g>
+
+    <!-- Glossy Leatherette Specular Reflection -->
+    <path d="M250 165 C284 150 326 154 352 178 C368 206 364 252 346 286 C318 242 276 232 238 258 C236 218 238 182 250 165 Z" fill="url(#seatHighlight)"/>
+  </g>
+
+  <!-- Floating Minimalist Vehicle Fitment Badges (Bike, Scooter, Toto Icons) -->
+  <!-- Left Card: Bike Icon -->
+  <g transform="translate(70, 232)">
+    <rect width="74" height="74" rx="22" fill="#141010" fill-opacity="0.82" stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="1.5"/>
+    <circle cx="23" cy="46" r="9" stroke="#FFFFFF" stroke-width="2.4"/>
+    <circle cx="51" cy="46" r="9" stroke="#FFFFFF" stroke-width="2.4"/>
+    <path d="M23 46 L33 31 L45 31 L51 46 M33 31 L39 46 H23 M42 26 H49" stroke="#FF4D58" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Right Card: Scooter Icon -->
+  <g transform="translate(456, 266)">
+    <rect width="74" height="74" rx="22" fill="#FFFFFF" fill-opacity="0.94" stroke="#E2E8F0" stroke-width="1.5"/>
+    <circle cx="24" cy="48" r="8" stroke="#0F172A" stroke-width="2.4"/>
+    <circle cx="51" cy="48" r="8" stroke="#0F172A" stroke-width="2.4"/>
+    <path d="M24 48 H42 L47 32 H40 M37 24 H44 L51 48 M20 38 H34 C37 38 39 40 39 43 V48" stroke="#E11D2E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Lower Left Card: Toto / E-Rickshaw Icon -->
+  <g transform="translate(88, 456)">
+    <rect width="72" height="72" rx="22" fill="#FFFFFF" fill-opacity="0.96" stroke="#E2E8F0" stroke-width="1.5"/>
+    <circle cx="24" cy="47" r="7" stroke="#0F172A" stroke-width="2.3"/>
+    <circle cx="48" cy="47" r="7" stroke="#0F172A" stroke-width="2.3"/>
+    <path d="M18 47 V27 C18 23 21 20 25 20 H44 C47 20 50 22 51 25 L54 39 V47 M18 35 H52 M36 20 V35" stroke="#E11D2E" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Lower Right Accent: Shield Check -->
+  <g transform="translate(448, 444)">
+    <rect width="72" height="72" rx="22" fill="#E11D2E"/>
+    <path d="M36 18 L51 24 V36 C51 46 44 53 36 56 C28 53 21 46 21 36 V24 L36 18 Z" fill="#FFFFFF" fill-opacity="0.18" stroke="#FFFFFF" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M29 36 L34 41 L44 30" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

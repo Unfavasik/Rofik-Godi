@@ -56,6 +56,7 @@ import {
   type VehicleCatalogModel,
   type VehicleCatalogType,
 } from '../lib/supabaseVehicleCatalog';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 export interface ProductSharePayload {
   title: string;
@@ -325,16 +326,16 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
 
   useEffect(() => {
     let active = true;
-    void loadVehicleModels().then(({ data }) => {
-      if (active) setCatalog(data);
-    });
     const refresh = () =>
-      void loadVehicleModels().then(({ data }) => {
+      loadVehicleModels().then(({ data }) => {
         if (active) setCatalog(data);
       });
+    void refresh();
+    const unsubscribePtr = subscribePullToRefresh(refresh);
     window.addEventListener(VEHICLE_CATALOG_CHANGED_EVENT, refresh);
     return () => {
       active = false;
+      unsubscribePtr();
       window.removeEventListener(VEHICLE_CATALOG_CHANGED_EVENT, refresh);
     };
   }, []);

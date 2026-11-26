@@ -1,11 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   classifyTouchDirection,
   computeDampedPullDistance,
   computePullProgress,
+  dispatchPullToRefresh,
   isPullThresholdMet,
   PULL_MAX_DISTANCE,
   PULL_TRIGGER_THRESHOLD,
+  subscribePullToRefresh,
 } from '../src/lib/pullToRefresh';
 
 describe('pullToRefresh helpers', () => {
@@ -38,5 +40,48 @@ describe('pullToRefresh helpers', () => {
     expect(classifyTouchDirection(24, 10)).toBe('scroll');
     expect(classifyTouchDirection(-20, 12)).toBe('scroll');
     expect(classifyTouchDirection(4, 18)).toBe('pull');
+  });
+
+  it('dispatches pull-to-refresh events and awaits all subscribed async loaders', async () => {
+    const listeners = new Set<EventListener>();
+    const mockWindow = {
+      addEventListener: (type: string, fn: EventListener) => {
+        if (type) listeners.add(fn);
+      },
+      removeEventListener: (_type: string, fn: EventListener) => {
+        listeners.delete(fn);
+      },
+      dispatchEvent: (event: Event) => {
+        listeners.forEach((fn) => fn(event));
+        return true;
+      },
+      setTimeout: globalThis.setTimeout.bind(globalThis),
+    };
+    vi.stubGlobal('window', mockWindow);
+    try {
+      let resolvedFirst = false;
+      let resolvedSecond = false;
+      const unsub1 = subscribePullToRefresh(async () => {
+        await new Promise((r) => setTimeout(r, 15));
+        resolvedFirst = true;
+      });
+      const unsub2 = subscribePullToRefresh(async () => {
+        await new Promise((r) => setTimeout(r, 10));
+        resolvedSecond = true;
+        throw new Error('non-fatal loader failure');
+      });
+
+      await dispatchPullToRefresh(500);
+      expect(resolvedFirst).toBe(true);
+      expect(resolvedSecond).toBe(true);
+
+      unsub1();
+      unsub2();
+      resolvedFirst = false;
+      await dispatchPullToRefresh(500);
+      expect(resolvedFirst).toBe(false);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

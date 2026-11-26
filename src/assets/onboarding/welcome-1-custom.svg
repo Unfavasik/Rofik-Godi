@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" fill="none">
+  <defs>
+    <linearGradient id="wbBg" x1="300" y1="0" x2="300" y2="800" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3E010C"/>
+      <stop offset="45%" stop-color="#770216"/>
+      <stop offset="100%" stop-color="#770216"/>
+    </linearGradient>
+    <radialGradient id="wbHalo" cx="50%" cy="36%" r="44%">
+      <stop offset="0%" stop-color="#FF6F88" stop-opacity="0.45"/>
+      <stop offset="55%" stop-color="#D9232D" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#770216" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wbPhone" x1="190" y1="140" x2="410" y2="540" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E181B"/>
+      <stop offset="100%" stop-color="#0D0A0C"/>
+    </linearGradient>
+    <pattern id="wbQuilt" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M10 0 L20 10 L10 20 L0 10 Z" fill="none" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="1"/>
+    </pattern>
+    <filter id="wbShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="24" stdDeviation="20" flood-color="#290007" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+
+  <rect width="600" height="800" fill="url(#wbBg)"/>
+  <circle cx="300" cy="295" r="250" fill="url(#wbHalo)"/>
+  <circle cx="115" cy="180" r="64" fill="#FF8FA3" fill-opacity="0.1"/>
+  <circle cx="495" cy="220" r="82" fill="#FDE68A" fill-opacity="0.08"/>
+
+  <!-- Sleek Dark Smartphone Showcase Card -->
+  <g filter="url(#wbShadow)">
+    <rect x="176" y="128" width="248" height="432" rx="42" fill="url(#wbPhone)" stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="2.5"/>
+    <!-- Dynamic Island -->
+    <rect x="262" y="148" width="76" height="18" rx="9" fill="#050405"/>
+    <!-- Inner Rider Profile & Seat Preview -->
+    <rect x="198" y="186" width="204" height="172" rx="26" fill="#2A1116" stroke="#FF6F88" stroke-opacity="0.3" stroke-width="1.5"/>
+    <!-- Mini Quilted Seat Silhouette Inside App Screen -->
+    <path d="M300 204 C328 204 344 226 346 260 C348 294 338 328 318 338 C306 342 294 342 282 338 C262 328 252 294 254 260 C256 226 272 204 300 204 Z" fill="#E11D2E"/>
+    <path d="M300 204 C328 204 344 226 346 260 C348 294 338 328 318 338 C306 342 294 342 282 338 C262 328 252 294 254 260 C256 226 272 204 300 204 Z" fill="url(#wbQuilt)"/>
+    <!-- Saved Ride Status Rows -->
+    <rect x="198" y="378" width="204" height="58" rx="18" fill="#FFFFFF" fill-opacity="0.1"/>
+    <circle cx="228" cy="407" r="14" fill="#FF4D58"/>
+    <path d="M222 407 L226 411 L235 402" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="254" y="396" width="112" height="9" rx="4.5" fill="#FFFFFF" fill-opacity="0.88"/>
+    <rect x="254" y="413" width="76" height="7" rx="3.5" fill="#FFFFFF" fill-opacity="0.45"/>
+
+    <rect x="198" y="452" width="204" height="58" rx="18" fill="#FFFFFF" fill-opacity="0.07"/>
+    <circle cx="228" cy="481" r="14" fill="#FFFFFF" fill-opacity="0.18"/>
+    <rect x="254" y="470" width="96" height="9" rx="4.5" fill="#FFFFFF" fill-opacity="0.72"/>
+    <rect x="254" y="487" width="64" height="7" rx="3.5" fill="#FFFFFF" fill-opacity="0.38"/>
+  </g>
+
+  <!-- Floating Warm Key / Sign-In Badge -->
+  <g transform="translate(388, 212)" filter="url(#wbShadow)">
+    <rect width="84" height="84" rx="26" fill="#FFFFFF"/>
+    <circle cx="42" cy="34" r="13" stroke="#E11D2E" stroke-width="4"/>
+    <path d="M24 62 C26 51 33 47 42 47 C51 47 58 51 60 62" stroke="#0F172A" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -10,6 +10,7 @@ import {
   type ReviewFilterMode,
   type ReviewRatingFilter,
 } from '../lib/supabaseReviews';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 interface CustomerReviewsProps {
   onOpenOrderHistory?: () => void;
@@ -31,7 +32,17 @@ export const CustomerReviews: React.FC<CustomerReviewsProps> = ({
 
   useEffect(() => {
     if (initialReviews !== undefined) return;
-    void listPublishedReviews(undefined, 24).then(setReviews);
+    let active = true;
+    const refreshReviews = () =>
+      listPublishedReviews(undefined, 24).then((rows) => {
+        if (active) setReviews(rows);
+      });
+    void refreshReviews();
+    const unsubscribePtr = subscribePullToRefresh(refreshReviews);
+    return () => {
+      active = false;
+      unsubscribePtr();
+    };
   }, [initialReviews]);
 
   const displayedReviews = useMemo(

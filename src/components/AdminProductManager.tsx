@@ -34,6 +34,7 @@ import {
   type NotificationAudience,
 } from './NotificationAudiencePicker';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 import { AdminProductColorEditor } from './AdminProductColorEditor';
 import {
   DEFAULT_INSTALLATION,
@@ -205,8 +206,10 @@ export const AdminProductManager: React.FC<{
   useEffect(() => {
     const hasWarmData = initialProducts !== undefined || readSwrCache('admin:products') !== undefined;
     void loadProducts(hasWarmData);
+    const unsubscribePtr = subscribePullToRefresh(() => loadProducts(true));
     return () => {
       loadRequestRef.current += 1;
+      unsubscribePtr();
     };
   }, [initialProducts, loadProducts]);
   useEffect(() => {

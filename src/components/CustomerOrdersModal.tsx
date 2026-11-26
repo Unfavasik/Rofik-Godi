@@ -37,6 +37,7 @@ import { formatInr, useI18n, type TranslationKey } from '../lib/i18n';
 import type { PreferredLanguage } from '../lib/customerPreferences';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 interface CustomerOrdersModalProps {
   orders: CustomerOrderRecord[];
@@ -122,20 +123,26 @@ const OrderTimeline = ({ orderId, status, createdAt }: { orderId: string; status
       setHistoryLoading(true);
     }
     setHistoryError(false);
-    void listMyOrderStatusHistory(orderId)
-      .then((rows) => {
-        if (active) {
-          setHistory(rows);
-          writeSwrCache(historyCacheKey, rows);
-        }
-      })
-      .catch(() => {
-        if (active && cached === undefined) setHistoryError(true);
-      })
-      .finally(() => {
-        if (active) setHistoryLoading(false);
-      });
-    return () => { active = false; };
+    const refreshHistory = () =>
+      listMyOrderStatusHistory(orderId)
+        .then((rows) => {
+          if (active) {
+            setHistory(rows);
+            writeSwrCache(historyCacheKey, rows);
+          }
+        })
+        .catch(() => {
+          if (active && cached === undefined) setHistoryError(true);
+        })
+        .finally(() => {
+          if (active) setHistoryLoading(false);
+        });
+    void refreshHistory();
+    const unsubscribePtr = subscribePullToRefresh(refreshHistory);
+    return () => {
+      active = false;
+      unsubscribePtr();
+    };
   }, [historyCacheKey, orderId, status]);
 
   const steps = getCustomerOrderTimeline(status, createdAt, history);
@@ -213,15 +220,19 @@ export const CustomerOrdersModal: React.FC<CustomerOrdersModalProps> = ({ orders
     if (!onRefresh) return;
     let refreshing = false;
     const refresh = () => {
-      if (refreshing || document.visibilityState === 'hidden') return;
+      if (refreshing || document.visibilityState === 'hidden') return Promise.resolve();
       refreshing = true;
-      void Promise.resolve(onRefresh()).catch(() => undefined).finally(() => { refreshing = false; });
+      return Promise.resolve(onRefresh())
+        .catch(() => undefined)
+        .finally(() => { refreshing = false; });
     };
-    const interval = window.setInterval(refresh, 20000);
+    const interval = window.setInterval(() => void refresh(), 20000);
     window.addEventListener('focus', refresh);
+    const unsubscribePtr = subscribePullToRefresh(() => Promise.resolve(onRefresh()));
     return () => {
       window.clearInterval(interval);
       window.removeEventListener('focus', refresh);
+      unsubscribePtr();
     };
   }, [onRefresh]);
 

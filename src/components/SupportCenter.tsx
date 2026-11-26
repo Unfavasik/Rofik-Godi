@@ -22,6 +22,7 @@ import { SupportConversation } from './SupportConversation';
 import { SupportTicketListSkeleton } from './AccountPageSkeleton';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 type StatusFilter = 'all' | 'open' | 'in_progress' | 'resolved';
 
@@ -137,6 +138,7 @@ export const SupportCenter: React.FC<{
       setLoading(false);
     }
     void refresh(Boolean(cached));
+    return subscribePullToRefresh(() => refresh(true));
   }, [cacheKey, refresh]);
 
   useEffect(() => {

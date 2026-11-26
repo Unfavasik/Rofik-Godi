@@ -32,7 +32,7 @@ type Slide = {
 const SLIDES: Slide[] = [
   {
     image: welcome1,
-    alt: "Boy relaxing on a bean bag, smiling at his phone",
+    alt: "Rider relaxing in a red beanbag checking Rofik Godi app on phone",
     theme: "dark",
     title: "Welcome",
     accent: "Back!",
@@ -41,7 +41,7 @@ const SLIDES: Slide[] = [
   },
   {
     image: welcome2,
-    alt: "Boy at a laptop, thinking with a pen in hand",
+    alt: "Rider setting up an account on laptop with bright ideas and checklist icons",
     theme: "light",
     title: "Create Your",
     accent: "Account",
@@ -51,7 +51,7 @@ const SLIDES: Slide[] = [
   },
   {
     image: welcome3,
-    alt: "Boy winking with a thumbs up, holding a phone",
+    alt: "Smiling rider giving thumbs up with phone and verified checkmark",
     theme: "light",
     title: "You’re",
     accent: "All Set!",
@@ -150,6 +150,7 @@ export default function RofikOnboarding({ onFinish }: Props) {
             <img
               src={s.image}
               alt={s.alt}
+              referrerPolicy="no-referrer"
               draggable={false}
               loading={k === i ? "eager" : "lazy"}
               decoding="async"

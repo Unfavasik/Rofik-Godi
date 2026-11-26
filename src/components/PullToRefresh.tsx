@@ -30,6 +30,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   const prefersReducedMotion = useReducedMotion();
   const [phase, setPhase] = useState<PullToRefreshPhase>('idle');
   const [pullDistance, setPullDistance] = useState(0);
+  const [refreshedCount, setRefreshedCount] = useState(0);
 
   const onRefreshRef = useRef(onRefresh);
   onRefreshRef.current = onRefresh;
@@ -44,6 +45,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   const activeRef = useRef(false);
   const lockRef = useRef<'pending' | 'pull' | 'scroll'>('pending');
   const crossedThresholdRef = useRef(false);
+  const minSpinnerTimerRef = useRef<number | null>(null);
   const doneTimerRef = useRef<number | null>(null);
 
   const updatePhase = (next: PullToRefreshPhase) => {
@@ -165,7 +167,12 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
           .finally(() => {
             const elapsed = Date.now() - startedAt;
             const remaining = Math.max(0, MIN_REFRESH_SPINNER_MS - elapsed);
-            window.setTimeout(() => {
+            if (minSpinnerTimerRef.current !== null) {
+              window.clearTimeout(minSpinnerTimerRef.current);
+            }
+            minSpinnerTimerRef.current = window.setTimeout(() => {
+              minSpinnerTimerRef.current = null;
+              setRefreshedCount((count) => count + 1);
               updatePhase('done');
               triggerHaptic(8);
               if (doneTimerRef.current !== null) {
@@ -194,6 +201,9 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('touchcancel', handleTouchEnd);
+      if (minSpinnerTimerRef.current !== null) {
+        window.clearTimeout(minSpinnerTimerRef.current);
+      }
       if (doneTimerRef.current !== null) {
         window.clearTimeout(doneTimerRef.current);
       }
@@ -204,7 +214,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   const isVisible = phase !== 'idle' && (pullDistance > 6 || phase === 'refreshing' || phase === 'done');
   const translateY =
     phase === 'refreshing' || phase === 'done'
-      ? 14
+      ? 18
       : Math.max(-44, Math.min(34, pullDistance * 0.52 - 22));
   const strokeDashoffset = RING_CIRCUMFERENCE * (1 - (phase === 'refreshing' || phase === 'done' ? 1 : progress));
 
@@ -221,9 +231,27 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     <div
       data-testid="pull-to-refresh-indicator"
       data-ptr-state={phase}
+      data-ptr-refreshed-count={refreshedCount}
       aria-live="polite"
       className="pointer-events-none fixed inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-[90] flex justify-center px-4"
     >
+      {phase === 'refreshing' && (
+        <div
+          aria-hidden="true"
+          className="fixed inset-x-0 top-0 z-[91] h-[2.5px] overflow-hidden bg-white/10"
+        >
+          <motion.div
+            initial={{ x: '-100%' }}
+            animate={prefersReducedMotion ? { x: '0%' } : { x: ['-100%', '100%'] }}
+            transition={
+              prefersReducedMotion
+                ? { duration: 0.2 }
+                : { repeat: Infinity, duration: 1.05, ease: 'easeInOut' }
+            }
+            className="h-full w-1/2 rounded-full bg-gradient-to-r from-transparent via-[#FF4D58] to-rose-300 shadow-[0_0_10px_rgba(255,77,88,0.85)]"
+          />
+        </div>
+      )}
       <AnimatePresence>
         {isVisible && (
           <motion.div

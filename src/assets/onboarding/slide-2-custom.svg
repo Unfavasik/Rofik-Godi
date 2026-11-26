@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" fill="none">
+  <defs>
+    <linearGradient id="bg2" x1="300" y1="0" x2="300" y2="800" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FBF3F0"/>
+      <stop offset="52%" stop-color="#F7ECE8"/>
+      <stop offset="100%" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <radialGradient id="archGlow2" cx="50%" cy="38%" r="48%">
+      <stop offset="0%" stop-color="#E11D2E" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#E11D2E" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="carbonGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4A515E"/>
+      <stop offset="55%" stop-color="#22262E"/>
+      <stop offset="100%" stop-color="#111318"/>
+    </linearGradient>
+    <linearGradient id="redHeroGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F03040"/>
+      <stop offset="52%" stop-color="#CA1222"/>
+      <stop offset="100%" stop-color="#870B16"/>
+    </linearGradient>
+    <linearGradient id="tanGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D4955F"/>
+      <stop offset="55%" stop-color="#A86834"/>
+      <stop offset="100%" stop-color="#6B3C17"/>
+    </linearGradient>
+    <pattern id="gridPat2" width="18" height="18" patternUnits="userSpaceOnUse">
+      <path d="M9 0 L18 9 L9 18 L0 9 Z" fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="1"/>
+    </pattern>
+    <filter id="cardShadow2" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="18" stdDeviation="14" flood-color="#171214" flood-opacity="0.22"/>
+    </filter>
+    <clipPath id="heroSeatClip2">
+      <path d="M300 165 C342 165 368 198 370 254 C372 308 360 352 364 410 C368 468 356 520 322 532 C308 536 292 536 278 532 C244 520 232 468 236 410 C240 352 228 308 230 254 C232 198 258 165 300 165 Z"/>
+    </clipPath>
+  </defs>
+
+  <rect width="600" height="800" fill="url(#bg2)"/>
+  <circle cx="300" cy="310" r="270" fill="url(#archGlow2)"/>
+
+  <!-- Architectural Studio Arch -->
+  <path d="M115 620 V290 C115 188 198 105 300 105 C402 105 485 188 485 290 V620 Z" fill="#FFFFFF" fill-opacity="0.72" stroke="#FFFFFF" stroke-width="2"/>
+
+  <!-- Left Seat Cover: Carbon-Grey & Neon-Lime Sport (Tilted -12deg) -->
+  <g transform="translate(152, 365) rotate(-13)" filter="url(#cardShadow2)">
+    <path d="M0 -158 C34 -158 56 -130 58 -84 C60 -36 50 4 54 52 C58 102 48 144 20 154 C8 158 -8 158 -20 154 C-48 144 -58 102 -54 52 C-50 4 -60 -36 -58 -84 C-56 -130 -34 -158 0 -158 Z" fill="url(#carbonGrad)" stroke="#5B6474" stroke-width="2"/>
+    <!-- Neon-Lime Racing Stripes -->
+    <path d="M-36 -92 L-16 -22 L-30 78" stroke="#A3E635" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M36 -92 L16 -22 L30 78" stroke="#A3E635" stroke-width="4.5" stroke-linecap="round"/>
+    <!-- Center Ribbed Treads -->
+    <g stroke="#FFFFFF" stroke-opacity="0.24" stroke-width="2.5" stroke-linecap="round">
+      <line x1="-18" y1="-98" x2="18" y2="-98"/>
+      <line x1="-22" y1="-76" x2="22" y2="-76"/>
+      <line x1="-22" y1="-54" x2="22" y2="-54"/>
+      <line x1="-18" y1="-32" x2="18" y2="-32"/>
+      <line x1="-20" y1="22" x2="20" y2="22"/>
+      <line x1="-22" y1="44" x2="22" y2="44"/>
+      <line x1="-20" y1="66" x2="20" y2="66"/>
+    </g>
+  </g>
+
+  <!-- Right Seat Cover: Classic Saddle-Tan Quilted Heritage (Tilted +12deg) -->
+  <g transform="translate(448, 365) rotate(13)" filter="url(#cardShadow2)">
+    <path d="M0 -158 C34 -158 56 -130 58 -84 C60 -36 50 4 54 52 C58 102 48 144 20 154 C8 158 -8 158 -20 154 C-48 144 -58 102 -54 52 C-50 4 -60 -36 -58 -84 C-56 -130 -34 -158 0 -158 Z" fill="url(#tanGrad)" stroke="#E5B382" stroke-width="2"/>
+    <!-- Classic Tuck-and-Roll Horizontal Pleats -->
+    <g stroke="#522B0D" stroke-opacity="0.45" stroke-width="3" stroke-linecap="round">
+      <line x1="-36" y1="-102" x2="36" y2="-102"/>
+      <line x1="-42" y1="-76" x2="42" y2="-76"/>
+      <line x1="-42" y1="-50" x2="42" y2="-50"/>
+      <line x1="-38" y1="-24" x2="38" y2="-24"/>
+      <line x1="-38" y1="2" x2="38" y2="2"/>
+      <line x1="-40" y1="28" x2="40" y2="28"/>
+      <line x1="-40" y1="54" x2="40" y2="54"/>
+      <line x1="-36" y1="80" x2="36" y2="80"/>
+      <line x1="-30" y1="106" x2="30" y2="106"/>
+    </g>
+    <g stroke="#FCE0C1" stroke-opacity="0.34" stroke-width="1.2" stroke-linecap="round">
+      <line x1="-34" y1="-99" x2="34" y2="-99"/>
+      <line x1="-40" y1="-73" x2="40" y2="-73"/>
+      <line x1="-40" y1="-47" x2="40" y2="-47"/>
+      <line x1="-36" y1="-21" x2="36" y2="-21"/>
+      <line x1="-36" y1="5" x2="36" y2="5"/>
+      <line x1="-38" y1="31" x2="38" y2="31"/>
+      <line x1="-38" y1="57" x2="38" y2="57"/>
+    </g>
+  </g>
+
+  <!-- Center Hero Seat Cover: Dual-Tone Apex Red & Black -->
+  <g filter="url(#cardShadow2)">
+    <path d="M300 142 C350 142 380 180 383 242 C386 302 372 348 377 412 C382 478 369 536 330 550 C313 556 287 556 270 550 C231 536 218 478 223 412 C228 348 214 302 217 242 C220 180 250 142 300 142 Z" fill="#14171D" stroke="#313744" stroke-width="2.5"/>
+    <g clip-path="url(#heroSeatClip2)">
+      <!-- Upper Red Diamond Zone -->
+      <rect x="220" y="155" width="160" height="202" fill="url(#redHeroGrad)"/>
+      <!-- Lower Matte Black Quilted Zone -->
+      <rect x="220" y="357" width="160" height="190" fill="#1D2129"/>
+      <!-- Diamond Grid Overlay -->
+      <rect x="220" y="155" width="160" height="390" fill="url(#gridPat2)"/>
+      <!-- Sculpted Mid Divider -->
+      <path d="M225 352 Q300 376 375 352" fill="none" stroke="#090808" stroke-width="6"/>
+      <path d="M225 356 Q300 380 375 356" fill="none" stroke="#EF3142" stroke-width="2"/>
+    </g>
+    <!-- Glossy Top Highlight -->
+    <ellipse cx="300" cy="212" rx="44" ry="26" fill="#FFFFFF" fill-opacity="0.16"/>
+  </g>
+
+  <!-- Floating Tactile Material Swatches Bar -->
+  <g transform="translate(154, 594)">
+    <rect width="292" height="62" rx="31" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1.5"/>
+    <!-- Swatch 1: Obsidian Black -->
+    <circle cx="46" cy="31" r="17" fill="#16181E" stroke="#E11D2E" stroke-width="3"/>
+    <!-- Swatch 2: Racing Red -->
+    <circle cx="104" cy="31" r="15" fill="#E11D2E"/>
+    <!-- Swatch 3: Saddle Tan -->
+    <circle cx="160" cy="31" r="15" fill="#B8733B"/>
+    <!-- Swatch 4: Carbon Grey -->
+    <circle cx="216" cy="31" r="15" fill="#475569"/>
+    <!-- Swatch 5: Volt Accent -->
+    <circle cx="256" cy="31" r="10" fill="#A3E635"/>
+  </g>
+</svg>

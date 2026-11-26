@@ -33,6 +33,7 @@ import { NewProductNotificationDetails } from './NewProductNotificationDetails';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { SupportNotificationDetails } from './SupportNotificationDetails';
 import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 import {
   getCustomerNotificationCategory,
   getNotificationRowSurfaceClass,
@@ -224,34 +225,41 @@ export function NotificationsView({
       }
       setOrderLookupReady(true);
     }, 15000);
-    void Promise.all([listMyNotifications(userId), listMyOrders(userId)]).then(([rows, orders]) => {
-      if (!active) return;
-      window.clearTimeout(timeoutId);
-      const ordersByNumber = new Map(orders.map((order) => [order.order_number.toUpperCase(), order]));
-      const enrichedRows = (rows as NotificationItem[]).map((item) => {
-        const orderNumber = getNotificationOrderNumber(`${item.title} ${item.body} ${item.action_url || ''}`);
-        const orderRecord = orderNumber ? ordersByNumber.get(orderNumber.toUpperCase()) || null : null;
-        const firstProductImage = orderRecord?.order_items.find((orderItem) => orderItem.image_url)?.image_url;
-        return { ...item, orderNumber, orderRecord, image_url: item.image_url || firstProductImage || null };
-      });
-      setItems((current) => {
-        const byId = new Map<string, NotificationItem>(enrichedRows.map((item) => [item.id, item] as const));
-        for (const item of current) {
-          if (liveNotificationIdsRef.current.has(item.id) && !byId.has(item.id)) byId.set(item.id, item);
+    const fetchNotifications = () =>
+      Promise.all([listMyNotifications(userId), listMyOrders(userId)]).then(([rows, orders]) => {
+        if (!active) return;
+        window.clearTimeout(timeoutId);
+        const ordersByNumber = new Map(orders.map((order) => [order.order_number.toUpperCase(), order]));
+        const enrichedRows = (rows as NotificationItem[]).map((item) => {
+          const orderNumber = getNotificationOrderNumber(`${item.title} ${item.body} ${item.action_url || ''}`);
+          const orderRecord = orderNumber ? ordersByNumber.get(orderNumber.toUpperCase()) || null : null;
+          const firstProductImage = orderRecord?.order_items.find((orderItem) => orderItem.image_url)?.image_url;
+          return { ...item, orderNumber, orderRecord, image_url: item.image_url || firstProductImage || null };
+        });
+        setItems((current) => {
+          const byId = new Map<string, NotificationItem>(enrichedRows.map((item) => [item.id, item] as const));
+          for (const item of current) {
+            if (liveNotificationIdsRef.current.has(item.id) && !byId.has(item.id)) byId.set(item.id, item);
+          }
+          return [...byId.values()].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, 50);
+        });
+      }).catch((error) => {
+        window.clearTimeout(timeoutId);
+        if (active && cachedRows.length === 0) setLoadError(error instanceof Error ? error.message : 'Your notifications could not be loaded.');
+      }).finally(() => {
+        window.clearTimeout(timeoutId);
+        if (active) {
+          setLoading(false);
+          setOrderLookupReady(true);
         }
-        return [...byId.values()].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, 50);
       });
-    }).catch((error) => {
+    void fetchNotifications();
+    const unsubscribePtr = subscribePullToRefresh(fetchNotifications);
+    return () => {
+      active = false;
       window.clearTimeout(timeoutId);
-      if (active && cachedRows.length === 0) setLoadError(error instanceof Error ? error.message : 'Your notifications could not be loaded.');
-    }).finally(() => {
-      window.clearTimeout(timeoutId);
-      if (active) {
-        setLoading(false);
-        setOrderLookupReady(true);
-      }
-    });
-    return () => { active = false; window.clearTimeout(timeoutId); };
+      unsubscribePtr();
+    };
   }, [userId, isGuest, loadAttempt]);
 
   useEffect(() => {
@@ -318,18 +326,24 @@ export function NotificationsView({
       setCouponDetailsLoading(true);
     }
     setCouponDetailsError('');
-    void loadCustomerCouponOffers().then(({ data, error }) => {
-      if (!active) return;
-      if (!error) writeSwrCache('public:customer-coupons', data);
-      const matchedOffer = getCouponOfferForNotification(selectedNotification, data);
-      setCouponOffer(matchedOffer);
-      setCouponDetailsError(error || (matchedOffer ? '' : 'This coupon is no longer active or its details are unavailable.'));
-    }).catch(() => {
-      if (active && cachedOffers === undefined) setCouponDetailsError('Coupon details could not be loaded. Please try again.');
-    }).finally(() => {
-      if (active) setCouponDetailsLoading(false);
-    });
-    return () => { active = false; };
+    const fetchCouponDetails = () =>
+      loadCustomerCouponOffers().then(({ data, error }) => {
+        if (!active) return;
+        if (!error) writeSwrCache('public:customer-coupons', data);
+        const matchedOffer = getCouponOfferForNotification(selectedNotification, data);
+        setCouponOffer(matchedOffer);
+        setCouponDetailsError(error || (matchedOffer ? '' : 'This coupon is no longer active or its details are unavailable.'));
+      }).catch(() => {
+        if (active && cachedOffers === undefined) setCouponDetailsError('Coupon details could not be loaded. Please try again.');
+      }).finally(() => {
+        if (active) setCouponDetailsLoading(false);
+      });
+    void fetchCouponDetails();
+    const unsubscribePtr = subscribePullToRefresh(fetchCouponDetails);
+    return () => {
+      active = false;
+      unsubscribePtr();
+    };
   }, [selectedNotification]);
 
   const enabledItems = useMemo(

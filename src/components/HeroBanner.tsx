@@ -11,6 +11,7 @@ import {
 } from '../lib/supabaseBanners';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { VIGNETTE_FADE_STAGE_CLASS } from './VignetteBarBackdrop';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 interface HeroBannerProps {
   onExploreClick: () => void;
@@ -72,8 +73,12 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   useEffect(() => {
     if (initialBanners !== undefined) return;
     let active = true;
-    const refreshBanners = () => {
-      void loadActiveStorefrontBanners().then(({ data }) => {
+    const refreshBanners = (forceClear = false) => {
+      if (forceClear) {
+        cachedStorefrontBanners = null;
+        setScheduleNow(new Date());
+      }
+      return loadActiveStorefrontBanners().then(({ data }) => {
         if (active) {
           cachedStorefrontBanners = data;
           setSlides(data);
@@ -81,21 +86,22 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
         }
       });
     };
-    refreshBanners();
+    void refreshBanners();
     const onBannersChanged = () => {
-      setScheduleNow(new Date());
-      refreshBanners();
+      void refreshBanners(true);
     };
     if (typeof window !== 'undefined') {
       window.addEventListener(STOREFRONT_BANNERS_CHANGED_EVENT, onBannersChanged);
     }
+    const unsubscribePtr = subscribePullToRefresh(() => refreshBanners(true));
     const poll = setInterval(() => {
       setScheduleNow(new Date());
-      refreshBanners();
+      void refreshBanners();
     }, 60_000);
     return () => {
       active = false;
       clearInterval(poll);
+      unsubscribePtr();
       if (typeof window !== 'undefined') {
         window.removeEventListener(STOREFRONT_BANNERS_CHANGED_EVENT, onBannersChanged);
       }

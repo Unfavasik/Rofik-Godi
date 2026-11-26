@@ -22,21 +22,21 @@ type Slide = { image: string; alt: string; title: string; text: string; cta: str
 const SLIDES: Slide[] = [
   {
     image: slide1,
-    alt: "Boy on a scooter browsing seat covers on his phone",
+    alt: "Rider sitting on a white scooter checking seat covers on phone",
     title: "Find the Perfect Seat Cover",
     text: "Explore premium seat covers for bikes and totos with ease.",
     cta: "Get Started",
   },
   {
     image: slide2,
-    alt: "Boy pointing at different seat cover designs",
+    alt: "Rider showcasing different quilted seat cover designs and color options",
     title: "View Different Designs",
     text: "Check various seat cover designs, colors and materials.",
     cta: "Next",
   },
   {
     image: slide3,
-    alt: "Boy giving a thumbs up beside a quilted seat cover",
+    alt: "Smiling rider giving thumbs up beside a fitted quilted scooter seat cover with verified checkmark",
     title: "Reliable Quality & Service",
     text: "Get durable seat covers with the best quality and support.",
     cta: "Start Now",
@@ -129,11 +129,12 @@ export default function Onboarding({ onFinish }: Props) {
               <img
                 src={s.image}
                 alt={s.alt}
+                referrerPolicy="no-referrer"
                 draggable={false}
                 loading={k === i ? "eager" : "lazy"}
                 decoding="async"
                 fetchPriority={k === i ? "high" : "low"}
-                className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[50%_35%]"
+                className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[50%_42%]"
               />
             </div>
           ))}

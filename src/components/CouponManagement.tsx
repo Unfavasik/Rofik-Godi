@@ -40,6 +40,7 @@ import {
 import { loadAdminCustomers, type AdminCustomer } from '../lib/supabaseAdmin';
 import { ConfirmDialog } from './ConfirmDialog';
 import { invalidateSwrCache, readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 const IST = 'Asia/Kolkata';
 const categories = [
@@ -165,6 +166,7 @@ export const CouponManagement: React.FC<{
 
   useEffect(() => {
     void refresh(readSwrCache('admin:coupons') !== undefined);
+    return subscribePullToRefresh(() => refresh(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -84,6 +84,7 @@ import { supabase } from '../lib/supabase';
 import { getOrderStatusLabel, isOrderComplete } from '../lib/orderPresentation';
 import { getAdminCouponIdFromPath, getAdminCustomerIdFromPath, getAdminOrderIdFromPath, getAdminProductIdFromPath, getAdminSectionFromPath, getAdminSupportRequestIdFromPath, getAdminVehicleModelIdFromPath, getPathForAdminCoupon, getPathForAdminCustomer, getPathForAdminOrder, getPathForAdminProduct, getPathForAdminSection, isAdminNotificationComposePath, type AdminSectionRoute } from '../lib/appRoutes';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 type AdminWorkspaceCache = {
   orders: AdminOrderRecord[];
@@ -363,7 +364,11 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
     }
     void refresh();
     const refreshTimer = window.setInterval(() => void refresh(), 30_000);
-    return () => window.clearInterval(refreshTimer);
+    const unsubscribePtr = subscribePullToRefresh(() => refresh());
+    return () => {
+      window.clearInterval(refreshTimer);
+      unsubscribePtr();
+    };
   }, [adminUserId, refresh]);
   useEffect(() => {
     if (!supabase) return;
@@ -2514,10 +2519,15 @@ function SettingsAdmin({
   const [saving, setSaving] = useState(false);
   const [adminEmail, setAdminEmail] = useState('');
   useEffect(() => {
-    void loadAdminSettings().then((result) => {
-      if (result.data) setSettings((current) => ({ ...current, ...result.data }));
-    });
-    void supabase?.auth.getUser().then(({ data }) => setAdminEmail(data.user?.email || ''));
+    const syncAdminSettings = () =>
+      Promise.all([
+        loadAdminSettings().then((result) => {
+          if (result.data) setSettings((current) => ({ ...current, ...result.data }));
+        }),
+        supabase?.auth.getUser().then(({ data }) => setAdminEmail(data.user?.email || '')) ?? Promise.resolve(),
+      ]);
+    void syncAdminSettings();
+    return subscribePullToRefresh(syncAdminSettings);
   }, []);
   const save = async () => {
     setSaving(true);

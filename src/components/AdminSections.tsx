@@ -43,6 +43,7 @@ import {
 } from '../lib/supabaseBanners';
 import { AdminNotificationComposer } from './AdminNotificationComposer';
 import { BannerLinkPicker } from './BannerLinkPicker';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 import { ConfirmDialog } from './ConfirmDialog';
 import { AdminBannerGridSkeleton } from './AccountPageSkeleton';
 import { UploadProgressBar } from './UploadProgressBar';
@@ -225,19 +226,23 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
     } else {
       setLoading(true);
     }
-    void loadAdminJsonSetting<StoreBanner[]>('store_banners', []).then((result) => {
-      if (!active) return;
-      if (result.error) {
-        if (cached === undefined) notify('Could not load banner settings. Verify your admin access and database migration.');
-      } else {
-        const nextBanners = Array.isArray(result.data) ? result.data : [];
-        setBanners(nextBanners);
-        writeSwrCache('admin:banners', nextBanners);
-      }
-      setLoading(false);
-    });
+    const fetchBanners = () =>
+      loadAdminJsonSetting<StoreBanner[]>('store_banners', []).then((result) => {
+        if (!active) return;
+        if (result.error) {
+          if (cached === undefined) notify('Could not load banner settings. Verify your admin access and database migration.');
+        } else {
+          const nextBanners = Array.isArray(result.data) ? result.data : [];
+          setBanners(nextBanners);
+          writeSwrCache('admin:banners', nextBanners);
+        }
+        setLoading(false);
+      });
+    void fetchBanners();
+    const unsubscribePtr = subscribePullToRefresh(fetchBanners);
     return () => {
       active = false;
+      unsubscribePtr();
     };
   }, [notify]);
 
@@ -1396,6 +1401,7 @@ export function NotificationsView({
 
   useEffect(() => {
     void refreshCampaigns(readSwrCache('admin:campaigns') !== undefined);
+    return subscribePullToRefresh(() => refreshCampaigns(true));
   }, [refreshCampaigns]);
 
   const handledFocusId = useRef<string | null>(null);

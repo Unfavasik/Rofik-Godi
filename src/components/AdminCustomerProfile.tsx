@@ -31,6 +31,7 @@ import { matchesAdminOrderToCustomer, type AdminOrderRecord } from '../lib/supab
 import { PRODUCTS } from '../data/products';
 import type { Product } from '../types';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 type CustomerProfileTab = 'orders' | 'details' | 'notes';
 type CustomerNoteCategory = 'Important' | 'Delivery' | 'Payment' | 'Call' | 'General';
@@ -233,26 +234,30 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
       setNotesLoading(true);
     }
     setNotesError('');
-    void loadAdminJsonSetting<unknown>('admin_customer_notes', {})
-      .then(({ data, error }) => {
-        if (!active) return;
-        const normalized = normalizeNotes(data);
-        setNotesByCustomer(normalized);
-        if (!error) writeSwrCache('admin:customer-notes', normalized);
-        setNotesError(error?.message || '');
-        setNotesLoading(false);
-      })
-      .catch((error: unknown) => {
-        if (!active) return;
-        if (cached === undefined) {
-          setNotesError(
-            error instanceof Error ? error.message : 'Customer notes could not be loaded.',
-          );
-        }
-        setNotesLoading(false);
-      });
+    const fetchNotes = () =>
+      loadAdminJsonSetting<unknown>('admin_customer_notes', {})
+        .then(({ data, error }) => {
+          if (!active) return;
+          const normalized = normalizeNotes(data);
+          setNotesByCustomer(normalized);
+          if (!error) writeSwrCache('admin:customer-notes', normalized);
+          setNotesError(error?.message || '');
+          setNotesLoading(false);
+        })
+        .catch((error: unknown) => {
+          if (!active) return;
+          if (cached === undefined) {
+            setNotesError(
+              error instanceof Error ? error.message : 'Customer notes could not be loaded.',
+            );
+          }
+          setNotesLoading(false);
+        });
+    void fetchNotes();
+    const unsubscribePtr = subscribePullToRefresh(fetchNotes);
     return () => {
       active = false;
+      unsubscribePtr();
     };
   }, [customerId]);
 

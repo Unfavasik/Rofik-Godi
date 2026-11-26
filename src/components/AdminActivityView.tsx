@@ -35,6 +35,7 @@ import {
   type SupportRequestStatus,
 } from '../lib/supabaseAdminActivity';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 type FeedFilter = 'all' | 'orders' | 'support' | 'reviews' | 'customers' | 'products' | 'coupons' | 'campaigns';
 type FeedCategory = Exclude<FeedFilter, 'all'>;
@@ -261,6 +262,7 @@ export const AdminActivityView: React.FC<{
       setLoading(false);
     }
     void refresh(Boolean(cached), feedSource);
+    return subscribePullToRefresh(() => refresh(true, feedSource));
   }, [feedSource, refresh]);
 
   const switchMode = (next: FeedMode) => {

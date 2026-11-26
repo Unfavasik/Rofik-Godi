@@ -71,6 +71,7 @@ import { useI18n } from '../lib/i18n';
 import { AccountPageSkeleton, AccountProfileEditorSkeleton } from './AccountPageSkeleton';
 import { isImageLoaded, markImageLoaded, readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { CUSTOMER_ORDERS_UPDATED_EVENT } from '../lib/localCache';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 interface AccountViewProps {
   currentUser?: UserProfile;
@@ -229,16 +230,22 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
   useEffect(() => {
     let active = true;
-    const syncCatalog = () => {
-      void loadVehicleModels().then(({ data }) => {
+    const syncCatalog = () =>
+      loadVehicleModels().then(({ data }) => {
         if (active && data.length) setVehicleCatalog(data);
       });
-    };
-    syncCatalog();
-    if (typeof window === 'undefined') return () => { active = false; };
+    void syncCatalog();
+    const unsubscribePtr = subscribePullToRefresh(syncCatalog);
+    if (typeof window === 'undefined') {
+      return () => {
+        active = false;
+        unsubscribePtr();
+      };
+    }
     window.addEventListener(VEHICLE_CATALOG_CHANGED_EVENT, syncCatalog);
     return () => {
       active = false;
+      unsubscribePtr();
       window.removeEventListener(VEHICLE_CATALOG_CHANGED_EVENT, syncCatalog);
     };
   }, []);
@@ -375,23 +382,29 @@ export const AccountView: React.FC<AccountViewProps> = ({
     if (cachedOrders !== undefined) setCustomerOrders(cachedOrders);
     if (cachedReviews !== undefined) setMyReviews(cachedReviews);
     setSummaryLoading(cachedOrders === undefined || cachedReviews === undefined);
-    void Promise.all([
-      listMyOrders(summaryUser.id).catch(() => null),
-      listMyProductReviews(summaryUser.id).catch(() => null),
-    ]).then(([orders, reviews]) => {
-      if (!active) return;
-      if (orders) {
-        setCustomerOrders(orders);
-        writeSwrCache(ordersKey, orders);
-      }
-      if (reviews) {
-        setMyReviews(reviews);
-        writeSwrCache(reviewsKey, reviews);
-      }
-    }).finally(() => {
-      if (active) setSummaryLoading(false);
-    });
-    return () => { active = false; };
+    const refreshSummary = () =>
+      Promise.all([
+        listMyOrders(summaryUser.id).catch(() => null),
+        listMyProductReviews(summaryUser.id).catch(() => null),
+      ]).then(([orders, reviews]) => {
+        if (!active) return;
+        if (orders) {
+          setCustomerOrders(orders);
+          writeSwrCache(ordersKey, orders);
+        }
+        if (reviews) {
+          setMyReviews(reviews);
+          writeSwrCache(reviewsKey, reviews);
+        }
+      }).finally(() => {
+        if (active) setSummaryLoading(false);
+      });
+    void refreshSummary();
+    const unsubscribePtr = subscribePullToRefresh(refreshSummary);
+    return () => {
+      active = false;
+      unsubscribePtr();
+    };
   }, [currentUser?.id, currentUser?.isGuest]);
 
   const [profileName, setProfileName] = useState('');
@@ -455,6 +468,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
     || profileAvatarUrl !== profileSnapshot.avatar
     || profileAvatarFile !== null
     || profileMetadataSyncFailed;
+  const profileDirtyRef = useRef(profileDirty);
+  profileDirtyRef.current = profileDirty;
   const profileFieldErrors = validateProfileFields({ full_name: profileName, phone: profilePhone, vehicle_model: profileVehicle, phoneCountry: profilePhoneCountry });
   const profilePhoneChanged = profilePhone.trim() !== profileSnapshot.phone.trim() || profilePhoneCountry !== profileSnapshot.phoneCountry;
   const profilePhoneError = profilePhoneTouched && profilePhoneChanged ? profileFieldErrors.phone : undefined;
@@ -529,31 +544,40 @@ export const AccountView: React.FC<AccountViewProps> = ({
     setProfileMetadataSyncFailed(false);
     setProfileMessage('');
     setProfileLoading(!cachedProfile);
-    void Promise.all([getMyProfile(profileUser.id), getMyAuthEmail()]).then(([profile, email]) => {
-      if (!active) return;
-      const loaded = {
-        name: profile?.full_name?.trim() || fallback.name,
-        phone: profile?.phone || fallback.phone,
-        phoneCountry: getPhoneCountry(profile?.phone || fallback.phone),
-        vehicle: profile?.vehicle_model || fallback.vehicle,
-        avatar: profile?.avatar_url || fallback.avatar,
-      };
-      setProfileName(loaded.name);
-      setProfilePhone(loaded.phone);
-      setProfilePhoneCountry(loaded.phoneCountry);
-      setProfilePhoneTouched(false);
-      hydrateProfileVehicle(loaded.vehicle);
-      const nextEmail = email || cachedProfile?.email || profileUser.email || '';
-      setProfileEmail(nextEmail);
-      setProfileAvatarUrl(loaded.avatar);
-      setProfileSnapshot(loaded);
-      writeSwrCache(profileKey, { ...loaded, email: nextEmail });
-    }).catch(() => {
-      if (active && !cachedProfile) setProfileMessage('Could not load the saved profile. You can still edit and try saving.');
-    }).finally(() => {
-      if (active) setProfileLoading(false);
-    });
-    return () => { active = false; };
+    const refreshProfile = (preserveDirtyEdits = false) =>
+      Promise.all([getMyProfile(profileUser.id), getMyAuthEmail()]).then(([profile, email]) => {
+        if (!active) return;
+        const loaded = {
+          name: profile?.full_name?.trim() || fallback.name,
+          phone: profile?.phone || fallback.phone,
+          phoneCountry: getPhoneCountry(profile?.phone || fallback.phone),
+          vehicle: profile?.vehicle_model || fallback.vehicle,
+          avatar: profile?.avatar_url || fallback.avatar,
+        };
+        const nextEmail = email || cachedProfile?.email || profileUser.email || '';
+        writeSwrCache(profileKey, { ...loaded, email: nextEmail });
+        if (preserveDirtyEdits && profileDirtyRef.current) return;
+        setProfileName(loaded.name);
+        setProfilePhone(loaded.phone);
+        setProfilePhoneCountry(loaded.phoneCountry);
+        setProfilePhoneTouched(false);
+        hydrateProfileVehicle(loaded.vehicle);
+        setProfileEmail(nextEmail);
+        setProfileAvatarUrl(loaded.avatar);
+        setProfileSnapshot(loaded);
+      }).catch(() => {
+        if (active && !cachedProfile && !preserveDirtyEdits) {
+          setProfileMessage('Could not load the saved profile. You can still edit and try saving.');
+        }
+      }).finally(() => {
+        if (active) setProfileLoading(false);
+      });
+    void refreshProfile(false);
+    const unsubscribePtr = subscribePullToRefresh(() => refreshProfile(true));
+    return () => {
+      active = false;
+      unsubscribePtr();
+    };
   }, [activeModal, currentUser?.id, currentUser?.isGuest, hydrateProfileVehicle]);
 
   const handleSaveProfile = async () => {

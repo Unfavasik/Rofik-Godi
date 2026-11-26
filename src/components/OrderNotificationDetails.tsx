@@ -24,6 +24,7 @@ import { isOrderComplete } from '../lib/orderPresentation';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { CUSTOMER_ORDERS_UPDATED_EVENT } from '../lib/localCache';
 import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 const money = formatInr;
 const orderDate = (value: string, locale: string) => {
@@ -135,14 +136,33 @@ export function OrderNotificationDetails({
 
   useEffect(() => {
     let active = true;
+    const cached = orderCacheKey ? readSwrCache<CustomerOrderRecord>(orderCacheKey) : undefined;
+    const fetchOrder = (silent = false) =>
+      getMyOrderByNumber(userId, orderNumber)
+        .then((result) => {
+          if (!active) return;
+          setOrder(result);
+          if (result && orderCacheKey) writeSwrCache(orderCacheKey, result);
+          setLoadError(!result);
+        })
+        .catch(() => {
+          if (active && !silent && !cached && !initialOrder) setLoadError(true);
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+
     if (initialOrder && refreshTick === 0) {
       setOrder(initialOrder);
       if (orderCacheKey) writeSwrCache(orderCacheKey, initialOrder);
       setLoading(false);
       setLoadError(false);
-      return () => { active = false; };
+      const unsubscribePtr = subscribePullToRefresh(() => fetchOrder(true));
+      return () => {
+        active = false;
+        unsubscribePtr();
+      };
     }
-    const cached = orderCacheKey ? readSwrCache<CustomerOrderRecord>(orderCacheKey) : undefined;
     if (cached) {
       setOrder(cached);
       setLoading(false);
@@ -150,20 +170,12 @@ export function OrderNotificationDetails({
       setLoading(true);
     }
     setLoadError(false);
-    void getMyOrderByNumber(userId, orderNumber)
-      .then((result) => {
-        if (!active) return;
-        setOrder(result);
-        if (result && orderCacheKey) writeSwrCache(orderCacheKey, result);
-        setLoadError(!result);
-      })
-      .catch(() => {
-        if (active && !cached && !initialOrder) setLoadError(true);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => { active = false; };
+    void fetchOrder(false);
+    const unsubscribePtr = subscribePullToRefresh(() => fetchOrder(true));
+    return () => {
+      active = false;
+      unsubscribePtr();
+    };
   }, [initialOrder, orderCacheKey, orderNumber, refreshTick, userId]);
 
   const viewportStyle = { height: viewportHeight ? `${viewportHeight}px` : '100dvh' };

@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { BottomSheet } from './BottomSheet';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 interface VehicleFinderProps {
   onFilterVehicle: (model: string | null) => void;
@@ -208,15 +209,25 @@ export const VehicleFinder: React.FC<VehicleFinderProps> = ({
   const [modelQuery, setModelQuery] = useState('');
 
   useEffect(() => {
+    let active = true;
     const refresh = () => {
       if (getCachedVehicleModels().length === 0) setCatalogLoading(true);
-      void loadVehicleModels()
-        .then(({ data }) => setCatalogModels(data))
-        .finally(() => setCatalogLoading(false));
+      return loadVehicleModels()
+        .then(({ data }) => {
+          if (active) setCatalogModels(data);
+        })
+        .finally(() => {
+          if (active) setCatalogLoading(false);
+        });
     };
-    refresh();
+    void refresh();
+    const unsubscribePtr = subscribePullToRefresh(refresh);
     window.addEventListener(VEHICLE_CATALOG_CHANGED_EVENT, refresh);
-    return () => window.removeEventListener(VEHICLE_CATALOG_CHANGED_EVENT, refresh);
+    return () => {
+      active = false;
+      unsubscribePtr();
+      window.removeEventListener(VEHICLE_CATALOG_CHANGED_EVENT, refresh);
+    };
   }, []);
 
   const currentBrands = useMemo(() => {

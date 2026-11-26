@@ -49,6 +49,7 @@ import {
 } from '../lib/checkoutCoupon';
 import { CheckoutCouponValidator } from './CheckoutCouponValidator';
 import { CheckoutPageSkeleton } from './AccountPageSkeleton';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -308,11 +309,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   useEffect(() => {
     if (!isOpen || !userId || items.length === 0) return;
     let active = true;
-    void loadCustomerCouponOffers().then(({ data }) => {
-      if (!active) return;
-      setCouponOffers(data);
-    });
-    return () => { active = false; };
+    const fetchOffers = () =>
+      loadCustomerCouponOffers().then(({ data }) => {
+        if (!active) return;
+        setCouponOffers(data);
+      });
+    void fetchOffers();
+    const unsubscribePtr = subscribePullToRefresh(fetchOffers);
+    return () => {
+      active = false;
+      unsubscribePtr();
+    };
   }, [isOpen, items.length, userId]);
 
   useEffect(() => {

@@ -18,14 +18,14 @@ export function useCatalog(pathname = '/') {
   const lastThrottledRefreshRef = useRef(0);
   const productsRef = useRef(products);
   productsRef.current = products;
-  const load = useCallback((throttled = false) => {
+  const load = useCallback((throttled = false): Promise<void> => {
     const now = Date.now();
-    if (throttled && now - lastThrottledRefreshRef.current < REFRESH_THROTTLE_MS) return;
+    if (throttled && now - lastThrottledRefreshRef.current < REFRESH_THROTTLE_MS) return Promise.resolve();
     if (throttled) lastThrottledRefreshRef.current = now;
     const requestId = ++requestIdRef.current;
     setIsLoading(false);
-    void fetchPublicProductGuaranteePolicy();
-    void loadPublicProducts().then((loadedProducts) => {
+    const guaranteeTask = fetchPublicProductGuaranteePolicy().catch(() => undefined);
+    const productsTask = loadPublicProducts().then((loadedProducts) => {
       if (requestId !== requestIdRef.current) return;
       setProducts(loadedProducts); productsRef.current = loadedProducts; writePublicCatalogCache(loadedProducts); setError(null);
     }).catch((loadError: unknown) => {
@@ -34,8 +34,9 @@ export function useCatalog(pathname = '/') {
     }).finally(() => {
       if (requestId === requestIdRef.current) { setIsLoaded(true); setIsFresh(true); setIsLoading(false); }
     });
+    return Promise.all([guaranteeTask, productsTask]).then(() => undefined);
   }, []);
-  const retry = useCallback(() => { setError(null); load(false); }, [load]);
+  const retry = useCallback(() => { setError(null); return load(false); }, [load]);
   useEffect(() => {
     load(false);
     const refresh = () => load(true);

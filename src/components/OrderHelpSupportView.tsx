@@ -56,6 +56,7 @@ import {
 import { useUploadProgress } from '../lib/useUploadProgress';
 import { UploadProgressBar } from './UploadProgressBar';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 export interface OrderHelpSupportViewProps {
   order?: CustomerOrderRecord | null;
@@ -265,21 +266,25 @@ export function OrderHelpSupportView({
     } else {
       setTicketsLoading(true);
     }
-    void listMySupportRequests(currentUserId)
-      .then((res) => {
-        if (!active) return;
-        const filtered = filterOrderSupportRequests(res.data, order);
-        setOrderTickets(filtered);
-        if (ticketCacheKey) writeSwrCache(ticketCacheKey, filtered);
-      })
-      .catch(() => {
-        // Non-blocking: user can still submit or open chat if ticket history fails.
-      })
-      .finally(() => {
-        if (active) setTicketsLoading(false);
-      });
+    const refreshOrderTickets = () =>
+      listMySupportRequests(currentUserId)
+        .then((res) => {
+          if (!active) return;
+          const filtered = filterOrderSupportRequests(res.data, order);
+          setOrderTickets(filtered);
+          if (ticketCacheKey) writeSwrCache(ticketCacheKey, filtered);
+        })
+        .catch(() => {
+          // Non-blocking: user can still submit or open chat if ticket history fails.
+        })
+        .finally(() => {
+          if (active) setTicketsLoading(false);
+        });
+    void refreshOrderTickets();
+    const unsubscribePtr = subscribePullToRefresh(refreshOrderTickets);
     return () => {
       active = false;
+      unsubscribePtr();
     };
   }, [currentUserId, isAuthenticated, order, createdTicketId, ticketCacheKey]);
 

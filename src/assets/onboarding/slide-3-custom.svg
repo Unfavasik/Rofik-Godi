@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" fill="none">
+  <defs>
+    <linearGradient id="bg3" x1="300" y1="0" x2="300" y2="800" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#110D0D"/>
+      <stop offset="44%" stop-color="#221515"/>
+      <stop offset="78%" stop-color="#F6F2F0"/>
+      <stop offset="100%" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <radialGradient id="glow3" cx="50%" cy="38%" r="48%">
+      <stop offset="0%" stop-color="#E11D2E" stop-opacity="0.32"/>
+      <stop offset="55%" stop-color="#F59E0B" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#110D0D" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="leatherCard3" x1="120" y1="150" x2="480" y2="540" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2A2E37"/>
+      <stop offset="50%" stop-color="#15171C"/>
+      <stop offset="100%" stop-color="#0B0C0E"/>
+    </linearGradient>
+    <pattern id="quiltStitch3" width="44" height="44" patternUnits="userSpaceOnUse">
+      <path d="M22 0 L44 22 L22 44 L0 22 Z" fill="none" stroke="#EF3142" stroke-opacity="0.62" stroke-width="1.8" stroke-dasharray="5 3.5"/>
+      <path d="M22 4 L40 22 L22 40 L4 22 Z" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1"/>
+      <circle cx="22" cy="22" r="2" fill="#090808"/>
+    </pattern>
+    <radialGradient id="waterDrop" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="45%" stop-color="#BAE6FD" stop-opacity="0.62"/>
+      <stop offset="100%" stop-color="#0EA5E9" stop-opacity="0.35"/>
+    </radialGradient>
+    <linearGradient id="shieldGrad3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F43F5E"/>
+      <stop offset="100%" stop-color="#BE1223"/>
+    </linearGradient>
+    <filter id="elev3" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="22" stdDeviation="18" flood-color="#090808" flood-opacity="0.36"/>
+    </filter>
+    <clipPath id="swatchClip3">
+      <rect x="112" y="156" width="376" height="390" rx="44"/>
+    </clipPath>
+  </defs>
+
+  <rect width="600" height="800" fill="url(#bg3)"/>
+  <circle cx="300" cy="300" r="290" fill="url(#glow3)"/>
+
+  <!-- Luxury Hand-Stitched Quilted Leatherette Craft Panel -->
+  <g filter="url(#elev3)">
+    <rect x="112" y="156" width="376" height="390" rx="44" fill="url(#leatherCard3)" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="2"/>
+    <g clip-path="url(#swatchClip3)">
+      <rect x="112" y="156" width="376" height="390" fill="url(#quiltStitch3)"/>
+      <!-- Diagonal Specular Sheen -->
+      <path d="M112 156 H488 L300 420 L112 310 Z" fill="#FFFFFF" fill-opacity="0.06"/>
+      <!-- Precision Crimson Double-Stitching Border -->
+      <rect x="132" y="176" width="336" height="350" rx="30" fill="none" stroke="#EF3142" stroke-width="2.4" stroke-dasharray="9 6"/>
+      <rect x="140" y="184" width="320" height="334" rx="24" fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="1.2" stroke-dasharray="9 6"/>
+    </g>
+  </g>
+
+  <!-- Waterproof Beading Water Droplets on Leatherette -->
+  <g>
+    <circle cx="192" cy="242" r="14" fill="url(#waterDrop)" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1"/>
+    <circle cx="187" cy="237" r="3.5" fill="#FFFFFF"/>
+    <circle cx="222" cy="222" r="8" fill="url(#waterDrop)" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="1"/>
+    <circle cx="219" cy="219" r="2" fill="#FFFFFF"/>
+    <circle cx="416" cy="272" r="11" fill="url(#waterDrop)" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="1"/>
+    <circle cx="412" cy="268" r="2.8" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Central Workshop Quality Shield Medallion -->
+  <g transform="translate(300, 354)" filter="url(#elev3)">
+    <circle r="96" fill="#FFFFFF" fill-opacity="0.98"/>
+    <circle r="86" fill="#FFF1F2" stroke="#FECDD3" stroke-width="2"/>
+    <path d="M0 -56 L48 -36 V2 C48 34 26 56 0 66 C-26 56 -48 34 -48 2 V-36 L0 -56 Z" fill="url(#shieldGrad3)"/>
+    <path d="M-20 4 L-6 18 L24 -14" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- 5-Star Rating & Stitch Craftsmanship Strip -->
+  <g transform="translate(184, 578)">
+    <rect width="232" height="52" rx="26" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1.5"/>
+    <g transform="translate(32, 16)" fill="#F59E0B">
+      <path d="M10 0 L12.9 6.2 L19.6 7 L14.6 11.7 L15.9 18.4 L10 15.1 L4.1 18.4 L5.4 11.7 L0.4 7 L7.1 6.2 Z"/>
+      <path transform="translate(36, 0)" d="M10 0 L12.9 6.2 L19.6 7 L14.6 11.7 L15.9 18.4 L10 15.1 L4.1 18.4 L5.4 11.7 L0.4 7 L7.1 6.2 Z"/>
+      <path transform="translate(72, 0)" d="M10 0 L12.9 6.2 L19.6 7 L14.6 11.7 L15.9 18.4 L10 15.1 L4.1 18.4 L5.4 11.7 L0.4 7 L7.1 6.2 Z"/>
+      <path transform="translate(108, 0)" d="M10 0 L12.9 6.2 L19.6 7 L14.6 11.7 L15.9 18.4 L10 15.1 L4.1 18.4 L5.4 11.7 L0.4 7 L7.1 6.2 Z"/>
+      <path transform="translate(144, 0)" d="M10 0 L12.9 6.2 L19.6 7 L14.6 11.7 L15.9 18.4 L10 15.1 L4.1 18.4 L5.4 11.7 L0.4 7 L7.1 6.2 Z"/>
+    </g>
+  </g>
+</svg>

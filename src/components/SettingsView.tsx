@@ -15,6 +15,7 @@ import { SettingsCouponsSkeleton, SettingsPageSkeleton } from './AccountPageSkel
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { SrishtiLabsLogo } from './SrishtiLabsLogo';
 import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -198,10 +199,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [openFaq, setOpenFaq] = useState<string | null>(null);
 
   useEffect(() => {
-    const preferences = readCustomerAppPreferences(preferenceOwnerId);
-    setNotificationState(preferences.notifications);
-    setLanguage(preferences.language);
-    setHapticFeedback(preferences.hapticFeedback);
+    const syncPreferences = () => {
+      const preferences = readCustomerAppPreferences(preferenceOwnerId);
+      setNotificationState(preferences.notifications);
+      setLanguage(preferences.language);
+      setHapticFeedback(preferences.hapticFeedback);
+    };
+    syncPreferences();
+    return subscribePullToRefresh(syncPreferences);
   }, [preferenceOwnerId]);
 
   // Start sub-section pages at the top, and restore the exact Settings hub scroll position when returning.
@@ -234,17 +239,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       setCouponOffersLoading(true);
     }
     setCouponOffersError('');
-    void loadCustomerCouponOffers().then(({ data, error }) => {
-      if (!active) return;
-      setCouponOffers(data);
-      setCouponOffersError(error);
-      if (!error) writeSwrCache('public:customer-coupons', data);
-    }).catch(() => {
-      if (active && cached === undefined) setCouponOffersError('Offers are temporarily unavailable. Please try again later.');
-    }).finally(() => {
-      if (active) setCouponOffersLoading(false);
-    });
-    return () => { active = false; };
+    const fetchCouponOffers = () =>
+      loadCustomerCouponOffers().then(({ data, error }) => {
+        if (!active) return;
+        setCouponOffers(data);
+        setCouponOffersError(error);
+        if (!error) writeSwrCache('public:customer-coupons', data);
+      }).catch(() => {
+        if (active && cached === undefined) setCouponOffersError('Offers are temporarily unavailable. Please try again later.');
+      }).finally(() => {
+        if (active) setCouponOffersLoading(false);
+      });
+    void fetchCouponOffers();
+    const unsubscribePtr = subscribePullToRefresh(fetchCouponOffers);
+    return () => {
+      active = false;
+      unsubscribePtr();
+    };
   }, [section]);
 
   if (isLoading) {

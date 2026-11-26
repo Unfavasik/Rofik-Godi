@@ -11,6 +11,7 @@ import { MAX_ORDER_ITEM_QUANTITY } from '../lib/cart';
 import { useI18n } from '../lib/i18n';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 import {
   X,
   ShoppingBag,
@@ -87,14 +88,20 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       setCouponOffersLoading(true);
     }
     setCouponOffersError('');
-    void loadCustomerCouponOffers().then((response) => {
-      if (cancelled) return;
-      setCouponOffers(response.data);
-      setCouponOffersError(response.error);
-      if (!response.error) writeSwrCache('public:customer-coupons', response.data);
-      setCouponOffersLoading(false);
-    });
-    return () => { cancelled = true; };
+    const fetchCartOffers = () =>
+      loadCustomerCouponOffers().then((response) => {
+        if (cancelled) return;
+        setCouponOffers(response.data);
+        setCouponOffersError(response.error);
+        if (!response.error) writeSwrCache('public:customer-coupons', response.data);
+        setCouponOffersLoading(false);
+      });
+    void fetchCartOffers();
+    const unsubscribePtr = subscribePullToRefresh(fetchCartOffers);
+    return () => {
+      cancelled = true;
+      unsubscribePtr();
+    };
   }, [isOpen, items.length, userId]);
 
   useEffect(() => {

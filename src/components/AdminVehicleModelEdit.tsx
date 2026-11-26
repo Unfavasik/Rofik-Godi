@@ -31,6 +31,7 @@ import {
 import { useUploadProgress } from '../lib/useUploadProgress';
 import { UploadProgressBar } from './UploadProgressBar';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import { subscribePullToRefresh } from '../lib/pullToRefresh';
 
 type Props = {
   modelId: string;
@@ -62,6 +63,16 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const imageUploadProgress = useUploadProgress('model image');
 
+  const isDirtyRef = useRef(false);
+  isDirtyRef.current = Boolean(
+    model &&
+      (brand !== model.brand ||
+        name !== model.name ||
+        type !== model.type ||
+        description !== (model.shortDescription || '') ||
+        isActive !== Boolean(model.isActive)),
+  );
+
   useEffect(() => {
     let active = true;
     const cached = readSwrCache<VehicleCatalogModel[]>('admin:vehicle-models');
@@ -77,30 +88,38 @@ export function AdminVehicleModelEdit({ modelId, notify }: Props) {
       if (cached) setAllBrands(Array.from(new Set(cached.map((item) => item.brand))).sort());
       setLoading(false);
     }
-    void loadVehicleModels({ includeHidden: true }).then(({ data, error }) => {
-      if (!active) return;
-      if (error) {
-        if (!cachedMatch) notify(`Could not load model: ${error.message}`, 'error');
-      } else {
-        writeSwrCache('admin:vehicle-models', data);
-        const found = data.find((item) => item.id === modelId) || null;
-        setModel(found);
-        setBrand(found?.brand || '');
-        setName(found?.name || '');
-        setType(found?.type || 'bike');
-        setSlug(found?.slug || slugifyVehicleModelName(found?.name || ''));
-        setDescription(found?.shortDescription || '');
-        setIsActive(Boolean(found?.isActive));
-        setAllBrands(Array.from(new Set(data.map((item) => item.brand))).sort());
-        if (!found) notify('Vehicle model not found', 'error');
-      }
-      setLoading(false);
-    }).catch((error: unknown) => {
-      if (!active) return;
-      if (!cachedMatch) notify(error instanceof Error ? error.message : 'Could not load vehicle model', 'error');
-      setLoading(false);
-    });
-    return () => { active = false; };
+    const fetchModel = (preserveDirty = false) =>
+      loadVehicleModels({ includeHidden: true }).then(({ data, error }) => {
+        if (!active) return;
+        if (error) {
+          if (!cachedMatch && !preserveDirty) notify(`Could not load model: ${error.message}`, 'error');
+        } else {
+          writeSwrCache('admin:vehicle-models', data);
+          const found = data.find((item) => item.id === modelId) || null;
+          setAllBrands(Array.from(new Set(data.map((item) => item.brand))).sort());
+          if (!preserveDirty || !isDirtyRef.current) {
+            setModel(found);
+            setBrand(found?.brand || '');
+            setName(found?.name || '');
+            setType(found?.type || 'bike');
+            setSlug(found?.slug || slugifyVehicleModelName(found?.name || ''));
+            setDescription(found?.shortDescription || '');
+            setIsActive(Boolean(found?.isActive));
+          }
+          if (!found && !preserveDirty) notify('Vehicle model not found', 'error');
+        }
+        setLoading(false);
+      }).catch((error: unknown) => {
+        if (!active) return;
+        if (!cachedMatch && !preserveDirty) notify(error instanceof Error ? error.message : 'Could not load vehicle model', 'error');
+        setLoading(false);
+      });
+    void fetchModel(false);
+    const unsubscribePtr = subscribePullToRefresh(() => fetchModel(true));
+    return () => {
+      active = false;
+      unsubscribePtr();
+    };
   }, [modelId, notify]);
 
   const handleNameChange = (value: string) => {
