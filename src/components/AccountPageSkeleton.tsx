@@ -814,34 +814,79 @@ export const ProductReviewsSkeleton: React.FC<{ count?: number; label?: string }
   </div>
 );
 
-export const ProductGridSkeleton: React.FC<{ count?: number; label?: string }> = ({
+export const ProductGridSkeleton: React.FC<{
+  count?: number;
+  label?: string;
+  layoutMode?: 'grid' | 'list';
+}> = ({
   count = 4,
   label = 'Loading products…',
-}) => (
-  <div
-    aria-hidden="true"
-    className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-  >
-    <span className="sr-only">{label}</span>
-    {Array.from({ length: count }).map((_, index) => (
+  layoutMode = 'grid',
+}) => {
+  if (layoutMode === 'list') {
+    return (
       <div
-        key={index}
-        className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-2.5 space-y-2.5 shadow-2xs"
+        aria-hidden="true"
+        data-testid="product-catalog-skeleton"
+        className="grid grid-cols-1 gap-2.5 lg:grid-cols-2"
       >
-        <div className="skeleton-shimmer aspect-[4/3] w-full rounded-xl bg-slate-200/75" />
-        <div className="space-y-1.5 px-0.5">
-          <div className="skeleton-shimmer h-2.5 w-14 rounded bg-slate-200/65" />
-          <div className="skeleton-shimmer h-3.5 w-full rounded bg-slate-200/85" />
-          <div className="skeleton-shimmer h-3.5 w-2/3 rounded bg-slate-200/75" />
-        </div>
-        <div className="flex items-center justify-between pt-1">
-          <div className="skeleton-shimmer h-4 w-16 rounded bg-slate-200/85" />
-          <div className="skeleton-shimmer h-7 w-16 rounded-lg bg-rose-100/80" />
-        </div>
+        <span className="sr-only">{label}</span>
+        {Array.from({ length: count }).map((_, index) => (
+          <div
+            key={index}
+            style={{ animationDelay: `${index * 80}ms` }}
+            className="skeleton-pulse flex items-center justify-between gap-2.5 overflow-hidden rounded-xl border border-slate-200/80 bg-white p-2.5 shadow-2xs"
+          >
+            <div className="skeleton-shimmer h-16 w-16 shrink-0 rounded-lg bg-slate-200/80 sm:h-[72px] sm:w-[72px]" />
+            <div className="flex-1 min-w-0 space-y-1.5 pr-1">
+              <div className="skeleton-shimmer h-3.5 w-3/4 rounded bg-slate-200/85" />
+              <div className="skeleton-shimmer h-2.5 w-16 rounded bg-emerald-100/80" />
+              <div className="skeleton-shimmer h-2.5 w-1/2 rounded bg-slate-200/65" />
+              <div className="skeleton-shimmer h-3.5 w-14 rounded bg-slate-200/85" />
+            </div>
+            <div className="flex flex-col items-center justify-between self-stretch py-0.5">
+              <div className="skeleton-shimmer h-7 w-7 rounded-full bg-slate-200/70" />
+              <div className="skeleton-shimmer h-9 w-9 rounded-lg bg-rose-100/80" />
+            </div>
+          </div>
+        ))}
       </div>
-    ))}
-  </div>
-);
+    );
+  }
+
+  return (
+    <div
+      aria-hidden="true"
+      data-testid="product-catalog-skeleton"
+      className="grid grid-cols-2 gap-2 sm:gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+    >
+      <span className="sr-only">{label}</span>
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          key={index}
+          style={{ animationDelay: `${index * 80}ms` }}
+          className="skeleton-pulse flex flex-col justify-between overflow-hidden rounded-xl border border-slate-200/80 bg-white p-2 shadow-2xs"
+        >
+          <div>
+            <div className="skeleton-shimmer aspect-square w-full rounded-lg bg-slate-200/80 mb-2" />
+            <div className="space-y-1.5">
+              <div className="skeleton-shimmer h-3 w-full rounded bg-slate-200/85" />
+              <div className="skeleton-shimmer h-3 w-2/3 rounded bg-slate-200/75" />
+              <div className="skeleton-shimmer h-2.5 w-14 rounded bg-emerald-100/80" />
+            </div>
+          </div>
+          <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-1.5">
+            <div className="space-y-1">
+              <div className="skeleton-shimmer h-3.5 w-12 rounded bg-slate-200/85" />
+              <div className="skeleton-shimmer h-2.5 w-16 rounded bg-slate-200/65" />
+            </div>
+            <div className="skeleton-shimmer h-9 w-9 rounded-lg bg-rose-100/80" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export const AdminBannerGridSkeleton: React.FC<{ count?: number; label?: string }> = ({
   count = 3,

@@ -112,45 +112,57 @@ canvas {
   100% { transform: translateX(100%); }
 }
 
-.skeleton-shimmer,
-.skeleton-shimmer-dark,
-.animate-shimmer {
-  position: relative;
-  overflow: hidden;
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.56; }
 }
-.skeleton-shimmer::after,
-.skeleton-shimmer-dark::after,
-.animate-shimmer::after {
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  animation: skeletonShimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  content: "";
-  pointer-events: none;
-}
-.skeleton-shimmer::after,
-.animate-shimmer::after {
-  background-image: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.28) 25%,
-    rgba(255, 255, 255, 0.65) 50%,
-    rgba(255, 255, 255, 0.28) 75%,
-    rgba(255, 255, 255, 0) 100%
-  );
-}
-.skeleton-shimmer-dark::after {
-  background-image: linear-gradient(
-    105deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.04) 30%,
-    rgba(255, 255, 255, 0.14) 50%,
-    rgba(255, 255, 255, 0.04) 70%,
-    rgba(255, 255, 255, 0) 100%
-  );
+
+@layer components {
+  .skeleton-pulse {
+    animation: skeletonPulse 1.65s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .skeleton-shimmer,
+  .skeleton-shimmer-dark,
+  .animate-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .skeleton-shimmer::after,
+  .skeleton-shimmer-dark::after,
+  .animate-shimmer::after {
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    animation: skeletonShimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    content: "";
+    pointer-events: none;
+  }
+  .skeleton-shimmer::after,
+  .animate-shimmer::after {
+    background-image: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.34) 25%,
+      rgba(255, 255, 255, 0.72) 50%,
+      rgba(255, 255, 255, 0.34) 75%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
+  .skeleton-shimmer-dark::after {
+    background-image: linear-gradient(
+      105deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.04) 30%,
+      rgba(255, 255, 255, 0.14) 50%,
+      rgba(255, 255, 255, 0.04) 70%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .skeleton-pulse,
   .skeleton-shimmer::after,
   .skeleton-shimmer-dark::after,
   .animate-shimmer::after,

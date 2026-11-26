@@ -140,7 +140,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
       </header>
 
       <div className="relative -mt-px flex-1">
-        <VignettePageCurtain className="h-[220px] sm:h-[250px]" />
+        <VignettePageCurtain className="h-[112px] sm:h-[120px]" />
 
         <div className="relative z-10 pt-3">
           <nav aria-label="Product categories" className="no-scrollbar flex max-w-full gap-1.5 overflow-x-auto px-3.5 sm:px-5">
@@ -202,7 +202,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
       </div>
 
       <div className="relative z-10 mt-2.5 flex items-center justify-between gap-2 px-3.5 sm:px-5">
-        <p className="text-[11.5px] font-medium text-slate-600 tabular-nums" aria-live="polite">
+        <p className="text-xs font-semibold text-slate-800 tabular-nums" aria-live="polite">
           {isLoading && renderableProducts.length === 0
             ? 'Loading products…'
             : error && renderableProducts.length === 0
@@ -240,7 +240,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
       </div>
 
       {error && <div className="px-3.5 sm:px-5 pt-2.5"><CatalogStatus state="error" onRetry={onRetry} /></div>}
-      {isLoading && renderableProducts.length === 0 && <div className="px-3.5 sm:px-5 pt-2.5"><CatalogStatus state="loading" /></div>}
+      {isLoading && renderableProducts.length === 0 && <div className="px-3.5 sm:px-5 pt-2.5"><CatalogStatus state="loading" layoutMode={layout} /></div>}
       {!isLoading && !error && visibleProducts.length === 0 && (
         <p className="mx-3.5 sm:mx-5 mt-3 rounded-2xl border border-slate-200 bg-white px-4 py-6 text-center text-xs text-slate-600" role="status">
           No products found

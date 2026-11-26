@@ -9,9 +9,15 @@ interface CatalogStatusProps {
   state: CatalogStatusKind;
   onRetry?: () => void;
   compact?: boolean;
+  layoutMode?: 'grid' | 'list';
 }
 
-export const CatalogStatus: React.FC<CatalogStatusProps> = ({ state, onRetry, compact = false }) => {
+export const CatalogStatus: React.FC<CatalogStatusProps> = ({
+  state,
+  onRetry,
+  compact = false,
+  layoutMode = 'grid',
+}) => {
   const spacing = compact ? 'px-4 py-5' : 'px-6 py-8';
   const baseClass = `w-full rounded-2xl border border-slate-200 bg-white text-center shadow-xs ${spacing}`;
 
@@ -21,7 +27,7 @@ export const CatalogStatus: React.FC<CatalogStatusProps> = ({ state, onRetry, co
         <div className={baseClass} role="status" aria-live="polite">
           <CloudLoader label="Loading products…" />
         </div>
-        {!compact && <ProductGridSkeleton count={4} />}
+        {!compact && <ProductGridSkeleton count={4} layoutMode={layoutMode} />}
       </div>
     );
   }

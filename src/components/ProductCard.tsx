@@ -66,7 +66,12 @@ const ProductImage: React.FC<{ src: string | null | undefined; alt: string; vari
 
   return (
     <>
-      {!isLoaded && <div className="skeleton-shimmer absolute inset-0 z-0 bg-gray-200" />}
+      {!isLoaded && (
+        <div
+          data-testid="product-image-skeleton"
+          className="skeleton-shimmer skeleton-pulse absolute inset-0 z-0 h-full w-full bg-slate-200/90"
+        />
+      )}
       <motion.img
         ref={imgRef}
         src={imageSrc}

@@ -835,48 +835,55 @@ export function NotificationsView({
           </button>
         </div>
 
-        <div className="relative z-10 border-t border-white/10 bg-white/95 backdrop-blur-md">
-          <div className="mx-auto w-full max-w-2xl px-3 py-2 sm:px-5">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div
-              role="tablist"
-              aria-label="Notification categories"
-              className="no-scrollbar flex min-w-0 items-center gap-1 overflow-x-auto rounded-xl bg-slate-100/90 p-1"
-            >
-              {(['All', 'Orders', 'Offers', 'Support', 'System'] as NotificationFilter[]).map((name) => {
-                const isActive = filter === name;
-                return (
-                  <button
-                    key={name}
-                    type="button"
-                    role="tab"
-                    aria-selected={isActive}
-                    onClick={() => {
-                      setFilter(name);
-                      setRevealedDeleteId(null);
-                    }}
-                    className={`relative inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all whitespace-nowrap ${
-                      isActive
-                        ? 'bg-white text-[#D9232D] shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
+      </header>
+
+      <div className="relative -mt-px">
+        <VignettePageCurtain className="h-[76px] sm:h-[86px]" />
+        <div className="relative z-10 mx-auto w-full max-w-2xl pt-2.5">
+          <div
+            role="tablist"
+            aria-label="Notification categories"
+            className="no-scrollbar flex max-w-full items-center gap-1.5 overflow-x-auto px-3 sm:px-5"
+          >
+            {(['All', 'Orders', 'Offers', 'Support', 'System'] as NotificationFilter[]).map((name) => {
+              const isActive = filter === name;
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => {
+                    setFilter(name);
+                    setRevealedDeleteId(null);
+                  }}
+                  className={`relative inline-flex min-h-8.5 shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition-all whitespace-nowrap cursor-pointer sm:gap-1.5 sm:px-3 ${
+                    isActive
+                      ? 'bg-white text-slate-950 shadow-[0_6px_18px_-6px_rgba(9,8,8,0.45)]'
+                      : 'border border-white/22 bg-white/16 text-white backdrop-blur-md hover:bg-white/25'
+                  }`}
+                >
+                  <span>{name}</span>
+                  <span
+                    className={`text-[10.5px] font-bold tabular-nums ${
+                      isActive ? 'text-[#D9232D]' : 'text-white/75'
                     }`}
                   >
-                    <span>{name}</span>
-                    <span className={`text-[10.5px] tabular-nums ${isActive ? 'text-[#D9232D]/75' : 'text-slate-400'}`}>
-                      {counts[name]}
-                    </span>
-                    {name === 'Support' && hasUnreadSupport && (
-                      <span
-                        aria-label="Unread support reply"
-                        className="h-1.5 w-1.5 rounded-full bg-[#D9232D]"
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+                    {counts[name]}
+                  </span>
+                  {name === 'Support' && hasUnreadSupport && (
+                    <span
+                      aria-label="Unread support reply"
+                      className="h-1.5 w-1.5 rounded-full bg-[#D9232D]"
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
-            {!isGuest && (
+          <div className="mt-2.5 flex items-center justify-between gap-2 px-3 sm:px-5">
+            {!isGuest ? (
               <button
                 type="button"
                 onClick={() => {
@@ -884,26 +891,36 @@ export function NotificationsView({
                   setRevealedDeleteId(null);
                 }}
                 aria-pressed={unreadOnly}
-                className={`inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 self-start rounded-xl border px-3 py-1.5 text-xs font-bold transition-colors whitespace-nowrap sm:self-auto ${
+                className={`inline-flex min-h-8.5 shrink-0 items-center gap-1.5 rounded-xl border px-3 py-1 text-[11.5px] font-semibold transition-colors whitespace-nowrap cursor-pointer ${
                   unreadOnly
-                    ? 'border-rose-200 bg-rose-50 text-[#D9232D]'
-                    : 'border-slate-200/90 bg-white text-slate-700 hover:bg-slate-50'
+                    ? 'border-rose-200 bg-rose-50 text-[#D9232D] shadow-2xs'
+                    : 'border-slate-200/90 bg-white text-slate-700 shadow-2xs hover:border-slate-300 hover:bg-slate-50'
                 }`}
               >
                 <span>Unread only</span>
-                <span className={`text-[10.5px] tabular-nums ${unreadOnly ? 'text-[#D9232D]/80' : 'text-slate-400'}`}>
+                <span
+                  className={`text-[10.5px] font-bold tabular-nums ${
+                    unreadOnly ? 'text-[#D9232D]' : 'text-slate-500'
+                  }`}
+                >
                   {categoryUnreadCount}
                 </span>
               </button>
+            ) : (
+              <span />
+            )}
+
+            {!loading && !loadError && (
+              <p className="text-xs font-semibold text-slate-700 tabular-nums">
+                {visible.length === 0
+                  ? 'No notifications'
+                  : `${visible.length} ${visible.length === 1 ? 'notification' : 'notifications'}`}
+              </p>
             )}
           </div>
-          </div>
         </div>
-      </header>
 
-      <div className="relative -mt-px">
-        <VignettePageCurtain className="h-[190px] sm:h-[220px]" />
-        <div className="relative z-10 mx-auto w-full max-w-2xl px-3 pt-3 sm:px-5">
+        <div className="relative z-10 mx-auto w-full max-w-2xl px-3 pt-1 sm:px-5">
 
         {deleteError && (
           <p role="alert" className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-semibold text-rose-800">
@@ -992,10 +1009,10 @@ export function NotificationsView({
             {groupedNotifications.map((group) => (
               <section key={group.label} aria-label={`${group.label} notifications`} className="space-y-2">
                 <div className="flex items-center justify-between px-1">
-                  <h2 className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-500">
+                  <h2 className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-700">
                     {group.label}
                   </h2>
-                  <span className="text-[11px] font-semibold tabular-nums text-slate-400">
+                  <span className="text-[11px] font-semibold tabular-nums text-slate-500">
                     {group.items.length}
                   </span>
                 </div>

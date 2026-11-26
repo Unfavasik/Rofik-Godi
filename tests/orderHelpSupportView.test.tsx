@@ -71,6 +71,33 @@ describe('OrderHelpSupportView UI & Resolution Flow', () => {
     // Internal store-map button under Store Working Hours
     expect(html).toContain('data-testid="order-help-open-store-map"');
     expect(html).toContain('Open in Maps');
+    // Connected horizontal order progress tracker
+    expect(html).toContain('data-testid="order-help-progress-tracker"');
+    expect(html).toContain('Step 3 of 4 · Ready at Store');
+    expect(html).toContain('Order Placed');
+    expect(html).toContain('Crafting');
+    expect(html).toContain('Ready at Store');
+    expect(html).toContain('Picked Up');
+  });
+
+  it('renders a clean 2-step terminated timeline for cancelled orders without post-pickup steps', () => {
+    const html = renderToStaticMarkup(
+      <OrderHelpSupportView
+        order={{ ...sampleOrder, status: 'CANCELLED', payment_status: 'PENDING' }}
+        isAuthenticated={true}
+        onBack={vi.fn()}
+        onOpenLiveChat={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain('data-testid="order-help-progress-tracker"');
+    expect(html).toContain('Order Timeline');
+    expect(html).toContain('Order closed');
+    expect(html).toContain('Order Placed');
+    expect(html).toContain('Order Cancelled');
+    expect(html).toContain('No payment due');
+    expect(html).not.toContain('Ready at Store');
+    expect(html).not.toContain('Picked Up');
   });
 
   it('renders Classic Glass skeleton loading layout when loading is true or order is pending', () => {

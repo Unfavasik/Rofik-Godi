@@ -33,6 +33,7 @@ import {
   AccountPageSkeleton,
   AccountProfileEditorSkeleton,
   ContactSupportPageSkeleton,
+  ProductGridSkeleton,
   SettingsPageSkeleton,
   SupportCenterPageSkeleton,
 } from './components/AccountPageSkeleton';
@@ -2469,7 +2470,9 @@ export default function App() {
               )}
 
               {/* Product Grid / List Display */}
-              {filteredProducts.length === 0 ? (
+              {catalogLoading && catalogProducts.length === 0 ? (
+                <ProductGridSkeleton count={4} layoutMode={shopLayoutMode} />
+              ) : filteredProducts.length === 0 ? (
                 <div className="bg-white rounded-2xl p-8 text-center border border-gray-100 shadow-xs">
                   <p className="text-gray-500 text-sm font-semibold mb-2">
                     No seat covers found matching your filter.

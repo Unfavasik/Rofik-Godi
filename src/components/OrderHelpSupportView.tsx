@@ -110,6 +110,25 @@ const formatDate = (value: string) => {
       }).format(date);
 };
 
+const formatShortOrderDate = (value: string) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? ''
+    : new Intl.DateTimeFormat('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }).format(date);
+};
+
+const renderOrderStepIcon = (step: ReturnType<typeof getOrderStepProgress>[number]) => {
+  if (step.state === 'cancelled') return <X className="h-3.5 w-3.5 stroke-[2.75]" aria-hidden="true" />;
+  if (step.state === 'done') return <Check className="h-3.5 w-3.5 stroke-[2.75]" aria-hidden="true" />;
+  if (step.key === 'ready') return <Store className="h-3.5 w-3.5 stroke-[2.15]" aria-hidden="true" />;
+  if (step.key === 'completed') return <CheckCircle2 className="h-3.5 w-3.5 stroke-[2.15]" aria-hidden="true" />;
+  return <Package className="h-3.5 w-3.5 stroke-[2.15]" aria-hidden="true" />;
+};
+
 const statusPillTone = (tone: 'emerald' | 'blue' | 'amber' | 'rose') => {
   if (tone === 'rose') return 'border-rose-200/90 bg-rose-50/95 text-rose-700';
   if (tone === 'emerald') return 'border-emerald-200/90 bg-emerald-50/95 text-emerald-700';
@@ -518,15 +537,21 @@ export function OrderHelpSupportView({
               </div>
             </div>
 
-            <div className="mt-3 rounded-xl border border-white/90 bg-white/80 px-3 py-2.5 shadow-2xs">
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="mt-3 rounded-xl border border-slate-200/80 bg-slate-50/75 px-3 py-3 sm:px-4">
+              <div className="mb-2.5 flex items-center justify-between gap-2 border-b border-slate-200/65 pb-2">
+                <div className="skeleton-shimmer skeleton-pulse h-3 w-24 rounded-md bg-slate-200/85" />
+                <div className="skeleton-shimmer skeleton-pulse h-3 w-28 rounded-md bg-slate-200/80" />
+              </div>
+              <div className="grid grid-cols-4 gap-0">
                 {[0, 1, 2, 3].map((stepIdx) => (
-                  <div key={stepIdx} className="space-y-1">
-                    <div className="flex items-center gap-1.5">
-                      <div className="skeleton-shimmer h-4.5 w-4.5 shrink-0 rounded-full bg-slate-200/90" />
-                      <div className="skeleton-shimmer h-1.5 flex-1 rounded-full bg-slate-200/75" />
+                  <div key={stepIdx} className="relative flex flex-col items-center px-1">
+                    <div className="relative flex w-full items-center justify-center">
+                      {stepIdx < 3 && (
+                        <div className="skeleton-shimmer skeleton-pulse pointer-events-none absolute left-1/2 top-1/2 z-0 h-[2.5px] w-full -translate-y-1/2 rounded-full bg-slate-200/80" />
+                      )}
+                      <div className="skeleton-shimmer skeleton-pulse relative z-10 h-7 w-7 shrink-0 rounded-full bg-slate-200/95 sm:h-8 sm:w-8" />
                     </div>
-                    <div className="skeleton-shimmer h-3 w-18 rounded-md bg-slate-200/80" />
+                    <div className="skeleton-shimmer skeleton-pulse mt-2 h-3 w-14 rounded-md bg-slate-200/80" />
                   </div>
                 ))}
               </div>
@@ -765,57 +790,124 @@ export function OrderHelpSupportView({
               </div>
             </div>
 
-            {/* 4-Step Visual Milestone Bar (2x2 on narrow phones, 4 cols on sm+) */}
-            <div className="mt-3 rounded-xl border border-white/90 bg-white/80 px-3 py-2.5 shadow-2xs">
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-2">
-                {progressSteps.map((step, index) => {
-                  const isDone = step.state === 'done';
-                  const isCurrent = step.state === 'current';
-                  const isCancelled = step.state === 'cancelled';
-                  return (
-                    <div key={step.key} className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px] font-extrabold ${
-                            isCancelled
-                              ? 'bg-rose-600 text-white'
-                              : isDone
-                                ? 'bg-emerald-600 text-white'
-                                : isCurrent
-                                  ? 'bg-[#D9232D] text-white ring-4 ring-rose-100'
-                                  : 'bg-slate-200 text-slate-500'
-                          }`}
+            {/* Connected Horizontal Order Progress / Timeline */}
+            {(() => {
+              const isCancelledOrder = progressSteps.some((step) => step.state === 'cancelled');
+              const currentIdx = progressSteps.findIndex((step) => step.state === 'current');
+              const activeStep = currentIdx >= 0 ? progressSteps[currentIdx] : null;
+              const allDone =
+                !isCancelledOrder &&
+                progressSteps.length > 0 &&
+                progressSteps.every((step) => step.state === 'done');
+              const placedDateLabel = formatShortOrderDate(safeOrder.created_at);
+
+              return (
+                <div
+                  data-testid="order-help-progress-tracker"
+                  className="mt-3 rounded-xl border border-slate-200/80 bg-slate-50/75 px-3 py-3 sm:px-4"
+                >
+                  <div className="mb-2.5 flex items-center justify-between gap-2 border-b border-slate-200/65 pb-2">
+                    <span className="text-[11px] font-semibold text-slate-500">
+                      {isCancelledOrder ? 'Order Timeline' : 'Order Progress'}
+                    </span>
+                    <span
+                      className={`text-[11px] font-bold tabular-nums ${
+                        isCancelledOrder
+                          ? 'text-rose-700'
+                          : allDone
+                            ? 'text-emerald-700'
+                            : 'text-slate-700'
+                      }`}
+                    >
+                      {isCancelledOrder
+                        ? 'Order closed'
+                        : allDone
+                          ? `${progressSteps.length} of ${progressSteps.length} · Completed`
+                          : activeStep
+                            ? `Step ${currentIdx + 1} of ${progressSteps.length} · ${activeStep.label}`
+                            : statusGuidance.badgeLabel}
+                    </span>
+                  </div>
+
+                  <ol
+                    aria-label={isCancelledOrder ? 'Order timeline' : 'Order progress steps'}
+                    className={`grid gap-0 ${
+                      progressSteps.length <= 2 ? 'grid-cols-2' : 'grid-cols-4'
+                    }`}
+                  >
+                    {progressSteps.map((step, index) => {
+                      const isDone = step.state === 'done';
+                      const isCurrent = step.state === 'current';
+                      const isCancelled = step.state === 'cancelled';
+                      const nextStep = progressSteps[index + 1];
+                      const connectorClass = !nextStep
+                        ? ''
+                        : nextStep.state === 'cancelled'
+                          ? 'bg-gradient-to-r from-emerald-500 to-rose-500'
+                          : nextStep.state === 'done' || nextStep.state === 'current'
+                            ? 'bg-emerald-500'
+                            : isCurrent
+                              ? 'bg-gradient-to-r from-rose-300 to-slate-200'
+                              : 'bg-slate-200';
+
+                      return (
+                        <li
+                          key={step.key}
+                          aria-current={isCurrent || isCancelled ? 'step' : undefined}
+                          className="relative flex min-w-0 flex-col items-center px-1 text-center"
                         >
-                          {isDone ? <Check className="h-3 w-3" /> : index + 1}
-                        </span>
-                        <div
-                          className={`h-1 flex-1 rounded-full ${
-                            isCancelled
-                              ? 'bg-rose-200'
-                              : isDone
-                                ? 'bg-emerald-500'
+                          <div className="relative flex w-full items-center justify-center">
+                            {nextStep && (
+                              <span
+                                aria-hidden="true"
+                                className={`pointer-events-none absolute left-1/2 top-1/2 z-0 h-[2.5px] w-full -translate-y-1/2 rounded-full ${connectorClass}`}
+                              />
+                            )}
+                            <span
+                              className={`relative z-10 grid h-7 w-7 shrink-0 place-items-center rounded-full border transition-colors sm:h-8 sm:w-8 ${
+                                isCancelled
+                                  ? 'border-[#D9232D] bg-[#D9232D] text-white ring-4 ring-rose-100/90 shadow-xs'
+                                  : isDone
+                                    ? 'border-emerald-600 bg-emerald-600 text-white shadow-xs'
+                                    : isCurrent
+                                      ? 'border-[#D9232D] bg-[#D9232D] text-white ring-4 ring-rose-100/90 shadow-xs'
+                                      : 'border-slate-200 bg-white text-slate-400'
+                              }`}
+                            >
+                              {renderOrderStepIcon(step)}
+                            </span>
+                          </div>
+
+                          <p
+                            className={`mt-2 text-[10.5px] leading-tight sm:text-xs ${
+                              isCancelled
+                                ? 'font-bold text-rose-700'
                                 : isCurrent
-                                  ? 'bg-rose-300'
-                                  : 'bg-slate-200/80'
-                          }`}
-                        />
-                      </div>
-                      <p
-                        className={`mt-1.5 text-[11px] font-extrabold leading-tight ${
-                          isCancelled
-                            ? 'text-rose-700'
-                            : isDone || isCurrent
-                              ? 'text-slate-900'
-                              : 'text-slate-400'
-                        }`}
-                      >
-                        {step.label}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+                                  ? 'font-bold text-slate-950'
+                                  : isDone
+                                    ? 'font-semibold text-slate-800'
+                                    : 'font-medium text-slate-400'
+                            }`}
+                          >
+                            {step.label}
+                          </p>
+
+                          {isCancelledOrder && (
+                            <p className="mt-0.5 text-[10px] font-medium text-slate-500 tabular-nums">
+                              {step.key === 'placed'
+                                ? placedDateLabel || 'Confirmed'
+                                : statusGuidance.isPaid
+                                  ? 'Refund eligible'
+                                  : 'No payment due'}
+                            </p>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
+              );
+            })()}
 
             {/* Expandable Line Item Specifications */}
             {itemsExpanded && items.length > 0 && (

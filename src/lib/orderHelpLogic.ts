@@ -149,7 +149,7 @@ export function getOrderHelpStatusGuidance(order: CustomerOrderRecord): OrderHel
 }
 
 export interface OrderHelpStep {
-  key: 'placed' | 'preparing' | 'ready' | 'completed';
+  key: 'placed' | 'preparing' | 'ready' | 'completed' | 'cancelled';
   label: string;
   state: 'done' | 'current' | 'upcoming' | 'cancelled';
 }
@@ -159,9 +159,7 @@ export function getOrderStepProgress(status: string): OrderHelpStep[] {
   if (raw === 'CANCELLED') {
     return [
       { key: 'placed', label: 'Order Placed', state: 'done' },
-      { key: 'preparing', label: 'Cancelled', state: 'cancelled' },
-      { key: 'ready', label: 'Ready at Store', state: 'upcoming' },
-      { key: 'completed', label: 'Picked Up', state: 'upcoming' },
+      { key: 'cancelled', label: 'Order Cancelled', state: 'cancelled' },
     ];
   }
   if (isOrderComplete(raw)) {
