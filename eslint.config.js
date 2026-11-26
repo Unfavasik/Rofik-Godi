@@ -7,7 +7,7 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['public/sw.js', 'functions/**/*.js'],
+    files: ['public/sw.js'],
     languageOptions: {
       globals: {
         URL: 'readonly',

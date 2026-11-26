@@ -375,7 +375,7 @@ export const downloadOrderInvoice = async (
   pdf.setFontSize(8);
   pdf.text(String(WORKSHOP_INFO.address || 'Berhampore, West Bengal'), margin, 30.5);
   pdf.text(
-    `Phone: ${WORKSHOP_INFO.phone || '+91 97753 33555'}${WORKSHOP_INFO.email ? `  ·  ${WORKSHOP_INFO.email}` : ''}`,
+    `Phone: ${WORKSHOP_INFO.phone || '+91 94348 86786'}${WORKSHOP_INFO.email ? `  ·  ${WORKSHOP_INFO.email}` : ''}`,
     margin,
     35,
   );

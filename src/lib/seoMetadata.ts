@@ -50,7 +50,7 @@ export function resolveRouteSeoMeta(
     }
     return {
       title: `Seat Cover Details | ${SITE_BRAND_NAME}`,
-      description: 'Browse seat-cover design information from Rofik Godi Centre in Berhampore. Contact the store for current product details and availability.',
+      description: 'Inspect waterproof seat cover specs, compatible bike, scooter & Toto models, foam options, and free on-spot workshop fitment in Berhampore.',
       canonicalUrl: buildCanonicalUrl(route.canonicalPath, origin),
       robots: indexRobots,
       ogType: 'product',
@@ -62,8 +62,8 @@ export function resolveRouteSeoMeta(
     switch (route.tab) {
       case 'shop':
         return {
-          title: `Bike Seat-Cover Designs in Berhampore | ${SITE_BRAND_NAME}`,
-          description: 'Browse bike seat-cover designs at Rofik Godi Centre, Stall G70, Zilla Parishad Market, Raninagar, Berhampore.',
+          title: `Shop Bike, Scooter & Toto Seat Covers | ${SITE_BRAND_NAME}`,
+          description: 'Browse waterproof bike seat covers, scooter covers, heavy-duty Toto bench covers, and gel cushions with vehicle fitment filtering in Berhampore.',
           canonicalUrl: buildCanonicalUrl('/shop', origin),
           robots: indexRobots,
           ogType: 'website',
@@ -72,7 +72,7 @@ export function resolveRouteSeoMeta(
       case 'custom':
         return {
           title: `Custom Seat Cover Builder | ${SITE_BRAND_NAME}`,
-          description: 'Explore seat-cover design choices at Rofik Godi Centre in Berhampore. Contact the store to confirm available options.',
+          description: 'Configure your custom bike, scooter, or Toto seat cover—choose colors, stitch patterns, piping, and high-density or gel foam at our Berhampore workshop.',
           canonicalUrl: buildCanonicalUrl('/custom', origin),
           robots: indexRobots,
           ogType: 'website',
@@ -102,8 +102,8 @@ export function resolveRouteSeoMeta(
       case 'home':
       default:
         return {
-          title: 'Rofik Godi Centre | Bike Seat Covers in Berhampore',
-          description: 'Browse bike seat-cover designs at Rofik Godi Centre, Stall G70, Zilla Parishad Market, Raninagar, Berhampore. Call +91 97753 33555.',
+          title: 'Rofik Godi Centre | Bike, Scooter & Toto Seat Covers',
+          description: 'Shop waterproof bike, scooter & toto seat covers, gel cushions & custom seat fitment at Rofik Godi Centre, Berhampore. Free on-spot fitting since 2007.',
           canonicalUrl: buildCanonicalUrl('/', origin),
           robots: indexRobots,
           ogType: 'website',
@@ -115,7 +115,7 @@ export function resolveRouteSeoMeta(
   if (route.kind === 'store' || route.kind === 'store-navigation') {
     return {
       title: `Visit Workshop & Store Map (Berhampore) | ${SITE_BRAND_NAME}`,
-      description: 'Find Rofik Godi Centre at Stall G70, Zilla Parishad Market, Raninagar, Keshobnagar, Berhampore 742101. Open Mon and Wed–Sun, 8:30 AM–7:30 PM; closed Tuesday.',
+      description: 'Get live directions to Rofik Godi Centre at Kadbeltal, Petrol Pump More, Raninagar, Keshobnagar, Berhampore, West Bengal 742101. Open daily 8 AM – 9:30 PM.',
       canonicalUrl: buildCanonicalUrl('/store-map', origin),
       robots: indexRobots,
       ogType: 'website',
@@ -125,8 +125,8 @@ export function resolveRouteSeoMeta(
 
   if (route.kind === 'settings-section' && route.section === 'about') {
     return {
-      title: `About ${SITE_BRAND_NAME} | Berhampore`,
-      description: 'Learn about Rofik Godi Centre, a motorcycle parts store and bike seat-cover shop in Raninagar, Berhampore, West Bengal.',
+      title: `About Us — Craft Since 2007 | ${SITE_BRAND_NAME}`,
+      description: 'Learn about Rofik Godi Centre in Berhampore, Murshidabad: 18+ years of automotive rexine tailoring, precision stitching, foam modification, and free on-spot fitment.',
       canonicalUrl: buildCanonicalUrl('/settings/about', origin),
       robots: indexRobots,
       ogType: 'website',
@@ -137,7 +137,7 @@ export function resolveRouteSeoMeta(
   if (route.kind === 'settings-section' && route.section === 'help') {
     return {
       title: `Help Center & FAQs | ${SITE_BRAND_NAME}`,
-      description: 'Find Rofik Godi Centre in Berhampore, call +91 97753 33555, and check current hours and seat-cover information before visiting.',
+      description: 'Answers about store pickup, free on-spot seat fitting, vehicle fitment finder, Razorpay & Pay at Workshop payments, guarantee claims, and Berhampore hours.',
       canonicalUrl: buildCanonicalUrl('/settings/help', origin),
       robots: indexRobots,
       ogType: 'website',
@@ -205,8 +205,8 @@ export function resolveRouteSeoMeta(
   }
 
   return {
-    title: 'Rofik Godi Centre | Bike Seat Covers in Berhampore',
-    description: 'Browse bike seat-cover designs at Rofik Godi Centre, Stall G70, Zilla Parishad Market, Raninagar, Berhampore. Call +91 97753 33555.',
+    title: 'Rofik Godi Centre | Bike, Scooter & Toto Seat Covers',
+    description: 'Shop waterproof bike, scooter & toto seat covers, gel cushions & custom seat fitment at Rofik Godi Centre, Berhampore. Free on-spot fitting since 2007.',
     canonicalUrl: buildCanonicalUrl('/', origin),
     robots: indexRobots,
     ogType: 'website',

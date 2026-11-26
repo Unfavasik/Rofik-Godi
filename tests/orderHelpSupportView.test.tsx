@@ -51,7 +51,7 @@ describe('OrderHelpSupportView UI & Resolution Flow', () => {
     expect(html).toContain('Racing Edge Seat Cover');
     expect(html).toContain('TVS Ntorq 125');
     expect(html).toContain('Due at Store Pickup (₹750)');
-    expect(html).toContain('Ready for pickup');
+    expect(html).toContain('Ready for pickup &amp; free workshop fitment');
 
     // All 6 interactive help topics
     expect(html).toContain('data-testid="order-help-topic-order_status"');

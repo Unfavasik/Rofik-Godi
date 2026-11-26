@@ -155,27 +155,25 @@ export function ContactSupportView({
                 </span>
               </a>
 
-              {WORKSHOP_INFO.phoneAlt && (
-                <a
-                  href={`tel:${WORKSHOP_INFO.phoneAlt.replace(/\s/g, '')}`}
-                  className="group flex min-h-12 items-center justify-between gap-2.5 rounded-xl border border-blue-200/70 bg-gradient-to-r from-[#EFF6FF] to-white p-2.5 sm:p-3 text-xs font-bold text-[#1D4ED8] transition-all hover:border-blue-300 hover:shadow-2xs active:scale-[0.99]"
-                >
-                  <span className="flex min-w-0 items-center gap-2.5">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-[#2563EB] shadow-2xs ring-1 ring-blue-100">
-                      <Phone className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block truncate font-extrabold text-slate-900 tabular-nums">
-                        Call {WORKSHOP_INFO.phoneAlt}
-                      </span>
-                      <span className="block text-[10px] font-medium text-slate-500">Alternate support line</span>
-                    </span>
+              <a
+                href={`tel:${WORKSHOP_INFO.phoneAlt.replace(/\s/g, '')}`}
+                className="group flex min-h-12 items-center justify-between gap-2.5 rounded-xl border border-blue-200/70 bg-gradient-to-r from-[#EFF6FF] to-white p-2.5 sm:p-3 text-xs font-bold text-[#1D4ED8] transition-all hover:border-blue-300 hover:shadow-2xs active:scale-[0.99]"
+              >
+                <span className="flex min-w-0 items-center gap-2.5">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-[#2563EB] shadow-2xs ring-1 ring-blue-100">
+                    <Phone className="h-4 w-4" />
                   </span>
-                  <span className="shrink-0 rounded-lg bg-white px-2 py-1 text-[10.5px] font-extrabold text-[#2563EB] ring-1 ring-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                    Dial →
+                  <span className="min-w-0">
+                    <span className="block truncate font-extrabold text-slate-900 tabular-nums">
+                      Call {WORKSHOP_INFO.phoneAlt}
+                    </span>
+                    <span className="block text-[10px] font-medium text-slate-500">Alternate support line</span>
                   </span>
-                </a>
-              )}
+                </span>
+                <span className="shrink-0 rounded-lg bg-white px-2 py-1 text-[10.5px] font-extrabold text-[#2563EB] ring-1 ring-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  Dial →
+                </span>
+              </a>
 
               <a
                 href={`https://wa.me/${WORKSHOP_INFO.whatsapp.replace(/\D/g, '')}`}
