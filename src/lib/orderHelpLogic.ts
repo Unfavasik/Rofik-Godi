@@ -124,9 +124,9 @@ export function getOrderHelpStatusGuidance(order: CustomerOrderRecord): OrderHel
   if (rawStatus === 'READY_FOR_PICKUP') {
     return {
       badgeLabel,
-      headline: 'Ready for pickup & free workshop fitment',
+      headline: 'Ready for pickup',
       description:
-        'Visit Rofik Godi Centre (Kadbeltal, Petrol Pump More, Berhampore) with your Order ID or Pickup QR code for complimentary on-spot seat installation.',
+        'Visit Rofik Godi Centre at Stall No. G70, Zilla Parishad Market, Raninagar, Berhampore with your Order ID or Pickup QR code. Call the store to confirm current collection and fitting arrangements.',
       tone: 'blue',
       canModifyOrder: false,
       isPaid,
@@ -271,12 +271,13 @@ export function getTopicResolutionGuide(
     case 'pickup_store':
       return {
         topic,
-        heading: `Workshop Pickup & Free Installation · #${orderNum}`,
+        heading: `Workshop Pickup · #${orderNum}`,
         summary:
-          'Every seat cover order includes complimentary on-spot fitting by our technicians at our Berhampore workshop.',
+          'Contact the store to confirm collection and any fitting arrangements for your order.',
         bullets: [
-          'Location: Kadbeltal, Petrol Pump More, Berhampore, Murshidabad, WB 742101',
-          'Working Hours: Mon – Sun, 9:00 AM – 8:00 PM',
+          'Location: Stall No. G70, Zilla Parishad Market, Raninagar, Kadbeltala Panchanantala, Keshobnagar, Berhampore, West Bengal 742101',
+          'Working Hours: Monday and Wednesday–Sunday, 8:30 AM–7:30 PM; Tuesday closed',
+          'Phone: +91 97753 33555',
           'Show your Order ID or Pickup QR code at the counter when you arrive.',
         ],
         quickPrompts: [

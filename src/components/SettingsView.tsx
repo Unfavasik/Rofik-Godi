@@ -666,7 +666,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </p>
             <p className="flex items-center gap-2.5">
               <Phone className="h-4 w-4 shrink-0 text-emerald-600" />
-              <span className="tabular-nums">{WORKSHOP_INFO.phone} · {WORKSHOP_INFO.phoneAlt}</span>
+              <span className="tabular-nums">{WORKSHOP_INFO.phoneAlt ? `${WORKSHOP_INFO.phone} · ${WORKSHOP_INFO.phoneAlt}` : WORKSHOP_INFO.phone}</span>
             </p>
           </div>
 

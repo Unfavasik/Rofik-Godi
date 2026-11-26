@@ -367,15 +367,15 @@ export const PRODUCTS: Product[] = [
 
 export const WORKSHOP_INFO = {
   name: 'ROFIK GODI CENTRE',
-  subtitle: 'Local Ride Essentials & Seat Manufacturing',
-  address: 'Kadbeltal, Petrol Pump More, Raninagar, Keshobnagar, Berhampore, West Bengal 742101',
-  phone: '+91 94348 86786',
-  phoneAlt: '+91 97753 33555',
-  whatsapp: '+91 94348 86786',
+  subtitle: 'Motorcycle Parts Store & Seat-Cover Designs',
+  address: 'Stall No. G70, Zilla Parishad Market, Raninagar, Kadbeltala Panchanantala, Keshobnagar, Berhampore, West Bengal 742101',
+  phone: '+91 97753 33555',
+  phoneAlt: '',
+  whatsapp: '+91 97753 33555',
   email: 'support@rofikgodi.com',
-  workingHours: 'Mon - Sun: 8:00 AM – 9:30 PM',
-  plusCode: '37WF+WC',
-  // Exact workshop coordinates (Plus Code 37WF+WC).
+  workingHours: 'Mon & Wed–Sun: 8:30 AM–7:30 PM · Tuesday: Closed',
+  plusCode: '37WF+XC',
+  // Approximate workshop map coordinates; use the linked Maps listing for directions.
   lat: 24.0973125,
   lng: 88.2735625,
   rating: 4.8,

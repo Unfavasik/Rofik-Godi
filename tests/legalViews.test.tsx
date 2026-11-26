@@ -62,7 +62,7 @@ describe('Privacy Policy & Terms & Conditions content and UI/UX upgrade', () => 
     expect(html).toContain(WORKSHOP_INFO.name);
     expect(html).toContain(WORKSHOP_INFO.email);
     expect(html).toContain(WORKSHOP_INFO.phone);
-    expect(html).toContain(WORKSHOP_INFO.workingHours);
+    expect(html).toContain(WORKSHOP_INFO.workingHours.replace('&', '&amp;'));
     expect(html).toContain('View Store Map &amp; Hours');
     expect(html).toContain('Read Terms &amp; Conditions');
     expect(html).toContain('Manage or Delete Account');

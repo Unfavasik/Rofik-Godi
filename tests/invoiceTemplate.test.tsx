@@ -82,7 +82,7 @@ describe('InvoiceTemplate', () => {
     );
 
     expect(DEFAULT_STORE.address).toContain('Berhampore');
-    expect(html).toContain('Kadbeltal, Petrol Pump More');
+    expect(html).toContain('Zilla Parishad Market');
     expect(html).toContain('support@rofikgodi.com');
     expect(html).toContain('PENDING');
     expect(html).toContain('Balance due at store');
@@ -264,4 +264,3 @@ describe('InvoiceTemplate', () => {
     expect(html).not.toContain('border-l-4');
   });
 });
-

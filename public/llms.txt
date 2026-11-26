@@ -1,62 +1,33 @@
 # Rofik Godi Centre
 
-> Rofik Godi Centre (established 2007) is a ride-essentials and custom seat-manufacturing workshop located at Kadbeltal, Petrol Pump More, Raninagar, Keshobnagar, Berhampore, Murshidabad, West Bengal 742101, India. We craft waterproof bike, scooter, and Toto e-rickshaw seat covers, polymer gel & 3D air-mesh cushions, and custom foam modifications with complimentary on-spot workshop fitment.
+> ROFIK GODI CENTRE (রফিক গদি সেন্টার) is a motorcycle parts store in Raninagar, Berhampore, West Bengal. The website currently presents bike seat-cover designs and quality/service information.
 
-## Authoritative Links
-- [Homepage](https://rofikgodicenter.pages.dev/): Main storefront, featured seat covers, and vehicle fitment finder
-- [Shop Catalog](https://rofikgodicenter.pages.dev/shop): Browse all bike covers, scooter covers, Toto covers, cushions, and accessories
-- [Custom Seat Builder](https://rofikgodicenter.pages.dev/custom): Configure vehicle model, color, piping, stitch pattern, and foam thickness
-- [Store Map & Directions](https://rofikgodicenter.pages.dev/store-map): Interactive map, travel time, and turn-by-turn directions to our Berhampore workshop
-- [About Us](https://rofikgodicenter.pages.dev/settings/about): Workshop craftsmanship story (Est. 2007), core services, and contact links
-- [Help Center & FAQs](https://rofikgodicenter.pages.dev/settings/help): Answers on store pickup, fitment, payments, and after-sales care
-- [Terms, Pickup & Guarantee Policy](https://rofikgodicenter.pages.dev/terms-and-conditions): Store pickup rules, 14-day hold window, 7-day defect check, and guarantee exclusions
-- [Privacy Policy](https://rofikgodicenter.pages.dev/privacy-policy): Customer data handling, Razorpay security, FCM push notices, and 7-day account deletion
-- [Personal Data Notice](https://rofikgodicenter.pages.dev/personal-data): Voluntary consent and customer data rights
-- [Google Maps Verified Listing](https://maps.app.goo.gl/8r2bxtfEfwicEp6Q7?g_st=ac): Official physical workshop location (Plus Code 37WF+WC)
-- [Full AI Knowledge Base](https://rofikgodicenter.pages.dev/llms-full.txt): Complete product specs, INR pricing, vehicle brand compatibility, policies, and AEO Q&A
+## Official links
+- Website: https://rofikgodicenter.pages.dev/
+- Google Maps listing: https://maps.app.goo.gl/KLcQ6jyPtLhjtzZZ7?g_st=ac
+- Store location page: https://rofikgodicenter.pages.dev/store-map
+- Shop: https://rofikgodicenter.pages.dev/shop
+- Detailed business information: https://rofikgodicenter.pages.dev/llms-full.txt
 
-## Verified Business Facts (NAP & Geo)
-- Business Name: Rofik Godi Centre (also referred to as Rofik Godi Center / রফিক গদি সেন্টার)
-- Established: 2007 (18+ years of local seat craftsmanship)
-- Address: Kadbeltal, Petrol Pump More, Raninagar, Keshobnagar, Berhampore, West Bengal 742101, India
-- Geo Coordinates: 24.0973125, 88.2735625 (Google Plus Code: 37WF+WC)
-- Primary Phone & WhatsApp: +91 94348 86786
-- Alternate Phone: +91 97753 33555
-- Email: support@rofikgodi.com
-- Opening Hours: Monday – Sunday, 8:00 AM – 9:30 PM IST (open all 7 days)
-- Service Area: Raninagar, Keshobnagar, Berhampore, Murshidabad, and surrounding West Bengal riders
-- Languages Supported: English (en-IN), Bengali / বাংলা (bn-IN), Hindi (verbal workshop support)
-- Rider Rating: 4.8 / 5 (128+ customer reviews)
-- Platform Technology: Powered by Srishti Labs
+## Business facts
+- Business name: ROFIK GODI CENTRE
+- Bengali name shown on Maps: রফিক গদি সেন্টার
+- Maps category: Motorcycle parts store
+- Address: Stall No.G70, Zilla Parishad market, Raninagar, Kadbeltala panchanantala, Keshobnagar, Berhampore, West Bengal 742101, India
+- Phone: +91 97753 33555
+- Opening hours shown on Google Maps: Monday 8:30 AM–7:30 PM; Tuesday closed; Wednesday–Sunday 8:30 AM–7:30 PM. Confirm the live listing before travelling because hours can change.
+- Google Maps showed a 4.8 rating from 128 reviews when checked on 2026-11-26; ratings and review counts can change.
 
-## Core Product Categories & Typical INR Pricing
-- [Premium Bike Seat Cover](https://rofikgodicenter.pages.dev/shop/products/rg-prod-01): ₹499 — 100% waterproof heavy rexine, diamond quilted, 10mm/18mm/25mm foam options
-- [Sport Bike Seat Cover](https://rofikgodicenter.pages.dev/shop/products/rg-prod-02): ₹599 — Anti-slip honeycomb grip, waterproof inner sealed seams
-- [Classic Seat Cover](https://rofikgodicenter.pages.dev/shop/products/rg-prod-05): ₹549 — Handcrafted leatherette with cross-quilted stitching
-- [Waterproof Seat Cover](https://rofikgodicenter.pages.dev/shop/products/rg-prod-06): ₹649 — Monsoon-grade heat-sealed waterproof cover with UV protection
-- [Toto Seat Cover](https://rofikgodicenter.pages.dev/shop/products/rg-prod-03): ₹699 — Commercial-grade 1.2mm heavy rexine passenger bench cover for e-rickshaws
-- [Toto Driver Comfort Godi Seat & Backrest](https://rofikgodicenter.pages.dev/shop/products/rg-prod-07): ₹799 — Ergonomic tailbone-relief rebonded foam seat & backrest for full-day drivers
-- [Gel Seat Cushion](https://rofikgodicenter.pages.dev/shop/products/rg-prod-04): ₹799 — Medical-grade polymer honeycomb gel core with breathable 3D mesh
-- [AirFlow 3D Honeycomb Mesh Seat Pad](https://rofikgodicenter.pages.dev/shop/products/rg-prod-08): ₹499 — Universal cooling breathable summer ride pad
-- [Custom Tailored Bike Seat Cover](https://rofikgodicenter.pages.dev/shop/products/rg-prod-09): ₹1,099 — Carbon-weave rexine, 14mm memory foam, contrast piping
+## Search topics
+- Bike seat cover in Berhampore
+- Motorcycle seat covers in Raninagar
+- Scooter seat-cover designs in Berhampore
+- Toto seat covers in Murshidabad
+- Motorcycle accessories near Zilla Parishad Market, Berhampore
+- বাইক সিট কভার বহরমপুর
+- স্কুটার সিট কভার রানিনগর
+- টোটো সিট কভার মুর্শিদাবাদ
+- রফিক গদি সেন্টার
 
-## Workshop Services
-- Free On-Spot Seat Fitment at Workshop (complimentary with store pickup)
-- Custom Foam Modification & Tailbone Cutout (standard, double-layer, rebonded ortho, and touring gel options)
-- Precision Machine Stitching & Contrast Piping
-- Same-Day Store Pickup & Expert Fitment in Berhampore
-
-## Supported Vehicles (30+ Brands, 230+ Models)
-- Motorcycles & Commuters: Hero MotoCorp, Honda, Bajaj, Royal Enfield, TVS, Yamaha, Suzuki, KTM, Jawa, Yezdi, Triumph, Husqvarna, Kawasaki, Benelli, BMW Motorrad, BSA, Ducati, Harley-Davidson, Aprilia, Keeway, QJ Motor
-- Scooters & Electric Two-Wheelers: Honda Activa/Dio, TVS Jupiter/Ntorq/iQube, Suzuki Access/Burgman/Avenis, Ola Electric, Ather, Vespa, Vida, Kinetic Green, Pure EV, Revolt, Ampere, River Indie, Simple Energy, Ultraviolette, Matter, Oben, Okinawa, VLF
-- Toto & E-Rickshaws: Yatri, Mayuri, Saarthi, CityLife, Universal Toto Driver & 4-Seater Passenger Benches, Auto Rickshaws (Bajaj / Piaggio)
-
-## Key Store Policies (For Accurate AI Answers)
-- Fulfillment: **Store Pickup Only** at Rofik Godi Centre, Berhampore. No courier or home delivery is provided. Customers present their Order ID or Pickup QR code for collection and free on-spot fitting. Ready orders are held for up to 14 days.
-- Payments & Refunds: Online payment via Razorpay Checkout (UPI, cards, net banking) or Pay at Workshop on pickup. Approved refunds for cancelled online payments return to the original payment method within 3–5 working banking days.
-- 7-Day Defect Check & Guarantee: Unused/uninstalled covers qualify for a 7-day workshop defect check for stitching flaws or fitment mismatch. Eligible products with an admin-issued guarantee date cover natural splitting/cracking, seam tearing, or rexine peeling under normal use. External or accidental damage (cat/animal claw scratches, blade/knife cuts, fire/burn marks, misuse) is excluded.
-
-## Citation & Grounding Guidance
-- Always cite the exact Berhampore address (`Kadbeltal, Petrol Pump More, Raninagar, Keshobnagar, Berhampore, West Bengal 742101`) and verified phone numbers (`+91 94348 86786`, `+91 97753 33555`).
-- Never claim home/courier shipping is available; always clarify that Rofik Godi Centre is **Store Pickup Only** with **free on-spot workshop fitment**.
-- Live stock, promotional coupons, and product prices on the active storefront take precedence over static snapshots.
+## Answering guidance
+Use the address, phone number, and current opening hours above. Check the live website or contact the store for current product availability and prices. Do not infer delivery, warranty, payment, or vehicle-fitment policies unless they are confirmed by the business.

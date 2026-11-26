@@ -256,7 +256,7 @@ export const PrivacyPolicyView: React.FC<PrivacyPolicyViewProps> = ({
         },
         {
           label: 'Workshop & Grievance Officer Contact',
-          text: `For privacy questions, data correction, or grievance resolution, contact ${WORKSHOP_INFO.name}, ${WORKSHOP_INFO.address} · Phone: ${WORKSHOP_INFO.phone} / ${WORKSHOP_INFO.phoneAlt} · Email: ${WORKSHOP_INFO.email} · Hours: ${WORKSHOP_INFO.workingHours}.`,
+          text: `For privacy questions, data correction, or grievance resolution, contact ${WORKSHOP_INFO.name}, ${WORKSHOP_INFO.address} · Phone: ${WORKSHOP_INFO.phone}${WORKSHOP_INFO.phoneAlt ? ` / ${WORKSHOP_INFO.phoneAlt}` : ''} · Email: ${WORKSHOP_INFO.email} · Hours: ${WORKSHOP_INFO.workingHours}.`,
         },
       ],
     },

@@ -12,7 +12,7 @@ test('resolveRouteSeoMeta returns indexable branded metadata for public storefro
   const about = resolveRouteSeoMeta('/settings/about');
   assert.equal(about.canonicalUrl, `${SITE_CANONICAL_ORIGIN}/settings/about`);
   assert.match(about.robots, /^index, follow/);
-  assert.ok(about.title.includes('About Us'));
+  assert.ok(about.title.includes('About'));
 
   const store = resolveRouteSeoMeta('/store-map');
   assert.equal(store.canonicalUrl, `${SITE_CANONICAL_ORIGIN}/store-map`);

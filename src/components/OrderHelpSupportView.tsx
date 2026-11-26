@@ -1499,10 +1499,14 @@ export function OrderHelpSupportView({
                             <a href={phoneHref} className="hover:text-[#D9232D]">
                               {WORKSHOP_INFO.phone}
                             </a>
-                            <span className="text-slate-300">·</span>
-                            <a href={phoneAltHref} className="hover:text-[#D9232D]">
-                              {WORKSHOP_INFO.phoneAlt}
-                            </a>
+                            {WORKSHOP_INFO.phoneAlt && (
+                              <>
+                                <span className="text-slate-300">·</span>
+                                <a href={phoneAltHref} className="hover:text-[#D9232D]">
+                                  {WORKSHOP_INFO.phoneAlt}
+                                </a>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>

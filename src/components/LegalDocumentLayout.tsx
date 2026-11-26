@@ -595,8 +595,12 @@ export const LegalDocumentLayout: React.FC<LegalDocumentLayoutProps> = ({
                 <span>{WORKSHOP_INFO.workingHours}</span>
                 <span aria-hidden="true">·</span>
                 <span>{WORKSHOP_INFO.phone}</span>
-                <span aria-hidden="true">·</span>
-                <span>{WORKSHOP_INFO.phoneAlt}</span>
+                {WORKSHOP_INFO.phoneAlt && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span>{WORKSHOP_INFO.phoneAlt}</span>
+                  </>
+                )}
               </div>
             </div>
 

@@ -297,7 +297,7 @@ export const TermsConditionsView: React.FC<TermsConditionsViewProps> = ({
         },
         {
           label: 'Official Workshop Details',
-          text: `${WORKSHOP_INFO.name}, ${WORKSHOP_INFO.address} · Phone: ${WORKSHOP_INFO.phone} / ${WORKSHOP_INFO.phoneAlt} · Email: ${WORKSHOP_INFO.email} · Hours: ${WORKSHOP_INFO.workingHours}.`,
+          text: `${WORKSHOP_INFO.name}, ${WORKSHOP_INFO.address} · Phone: ${WORKSHOP_INFO.phone}${WORKSHOP_INFO.phoneAlt ? ` / ${WORKSHOP_INFO.phoneAlt}` : ''} · Email: ${WORKSHOP_INFO.email} · Hours: ${WORKSHOP_INFO.workingHours}.`,
         },
       ],
     },

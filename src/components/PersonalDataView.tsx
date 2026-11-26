@@ -181,7 +181,7 @@ export const PersonalDataView: React.FC<PersonalDataViewProps> = ({
         },
         {
           label: 'Support Phone & WhatsApp',
-          text: `${WORKSHOP_INFO.phone} / ${WORKSHOP_INFO.phoneAlt} (${WORKSHOP_INFO.workingHours})`,
+          text: `${WORKSHOP_INFO.phone}${WORKSHOP_INFO.phoneAlt ? ` / ${WORKSHOP_INFO.phoneAlt}` : ''} (${WORKSHOP_INFO.workingHours})`,
         },
         {
           label: 'Official Store Email',
