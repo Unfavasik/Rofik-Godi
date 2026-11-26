@@ -1,0 +1,12 @@
+# Canonical public metadata files
+/sitemap /sitemap.xml 301
+/sitemap/ /sitemap.xml 301
+/robot.txt /robots.txt 301
+/robot /robots.txt 301
+/robot/ /robots.txt 301
+/robots /robots.txt 301
+/robots/ /robots.txt 301
+/llms /llms.txt 301
+/llms/ /llms.txt 301
+/llms-full /llms-full.txt 301
+/llms-full/ /llms-full.txt 301
