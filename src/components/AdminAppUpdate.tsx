@@ -11,6 +11,7 @@ export const AdminAppUpdate = ({ notify }: { notify: (message: string) => void }
   const [notes, setNotes] = useState('');
   const [force, setForce] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [readingMetadata, setReadingMetadata] = useState(false);
 
   useEffect(() => {
     void fetchLatestRelease().then(setCurrent);
@@ -45,6 +46,30 @@ export const AdminAppUpdate = ({ notify }: { notify: (message: string) => void }
     }
   };
 
+  const handleApkChange = async (selectedFile: File | undefined) => {
+    setFile(selectedFile ?? null);
+    if (!selectedFile) return;
+    setReadingMetadata(true);
+    try {
+      const parserModule = await import('apk-manifest-parser');
+      const parserExport = parserModule.default as unknown as { default?: typeof parserModule.default };
+      const ManifestParser = parserExport.default ?? parserModule.default;
+      const metadata = await ManifestParser.extractApkManifest(selectedFile);
+      if (!metadata.versionName || !Number.isFinite(Number(metadata.versionCode))) {
+        throw new Error('APK manifest is missing version information');
+      }
+      setVersionName(String(metadata.versionName));
+      setVersionCode(String(metadata.versionCode));
+      notify(`Detected APK version ${metadata.versionName} (code ${metadata.versionCode})`);
+    } catch (error) {
+      setVersionName('');
+      setVersionCode('');
+      notify(error instanceof Error ? `Could not read APK version: ${error.message}` : 'Could not read APK version');
+    } finally {
+      setReadingMetadata(false);
+    }
+  };
+
   return (
     <section className="mx-auto max-w-2xl space-y-4 p-4">
       <div className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -64,20 +89,20 @@ export const AdminAppUpdate = ({ notify }: { notify: (message: string) => void }
             <input
               type="file"
               accept=".apk,application/vnd.android.package-archive"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => void handleApkChange(e.target.files?.[0])}
               className="sr-only"
             />
           </label>
           <p className="mt-2 truncate text-center text-xs font-semibold text-slate-500" title={file?.name}>
-            {file ? file.name : 'Tap the red button to select your APK'}
+            {readingMetadata ? 'Reading APK version…' : file ? file.name : 'Tap the red button to select your APK'}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <label className="block text-xs font-bold text-slate-600">Version name
-            <input value={versionName} onChange={(e) => setVersionName(e.target.value)} placeholder="1.1.59" className="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" />
+            <input value={versionName} readOnly={Boolean(file)} onChange={(e) => setVersionName(e.target.value)} placeholder="1.1.59" className="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 text-sm read-only:bg-slate-50" />
           </label>
           <label className="block text-xs font-bold text-slate-600">Version code (must be higher)
-            <input value={versionCode} onChange={(e) => setVersionCode(e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder={String((current?.versionCode ?? 0) + 1)} className="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" />
+            <input value={versionCode} readOnly={Boolean(file)} onChange={(e) => setVersionCode(e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder={String((current?.versionCode ?? 0) + 1)} className="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 text-sm read-only:bg-slate-50" />
           </label>
         </div>
         <label className="block text-xs font-bold text-slate-600">What's new (one line each)
