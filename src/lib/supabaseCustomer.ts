@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { convertImageToWebP } from './imagePipeline';
 import { buildAvatarStoragePath } from './profileValidation';
+import { isValidUuid, sanitizeUrl } from './security';
 
 export async function getMyProfile(expectedUserId?: string) {
   if (!supabase) return null;
@@ -26,7 +27,7 @@ export async function saveMyProfile(profile: { full_name: string; phone: string;
   const payload = {
     full_name: profile.full_name,
     phone: profile.phone,
-    avatar_url: profile.avatar_url,
+    avatar_url: profile.avatar_url ? sanitizeUrl(profile.avatar_url, { allowRelative: false }) : null,
     vehicle_model: profile.vehicle_model,
   };
   const { data, error } = await supabase.from('profiles').upsert({ id: userData.user.id, ...payload }).select().single();
@@ -102,6 +103,7 @@ export async function listMyWishlist() {
 
 export async function toggleWishlist(productId: string, saved: boolean) {
   if (!supabase) return { error: null };
+  if (!isValidUuid(productId)) return { error: new Error('Invalid product reference.') };
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) return { error: new Error('Sign in required') };
   if (saved) return supabase.from('wishlists').delete().eq('user_id', userData.user.id).eq('product_id', productId);
@@ -127,6 +129,7 @@ export async function listMyNotifications(expectedUserId?: string) {
 
 export async function markNotificationRead(id: string, expectedUserId?: string) {
   if (!supabase) return { error: new Error('Service configuration unavailable. Please try again.') };
+  if (!isValidUuid(id)) return { error: new Error('Invalid notification reference.') };
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return { error: new Error('Sign in required') };
   return supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id).eq('user_id', userData.user.id);
@@ -145,6 +148,7 @@ export async function markAllNotificationsRead(expectedUserId?: string) {
 
 export async function deleteMyNotification(id: string, expectedUserId?: string) {
   if (!supabase) return { error: new Error('Service configuration unavailable. Please try again.') };
+  if (!isValidUuid(id)) return { error: new Error('Invalid notification reference.') };
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user || (expectedUserId && expectedUserId !== userData.user.id)) return { error: new Error('Sign in required') };
   return supabase.from('notifications').delete().eq('id', id).eq('user_id', userData.user.id);
@@ -161,9 +165,9 @@ export async function listMyOrders() {
 }
 
 export async function findActiveCoupon(code: string) {
-  if (!supabase) return null;
-  const { data } = await supabase.from('coupons').select('code,discount_type,discount_value,minimum_order,maximum_discount,usage_limit,usage_count,starts_at,ends_at').eq('code', code.trim().toUpperCase()).eq('is_active', true).maybeSingle();
-  return data;
+  // Coupon rules are enforced server-side via validate_coupon and order creation RPCs.
+  void code;
+  return null;
 }
 
 

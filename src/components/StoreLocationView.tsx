@@ -518,17 +518,37 @@ export function StoreLocationView({ onClose, startInNavigation = false, onStartN
             if (activeModeRef.current === 'walk') {
               // Google Maps-style walking puck: blue dot with a 45-degree
               // view cone, rotated by the compass via the rotor.
-              iconEl.innerHTML = `<div class="nav-marker-rotor" style="position:relative;width:64px;height:64px;display:flex;align-items:center;justify-content:center;">
-                <svg width="64" height="64" viewBox="0 0 64 64" style="position:absolute;inset:0;" aria-hidden="true">
-                  <path d="M32 32 L20.5 4.3 A30 30 0 0 1 43.5 4.3 Z" fill="rgba(26,115,232,0.28)"/>
-                </svg>
-                <div style="position:relative;width:${spec.markerWidthPx}px;height:${spec.markerHeightPx}px;border-radius:50%;background:#1A73E8;border:3px solid #ffffff;box-shadow:0 1px 6px rgba(0,0,0,0.35);"></div>
-              </div>`;
+              const rotor = document.createElement('div');
+              rotor.className = 'nav-marker-rotor';
+              rotor.style.cssText = 'position:relative;width:64px;height:64px;display:flex;align-items:center;justify-content:center;';
+              const svgNS = 'http://www.w3.org/2000/svg';
+              const coneSvg = document.createElementNS(svgNS, 'svg');
+              coneSvg.setAttribute('width', '64');
+              coneSvg.setAttribute('height', '64');
+              coneSvg.setAttribute('viewBox', '0 0 64 64');
+              coneSvg.setAttribute('aria-hidden', 'true');
+              coneSvg.style.cssText = 'position:absolute;inset:0;';
+              const conePath = document.createElementNS(svgNS, 'path');
+              conePath.setAttribute('d', 'M32 32 L20.5 4.3 A30 30 0 0 1 43.5 4.3 Z');
+              conePath.setAttribute('fill', 'rgba(26,115,232,0.28)');
+              coneSvg.appendChild(conePath);
+              const dot = document.createElement('div');
+              dot.style.cssText = `position:relative;width:${spec.markerWidthPx}px;height:${spec.markerHeightPx}px;border-radius:50%;background:#1A73E8;border:3px solid #ffffff;box-shadow:0 1px 6px rgba(0,0,0,0.35);`;
+              rotor.appendChild(coneSvg);
+              rotor.appendChild(dot);
+              iconEl.replaceChildren(rotor);
             } else {
               const iconUrl = activeModeRef.current === 'drive' ? NAV_CAR_ICON : NAV_BIKE_ICON;
-              iconEl.innerHTML = `<div class="nav-marker-rotor" style="display:flex;">
-                <img src="${iconUrl}" alt="" style="width:${spec.markerWidthPx}px;height:${spec.markerHeightPx}px;object-fit:contain;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.4));" draggable="false" />
-              </div>`;
+              const rotor = document.createElement('div');
+              rotor.className = 'nav-marker-rotor';
+              rotor.style.cssText = 'display:flex;';
+              const img = document.createElement('img');
+              img.src = iconUrl;
+              img.alt = '';
+              img.draggable = false;
+              img.style.cssText = `width:${spec.markerWidthPx}px;height:${spec.markerHeightPx}px;object-fit:contain;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.4));`;
+              rotor.appendChild(img);
+              iconEl.replaceChildren(rotor);
             }
             // The camera eases to this heading; rotate the rotor relative to
             // the map's rotation so the marker points along the route on screen.

@@ -293,23 +293,68 @@ const CONFIRMATION_LOG_TABLE = 'order_confirmation_email_logs';
 const STATUS_LOG_TABLE = 'order_status_email_logs';
 const WELCOME_LOG_TABLE = 'welcome_email_logs';
 const PUBLIC_APP_URL = 'https://rofikgodicenter.pages.dev';
-const ALLOWED_WEB_ORIGINS = new Set([PUBLIC_APP_URL, 'http://localhost:3000', 'http://127.0.0.1:3000']);
+const ALLOWED_WEB_ORIGINS = new Set([
+  PUBLIC_APP_URL,
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://localhost',
+  'http://localhost',
+  'capacitor://localhost',
+]);
 const ALLOWED_STATUS_EVENTS = new Set<OrderEmailEvent>(['COMPLETED']);
 const allowedHeaders = 'authorization, x-client-info, apikey, content-type';
+const MAX_REQUEST_BYTES = 32 * 1024;
+class PayloadTooLargeError extends Error {}
+
+async function readBoundedJson(request: Request, maxBytes = MAX_REQUEST_BYTES): Promise<Record<string, unknown>> {
+  const declared = Number(request.headers.get('content-length') || 0);
+  if (Number.isFinite(declared) && declared > maxBytes) throw new PayloadTooLargeError();
+  if (!request.body) throw new Error('Empty request body');
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      throw new PayloadTooLargeError();
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  const parsed = JSON.parse(new TextDecoder().decode(bytes)) as unknown;
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Invalid request body');
+  }
+  return parsed as Record<string, unknown>;
+}
 
 function responseHeaders(origin: string | null) {
   return {
-    'Access-Control-Allow-Origin': origin && ALLOWED_WEB_ORIGINS.has(origin) ? origin : PUBLIC_APP_URL,
+    ...(origin && ALLOWED_WEB_ORIGINS.has(origin) ? { 'Access-Control-Allow-Origin': origin } : {}),
     'Access-Control-Allow-Headers': allowedHeaders,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Vary': 'Origin',
   };
 }
 
-function jsonResponse(body: Record<string, unknown>, status: number, origin: string | null) {
+function jsonResponse(
+  body: Record<string, unknown>,
+  status: number,
+  origin: string | null,
+  extraHeaders?: Record<string, string>,
+) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...responseHeaders(origin), 'Content-Type': 'application/json; charset=utf-8' },
+    headers: { ...responseHeaders(origin), ...(extraHeaders || {}), 'Content-Type': 'application/json; charset=utf-8' },
   });
 }
 
@@ -685,8 +730,11 @@ Deno.serve(async (request: Request) => {
 
     let body: { type?: unknown; orderNumber?: unknown; event?: unknown };
     try {
-      body = await request.json();
-    } catch {
+      body = await readBoundedJson(request);
+    } catch (error) {
+      if (error instanceof PayloadTooLargeError) {
+        return jsonResponse({ error: 'Request body is too large' }, 413, origin);
+      }
       return jsonResponse({ error: 'Invalid request body' }, 400, origin);
     }
     const type = body.type === undefined ? 'order_confirmation' : body.type;
@@ -706,6 +754,19 @@ Deno.serve(async (request: Request) => {
       authorization,
     );
     if ('error' in clients) return jsonResponse({ error: clients.error }, 401, origin);
+
+    const { data: rateResult, error: rateError } = await clients.serviceClient.rpc('enforce_edge_rate_limit', {
+      p_scope: 'edge:send-order-confirmation',
+      p_subject: clients.user.id,
+      p_limit: 25,
+      p_window_seconds: 600,
+    });
+    if (!rateError && rateResult && rateResult.allowed === false) {
+      const retryAfter = String(Math.max(1, Number(rateResult.reset_in_seconds || 60)));
+      return jsonResponse({ error: 'Too many email requests. Please wait a few minutes.' }, 429, origin, {
+        'Retry-After': retryAfter,
+      });
+    }
 
     if (type === 'welcome') {
       return await handleWelcomeEmail(origin, credentials, clients.user, clients.serviceClient);

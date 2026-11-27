@@ -1,11 +1,50 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-function json(body: Record<string, unknown>, status = 200) {
+const MAX_WEBHOOK_BYTES = 256 * 1024;
+class PayloadTooLargeError extends Error {}
+
+function json(body: Record<string, unknown>, status = 200, extraHeaders?: Record<string, string>) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
+    headers: { ...(extraHeaders || {}), "Content-Type": "application/json; charset=utf-8" },
   });
+}
+
+function getClientIp(req: Request): string {
+  const cf = req.headers.get("cf-connecting-ip")?.trim();
+  if (cf) return cf.slice(0, 64);
+  const forwarded = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  if (forwarded) return forwarded.slice(0, 64);
+  const realIp = req.headers.get("x-real-ip")?.trim();
+  return (realIp || "unknown").slice(0, 64);
+}
+
+async function readBoundedBytes(req: Request, maxBytes = MAX_WEBHOOK_BYTES): Promise<Uint8Array> {
+  const declared = Number(req.headers.get("content-length") || 0);
+  if (Number.isFinite(declared) && declared > maxBytes) throw new PayloadTooLargeError();
+  if (!req.body) return new Uint8Array(0);
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      throw new PayloadTooLargeError();
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return bytes;
 }
 
 function hexToBytes(hex: string): Uint8Array | null {
@@ -38,7 +77,28 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Webhook is not configured." }, 503);
   }
 
-  const rawBody = new Uint8Array(await req.arrayBuffer());
+  let rawBody: Uint8Array;
+  try {
+    rawBody = await readBoundedBytes(req);
+  } catch (error) {
+    if (error instanceof PayloadTooLargeError) return json({ error: "Webhook payload is too large." }, 413);
+    return json({ error: "Invalid webhook payload." }, 400);
+  }
+
+  const serviceClient = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data: rateResult, error: rateError } = await serviceClient.rpc("enforce_edge_rate_limit", {
+    p_scope: "edge:razorpay-webhook",
+    p_subject: getClientIp(req),
+    p_limit: 120,
+    p_window_seconds: 60,
+  });
+  if (!rateError && rateResult && rateResult.allowed === false) {
+    const retryAfter = String(Math.max(1, Number(rateResult.reset_in_seconds || 60)));
+    return json({ error: "Too many webhook requests." }, 429, { "Retry-After": retryAfter });
+  }
+
   const signature = req.headers.get("x-razorpay-signature") || "";
   if (!await verifyWebhookSignature(rawBody, signature, webhookSecret)) {
     return json({ error: "Invalid Razorpay webhook signature." }, 401);
@@ -61,9 +121,6 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Captured payment details are incomplete." }, 400);
   }
 
-  const serviceClient = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
   const { data, error } = await serviceClient.rpc("mark_razorpay_payment_paid", {
     p_razorpay_order_id: payment.order_id,
     p_razorpay_payment_id: payment.id,

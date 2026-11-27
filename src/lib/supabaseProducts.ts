@@ -167,15 +167,14 @@ export const mapSupabaseProduct = (row: ProductRow): Product => {
     })(),
   };
 };
-const mapProductsWithReviewSummaries = async (rows: ProductRow[]): Promise<Product[]> => {
-  if (!supabase || !rows.length) return rows.map(mapSupabaseProduct);
-  const ids = rows.map((row) => String(row.id)).filter((id) => /^[0-9a-f-]{36}$/i.test(id));
-  if (!ids.length) return rows.map(mapSupabaseProduct);
-  const { data } = await supabase
-    .from('product_rating_summary')
-    .select('product_id,average_rating,review_count')
-    .in('product_id', ids);
-  const summaries = new Map((data || []).map((summary) => [summary.product_id, summary]));
+type RatingSummaryRow = {
+  product_id: string;
+  average_rating: number;
+  review_count: number;
+};
+
+const applyReviewSummaries = (rows: ProductRow[], summaryRows: RatingSummaryRow[]): Product[] => {
+  const summaries = new Map(summaryRows.map((summary) => [summary.product_id, summary]));
   return rows.map((row) => {
     const summary = summaries.get(String(row.id));
     return mapSupabaseProduct({
@@ -184,6 +183,17 @@ const mapProductsWithReviewSummaries = async (rows: ProductRow[]): Promise<Produ
       review_count: Number(summary?.review_count || 0),
     });
   });
+};
+
+const mapProductsWithReviewSummaries = async (rows: ProductRow[]): Promise<Product[]> => {
+  if (!supabase || !rows.length) return rows.map(mapSupabaseProduct);
+  const ids = rows.map((row) => String(row.id)).filter((id) => /^[0-9a-f-]{36}$/i.test(id));
+  if (!ids.length) return rows.map(mapSupabaseProduct);
+  const { data } = await supabase
+    .from('product_rating_summary')
+    .select('product_id,average_rating,review_count')
+    .in('product_id', ids);
+  return applyReviewSummaries(rows, (data || []) as RatingSummaryRow[]);
 };
 
 export const loadPublicProducts = async (): Promise<Product[]> => {

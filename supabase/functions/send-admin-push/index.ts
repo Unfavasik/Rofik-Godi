@@ -20,8 +20,41 @@ type AdminPushToken = { token: string; user_id: string };
 
 const SITE = 'https://rofikgodicenter.pages.dev';
 const FIREBASE_PROJECT_ID = 'rofik-godi-centre';
+const MAX_WEBHOOK_BYTES = 256 * 1024;
+class PayloadTooLargeError extends Error {}
 let accessTokenCache = '';
 let accessTokenExpiresAt = 0;
+
+async function readBoundedJson(request: Request, maxBytes = MAX_WEBHOOK_BYTES): Promise<Record<string, unknown>> {
+  const declared = Number(request.headers.get('content-length') || 0);
+  if (Number.isFinite(declared) && declared > maxBytes) throw new PayloadTooLargeError();
+  if (!request.body) throw new Error('Empty request body');
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      throw new PayloadTooLargeError();
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  const parsed = JSON.parse(new TextDecoder().decode(bytes)) as unknown;
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Invalid JSON');
+  }
+  return parsed as Record<string, unknown>;
+}
 
 function constantTimeEqual(a: string, b: string) {
   if (!a || !b || a.length !== b.length) return false;
@@ -130,8 +163,9 @@ Deno.serve(async (request) => {
 
   let event: ActivityEvent;
   try {
-    event = await request.json();
-  } catch {
+    event = await readBoundedJson(request) as ActivityEvent;
+  } catch (error) {
+    if (error instanceof PayloadTooLargeError) return new Response('Payload too large', { status: 413 });
     return new Response('Invalid JSON', { status: 400 });
   }
   if (!event || typeof event !== 'object' || !event.id || !event.event_type) {

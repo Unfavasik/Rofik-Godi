@@ -32,6 +32,7 @@ import { PRODUCTS } from '../data/products';
 import type { Product } from '../types';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { subscribePullToRefresh } from '../lib/pullToRefresh';
+import { generateSecureToken } from '../lib/security';
 
 type CustomerProfileTab = 'orders' | 'details' | 'notes';
 type CustomerNoteCategory = 'Important' | 'Delivery' | 'Payment' | 'Call' | 'General';
@@ -314,9 +315,7 @@ export const AdminCustomerProfile: React.FC<AdminCustomerProfileProps> = ({
       pending.category === noteCategory &&
       pending.content === content
         ? pending.noteId
-        : typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-          ? crypto.randomUUID()
-          : `note-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+        : generateSecureToken('note');
     pendingNoteRef.current = {
       customerId: customer.id,
       noteId,

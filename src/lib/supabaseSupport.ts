@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { isValidSafeId, validatePostgrestCursor } from './security';
 
 export type SupportRequestCategory =
   | 'Order issue'
@@ -127,6 +128,9 @@ export async function createCustomerSupportRequest(input: {
 }): Promise<{ id: string | null; error: Error | null; attachmentError?: Error | null }> {
   const { user, error: authError } = await getSignedInUser(input.expectedUserId);
   if (!user || !supabase) return { id: null, error: authError };
+  if (input.relatedOrderId && !isValidSafeId(input.relatedOrderId)) {
+    return { id: null, error: new Error('Invalid order reference.') };
+  }
   const { data, error } = await supabase.rpc('create_customer_support_request', {
     p_category: input.category,
     p_subject: input.subject.trim(),
@@ -165,7 +169,13 @@ export async function listMySupportRequests(expectedUserId?: string, cursor?: Su
     .order('last_message_at', { ascending: false })
     .order('id', { ascending: false });
   if (cursor) {
-    query = query.or(`last_message_at.lt.${cursor.lastMessageAt},and(last_message_at.eq.${cursor.lastMessageAt},id.lt.${cursor.id})`);
+    const validatedCursor = validatePostgrestCursor(cursor, 'lastMessageAt');
+    if (!validatedCursor.valid) {
+      return { data: [], error: new Error('Invalid support request cursor.'), hasMore: false, cursor: null };
+    }
+    query = query.or(
+      `last_message_at.lt.${validatedCursor.timestamp},and(last_message_at.eq.${validatedCursor.timestamp},id.lt.${validatedCursor.id})`,
+    );
   }
   const pageSize = 50;
   const { data, error } = await query.limit(pageSize + 1);
@@ -192,6 +202,7 @@ export async function getSupportRequest(requestId: string, expectedUserId?: stri
   data: SupportRequestRecord | null;
   error: Error | null;
 }> {
+  if (!isValidSafeId(requestId)) return { data: null, error: new Error('Invalid support request reference.') };
   const { user, error: authError } = await getSignedInUser(expectedUserId);
   if (!user || !supabase) return { data: null, error: authError };
   const { data, error } = await supabase
@@ -215,6 +226,7 @@ export async function listSupportMessages(requestId: string, expectedUserId?: st
   hasMore: boolean;
   cursor: SupportMessageCursor | null;
 }> {
+  if (!isValidSafeId(requestId)) return { data: [], error: new Error('Invalid support request reference.'), hasMore: false, cursor: null };
   const { user, error: authError } = await getSignedInUser(expectedUserId);
   if (!user || !supabase) return { data: [], error: authError, hasMore: false, cursor: null };
   let query = supabase
@@ -224,7 +236,13 @@ export async function listSupportMessages(requestId: string, expectedUserId?: st
     .order('created_at', { ascending: false })
     .order('id', { ascending: false });
   if (cursor) {
-    query = query.or(`created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`);
+    const validatedCursor = validatePostgrestCursor(cursor, 'createdAt');
+    if (!validatedCursor.valid) {
+      return { data: [], error: new Error('Invalid message pagination cursor.'), hasMore: false, cursor: null };
+    }
+    query = query.or(
+      `created_at.lt.${validatedCursor.timestamp},and(created_at.eq.${validatedCursor.timestamp},id.lt.${validatedCursor.id})`,
+    );
   }
   const pageSize = 100;
   const { data, error } = await query.limit(pageSize + 1);
@@ -255,6 +273,7 @@ export async function sendSupportMessage(input: {
   files?: File[];
   expectedUserId?: string;
 }): Promise<{ error: Error | null }> {
+  if (!isValidSafeId(input.requestId)) return { error: new Error('Invalid support request reference.') };
   const { user, error: authError } = await getSignedInUser(input.expectedUserId);
   if (!user || !supabase) return { error: authError };
   const files = input.files || [];

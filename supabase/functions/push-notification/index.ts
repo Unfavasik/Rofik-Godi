@@ -25,11 +25,42 @@ type FirebaseServiceAccount = {
   private_key: string;
 };
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, apikey, content-type',
+const jsonHeaders = {
   'Content-Type': 'application/json',
 };
+const MAX_WEBHOOK_BYTES = 256 * 1024;
+class PayloadTooLargeError extends Error {}
+
+async function readBoundedJson(request: Request, maxBytes = MAX_WEBHOOK_BYTES): Promise<Record<string, unknown>> {
+  const declared = Number(request.headers.get('content-length') || 0);
+  if (Number.isFinite(declared) && declared > maxBytes) throw new PayloadTooLargeError();
+  if (!request.body) throw new Error('Empty request body');
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      throw new PayloadTooLargeError();
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  const parsed = JSON.parse(new TextDecoder().decode(bytes)) as unknown;
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Invalid JSON payload');
+  }
+  return parsed as Record<string, unknown>;
+}
 
 let cachedAccessToken = '';
 let cachedAccessTokenExpiresAt = 0;
@@ -74,7 +105,7 @@ async function isAdminRecipient(supabase: ReturnType<typeof createClient>, userI
 }
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: corsHeaders });
+  return new Response(JSON.stringify(body), { status, headers: jsonHeaders });
 }
 
 function base64UrlEncode(bytes: Uint8Array) {
@@ -170,6 +201,7 @@ async function getFcmAccessToken(serviceAccount: FirebaseServiceAccount) {
       grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
       assertion,
     }),
+    signal: AbortSignal.timeout(15_000),
   });
   const data = await response.json();
   if (!response.ok || typeof data.access_token !== 'string') {
@@ -331,7 +363,6 @@ function isCategoryEnabledInMetadata(metadata: Record<string, unknown>, category
 }
 
 Deno.serve(async (request) => {
-  if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405);
   // Database Webhooks send the project's secret key in `apikey` or `Authorization`,
   // and custom pg_net triggers may authenticate with `x-webhook-secret`.
@@ -339,8 +370,9 @@ Deno.serve(async (request) => {
 
   let payload: WebhookPayload;
   try {
-    payload = await request.json();
-  } catch {
+    payload = await readBoundedJson(request) as unknown as WebhookPayload;
+  } catch (error) {
+    if (error instanceof PayloadTooLargeError) return jsonResponse({ error: 'Payload too large' }, 413);
     return jsonResponse({ error: 'Invalid JSON payload' }, 400);
   }
   if (payload.type !== 'INSERT' || payload.schema !== 'public' || payload.table !== 'notifications') {

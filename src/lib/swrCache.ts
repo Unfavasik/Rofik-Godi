@@ -1,3 +1,5 @@
+import { safeJsonParse } from './security';
+
 const SESSION_PREFIX = 'rofik-godi:swr:v1:';
 const memoryCache = new Map<string, { data: unknown; savedAt: number }>();
 const loadedImageUrls = new Set<string>();
@@ -7,7 +9,7 @@ function readSessionEntry<T>(key: string): { data: T; savedAt: number } | undefi
   try {
     const raw = window.sessionStorage.getItem(`${SESSION_PREFIX}${key}`);
     if (!raw) return undefined;
-    const parsed = JSON.parse(raw) as { data?: T; savedAt?: unknown } | null;
+    const parsed = safeJsonParse<{ data?: T; savedAt?: unknown }>(raw, 2_000_000);
     if (!parsed || typeof parsed !== 'object' || typeof parsed.savedAt !== 'number' || !('data' in parsed)) {
       return undefined;
     }

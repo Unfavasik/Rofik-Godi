@@ -1,5 +1,6 @@
 import { getCustomerNotificationCategory, type CustomerNotificationCategory, type NotificationLike } from './notificationCategory';
 import { supabase } from './supabase';
+import { safeJsonParse } from './security';
 
 export type PreferredLanguage = 'en' | 'bn' | 'hi';
 
@@ -145,7 +146,8 @@ function normalizePreferences(value: unknown): CustomerAppPreferences {
 export function readCustomerAppPreferences(userId?: string): CustomerAppPreferences {
   try {
     const raw = globalThis.localStorage?.getItem(preferenceStorageKey(userId));
-    return raw ? normalizePreferences(JSON.parse(raw)) : structuredClone(DEFAULT_CUSTOMER_APP_PREFERENCES);
+    const parsed = raw ? safeJsonParse(raw) : null;
+    return parsed ? normalizePreferences(parsed) : structuredClone(DEFAULT_CUSTOMER_APP_PREFERENCES);
   } catch {
     return structuredClone(DEFAULT_CUSTOMER_APP_PREFERENCES);
   }

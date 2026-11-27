@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { isValidUuid } from './security';
 
 export interface ProductReviewRecord {
   id: string;
@@ -106,7 +107,7 @@ const emptySummary = (productId: string): ProductRatingSummary => ({
 });
 
 export async function getProductRatingSummary(productId: string): Promise<ProductRatingSummary> {
-  if (!supabase || !/^[0-9a-f-]{36}$/i.test(productId)) return emptySummary(productId);
+  if (!supabase || !isValidUuid(productId)) return emptySummary(productId);
   const { data, error } = await supabase
     .from('product_rating_summary')
     .select('product_id,average_rating,review_count,five_star_count,four_star_count,three_star_count,two_star_count,one_star_count')
@@ -127,12 +128,14 @@ export async function getProductRatingSummary(productId: string): Promise<Produc
 
 export async function listPublishedReviews(productId?: string, limit = 20): Promise<ProductReviewRecord[]> {
   if (!supabase) return [];
+  if (productId !== undefined && !isValidUuid(productId)) return [];
+  const boundedLimit = Math.max(1, Math.min(100, Number.isFinite(limit) ? Math.floor(limit) : 20));
   let query = supabase
     .from('reviews')
     .select('id,product_id,order_id,customer_id,author_name,rating,review_text,is_verified_purchase,is_published,created_at,products(name)')
     .eq('is_published', true)
     .order('created_at', { ascending: false })
-    .limit(limit);
+    .limit(boundedLimit);
   if (productId) query = query.eq('product_id', productId);
   const { data, error } = await query;
   if (error || !data) return [];
@@ -156,7 +159,7 @@ export async function listMyProductReviews(expectedUserId?: string): Promise<Pro
 }
 
 export async function getMyReviewContext(productId: string, expectedUserId?: string) {
-  if (!supabase || !/^[0-9a-f-]{36}$/i.test(productId)) return { orders: [] as ReviewEligibleOrder[], reviews: [] as ProductReviewRecord[] };
+  if (!supabase || !isValidUuid(productId)) return { orders: [] as ReviewEligibleOrder[], reviews: [] as ProductReviewRecord[] };
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError || !auth.user || (expectedUserId && auth.user.id !== expectedUserId)) {
     return { orders: [] as ReviewEligibleOrder[], reviews: [] as ProductReviewRecord[] };
@@ -183,6 +186,9 @@ export async function getMyReviewContext(productId: string, expectedUserId?: str
 
 export async function createProductReview(input: { productId: string; orderId: string; rating: number; reviewText: string }) {
   if (!supabase) return { error: new Error('Review service is not configured') };
+  if (!isValidUuid(input.productId) || !isValidUuid(input.orderId)) {
+    return { error: new Error('Invalid product or order reference.') };
+  }
   const { error } = await supabase.rpc('create_product_review', {
     p_product_id: input.productId,
     p_order_id: input.orderId,
@@ -194,6 +200,9 @@ export async function createProductReview(input: { productId: string; orderId: s
 
 export async function updateProductReview(input: { reviewId: string; rating: number; reviewText: string }) {
   if (!supabase) return { error: new Error('Review service is not configured') };
+  if (!isValidUuid(input.reviewId)) {
+    return { error: new Error('Invalid review reference.') };
+  }
   const { error } = await supabase.rpc('update_product_review', {
     p_review_id: input.reviewId,
     p_rating: input.rating,
@@ -218,12 +227,14 @@ export async function listAdminProductReviews(): Promise<ProductReviewRecord[] |
 
 export async function setProductReviewPublished(reviewId: string, isPublished: boolean) {
   if (!supabase) return { error: new Error('Review service is not configured') };
+  if (!isValidUuid(reviewId)) return { error: new Error('Invalid review reference.') };
   const { error } = await supabase.rpc('admin_set_review_published', { p_review_id: reviewId, p_is_published: isPublished });
   return { error };
 }
 
 export async function deleteProductReview(reviewId: string) {
   if (!supabase) return { error: new Error('Review service is not configured') };
+  if (!isValidUuid(reviewId)) return { error: new Error('Invalid review reference.') };
   const { error } = await supabase.rpc('admin_delete_review', { p_review_id: reviewId });
   return { error };
 }

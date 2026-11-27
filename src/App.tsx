@@ -6,6 +6,7 @@
 import React, { Suspense, useState, useMemo, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { motion, MotionConfig } from 'motion/react';
 import { lazyWithRetry } from './lib/lazyWithRetry';
+import { sanitizeUrl } from './lib/security';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
@@ -1657,16 +1658,14 @@ export default function App() {
   const handleBannerClick = useCallback(
     (url: string) => {
       const target = url.trim();
-      if (target.startsWith('/')) {
-        navigate(target);
+      if (target.startsWith('/') && !target.startsWith('//')) {
+        const safePath = sanitizeUrl(target, { allowRelative: true });
+        if (safePath) navigate(safePath);
         return;
       }
-      const externalUrl = /^https?:\/\//i.test(target)
-        ? target
-        : /^www\./i.test(target)
-          ? `https://${target}`
-          : '';
-      if (externalUrl) window.open(externalUrl, '_blank', 'noopener,noreferrer');
+      const candidate = /^www\./i.test(target) ? `https://${target}` : target;
+      const safeExternal = sanitizeUrl(candidate, { allowRelative: false });
+      if (safeExternal) window.open(safeExternal, '_blank', 'noopener,noreferrer');
     },
     [navigate],
   );

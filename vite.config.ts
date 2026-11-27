@@ -18,11 +18,15 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [react(), tailwindcss()],
     resolve: {
-      alias: {
-          '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.'),
-      },
+      alias: [
+        { find: /^maplibre-gl$/, replacement: path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src/lib/maplibreCompat.ts') },
+        { find: '@', replacement: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.') },
+      ],
       // Keep every component on the same React dispatcher instance.
       dedupe: ['react', 'react-dom'],
+    },
+    optimizeDeps: {
+      exclude: ['@navigatr/web', 'maplibre-gl'],
     },
     build: {
       rolldownOptions: {

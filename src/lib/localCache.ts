@@ -1,4 +1,5 @@
 import type { Product } from '../types';
+import { safeJsonParse, sanitizeUrl } from './security';
 
 const PUBLIC_CATALOG_KEY = 'rofik-godi:public-catalog:v2';
 export const CATALOG_CHANGED_EVENT = 'rofik-godi:catalog-changed';
@@ -43,8 +44,8 @@ export function readPublicCatalogCache(): Product[] | null {
   try {
     const raw = localStorage.getItem(PUBLIC_CATALOG_KEY);
     if (!raw) return null;
-    const parsed: unknown = JSON.parse(raw);
-    if (parsed === null || typeof parsed !== 'object' || !('products' in parsed) || !Array.isArray(parsed.products)) return null;
+    const parsed = safeJsonParse<{ products?: unknown }>(raw, 2_000_000);
+    if (parsed === null || typeof parsed !== 'object' || !Array.isArray(parsed.products)) return null;
     const products = parsed.products.filter((item): item is Product =>
       item !== null && typeof item === 'object' &&
       'id' in item && typeof item.id === 'string' &&
@@ -69,15 +70,22 @@ export function readCustomerNotificationCache(userId: string): CachedCustomerNot
   try {
     const raw = localStorage.getItem(notificationListKey(userId));
     if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
+    const parsed = safeJsonParse<unknown>(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((item): item is CachedCustomerNotification => {
-      if (item === null || typeof item !== 'object') return false;
-      const row = item as Record<string, unknown>;
-      if (typeof row.id !== 'string' || typeof row.kind !== 'string' || typeof row.title !== 'string' ||
-          typeof row.body !== 'string' || typeof row.created_at !== 'string') return false;
-      return true;
-    }).slice(0, NOTIFICATION_LIMIT);
+    return parsed
+      .filter((item): item is CachedCustomerNotification => {
+        if (item === null || typeof item !== 'object') return false;
+        const row = item as Record<string, unknown>;
+        if (typeof row.id !== 'string' || typeof row.kind !== 'string' || typeof row.title !== 'string' ||
+            typeof row.body !== 'string' || typeof row.created_at !== 'string') return false;
+        return true;
+      })
+      .slice(0, NOTIFICATION_LIMIT)
+      .map((item) => ({
+        ...item,
+        action_url: sanitizeUrl(item.action_url, { allowRelative: true }),
+        image_url: sanitizeUrl(item.image_url, { allowRelative: true }),
+      }));
   } catch {
     return [];
   }
@@ -90,8 +98,8 @@ export function writeCustomerNotificationCache(userId: string, notifications: Ca
       kind: item.kind,
       title: item.title,
       body: item.body,
-      action_url: item.action_url || null,
-      image_url: item.image_url || null,
+      action_url: sanitizeUrl(item.action_url, { allowRelative: true }),
+      image_url: sanitizeUrl(item.image_url, { allowRelative: true }),
       read_at: item.read_at || null,
       created_at: item.created_at,
       expires_at: item.expires_at || null,

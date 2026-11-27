@@ -3,10 +3,47 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const allowedOrigins = new Set([
   "https://rofikgodicenter.pages.dev",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
   "https://localhost",
   "http://localhost",
   "capacitor://localhost",
 ]);
+
+const MAX_REQUEST_BYTES = 32 * 1024;
+class PayloadTooLargeError extends Error {}
+
+async function readBoundedJson(req: Request, maxBytes = MAX_REQUEST_BYTES): Promise<Record<string, unknown> | null> {
+  const declared = Number(req.headers.get("content-length") || 0);
+  if (Number.isFinite(declared) && declared > maxBytes) throw new PayloadTooLargeError();
+  if (!req.body) return null;
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      throw new PayloadTooLargeError();
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  try {
+    const parsed = JSON.parse(new TextDecoder().decode(bytes));
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : null;
+  } catch {
+    return null;
+  }
+}
 
 function corsHeaders(origin: string | null) {
   return {
@@ -39,9 +76,9 @@ async function verifyCheckoutSignature(message: string, signatureHex: string, se
 
 Deno.serve(async (req: Request) => {
   const headers = corsHeaders(req.headers.get("Origin"));
-  const json = (body: Record<string, unknown>, status = 200) => new Response(JSON.stringify(body), {
+  const json = (body: Record<string, unknown>, status = 200, extraHeaders?: Record<string, string>) => new Response(JSON.stringify(body), {
     status,
-    headers: { ...headers, "Content-Type": "application/json; charset=utf-8" },
+    headers: { ...headers, ...(extraHeaders || {}), "Content-Type": "application/json; charset=utf-8" },
   });
 
   if (req.method === "OPTIONS") return new Response("ok", { headers });
@@ -71,7 +108,24 @@ Deno.serve(async (req: Request) => {
     const { data: authData, error: authError } = await userClient.auth.getUser();
     if (authError || !authData.user) return json({ error: "Your sign-in session has expired. Sign in again." }, 401);
 
-    const body = await req.json().catch(() => null) as Record<string, unknown> | null;
+    const { data: rateResult, error: rateError } = await serviceClient.rpc("enforce_edge_rate_limit", {
+      p_scope: "edge:verify-razorpay-payment",
+      p_subject: authData.user.id,
+      p_limit: 30,
+      p_window_seconds: 300,
+    });
+    if (!rateError && rateResult && rateResult.allowed === false) {
+      const retryAfter = String(Math.max(1, Number(rateResult.reset_in_seconds || 60)));
+      return json({ error: "Too many payment verification attempts. Please wait a moment." }, 429, { "Retry-After": retryAfter });
+    }
+
+    let body: Record<string, unknown> | null;
+    try {
+      body = await readBoundedJson(req);
+    } catch (error) {
+      if (error instanceof PayloadTooLargeError) return json({ error: "Request body is too large." }, 413);
+      return json({ error: "Invalid request body." }, 400);
+    }
     const orderNumber = typeof body?.orderNumber === "string" ? body.orderNumber.trim() : "";
     const providerOrderId = typeof body?.razorpay_order_id === "string" ? body.razorpay_order_id : "";
     const paymentId = typeof body?.razorpay_payment_id === "string" ? body.razorpay_payment_id : "";
@@ -112,6 +166,7 @@ Deno.serve(async (req: Request) => {
 
     const providerResponse = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(paymentId)}`, {
       headers: { Authorization: `Basic ${btoa(`${razorpayKeyId}:${razorpayKeySecret}`)}` },
+      signal: AbortSignal.timeout(15_000),
     });
     if (!providerResponse.ok) return json({ error: "Razorpay could not confirm the payment. Check My Orders before retrying." }, 502);
     const providerPayment = await providerResponse.json() as {

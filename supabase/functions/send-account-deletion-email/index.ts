@@ -12,8 +12,48 @@ const DELETE_PATH = '/account/settings/delete-account';
 const RED = '#d9232d';
 const NAVY = '#101828';
 const MUTED = '#667085';
-const ALLOWED_ORIGINS = new Set([APP_URL, 'http://localhost:3000', 'http://127.0.0.1:3000']);
+const ALLOWED_ORIGINS = new Set([
+  APP_URL,
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://localhost',
+  'http://localhost',
+  'capacitor://localhost',
+]);
+const MAX_REQUEST_BYTES = 32 * 1024;
+class PayloadTooLargeError extends Error {}
 type EmailEvent = 'scheduled' | 'cancelled';
+
+async function readBoundedJson(request: Request, maxBytes = MAX_REQUEST_BYTES): Promise<Record<string, unknown>> {
+  const declared = Number(request.headers.get('content-length') || 0);
+  if (Number.isFinite(declared) && declared > maxBytes) throw new PayloadTooLargeError();
+  if (!request.body) throw new Error('Empty request body');
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      throw new PayloadTooLargeError();
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  const parsed = JSON.parse(new TextDecoder().decode(bytes)) as unknown;
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Invalid request body');
+  }
+  return parsed as Record<string, unknown>;
+}
 
 function escapeHtml(value: unknown): string {
   return String(value ?? '').replace(
@@ -73,17 +113,22 @@ const allowedHeaders = 'authorization, x-client-info, apikey, content-type';
 
 function responseHeaders(origin: string | null) {
   return {
-    'Access-Control-Allow-Origin': origin && ALLOWED_ORIGINS.has(origin) ? origin : APP_URL,
+    ...(origin && ALLOWED_ORIGINS.has(origin) ? { 'Access-Control-Allow-Origin': origin } : {}),
     'Access-Control-Allow-Headers': allowedHeaders,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     Vary: 'Origin',
   };
 }
 
-function jsonResponse(body: Record<string, unknown>, status: number, origin: string | null) {
+function jsonResponse(
+  body: Record<string, unknown>,
+  status: number,
+  origin: string | null,
+  extraHeaders?: Record<string, string>,
+) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...responseHeaders(origin), 'Content-Type': 'application/json; charset=utf-8' },
+    headers: { ...responseHeaders(origin), ...(extraHeaders || {}), 'Content-Type': 'application/json; charset=utf-8' },
   });
 }
 
@@ -204,7 +249,14 @@ Deno.serve(async (request: Request) => {
     const authorization = request.headers.get('authorization') || '';
     if (!authorization.toLowerCase().startsWith('bearer ')) return jsonResponse({ error: 'Authentication required' }, 401, origin);
     let body: { event?: unknown };
-    try { body = await request.json(); } catch { return jsonResponse({ error: 'Invalid request body' }, 400, origin); }
+    try {
+      body = await readBoundedJson(request);
+    } catch (error) {
+      if (error instanceof PayloadTooLargeError) {
+        return jsonResponse({ error: 'Request body is too large' }, 413, origin);
+      }
+      return jsonResponse({ error: 'Invalid request body' }, 400, origin);
+    }
     if (body.event !== 'scheduled' && body.event !== 'cancelled') return jsonResponse({ error: 'Invalid email event' }, 400, origin);
     const event = body.event as EmailEvent;
     const credentials = getEmailConfig();
@@ -218,6 +270,19 @@ Deno.serve(async (request: Request) => {
     });
     const { data: authData, error: authError } = await userClient.auth.getUser();
     if (authError || !authData.user) return jsonResponse({ error: 'Authentication required' }, 401, origin);
+
+    const { data: rateResult, error: rateError } = await serviceClient.rpc('enforce_edge_rate_limit', {
+      p_scope: 'edge:send-account-deletion-email',
+      p_subject: authData.user.id,
+      p_limit: 10,
+      p_window_seconds: 3600,
+    });
+    if (!rateError && rateResult && rateResult.allowed === false) {
+      const retryAfter = String(Math.max(1, Number(rateResult.reset_in_seconds || 60)));
+      return jsonResponse({ error: 'Too many account deletion email requests. Try again later.' }, 429, origin, {
+        'Retry-After': retryAfter,
+      });
+    }
     const recipient = (authData.user.email || '').trim();
     if (!validEmail(recipient)) return jsonResponse({ ok: true, emailSent: false, reason: 'NO_VALID_CUSTOMER_EMAIL' }, 200, origin);
     const { data: deletionRequest, error: requestError } = await serviceClient

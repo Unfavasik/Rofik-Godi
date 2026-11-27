@@ -9,12 +9,35 @@ type GeminiDetails = {
   stitch_patterns: string[];
 };
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Content-Type': 'application/json',
-};
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://rofikgodicenter.pages.dev',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://localhost',
+  'http://localhost',
+  'capacitor://localhost',
+];
+
+function getAllowedOrigins(): Set<string> {
+  const configured = (Deno.env.get('ALLOWED_WEB_ORIGINS') || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return new Set([...DEFAULT_ALLOWED_ORIGINS, ...configured]);
+}
+
+function buildCorsHeaders(origin: string | null) {
+  const allowedOrigins = getAllowedOrigins();
+  return {
+    ...(origin && allowedOrigins.has(origin) ? { 'Access-Control-Allow-Origin': origin } : {}),
+    'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+    'Content-Type': 'application/json',
+  };
+}
+
+const MAX_REQUEST_BYTES = 32 * 1024;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const IMAGE_PATH_PREFIX = '/storage/v1/object/public/product-images/';
@@ -25,8 +48,49 @@ const GEMINI_MODELS = [
 const GEMINI_REQUEST_TIMEOUT_MS = 20_000;
 const GEMINI_PROMPT = `This is a bike/toto seat cover. Look at the image and return ONLY JSON: {subtitle: short string, description: helpful product description string, features: string[], materials: string[], stitch_patterns: string[]}. Write the description in 2-4 natural sentences for a product page, based only on what is visible; do not invent fitment, warranty, price, or performance claims. Only describe what is visible. If unsure about material, use generic words like 'Premium synthetic leather'. Do not include markdown, code fences, or text outside the JSON object.`;
 
-function jsonResponse(body: Record<string, unknown>, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: corsHeaders });
+class PayloadTooLargeError extends Error {}
+
+async function readBoundedJson(request: Request, maxBytes = MAX_REQUEST_BYTES): Promise<Record<string, unknown>> {
+  const declared = Number(request.headers.get('content-length') || 0);
+  if (Number.isFinite(declared) && declared > maxBytes) throw new PayloadTooLargeError();
+  if (!request.body) throw new Error('Empty request body');
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      throw new PayloadTooLargeError();
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  const parsed = JSON.parse(new TextDecoder().decode(bytes)) as unknown;
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Invalid JSON object');
+  }
+  return parsed as Record<string, unknown>;
+}
+
+function jsonResponse(
+  body: Record<string, unknown>,
+  status = 200,
+  origin: string | null = null,
+  extraHeaders?: Record<string, string>,
+) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...buildCorsHeaders(origin), ...(extraHeaders || {}) },
+  });
 }
 
 function cleanString(value: unknown, maxLength: number): string {
@@ -139,8 +203,9 @@ function validImageUrl(rawUrl: unknown, supabaseUrl: string): URL | null {
 }
 
 Deno.serve(async (request) => {
-  if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
-  if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405);
+  const origin = request.headers.get('origin');
+  if (request.method === 'OPTIONS') return new Response('ok', { headers: buildCorsHeaders(origin) });
+  if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405, origin);
 
   const authorization = request.headers.get('authorization');
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -148,10 +213,10 @@ Deno.serve(async (request) => {
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
   if (!supabaseUrl || !anonKey || !serviceRoleKey || !geminiApiKey) {
-    return jsonResponse({ error: 'Image auto-fill is not configured.' }, 500);
+    return jsonResponse({ error: 'Image auto-fill is not configured.' }, 500, origin);
   }
   if (!authorization?.toLowerCase().startsWith('bearer ')) {
-    return jsonResponse({ error: 'Please sign in with an admin account.' }, 401);
+    return jsonResponse({ error: 'Please sign in with an admin account.' }, 401, origin);
   }
 
   const userClient = createClient(supabaseUrl, anonKey, {
@@ -159,7 +224,7 @@ Deno.serve(async (request) => {
     global: { headers: { Authorization: authorization } },
   });
   const { data: userData, error: userError } = await userClient.auth.getUser();
-  if (userError || !userData.user) return jsonResponse({ error: 'Please sign in again.' }, 401);
+  if (userError || !userData.user) return jsonResponse({ error: 'Please sign in again.' }, 401, origin);
 
   const adminClient = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -172,31 +237,50 @@ Deno.serve(async (request) => {
     .limit(1)
     .maybeSingle();
   if (adminError || !admin?.user_id)
-    return jsonResponse({ error: 'Admin access is required.' }, 403);
+    return jsonResponse({ error: 'Admin access is required.' }, 403, origin);
+
+  const { data: rateResult, error: rateError } = await adminClient.rpc('enforce_edge_rate_limit', {
+    p_scope: 'edge:autofill-product-details',
+    p_subject: userData.user.id,
+    p_limit: 20,
+    p_window_seconds: 300,
+  });
+  if (!rateError && rateResult && rateResult.allowed === false) {
+    const retryAfter = String(Math.max(1, Number(rateResult.reset_in_seconds || 60)));
+    return jsonResponse({ error: 'Too many autofill requests. Please wait a moment.' }, 429, origin, {
+      'Retry-After': retryAfter,
+    });
+  }
 
   let payload: Record<string, unknown>;
   try {
-    payload = await request.json();
-  } catch {
-    return jsonResponse({ error: 'Invalid request body.' }, 400);
+    payload = await readBoundedJson(request);
+  } catch (error) {
+    if (error instanceof PayloadTooLargeError) {
+      return jsonResponse({ error: 'Request body is too large.' }, 413, origin);
+    }
+    return jsonResponse({ error: 'Invalid request body.' }, 400, origin);
   }
   const imageUrl = validImageUrl(payload.image_url, supabaseUrl);
   if (!imageUrl)
-    return jsonResponse({ error: 'Use an uploaded image from the product-images bucket.' }, 400);
+    return jsonResponse({ error: 'Use an uploaded image from the product-images bucket.' }, 400, origin);
 
   let imageResponse: Response;
   try {
-    imageResponse = await fetch(imageUrl, { signal: AbortSignal.timeout(15_000) });
+    imageResponse = await fetch(imageUrl, {
+      redirect: 'error',
+      signal: AbortSignal.timeout(15_000),
+    });
   } catch {
-    return jsonResponse({ error: 'Could not load the uploaded image. Please try again.' }, 400);
+    return jsonResponse({ error: 'Could not load the uploaded image. Please try again.' }, 400, origin);
   }
-  if (!imageResponse.ok) return jsonResponse({ error: 'Could not load the uploaded image.' }, 400);
+  if (!imageResponse.ok) return jsonResponse({ error: 'Could not load the uploaded image.' }, 400, origin);
   const contentType = (imageResponse.headers.get('content-type') || '')
     .split(';')[0]
     .trim()
     .toLowerCase();
   if (!ALLOWED_IMAGE_TYPES.has(contentType)) {
-    return jsonResponse({ error: 'Only JPG, PNG, or WebP product images are supported.' }, 415);
+    return jsonResponse({ error: 'Only JPG, PNG, or WebP product images are supported.' }, 415, origin);
   }
 
   let imageBytes: Uint8Array;
@@ -206,9 +290,10 @@ Deno.serve(async (request) => {
     return jsonResponse(
       { error: error instanceof Error ? error.message : 'Could not read the image.' },
       413,
+      origin,
     );
   }
-  if (!imageBytes.length) return jsonResponse({ error: 'The uploaded image is empty.' }, 400);
+  if (!imageBytes.length) return jsonResponse({ error: 'The uploaded image is empty.' }, 400, origin);
 
   let geminiResponse: Response | null = null;
   try {
@@ -277,6 +362,7 @@ Deno.serve(async (request) => {
         code: timedOut ? 'GEMINI_TIMEOUT' : 'GEMINI_NETWORK_ERROR',
       },
       timedOut ? 504 : 502,
+      origin,
     );
   }
   if (!geminiResponse.ok) {
@@ -312,6 +398,7 @@ Deno.serve(async (request) => {
         code: 'GEMINI_API_ERROR',
       },
       502,
+      origin,
     );
   }
 
@@ -319,7 +406,7 @@ Deno.serve(async (request) => {
   try {
     responseData = await geminiResponse.json();
   } catch {
-    return jsonResponse({ error: 'Image analysis returned an invalid response.' }, 502);
+    return jsonResponse({ error: 'Image analysis returned an invalid response.' }, 502, origin);
   }
   const candidates = Array.isArray(responseData.candidates)
     ? (responseData.candidates as Array<Record<string, unknown>>)
@@ -336,14 +423,16 @@ Deno.serve(async (request) => {
     return jsonResponse(
       { error: 'The image model returned no details. Try a clearer photo.' },
       502,
+      origin,
     );
 
   try {
-    return jsonResponse(parseGeminiJson(text));
+    return jsonResponse(parseGeminiJson(text), 200, origin);
   } catch {
     return jsonResponse(
       { error: 'The image model returned unreadable details. Please try again.' },
       502,
+      origin,
     );
   }
 });

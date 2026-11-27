@@ -3,8 +3,9 @@ import { supabase } from './supabase';
 import { normalizeCouponFailureMessage } from './couponErrors';
 import { getCartItemUnitPrice, MAX_ORDER_ITEM_QUANTITY, MAX_ORDER_LINE_ITEMS } from './cart';
 import type { CustomerOrderStatusEvent } from './orderPresentation';
+import { isValidSafeId, isValidUuid } from './security';
 
-const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+const isUuid = isValidUuid;
 const missingOrderOptionColumns = (error: { message?: string } | null) => Boolean(error && /selected_thickness|selected_stitch|custom_embroidery_text/i.test(error.message || ''));
 const imageForOrderColor = (row: { image_url?: unknown; colors_json?: unknown }, colorName?: string | null) => {
   const colors = Array.isArray(row.colors_json) ? row.colors_json : [];
@@ -253,6 +254,7 @@ export function getMyOrderBySlug(expectedUserId: string, orderSlug: string): Pro
 /** Read only the authenticated customer's permitted status history for an order. */
 export async function listMyOrderStatusHistory(orderId: string): Promise<CustomerOrderStatusEvent[]> {
   if (!supabase) throw new Error('Service configuration unavailable.');
+  if (!isValidSafeId(orderId)) throw new Error('Invalid order reference.');
   const { data: userData, error: authError } = await supabase.auth.getUser();
   if (authError) throw authError;
   if (!userData.user) throw new Error('Sign in to view order updates.');
