@@ -61,6 +61,30 @@ export async function uploadApk(file: File, versionName: string): Promise<string
   return supabase.storage.from('app-releases').getPublicUrl(path).data.publicUrl;
 }
 
+async function removeOldApks(keepUrl: string): Promise<void> {
+  if (!supabase) return;
+  const marker = '/storage/v1/object/public/app-releases/';
+  const keepPath = keepUrl.includes(marker)
+    ? decodeURIComponent(keepUrl.split(marker)[1].split('?')[0])
+    : '';
+  if (!keepPath) return;
+
+  const bucket = supabase.storage.from('app-releases');
+  if (typeof bucket.list !== 'function' || typeof bucket.remove !== 'function') return;
+  const { data: objects, error: listError } = await bucket.list('', {
+    limit: 100,
+    sortBy: { column: 'name', order: 'asc' },
+  });
+  if (listError) throw new Error(`Could not inspect old APK files: ${listError.message}`);
+  const stalePaths = (objects ?? [])
+    .map((object) => object.name)
+    .filter((name) => name && name !== keepPath);
+  if (!stalePaths.length) return;
+
+  const { error: removeError } = await bucket.remove(stalePaths);
+  if (removeError) throw new Error(`APK published, but old APK cleanup failed: ${removeError.message}`);
+}
+
 /** Admin only: publishes (or replaces) the single Android release row. */
 export async function publishRelease(release: Omit<AppRelease, 'updatedAt'>): Promise<void> {
   if (!supabase) throw new Error('Supabase is not configured');
@@ -79,4 +103,5 @@ export async function publishRelease(release: Omit<AppRelease, 'updatedAt'>): Pr
     updated_by: userData.user?.id ?? null,
   });
   if (error) throw new Error(error.message);
+  await removeOldApks(safeApkUrl);
 }
