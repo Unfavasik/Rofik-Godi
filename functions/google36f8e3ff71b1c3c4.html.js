@@ -1,3 +1,4 @@
+/* global Response */
 const VERIFICATION_FILE_CONTENT = "google-site-verification: google36f8e3ff71b1c3c4.html\n";
 
 export function onRequestGet() {

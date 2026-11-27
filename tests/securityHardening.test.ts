@@ -126,6 +126,13 @@ describe('frontend security hardening', () => {
     expect(({} as Record<string, unknown>).polluted).toBeUndefined();
   });
 
+  it('keeps live notification and order image sources on safe URL schemes', () => {
+    const source = fs.readFileSync(path.join(repoRoot, 'src/components/NotificationsView.tsx'), 'utf8');
+    expect(source).toContain("sanitizeUrl(item.image_url, { allowRelative: true })");
+    expect(source).toContain("sanitizeUrl(firstProductImage, { allowRelative: true })");
+    expect(source).toContain("sanitizeUrl(item.action_url, { allowRelative: true })");
+  });
+
   it('falls back safely when configured OAuth redirect URL uses an unsafe scheme', () => {
     vi.stubEnv('NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL', 'javascript:alert(document.domain)');
     try {

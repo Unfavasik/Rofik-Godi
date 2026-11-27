@@ -48,6 +48,7 @@ import {
   saveCustomerAppPreferences,
   type CustomerNotificationPreferences,
 } from '../lib/customerPreferences';
+import { sanitizeUrl } from '../lib/security';
 import {
   CUSTOMER_NOTIFICATIONS_UPDATED_EVENT,
   readCustomerNotificationCache,
@@ -234,7 +235,16 @@ export function NotificationsView({
           const orderNumber = getNotificationOrderNumber(`${item.title} ${item.body} ${item.action_url || ''}`);
           const orderRecord = orderNumber ? ordersByNumber.get(orderNumber.toUpperCase()) || null : null;
           const firstProductImage = orderRecord?.order_items.find((orderItem) => orderItem.image_url)?.image_url;
-          return { ...item, orderNumber, orderRecord, image_url: item.image_url || firstProductImage || null };
+          return {
+            ...item,
+            orderNumber,
+            orderRecord,
+            action_url: sanitizeUrl(item.action_url, { allowRelative: true }),
+            image_url:
+              sanitizeUrl(item.image_url, { allowRelative: true }) ||
+              sanitizeUrl(firstProductImage, { allowRelative: true }) ||
+              null,
+          };
         });
         setItems((current) => {
           const byId = new Map<string, NotificationItem>(enrichedRows.map((item) => [item.id, item] as const));
@@ -277,7 +287,13 @@ export function NotificationsView({
         if (!row?.id || typeof row.title !== 'string' || typeof row.body !== 'string' || typeof row.created_at !== 'string') return;
         liveNotificationIdsRef.current.add(row.id);
         const orderNumber = getNotificationOrderNumber(`${row.title} ${row.body} ${row.action_url || ''}`);
-        const incoming: NotificationItem = { ...row, orderNumber, orderRecord: null };
+        const incoming: NotificationItem = {
+          ...row,
+          action_url: sanitizeUrl(row.action_url, { allowRelative: true }),
+          image_url: sanitizeUrl(row.image_url, { allowRelative: true }),
+          orderNumber,
+          orderRecord: null,
+        };
         setItems((current) => {
           if (current.some((item) => item.id === incoming.id)) return current;
           return [incoming, ...current].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, 50);
