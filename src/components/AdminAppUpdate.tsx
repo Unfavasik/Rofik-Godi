@@ -56,9 +56,22 @@ export const AdminAppUpdate = ({ notify }: { notify: (message: string) => void }
 
       <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
         <h2 className="flex items-center gap-2 text-base font-black text-slate-900"><Rocket className="h-5 w-5 text-[#d9232d]" /> Publish new Android update</h2>
-        <label className="block text-xs font-bold text-slate-600">APK file (max 50 MB)
-          <input type="file" accept=".apk,application/vnd.android.package-archive" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="mt-1 block w-full text-sm" />
-        </label>
+        <div className="rounded-2xl border-2 border-dashed border-red-200 bg-red-50/60 p-4">
+          <p className="text-xs font-black uppercase tracking-wide text-slate-600">APK file (max 50 MB)</p>
+          <label className="mt-3 flex min-h-16 cursor-pointer items-center justify-center rounded-xl bg-[#d9232d] px-4 py-3 text-center text-sm font-extrabold text-white shadow-sm transition hover:bg-[#b91c1c] active:scale-[0.99]">
+            <UploadCloud className="mr-2 h-5 w-5" />
+            {file ? 'Change APK file' : 'Choose APK file'}
+            <input
+              type="file"
+              accept=".apk,application/vnd.android.package-archive"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="sr-only"
+            />
+          </label>
+          <p className="mt-2 truncate text-center text-xs font-semibold text-slate-500" title={file?.name}>
+            {file ? file.name : 'Tap the red button to select your APK'}
+          </p>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <label className="block text-xs font-bold text-slate-600">Version name
             <input value={versionName} onChange={(e) => setVersionName(e.target.value)} placeholder="1.1.59" className="mt-1 min-h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" />
