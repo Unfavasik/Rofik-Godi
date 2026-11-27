@@ -25,6 +25,7 @@ import {
   Package,
   Printer,
   RefreshCw,
+  Rocket,
   Search,
   Settings,
   ShieldCheck,
@@ -49,6 +50,7 @@ import { InvoiceTemplate } from './InvoiceTemplate';
 import { AdminOrderDetails } from './AdminOrderDetails';
 import { PickupVerification } from './PickupVerification';
 import { BannersView, NotificationsView, ReportsView } from './AdminSections';
+import { AdminAppUpdate } from './AdminAppUpdate';
 import { AdminCategoriesManager } from './AdminCategoriesManager';
 import { AdminCustomerProfile } from './AdminCustomerProfile';
 import { AdminCustomerAvatar } from './AdminCustomerAvatar';
@@ -123,7 +125,10 @@ const navGroups = [
   },
   {
     label: 'Insights',
-    items: [{ id: 'reports' as AdminSection, label: 'Reports', icon: BarChart3 }],
+    items: [
+      { id: 'reports' as AdminSection, label: 'Reports', icon: BarChart3 },
+      { id: 'app-update' as AdminSection, label: 'App update', icon: Rocket },
+    ],
   },
 ];
 const money = (value: number) => `₹${value.toLocaleString('en-IN')}`;
@@ -550,6 +555,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
       activity: 'Notifications',
       support: 'Support',
       reports: 'Reports',
+      'app-update': 'App update',
       settings: 'Settings',
     } as Record<AdminSection, string>
   )[section];
@@ -1101,6 +1107,7 @@ export const AdminPanel: React.FC<{ onBackToStore?: () => void }> = ({ onBackToS
               onNavigate={goTo}
             />
           )}
+          {section === 'app-update' && <AdminAppUpdate notify={notify} />}
           {section === 'settings' && (
             <SettingsAdmin
               notify={notify}

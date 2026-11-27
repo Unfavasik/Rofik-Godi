@@ -134,6 +134,7 @@ describe('admin workspace redirect policy', () => {
     ['/admin/notifications', 'notifications'],
     ['/admin/activity', 'activity'],
     ['/admin/reports', 'reports'],
+    ['/admin/app-update', 'app-update'],
     ['/admin/settings', 'settings'],
   ] as const)('resolves admin URL %s to section %s', (path, section) => {
     expect(getAdminSectionFromPath(path)).toBe(section);

@@ -1,6 +1,6 @@
 export type AppPhase = 'onboarding' | 'main' | 'account-onboarding' | 'splash' | 'auth';
 export type RouteTab = 'home' | 'shop' | 'search' | 'custom' | 'wishlist' | 'account' | 'cart' | 'notifications';
-export type AdminSectionRoute = 'overview' | 'orders' | 'products' | 'vehicle' | 'categories' | 'customers' | 'reviews' | 'marketing' | 'banners' | 'notifications' | 'activity' | 'support' | 'reports' | 'settings';
+export type AdminSectionRoute = 'overview' | 'orders' | 'products' | 'vehicle' | 'categories' | 'customers' | 'reviews' | 'marketing' | 'banners' | 'notifications' | 'activity' | 'support' | 'reports' | 'app-update' | 'settings';
 export type SettingsSectionRoute = 'notifications' | 'app' | 'coupons' | 'reviews' | 'about' | 'help' | 'delete-account';
 
 export const APP_ROUTE_PATHS = [
@@ -17,7 +17,7 @@ export const APP_ROUTE_PATHS = [
   '/personal-data', '/personal-data-processing',
   '/admin', '/admin/dashboard', '/admin/orders', '/admin/orders/:orderId', '/admin/products', '/admin/products/:productId', '/admin/Vehicle', '/admin/Vehicle/:modelId/edit', '/admin/categories', '/admin/customers',
   '/admin/customers/:customerId', '/admin/reviews', '/admin/coupons', '/admin/coupons/:couponId', '/admin/marketing', '/admin/banners', '/admin/notifications', '/admin/notifications/compose', '/admin/activity', '/admin/support', '/admin/support/:requestId',
-  '/admin/reports', '/admin/settings', '/Onboarding', '/onboarding', '/signup', '/signup/onboarding', '/signup/loading',
+  '/admin/reports', '/admin/app-update', '/admin/settings', '/Onboarding', '/onboarding', '/signup', '/signup/onboarding', '/signup/loading',
   '/auth/callback', '/example/shop',
 ] as const;
 
@@ -63,12 +63,13 @@ const adminSectionPaths: Record<AdminSectionRoute, string> = {
   activity: '/admin/activity',
   support: '/admin/support',
   reports: '/admin/reports',
+  'app-update': '/admin/app-update',
   settings: '/admin/settings',
 };
 const adminSectionsBySlug: Record<string, AdminSectionRoute> = {
   dashboard: 'overview', orders: 'orders', products: 'products', vehicle: 'vehicle', categories: 'categories',
   customers: 'customers', reviews: 'reviews', coupons: 'marketing', marketing: 'marketing',
-  banners: 'banners', notifications: 'notifications', activity: 'activity', support: 'support', reports: 'reports', settings: 'settings',
+  banners: 'banners', notifications: 'notifications', activity: 'activity', support: 'support', reports: 'reports', 'app-update': 'app-update', settings: 'settings',
 };
 
 export function getPathForAdminSection(section: AdminSectionRoute): string {

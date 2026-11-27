@@ -11,6 +11,7 @@ import { MAX_ORDER_ITEM_QUANTITY } from '../lib/cart';
 import { useI18n } from '../lib/i18n';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
+import { EmptyCartState } from './EmptyCartState';
 import { subscribePullToRefresh } from '../lib/pullToRefresh';
 import {
   X,
@@ -37,6 +38,7 @@ interface CartDrawerProps {
   onUpdateQuantity: (cartItemId: string, newQty: number) => void;
   onRemoveItem: (cartItemId: string) => void;
   onProceedToCheckout: (appliedDiscount: number, couponCode: string, quote?: { subtotal: number; total: number }) => void;
+  onShopNow?: () => void;
   reorderNotice?: string | null;
   onDismissReorderNotice?: () => void;
 }
@@ -49,6 +51,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onUpdateQuantity,
   onRemoveItem,
   onProceedToCheckout,
+  onShopNow,
   reorderNotice,
   onDismissReorderNotice,
 }) => {
@@ -225,21 +228,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>}
 
               {items.length === 0 ? (
-              <div className="min-h-[340px] flex flex-col items-center justify-center text-center py-12 rounded-2xl bg-white/95 border border-slate-100 shadow-[0_12px_28px_-16px_rgba(9,8,8,0.22)] px-4">
-                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
-                  <ShoppingBag className="w-8 h-8" />
-                </div>
-                <h4 className="text-[15px] font-black text-slate-900 mb-1">{t('cart.emptyTitle')}</h4>
-                <p className="text-[12px] text-slate-500 max-w-[220px] mb-4">
-                  {t('cart.emptyBody')}
-                </p>
-                <button
-                  onClick={onClose}
-                  className="banner-cta-shine group/cta min-h-11 bg-[#D9232D] text-white text-[12px] font-bold px-5 py-2.5 rounded-full shadow-md hover:bg-[#c01d26] hover:shadow-lg active:scale-95 transition-all"
-                >
-                  {t('cart.explore')}
-                </button>
-              </div>
+              <EmptyCartState
+                title={t('cart.emptyTitle')}
+                body={t('cart.emptyBody')}
+                ctaLabel={t('cart.shopNow')}
+                onShopNow={onShopNow ?? onClose}
+              />
             ) : (
               items.map((item) => (
                 <div

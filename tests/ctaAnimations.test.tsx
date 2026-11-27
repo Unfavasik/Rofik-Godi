@@ -74,6 +74,30 @@ describe('Banner CTA shine & motion roll-out', () => {
     expect(html).toContain('group-hover/cta:translate-x-0.5');
   });
 
+  it('renders animated EmptyCartState and engaging Shop Now CTA when CartDrawer is empty', () => {
+    const html = renderToStaticMarkup(
+      <I18nProvider language="en">
+        <CartDrawer
+          isOpen
+          onClose={() => undefined}
+          onShopNow={() => undefined}
+          items={[]}
+          userId="user-1"
+          onUpdateQuantity={() => undefined}
+          onRemoveItem={() => undefined}
+          onProceedToCheckout={() => undefined}
+        />
+      </I18nProvider>,
+    );
+
+    expect(html).toContain('data-testid="cart-empty-state"');
+    expect(html).toContain('data-testid="cart-empty-shop-now"');
+    expect(html).toContain('Your cart is empty');
+    expect(html).toContain('Shop Now');
+    expect(html).toContain('banner-cta-shine');
+    expect(html).toContain('group-hover/cta:translate-x-1');
+  });
+
   it('applies banner-cta-shine to CheckoutCouponValidator Apply CTA', () => {
     const html = renderToStaticMarkup(
       <I18nProvider language="en">

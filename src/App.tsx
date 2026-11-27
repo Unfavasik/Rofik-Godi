@@ -19,6 +19,7 @@ import { CatalogStatus } from './components/CatalogStatus';
 import { VehicleFinderSheet, VehicleFitmentTriggerBar } from './components/VehicleFinder';
 import { ProductCard } from './components/ProductCard';
 import { PwaInstallCard } from './components/PwaInstallCard';
+import { AppUpdatePrompt } from './components/AppUpdatePrompt';
 const ProductDetailModal = lazyWithRetry(() => import('./components/ProductDetailModal').then((module) => ({ default: module.ProductDetailModal })));
 const CustomSeatBuilder = lazyWithRetry(() => import('./components/CustomSeatBuilder').then((module) => ({ default: module.CustomSeatBuilder })));
 const CartDrawer = lazyWithRetry(() => import('./components/CartDrawer').then((module) => ({ default: module.CartDrawer })));
@@ -2690,6 +2691,12 @@ export default function App() {
           onUpdateQuantity={handleUpdateQuantity}
           onRemoveItem={handleRemoveCartItem}
           onProceedToCheckout={handleProceedToCheckout}
+          onShopNow={() => {
+            setIsCartOpen(false);
+            setCartReorderNotice(null);
+            setActiveTab('shop');
+            navigate('/shop');
+          }}
           reorderNotice={cartReorderNotice}
           onDismissReorderNotice={() => setCartReorderNotice(null)}
         />}
@@ -2884,6 +2891,7 @@ export default function App() {
             }} className="min-h-11 shrink-0 rounded-xl px-3 text-[11px] font-extrabold hover:bg-black/5">Dismiss</button>
           </div>
         </div>}
+        <AppUpdatePrompt />
         <Outlet />
       </div>
     </div>
