@@ -380,10 +380,21 @@ export function BannersView({ notify }: { notify: (message: string) => void }) {
       endsAt: parsedEnd ? parsedEnd.toISOString() : '',
       fontStyle: normalizeBannerFontStyle(draft.fontStyle),
     };
+    const previous = banners.find((banner) => banner.id === normalized.id);
     const next = banners.some((banner) => banner.id === normalized.id)
       ? banners.map((banner) => (banner.id === normalized.id ? normalized : banner))
       : [normalized, ...banners];
     if (await persist(next)) {
+      if (previous?.imageUrl && previous.imageUrl !== normalized.imageUrl) {
+        const storageResult = await deleteProductImageIfUnreferenced(previous.imageUrl);
+        if (storageResult.error) {
+          notify(
+            `Banner saved, but the old Storage image could not be removed: ${storageResult.error.message}`,
+          );
+        } else {
+          notify('Banner saved and its old unused Storage image deleted');
+        }
+      }
       setScheduleError('');
       setDraft(null);
     }
