@@ -10,6 +10,7 @@ import { VoiceSearchBanner } from './VoiceSearchBanner';
 import { VoiceSearchHint } from './VoiceSearchHint';
 import { CartBadge } from './CartBadge';
 import { VignetteBarBackdrop } from './VignetteBarBackdrop';
+import { useCartLandingStage } from '../hooks/useCartLandingStage';
 
 interface HeaderProps {
   cartCount: number;
@@ -58,6 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
   const promptTerms = searchPromptTerms.length > 0 ? searchPromptTerms : DEFAULT_PROMPT_TERMS;
   const [promptIndex, setPromptIndex] = useState(0);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
+  const { stagePulse: cartStagePulse, isStaged: isCartStaged } = useCartLandingStage();
 
   const voiceSearch = useVoiceSearch({
     language,
@@ -133,7 +135,7 @@ export const Header: React.FC<HeaderProps> = ({
               type="button"
               onClick={onOpenNotifications}
               aria-label="Notifications"
-              className="relative w-9.5 h-9.5 rounded-full bg-white/14 hover:bg-white/22 border border-white/18 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] flex items-center justify-center text-white active:scale-95 transition-all cursor-pointer"
+              className="btn-squash-stretch relative w-9.5 h-9.5 rounded-full bg-white/14 hover:bg-white/22 border border-white/18 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] flex items-center justify-center text-white transition-colors cursor-pointer"
               title="Notifications"
             >
               <Bell className="w-4 h-4 text-white" />
@@ -152,10 +154,28 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onOpenCart}
             aria-label="Cart"
-            className="relative w-9.5 h-9.5 rounded-full bg-white/14 hover:bg-white/22 border border-white/18 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] flex items-center justify-center text-white active:scale-95 transition-all cursor-pointer"
+            data-cart-target="true"
+            data-cart-staged={isCartStaged ? 'true' : 'false'}
+            className={`btn-squash-stretch relative w-9.5 h-9.5 rounded-full bg-white/14 hover:bg-white/22 border backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] flex items-center justify-center text-white transition-colors cursor-pointer ${
+              isCartStaged
+                ? 'border-rose-300/90 bg-white/26 ring-2 ring-[#FF4D58]/70 shadow-[0_0_24px_rgba(255,77,88,0.55)]'
+                : 'border-white/18'
+            }`}
             title="Shopping Cart"
           >
-            <ShoppingBag className="w-4 h-4 text-white" />
+            {isCartStaged && !isReducedMotion && (
+              <span
+                key={`header-cart-stage-${cartStagePulse}`}
+                aria-hidden="true"
+                className="staging-focus-spotlight pointer-events-none absolute -inset-1.5 rounded-full border-2 border-[#FF4D58]/80 bg-[#FF4D58]/20"
+              />
+            )}
+            <span
+              key={`header-cart-catch-${cartStagePulse}`}
+              className={cartStagePulse > 0 && isCartStaged ? 'cart-target-catch inline-flex' : 'inline-flex'}
+            >
+              <ShoppingBag className="w-4 h-4 text-white" />
+            </span>
             <CartBadge
               count={cartCount}
               className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-[#D9232D] text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-[#181412] shadow-xs tabular-nums"

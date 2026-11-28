@@ -6,6 +6,7 @@ import { ProductCardErrorBoundary } from './ProductCardErrorBoundary';
 import { CatalogStatus } from './CatalogStatus';
 import { CartBadge } from './CartBadge';
 import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
+import { useCartLandingStage } from '../hooks/useCartLandingStage';
 import {
   getWishlistHeartbeatEntry,
   type WishlistHeartbeatMap,
@@ -75,6 +76,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
 }) => {
   const [category, setCategory] = useState('All');
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
+  const { stagePulse: cartStagePulse, isStaged: isCartStaged } = useCartLandingStage();
 
   const renderableProducts = useMemo(
     () => (Array.isArray(products) ? products : []).filter(isRenderableProduct),
@@ -105,7 +107,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
               type="button"
               onClick={onBack}
               aria-label="Go back"
-              className="grid min-h-10 min-w-10 shrink-0 place-items-center rounded-full bg-white/14 hover:bg-white/22 border border-white/18 backdrop-blur-md text-white transition-colors active:scale-95 cursor-pointer"
+              className="btn-squash-stretch grid min-h-10 min-w-10 shrink-0 place-items-center rounded-full bg-white/14 hover:bg-white/22 border border-white/18 backdrop-blur-md text-white transition-colors cursor-pointer"
             >
               <ArrowLeft className="h-4.5 w-4.5" />
             </button>
@@ -118,10 +120,28 @@ export const ShopView: React.FC<ShopViewProps> = ({
             <button
               type="button"
               aria-label="Go to Cart"
+              data-cart-target="true"
+              data-cart-staged={isCartStaged ? 'true' : 'false'}
               onClick={onOpenCart}
-              className="relative grid min-h-10 min-w-10 place-items-center rounded-full bg-white/14 hover:bg-white/22 border border-white/18 backdrop-blur-md text-white transition-colors active:scale-95 cursor-pointer"
+              className={`btn-squash-stretch relative grid min-h-10 min-w-10 place-items-center rounded-full bg-white/14 hover:bg-white/22 border backdrop-blur-md text-white transition-colors cursor-pointer ${
+                isCartStaged
+                  ? 'border-rose-300/90 bg-white/26 ring-2 ring-[#FF4D58]/70 shadow-[0_0_24px_rgba(255,77,88,0.55)]'
+                  : 'border-white/18'
+              }`}
             >
-              <ShoppingCart className="h-4.5 w-4.5" />
+              {isCartStaged && (
+                <span
+                  key={`shop-cart-stage-${cartStagePulse}`}
+                  aria-hidden="true"
+                  className="staging-focus-spotlight pointer-events-none absolute -inset-1.5 rounded-full border-2 border-[#FF4D58]/80 bg-[#FF4D58]/20"
+                />
+              )}
+              <span
+                key={`shop-cart-catch-${cartStagePulse}`}
+                className={cartStagePulse > 0 && isCartStaged ? 'cart-target-catch inline-flex' : 'inline-flex'}
+              >
+                <ShoppingCart className="h-4.5 w-4.5" />
+              </span>
               <CartBadge
                 count={cartCount}
                 showZero
@@ -156,7 +176,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
                 type="button"
                 onClick={() => setCategory(item)}
                 aria-pressed={activeCategory === item}
-                className={`min-h-8.5 shrink-0 rounded-full px-3.5 py-1 text-[11.5px] font-semibold transition-all cursor-pointer ${
+                className={`btn-squash-stretch min-h-8.5 shrink-0 rounded-full px-3.5 py-1 text-[11.5px] font-semibold transition-colors cursor-pointer ${
                   activeCategory === item
                     ? 'bg-white text-slate-950 shadow-[0_6px_18px_-6px_rgba(9,8,8,0.45)]'
                     : 'bg-white/16 border border-white/22 backdrop-blur-md text-white hover:bg-white/25'
@@ -173,7 +193,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
           type="button"
           onClick={onOpenSort}
           aria-label="Sort products"
-          className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200/85 bg-white hover:border-slate-300 px-3 py-1 text-[11.5px] font-semibold text-slate-700 transition-colors whitespace-nowrap cursor-pointer"
+          className="btn-squash-stretch flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200/85 bg-white hover:border-slate-300 px-3 py-1 text-[11.5px] font-semibold text-slate-700 transition-colors whitespace-nowrap cursor-pointer"
         >
           <ArrowUpDown className="h-3.5 w-3.5 text-slate-500" /> {sortLabel}
         </button>
@@ -181,7 +201,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
           type="button"
           onClick={onOpenFilter}
           aria-label="Filter products"
-          className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200/85 bg-white hover:border-slate-300 px-3 py-1 text-[11.5px] font-semibold text-slate-700 transition-colors whitespace-nowrap cursor-pointer"
+          className="btn-squash-stretch flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200/85 bg-white hover:border-slate-300 px-3 py-1 text-[11.5px] font-semibold text-slate-700 transition-colors whitespace-nowrap cursor-pointer"
         >
           <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" /> Filter
           {activeFilterCount > 0 && (
@@ -195,7 +215,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
             type="button"
             onClick={onOpenVehicleFinder}
             aria-label="Open Vehicle Fitment Finder"
-            className={`flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border px-3 py-1 text-[11.5px] font-semibold transition-colors whitespace-nowrap cursor-pointer ${
+            className={`btn-squash-stretch flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border px-3 py-1 text-[11.5px] font-semibold transition-colors whitespace-nowrap cursor-pointer ${
               activeVehicleFilter
                 ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
                 : 'border-slate-200/85 bg-white text-slate-700 hover:border-slate-300 hover:text-slate-950'

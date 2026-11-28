@@ -12,6 +12,7 @@ import { useI18n } from '../lib/i18n';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import { EmptyCartState } from './EmptyCartState';
+import { getSquashStretchMotionProps } from '../lib/motionChoreography';
 import { subscribePullToRefresh } from '../lib/pullToRefresh';
 import {
   X,
@@ -203,7 +204,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               type="button"
               onClick={onClose}
               aria-label={t('common.close')}
-              className="relative z-10 h-9 w-9 rounded-full border border-white/18 bg-white/14 hover:bg-white/22 text-white backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer"
+              className="btn-squash-stretch relative z-10 h-9 w-9 rounded-full border border-white/18 bg-white/14 hover:bg-white/22 text-white backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -448,7 +449,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         <button
                           type="submit"
                           disabled={isApplyingCoupon}
-                          className={`banner-cta-shine inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-md px-3 text-[11px] font-extrabold text-white transition-all active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap ${
+                          className={`btn-squash-stretch banner-cta-shine inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-md px-3 text-[11px] font-extrabold text-white transition-all disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap ${
                             couponCode.trim().length > 0
                               ? 'bg-[#D9232D] hover:bg-[#be1d26]'
                               : 'bg-slate-900 hover:bg-slate-800'
@@ -581,7 +582,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                                     onClick={() => void handleApplyCoupon(offer.code)}
                                     disabled={isApplyingCoupon}
                                     aria-label={`${t('cart.apply')} ${offer.code}`}
-                                    className="inline-flex h-7 shrink-0 items-center justify-center rounded-md border border-rose-200/90 bg-rose-50/90 px-2.5 text-[10.5px] font-extrabold text-[#D9232D] transition-all hover:border-[#D9232D] hover:bg-[#D9232D] hover:text-white active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
+                                    className="btn-squash-stretch inline-flex h-7 shrink-0 items-center justify-center rounded-md border border-rose-200/90 bg-rose-50/90 px-2.5 text-[10.5px] font-extrabold text-[#D9232D] transition-all hover:border-[#D9232D] hover:bg-[#D9232D] hover:text-white disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
                                   >
                                     {isThisOfferApplying ? (
                                       <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
@@ -654,10 +655,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
 
               <motion.button
-                whileHover={hasUnavailableItems ? undefined : { scale: 1.015 }}
-                whileTap={hasUnavailableItems ? undefined : { scale: 0.97 }}
+                {...getSquashStretchMotionProps(prefersReducedMotion, {
+                  disabled: hasUnavailableItems,
+                  intensity: 'standard',
+                })}
                 onClick={() => onProceedToCheckout(discount, appliedCoupon?.code || '', appliedCoupon ? { subtotal: appliedCoupon.subtotal, total: appliedCoupon.total } : undefined)} disabled={hasUnavailableItems}
-                className="banner-cta-shine group/cta w-full min-h-11 py-2.5 bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91C1C] hover:brightness-105 text-white rounded-xl text-[12.5px] font-black shadow-[0_8px_20px_-4px_rgba(217,35,45,0.4)] hover:shadow-[0_10px_24px_-4px_rgba(217,35,45,0.5)] flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:shadow-none"
+                className="btn-squash-stretch banner-cta-shine group/cta w-full min-h-11 py-2.5 bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91C1C] hover:brightness-105 text-white rounded-xl text-[12.5px] font-black shadow-[0_8px_20px_-4px_rgba(217,35,45,0.4)] hover:shadow-[0_10px_24px_-4px_rgba(217,35,45,0.5)] flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:shadow-none"
               >
                 <span>{hasUnavailableItems ? t('cart.removeUnavailable') : t('cart.proceedCheckout')}</span>
                 <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />

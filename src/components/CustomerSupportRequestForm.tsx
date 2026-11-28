@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import {
   Check,
   ChevronDown,
@@ -23,6 +24,12 @@ import {
 import { useUploadProgress } from '../lib/useUploadProgress';
 import { UploadProgressBar } from './UploadProgressBar';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
+import {
+  getSupportSendAnticipationTargets,
+  SUPPORT_SEND_LAUNCH_MS,
+  SUPPORT_SEND_WINDUP_MS,
+  type SupportSendPhase,
+} from '../lib/motionChoreography';
 
 const categories: SupportRequestCategory[] = [
   'Order issue',
@@ -46,8 +53,18 @@ export const CustomerSupportRequestForm: React.FC<{
   initialRelatedOrderId?: string | null;
   onOpenLogin?: () => void;
   onOpenSupportRequest?: (requestId: string) => void;
+  onComposerFocusChange?: (focused: boolean) => void;
   compact?: boolean;
-}> = ({ isAuthenticated, expectedUserId, initialRelatedOrderId, onOpenLogin, onOpenSupportRequest, compact = false }) => {
+}> = ({
+  isAuthenticated,
+  expectedUserId,
+  initialRelatedOrderId,
+  onOpenLogin,
+  onOpenSupportRequest,
+  onComposerFocusChange,
+  compact = false,
+}) => {
+  const prefersReducedMotion = useReducedMotion();
   const [category, setCategory] = useState<SupportRequestCategory>('Order issue');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -61,10 +78,20 @@ export const CustomerSupportRequestForm: React.FC<{
   );
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [sendPhase, setSendPhase] = useState<SupportSendPhase>('idle');
+  const [isComposerFocused, setIsComposerFocused] = useState(false);
+  const sendTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const [error, setError] = useState('');
   const [attachmentError, setAttachmentError] = useState('');
   const [requestId, setRequestId] = useState('');
   const attachmentUploadProgress = useUploadProgress('attachments');
+  useEffect(
+    () => () => {
+      sendTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+      sendTimersRef.current = [];
+    },
+    [],
+  );
   const messageLimit = compact ? 500 : 2000;
   const selectedOrder = orders.find((order) => order.id === relatedOrderId);
   const requestSubject = compact
@@ -107,6 +134,27 @@ export const CustomerSupportRequestForm: React.FC<{
     setSubmitting(true);
     setError('');
     setAttachmentError('');
+
+    sendTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+    sendTimersRef.current = [];
+
+    if (!prefersReducedMotion) {
+      setSendPhase('windup');
+      await new Promise<void>((resolve) => {
+        const windupTimer = setTimeout(() => {
+          setSendPhase('launch');
+          const launchTimer = setTimeout(() => {
+            setSendPhase('sending');
+          }, SUPPORT_SEND_LAUNCH_MS);
+          sendTimersRef.current.push(launchTimer);
+          resolve();
+        }, SUPPORT_SEND_WINDUP_MS);
+        sendTimersRef.current.push(windupTimer);
+      });
+    } else {
+      setSendPhase('sending');
+    }
+
     if (files.length > 0) {
       attachmentUploadProgress.startUpload(files[0].name, {
         totalCount: files.length,
@@ -145,6 +193,9 @@ export const CustomerSupportRequestForm: React.FC<{
       attachmentUploadProgress.resetUpload();
       setError('Support is temporarily unavailable. Please try again or use phone/WhatsApp.');
     } finally {
+      sendTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+      sendTimersRef.current = [];
+      setSendPhase('idle');
       setSubmitting(false);
     }
   };
@@ -185,7 +236,7 @@ export const CustomerSupportRequestForm: React.FC<{
             <button
               type="button"
               onClick={onOpenLogin}
-              className="banner-cta-shine group/cta mt-3 inline-flex min-h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-4 py-2 text-xs font-extrabold text-white shadow-sm shadow-rose-600/20 transition-all hover:brightness-105 hover:shadow-md active:scale-95"
+              className="btn-squash-stretch banner-cta-shine group/cta mt-3 inline-flex min-h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-4 py-2 text-xs font-extrabold text-white shadow-sm shadow-rose-600/20 transition-all hover:brightness-105 hover:shadow-md"
             >
               Sign in to continue
             </button>
@@ -240,11 +291,28 @@ export const CustomerSupportRequestForm: React.FC<{
   }
 
   const quickPrompts = QUICK_MESSAGE_PROMPTS[category] ?? [];
+  const anticipationTargets = getSupportSendAnticipationTargets(sendPhase, prefersReducedMotion);
+  const isFocusStaged = isComposerFocused || submitting;
 
   return (
     <form
       onSubmit={(event) => void handleSubmit(event)}
-      className="min-w-0 max-w-full space-y-3 overflow-hidden rounded-2xl border border-slate-200/85 bg-white/95 p-3.5 backdrop-blur-md shadow-[0_8px_24px_-16px_rgba(15,23,42,0.08)] sm:p-4"
+      onFocusCapture={() => {
+        setIsComposerFocused(true);
+        onComposerFocusChange?.(true);
+      }}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+          setIsComposerFocused(false);
+          onComposerFocusChange?.(false);
+        }
+      }}
+      data-focus-staged={isFocusStaged ? 'true' : 'false'}
+      className={`min-w-0 max-w-full space-y-3 overflow-hidden rounded-2xl border bg-white/95 p-3.5 backdrop-blur-md transition-[box-shadow,border-color] duration-200 sm:p-4 ${
+        isFocusStaged
+          ? 'border-[#D9232D]/45 ring-2 ring-[#D9232D]/14 shadow-[0_18px_38px_-18px_rgba(217,35,45,0.24)]'
+          : 'border-slate-200/85 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.08)]'
+      }`}
     >
       {!compact && (
         <div className="border-b border-slate-100 pb-2.5">
@@ -273,7 +341,7 @@ export const CustomerSupportRequestForm: React.FC<{
                 key={item}
                 type="button"
                 onClick={() => setCategory(item)}
-                className={`min-h-9 rounded-xl border px-2.5 py-1 text-[11px] font-bold transition-all whitespace-nowrap shrink-0 ${
+                className={`btn-squash-stretch min-h-9 rounded-xl border px-2.5 py-1 text-[11px] font-bold transition-colors whitespace-nowrap shrink-0 ${
                   active
                     ? 'border-[#D9232D] bg-gradient-to-r from-[#D9232D] to-[#B91822] text-white shadow-2xs'
                     : 'border-slate-200/85 bg-slate-50/90 text-slate-600 hover:border-rose-200 hover:bg-rose-50/50 hover:text-slate-900'
@@ -413,7 +481,7 @@ export const CustomerSupportRequestForm: React.FC<{
                 key={prompt}
                 type="button"
                 onClick={() => applyQuickPrompt(prompt)}
-                className="rounded-lg border border-slate-200/80 bg-slate-50 px-2.5 py-1 text-[10.5px] font-semibold text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50/60 hover:text-[#D9232D]"
+                className="btn-squash-stretch rounded-lg border border-slate-200/80 bg-slate-50 px-2.5 py-1 text-[10.5px] font-semibold text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50/60 hover:text-[#D9232D]"
               >
                 + {prompt}
               </button>
@@ -481,14 +549,47 @@ export const CustomerSupportRequestForm: React.FC<{
 
       <UploadProgressBar state={attachmentUploadProgress.state} compact />
 
-      <button
+      <motion.button
         type="submit"
         disabled={submitting || !canSubmit}
-        className={`banner-cta-shine group/cta inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-4 py-2.5 font-extrabold text-white shadow-md shadow-rose-600/25 transition-all hover:brightness-105 hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${compact ? 'text-[13px]' : 'text-xs'}`}
+        data-testid="support-send-button"
+        data-send-phase={sendPhase}
+        animate={anticipationTargets.button}
+        transition={anticipationTargets.buttonTransition}
+        whileHover={
+          prefersReducedMotion || submitting || !canSubmit
+            ? undefined
+            : { scaleX: 1.02, scaleY: 0.99 }
+        }
+        whileTap={
+          prefersReducedMotion || submitting || !canSubmit
+            ? undefined
+            : { scaleX: 0.95, scaleY: 0.96, x: -2 }
+        }
+        className={`banner-cta-shine group/cta inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-4 py-2.5 font-extrabold text-white shadow-md shadow-rose-600/25 transition-[filter,box-shadow,opacity] hover:brightness-105 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 will-change-transform ${compact ? 'text-[13px]' : 'text-xs'}`}
       >
-        {submitting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />}
-        {submitting ? 'Sending…' : compact ? 'Send Message' : 'Submit request'}
-      </button>
+        {sendPhase === 'sending' ? (
+          <LoaderCircle className="h-4 w-4 animate-spin" />
+        ) : (
+          <motion.span
+            data-testid="support-send-icon"
+            animate={anticipationTargets.icon}
+            transition={anticipationTargets.iconTransition}
+            className="inline-flex items-center justify-center will-change-transform"
+          >
+            <Send className="h-4 w-4 transition-transform duration-150 group-active/cta:-translate-x-1 group-active/cta:translate-y-0.5 group-active/cta:-rotate-12 group-hover/cta:translate-x-0.5" />
+          </motion.span>
+        )}
+        <span>
+          {sendPhase === 'windup'
+            ? 'Preparing…'
+            : submitting
+              ? 'Sending…'
+              : compact
+                ? 'Send Message'
+                : 'Submit request'}
+        </span>
+      </motion.button>
     </form>
   );
 };

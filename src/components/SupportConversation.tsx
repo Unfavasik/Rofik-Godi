@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import {
   Download,
   FileText,
@@ -24,6 +25,12 @@ import { useUploadProgress } from '../lib/useUploadProgress';
 import { UploadProgressBar } from './UploadProgressBar';
 import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { subscribePullToRefresh } from '../lib/pullToRefresh';
+import {
+  getSupportSendAnticipationTargets,
+  SUPPORT_SEND_LAUNCH_MS,
+  SUPPORT_SEND_WINDUP_MS,
+  type SupportSendPhase,
+} from '../lib/motionChoreography';
 
 const QUICK_REPLIES = [
   'Any update on this?',
@@ -71,7 +78,10 @@ export const SupportConversation: React.FC<{
   const [loading, setLoading] = useState(() => !initialThread);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [hasOlder, setHasOlder] = useState(() => initialThread?.hasOlder ?? false);
+  const prefersReducedMotion = useReducedMotion();
   const [sending, setSending] = useState(false);
+  const [sendPhase, setSendPhase] = useState<SupportSendPhase>('idle');
+  const sendTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const [error, setError] = useState('');
   const [previewAttachment, setPreviewAttachment] = useState<SupportMessageRecord['attachments'][number] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -82,6 +92,13 @@ export const SupportConversation: React.FC<{
   const attachmentCount = request?.attachment_count ?? 0;
   const customerReplyLocked = !isAdmin && request?.status === 'resolved';
   const attachmentUploadProgress = useUploadProgress('attachments');
+  useEffect(
+    () => () => {
+      sendTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+      sendTimersRef.current = [];
+    },
+    [],
+  );
 
   useEffect(() => {
     const cached = readSwrCache<{ request: SupportRequestRecord | null; messages: SupportMessageRecord[]; hasOlder: boolean }>(threadCacheKey);
@@ -231,6 +248,24 @@ export const SupportConversation: React.FC<{
     if (sending || (!draft.trim() && files.length === 0)) return;
     setSending(true);
     setError('');
+    sendTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+    sendTimersRef.current = [];
+    if (!prefersReducedMotion) {
+      setSendPhase('windup');
+      await new Promise<void>((resolve) => {
+        const windupTimer = setTimeout(() => {
+          setSendPhase('launch');
+          const launchTimer = setTimeout(() => {
+            setSendPhase('sending');
+          }, SUPPORT_SEND_LAUNCH_MS);
+          sendTimersRef.current.push(launchTimer);
+          resolve();
+        }, SUPPORT_SEND_WINDUP_MS);
+        sendTimersRef.current.push(windupTimer);
+      });
+    } else {
+      setSendPhase('sending');
+    }
     if (files.length > 0) {
       attachmentUploadProgress.startUpload(files[0].name, {
         totalCount: files.length,
@@ -260,6 +295,9 @@ export const SupportConversation: React.FC<{
       attachmentUploadProgress.resetUpload();
       setError('Could not send your reply. Please try again.');
     } finally {
+      sendTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+      sendTimersRef.current = [];
+      setSendPhase('idle');
       setSending(false);
     }
   };
@@ -490,15 +528,48 @@ export const SupportConversation: React.FC<{
             className="min-h-11 max-h-28 min-w-0 flex-1 resize-y rounded-xl border border-slate-200/90 bg-slate-50/70 px-3.5 py-2.5 text-base sm:text-xs leading-5 text-slate-900 outline-none transition-colors focus:border-[#D9232D] focus:bg-white disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
             aria-label="Reply message"
           />
-          <button
-            type="submit"
-            disabled={customerReplyLocked || sending || (!draft.trim() && files.length === 0) || attachmentCount + files.length > 3}
-            className="banner-cta-shine group/cta flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-4 text-xs font-extrabold text-white shadow-sm shadow-rose-600/20 transition-all hover:brightness-105 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label="Send reply"
-          >
-            {sending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />}
-            <span className="hidden sm:inline">{customerReplyLocked ? 'Resolved' : sending ? 'Sending' : 'Send'}</span>
-          </button>
+          {(() => {
+            const replyAnticipation = getSupportSendAnticipationTargets(
+              sendPhase,
+              prefersReducedMotion,
+            );
+            const replyDisabled =
+              customerReplyLocked ||
+              sending ||
+              (!draft.trim() && files.length === 0) ||
+              attachmentCount + files.length > 3;
+            return (
+              <motion.button
+                type="submit"
+                disabled={replyDisabled}
+                data-send-phase={sendPhase}
+                animate={replyAnticipation.button}
+                transition={replyAnticipation.buttonTransition}
+                whileTap={
+                  prefersReducedMotion || replyDisabled
+                    ? undefined
+                    : { scaleX: 0.94, scaleY: 0.96, x: -2 }
+                }
+                className="banner-cta-shine group/cta flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-4 text-xs font-extrabold text-white shadow-sm shadow-rose-600/20 transition-[filter,box-shadow,opacity] hover:brightness-105 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 will-change-transform"
+                aria-label="Send reply"
+              >
+                {sendPhase === 'sending' ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : (
+                  <motion.span
+                    animate={replyAnticipation.icon}
+                    transition={replyAnticipation.iconTransition}
+                    className="inline-flex items-center justify-center will-change-transform"
+                  >
+                    <Send className="h-4 w-4 transition-transform duration-150 group-active/cta:-translate-x-1 group-active/cta:translate-y-0.5 group-active/cta:-rotate-12 group-hover/cta:translate-x-0.5" />
+                  </motion.span>
+                )}
+                <span className="hidden sm:inline">
+                  {customerReplyLocked ? 'Resolved' : sending ? 'Sending' : 'Send'}
+                </span>
+              </motion.button>
+            );
+          })()}
         </div>
 
         <p className="mt-2 flex items-center gap-1.5 text-[10.5px] font-medium text-slate-400">

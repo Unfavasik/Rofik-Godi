@@ -128,8 +128,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 type="button"
                 tabIndex={isHidden ? -1 : 0}
                 aria-current={isActive ? 'page' : undefined}
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.92 }}
-                transition={{ type: 'spring', stiffness: 520, damping: 28 }}
+                whileTap={prefersReducedMotion ? undefined : { scaleX: 1.07, scaleY: 0.91 }}
+                transition={{ type: 'spring', stiffness: 560, damping: 20, mass: 0.65 }}
                 onClick={item.onClick}
                 className="group relative flex min-h-[48px] flex-col items-center justify-center rounded-[22px] px-2 py-1.5 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
               >

@@ -57,6 +57,7 @@ import {
   type VehicleCatalogType,
 } from '../lib/supabaseVehicleCatalog';
 import { subscribePullToRefresh } from '../lib/pullToRefresh';
+import { useCartLandingStage } from '../hooks/useCartLandingStage';
 
 export interface ProductSharePayload {
   title: string;
@@ -139,6 +140,7 @@ interface ProductDetailModalProps {
     selectedThickness: { label: string; extraPrice: number },
     customEmbroideryText?: string,
     quantity?: number,
+    originEvent?: React.MouseEvent,
   ) => void;
   cartItems?: CartItem[];
   isWishlisted: boolean;
@@ -220,6 +222,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
   onOpenOrderHistory,
   initialColorName,
 }) => {
+  const { stagePulse: cartStagePulse, isStaged: isCartStaged } = useCartLandingStage();
   const [selectedColor, setSelectedColor] = useState(
     () =>
       (initialColorName
@@ -469,7 +472,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
   const discount =
     displayOriginalTotal > 0 ? Math.round((savings / displayOriginalTotal) * 100) : 0;
 
-  const addToCart = (buyNow = false) => {
+  const addToCart = (buyNow = false, originEvent?: React.MouseEvent) => {
     if (!sellable) return;
     if (buyNow) {
       onBuyNow?.(
@@ -489,6 +492,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
       selectedThickness,
       normalizedEmbroidery || undefined,
       quantity,
+      originEvent,
     );
   };
 
@@ -681,10 +685,28 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
               <button
                 type="button"
                 aria-label={`Open cart, ${cartCount} items`}
+                data-cart-target="true"
+                data-cart-staged={isCartStaged ? 'true' : 'false'}
                 onClick={onOpenCart}
-                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-all duration-180 hover:bg-white/22 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 active:scale-95"
+                className={`btn-squash-stretch relative flex h-10 w-10 items-center justify-center rounded-full border bg-white/14 text-white backdrop-blur-md transition-colors duration-180 hover:bg-white/22 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${
+                  isCartStaged
+                    ? 'border-rose-300/90 bg-white/26 ring-2 ring-[#FF4D58]/70 shadow-[0_0_24px_rgba(255,77,88,0.55)]'
+                    : 'border-white/18'
+                }`}
               >
-                <ShoppingCart className="h-4 w-4" />
+                {isCartStaged && (
+                  <span
+                    key={`pdp-cart-stage-${cartStagePulse}`}
+                    aria-hidden="true"
+                    className="staging-focus-spotlight pointer-events-none absolute -inset-1.5 rounded-full border-2 border-[#FF4D58]/80 bg-[#FF4D58]/20"
+                  />
+                )}
+                <span
+                  key={`pdp-cart-catch-${cartStagePulse}`}
+                  className={cartStagePulse > 0 && isCartStaged ? 'cart-target-catch inline-flex' : 'inline-flex'}
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                </span>
                 <CartBadge
                   count={cartCount}
                   className="absolute -right-0.5 -top-0.5 grid h-4.5 min-w-4.5 place-items-center rounded-full border-2 border-[#181412] bg-[#D9232D] px-1 text-[9.5px] font-extrabold text-white shadow-xs tabular-nums"
@@ -1390,14 +1412,14 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                         <>
                           <button
                             type="button"
-                            onClick={() => {
+                            onClick={(event) => {
                               if (isSelectedConfigurationInCart) onOpenCart?.();
-                              else addToCart(false);
+                              else addToCart(false, event);
                             }}
                             aria-label={
                               isSelectedConfigurationInCart ? 'Go to Cart' : 'Add to cart'
                             }
-                            className="flex min-h-11.5 items-center justify-center gap-2 rounded-2xl border border-[#D9232D]/85 bg-white/85 px-4 text-xs font-extrabold text-[#D9232D] shadow-[0_6px_18px_-10px_rgba(217,35,45,0.28)] backdrop-blur-sm transition-all duration-180 hover:bg-rose-50/90 active:scale-[0.98]"
+                            className="btn-squash-stretch flex min-h-11.5 items-center justify-center gap-2 rounded-2xl border border-[#D9232D]/85 bg-white/85 px-4 text-xs font-extrabold text-[#D9232D] shadow-[0_6px_18px_-10px_rgba(217,35,45,0.28)] backdrop-blur-sm transition-colors duration-180 hover:bg-rose-50/90"
                           >
                             <ShoppingCart className="h-4 w-4" />
                             <span>
@@ -1407,7 +1429,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                           <button
                             type="button"
                             onClick={() => addToCart(true)}
-                            className="banner-cta-shine group/cta flex min-h-11.5 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-4 text-xs font-extrabold text-white shadow-[0_12px_26px_-10px_rgba(217,35,45,0.52)] transition-all duration-180 hover:brightness-105 active:scale-[0.98]"
+                            className="btn-squash-stretch banner-cta-shine group/cta flex min-h-11.5 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-4 text-xs font-extrabold text-white shadow-[0_12px_26px_-10px_rgba(217,35,45,0.52)] transition-colors duration-180 hover:brightness-105"
                           >
                             <Zap className="h-4 w-4 fill-current transition-transform duration-180 group-hover/cta:translate-x-0.5" />
                             <span>Buy Now</span>
@@ -1419,7 +1441,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
                           disabled={!onNotifyMe || notifySubmitting}
                           onClick={() => void handleNotifyMe(product)}
                           aria-label="Notify me when this product is back in stock"
-                          className="banner-cta-shine group/cta col-span-2 flex min-h-11.5 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-4 text-xs font-extrabold text-white shadow-sm transition-all hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
+                          className="btn-squash-stretch banner-cta-shine group/cta col-span-2 flex min-h-11.5 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] to-[#B91822] px-4 text-xs font-extrabold text-white shadow-sm transition-colors hover:brightness-105 disabled:opacity-50"
                         >
                           <Clock3
                             className={`h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5 ${
@@ -1788,12 +1810,12 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => {
+                onClick={(event) => {
                   if (isSelectedConfigurationInCart) onOpenCart?.();
-                  else addToCart(false);
+                  else addToCart(false, event);
                 }}
                 aria-label={isSelectedConfigurationInCart ? 'Go to Cart' : 'Add to cart'}
-                className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-2xl border border-[#D9232D]/85 bg-white/85 px-3 text-xs font-extrabold text-[#D9232D] shadow-[0_6px_16px_-10px_rgba(217,35,45,0.3)] backdrop-blur-sm transition-all duration-180 hover:bg-rose-50/90 active:scale-[0.98]"
+                className="btn-squash-stretch flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-2xl border border-[#D9232D]/85 bg-white/85 px-3 text-xs font-extrabold text-[#D9232D] shadow-[0_6px_16px_-10px_rgba(217,35,45,0.3)] backdrop-blur-sm transition-colors duration-180 hover:bg-rose-50/90"
               >
                 <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">
@@ -1803,7 +1825,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
               <button
                 type="button"
                 onClick={() => addToCart(true)}
-                className="banner-cta-shine group/cta flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-3 text-xs font-extrabold text-white shadow-[0_10px_22px_-6px_rgba(217,35,45,0.46)] transition-all duration-180 hover:brightness-105 active:scale-[0.97]"
+                className="btn-squash-stretch banner-cta-shine group/cta flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-[#D9232D] via-[#E11D48] to-[#B91822] px-3 text-xs font-extrabold text-white shadow-[0_10px_22px_-6px_rgba(217,35,45,0.46)] transition-colors duration-180 hover:brightness-105"
               >
                 <Zap className="h-3.5 w-3.5 shrink-0 fill-current transition-transform duration-180 group-hover/cta:translate-x-0.5" />
                 <span className="truncate">Buy Now</span>
@@ -1815,7 +1837,7 @@ const ProductDetailPage: React.FC<InternalProductDetailPageProps> = ({
               disabled={!onNotifyMe || notifySubmitting}
               onClick={() => void handleNotifyMe(product)}
               aria-label="Notify me when this product is back in stock"
-              className="banner-cta-shine group/cta flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] to-[#B91822] text-xs font-extrabold text-white shadow-sm transition-all hover:brightness-105 active:scale-[0.97] disabled:opacity-50"
+              className="btn-squash-stretch banner-cta-shine group/cta flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D9232D] to-[#B91822] text-xs font-extrabold text-white shadow-sm transition-colors hover:brightness-105 disabled:opacity-50"
             >
               <Clock3
                 className={`h-4 w-4 transition-transform duration-200 group-hover/cta:translate-x-0.5 ${

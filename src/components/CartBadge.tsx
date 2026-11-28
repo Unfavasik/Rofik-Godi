@@ -37,11 +37,12 @@ export const CartBadge: React.FC<CartBadgeProps> = ({
     const controls = animate(
       scope.current,
       {
-        scale: [1, 1.38, 0.92, 1.1, 1],
-        y: [0, -2.5, 0.5, -0.5, 0],
+        scaleX: [1, 1.32, 0.88, 1.09, 1],
+        scaleY: [1, 0.78, 1.18, 0.95, 1],
+        y: [0, 1.5, -2.5, 0.5, 0],
       },
       {
-        duration: 0.44,
+        duration: 0.46,
         ease: 'easeOut',
       },
     );

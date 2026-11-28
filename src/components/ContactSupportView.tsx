@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ArrowLeft,
   Bell,
@@ -31,6 +31,8 @@ export function ContactSupportView({
   onOpenSupportRequest?: (requestId: string) => void;
   onOpenSupportRequests?: () => void;
 }) {
+  const [isComposerFocused, setIsComposerFocused] = useState(false);
+
   return (
     <main className="min-h-dvh w-full max-w-full overflow-x-hidden bg-gradient-to-br from-[#F8FAFC] via-[#F4F6FB] to-[#FFF5F6] font-sans text-slate-900">
       {/* Edge-to-Edge Vignette Sticky Header */}
@@ -42,7 +44,7 @@ export function ContactSupportView({
               type="button"
               onClick={onBack}
               aria-label="Close"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-all hover:bg-white/22 active:scale-95"
+              className="btn-squash-stretch flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/18 bg-white/14 text-white backdrop-blur-md transition-colors hover:bg-white/22"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
@@ -63,7 +65,7 @@ export function ContactSupportView({
             <button
               type="button"
               onClick={onOpenSupportRequests}
-              className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border border-white/18 bg-white/14 px-3 py-1.5 text-xs font-extrabold text-white backdrop-blur-md transition-colors hover:bg-white/22 whitespace-nowrap"
+              className="btn-squash-stretch inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border border-white/18 bg-white/14 px-3 py-1.5 text-xs font-extrabold text-white backdrop-blur-md transition-colors hover:bg-white/22 whitespace-nowrap"
             >
               <Ticket className="h-3.5 w-3.5 text-rose-300" />
               <span className="hidden sm:inline">My requests</span>
@@ -100,6 +102,7 @@ export function ContactSupportView({
             initialRelatedOrderId={initialOrderId}
             onOpenLogin={onOpenLogin}
             onOpenSupportRequest={onOpenSupportRequest}
+            onComposerFocusChange={setIsComposerFocused}
             compact
           />
 
@@ -107,7 +110,7 @@ export function ContactSupportView({
             <button
               type="button"
               onClick={onOpenSupportRequests}
-              className="flex min-h-11 w-full items-center justify-between rounded-xl border border-slate-200/85 bg-white/95 px-3.5 py-2.5 text-xs font-extrabold text-slate-700 shadow-2xs backdrop-blur-md transition-all hover:border-rose-200 hover:bg-rose-50/40 hover:text-[#D9232D]"
+              className="btn-squash-stretch flex min-h-11 w-full items-center justify-between rounded-xl border border-slate-200/85 bg-white/95 px-3.5 py-2.5 text-xs font-extrabold text-slate-700 shadow-2xs backdrop-blur-md transition-colors hover:border-rose-200 hover:bg-rose-50/40 hover:text-[#D9232D]"
             >
               <span className="flex items-center gap-2">
                 <Ticket className="h-4 w-4 text-[#D9232D]" />
@@ -119,7 +122,11 @@ export function ContactSupportView({
         </div>
 
         {/* Right / Secondary Column: Direct Workshop Channels & Info */}
-        <aside className="min-w-0 space-y-3">
+        <aside
+          className={`min-w-0 space-y-3 transition-opacity duration-200 ${
+            isComposerFocused ? 'lg:opacity-75' : 'opacity-100'
+          }`}
+        >
           <div className="flex items-center gap-3 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400 lg:hidden">
             <span className="h-px flex-1 bg-slate-200/80" />
             Or contact us directly

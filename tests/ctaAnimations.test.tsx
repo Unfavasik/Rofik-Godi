@@ -12,8 +12,11 @@ import { ProductCard } from '../src/components/ProductCard';
 import { CustomerSupportRequestForm } from '../src/components/CustomerSupportRequestForm';
 import { ReviewComposer } from '../src/components/ReviewComposer';
 import { AdminNotificationComposer } from '../src/components/AdminNotificationComposer';
+import { Header } from '../src/components/Header';
+import { CartArcOverlay } from '../src/components/CartArcOverlay';
 import Onboarding from '../src/components/Onboarding';
 import { I18nProvider } from '../src/lib/i18n';
+import { computeParabolicArcTrajectory } from '../src/lib/motionChoreography';
 import { PRODUCTS } from '../src/data/products';
 import type { CartItem } from '../src/types';
 
@@ -171,5 +174,67 @@ describe('Banner CTA shine & motion roll-out', () => {
     expect(supportHtml).toContain('banner-cta-shine');
     expect(reviewHtml).toContain('banner-cta-shine');
     expect(adminNotifyHtml).toContain('banner-cta-shine');
+  });
+
+  it('defines squash-and-stretch, cart catch, and staging focus choreography with reduced-motion guards in src/index.css', () => {
+    const css = fs.readFileSync(path.resolve(process.cwd(), 'src/index.css'), 'utf8');
+    expect(css).toContain('.btn-squash-stretch');
+    expect(css).toContain('@keyframes cartTargetCatch');
+    expect(css).toContain('.cart-target-catch');
+    expect(css).toContain('@keyframes stagingFocusSpotlight');
+    expect(css).toContain('.staging-focus-spotlight');
+    expect(css).toContain('@keyframes stagingFocusCard');
+    expect(css).toContain('.staging-focus-card');
+  });
+
+  it('wires anticipation wind-up, focus staging, squash-and-stretch buttons, and parabolic cart arc projectiles', () => {
+    const headerHtml = renderToStaticMarkup(
+      <I18nProvider language="en">
+        <Header
+          cartCount={2}
+          notificationCount={1}
+          onOpenCart={() => undefined}
+          onOpenNotifications={() => undefined}
+          onOpenAccount={() => undefined}
+          searchQuery=""
+          setSearchQuery={() => undefined}
+          onOpenSearch={() => undefined}
+        />
+      </I18nProvider>,
+    );
+    expect(headerHtml).toContain('data-cart-target="true"');
+    expect(headerHtml).toContain('btn-squash-stretch');
+
+    const supportHtml = renderToStaticMarkup(
+      <CustomerSupportRequestForm isAuthenticated expectedUserId="user-1" />,
+    );
+    expect(supportHtml).toContain('data-testid="support-send-button"');
+    expect(supportHtml).toContain('data-send-phase="idle"');
+    expect(supportHtml).toContain('data-testid="support-send-icon"');
+    expect(supportHtml).toContain('data-focus-staged="false"');
+    expect(supportHtml).toContain('btn-squash-stretch');
+
+    const start = { x: 140, y: 540 };
+    const end = { x: 350, y: 44 };
+    const arcHtml = renderToStaticMarkup(
+      <CartArcOverlay
+        flights={[
+          {
+            id: 'flight-1',
+            image: '/images/sample.jpg',
+            title: sampleProduct.title,
+            start,
+            end,
+            trajectory: computeParabolicArcTrajectory(start, end),
+          },
+        ]}
+        onFlightComplete={() => undefined}
+      />,
+    );
+    expect(arcHtml).toContain('data-testid="cart-arc-overlay"');
+    expect(arcHtml).toContain('data-testid="cart-arc-ribbon"');
+    expect(arcHtml).toContain('data-testid="cart-arc-trail"');
+    expect(arcHtml).toContain('data-testid="cart-arc-projectile"');
+    expect(arcHtml).toContain('+1');
   });
 });

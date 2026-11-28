@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Product } from '../types';
 import { Heart, Plus, Star, ShoppingCart, ImageOff } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
@@ -9,6 +9,7 @@ import {
   resolveProductCardHeartbeatState,
   type WishlistHeartbeatEntry,
 } from '../lib/wishlistHeartbeat';
+import { getSquashStretchMotionProps } from '../lib/motionChoreography';
 
 export const PRODUCT_IMAGE_ZOOM_VARIANTS = {
   rest: { scale: 1 },
@@ -133,7 +134,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const availabilityClass = availability.state === 'in-stock' ? 'text-emerald-700' : 'text-amber-700';
   const [notifySubmitting, setNotifySubmitting] = useState(false);
   const [heartPulseKey, setHeartPulseKey] = useState(0);
+  const [isStagingCartFocus, setIsStagingCartFocus] = useState(false);
+  const stagingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notifyRequestLock = useRef(false);
+  useEffect(
+    () => () => {
+      if (stagingTimerRef.current) clearTimeout(stagingTimerRef.current);
+    },
+    [],
+  );
   const { heartKey, shouldAnimate: shouldAnimateHeartbeat } = resolveProductCardHeartbeatState({
     isWishlisted,
     localPulseKey: heartPulseKey,
@@ -144,6 +153,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       setHeartPulseKey((key) => key + 1);
     }
     onToggleWishlist(product, event);
+  };
+  const handleQuickAddAction = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (isInCart) {
+      onOpenCart();
+      return;
+    }
+    if (sellable) {
+      setIsStagingCartFocus(true);
+      if (stagingTimerRef.current) clearTimeout(stagingTimerRef.current);
+      stagingTimerRef.current = setTimeout(() => {
+        setIsStagingCartFocus(false);
+        stagingTimerRef.current = null;
+      }, 640);
+      onQuickAddToCart(product, event);
+      return;
+    }
+    void handleNotifyMe(event);
   };
   const handleNotifyMe = async (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -162,6 +189,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   // Determine diagonal corner ribbon badge label and color
   const badgeInfo = getProductBadgeInfo(product, t);
   const shouldReduceMotion = useReducedMotion();
+  const quickAddSquashProps = getSquashStretchMotionProps(shouldReduceMotion, {
+    disabled: !sellable && !isInCart && (!onNotifyMe || notifySubmitting),
+    intensity: 'playful',
+  });
 
   // ----------------------------------------------------------------------
   // LIST VIEW (Screen 3 in mockup - horizontal rows)
@@ -172,7 +203,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         initial="rest"
         animate="rest"
         whileHover={shouldReduceMotion ? undefined : 'hover'}
-        className="w-full bg-white rounded-xl p-2.5 border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.03)] hover:border-slate-300 md:hover:-translate-y-0.5 md:hover:shadow-[0_10px_24px_-10px_rgba(15,23,42,0.12)] flex items-center justify-between gap-2.5 relative overflow-hidden group cursor-pointer transition-all duration-200 ease-out will-change-transform select-none"
+        data-staging-focus={isStagingCartFocus ? 'true' : 'false'}
+        className={`w-full bg-white rounded-xl p-2.5 border shadow-[0_1px_3px_rgba(15,23,42,0.03)] hover:border-slate-300 md:hover:-translate-y-0.5 md:hover:shadow-[0_10px_24px_-10px_rgba(15,23,42,0.12)] flex items-center justify-between gap-2.5 relative overflow-hidden group cursor-pointer transition-all duration-200 ease-out will-change-transform select-none ${
+          isStagingCartFocus ? 'staging-focus-card border-[#D9232D]/55' : 'border-slate-200/80'
+        }`}
       >
         <ProductCardOpenButton product={product} onSelectProduct={onSelectProduct} />
         {badgeInfo && (
@@ -231,7 +265,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             onClick={handleWishlistClick}
             aria-label={isWishlisted ? t('product.removeFromWishlist') : t('product.addToWishlist')}
             aria-pressed={isWishlisted}
-            className="pointer-events-auto grid min-h-9 min-w-9 place-items-center rounded-full text-slate-400 hover:text-[#D9232D] transition-colors active:scale-90"
+            className="btn-squash-stretch pointer-events-auto grid min-h-9 min-w-9 place-items-center rounded-full text-slate-400 hover:text-[#D9232D] transition-colors"
           >
             <Heart
               key={heartKey}
@@ -246,21 +280,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </button>
 
           <motion.button
-            whileTap={{ scale: 0.9 }}
+            {...quickAddSquashProps}
             type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              if (isInCart) onOpenCart();
-              else if (sellable) onQuickAddToCart(product, event);
-              else void handleNotifyMe(event);
-            }}
+            onClick={handleQuickAddAction}
             disabled={!sellable && !isInCart && (!onNotifyMe || notifySubmitting)}
             aria-label={isInCart ? t('product.goToCart') : sellable ? t('product.addToCart') : t('product.notifyMe')}
             title={isInCart ? t('product.goToCart') : sellable ? t('product.addToCart') : t('product.notifyMe')}
-            className={`pointer-events-auto ${!sellable && !isInCart ? 'min-h-9 min-w-[72px] px-2 text-[9.5px] font-bold' : 'h-9 w-9'} rounded-lg flex items-center justify-center transition-colors ${
+            className={`btn-squash-stretch pointer-events-auto ${!sellable && !isInCart ? 'min-h-9 min-w-[72px] px-2 text-[9.5px] font-bold' : 'h-9 w-9'} rounded-lg flex items-center justify-center transition-colors ${
               isInCart
                 ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                : 'banner-cta-shine bg-[#D9232D] text-white hover:bg-[#BE1C25] active:scale-95'
+                : 'banner-cta-shine bg-[#D9232D] text-white hover:bg-[#BE1C25]'
             }`}
           >
             {isInCart ? (
@@ -282,9 +311,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       initial="rest"
       animate="rest"
       whileHover={shouldReduceMotion ? undefined : 'hover'}
+      data-staging-focus={isStagingCartFocus ? 'true' : 'false'}
       className={`${
         layoutMode === 'shelf' ? 'flex-shrink-0 w-[144px] sm:w-[158px]' : 'w-full'
-      } bg-white rounded-xl p-2 border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.03)] hover:border-slate-300 md:hover:-translate-y-0.5 md:hover:shadow-[0_12px_24px_-12px_rgba(15,23,42,0.14)] flex flex-col justify-between relative overflow-hidden group cursor-pointer transition-all duration-200 ease-out will-change-transform select-none`}
+      } bg-white rounded-xl p-2 border shadow-[0_1px_3px_rgba(15,23,42,0.03)] hover:border-slate-300 md:hover:-translate-y-0.5 md:hover:shadow-[0_12px_24px_-12px_rgba(15,23,42,0.14)] flex flex-col justify-between relative overflow-hidden group cursor-pointer transition-all duration-200 ease-out will-change-transform select-none ${
+        isStagingCartFocus ? 'staging-focus-card border-[#D9232D]/55' : 'border-slate-200/80'
+      }`}
     >
       <ProductCardOpenButton product={product} onSelectProduct={onSelectProduct} />
       {/* Dynamic Diagonal Corner Ribbon (Bestseller, New, Anti-Slip, Gel, Waterproof, etc.) */}
@@ -305,7 +337,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           onClick={handleWishlistClick}
           aria-label={isWishlisted ? t('product.removeFromWishlist') : t('product.addToWishlist')}
           aria-pressed={isWishlisted}
-          className="pointer-events-auto absolute top-1.5 right-1.5 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/92 backdrop-blur-xs text-slate-600 hover:text-[#D9232D] border border-slate-200/60 shadow-2xs transition-colors active:scale-90"
+          className="btn-squash-stretch pointer-events-auto absolute top-1.5 right-1.5 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/92 backdrop-blur-xs text-slate-600 hover:text-[#D9232D] border border-slate-200/60 shadow-2xs transition-colors"
         >
           <Heart
             key={heartKey}
@@ -353,21 +385,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Crisp Quick Add Button */}
         <motion.button
-          whileTap={{ scale: 0.9 }}
+          {...quickAddSquashProps}
           type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              if (isInCart) onOpenCart();
-              else if (sellable) onQuickAddToCart(product, event);
-              else void handleNotifyMe(event);
-            }}
+          onClick={handleQuickAddAction}
           disabled={!sellable && !isInCart && (!onNotifyMe || notifySubmitting)}
           aria-label={isInCart ? t('product.goToCart') : sellable ? t('product.addToCart') : t('product.notifyMe')}
           title={isInCart ? t('product.goToCart') : sellable ? t('product.addToCart') : t('product.notifyMe')}
-          className={`pointer-events-auto ${!sellable && !isInCart ? 'min-h-9 min-w-[74px] px-2 text-[9.5px] font-bold' : 'h-9 w-9'} rounded-lg flex items-center justify-center transition-colors ${
+          className={`btn-squash-stretch pointer-events-auto ${!sellable && !isInCart ? 'min-h-9 min-w-[74px] px-2 text-[9.5px] font-bold' : 'h-9 w-9'} rounded-lg flex items-center justify-center transition-colors ${
             isInCart
               ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-              : 'banner-cta-shine bg-[#D9232D] text-white hover:bg-[#BE1C25] active:scale-95'
+              : 'banner-cta-shine bg-[#D9232D] text-white hover:bg-[#BE1C25]'
           }`}
         >
           {isInCart ? (

@@ -169,8 +169,16 @@ canvas {
   .banner-cta-shine::after,
   .banner-ambient-pulse,
   .wishlist-heartbeat,
-  .voice-mic-pulse {
+  .voice-mic-pulse,
+  .cart-target-catch,
+  .staging-focus-spotlight,
+  .staging-focus-card {
     animation: none !important;
+  }
+  .btn-squash-stretch,
+  .btn-squash-stretch:hover,
+  .btn-squash-stretch:active {
+    transform: none !important;
   }
 }
 
@@ -195,6 +203,86 @@ canvas {
 .wishlist-heartbeat {
   animation: wishlistHeartbeat 540ms cubic-bezier(0.22, 1, 0.36, 1);
   transform-origin: center;
+}
+
+/* Volume-preserving Squash & Stretch for tactile buttons */
+.btn-squash-stretch {
+  transform-origin: center;
+  will-change: transform;
+  transition: transform 220ms cubic-bezier(0.22, 1.4, 0.36, 1);
+}
+
+@media (hover: hover) {
+  .btn-squash-stretch:not(:disabled):not([aria-disabled='true']):hover {
+    transform: scaleX(1.03) scaleY(0.98);
+  }
+}
+
+.btn-squash-stretch:not(:disabled):not([aria-disabled='true']):active {
+  transform: scaleX(1.08) scaleY(0.9);
+  transition-duration: 95ms;
+  transition-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+/* Cart catch squash-and-stretch when an arc item lands */
+@keyframes cartTargetCatch {
+  0% {
+    transform: scaleX(1) scaleY(1) translateY(0);
+  }
+  28% {
+    transform: scaleX(1.2) scaleY(0.84) translateY(2px);
+  }
+  58% {
+    transform: scaleX(0.92) scaleY(1.12) translateY(-2.5px);
+  }
+  82% {
+    transform: scaleX(1.05) scaleY(0.96) translateY(0.5px);
+  }
+  100% {
+    transform: scaleX(1) scaleY(1) translateY(0);
+  }
+}
+
+.cart-target-catch {
+  animation: cartTargetCatch 460ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: center;
+}
+
+/* Staging the focus: subtle spotlight ring on cart arrival & source product */
+@keyframes stagingFocusSpotlight {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.92);
+  }
+  55% {
+    opacity: 0.45;
+    transform: scale(1.48);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.72);
+  }
+}
+
+.staging-focus-spotlight {
+  animation: stagingFocusSpotlight 680ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: center;
+}
+
+@keyframes stagingFocusCard {
+  0% {
+    box-shadow: 0 0 0 0 rgba(217, 35, 45, 0.42), 0 12px 26px -12px rgba(217, 35, 45, 0.25);
+  }
+  55% {
+    box-shadow: 0 0 0 4px rgba(217, 35, 45, 0.16), 0 14px 30px -12px rgba(217, 35, 45, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(217, 35, 45, 0), 0 1px 3px rgba(15, 23, 42, 0.03);
+  }
+}
+
+.staging-focus-card {
+  animation: stagingFocusCard 640ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes voiceMicPulse {

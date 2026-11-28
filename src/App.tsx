@@ -18,9 +18,17 @@ import { CategorySection, type CategoryFilter } from './components/CategorySecti
 import { CatalogStatus } from './components/CatalogStatus';
 import { VehicleFinderSheet, VehicleFitmentTriggerBar } from './components/VehicleFinder';
 import { ProductCard } from './components/ProductCard';
+import { CartArcOverlay } from './components/CartArcOverlay';
 import { PwaInstallCard } from './components/PwaInstallCard';
 import { AppUpdatePrompt } from './components/AppUpdatePrompt';
 import { useAppUpdate } from './hooks/useAppUpdate';
+import {
+  computeParabolicArcTrajectory,
+  dispatchCartArcLandedEvent,
+  findVisibleCartTargetPoint,
+  getOriginPointFromEvent,
+  type CartArcFlight,
+} from './lib/motionChoreography';
 const ProductDetailModal = lazyWithRetry(() => import('./components/ProductDetailModal').then((module) => ({ default: module.ProductDetailModal })));
 const CustomSeatBuilder = lazyWithRetry(() => import('./components/CustomSeatBuilder').then((module) => ({ default: module.CustomSeatBuilder })));
 const CartDrawer = lazyWithRetry(() => import('./components/CartDrawer').then((module) => ({ default: module.CartDrawer })));
@@ -976,6 +984,73 @@ export default function App() {
     (product: Product) => hasMatchingCartItem(cart, createDefaultCartItem(product, `${product.id}-cart-check`)),
     [cart],
   );
+  const [cartArcFlights, setCartArcFlights] = useState<CartArcFlight[]>([]);
+  const cartArcSeqRef = useRef(0);
+  const cartArcProductMapRef = useRef<Map<string, string>>(new Map());
+  const cartArcTimersRef = useRef<Map<string, number>>(new Map());
+
+  const handleCartArcComplete = useCallback((flightId: string) => {
+    const timer = cartArcTimersRef.current.get(flightId);
+    if (timer !== undefined) {
+      window.clearTimeout(timer);
+      cartArcTimersRef.current.delete(flightId);
+    }
+    const productId = cartArcProductMapRef.current.get(flightId);
+    if (productId !== undefined) {
+      cartArcProductMapRef.current.delete(flightId);
+      dispatchCartArcLandedEvent(productId);
+    }
+    setCartArcFlights((prev) => prev.filter((flight) => flight.id !== flightId));
+  }, []);
+
+  const launchCartArcFlight = useCallback(
+    (product: Product, originEvent?: React.MouseEvent, imageOverride?: string) => {
+      if (typeof window === 'undefined') return;
+      const prefersReducedMotion =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion) {
+        dispatchCartArcLandedEvent(product.id);
+        return;
+      }
+
+      const start = getOriginPointFromEvent(originEvent);
+      const end = findVisibleCartTargetPoint();
+      if (!start || !end) {
+        dispatchCartArcLandedEvent(product.id);
+        return;
+      }
+
+      cartArcSeqRef.current += 1;
+      const flightId = `cart-arc-${cartArcSeqRef.current}-${product.id}`;
+      const trajectory = computeParabolicArcTrajectory(start, end);
+      const flight: CartArcFlight = {
+        id: flightId,
+        image: imageOverride || product.image,
+        title: product.title,
+        start,
+        end,
+        trajectory,
+      };
+
+      cartArcProductMapRef.current.set(flightId, product.id);
+      setCartArcFlights((prev) => [...prev.slice(-3), flight]);
+
+      const fallbackTimer = window.setTimeout(() => {
+        handleCartArcComplete(flightId);
+      }, Math.round(trajectory.durationSec * 1000) + 340);
+      cartArcTimersRef.current.set(flightId, fallbackTimer);
+    },
+    [handleCartArcComplete],
+  );
+
+  useEffect(() => {
+    const timers = cartArcTimersRef.current;
+    return () => {
+      timers.forEach((timerId) => window.clearTimeout(timerId));
+      timers.clear();
+    };
+  }, []);
 
   useEffect(() => {
     if (appPhase !== 'main' || authStatus === 'AUTH_LOADING') return;
@@ -1359,7 +1434,12 @@ export default function App() {
 
   const handleQuickAddToCart = (p: Product, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!p.inStock) return;
+    const willAdd = !isQuickAddInCart(p);
     handleToggleDefaultCartItem(p);
+    if (willAdd) {
+      launchCartArcFlight(p, e);
+    }
   };
 
   // Detailed Modal Add To Cart
@@ -1370,6 +1450,7 @@ export default function App() {
     selectedThickness: { label: string; extraPrice: number },
     customEmbroideryText?: string,
     quantity = 1,
+    originEvent?: React.MouseEvent,
   ) => {
     if (!product.inStock) return;
     const unitPrice = getCartItemUnitPrice(product, selectedThickness, customEmbroideryText);
@@ -1385,7 +1466,11 @@ export default function App() {
       unitPrice,
     };
 
+    const willAdd = !hasMatchingCartItem(cart, newItem);
     setCart((current) => toggleCartItem(current, newItem));
+    if (willAdd) {
+      launchCartArcFlight(product, originEvent, selectedColor?.images?.[0] || product.image);
+    }
   };
 
   const handleDetailBuyNow = (
@@ -2344,7 +2429,7 @@ export default function App() {
                     type="button"
                     onClick={() => setIsHomeSortOpen(true)}
                     aria-label="Sort products"
-                    className="flex min-h-9 items-center gap-1.5 rounded-xl border border-slate-200/85 bg-white hover:border-slate-300 px-3 py-1 text-[11.5px] font-semibold text-slate-700 transition-colors cursor-pointer"
+                    className="btn-squash-stretch flex min-h-9 items-center gap-1.5 rounded-xl border border-slate-200/85 bg-white hover:border-slate-300 px-3 py-1 text-[11.5px] font-semibold text-slate-700 transition-colors cursor-pointer"
                   >
                     <ArrowUpDown className="h-3.5 w-3.5 text-slate-500" /> {SORT_LABELS[sortBy]?.label || 'Sort'}
                   </button>
@@ -2352,7 +2437,7 @@ export default function App() {
                     type="button"
                     onClick={() => setIsHomeFilterOpen(true)}
                     aria-label="Filter products"
-                    className="flex min-h-9 items-center gap-1.5 rounded-xl border border-slate-200/85 bg-white hover:border-slate-300 px-3 py-1 text-[11.5px] font-semibold text-slate-700 transition-colors cursor-pointer"
+                    className="btn-squash-stretch flex min-h-9 items-center gap-1.5 rounded-xl border border-slate-200/85 bg-white hover:border-slate-300 px-3 py-1 text-[11.5px] font-semibold text-slate-700 transition-colors cursor-pointer"
                   >
                     <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" /> Filter
                     {activeHomeFiltersCount > 0 && (
@@ -2368,7 +2453,7 @@ export default function App() {
                     onClick={() => setShopLayoutMode('grid')}
                     aria-label="Grid view"
                     aria-pressed={shopLayoutMode === 'grid'}
-                    className={`grid h-8 w-8 place-items-center rounded-lg transition-all cursor-pointer ${
+                    className={`btn-squash-stretch grid h-8 w-8 place-items-center rounded-lg transition-all cursor-pointer ${
                       shopLayoutMode === 'grid'
                         ? 'bg-white text-[#D9232D] shadow-2xs'
                         : 'text-slate-500 hover:text-slate-800'
@@ -2381,7 +2466,7 @@ export default function App() {
                     onClick={() => setShopLayoutMode('list')}
                     aria-label="List view"
                     aria-pressed={shopLayoutMode === 'list'}
-                    className={`grid h-8 w-8 place-items-center rounded-lg transition-all cursor-pointer ${
+                    className={`btn-squash-stretch grid h-8 w-8 place-items-center rounded-lg transition-all cursor-pointer ${
                       shopLayoutMode === 'list'
                         ? 'bg-white text-[#D9232D] shadow-2xs'
                         : 'text-slate-500 hover:text-slate-800'
@@ -2955,6 +3040,7 @@ export default function App() {
             }} className="min-h-11 shrink-0 rounded-xl px-3 text-[11px] font-extrabold hover:bg-black/5">Dismiss</button>
           </div>
         </div>}
+        <CartArcOverlay flights={cartArcFlights} onFlightComplete={handleCartArcComplete} />
         <AppUpdatePrompt />
         <Outlet />
       </div>
