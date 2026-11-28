@@ -1873,6 +1873,10 @@ export default function App() {
         window.setTimeout(resolve, 4500);
       }),
     ]);
+    // Pull-to-refresh is intentionally a hard refresh: after the latest data/session
+    // work settles, restart the document so the app bundle and all in-memory state
+    // are loaded from a clean WebView/browser context.
+    window.location.reload();
   }, [
     catalogProducts,
     currentUser.id,
