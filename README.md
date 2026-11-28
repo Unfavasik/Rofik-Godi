@@ -5,17 +5,17 @@ Storefront and admin catalog for Rofik Godi Centre, built with React, Vite, Type
 ## Development
 
 ```bash
-pnpm install
-pnpm dev
+npm ci
+npm run dev
 ```
 
 ## Quality checks
 
 ```bash
-pnpm lint       # TypeScript + ESLint
-pnpm test       # Catalog, cart, coupon, order-flow, and profile tests
-pnpm build
-pnpm format
+npm run lint    # TypeScript + ESLint
+npm test        # Catalog, cart, coupon, order-flow, and profile tests
+npm run build
+npm run format
 ```
 
 ## Supabase
