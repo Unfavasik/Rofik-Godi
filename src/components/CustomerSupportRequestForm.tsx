@@ -18,6 +18,7 @@ import {
   createCustomerSupportRequest,
   listMySupportOrderChoices,
   validateSupportFiles,
+  withSupportTimeout,
   type SupportOrderChoice,
   type SupportRequestCategory,
 } from '../lib/supabaseSupport';
@@ -162,14 +163,17 @@ export const CustomerSupportRequestForm: React.FC<{
       });
     }
     try {
-      const result = await createCustomerSupportRequest({
-        category,
-        subject: requestSubject,
-        message,
-        relatedOrderId: relatedOrderId || null,
-        files,
-        expectedUserId,
-      });
+      const result = await withSupportTimeout(
+        createCustomerSupportRequest({
+          category,
+          subject: requestSubject,
+          message,
+          relatedOrderId: relatedOrderId || null,
+          files,
+          expectedUserId,
+        }),
+        'Support request timed out. Please try again.',
+      );
       if (result.error) {
         attachmentUploadProgress.resetUpload();
         setError(result.error.message);
@@ -583,11 +587,13 @@ export const CustomerSupportRequestForm: React.FC<{
         <span>
           {sendPhase === 'windup'
             ? 'Preparing…'
-            : submitting
-              ? 'Sending…'
-              : compact
-                ? 'Send Message'
-                : 'Submit request'}
+            : sendPhase === 'launch'
+              ? 'Launching…'
+              : submitting
+                ? 'Sending…'
+                : compact
+                  ? 'Send Message'
+                  : 'Submit request'}
         </span>
       </motion.button>
     </form>

@@ -16,6 +16,7 @@ import {
   listSupportMessages,
   sendSupportMessage,
   validateSupportFiles,
+  withSupportTimeout,
   type SupportMessageCursor,
   type SupportMessageRecord,
   type SupportRequestRecord,
@@ -273,12 +274,15 @@ export const SupportConversation: React.FC<{
       });
     }
     try {
-      const result = await sendSupportMessage({
-        requestId,
-        message: draft,
-        files,
-        expectedUserId: currentUserId,
-      });
+      const result = await withSupportTimeout(
+        sendSupportMessage({
+          requestId,
+          message: draft,
+          files,
+          expectedUserId: currentUserId,
+        }),
+        'Sending the reply timed out. Please try again.',
+      );
       if (result.error) {
         attachmentUploadProgress.resetUpload();
         setError(result.error.message);
@@ -565,7 +569,15 @@ export const SupportConversation: React.FC<{
                   </motion.span>
                 )}
                 <span className="hidden sm:inline">
-                  {customerReplyLocked ? 'Resolved' : sending ? 'Sending' : 'Send'}
+                  {customerReplyLocked
+                    ? 'Resolved'
+                    : sendPhase === 'windup'
+                      ? 'Preparing'
+                      : sendPhase === 'launch'
+                        ? 'Launching'
+                        : sending
+                          ? 'Sending'
+                          : 'Send'}
                 </span>
               </motion.button>
             );

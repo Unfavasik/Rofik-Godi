@@ -57,8 +57,29 @@ export type SupportMessageCursor = { createdAt: string; id: string };
 const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
 const maxFileBytes = 5 * 1024 * 1024;
 const maxFilesPerRequest = 3;
+export const SUPPORT_OPERATION_TIMEOUT_MS = 20_000;
 const toError = (error: { message?: string } | null | undefined, fallback: string) =>
   error ? new Error(error.message || fallback) : null;
+
+export function withSupportTimeout<T>(
+  operation: Promise<T>,
+  message = 'Support is taking too long to respond. Please try again.',
+  timeoutMs = SUPPORT_OPERATION_TIMEOUT_MS,
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+    operation.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
 
 export function validateSupportFiles(files: File[], existingCount = 0): string | null {
   if (existingCount + files.length > maxFilesPerRequest) {
