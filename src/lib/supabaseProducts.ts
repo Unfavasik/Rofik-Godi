@@ -377,48 +377,85 @@ const productImagePaths = (product: Product): string[] => {
     .filter((path, index, paths) => paths.indexOf(path) === index);
 };
 
+const productImageUrls = (product: Product): string[] => [
+  product.image,
+  ...(product.additionalImages || []),
+  ...(product.colors || []).flatMap((color) => color.images || []),
+].filter((url, index, urls): url is string => Boolean(url) && urls.indexOf(url) === index);
+
+/**
+ * Remove old product-images objects after a product is saved or deleted.
+ * The reference check protects images that are still used by another product,
+ * banner, or notification.
+ */
+export const cleanupSupabaseProductImages = async (
+  previousProduct: Product,
+  currentProduct?: Product,
+) => {
+  if (!supabase) return { error: null as { message: string } | null };
+  const currentUrls = new Set(currentProduct ? productImageUrls(currentProduct) : []);
+  const candidatePaths = productImagePaths(previousProduct).filter((path) => {
+    const publicUrl = supabase!.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+    return !currentUrls.has(publicUrl);
+  });
+  if (!candidatePaths.length) return { error: null as { message: string } | null };
+
+  const [productsResult, settingsResult, notificationsResult] = await Promise.all([
+    supabase.from('products').select('image_url,additional_images,colors_json').limit(10000),
+    supabase.from('app_settings').select('value').eq('key', 'store_banners').maybeSingle(),
+    supabase.from('notifications').select('image_url').limit(10000),
+  ]);
+  const readError = productsResult.error || settingsResult.error || notificationsResult.error;
+  if (readError) return { error: readError };
+
+  const references = new Set<string>();
+  for (const row of productsResult.data || []) {
+    if (typeof row.image_url === 'string') references.add(row.image_url);
+    if (Array.isArray(row.additional_images)) {
+      for (const url of row.additional_images) if (typeof url === 'string') references.add(url);
+    }
+    if (Array.isArray(row.colors_json)) {
+      for (const color of row.colors_json) {
+        if (!color || typeof color !== 'object') continue;
+        const images = (color as Record<string, unknown>).images;
+        if (Array.isArray(images)) {
+          for (const url of images) if (typeof url === 'string') references.add(url);
+        }
+      }
+    }
+  }
+  const banners = settingsResult.data?.value;
+  if (Array.isArray(banners)) {
+    for (const banner of banners) {
+      if (banner && typeof banner === 'object') {
+        const imageUrl = (banner as Record<string, unknown>).imageUrl;
+        if (typeof imageUrl === 'string') references.add(imageUrl);
+      }
+    }
+  }
+  for (const row of notificationsResult.data || []) {
+    if (typeof row.image_url === 'string') references.add(row.image_url);
+  }
+
+  const removablePaths = candidatePaths.filter((path) => {
+    const publicUrl = supabase!.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+    return !references.has(publicUrl);
+  });
+  if (!removablePaths.length) return { error: null as { message: string } | null };
+  const { error } = await supabase.storage.from('product-images').remove(removablePaths);
+  return { error };
+};
+
 export const deleteSupabaseProduct = async (product: Product) => {
   if (!supabase || !product.id.match(/^[0-9a-f-]{36}$/i)) {
     return { synced: false, error: null, storageError: null };
   }
 
-  const paths = productImagePaths(product);
-  const { data: otherRows } = await supabase
-    .from('products')
-    .select('image_url,additional_images,colors_json')
-    .neq('id', product.id);
-  const referencedUrls = new Set<string>();
-  for (const row of (otherRows || []) as ProductRow[]) {
-    const values = [
-      row.image_url,
-      ...(Array.isArray(row.additional_images) ? row.additional_images : []),
-      ...(Array.isArray(row.colors_json)
-        ? (row.colors_json as unknown[]).flatMap((color) =>
-            color &&
-            typeof color === 'object' &&
-            Array.isArray((color as Record<string, unknown>).images)
-              ? ((color as Record<string, unknown>).images as unknown[])
-              : [],
-          )
-        : []),
-    ];
-    values
-      .filter((value): value is string => typeof value === 'string')
-      .forEach((url) => referencedUrls.add(url));
-  }
-  const removablePaths = paths.filter((path) => {
-    const publicUrl = supabase!.storage.from('product-images').getPublicUrl(path).data.publicUrl;
-    return !referencedUrls.has(publicUrl);
-  });
-
   const { error } = await supabase.from('products').delete().eq('id', product.id);
   if (error) return { synced: false, error, storageError: null };
 
-  let storageError: { message: string } | null = null;
-  if (removablePaths.length) {
-    const result = await supabase.storage.from('product-images').remove(removablePaths);
-    storageError = result.error;
-  }
+  const result = await cleanupSupabaseProductImages(product);
+  const storageError = result.error;
   return { synced: true, error: null, storageError };
 };
 

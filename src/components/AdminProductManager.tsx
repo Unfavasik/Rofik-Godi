@@ -20,6 +20,7 @@ import type { Product, VehicleCategory } from '../types';
 import { getPathForAdminProduct, getPathForProduct } from '../lib/appRoutes';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import {
+  cleanupSupabaseProductImages,
   deleteSupabaseProduct,
   loadAdminProducts,
   reorderSupabaseProducts,
@@ -422,6 +423,10 @@ export const AdminProductManager: React.FC<{
       notify(`Product was not saved: ${synced.error.message}`);
       return;
     }
+    const previousProduct = draft.id ? products.find((item) => item.id === draft.id) : undefined;
+    const imageCleanup = previousProduct
+      ? await cleanupSupabaseProductImages(previousProduct, synced.product)
+      : { error: null };
     setProducts((current) =>
       draft.id
         ? current.map((item) => (item.id === draft.id ? synced.product : item))
@@ -460,7 +465,11 @@ export const AdminProductManager: React.FC<{
       return;
     }
     clearCatalogCache();
-    notify(savedMessage);
+    notify(
+      imageCleanup.error
+        ? `${savedMessage}, but an old Storage image could not be removed: ${imageCleanup.error.message}`
+        : savedMessage,
+    );
   };
   const remove = (id: string) => setPendingDeleteId(id);
   const confirmRemove = async () => {
