@@ -72,6 +72,7 @@ import { AccountPageSkeleton, AccountProfileEditorSkeleton } from './AccountPage
 import { isImageLoaded, markImageLoaded, readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { CUSTOMER_ORDERS_UPDATED_EVENT } from '../lib/localCache';
 import { subscribePullToRefresh } from '../lib/pullToRefresh';
+import type { AppUpdateInfo } from '../hooks/useAppUpdate';
 
 interface AccountViewProps {
   currentUser?: UserProfile;
@@ -118,6 +119,9 @@ interface AccountViewProps {
   onBuyAgain?: (order: CustomerOrderRecord) => Promise<BuyAgainResult>;
   products?: Product[];
   pwaInstallCard?: React.ReactNode;
+  hasAppUpdate?: boolean;
+  pendingAppUpdate?: AppUpdateInfo | null;
+  onStartAppUpdate?: () => void;
 }
 
 export const AccountView: React.FC<AccountViewProps> = ({
@@ -162,6 +166,9 @@ export const AccountView: React.FC<AccountViewProps> = ({
   onBuyAgain,
   products = [],
   pwaInstallCard,
+  hasAppUpdate = false,
+  pendingAppUpdate,
+  onStartAppUpdate,
 }) => {
   const { t } = useI18n();
   const [activeModal, setActiveModal] = useState<'orders' | 'pickupStore' | 'settings' | 'support' | 'contact-support' | 'profile' | 'privacy' | 'terms' | null>(routeModal);
@@ -770,6 +777,8 @@ export const AccountView: React.FC<AccountViewProps> = ({
         onOpenSection={onOpenSettingsSection}
         onCloseSection={onCloseSettingsSection}
         pwaInstallCard={pwaInstallCard}
+        pendingAppUpdate={pendingAppUpdate}
+        onStartAppUpdate={onStartAppUpdate}
       />
     );
   }
@@ -845,10 +854,17 @@ export const AccountView: React.FC<AccountViewProps> = ({
             <button
               type="button"
               onClick={() => handleProtectedAction('settings')}
-              aria-label={t('account.settings')}
-              className="min-h-10 min-w-10 h-10 w-10 rounded-full bg-white/14 hover:bg-white/22 border border-white/18 backdrop-blur-md flex items-center justify-center text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] transition-all active:scale-95 cursor-pointer"
+              aria-label={hasAppUpdate ? `${t('account.settings')}, update available` : t('account.settings')}
+              className="relative min-h-10 min-w-10 h-10 w-10 rounded-full bg-white/14 hover:bg-white/22 border border-white/18 backdrop-blur-md flex items-center justify-center text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] transition-all active:scale-95 cursor-pointer"
             >
               <Settings className="h-4.5 w-4.5" />
+              {hasAppUpdate && (
+                <span
+                  data-testid="account-header-settings-update-dot"
+                  aria-hidden="true"
+                  className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#FF4D58] ring-2 ring-[#181412]"
+                />
+              )}
             </button>
           </div>
         </div>
@@ -1200,12 +1216,21 @@ export const AccountView: React.FC<AccountViewProps> = ({
               onClick={() => handleProtectedAction('settings')}
               className="min-h-12 bg-white rounded-xl p-2.5 flex items-center gap-2 border border-slate-200/85 shadow-[0_1px_2px_rgba(15,23,42,0.03)] hover:border-slate-300 active:scale-[0.98] transition-all text-left"
             >
-              <div className="h-8 w-8 rounded-lg bg-slate-100/90 flex items-center justify-center text-slate-700 shrink-0">
+              <div className="relative h-8 w-8 rounded-lg bg-slate-100/90 flex items-center justify-center text-slate-700 shrink-0">
                 <SlidersHorizontal className="w-4 h-4" />
+                {hasAppUpdate && (
+                  <span
+                    data-testid="account-settings-update-dot"
+                    aria-hidden="true"
+                    className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-[#FF3B47] ring-2 ring-white shadow-xs"
+                  />
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-[12.5px] font-bold text-slate-900 tracking-tight leading-tight truncate">{t('account.settings')}</h3>
-                <p className="text-[10.5px] text-slate-500 font-medium mt-0.5 truncate">{t('account.preferences')}</p>
+                <p className={`text-[10.5px] mt-0.5 truncate ${hasAppUpdate ? 'font-bold text-[#D9232D]' : 'font-medium text-slate-500'}`}>
+                  {hasAppUpdate ? 'Update available' : t('account.preferences')}
+                </p>
               </div>
               <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
             </button>

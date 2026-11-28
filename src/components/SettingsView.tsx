@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2, Search, ChevronDown, ShoppingBag, MapPin, CreditCard, Wrench, HelpCircle, Clock3, Phone, CheckCircle2, Trash2, ExternalLink, Layers3, Award } from 'lucide-react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2, Search, ChevronDown, ShoppingBag, MapPin, CreditCard, Wrench, HelpCircle, Clock3, Phone, CheckCircle2, Trash2, ExternalLink, Layers3, Award, Download, Rocket, Check } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { PersonalDataView } from './PersonalDataView';
@@ -16,6 +16,10 @@ import { readSwrCache, writeSwrCache } from '../lib/swrCache';
 import { SrishtiLabsLogo } from './SrishtiLabsLogo';
 import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import { subscribePullToRefresh } from '../lib/pullToRefresh';
+import { useAppUpdate, type AppUpdateInfo } from '../hooks/useAppUpdate';
+import { getSettingsUpdateCardMotion } from '../lib/appUpdateMotion';
+import { openApkUpdateDownload } from '../lib/appUpdateState';
+import { sanitizeUrl } from '../lib/security';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -39,6 +43,8 @@ interface SettingsViewProps {
   isAuthenticated: boolean;
   isLoading?: boolean;
   pwaInstallCard?: React.ReactNode;
+  pendingAppUpdate?: AppUpdateInfo | null;
+  onStartAppUpdate?: () => void;
 }
 
 const ChevronRight = () => (
@@ -156,8 +162,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   isAuthenticated,
   isLoading = false,
   pwaInstallCard,
+  pendingAppUpdate,
+  onStartAppUpdate,
 }) => {
   const { t } = useI18n();
+  const prefersReducedMotion = Boolean(useReducedMotion());
+  const updateCardMotion = getSettingsUpdateCardMotion(prefersReducedMotion);
+  const hookAppUpdate = useAppUpdate();
+  const resolvedAppUpdate = pendingAppUpdate !== undefined ? pendingAppUpdate : hookAppUpdate.pendingUpdate;
+  const safeAppUpdateUrl = resolvedAppUpdate
+    ? sanitizeUrl(resolvedAppUpdate.apkUrl, { allowRelative: false })
+    : null;
+  const handleStartAppUpdate = () => {
+    if (onStartAppUpdate) {
+      onStartAppUpdate();
+      return;
+    }
+    openApkUpdateDownload(safeAppUpdateUrl);
+  };
   const [localSection, setLocalSection] = useState<SettingsSectionRoute | null>(null);
   const section = activeSection ?? localSection;
   const savedHubScrollYRef = useRef<number | null>(null);
@@ -887,7 +909,132 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         {/* BEGIN: SettingsMenuList */}
         <nav aria-label={t('settings.title')} className="relative z-10 mx-auto w-full max-w-3xl flex-1 px-3.5 space-y-4 mt-3 pb-8">
-          <SettingsGroup label="Preferences" lightLabel>
+          {resolvedAppUpdate && safeAppUpdateUrl && (
+            <SettingsGroup label="App update" lightLabel={!pwaInstallCard}>
+              <motion.section
+                aria-labelledby="settings-app-update-title"
+                data-testid="settings-app-update-card"
+                initial={updateCardMotion.cardInitial}
+                animate={updateCardMotion.cardAnimate}
+                transition={
+                  updateCardMotion.enabled
+                    ? { type: 'spring', stiffness: 360, damping: 28, mass: 0.78 }
+                    : { duration: 0 }
+                }
+                className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 text-slate-900 shadow-[0_14px_34px_-12px_rgba(15,23,42,0.16)]"
+              >
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#D9232D]/[0.07] blur-2xl"
+                />
+
+                <div className="relative z-10">
+                  <div className="flex items-start gap-3">
+                    {/* Animated Update Emblem */}
+                    <div className="relative flex h-12 w-12 shrink-0 items-center justify-center">
+                      <motion.span
+                        aria-hidden="true"
+                        animate={updateCardMotion.ringAnimate}
+                        transition={
+                          updateCardMotion.enabled
+                            ? { duration: 2.4, repeat: Infinity, ease: 'easeOut' }
+                            : { duration: 0 }
+                        }
+                        className="absolute inset-0 rounded-2xl border border-[#D9232D]/40"
+                      />
+                      <motion.span
+                        aria-hidden="true"
+                        animate={updateCardMotion.haloAnimate}
+                        transition={
+                          updateCardMotion.enabled
+                            ? { duration: 2.8, repeat: Infinity, ease: 'easeInOut' }
+                            : { duration: 0 }
+                        }
+                        className="absolute inset-0 rounded-2xl bg-[#D9232D]/25 blur-[5px]"
+                      />
+                      <motion.div
+                        animate={updateCardMotion.emblemAnimate}
+                        transition={
+                          updateCardMotion.enabled
+                            ? { duration: 3.1, repeat: Infinity, ease: 'easeInOut' }
+                            : { duration: 0 }
+                        }
+                        className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#D9232D] to-[#a6161f] text-white shadow-[0_10px_20px_-8px_rgba(217,35,45,0.65)]"
+                      >
+                        <Rocket className="h-5 w-5" />
+                      </motion.div>
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-bold tracking-tight text-[#D9232D] tabular-nums">
+                        <span>v{resolvedAppUpdate.versionName}</span>
+                        <span aria-hidden="true" className="mx-1.5 text-slate-300">·</span>
+                        <span>Ready to install</span>
+                      </p>
+                      <h2
+                        id="settings-app-update-title"
+                        className="mt-0.5 text-[15.5px] font-extrabold tracking-tight text-slate-900 leading-snug"
+                      >
+                        {resolvedAppUpdate.title || 'New update available'}
+                      </h2>
+                    </div>
+                  </div>
+
+                  {!!resolvedAppUpdate.notes?.length && (
+                    <ul className="mt-3 space-y-1.5 border-t border-slate-100 pt-2.5">
+                      {resolvedAppUpdate.notes.slice(0, 3).map((note, index) => (
+                        <motion.li
+                          key={note}
+                          initial={updateCardMotion.getNoteInitial(index)}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{
+                            delay: updateCardMotion.getNoteDelay(index),
+                            duration: 0.22,
+                            ease: [0.16, 1, 0.3, 1],
+                          }}
+                          className="flex items-start gap-2 text-[12px] font-medium leading-snug text-slate-600"
+                        >
+                          <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-rose-50 text-[#D9232D]">
+                            <Check className="h-2.5 w-2.5 stroke-[3]" aria-hidden="true" />
+                          </span>
+                          <span>{note}</span>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  )}
+
+                  <div className="mt-3.5 flex flex-col gap-2.5 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+                      <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden="true" />
+                      <span>Tap downloaded APK to install · Data stays safe</span>
+                    </p>
+                    <motion.button
+                      type="button"
+                      onClick={handleStartAppUpdate}
+                      whileTap={updateCardMotion.enabled ? { scale: 0.97 } : undefined}
+                      className="banner-cta-shine inline-flex min-h-11 shrink-0 items-center justify-center gap-2 overflow-hidden rounded-xl bg-[#D9232D] px-5 py-2.5 text-xs font-extrabold text-white shadow-[0_10px_22px_-10px_rgba(217,35,45,0.6)] transition-colors hover:bg-[#b91822]"
+                    >
+                      <motion.span
+                        aria-hidden="true"
+                        animate={updateCardMotion.arrowAnimate}
+                        transition={
+                          updateCardMotion.enabled
+                            ? { duration: 1.8, repeat: Infinity, ease: 'easeInOut' }
+                            : { duration: 0 }
+                        }
+                        className="inline-flex"
+                      >
+                        <Download className="h-4 w-4" />
+                      </motion.span>
+                      <span>Update now</span>
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.section>
+            </SettingsGroup>
+          )}
+
+          <SettingsGroup label="Preferences" lightLabel={!(resolvedAppUpdate && safeAppUpdateUrl) && !pwaInstallCard}>
           <SettingsRow
             onClick={() => openSection('notifications')}
             iconBg="bg-slate-100 text-slate-700"

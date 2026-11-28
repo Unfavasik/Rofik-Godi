@@ -20,6 +20,7 @@ import { VehicleFinderSheet, VehicleFitmentTriggerBar } from './components/Vehic
 import { ProductCard } from './components/ProductCard';
 import { PwaInstallCard } from './components/PwaInstallCard';
 import { AppUpdatePrompt } from './components/AppUpdatePrompt';
+import { useAppUpdate } from './hooks/useAppUpdate';
 const ProductDetailModal = lazyWithRetry(() => import('./components/ProductDetailModal').then((module) => ({ default: module.ProductDetailModal })));
 const CustomSeatBuilder = lazyWithRetry(() => import('./components/CustomSeatBuilder').then((module) => ({ default: module.CustomSeatBuilder })));
 const CartDrawer = lazyWithRetry(() => import('./components/CartDrawer').then((module) => ({ default: module.CartDrawer })));
@@ -727,6 +728,11 @@ export default function App() {
   // Navigation & View State
   const tabToRoute = useCallback((tab: RouteTab) => getPathForTab(tab), []);
   const [activeTab, setActiveTab] = useState<RouteTab>(() => backgroundRoute.tab);
+  const {
+    pendingUpdate: pendingAppUpdate,
+    showDeferredDot: hasDeferredAppUpdate,
+    startUpdate: startAppUpdateDownload,
+  } = useAppUpdate();
   const isBottomNavHidden = useScrollDirection(`${activeTab}:${location.pathname}`);
   useEffect(() => {
     setAppPhase(phaseFromPath(location.pathname));
@@ -2090,6 +2096,9 @@ export default function App() {
                 navigate('/admin');
               }}
               products={catalogProducts}
+              hasAppUpdate={hasDeferredAppUpdate}
+              pendingAppUpdate={pendingAppUpdate}
+              onStartAppUpdate={startAppUpdateDownload}
               pwaInstallCard={pwaInstall.visible ? <PwaInstallCard visible={pwaInstall.visible} canInstall={pwaInstall.canInstall} isIOSSafari={pwaInstall.isIOSSafari} isInstalling={pwaInstall.isInstalling} installError={pwaInstall.installError} onInstall={pwaInstall.install} onDismiss={pwaInstall.dismiss} /> : null}
               onProfileChange={(profile) =>
                 setCurrentUser((user) =>
@@ -2624,6 +2633,7 @@ export default function App() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               onScrollToTop={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              accountUpdateDot={hasDeferredAppUpdate}
             />
           )}
 

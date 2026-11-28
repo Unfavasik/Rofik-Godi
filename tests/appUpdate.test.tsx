@@ -11,8 +11,18 @@ const mockUpdateState = vi.hoisted(() => ({
     title: string;
     notes: string[];
   },
+  pendingUpdate: null as null | {
+    versionCode: number;
+    versionName: string;
+    minVersionCode: number;
+    apkUrl: string;
+    title: string;
+    notes: string[];
+  },
   required: false,
+  showDeferredDot: false,
   dismiss: vi.fn(),
+  startUpdate: vi.fn(),
 }));
 
 const mockStorageFrom = vi.hoisted(() =>
@@ -49,17 +59,24 @@ vi.mock('../src/hooks/useAppUpdate', () => ({
 
 import { AdminAppUpdate } from '../src/components/AdminAppUpdate';
 import { AppUpdatePrompt } from '../src/components/AppUpdatePrompt';
+import { BottomNav } from '../src/components/BottomNav';
+import { AccountView } from '../src/components/AccountView';
+import { SettingsView } from '../src/components/SettingsView';
+import { I18nProvider } from '../src/lib/i18n';
 import { publishRelease, uploadApk } from '../src/lib/supabaseAppRelease';
 
 describe('Android App Update integration', () => {
-  it('renders AdminAppUpdate form with APK file input, version fields, and Force update toggle', () => {
+  it('renders AdminAppUpdate form with APK file input, version fields, Force update toggle, and live preview', () => {
     const html = renderToStaticMarkup(<AdminAppUpdate notify={() => undefined} />);
+    expect(html).toContain('App Update Manager');
     expect(html).toContain('Publish new Android update');
     expect(html).toContain('APK file (max 50 MB)');
     expect(html).toContain('Version name');
     expect(html).toContain('Version code (must be higher)');
     expect(html).toContain('Force update');
     expect(html).toContain('Upload and publish');
+    expect(html).toContain('Live production build');
+    expect(html).toContain('Android prompt preview');
   });
 
   it('renders AppUpdatePrompt when update is available and respects required vs optional dismiss', () => {
@@ -106,8 +123,12 @@ describe('Android App Update integration', () => {
     const goodApk = new File(['apk-bytes'], 'release.apk', { type: 'application/vnd.android.package-archive' });
     await expect(uploadApk(goodApk, '!!!')).rejects.toThrow('Enter a version name first');
 
-    const url = await uploadApk(goodApk, '1.1.59');
+    const progressEvents: number[] = [];
+    const url = await uploadApk(goodApk, '1.1.59', (progress) => {
+      progressEvents.push(progress.percent);
+    });
     expect(url).toContain('Rofik_Godi_Center_1.1.59.apk');
+    expect(progressEvents[progressEvents.length - 1]).toBe(100);
 
     await expect(
       publishRelease({
@@ -130,5 +151,83 @@ describe('Android App Update integration', () => {
         notes: ['Notes'],
       }),
     ).resolves.toBeUndefined();
+  });
+
+  it('renders deferred update red dots on BottomNav and AccountView Settings and top update card inside SettingsView', () => {
+    const release = {
+      versionCode: 61,
+      versionName: '1.1.59',
+      minVersionCode: 0,
+      apkUrl: 'https://example.supabase.co/storage/v1/object/public/app-releases/Rofik_Godi_Center_1.1.59.apk',
+      title: 'New update available',
+      notes: ['Faster loading', 'Bug fixes'],
+    };
+
+    const navWithoutDot = renderToStaticMarkup(
+      <I18nProvider language="en">
+        <BottomNav
+          activeTab="home"
+          setActiveTab={() => undefined}
+          cartCount={0}
+          wishlistCount={0}
+          onOpenCart={() => undefined}
+          onOpenWishlist={() => undefined}
+          onOpenShop={() => undefined}
+          onOpenAccount={() => undefined}
+          onScrollToTop={() => undefined}
+          accountUpdateDot={false}
+        />
+      </I18nProvider>,
+    );
+    expect(navWithoutDot).not.toContain('bottom-nav-account-update-dot');
+
+    const navWithDot = renderToStaticMarkup(
+      <I18nProvider language="en">
+        <BottomNav
+          activeTab="home"
+          setActiveTab={() => undefined}
+          cartCount={0}
+          wishlistCount={0}
+          onOpenCart={() => undefined}
+          onOpenWishlist={() => undefined}
+          onOpenShop={() => undefined}
+          onOpenAccount={() => undefined}
+          onScrollToTop={() => undefined}
+          accountUpdateDot
+        />
+      </I18nProvider>,
+    );
+    expect(navWithDot).toContain('bottom-nav-account-update-dot');
+    expect(navWithDot).toContain('update available');
+
+    const accountWithDot = renderToStaticMarkup(
+      <I18nProvider language="en">
+        <AccountView
+          onOpenWishlist={() => undefined}
+          hasAppUpdate
+          pendingAppUpdate={release}
+        />
+      </I18nProvider>,
+    );
+    expect(accountWithDot).toContain('account-header-settings-update-dot');
+    expect(accountWithDot).toContain('account-settings-update-dot');
+    expect(accountWithDot).toContain('Update available');
+
+    const settingsWithoutUpdate = renderToStaticMarkup(
+      <I18nProvider language="en">
+        <SettingsView onBack={() => undefined} isAuthenticated pendingAppUpdate={null} />
+      </I18nProvider>,
+    );
+    expect(settingsWithoutUpdate).not.toContain('settings-app-update-card');
+
+    const settingsWithUpdate = renderToStaticMarkup(
+      <I18nProvider language="en">
+        <SettingsView onBack={() => undefined} isAuthenticated pendingAppUpdate={release} />
+      </I18nProvider>,
+    );
+    expect(settingsWithUpdate).toContain('settings-app-update-card');
+    expect(settingsWithUpdate).toContain('App update');
+    expect(settingsWithUpdate).toContain('v1.1.59');
+    expect(settingsWithUpdate).toContain('Update now');
   });
 });

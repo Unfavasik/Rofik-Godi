@@ -44,20 +44,98 @@ export async function fetchLatestRelease(): Promise<AppRelease | null> {
   return fromRow(data as Row);
 }
 
+export type ApkUploadProgress = {
+  loaded: number;
+  total: number;
+  percent: number;
+};
+
+function uploadViaXhr(params: {
+  endpoint: string;
+  apikey: string;
+  accessToken: string;
+  file: File;
+  onProgress: (progress: ApkUploadProgress) => void;
+}): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', params.endpoint, true);
+    xhr.setRequestHeader('apikey', params.apikey);
+    xhr.setRequestHeader('Authorization', `Bearer ${params.accessToken}`);
+    xhr.setRequestHeader('x-upsert', 'true');
+
+    xhr.upload.onprogress = (event) => {
+      const total = event.lengthComputable && event.total > 0 ? event.total : params.file.size;
+      const loaded = Math.min(event.loaded, total);
+      const percent = total > 0 ? Math.min(99, Math.round((loaded / total) * 100)) : 0;
+      params.onProgress({ loaded, total, percent });
+    };
+
+    xhr.onerror = () => reject(new Error('Network error while uploading the APK file'));
+    xhr.onabort = () => reject(new Error('APK upload was cancelled'));
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        params.onProgress({ loaded: params.file.size, total: params.file.size, percent: 100 });
+        resolve();
+        return;
+      }
+      let message = `Upload failed (HTTP ${xhr.status})`;
+      try {
+        const parsed = JSON.parse(xhr.responseText) as { message?: string; error?: string };
+        message = parsed.message || parsed.error || message;
+      } catch {
+        // Keep HTTP fallback error message
+      }
+      reject(new Error(message));
+    };
+
+    const formData = new FormData();
+    formData.append('cacheControl', '300');
+    formData.append('', params.file);
+    xhr.send(formData);
+  });
+}
+
 /** Admin only: uploads the APK to the public "app-releases" bucket and returns its public URL. */
-export async function uploadApk(file: File, versionName: string): Promise<string> {
+export async function uploadApk(
+  file: File,
+  versionName: string,
+  onProgress?: (progress: ApkUploadProgress) => void,
+): Promise<string> {
   if (!supabase) throw new Error('Supabase is not configured');
   if (!/\.apk$/i.test(file.name)) throw new Error('Please choose an .apk file');
   if (file.size > MAX_APK_BYTES) throw new Error('APK file exceeds the 50 MB limit');
   const safe = versionName.replace(/[^0-9A-Za-z._-]/g, '');
   if (!safe) throw new Error('Enter a version name first');
   const path = `Rofik_Godi_Center_${safe}.apk`;
+
+  const supabaseUrl = ((import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim() || '').replace(/\/+$/, '');
+  const supabaseKey = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)?.trim() || '';
+
+  if (onProgress && typeof XMLHttpRequest !== 'undefined' && supabaseUrl && supabaseKey && typeof supabase.auth.getSession === 'function') {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (accessToken) {
+      onProgress({ loaded: 0, total: file.size, percent: 0 });
+      await uploadViaXhr({
+        endpoint: `${supabaseUrl}/storage/v1/object/app-releases/${encodeURIComponent(path)}`,
+        apikey: supabaseKey,
+        accessToken,
+        file,
+        onProgress,
+      });
+      return supabase.storage.from('app-releases').getPublicUrl(path).data.publicUrl;
+    }
+  }
+
+  onProgress?.({ loaded: 0, total: file.size, percent: 15 });
   const { error } = await supabase.storage.from('app-releases').upload(path, file, {
     upsert: true,
     contentType: 'application/vnd.android.package-archive',
     cacheControl: '300',
   });
   if (error) throw new Error(error.message);
+  onProgress?.({ loaded: file.size, total: file.size, percent: 100 });
   return supabase.storage.from('app-releases').getPublicUrl(path).data.publicUrl;
 }
 

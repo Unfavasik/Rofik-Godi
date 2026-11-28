@@ -17,6 +17,7 @@ interface BottomNavProps {
   onOpenSearch?: () => void;
   onOpenAccount: () => void;
   onScrollToTop: () => void;
+  accountUpdateDot?: boolean;
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({
@@ -28,6 +29,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onOpenShop,
   onOpenAccount,
   onScrollToTop,
+  accountUpdateDot = false,
 }) => {
   const { t } = useI18n();
   const prefersReducedMotion = useReducedMotion();
@@ -72,6 +74,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         onOpenAccount();
       },
       badge: 0,
+      dot: accountUpdateDot,
     },
   ];
 
@@ -166,6 +169,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                       {item.badge}
                     </motion.span>
                   )}
+                  {'dot' in item && item.dot && item.badge === 0 && (
+                    <motion.span
+                      data-testid="bottom-nav-account-update-dot"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={springTransition}
+                      aria-hidden="true"
+                      className="absolute -top-0.5 -right-1.5 h-2.5 w-2.5 rounded-full border border-[#14100E] bg-[#FF3B47] shadow-[0_0_0_2px_rgba(255,59,71,0.22)]"
+                    />
+                  )}
                 </motion.div>
 
                 <span
@@ -177,6 +190,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 >
                   {item.label}
                 </span>
+                {'dot' in item && item.dot && (
+                  <span className="sr-only">, update available</span>
+                )}
               </motion.button>
             );
           })}
