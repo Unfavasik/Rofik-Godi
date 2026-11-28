@@ -251,22 +251,21 @@ export const SupportConversation: React.FC<{
     setError('');
     sendTimersRef.current.forEach((timerId) => clearTimeout(timerId));
     sendTimersRef.current = [];
-    if (!prefersReducedMotion) {
-      setSendPhase('windup');
-      await new Promise<void>((resolve) => {
-        const windupTimer = setTimeout(() => {
-          setSendPhase('launch');
-          const launchTimer = setTimeout(() => {
-            setSendPhase('sending');
-          }, SUPPORT_SEND_LAUNCH_MS);
-          sendTimersRef.current.push(launchTimer);
-          resolve();
-        }, SUPPORT_SEND_WINDUP_MS);
-        sendTimersRef.current.push(windupTimer);
-      });
-    } else {
-      setSendPhase('sending');
-    }
+    // Keep the semantic send phases even when reduced motion is enabled. The
+    // choreography helper removes transforms in that mode, but the status still
+    // communicates progress instead of jumping straight to an opaque spinner.
+    setSendPhase('windup');
+    await new Promise<void>((resolve) => {
+      const windupTimer = setTimeout(() => {
+        setSendPhase('launch');
+        const launchTimer = setTimeout(() => {
+          setSendPhase('sending');
+        }, prefersReducedMotion ? Math.min(SUPPORT_SEND_LAUNCH_MS, 120) : SUPPORT_SEND_LAUNCH_MS);
+        sendTimersRef.current.push(launchTimer);
+        resolve();
+      }, prefersReducedMotion ? Math.min(SUPPORT_SEND_WINDUP_MS, 100) : SUPPORT_SEND_WINDUP_MS);
+      sendTimersRef.current.push(windupTimer);
+    });
     if (files.length > 0) {
       attachmentUploadProgress.startUpload(files[0].name, {
         totalCount: files.length,
