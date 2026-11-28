@@ -31,7 +31,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ open, title, onClose, 
     return () => { document.body.style.overflow = previous; document.removeEventListener('keydown', onKeyDown); };
   }, [open, onClose]);
   return <AnimatePresence>{open && <motion.div className="fixed inset-0 z-[100] flex items-end justify-center overflow-x-hidden bg-slate-950/50 p-0 sm:items-center sm:p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-    <motion.div ref={sheetRef} role="dialog" aria-modal="true" aria-labelledby="bottom-sheet-title" className={`flex max-h-[85dvh] w-full max-w-full flex-col overflow-hidden overflow-x-hidden rounded-t-2xl bg-[#F8FAFC] shadow-2xl sm:max-w-lg sm:rounded-2xl ${className}`} initial={{ y: 40 }} animate={{ y: 0 }} exit={{ y: 40 }}>
+    <motion.div ref={sheetRef} role="dialog" aria-modal="true" aria-labelledby="bottom-sheet-title" className={`flex max-h-[85dvh] w-full max-w-full flex-col overflow-hidden overflow-x-hidden rounded-t-2xl bg-[#F8FAFC] shadow-2xl sm:max-w-lg sm:rounded-2xl ${className}`} initial={{ y: 40 }} animate={{ y: 0 }} exit={{ y: 40 }} onMouseDown={(event) => event.stopPropagation()} onTouchStart={(event) => event.stopPropagation()}>
       <div className="relative isolate shrink-0 overflow-hidden bg-[#090808] px-4 pb-3 pt-2.5 text-white sm:pt-3">
         <VignetteBarBackdrop variant="top" />
         <div className="relative z-10 mx-auto mb-2 h-1.5 w-10 rounded-full bg-white/30 sm:hidden" />
