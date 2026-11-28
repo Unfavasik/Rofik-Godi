@@ -43,6 +43,10 @@ import {
   getLiveSearchSuggestions,
   getQuickVehicleBrandsWithCounts,
 } from '../lib/searchProducts';
+import {
+  getWishlistHeartbeatEntry,
+  type WishlistHeartbeatMap,
+} from '../lib/wishlistHeartbeat';
 
 interface SearchViewProps {
   products: Product[];
@@ -57,6 +61,7 @@ interface SearchViewProps {
   isQuickAddInCart: (p: Product) => boolean;
   onOpenCart: () => void;
   wishlist: Product[];
+  wishlistHeartbeatMap?: WishlistHeartbeatMap;
   onToggleWishlist: (p: Product, e: React.MouseEvent) => void;
   onBackToHome: () => void;
   language?: PreferredLanguage;
@@ -77,6 +82,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
   isQuickAddInCart,
   onOpenCart,
   wishlist,
+  wishlistHeartbeatMap,
   onToggleWishlist,
   onBackToHome,
   language = 'en',
@@ -740,6 +746,11 @@ export const SearchView: React.FC<SearchViewProps> = ({
                         isInCart={isQuickAddInCart(prod)}
                         onOpenCart={onOpenCart}
                         isWishlisted={wishlist.some((w) => w.id === prod.id)}
+                        wishlistHeartbeat={
+                          wishlistHeartbeatMap
+                            ? getWishlistHeartbeatEntry(wishlistHeartbeatMap, prod.id)
+                            : undefined
+                        }
                         onToggleWishlist={onToggleWishlist}
                       />
                     ))}
@@ -757,6 +768,11 @@ export const SearchView: React.FC<SearchViewProps> = ({
                         isInCart={isQuickAddInCart(prod)}
                         onOpenCart={onOpenCart}
                         isWishlisted={wishlist.some((w) => w.id === prod.id)}
+                        wishlistHeartbeat={
+                          wishlistHeartbeatMap
+                            ? getWishlistHeartbeatEntry(wishlistHeartbeatMap, prod.id)
+                            : undefined
+                        }
                         onToggleWishlist={onToggleWishlist}
                       />
                     ))}
@@ -970,6 +986,11 @@ export const SearchView: React.FC<SearchViewProps> = ({
                             isInCart={isQuickAddInCart(prod)}
                             onOpenCart={onOpenCart}
                             isWishlisted={wishlist.some((w) => w.id === prod.id)}
+                            wishlistHeartbeat={
+                              wishlistHeartbeatMap
+                                ? getWishlistHeartbeatEntry(wishlistHeartbeatMap, prod.id)
+                                : undefined
+                            }
                             onToggleWishlist={onToggleWishlist}
                           />
                         ))}
@@ -990,6 +1011,11 @@ export const SearchView: React.FC<SearchViewProps> = ({
                       isInCart={isQuickAddInCart(prod)}
                       onOpenCart={onOpenCart}
                       isWishlisted={wishlist.some((w) => w.id === prod.id)}
+                      wishlistHeartbeat={
+                        wishlistHeartbeatMap
+                          ? getWishlistHeartbeatEntry(wishlistHeartbeatMap, prod.id)
+                          : undefined
+                      }
                       onToggleWishlist={onToggleWishlist}
                     />
                   ))}
@@ -1007,6 +1033,11 @@ export const SearchView: React.FC<SearchViewProps> = ({
                       isInCart={isQuickAddInCart(prod)}
                       onOpenCart={onOpenCart}
                       isWishlisted={wishlist.some((w) => w.id === prod.id)}
+                      wishlistHeartbeat={
+                        wishlistHeartbeatMap
+                          ? getWishlistHeartbeatEntry(wishlistHeartbeatMap, prod.id)
+                          : undefined
+                      }
                       onToggleWishlist={onToggleWishlist}
                     />
                   ))}

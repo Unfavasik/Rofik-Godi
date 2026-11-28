@@ -6,10 +6,15 @@ import { ProductCardErrorBoundary } from './ProductCardErrorBoundary';
 import { CatalogStatus } from './CatalogStatus';
 import { CartBadge } from './CartBadge';
 import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
+import {
+  getWishlistHeartbeatEntry,
+  type WishlistHeartbeatMap,
+} from '../lib/wishlistHeartbeat';
 
 interface ShopViewProps {
   products: Product[];
   wishlist: Product[];
+  wishlistHeartbeatMap?: WishlistHeartbeatMap;
   cartCount: number;
   isLoading: boolean;
   error: Error | null;
@@ -48,6 +53,7 @@ const getProductCategory = (product: Product): string => {
 export const ShopView: React.FC<ShopViewProps> = ({
   products,
   wishlist,
+  wishlistHeartbeatMap,
   cartCount,
   isLoading,
   error,
@@ -259,6 +265,11 @@ export const ShopView: React.FC<ShopViewProps> = ({
                 isInCart={isQuickAddInCart(product)}
                 onOpenCart={onOpenCart}
                 isWishlisted={wishlist.some((item) => item.id === product.id)}
+                wishlistHeartbeat={
+                  wishlistHeartbeatMap
+                    ? getWishlistHeartbeatEntry(wishlistHeartbeatMap, product.id)
+                    : undefined
+                }
                 onToggleWishlist={onToggleWishlist}
               />
             </ProductCardErrorBoundary>

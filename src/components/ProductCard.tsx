@@ -5,6 +5,10 @@ import { motion, useReducedMotion } from 'motion/react';
 import { getProductAvailability, isProductSellable } from '../lib/productAvailability';
 import { formatInr, useI18n } from '../lib/i18n';
 import { getProductBadgeInfo, ProductCornerRibbon } from './ProductCornerRibbon';
+import {
+  resolveProductCardHeartbeatState,
+  type WishlistHeartbeatEntry,
+} from '../lib/wishlistHeartbeat';
 
 export const PRODUCT_IMAGE_ZOOM_VARIANTS = {
   rest: { scale: 1 },
@@ -30,6 +34,7 @@ interface ProductCardProps {
   onSelectProduct: (p: Product) => void;
   onQuickAddToCart: (p: Product, e: React.MouseEvent) => void;
   isWishlisted: boolean;
+  wishlistHeartbeat?: WishlistHeartbeatEntry;
   onToggleWishlist: (p: Product, e: React.MouseEvent) => void;
   onNotifyMe?: (p: Product) => void | Promise<void>;
   isInCart?: boolean;
@@ -107,6 +112,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onSelectProduct,
   onQuickAddToCart,
   isWishlisted,
+  wishlistHeartbeat,
   onToggleWishlist,
   isInCart = false,
   onOpenCart,
@@ -128,8 +134,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const [notifySubmitting, setNotifySubmitting] = useState(false);
   const [heartPulseKey, setHeartPulseKey] = useState(0);
   const notifyRequestLock = useRef(false);
+  const { heartKey, shouldAnimate: shouldAnimateHeartbeat } = resolveProductCardHeartbeatState({
+    isWishlisted,
+    localPulseKey: heartPulseKey,
+    controlledHeartbeat: wishlistHeartbeat,
+  });
   const handleWishlistClick = (event: React.MouseEvent) => {
-    if (!isWishlisted) {
+    if (wishlistHeartbeat === undefined && !isWishlisted) {
       setHeartPulseKey((key) => key + 1);
     }
     onToggleWishlist(product, event);
@@ -223,10 +234,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             className="pointer-events-auto grid min-h-9 min-w-9 place-items-center rounded-full text-slate-400 hover:text-[#D9232D] transition-colors active:scale-90"
           >
             <Heart
-              key={heartPulseKey}
+              key={heartKey}
               className={`w-3.5 h-3.5 transition-colors ${
+                shouldAnimateHeartbeat ? 'wishlist-heartbeat ' : ''
+              }${
                 isWishlisted
-                  ? 'wishlist-heartbeat text-[#D9232D] fill-[#D9232D]'
+                  ? 'text-[#D9232D] fill-[#D9232D]'
                   : 'text-slate-400'
               }`}
             />
@@ -295,10 +308,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           className="pointer-events-auto absolute top-1.5 right-1.5 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/92 backdrop-blur-xs text-slate-600 hover:text-[#D9232D] border border-slate-200/60 shadow-2xs transition-colors active:scale-90"
         >
           <Heart
-            key={heartPulseKey}
+            key={heartKey}
             className={`w-3.5 h-3.5 transition-colors ${
+              shouldAnimateHeartbeat ? 'wishlist-heartbeat ' : ''
+            }${
               isWishlisted
-                ? 'wishlist-heartbeat text-[#D9232D] fill-[#D9232D]'
+                ? 'text-[#D9232D] fill-[#D9232D]'
                 : 'text-slate-600'
             }`}
           />

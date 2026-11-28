@@ -64,6 +64,13 @@ import { INITIAL_FILTERS, SORT_LABELS } from './data/filterOptions';
 import { compareProductsByDisplayOrder } from './lib/productOrdering';
 import type { FilterState, SortOption } from './data/filterOptions';
 import {
+  clearWishlistHeartbeatEntry,
+  getWishlistHeartbeatEntry,
+  triggerWishlistHeartbeatEntry,
+  WISHLIST_HEARTBEAT_DURATION_MS,
+  type WishlistHeartbeatMap,
+} from './lib/wishlistHeartbeat';
+import {
   SlidersHorizontal,
   LayoutGrid,
   List,
@@ -1107,6 +1114,41 @@ export default function App() {
     ownerId: 'guest-user',
     items: [],
   });
+  const [wishlistHeartbeatMap, setWishlistHeartbeatMap] = useState<WishlistHeartbeatMap>({});
+  const wishlistHeartbeatPulseRef = useRef(0);
+  const wishlistHeartbeatTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const clearProductWishlistHeartbeat = useCallback((productId: string) => {
+    const existingTimer = wishlistHeartbeatTimersRef.current[productId];
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+      delete wishlistHeartbeatTimersRef.current[productId];
+    }
+    setWishlistHeartbeatMap((current) => clearWishlistHeartbeatEntry(current, productId));
+  }, []);
+  const triggerProductWishlistHeartbeat = useCallback((productId: string) => {
+    if (!productId) return;
+    const existingTimer = wishlistHeartbeatTimersRef.current[productId];
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+    const nextPulse = ++wishlistHeartbeatPulseRef.current;
+    setWishlistHeartbeatMap((current) =>
+      triggerWishlistHeartbeatEntry(current, productId, nextPulse),
+    );
+    wishlistHeartbeatTimersRef.current[productId] = setTimeout(() => {
+      delete wishlistHeartbeatTimersRef.current[productId];
+      setWishlistHeartbeatMap((current) =>
+        clearWishlistHeartbeatEntry(current, productId, nextPulse),
+      );
+    }, WISHLIST_HEARTBEAT_DURATION_MS);
+  }, []);
+  useEffect(
+    () => () => {
+      Object.values(wishlistHeartbeatTimersRef.current).forEach((timerId) => clearTimeout(timerId));
+      wishlistHeartbeatTimersRef.current = {};
+    },
+    [],
+  );
   const wishlist = useMemo(() => {
     const productsById = new Map<string, Product>();
     catalogProducts.forEach((product) => productsById.set(product.id, product));
@@ -1393,12 +1435,21 @@ export default function App() {
     setWishlist((current) =>
       saved ? current.filter((item) => item.id !== p.id) : [...current, p],
     );
+    if (!saved) {
+      triggerProductWishlistHeartbeat(p.id);
+    } else {
+      clearProductWishlistHeartbeat(p.id);
+    }
     if (!currentUser.isGuest && supabase) {
       const result = await toggleWishlist(p.id, saved);
-      if (result.error)
+      if (result.error) {
+        if (!saved) {
+          clearProductWishlistHeartbeat(p.id);
+        }
         setWishlist((current) =>
           saved ? [...current, p] : current.filter((item) => item.id !== p.id),
         );
+      }
     }
   };
 
@@ -2003,6 +2054,7 @@ export default function App() {
           <ShopView
             products={filteredProducts}
             wishlist={wishlist}
+            wishlistHeartbeatMap={wishlistHeartbeatMap}
             cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
             isLoading={catalogLoading}
             error={catalogError}
@@ -2047,6 +2099,7 @@ export default function App() {
               isQuickAddInCart={isQuickAddInCart}
               onOpenCart={handleOpenCart}
               wishlist={wishlist}
+              wishlistHeartbeatMap={wishlistHeartbeatMap}
               onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
               language={uiLanguage}
               onBackToHome={() => {
@@ -2259,6 +2312,7 @@ export default function App() {
                         isInCart={isQuickAddInCart(prod)}
                         onOpenCart={handleOpenCart}
                         isWishlisted={wishlist.some((w) => w.id === prod.id)}
+                        wishlistHeartbeat={getWishlistHeartbeatEntry(wishlistHeartbeatMap, prod.id)}
                         onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
                       />
                     ))}
@@ -2508,6 +2562,7 @@ export default function App() {
                       isInCart={isQuickAddInCart(prod)}
                       onOpenCart={handleOpenCart}
                       isWishlisted={wishlist.some((w) => w.id === prod.id)}
+                      wishlistHeartbeat={getWishlistHeartbeatEntry(wishlistHeartbeatMap, prod.id)}
                       onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
                     />
                   ))}
@@ -2525,6 +2580,7 @@ export default function App() {
                       isInCart={isQuickAddInCart(prod)}
                       onOpenCart={handleOpenCart}
                       isWishlisted={wishlist.some((w) => w.id === prod.id)}
+                      wishlistHeartbeat={getWishlistHeartbeatEntry(wishlistHeartbeatMap, prod.id)}
                       onToggleWishlist={(p, e) => handleToggleWishlist(p, e)}
                     />
                   ))}

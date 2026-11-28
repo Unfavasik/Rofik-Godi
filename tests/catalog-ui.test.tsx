@@ -119,6 +119,36 @@ describe('catalog feedback', () => {
     expect(notAdded).toContain('aria-label="Add to Wishlist"');
     expect(notAdded).toContain('aria-pressed="false"');
     expect(notAdded).not.toContain('wishlist-heartbeat');
+
+    const controlledActive = renderToStaticMarkup(
+      <ProductCard
+        product={sampleProduct}
+        layoutMode={layoutMode}
+        onSelectProduct={() => {}}
+        onQuickAddToCart={() => {}}
+        isInCart={false}
+        onOpenCart={() => {}}
+        isWishlisted={true}
+        wishlistHeartbeat={{ pulse: 1, active: true }}
+        onToggleWishlist={() => {}}
+      />,
+    );
+    const controlledIdle = renderToStaticMarkup(
+      <ProductCard
+        product={sampleProduct}
+        layoutMode={layoutMode}
+        onSelectProduct={() => {}}
+        onQuickAddToCart={() => {}}
+        isInCart={false}
+        onOpenCart={() => {}}
+        isWishlisted={true}
+        wishlistHeartbeat={{ pulse: 0, active: false }}
+        onToggleWishlist={() => {}}
+      />,
+    );
+
+    expect(controlledActive).toContain('wishlist-heartbeat');
+    expect(controlledIdle).not.toContain('wishlist-heartbeat');
   });
 
   it('does not invent a zero-star score and formats catalog pricing with a real savings badge', () => {
