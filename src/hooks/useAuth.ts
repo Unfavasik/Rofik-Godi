@@ -3,6 +3,7 @@ import type { UserProfile } from '../types';
 import { supabase } from '../lib/supabase';
 import { getMyProfile } from '../lib/supabaseCustomer';
 import { clearSwrCache } from '../lib/swrCache';
+import { requestWelcomeEmailIfEligible, type WelcomeEmailSessionLike } from '../lib/welcomeEmail';
 
 export type AuthStatus = 'AUTH_LOADING' | 'AUTHENTICATED' | 'UNAUTHENTICATED';
 
@@ -121,27 +122,11 @@ export function useAuth() {
       });
     };
 
-    const requestWelcomeEmail = (userId: string) => {
-      const storageKey = `welcome-email-requested:${userId}`;
-      try {
-        if (sessionStorage.getItem(storageKey)) return;
-        sessionStorage.setItem(storageKey, '1');
-      } catch {
-        // Session storage can be disabled; the server-side send ledger remains authoritative.
-      }
+    const requestWelcomeEmail = (session: WelcomeEmailSessionLike | null | undefined) => {
+      if (!session?.user?.id || !session.access_token) return;
       setTimeout(() => {
         if (!active || !supabase) return;
-        void supabase.functions.invoke('send-order-confirmation', { body: { type: 'welcome' } })
-          .then(({ error }) => {
-            if (error) {
-              try { sessionStorage.removeItem(storageKey); } catch { /* best effort */ }
-              console.warn('Welcome email request failed');
-            }
-          })
-          .catch(() => {
-            try { sessionStorage.removeItem(storageKey); } catch { /* best effort */ }
-            console.warn('Welcome email request failed');
-          });
+        void requestWelcomeEmailIfEligible(supabase, session);
       }, 0);
     };
 
@@ -158,7 +143,7 @@ export function useAuth() {
         if (session?.user) queueMicrotask(() => {
           if (!active) return;
           applySession(session.user);
-          requestWelcomeEmail(session.user.id);
+          requestWelcomeEmail(session);
         });
         else clearSession();
         return;
@@ -173,7 +158,7 @@ export function useAuth() {
         queueMicrotask(() => {
           if (!active) return;
           applySession(session.user);
-          requestWelcomeEmail(session.user.id);
+          requestWelcomeEmail(session);
         });
         return;
       }
@@ -189,7 +174,7 @@ export function useAuth() {
       if (error || !data.session?.user) clearSession();
       else {
         applySession(data.session.user);
-        requestWelcomeEmail(data.session.user.id);
+        requestWelcomeEmail(data.session);
       }
     });
 

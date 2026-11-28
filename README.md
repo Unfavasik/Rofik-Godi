@@ -18,6 +18,13 @@ npm run build
 npm run format
 ```
 
+## Cloudflare Pages deployment
+
+- **Build command**: `npm ci --ignore-scripts --no-audit --no-fund && npm run build`
+- **Output directory**: `dist`
+- **Node version**: `20` or newer
+- **Package manager / lockfile**: `npm` with `package-lock.json` only (do not commit `bun.lock` or `pnpm-lock.yaml`)
+
 ## Supabase
 
 Apply migrations in `supabase/migrations/` in order. Use 14-digit timestamps (`YYYYMMDDHHMMSS`) for new migrations; do not rename migrations already applied. When a project has later-numbered migrations already applied but older timestamps still pending, deploy with `supabase db push --include-all`. The catalog migration keeps `is_active` (publication) separate from `in_stock` (availability), adds atomic gallery replacement, and provides the admin customer summary RPC. Product images are converted to WebP and uploaded to the `product-images` Storage bucket. Customer profile photos use the public-read, WebP-only `avatars` bucket (2 MB object limit); authenticated writes are restricted to each user's own UUID folder.

@@ -17,14 +17,14 @@ Google OAuth opens a secure Android browser tab, then returns to the app through
 
 ## Build commands
 
-Use Node.js, pnpm, JDK 21, and Android SDK. Supply the project's public Supabase URL and publishable key through the build environment; do not put server credentials or Firebase service-account JSON in source control.
+Use Node.js, npm, JDK 21, and Android SDK. Supply the project's public Supabase URL and publishable key through the build environment; do not put server credentials or Firebase service-account JSON in source control.
 
 ```bash
-pnpm install --frozen-lockfile
+npm ci --ignore-scripts --no-audit --no-fund
 export VITE_SUPABASE_URL="https://cyijfvylyhhusackvcuj.supabase.co"
 export VITE_SUPABASE_PUBLISHABLE_KEY="<project publishable key>"
-pnpm build
-pnpm exec cap sync android
+npm run build
+npx cap sync android
 cd android
 ./gradlew assembleDebug
 ```
@@ -63,7 +63,7 @@ This project does not install updates silently or automatically. Users must down
 
 1. Confirm TypeScript/lint and web build pass.
 2. Increment Android `versionCode` and `versionName`.
-3. Run `pnpm exec cap sync android` and build the APK.
+3. Run `npx cap sync android` and build the APK.
 4. Verify package name, version, signer fingerprint, APK integrity, and SHA-256 checksum.
 5. Attach the APK and a `.sha256` checksum file to a GitHub Release. Include the source commit and clearly label debug-signed builds as test/pre-release builds.
 6. Never attach Firebase Admin service-account JSON, private signing keys, passwords, or Supabase service-role secrets.

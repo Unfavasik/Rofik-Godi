@@ -337,9 +337,33 @@ async function readBoundedJson(request: Request, maxBytes = MAX_REQUEST_BYTES): 
   return parsed as Record<string, unknown>;
 }
 
+function isAllowedWebOrigin(origin: string | null): boolean {
+  if (!origin) return false;
+  if (ALLOWED_WEB_ORIGINS.has(origin)) return true;
+
+  try {
+    const parsed = new URL(origin);
+    if (
+      parsed.protocol === 'https:' &&
+      /^[a-z0-9-]+\.rofikgodicenter\.pages\.dev$/i.test(parsed.hostname)
+    ) {
+      return true;
+    }
+    const extraOrigins = (Deno.env.get('EXTRA_ALLOWED_ORIGINS') || '')
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.startsWith('https://'));
+    if (extraOrigins.includes(origin)) return true;
+  } catch {
+    return false;
+  }
+
+  return false;
+}
+
 function responseHeaders(origin: string | null) {
   return {
-    ...(origin && ALLOWED_WEB_ORIGINS.has(origin) ? { 'Access-Control-Allow-Origin': origin } : {}),
+    ...(origin && isAllowedWebOrigin(origin) ? { 'Access-Control-Allow-Origin': origin } : {}),
     'Access-Control-Allow-Headers': allowedHeaders,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Vary': 'Origin',
