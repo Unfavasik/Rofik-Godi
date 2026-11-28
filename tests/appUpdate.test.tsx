@@ -47,6 +47,9 @@ vi.mock('../src/lib/supabase', () => ({
   supabase: {
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'admin-1' } }, error: null }),
+      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+      stopAutoRefresh: vi.fn().mockResolvedValue(undefined),
+      startAutoRefresh: vi.fn().mockResolvedValue(undefined),
     },
     storage: { from: mockStorageFrom },
     from: mockFrom,
@@ -99,6 +102,22 @@ describe('Android App Update integration', () => {
     expect(optionalHtml).toContain('Faster loading');
     expect(optionalHtml).toContain('Later');
     expect(optionalHtml).toContain('Update now');
+    expect(optionalHtml).toContain('Install the latest APK once by hand to enable in-app updates');
+
+    (globalThis as unknown as { window?: Record<string, unknown> }).window = {
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      RGUpdater: {
+        download: vi.fn(() => 'STARTED'),
+        progress: vi.fn(() => '8|100|100'),
+      },
+    };
+    try {
+      const readyHtml = renderToStaticMarkup(<AppUpdatePrompt />);
+      expect(readyHtml).toContain('In-app installer ready');
+    } finally {
+      delete (globalThis as unknown as { window?: Record<string, unknown> }).window;
+    }
 
     mockUpdateState.required = true;
     const forcedHtml = renderToStaticMarkup(<AppUpdatePrompt />);

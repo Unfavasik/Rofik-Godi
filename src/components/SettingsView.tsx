@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2, Search, ChevronDown, ShoppingBag, MapPin, CreditCard, Wrench, HelpCircle, Clock3, Phone, CheckCircle2, Trash2, ExternalLink, Layers3, Award, Download, Rocket, Check } from 'lucide-react';
+import { Star, Globe, Bell, Tag, Truck, MessageCircle, Package, Heart, ShieldCheck, Share2, Search, ChevronDown, ShoppingBag, MapPin, CreditCard, Wrench, HelpCircle, Clock3, Phone, CheckCircle2, Trash2, ExternalLink, Layers3, Award, Download, Loader2, Rocket, Check } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsConditionsView } from './TermsConditionsView';
 import { PersonalDataView } from './PersonalDataView';
@@ -17,8 +17,8 @@ import { SrishtiLabsLogo } from './SrishtiLabsLogo';
 import { VignetteBarBackdrop, VignettePageCurtain } from './VignetteBarBackdrop';
 import { subscribePullToRefresh } from '../lib/pullToRefresh';
 import { useAppUpdate, type AppUpdateInfo } from '../hooks/useAppUpdate';
+import { useApkInstaller } from '../hooks/useApkInstaller';
 import { getSettingsUpdateCardMotion } from '../lib/appUpdateMotion';
-import { openApkUpdateDownload } from '../lib/appUpdateState';
 import { sanitizeUrl } from '../lib/security';
 
 interface SettingsViewProps {
@@ -170,6 +170,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const updateCardMotion = getSettingsUpdateCardMotion(prefersReducedMotion);
   const hookAppUpdate = useAppUpdate();
   const resolvedAppUpdate = pendingAppUpdate !== undefined ? pendingAppUpdate : hookAppUpdate.pendingUpdate;
+  const {
+    phase: updatePhase,
+    percent: updatePercent,
+    busy: updateBusy,
+    hasInAppUpdater,
+    startInstall,
+  } = useApkInstaller(resolvedAppUpdate);
   const safeAppUpdateUrl = resolvedAppUpdate
     ? sanitizeUrl(resolvedAppUpdate.apkUrl, { allowRelative: false })
     : null;
@@ -178,8 +185,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       onStartAppUpdate();
       return;
     }
-    openApkUpdateDownload(safeAppUpdateUrl);
+    void startInstall();
   };
+  const updateCtaLabel =
+    updatePhase === 'downloading'
+      ? 'Downloading…'
+      : updatePhase === 'installing'
+        ? 'Install again'
+        : updatePhase === 'error'
+          ? 'Try again'
+          : 'Update now';
   const [localSection, setLocalSection] = useState<SettingsSectionRoute | null>(null);
   const section = activeSection ?? localSection;
   const savedHubScrollYRef = useRef<number | null>(null);
@@ -1003,30 +1018,76 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     </ul>
                   )}
 
+                  {updateBusy && (
+                    <div className="mt-3 border-t border-slate-100 pt-3" role="status" aria-live="polite">
+                      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                        <div
+                          className="h-full rounded-full bg-[#D9232D] transition-[width] duration-300"
+                          style={{ width: `${updatePercent}%` }}
+                        />
+                      </div>
+                      <p className="mt-1.5 text-xs font-bold text-slate-600 tabular-nums">
+                        {updatePhase === 'downloading'
+                          ? `Downloading… ${updatePercent}%`
+                          : 'Download complete. Tap Install on the next screen.'}
+                      </p>
+                    </div>
+                  )}
+
+                  {updatePhase === 'permission' && (
+                    <p
+                      role="status"
+                      className="mt-3 rounded-xl border border-amber-200/80 bg-amber-50 p-2.5 text-[11.5px] font-semibold text-amber-800"
+                    >
+                      Turn on &ldquo;Allow from this source&rdquo; for Rofik Godi Center, go back, then tap Update now again.
+                    </p>
+                  )}
+
+                  {updatePhase === 'error' && (
+                    <p
+                      role="alert"
+                      className="mt-3 rounded-xl border border-red-200/80 bg-red-50 p-2.5 text-[11.5px] font-semibold text-red-700"
+                    >
+                      Download failed. Check your internet and try again.
+                    </p>
+                  )}
+
                   <div className="mt-3.5 flex flex-col gap-2.5 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
-                      <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden="true" />
-                      <span>Tap downloaded APK to install · Data stays safe</span>
+                      <ShieldCheck
+                        className={`h-3.5 w-3.5 shrink-0 ${hasInAppUpdater ? 'text-emerald-600' : 'text-slate-400'}`}
+                        aria-hidden="true"
+                      />
+                      <span>
+                        {hasInAppUpdater
+                          ? 'In-app installer ready'
+                          : 'Install the latest APK once by hand to enable in-app updates'}
+                      </span>
                     </p>
                     <motion.button
                       type="button"
+                      disabled={updatePhase === 'downloading'}
                       onClick={handleStartAppUpdate}
-                      whileTap={updateCardMotion.enabled ? { scale: 0.97 } : undefined}
-                      className="banner-cta-shine inline-flex min-h-11 shrink-0 items-center justify-center gap-2 overflow-hidden rounded-xl bg-[#D9232D] px-5 py-2.5 text-xs font-extrabold text-white shadow-[0_10px_22px_-10px_rgba(217,35,45,0.6)] transition-colors hover:bg-[#b91822]"
+                      whileTap={updateCardMotion.enabled && updatePhase !== 'downloading' ? { scale: 0.97 } : undefined}
+                      className="banner-cta-shine inline-flex min-h-11 shrink-0 items-center justify-center gap-2 overflow-hidden rounded-xl bg-[#D9232D] px-5 py-2.5 text-xs font-extrabold text-white shadow-[0_10px_22px_-10px_rgba(217,35,45,0.6)] transition-colors hover:bg-[#b91822] disabled:opacity-60"
                     >
-                      <motion.span
-                        aria-hidden="true"
-                        animate={updateCardMotion.arrowAnimate}
-                        transition={
-                          updateCardMotion.enabled
-                            ? { duration: 1.8, repeat: Infinity, ease: 'easeInOut' }
-                            : { duration: 0 }
-                        }
-                        className="inline-flex"
-                      >
-                        <Download className="h-4 w-4" />
-                      </motion.span>
-                      <span>Update now</span>
+                      {updatePhase === 'downloading' ? (
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                      ) : (
+                        <motion.span
+                          aria-hidden="true"
+                          animate={updateCardMotion.arrowAnimate}
+                          transition={
+                            updateCardMotion.enabled
+                              ? { duration: 1.8, repeat: Infinity, ease: 'easeInOut' }
+                              : { duration: 0 }
+                          }
+                          className="inline-flex"
+                        >
+                          <Download className="h-4 w-4" />
+                        </motion.span>
+                      )}
+                      <span>{updateCtaLabel}</span>
                     </motion.button>
                   </div>
                 </div>

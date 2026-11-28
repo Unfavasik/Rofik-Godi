@@ -1,15 +1,16 @@
 import { useEffect } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { Check, Download, Rocket, ShieldCheck } from 'lucide-react';
+import { Check, Download, Loader2, Rocket, ShieldCheck } from 'lucide-react';
 import { useAppUpdate } from '../hooks/useAppUpdate';
-import { openApkUpdateDownload } from '../lib/appUpdateState';
+import { useApkInstaller } from '../hooks/useApkInstaller';
 import { sanitizeUrl } from '../lib/security';
 import { getAppUpdateSheetMotion } from '../lib/appUpdateMotion';
 import { VignetteBarBackdrop } from './VignetteBarBackdrop';
 
-/** Bottom-sheet that tells Android users a new APK is available. Mount once near the app root. */
+/** Bottom-sheet that tells Android users a new APK is available. Downloads & installs inside the app (APK 1.1.59+). */
 export const AppUpdatePrompt = () => {
   const { update, required, dismiss } = useAppUpdate();
+  const { phase, percent, busy, hasInAppUpdater, startInstall } = useApkInstaller(update);
   const prefersReducedMotion = Boolean(useReducedMotion());
   const sheetMotion = getAppUpdateSheetMotion(prefersReducedMotion);
 
@@ -22,7 +23,7 @@ export const AppUpdatePrompt = () => {
     document.body.style.overflow = 'hidden';
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !required) {
+      if (event.key === 'Escape' && !required && !busy) {
         dismiss();
       }
     };
@@ -31,11 +32,16 @@ export const AppUpdatePrompt = () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isVisible, required, dismiss]);
+  }, [isVisible, required, busy, dismiss]);
 
-  const startUpdate = () => {
-    openApkUpdateDownload(safeApkUrl);
-  };
+  const ctaLabel =
+    phase === 'downloading'
+      ? 'Downloading…'
+      : phase === 'installing'
+        ? 'Install again'
+        : phase === 'error'
+          ? 'Try again'
+          : 'Update now';
 
   return (
     <AnimatePresence>
@@ -47,7 +53,7 @@ export const AppUpdatePrompt = () => {
           exit={sheetMotion.backdropExit}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget && !required) {
+            if (event.target === event.currentTarget && !required && !busy) {
               dismiss();
             }
           }}
@@ -157,9 +163,43 @@ export const AppUpdatePrompt = () => {
                 </div>
               )}
 
+              {busy && (
+                <div className="mt-4" role="status" aria-live="polite">
+                  <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-[#D9232D] transition-[width] duration-300"
+                      style={{ width: `${percent}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-center text-xs font-bold text-slate-600 tabular-nums">
+                    {phase === 'downloading'
+                      ? `Downloading… ${percent}%`
+                      : 'Download complete. Tap Install on the next screen.'}
+                  </p>
+                </div>
+              )}
+
+              {phase === 'permission' && (
+                <p
+                  role="status"
+                  className="mt-4 rounded-2xl border border-amber-200/80 bg-amber-50 p-3 text-xs font-semibold text-amber-800"
+                >
+                  Turn on &ldquo;Allow from this source&rdquo; for Rofik Godi Center, go back, then tap Update now again.
+                </p>
+              )}
+
+              {phase === 'error' && (
+                <p
+                  role="alert"
+                  className="mt-4 rounded-2xl border border-red-200/80 bg-red-50 p-3 text-xs font-semibold text-red-700"
+                >
+                  Download failed. Check your internet and try again.
+                </p>
+              )}
+
               {/* Thumb-Zone Primary Action Row */}
               <div className="mt-4 flex gap-2.5">
-                {!required && (
+                {!required && !busy && (
                   <motion.button
                     type="button"
                     onClick={dismiss}
@@ -171,29 +211,44 @@ export const AppUpdatePrompt = () => {
                 )}
                 <motion.button
                   type="button"
-                  onClick={startUpdate}
-                  whileTap={sheetMotion.enabled ? { scale: 0.97 } : undefined}
-                  className="banner-cta-shine group relative flex min-h-12 flex-[1.45] items-center justify-center gap-2 overflow-hidden rounded-2xl bg-[#D9232D] px-5 text-sm font-bold text-white shadow-[0_12px_24px_-10px_rgba(217,35,45,0.65)] transition-colors hover:bg-[#b91822]"
+                  disabled={phase === 'downloading'}
+                  onClick={() => void startInstall()}
+                  whileTap={sheetMotion.enabled && phase !== 'downloading' ? { scale: 0.97 } : undefined}
+                  className="banner-cta-shine group relative flex min-h-12 flex-[1.45] items-center justify-center gap-2 overflow-hidden rounded-2xl bg-[#D9232D] px-5 text-sm font-bold text-white shadow-[0_12px_24px_-10px_rgba(217,35,45,0.65)] transition-colors hover:bg-[#b91822] disabled:opacity-60"
                 >
-                  <motion.span
-                    aria-hidden="true"
-                    animate={sheetMotion.arrowAnimate}
-                    transition={
-                      sheetMotion.enabled
-                        ? { duration: 1.8, repeat: Infinity, ease: 'easeInOut' }
-                        : { duration: 0 }
-                    }
-                    className="inline-flex"
-                  >
-                    <Download className="h-4 w-4" />
-                  </motion.span>
-                  <span>Update now</span>
+                  {phase === 'downloading' ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <motion.span
+                      aria-hidden="true"
+                      animate={sheetMotion.arrowAnimate}
+                      transition={
+                        sheetMotion.enabled
+                          ? { duration: 1.8, repeat: Infinity, ease: 'easeInOut' }
+                          : { duration: 0 }
+                      }
+                      className="inline-flex"
+                    >
+                      <Download className="h-4 w-4" />
+                    </motion.span>
+                  )}
+                  <span>{ctaLabel}</span>
                 </motion.button>
               </div>
 
-              <p className="mt-3.5 flex items-center justify-center gap-1.5 text-center text-[11px] font-medium text-slate-500">
-                <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                <span>Tap the downloaded APK to install · Your data stays safe.</span>
+              <p
+                data-testid="app-update-installer-status"
+                className="mt-3.5 flex items-center justify-center gap-1.5 text-center text-[11px] font-medium text-slate-500"
+              >
+                <ShieldCheck
+                  className={`h-3.5 w-3.5 shrink-0 ${hasInAppUpdater ? 'text-emerald-600' : 'text-slate-400'}`}
+                  aria-hidden="true"
+                />
+                <span>
+                  {hasInAppUpdater
+                    ? 'In-app installer ready'
+                    : 'Install the latest APK once by hand to enable in-app updates'}
+                </span>
               </p>
             </div>
           </motion.div>

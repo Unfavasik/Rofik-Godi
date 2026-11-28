@@ -7,6 +7,13 @@ export type UpdateSnoozeRecord = {
   until: number;
 };
 
+export type RgUpdaterBridge = {
+  download: (url: string, fileName: string) => string;
+  progress: () => string;
+};
+
+export type ApkInstallPhase = 'idle' | 'downloading' | 'installing' | 'permission' | 'error';
+
 export const APP_UPDATE_SNOOZE_KEY = 'rg_update_snooze';
 export const APP_UPDATE_SNOOZE_MS = 24 * 60 * 60 * 1000;
 export const APP_UPDATE_CHANGED_EVENT = 'rg:app-update-changed';
@@ -21,6 +28,36 @@ export interface ResolvedAppUpdateUiState {
   /** True when a newer update was deferred ("Later" tapped / currently snoozed), lighting up Account & Settings red dots. */
   showDeferredDot: boolean;
 }
+
+export const getRgUpdater = (): RgUpdaterBridge | undefined => {
+  if (typeof window === 'undefined') return undefined;
+  return (window as unknown as { RGUpdater?: RgUpdaterBridge }).RGUpdater;
+};
+
+export const buildApkFileName = (versionName: string): string => {
+  const safe = versionName.replace(/[^0-9A-Za-z._-]/g, '') || 'latest';
+  return `Rofik_Godi_Center_${safe}.apk`;
+};
+
+export const parseRgUpdaterProgress = (
+  raw: string,
+): { status: number; done: number; total: number; percent: number | null } => {
+  const [statusRaw = '', doneRaw = '', totalRaw = ''] = String(raw || '').split('|');
+  const status = Number(statusRaw);
+  const done = Number(doneRaw);
+  const total = Number(totalRaw);
+  const percent =
+    Number.isFinite(done) && Number.isFinite(total) && total > 0
+      ? Math.max(0, Math.min(100, Math.round((done / total) * 100)))
+      : null;
+
+  return {
+    status: Number.isFinite(status) ? status : 0,
+    done: Number.isFinite(done) ? done : 0,
+    total: Number.isFinite(total) ? total : 0,
+    percent,
+  };
+};
 
 export const readAppUpdateSnooze = (storage: Pick<Storage, 'getItem'> | null | undefined): UpdateSnoozeRecord | null => {
   if (!storage) return null;

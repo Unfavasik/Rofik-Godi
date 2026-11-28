@@ -731,7 +731,6 @@ export default function App() {
   const {
     pendingUpdate: pendingAppUpdate,
     showDeferredDot: hasDeferredAppUpdate,
-    startUpdate: startAppUpdateDownload,
   } = useAppUpdate();
   const isBottomNavHidden = useScrollDirection(`${activeTab}:${location.pathname}`);
   useEffect(() => {
@@ -2098,7 +2097,6 @@ export default function App() {
               products={catalogProducts}
               hasAppUpdate={hasDeferredAppUpdate}
               pendingAppUpdate={pendingAppUpdate}
-              onStartAppUpdate={startAppUpdateDownload}
               pwaInstallCard={pwaInstall.visible ? <PwaInstallCard visible={pwaInstall.visible} canInstall={pwaInstall.canInstall} isIOSSafari={pwaInstall.isIOSSafari} isInstalling={pwaInstall.isInstalling} installError={pwaInstall.installError} onInstall={pwaInstall.install} onDismiss={pwaInstall.dismiss} /> : null}
               onProfileChange={(profile) =>
                 setCurrentUser((user) =>

@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {
   APP_UPDATE_SNOOZE_KEY,
   APP_UPDATE_SNOOZE_MS,
+  buildApkFileName,
+  parseRgUpdaterProgress,
   readAppUpdateSnooze,
   resolveAppUpdateUiState,
   writeAppUpdateSnooze,
@@ -125,4 +127,35 @@ test('snooze storage helpers read and write safely', () => {
 
   map.set(APP_UPDATE_SNOOZE_KEY, '{broken');
   assert.equal(readAppUpdateSnooze(memoryStorage), null);
+});
+
+test('buildApkFileName and parseRgUpdaterProgress handle normal and malformed inputs safely', () => {
+  assert.equal(buildApkFileName('1.1.61'), 'Rofik_Godi_Center_1.1.61.apk');
+  assert.equal(buildApkFileName('1.1.61 (beta)!'), 'Rofik_Godi_Center_1.1.61beta.apk');
+  assert.equal(buildApkFileName('!!!'), 'Rofik_Godi_Center_latest.apk');
+
+  assert.deepEqual(parseRgUpdaterProgress('2|500|1000'), {
+    status: 2,
+    done: 500,
+    total: 1000,
+    percent: 50,
+  });
+  assert.deepEqual(parseRgUpdaterProgress('8|1200|1000'), {
+    status: 8,
+    done: 1200,
+    total: 1000,
+    percent: 100,
+  });
+  assert.deepEqual(parseRgUpdaterProgress('16|0|0'), {
+    status: 16,
+    done: 0,
+    total: 0,
+    percent: null,
+  });
+  assert.deepEqual(parseRgUpdaterProgress('invalid'), {
+    status: 0,
+    done: 0,
+    total: 0,
+    percent: null,
+  });
 });
